@@ -619,6 +619,7 @@ static func other_kinds() -> Array:
 			"fields": [
 				{"key": "node", "label": "Node", "drawer": "node", "types": ["Node"], "empty": "This object"},
 				{"key": EFFECT_KEY, "label": "Property", "drawer": "property", "node_key": "node", "default": "rotation"},
+				{"key": "from", "label": "From", "drawer": "from", "node_key": "node", "property_key": EFFECT_KEY},
 				{"key": "to", "label": "To", "drawer": "typed", "node_key": "node", "property_key": EFFECT_KEY, "fallback_key": AMOUNT_KEY},
 				{"key": SECONDS_KEY, "label": "Over", "drawer": "unit:time", "default": 0.2},
 				{"key": "trans", "label": "Transition", "drawer": "options:linear=Linear,sine=Sine,quad=Quad,cubic=Cubic,quart=Quart,quint=Quint,expo=Expo,circ=Circ,back=Back,elastic=Elastic,bounce=Bounce,spring=Spring", "unset": "linear"},

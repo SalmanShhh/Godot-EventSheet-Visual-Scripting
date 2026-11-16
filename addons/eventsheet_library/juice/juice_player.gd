@@ -2014,12 +2014,14 @@ static func editor_kind(word: String) -> String:
 			return "skipped:it moves a bus volume, which the editor leaves alone"
 		VIBRATE:
 			return "skipped:a controller or a phone is not in the editor"
+		PARTICLES, ANIMATION, SPRITE_ANIMATION, SHOW_HIDE, SQUASH_STRETCH, PUNCH_POSITION, PUNCH_ROTATION, POP, FADE, GRAB_FOCUS, COUNT_TO, REVEAL_TEXT, FILL_BAR, SHADER_VALUE:
+			return "skipped:not shown in the editor yet, it plays when the game runs"
 		PUSH, FORCE_FOR_A_TIME, GRAVITY_FOR_A_TIME, FREEZE_BODY:
-			return "skipped:physics does not run in the editor"
+			return "skipped:not shown in the editor, physics needs the running game"
 		SPAWN_SCENE:
-			return "skipped:it adds a scene to the running game"
+			return "skipped:not shown in the editor, it adds a scene to the running game"
 		CALL_METHOD:
-			return "skipped:a method runs the game's own code"
+			return "skipped:not shown in the editor, it would run your own code"
 		EMIT_SIGNAL:
 			return "skipped:a signal runs the game's own code"
 		PLAY_PLAYER:
@@ -2529,7 +2531,13 @@ func _reveal_text(card: Dictionary, seconds: float) -> void:
 		return
 	_remember(target, "visible_ratio")
 	target.set("visible_ratio", 0.0)
-	_new_tween().tween_property(target, "visible_ratio", 1.0, seconds)
+	# A card that holds a speed (letters a second) reveals the text the label holds right now at that
+	# speed; a card with only seconds takes exactly that long.
+	var span: float = seconds
+	var speed: float = float(card.get("speed", 0.0))
+	if speed > 0.0:
+		span = float(str(target.get("text")).length()) / speed
+	_new_tween().tween_property(target, "visible_ratio", 1.0, span)
 
 ## A bar or slider glides to a number.
 func _fill_bar(card: Dictionary, seconds: float) -> void:

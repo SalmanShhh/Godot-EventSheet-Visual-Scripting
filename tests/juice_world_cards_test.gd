@@ -34,6 +34,8 @@ static func run() -> bool:
 	ok = _runtime_pins() and ok
 	ok = _drawer_pins() and ok
 	ok = _menu_pins() and ok
+	ok = _words_pins() and ok
+	ok = _enter_pins() and ok
 	return ok
 
 
@@ -202,5 +204,50 @@ static func _menu_pins() -> bool:
 		rows.append(["the menu shows a key beside %s" % word, int(hints.get(word, 0)) != 0, true])
 	rows.append(["the others show none", int(hints.get("Move up", 0)), 0])
 	popup.free()
+	drawer.free()
+	return SUPPORT.pins(TEST_NAME, rows)
+
+
+## A node field shows the node's name as the Scene dock does, whatever the path to it looks like, and its
+## path in the tooltip; the Reveal Text card is a speed in letters a second that sets the card's length.
+static func _words_pins() -> bool:
+	var fields: Script = load(FIELDS_PATH) as Script
+	var parent: Node = Node.new()
+	parent.name = "Actor"
+	var player: Node = Node.new()
+	player.set_script(_pack())
+	player.name = "Player"
+	parent.add_child(player)
+	var label: Label = Label.new()
+	label.name = "Banner"
+	label.text = "Hello there world"
+	parent.add_child(label)
+	var kinds: Script = load("res://addons/eventsheet/editor/inspector/juice_card_kinds.gd") as Script
+	var card: Dictionary = {"node": NodePath("../Banner"), "speed": 34.0}
+	var rows: Array = [
+		["a parent shows its name, not two dots", fields.call("node_words", player, {"node": NodePath("..")}, "node", ""), "Actor"],
+		["the player itself shows its name", fields.call("node_words", player, {"node": NodePath(".")}, "node", ""), "Player"],
+		["a sibling shows its name", fields.call("node_words", player, {"node": NodePath("../Banner")}, "node", ""), "Banner"],
+		["a node that is gone shows its last name", fields.call("node_words", player, {"node": NodePath("../Smoke")}, "node", ""), "Smoke"],
+		["picking the label sets the length from its letters", kinds.call("reveal_length", card, label), {"seconds": 0.5}],
+		["a new speed sets the length again", kinds.call("reveal_length_for_speed", card, player, 17.0), {"seconds": 1.0}],
+		["the property picker's answer, with its leading colon, is the plain property name", fields.call("property_text", NodePath(":modulate")), "modulate"],
+		["a card the board promises a preview for says it is not shown yet", str(_pack().call("editor_kind", "particles")).begins_with("skipped:not shown in the editor yet"), true]
+	]
+	label.free()
+	player.free()
+	parent.free()
+	return SUPPORT.pins(TEST_NAME, rows)
+
+
+## Enter in the Add box's search adds the first card it found.
+static func _enter_pins() -> bool:
+	var drawer: EventSheetCardListDrawer = EventSheetCardListDrawer.new({"kind_key": "verb", "schema_dict": (load(SCHEMA_PATH) as Script).call("schema")})
+	drawer._on_add_pressed()
+	drawer._add_filter.text = "tween"
+	drawer._fill_add_tree()
+	drawer._add_filter.text_submitted.emit("tween")
+	var added: Array = drawer.get_value()
+	var rows: Array = [["Enter adds the first card the search found", [added.size(), (added[0] as Dictionary).get("verb") if added.size() > 0 else ""], [1, "tween_property"]]]
 	drawer.free()
 	return SUPPORT.pins(TEST_NAME, rows)

@@ -125,11 +125,11 @@ static func _object_kinds(family_of: Dictionary) -> Array:
 			{"key": "parameter", "label": "Value", "drawer": "choices", "choices": shader_values, "empty": "Pick a value"},
 			{"key": "to", "label": "To", "drawer": "typed", "sample": shader_sample},
 			_over("Over", 0.12),
-			{"key": "trans", "label": "Transition", "drawer": "options:linear=Linear,sine=Sine,quad=Quad,cubic=Cubic,expo=Expo,back=Back,elastic=Elastic,bounce=Bounce", "default": "sine"},
+			{"key": "trans", "label": "Transition", "drawer": "options:linear=Linear,sine=Sine,quad=Quad,cubic=Cubic,expo=Expo,back=Back,elastic=Elastic,bounce=Bounce", "default": "quad"},
 			{"key": "back", "label": "Then come back", "drawer": "bool", "default": true},
 			{"key": "only_this", "label": "Only this object", "drawer": "bool", "default": true},
 			{"key": "shader_note", "label": "", "drawer": "note", "text": shared_material_note, "visible_when": shared_material_care, "warn_when": shared_material_care}
-		], {"trans": "sine", "back": true, "only_this": true, "seconds": 0.12}, ["material", "uniform", "flash"])
+		], {"trans": "quad", "back": true, "only_this": true, "seconds": 0.12}, ["material", "uniform", "flash"])
 	]
 
 
@@ -147,9 +147,9 @@ static func _body_kinds(family_of: Dictionary) -> Array:
 		], {"direction": "away", "speed": 300.0, "scaled": true}, ["knockback", "impulse", "shove"]),
 		_kind("force_for_a_time", "Force For A Time", "A steady force on a RigidBody for a time: wind, a tractor beam, a rocket kick. It is taken away again when the time is up or on Restore.", family_of, [
 			_node("body", "Body", RIGID_TYPES, "This object"),
-			{"key": "x", "label": "Across", "drawer": "num", "default": 0.0},
-			{"key": "y", "label": "Down", "drawer": "num", "default": -400.0},
-			{"key": "z", "label": "Depth", "drawer": "num", "default": 0.0},
+			{"key": "x", "label": "Force x", "drawer": "num", "default": 0.0},
+			{"key": "y", "label": "Force y", "drawer": "num", "default": -400.0},
+			{"key": "z", "label": "Force z", "drawer": "num", "default": 0.0},
 			_over("Over", 0.5)
 		], {"x": 0.0, "y": -400.0, "z": 0.0, "seconds": 0.5}, ["wind", "constant force"]),
 		_kind("gravity_for_a_time", "Gravity For A Time", "Changes the gravity scale of a RigidBody for a time, then puts it back: a floaty moment at the top of a hit.", family_of, [
@@ -181,14 +181,14 @@ static func _ui_kinds(family_of: Dictionary) -> Array:
 			_node("node", "Control", ["Control"])
 		], {}, ["focus", "button"]),
 		_kind("count_to", "Count To", "A label counts from the number it shows to a number. The number is a plain number or a name from your game, such as GameState.score.", family_of, [
-			_node("node", "Label", ["Label", "RichTextLabel"]),
+			_node("node", "Label node", ["Label", "RichTextLabel"]),
 			{"key": "to", "label": "To", "drawer": "text", "default": ""},
 			_over("Over", 0.6)
 		], {"to": "", "seconds": 0.6}, ["score", "number", "counter"]),
-		_kind("reveal_text", "Reveal Text", "The letters of a label appear one after another over the card's length.", family_of, [
-			_node("node", "Label", ["Label", "RichTextLabel"]),
-			_over("Over", 0.8)
-		], {"seconds": 0.8}, ["typewriter", "letters", "banner"]),
+		_kind("reveal_text", "Reveal Text", "The letters of a label appear one after another at a speed. The card's length is the label's text divided by the speed.", family_of, [
+			_node("node", "Label node", ["Label", "RichTextLabel"], "", "", reveal_length),
+			{"key": "speed", "label": "Speed", "drawer": "num", "default": 40.0, "suffix": "letters/s", "on_change": reveal_length_for_speed}
+		], {"speed": 40.0, "seconds": 0.8}, ["typewriter", "letters", "banner"]),
 		_kind("fill_bar", "Fill Bar", "A progress bar or slider glides to a value. The value is a plain number or a name from your game, such as Player.health.", family_of, [
 			_node("node", "Bar", ["Range"]),
 			{"key": "to", "label": "To", "drawer": "text", "default": ""},
@@ -200,7 +200,7 @@ static func _ui_kinds(family_of: Dictionary) -> Array:
 static func _flow_kinds(family_of: Dictionary) -> Array:
 	return [
 		_kind("call_method", "Call Method", "Tells a node to act: calls a function of its script with the values below. For whatever no card covers: pop a score label, open a door, start your own effect.", family_of, [
-			_node("node", "Node", ["Node"]),
+			_node("node", "On", ["Node"]),
 			{"key": "method", "label": "Method", "drawer": "choices", "choices": script_methods, "empty": "Pick a method"},
 			{"key": "args", "label": "", "drawer": "arguments", "arguments": method_arguments}
 		], {}, ["function", "call"])
@@ -208,6 +208,22 @@ static func _flow_kinds(family_of: Dictionary) -> Array:
 
 
 # ── What a card reads off the node it picked ───────────────────────────────────────────────────
+
+
+## A Reveal Text card's length once its label is picked: the label's letters at the card's speed.
+static func reveal_length(card: Dictionary, picked: Node) -> Dictionary:
+	var letters: int = str(picked.get("text")).length() if picked != null and picked.get("text") != null else 0
+	var speed: float = maxf(float(card.get("speed", 40.0)), 0.001)
+	return {"seconds": snappedf(float(letters) / speed, 0.01)} if letters > 0 else {}
+
+
+## The same length, once the speed is changed: the text of the label the card has picked.
+static func reveal_length_for_speed(card: Dictionary, edited: Object, value: Variant) -> Dictionary:
+	var label: Node = fields().call("resolve", edited, card.get("node")) as Node
+	if label == null or label.get("text") == null:
+		return {}
+	var letters: int = str(label.get("text")).length()
+	return {"seconds": snappedf(float(letters) / maxf(float(value), 0.001), 0.01)} if letters > 0 else {}
 
 
 ## The length of a particles card once its node is picked: the node's lifetime when it plays once.

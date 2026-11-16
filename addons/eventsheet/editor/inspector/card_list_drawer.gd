@@ -663,6 +663,7 @@ func _on_add_pressed() -> void:
 		_add_filter.clear_button_enabled = true
 		_add_filter.custom_minimum_size = Vector2(EventSheetPalette.scaled(220), 0.0)
 		_add_filter.text_changed.connect(func(_text: String) -> void: _fill_add_tree())
+		_add_filter.text_submitted.connect(func(_text: String) -> void: _add_first_match())
 		box.add_child(_add_filter)
 		_add_tree = Tree.new()
 		_add_tree.hide_root = true
@@ -704,6 +705,18 @@ func _fill_add_tree() -> void:
 			leaf.set_text(0, _said(str((entry as Dictionary).get("label", (entry as Dictionary).get("kind", "")))))
 			leaf.set_tooltip_text(0, _said(str((entry as Dictionary).get("help", ""))))
 			leaf.set_metadata(0, str((entry as Dictionary).get("kind", "")))
+
+
+## Enter in the search box adds the first card the search found.
+func _add_first_match() -> void:
+	var group: TreeItem = _add_tree.get_root().get_first_child() if _add_tree.get_root() != null else null
+	while group != null:
+		var leaf: TreeItem = group.get_first_child()
+		if leaf != null and leaf.get_metadata(0) != null:
+			_add_popup.hide()
+			add_card(str(leaf.get_metadata(0)))
+			return
+		group = group.get_next()
 
 
 func _on_add_chosen() -> void:
@@ -1164,6 +1177,14 @@ func _build_field(index: int, card: Dictionary, field: Dictionary) -> Control:
 		else:
 			_write_field(index, written, value)
 			value_changed.emit(get_value())
+		# A field may ask for other keys to follow its value (a speed that sets the card's length).
+		var follows: Variant = field.get("on_change")
+		if follows is Callable and index >= 0 and index < _cards.size():
+			var more: Variant = (follows as Callable).call(_cards[index], _edited, value)
+			if more is Dictionary:
+				for more_key: Variant in more:
+					_write_field(index, str(more_key), more[more_key])
+				value_changed.emit(get_value())
 		_refresh_notes(index)
 		# Changing a card's KIND changes which fields it has, so the card is redrawn - deferred,
 		# because the control that just emitted is still finishing its own signal.
@@ -1372,7 +1393,7 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable, i
 			return _note_line(card, field, index)
 		"custom":
 			return _custom_field(index, field)
-		"node", "property", "typed", "choices", "arguments":
+		"node", "property", "typed", "choices", "arguments", "from":
 			return attribute_fields().call(drawer + "_field", self, card, field, write, index)
 	return _number_field(card, key, write, FLOAT_STEP)
 

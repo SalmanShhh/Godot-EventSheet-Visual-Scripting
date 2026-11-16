@@ -55,12 +55,17 @@ static func missing_note(edited: Object, card: Dictionary, key: String) -> Strin
 	return EventSheetL10n.translate("%s is not under this object any more.") % named
 
 
-## The words a node field shows: the picked node's name, else what an empty field means.
+## The words a node field shows: the name of the picked node, as the Scene dock shows it (a parent, the
+## owner and the player itself included), else what an empty field means. A path that finds no node shows
+## its last name.
 static func node_words(edited: Object, card: Dictionary, key: String, empty_means: String) -> String:
 	var stored: Variant = card.get(key, NodePath())
 	var path: NodePath = stored if stored is NodePath else NodePath(str(stored))
 	if path.is_empty():
 		return EventSheetL10n.translate(empty_means) if not empty_means.is_empty() else EventSheetL10n.translate(NOTHING_PICKED)
+	var found: Node = resolve(edited, path)
+	if found != null:
+		return str(found.name)
 	return path.get_name(path.get_name_count() - 1) if path.get_name_count() > 0 else str(path)
 
 
@@ -92,6 +97,7 @@ static func node_field(drawer: Control, card: Dictionary, field: Dictionary, wri
 	shown.editable = false
 	shown.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	shown.text = node_words(edited, card, key, str(field.get("empty", "")))
+	shown.tooltip_text = str(card.get(key, ""))
 	line.add_child(shown)
 	var finding: Label = EventSheetLookStyle.message_line(missing_note(edited, card, key), EventSheetLookStyle.Tone.WARNING)
 	finding.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
@@ -120,6 +126,7 @@ static func node_field(drawer: Control, card: Dictionary, field: Dictionary, wri
 					for more_key: Variant in more:
 						drawer.call("write_card_key", index, str(more_key), more[more_key])
 			shown.text = node_words(edited, {key: relative}, key, str(field.get("empty", "")))
+			shown.tooltip_text = str(relative)
 			finding.text = missing_note(edited, {key: relative}, key)
 			finding.visible = not finding.text.is_empty()
 			drawer.call("rebuild_soon"), types, current))
@@ -157,7 +164,7 @@ static func property_field(drawer: Control, card: Dictionary, field: Dictionary,
 		if not ClassDB.class_exists("EditorInterface") or target == null:
 			return
 		EditorInterface.popup_property_selector(target, func(chosen: NodePath) -> void:
-			var text: String = str(chosen)
+			var text: String = property_text(chosen)
 			if text.is_empty():
 				return
 			shown.text = text
@@ -165,6 +172,12 @@ static func property_field(drawer: Control, card: Dictionary, field: Dictionary,
 			drawer.call("rebuild_soon"), PackedInt32Array(), str(card.get(key, ""))))
 	line.add_child(pick)
 	return line
+
+
+## The property Godot's picker handed back as the plain name a card stores: the picker answers a path that
+## begins with a colon (":modulate"), and a tween reads "modulate".
+static func property_text(chosen: NodePath) -> String:
+	return str(chosen).trim_prefix(":")
 
 
 ## The sample value a typed field is shaped by, read from the property or the shader value it is for, or
@@ -188,11 +201,19 @@ static func typed_field(drawer: Control, card: Dictionary, field: Dictionary, wr
 	var sample: Variant = sample_for(drawer, card, field)
 	var stored: Variant = card.get(key, card.get(str(field.get("fallback_key", "")), sample))
 	var editable: bool = bool(drawer.get("editable"))
+	var line: HBoxContainer = HBoxContainer.new()
+	line.add_theme_constant_override("separation", 4)
+	# Until the property or shader value is picked there is no kind of value to draw a box for.
+	if sample == null and str(card.get(str(field.get("property_key", "")), "x")).is_empty():
+		var waiting: LineEdit = LineEdit.new()
+		waiting.editable = false
+		waiting.placeholder_text = EventSheetL10n.translate("Pick a property first")
+		waiting.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		line.add_child(waiting)
+		return line
 	if sample == null:
 		sample = stored if stored != null else 0.0
 	var shape: int = typeof(sample)
-	var line: HBoxContainer = HBoxContainer.new()
-	line.add_theme_constant_override("separation", 4)
 	match shape:
 		TYPE_BOOL:
 			var check: CheckBox = CheckBox.new()
@@ -235,6 +256,29 @@ static func _blank_of(kind: int) -> Variant:
 		TYPE_FLOAT:
 			return 0.0
 	return ""
+
+
+## Where a tween starts: where the property is now (the card stores nothing), or a value of its own, which
+## the card stores under `from`. Choosing "where it is now" takes the key off the card again.
+static func from_field(drawer: Control, card: Dictionary, field: Dictionary, write: Callable, index: int) -> Control:
+	var key: String = str(field.get("key", "from"))
+	var box: VBoxContainer = VBoxContainer.new()
+	var choice: OptionButton = OptionButton.new()
+	choice.add_item(EventSheetL10n.translate("Where it is now"))
+	choice.add_item(EventSheetL10n.translate("A value"))
+	choice.select(1 if card.has(key) else 0)
+	choice.disabled = not bool(drawer.get("editable"))
+	box.add_child(choice)
+	if card.has(key):
+		box.add_child(typed_field(drawer, card, field, write, index))
+	choice.item_selected.connect(func(chosen: int) -> void:
+		if chosen == 0:
+			drawer.call("erase_card_key", index, key)
+		else:
+			var sample: Variant = sample_for(drawer, card, field)
+			drawer.call("write_card_key", index, key, sample if sample != null else 0.0)
+		drawer.call("rebuild_soon"))
+	return box
 
 
 static func _spin(value: float, editable: bool) -> SpinBox:
