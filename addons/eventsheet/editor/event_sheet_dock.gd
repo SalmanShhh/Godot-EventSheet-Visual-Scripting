@@ -7689,9 +7689,13 @@ func _update_row_help_strip(row_data: EventRowData) -> void:
 	_row_help_row = row_data
 	_say_finding_sentence(EventSheetActiveTheme.reading().error_text_color if row_data.attention_severe \
 		else EventSheetActiveTheme.chrome().object_bar_warning_color)
-	# The door is the FIRST finding's, because one row rarely has two and offering two buttons for
-	# one row would be a menu rather than a strip.
+	# The door is the first finding's that has one, because one row rarely has two and offering two
+	# buttons for one row would be a menu rather than a strip.
 	_row_help_finding = found[0]
+	for candidate: Dictionary in found:
+		if not str(candidate.get("fix_label", "")).is_empty():
+			_row_help_finding = candidate
+			break
 	# A finding Godot itself put in words keeps them, exactly, on the strip's hover.
 	var godot_says: String = str(_row_help_finding.get("original", ""))
 	if not godot_says.is_empty():
