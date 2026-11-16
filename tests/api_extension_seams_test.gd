@@ -42,7 +42,7 @@ static func run() -> bool:
 	registry.refresh_from_sources([], false)
 	all_passed = _check("registered simple ACE joins the registry",
 		registry.find_definition("Extension", "ZzDash") == definition, true) and all_passed
-	EventSheets.simple_aces().clear()
+	EventSheets.unregister_simple_ace("ZzDash")
 
 	# Starters: registered entries appear (ids 1000+) and build fresh sheets.
 	EventSheets.register_starter({"label": "Zz Starter", "build": func() -> EventSheetResource:
@@ -54,7 +54,7 @@ static func run() -> bool:
 		int(listed[listed.size() - 1].get("id", -1)) == 1000 and str(listed[listed.size() - 1].get("label", "")) == "Zz Starter", true) and all_passed
 	all_passed = _check("registered starter builds its sheet",
 		EventSheetStarterTemplates.build_starter(1000).host_class, "Area2D") and all_passed
-	EventSheets.registered_starters().clear()
+	EventSheets.unregister_starter("Zz Starter")
 
 	# Quick-add synonyms: a pack phrase maps to its search term.
 	EventSheets.register_quick_add_synonyms({"zz dash forward": "zzdash"})

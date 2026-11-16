@@ -143,8 +143,8 @@ static func run() -> bool:
 		"display_name": "Door probe", "template": "pass"})
 	var held: Array = DockRegistry.simple_aces()
 	rows.append(["a simple verb registered through the API is held by the leaf", held.has(registered), true])
-	rows.append(["the leaf holds the API's own list", is_same(held, EventSheets.simple_aces()), true])
-	EventSheets.simple_aces().erase(registered)
+	rows.append(["the leaf holds the API's own list", is_same(held, EventSheets._simple_aces), true])
+	EventSheets.unregister_simple_ace("zz_door_probe")
 	rows.append(["and taking it off the API's list takes it off the leaf's",
 		DockRegistry.simple_aces().has(registered), false])
 	# The Properties bar's field factory is built with the workspace; the parameters dialog it builds

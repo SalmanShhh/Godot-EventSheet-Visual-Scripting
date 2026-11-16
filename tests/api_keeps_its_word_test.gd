@@ -7,6 +7,7 @@
 #   palette       a command registered with a category is taken back by its title and category
 #   registration  register_provider_script is for the session; add_provider_to_sheet edits the open sheet
 #   kinds         a block kind can be registered with a reason, and taken back
+#   copies        the lists the API hands out are copies: clearing one empties nothing
 #   language      an empty string goes back to following Godot's editor language
 #   open_sheet    a file that is not there is refused; a file already open is brought forward, not opened twice
 @tool
@@ -51,6 +52,7 @@ static func run() -> bool:
 	ok = _palette() and ok
 	ok = _registration() and ok
 	ok = _kind_registration() and ok
+	ok = _copies() and ok
 	return ok
 
 
@@ -303,3 +305,27 @@ static func _kind_registration() -> bool:
 		["the registry's own unregister_kind is the same door", EventSheetBlockRegistry.unregister_kind("keeps_its_word.quiet"), false],
 	])
 	return SUPPORT.pins(P, rows)
+
+
+static func _copies() -> bool:
+	EventSheets.register_simple_ace({"id": "KeepsItsWordCopy", "display_name": "Copy", "template": "pass", "kind": "action"})
+	EventSheets.register_starter({"label": "Keeps Its Word Copy", "build": func() -> EventSheetResource: return null})
+	var builder: Callable = func() -> Control: return null
+	EventSheets.register_preference(builder)
+	var aces: Array = EventSheets.simple_aces()
+	var starters: Array = EventSheets.registered_starters()
+	var preferences: Array = EventSheets.preference_builders()
+	var held: Array = [aces.size(), starters.size(), preferences.size()]
+	aces.clear()
+	starters.clear()
+	preferences.clear()
+	var after: Array = [EventSheets.simple_aces().size(), EventSheets.registered_starters().size(), EventSheets.preference_builders().size()]
+	EventSheets.unregister_simple_ace("KeepsItsWordCopy")
+	EventSheets.unregister_starter("Keeps Its Word Copy")
+	EventSheets.unregister_preference(builder)
+	return SUPPORT.pins(P, [
+		["clearing what simple_aces() returned empties nothing", after[0], held[0]],
+		["clearing what registered_starters() returned empties nothing", after[1], held[1]],
+		["clearing what preference_builders() returned empties nothing", after[2], held[2]],
+		["the leaf the workspace reads still holds the API's own list", is_same(load("res://addons/eventsheet/api/dock_registry.gd").simple_aces(), EventSheets._simple_aces), true],
+	])

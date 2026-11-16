@@ -1418,7 +1418,7 @@ static func register_starter(config: Dictionary) -> void:
 
 
 static func registered_starters() -> Array[Dictionary]:
-	return _starters
+	return _starters.duplicate()
 
 
 ## Takes back the starters registered under `label`.
@@ -1689,7 +1689,7 @@ static func register_preference(builder: Callable) -> void:
 
 
 static func preference_builders() -> Array[Callable]:
-	return _preference_builders
+	return _preference_builders.duplicate()
 
 
 ## Takes back a row registered by register_preference: pass the same Callable.
@@ -1753,7 +1753,7 @@ static func unregister_simple_ace(id: String, provider_id: String = "Extension")
 
 static func simple_aces() -> Array[ACEDefinition]:
 	DOCK_REGISTRY.share_simple_aces(_simple_aces)
-	return _simple_aces
+	return _simple_aces.duplicate()
 
 
 ## Runs a custom guided tour through the built-in tour engine. Steps use the same shape as the
