@@ -1189,9 +1189,13 @@ static func available_languages() -> PackedStringArray:
 	return EventSheetL10n.available_locales()
 
 
-## Switches the editor UI language ("en" restores the default English). Persisted per-user.
+## Switches the editor UI language ("en" for English) and remembers the choice for this user. An empty
+## string goes back to following Godot's own editor language and forgets the remembered choice.
 static func set_editor_language(locale: String) -> void:
-	EventSheetL10n.set_locale(locale)
+	if locale.is_empty():
+		EventSheetL10n.follow_editor_language()
+	else:
+		EventSheetL10n.set_locale(locale)
 	if _dock_alive():
 		_dock.propagate_notification(MainLoop.NOTIFICATION_TRANSLATION_CHANGED)
 

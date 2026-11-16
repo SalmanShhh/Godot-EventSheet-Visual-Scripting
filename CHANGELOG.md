@@ -31,6 +31,10 @@ The box was a narrow list about 220 pixels wide that cut its last line in half. 
 ### Added: the Inspector's Play button shows the cards that move other nodes
 
 Play, Play this card and Play from here now show Particles, Animation, Sprite Animation, Show or Hide, Squash And Stretch, Punch Position, Punch Rotation, Pop, Fade, Count To, Reveal Text, Fill Bar, Shader Value and a Tween Property card that points at another node, and Debug view calls each of them played. Before the first frame the preview writes down every property those cards may move on every node they point at (a label's text, a bar's value, a node's visible, modulate and scale, the tracks of the clip it plays, the shader value on a copy of the material that lives for the pass), and puts exactly those back on Stop, Restore, at the end of a pass and before the editor saves or runs the scene, so a scene saved in the middle of a preview holds the same text it held before. Spawn Scene, Push, Force, Gravity, Freeze Body, Grab Focus, Call Method, Emit Signal and Play Player still say why they are not shown.
+### Added: set_editor_language("") goes back to following Godot's language
+
+Choosing a language through `EventSheets.set_editor_language()` was remembered with no way back: an empty string used to pin English. It now forgets the saved choice and follows Godot's own editor language again.
+
 ### Fixed: EventSheets.open_sheet() tells the truth about a file that is not there
 
 `open_sheet()` returned true for a path with no file and printed engine errors. It now returns false and the status line says there is no file at that path. Asking for a file that is already open brings its tab forward instead of opening a second tab of it.

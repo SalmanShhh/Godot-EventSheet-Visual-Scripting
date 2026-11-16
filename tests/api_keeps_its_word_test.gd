@@ -3,6 +3,7 @@
 # Each block below is one promise of the extension API that had no test:
 #   block kinds   a kind can say "nothing to write for this row" and the compile still succeeds
 #   the compiler  a sheet with no file and no output path writes no stray script
+#   language      an empty string goes back to following Godot's editor language
 #   open_sheet    a file that is not there is refused; a file already open is brought forward, not opened twice
 @tool
 extends RefCounted
@@ -41,6 +42,7 @@ static func run() -> bool:
 	ok = _writes_nothing() and ok
 	ok = _stray_file() and ok
 	ok = _open_sheet() and ok
+	ok = _language() and ok
 	return ok
 
 
@@ -111,4 +113,23 @@ static func _open_sheet() -> bool:
 		["a refused path opens no tab", tabs_after_missing, 1],
 		["open_sheet on an open file says it worked", opened, true],
 		["and opens no second tab for it", tabs_after, tabs_before],
+	])
+
+
+static func _language() -> bool:
+	var catalogs: PackedStringArray = PackedStringArray(EventSheetL10n._catalogs.keys())
+	var wanted: String = "de" if catalogs.has("de") else ""
+	EventSheets.set_editor_language("ja" if catalogs.has("ja") else "de")
+	var pinned: String = EventSheetL10n.get_locale()
+	# The editor's own language, handed in because a headless run has none of its own (always English).
+	EventSheetL10n.follow_editor_language("de")
+	var followed: String = EventSheetL10n.get_locale()
+	EventSheets.set_editor_language("")
+	var empty_means_editor: String = EventSheetL10n.get_locale()
+	var english: String = EventSheetL10n.locale_for_editor_language(EventSheetL10n.editor_language(), catalogs)
+	EventSheets.set_editor_language("en")
+	return SUPPORT.pins(P, [
+		["a language was chosen first", pinned != "en", true],
+		["following an editor language of de speaks de", followed, wanted if not wanted.is_empty() else "en"],
+		["an empty string goes back to the editor's language", empty_means_editor, english],
 	])

@@ -102,7 +102,8 @@ automatically - the whole dock shares one translation domain. For the rest:
 - `EventSheets.register_translation_file(path)` - ship translations WITH your pack (any
   folder), merged live into the language catalogs.
 - `EventSheets.available_languages()` / `EventSheets.set_editor_language(locale)` - the
-  picker's plumbing, exposed.
+  picker's plumbing, exposed. `set_editor_language("")` forgets the saved choice and goes back
+  to following Godot's own editor language.
 
 Your ACE `display_name`s, descriptions, and Custom Block kind titles already flow through the
 translation layer in the picker and menus - shipping a CSV whose keys are those English names

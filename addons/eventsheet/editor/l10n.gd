@@ -231,6 +231,19 @@ static func set_locale(locale: String) -> void:
 	_save_language_preference()
 
 
+## Goes back to speaking the language Godot's editor does, and forgets the choice this project's user
+## saved, so the plugin keeps following the editor from now on. `code` stands in for the editor's own
+## language code (a test passes one; nothing else needs to).
+static func follow_editor_language(code: String = "") -> void:
+	ensure_loaded()
+	_forget_language_preference()
+	if code.is_empty() and Engine.is_editor_hint():
+		_load_language_preference()
+	else:
+		_locale = locale_for_editor_language(code if not code.is_empty() else editor_language(), PackedStringArray(_catalogs.keys()))
+	_apply_domain()
+
+
 ## Explicit translation for strings that never pass through a Control property - the canvas
 ## draw_string sites (empty states, banner, add affordances) and any dynamic formatting.
 ## English default: pass-through when no translation exists. Named translate (not tr) because
@@ -357,6 +370,16 @@ static func register_override_setting() -> void:
 static func reapply() -> void:
 	ensure_loaded()
 	_apply_domain()
+
+
+static func _forget_language_preference() -> void:
+	if not Engine.is_editor_hint():
+		return
+	var config: ConfigFile = ConfigFile.new()
+	if config.load(LANGUAGE_FILE) != OK or not config.has_section_key("language", _preference_key()):
+		return
+	config.erase_section_key("language", _preference_key())
+	config.save(LANGUAGE_FILE)
 
 
 static func _save_language_preference() -> void:

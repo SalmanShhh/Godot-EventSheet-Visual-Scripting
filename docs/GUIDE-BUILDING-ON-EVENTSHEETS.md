@@ -482,7 +482,7 @@ The calls below sit beside the ones above. Each is a plain static on `EventSheet
 | Localisation | `translate(text: String)` | `String` | no |
 | Localisation | `register_translation_file(path: String)` | `bool` | no |
 | Localisation | `available_languages()` | `PackedStringArray` | no |
-| Localisation | `set_editor_language(locale: String)` | `void` | no |
+| Localisation | `set_editor_language(locale: String)` - a language code is remembered for this user; an empty string forgets it and follows Godot's editor language again | `void` | no |
 
 `compile()`'s and `echo()`'s Dictionary keys: `"output"` (the source text: this key, not "source"), `"success"`, `"errors"`, `"warnings"`, `"source_map"`. `doctor()`'s: `"findings"` (each `{severity, check, path, message}`), `"errors"`, `"warnings"`, `"infos"`.
 
