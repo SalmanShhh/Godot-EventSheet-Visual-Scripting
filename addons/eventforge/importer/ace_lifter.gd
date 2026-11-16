@@ -120,6 +120,8 @@ const RUN_FAMILIES: Array[GDScript] = [
 ## before the walk starts - the one fact its two same-in-both-dimensions shapes cannot get from the
 ## line. By path, like every other name here, so the importer never waits on the class cache.
 const SpawnRunLift := preload("res://addons/eventforge/importer/spawn_run_lift.gd")
+## A guarded plain number read back as the same verb as the guarded spelling.
+const LiteralFold := preload("res://addons/eventforge/compiler/literal_fold.gd")
 ## How the compiler spells a handler's unread parameters (`_delta`), read back here.
 const UnusedParams := preload("res://addons/eventforge/compiler/unused_params.gd")
 
@@ -4711,6 +4713,7 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 		# file's own spelling is remembered on the row, because the compiler writes the opposite
 		# operator by default and re-emitting the short form here would lose the byte gate.
 		condition.negation_wrapped = negated and not _flips_when_inverted(matched).is_empty()
+		condition.folds_literals = bool(matched.get("folds_literals", false))
 		if not off_condition.is_empty():
 			condition.enabled = false
 		event.conditions.append(condition)
@@ -4997,6 +5000,7 @@ static func _consume_action_line(event: EventRow, line: String, _depth: int, pen
 	action.provider_id = str(matched.get("provider", ""))
 	action.ace_id = str(matched.get("ace_id", ""))
 	action.params = matched.get("params", {})
+	action.folds_literals = bool(matched.get("folds_literals", false))
 	_stamp_body_blanks(action, blank_box)
 	event.actions.append(action)
 
@@ -5606,6 +5610,28 @@ const REVERSE_LIFT_EXCLUDED_ACE_IDS: PackedStringArray = [
 ]
 
 
+## The entries without any short spelling that another entry already has. A short spelling that read the
+## same as a verb's own line (or as another short spelling) would change what a hand-written file opens
+## as, so it is dropped and that verb keeps only its long spelling. Compared with the slot names blanked.
+static func _without_colliding_folds(entries: Array) -> Array:
+	var seen: Dictionary = {}
+	var folded_count: Dictionary = {}
+	for entry: Variant in entries:
+		var shape: String = LiteralFold.shape(str((entry as Dictionary).get("variant", "")))
+		if (entry as Dictionary).get("fold_floors", {}).is_empty():
+			seen[shape] = true
+		else:
+			folded_count[shape] = int(folded_count.get(shape, 0)) + 1
+	var kept: Array = []
+	for entry: Variant in entries:
+		if not (entry as Dictionary).get("fold_floors", {}).is_empty():
+			var shape: String = LiteralFold.shape(str((entry as Dictionary).get("variant", "")))
+			if seen.has(shape) or int(folded_count.get(shape, 0)) > 1:
+				continue
+		kept.append(entry)
+	return kept
+
+
 static func _compose_reverse_entries(all_descriptors: Array) -> Array:
 	var entries: Array = []
 	var brace_regex: RegEx = RegEx.new()
@@ -5661,6 +5687,15 @@ static func _compose_reverse_entries(all_descriptors: Array) -> Array:
 		# (`play()`) and the set-target form (`$Enemy.play()`) - so register a reverse entry for each.
 		var spellings: Array = _ordered_comma_variants(_optional_prefix_variants(template)) if ordered_chain \
 			else _optional_comma_variants(_optional_prefix_variants(template))
+		# A template that guards a value (`maxf({seconds}, 0.001)`) is also written without the guard when
+		# the value is a plain number, so the same verb reads both. The short spelling is added after the
+		# long ones and only claims a line whose value really is a float literal at the floor or above.
+		var fold_floors_of: Dictionary = {}
+		for plain_variant: String in spellings.duplicate():
+			var folded: Dictionary = LiteralFold.folded_variant(plain_variant)
+			if not folded.is_empty() and not spellings.has(str(folded["template"])):
+				spellings.append(str(folded["template"]))
+				fold_floors_of[str(folded["template"])] = folded["floors"]
 		for variant: String in spellings:
 			var regex: RegEx = _template_to_regex(variant, ordered_chain)
 			if regex == null:
@@ -5684,7 +5719,8 @@ static func _compose_reverse_entries(all_descriptors: Array) -> Array:
 			# now writes another way. Recorded here so the sort below can prefer the current verb
 			# whenever the two spell the same template - see the tie-break note there.
 			var superseded: bool = not descriptor.successor_map().is_empty()
-			entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size(), "assign_op": assign_op, "loop_control": loop_control, "decl_name": decl_name, "superseded": superseded, "required_literal": _longest_literal_run(variant), "scope_trigger": str(TRIGGER_SCOPED_ACES.get(descriptor.ace_id, ""))})
+			entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size(), "assign_op": assign_op, "loop_control": loop_control, "decl_name": decl_name, "superseded": superseded, "variant": variant, "required_literal": _longest_literal_run(variant), "scope_trigger": str(TRIGGER_SCOPED_ACES.get(descriptor.ace_id, "")), "fold_floors": fold_floors_of.get(variant, {})})
+	entries = _without_colliding_folds(entries)
 	# Try SPECIFIC templates before generic catch-alls. The Core generics (SetVar `{var_name} = {value}`,
 	# CallFunction `{function_name}({args})`, …) use lazy `.+?` captures that match almost any
 	# assignment/call, so in raw registry order they SHADOW every specific node ACE (`position = …`
@@ -5706,6 +5742,8 @@ static func _compose_reverse_entries(all_descriptors: Array) -> Array:
 			return a["literal_len"] > b["literal_len"]
 		if bool(a["superseded"]) != bool(b["superseded"]):
 			return not bool(a["superseded"])
+		if (a["fold_floors"] as Dictionary).is_empty() != (b["fold_floors"] as Dictionary).is_empty():
+			return (a["fold_floors"] as Dictionary).is_empty()
 		return a["order"] < b["order"])
 	return entries
 
@@ -5799,7 +5837,16 @@ static func _match_entry(line: String, reverse_entries: Array, kind: String, in_
 		# bytes are the same line either way, so nothing about what the file compiles to moves.
 		if KEYCARD_SHADOWED_ACES.has(str((entry as Dictionary).get("ace_id", ""))) and _reads_as_keycard(params):
 			continue
-		return {"provider": (entry as Dictionary).get("provider"), "ace_id": (entry as Dictionary).get("ace_id"), "params": params}
+		# A spelling without the guard only claims a line whose value is a float literal at the floor or
+		# above; anything else (a name, an int, a smaller number) was not written by a row that folds.
+		var fold_floors: Dictionary = (entry as Dictionary).get("fold_floors", {})
+		var fold_refused: bool = false
+		for folded_slot: Variant in fold_floors.keys():
+			if not LiteralFold.is_foldable_value(str(params.get(folded_slot, "")), str(fold_floors[folded_slot])):
+				fold_refused = true
+		if fold_refused:
+			continue
+		return {"provider": (entry as Dictionary).get("provider"), "ace_id": (entry as Dictionary).get("ace_id"), "params": params, "folds_literals": not fold_floors.is_empty()}
 	return {}
 
 

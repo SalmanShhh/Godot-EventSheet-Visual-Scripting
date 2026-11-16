@@ -15,6 +15,12 @@ extends Resource
 ## reproduces the source byte for byte. False on every authored row, which keeps the flip the default.
 @export var negation_wrapped: bool = false
 @export var enabled: bool = true
+## True when the file this row was read from wrote a plain number where the verb's template guards the value
+## (`>= 2.0` where the template says `>= maxf({seconds}, 0.001)`), and true on a row placed from the picker. The
+## compiler then writes the plain number whenever the value in the slot is a float literal at or above the guard's
+## floor, and the guard otherwise. False on every row read from a file that wrote the guard and on every row saved
+## before this field existed, which is what keeps those files byte for byte as they were.
+@export var folds_literals: bool = false
 ## Baked codegen template (from a custom ACE's @ace_codegen_template). When non-empty it
 ## takes precedence over the descriptor registry, so addon ACEs compile without one.
 @export var codegen_template: String = ""

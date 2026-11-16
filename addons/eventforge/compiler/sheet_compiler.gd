@@ -34,6 +34,9 @@ const SceneTrust := preload("res://addons/eventforge/scene_trust.gd")
 ## same reason the two above are.
 const SpecText := preload("res://addons/eventforge/registration/annotation_spec_text.gd")
 
+## A guarded plain number written as the number, for the rows that ask for it.
+const LiteralFold := preload("res://addons/eventforge/compiler/literal_fold.gd")
+
 ## The spellings the editor's readers recognise this compiler's output by. They live in a file that
 ## names nothing heavy, so a reader can ask for them without compiling this one.
 const Spellings := preload("res://addons/eventforge/compiler/compiler_spellings.gd")
@@ -2840,7 +2843,10 @@ static func _emit_event_body(
 			if condition.negated and not condition.member_declaration.is_empty():
 				warnings.append("Stateful conditions (Every X Seconds\u2026) can not be inverted; ignoring the negation.")
 			if not condition.codegen_on_true.is_empty():
-				stateful_on_true.append(_substitute_params(condition.codegen_on_true, condition.params))
+				var on_true_text: String = condition.codegen_on_true
+				if condition.folds_literals:
+					on_true_text = LiteralFold.fold_template(on_true_text, condition.params)
+				stateful_on_true.append(_substitute_params(on_true_text, condition.params))
 			if not condition.codegen_on_exit.is_empty():
 				stateful_on_exit.append(_substitute_params(condition.codegen_on_exit, condition.params))
 		# Group breadcrumb: a `# @group:<slug>` line before a grouped event's block, so the importer can

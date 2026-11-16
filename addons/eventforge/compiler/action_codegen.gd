@@ -4,6 +4,8 @@
 class_name EventSheetActionCodegen
 extends RefCounted
 
+const LiteralFold := preload("res://addons/eventforge/compiler/literal_fold.gd")
+
 
 ## Generates one action statement from an ACE action. target_default is an enclosing "With node X:"
 ## scope (see EventSheetCompiler): when set, it fills the action's "On node" target if the author left it on
@@ -30,6 +32,8 @@ static func generate_action(action: ACEAction, target_default: String = "", host
 		for written_id: Variant in action.written_params.keys():
 			if params.get(written_id) is String:
 				params[written_id] = EventForgeValueLines.written(str(params[written_id]), action.written_params[written_id])
+	if action.folds_literals:
+		template = LiteralFold.fold_template(template, params)
 	if template.contains("{%s}" % STARTING_VALUE_SLOT) or template.contains("{%s}" % EVERY_STARTING_VALUE_SLOT):
 		return _starting_value_line(template, params, starting_values)
 	# A call written over several lines whose values could not be kept one by one goes back on those lines

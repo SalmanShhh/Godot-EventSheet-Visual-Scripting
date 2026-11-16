@@ -4,6 +4,8 @@
 class_name EventSheetConditionCodegen
 extends RefCounted
 
+const LiteralFold := preload("res://addons/eventforge/compiler/literal_fold.gd")
+
 
 ## Generates one condition expression from an ACE condition.
 static func generate_condition(condition: ACECondition, host_default: String = "") -> String:
@@ -19,6 +21,9 @@ static func generate_condition(condition: ACECondition, host_default: String = "
 		template = descriptor.codegen_template
 
 	var params: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
+	# A row that asks for it writes a guarded plain number as the number (`>= 2.0` for `>= maxf(2.0, 0.001)`).
+	if condition.folds_literals:
+		template = LiteralFold.fold_template(template, params)
 	# Fold the behavior-mode host accessor into {host.}/{host} templates (e.g. {host.}is_on_floor()
 	# -> host.is_on_floor()) BEFORE the negation wrap, so a negated host condition becomes
 	# `not (host.is_on_floor())`. Empty host_default leaves the call bare (byte-stable, non-behavior).
