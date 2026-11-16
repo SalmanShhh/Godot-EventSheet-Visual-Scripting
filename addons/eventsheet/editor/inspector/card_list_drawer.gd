@@ -2217,7 +2217,7 @@ func _resource_text_field(card: Dictionary, key: String, write: Callable, base_t
 	box.add_child(_resource_picker(base_type, current, func(picked: Resource) -> void:
 		var text: String = EventSheetCardSchemas.resource_reference(picked)
 		# A NEW curve (the picker's New Curve) has no file yet: ask where to save it, then keep that file.
-		if picked is Curve and text.is_empty() and picked.resource_path.is_empty():
+		if picked is Curve and text.is_empty():
 			refusal.visible = false
 			load("res://addons/eventsheet/editor/inspector/juice_card_resource_save.gd").call("ask", self, picked, func(saved: String) -> void:
 				if saved.is_empty():
