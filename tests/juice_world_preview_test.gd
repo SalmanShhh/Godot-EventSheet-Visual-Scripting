@@ -25,6 +25,7 @@ static func run() -> bool:
 	ok = _kind_pins() and ok
 	ok = _shape_pins() and ok
 	ok = _put_back_pins() and ok
+	ok = _clip_sprite_shader_pins() and ok
 	return ok
 
 
@@ -148,4 +149,76 @@ static func _put_back_pins() -> bool:
 		["the cards moved those other nodes", moved, ["99", 0.0, 80.0]],
 		["Restore puts every one of them back", back, ["12", 1.0, 20.0, Vector2.ONE]],
 		["and forgets what it had written down", again, []]
+	])
+
+
+## Animation, Sprite Animation and Shader Value: what the preview plans to move, what it moves, and what it puts back.
+static func _clip_sprite_shader_pins() -> bool:
+	var parent: Node2D = Node2D.new()
+	var player: Node = _pack().new()
+	player.name = "Juice"
+	parent.add_child(player)
+	var body: Sprite2D = Sprite2D.new()
+	body.name = "Body"
+	var shader: Shader = Shader.new()
+	shader.code = "shader_type canvas_item;
+uniform float amount = 0.0;
+void fragment() { COLOR = vec4(amount); }
+"
+	var original: ShaderMaterial = ShaderMaterial.new()
+	original.shader = shader
+	original.set_shader_parameter("amount", 0.0)
+	body.material = original
+	parent.add_child(body)
+	var anim: AnimationPlayer = AnimationPlayer.new()
+	anim.name = "Anim"
+	parent.add_child(anim)
+	var clip: Animation = Animation.new()
+	clip.length = 1.0
+	var track: int = clip.add_track(Animation.TYPE_VALUE)
+	clip.track_set_path(track, NodePath("Body:rotation"))
+	clip.track_insert_key(track, 0.0, 0.0)
+	clip.track_insert_key(track, 1.0, 2.0)
+	var library: AnimationLibrary = AnimationLibrary.new()
+	library.add_animation("spin", clip)
+	anim.add_animation_library("", library)
+	var face: AnimatedSprite2D = AnimatedSprite2D.new()
+	face.name = "Face"
+	var frames: SpriteFrames = SpriteFrames.new()
+	frames.add_animation("blink")
+	for index: int in range(4):
+		frames.add_frame("blink", PlaceholderTexture2D.new())
+	face.sprite_frames = frames
+	parent.add_child(face)
+	var cards: Array = [
+		{"verb": "animation", "node": NodePath("../Anim"), "animation": "spin", "seconds": 1.0},
+		{"verb": "sprite_animation", "node": NodePath("../Face"), "animation": "blink", "seconds": 1.0},
+		{"verb": "shader_value", "node": NodePath("../Body"), "parameter": "amount", "to": 1.0, "seconds": 1.0, "back": false, "only_this": true, "trans": "linear"}
+	]
+	var world: Script = load(WORLD_PATH) as Script
+	var planned: PackedStringArray = PackedStringArray()
+	for card: Variant in cards:
+		var node: Node = world.call("node_of", player, card, parent) as Node
+		for pair: Variant in world.call("watched", card, node) as Array:
+			planned.append("%s.%s" % [str(((pair as Array)[0] as Node).name), str((pair as Array)[1])])
+	planned.sort()
+	var strip: Control = (load(STRIP_PATH) as Script).new(player) as Control
+	strip.set("_run_list", cards)
+	strip.call("_record_world", parent)
+	strip.set("_time", 0.5)
+	strip.call("_step_world", _pack(), parent)
+	var middle: Array = [snappedf(anim.current_animation_position, 0.01), snappedf(body.rotation, 0.01), face.frame, body.material != original,
+		snappedf(float((body.material as ShaderMaterial).get_shader_parameter("amount")), 0.01)]
+	strip.call("restore")
+	var back: Array = [snappedf(body.rotation, 0.01), face.frame, body.material == original, (original.get_shader_parameter("amount") == null or float(original.get_shader_parameter("amount")) == 0.0)]
+	strip.call("_exit_tree")
+	strip.free()
+	player.free()
+	parent.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["the preview plans to move the clip's tracks, the player's clip, the sprite's animation and frame, and the node's material",
+			planned, PackedStringArray(["Anim.assigned_animation", "Body.material", "Body.rotation", "Face.animation", "Face.frame", "Face.frame_progress"])],
+		["half way: the clip is half through, its track moved, the sprite is on its third frame, and the shader walked on a copy",
+			middle, [0.5, 1.0, 2, true, 0.5]],
+		["Restore puts the track, the frame and the node's own material back", back, [0.0, 0, true, true]]
 	])
