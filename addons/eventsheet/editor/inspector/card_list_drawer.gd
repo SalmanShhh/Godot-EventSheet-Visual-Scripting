@@ -1028,7 +1028,10 @@ func _size_add_box() -> void:
 	# line does, so no part of a next line shows under it.
 	var top: float = _add_tree.get_item_area_rect(first).position.y if first != null else 0.0
 	var lines: int = EventSheetCardSchemas.kinds_of(_schema).size() if bool(_schema.get("flat_add", false)) else ADD_BOX_LINES
-	var pad: float = EventSheetPalette.scaled(8) if bool(_schema.get("flat_add", false)) else 0.0
+	# A flat list of a few kinds holds every line whole: the box adds its own margins to them and never scrolls, so no
+	# scrollbar shows beside six lines (a grouped list still scrolls).
+	_add_tree.scroll_vertical_enabled = not bool(_schema.get("flat_add", false))
+	var pad: float = (EventSheetPalette.scaled(8) + _add_tree.get_theme_stylebox("panel").get_minimum_size().y) if bool(_schema.get("flat_add", false)) else 0.0
 	_add_tree.custom_minimum_size = Vector2(wide, top + line * float(mini(lines, ADD_BOX_LINES)) + pad)
 
 

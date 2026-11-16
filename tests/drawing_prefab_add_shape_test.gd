@@ -29,6 +29,7 @@ static func run() -> bool:
 	var editor: PREFAB_STEPS.ShapeStepsEditor = PREFAB_STEPS.ShapeStepsEditor.new()
 	editor.set_steps([{"kind": "circle", "x": 0.0, "y": 0.0, "p1": 5.0, "p2": 0.0, "p3": 0.0, "color": "#ffffff", "texture": ""}])
 	editor.call("prepare_add_box")
+	editor.call("_size_add_box")
 	var tree: Tree = editor.call("add_box_tree")
 	var all_have_tiles: bool = true
 	var kinds: PackedStringArray = PackedStringArray()
@@ -42,6 +43,8 @@ static func run() -> bool:
 		["the box is one flat list of the six kinds, no headings", _words(tree), "Circle,Ring,Rectangle,Line,Cone,Stamp"],
 		["each leaf stores the stored word", ",".join(kinds), "circle,ring,rect,line,cone,stamp"],
 		["every kind wears its tile", all_have_tiles, true],
+		["the six lines never scroll, so no scrollbar is drawn", tree.scroll_vertical_enabled, false],
+		["and the box is tall enough for all six whole lines and its own margins", tree.custom_minimum_size.y >= float(tree.get_item_area_rect(tree.get_root().get_first_child()).size.y) * 6.0 + tree.get_theme_stylebox("panel").get_minimum_size().y, true],
 	]
 	var filter: LineEdit = editor.call("add_box_filter")
 	filter.text = "ri"
