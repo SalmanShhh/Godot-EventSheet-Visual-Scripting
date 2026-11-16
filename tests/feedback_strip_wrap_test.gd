@@ -29,7 +29,7 @@ static func run() -> bool:
 	strip.free()
 	return SUPPORT.pins("feedback strip wrap", [
 		["the doors sit in one wrapping row", rows.size(), 1],
-		["all seven doors are there", buttons, 7],
+		["all eight doors are there", buttons, 8],
 		["the row asks for no more than its widest door", asked <= widest + 1.0, true],
 		["and that is far less than the doors side by side", asked < total * 0.5, true],
 	])

@@ -1,10 +1,10 @@
+## @ace_version(1.0.0)
 @icon("res://eventsheet_addons/juice/icon.svg")
 class_name JuiceCard
 extends Resource
 ## The base of a juice card of your own. Write a script that extends JuiceCard, export the values you want on the card, and write play(target, strength): the Juice Player lists the script in its Add card box under Yours and plays it when the list reaches it. length, stop and restore are optional.
 
-## The Juice Player that is playing this card, set just before `play` runs. A card that exports a
-## NodePath finds its node with `player.get_node_or_null(path)`, the way the built-in cards do.
+## The Juice Player playing this card, set just before `play` runs. Find a NodePath export with it.
 var player: Node = null
 
 ## What the card does when the list reaches it. `target` is the object the Juice Player is under, and

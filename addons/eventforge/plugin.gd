@@ -798,7 +798,7 @@ func _ensure_editor() -> void:
 		return
 	var editor: Control = editor_candidate as Control
 	# The row menu's entry that shows the cards of the Juice Player a row plays.
-	load("res://addons/eventsheet/editor/dock/juice_row_menu.gd").call("register")
+	load("res://addons/eventsheet/editor/dock/juice_row_menu_door.gd").call("register")
 	# The Live Values debugger itself is registered eagerly in _enter_tree (transport stays live even
 	# before the workspace opens); only these editor-facing sinks defer until the editor exists.
 	if _live_values_debugger != null and editor.has_method("update_live_values"):

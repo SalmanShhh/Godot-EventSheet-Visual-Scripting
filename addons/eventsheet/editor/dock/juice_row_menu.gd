@@ -29,16 +29,7 @@ const MAIN_SCREEN: String = "EventSheet"
 const PLAY_IDS: PackedStringArray = ["play", "play_and_wait", "play_backwards"]
 
 
-## Registers the entry on the right-click menu of every row, through the same seam an extension uses
-## (`EventSheets.register_row_menu_item`): the filter below decides which rows carry it. Done once, when the
-## workspace is built, so it is there before the first right-click and costs nothing before the workspace exists.
-static func register() -> void:
-	var api: Script = load("res://addons/eventsheet/api/eventsheets.gd")
-	var here: Script = load("res://addons/eventsheet/editor/dock/juice_row_menu.gd")
-	api.call("register_row_menu_item", EventSheetL10n.translate("Show its cards"), Callable(here, "offers_for_row"), Callable(here, "show_for_row"))
-
-
-## Whether a row plays a Juice Player of the scene its sheet runs in. The filter of the entry above.
+## Whether a row plays a Juice Player of the scene its sheet runs in. The filter of the row menu's entry.
 static func offers_for_row(row: Resource) -> bool:
 	return not player_for_row(row).is_empty()
 
@@ -84,7 +75,7 @@ static func names_in_code(code: String) -> PackedStringArray:
 
 ## Adds the entry to the action menu when the right-clicked action plays a player, and takes it away
 ## again when it does not, so no other action carries a command it cannot use. The listener is connected
-## once, on the first time the entry is offered. The row menu carries the same entry through `register`.
+## once, on the first time the entry is offered. The row menu carries the same entry, registered by the door file.
 static func refresh(dock: Control, menu: PopupMenu) -> void:
 	var existing: int = menu.get_item_index(MENU_ID)
 	if existing >= 0:

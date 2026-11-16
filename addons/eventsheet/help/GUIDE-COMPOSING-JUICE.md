@@ -292,7 +292,7 @@ Three things about it that a plain list of cards would not tell you:
 - **Godot draws its fields.** Each export is drawn by Godot's own editor for its type, so a colour is a colour button, a range is a slider with its suffix, and a file is a file picker. The `##` line above an export is its tooltip.
 - **The editor plays it only if it is a tool script.** That is Godot's rule for any script that runs in the editor, and Debug view says which of your cards it played and which it did not. In the game it always plays.
 
-The same card can be written as an event sheet: a Custom Resource sheet that extends `JuiceCard`, whose editable variables are the fields and whose `play` function holds the actions. `eventsheet_addons/juice/screen_flash_card.gd` is exactly that, and it is the same plain script a person would write by hand.
+The same card can be written as an event sheet: a Custom Resource sheet that extends `JuiceCard`, whose editable variables are the fields and whose `play` function holds the actions. `eventsheet_addons/juice/screen_flash_card.gd` is exactly that, and it is the same plain script a person would write by hand, with a version line on top.
 
 ## Finding what went wrong
 

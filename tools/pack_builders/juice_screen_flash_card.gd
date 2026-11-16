@@ -38,7 +38,7 @@ static func build() -> bool:
 	var layer_line: RawCodeRow = RawCodeRow.new()
 	layer_line.code = "## The layer the flash is drawn on while it lasts, so stop can take it away.\nvar _layer: CanvasLayer = null"
 	sheet.events.append(layer_line)
-	return Lib.save_pack(sheet, "res://eventsheet_addons/juice/screen_flash_card", Lib.BEHAVIOR_ICON, false)
+	return Lib.save_pack(sheet, "res://eventsheet_addons/juice/screen_flash_card")
 
 
 ## One plain function of the card: not a row the picker offers, only a method of the script, written with no

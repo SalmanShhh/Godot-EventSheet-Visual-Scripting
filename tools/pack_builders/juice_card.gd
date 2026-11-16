@@ -26,13 +26,12 @@ static func build() -> bool:
 	var body: RawCodeRow = RawCodeRow.new()
 	body.code = "\n".join(_lines())
 	sheet.events.append(body)
-	return Lib.save_pack(sheet, "res://eventsheet_addons/juice/juice_card", Lib.BEHAVIOR_ICON, false)
+	return Lib.save_pack(sheet, "res://eventsheet_addons/juice/juice_card")
 
 
 static func _lines() -> PackedStringArray:
 	return PackedStringArray([
-		"## The Juice Player that is playing this card, set just before `play` runs. A card that exports a",
-		"## NodePath finds its node with `player.get_node_or_null(path)`, the way the built-in cards do.",
+		"## The Juice Player playing this card, set just before `play` runs. Find a NodePath export with it.",
 		"var player: Node = null",
 		"",
 		"## What the card does when the list reaches it. `target` is the object the Juice Player is under, and",
