@@ -157,6 +157,7 @@ const FINDINGS_INPUT := "input"
 const FINDINGS_INCLUDES := "includes"
 const FINDINGS_COMPILER := "compiler"
 const FINDINGS_MISTAKES := "mistakes"
+const FINDINGS_BLOCK := "block"
 ## The mistake checks are named by path: this file is on the boot path, and a class name would compile the checks into the first open.
 const MISTAKE_FINDINGS_PATH := "res://addons/eventsheet/editor/interaction/mistake_findings.gd"
 const MISTAKE_ANCHOR_VARIABLE := "variable"
@@ -5456,20 +5457,21 @@ func _build_custom_block_row(block: CustomBlockRow, indent: int) -> EventRowData
 				{"kind": "custom_block_row", "text_color": _viewport._get_reading_style().muted_text_color if kind == null else event_style.object_label_color}
 			)
 		]
+	# Everything a block has to say about itself is the quiet amber state, and the words are the strip's:
+	# what its kind says is wrong with its fields.
+	var quiet: Array[Dictionary] = []
 	var problem: String = kind.validate(block) if kind != null else ""
 	if not problem.is_empty():
-		row_data.spans.append(_make_span(
-			"⚠ " + problem,
-			EventSheetSemanticSpan.SpanType.VALUE,
-			{"kind": "custom_block_row", "text_color": _viewport._get_reading_style().error_text_color}
-		))
+		quiet.append({"family": FINDINGS_BLOCK, "message": problem})
 	# A preload of a file the project does not have wears the quiet red state; the words are the strip's.
 	if block.kind_id == "preload":
 		var about_block: Array[Dictionary] = []
 		for finding: Dictionary in _sheet_findings(FINDINGS_MISTAKES):
 			if str(finding.get("anchor", "")) == MISTAKE_ANCHOR_BLOCK and is_same(finding.get("block"), block):
 				about_block.append(finding)
-		_stamp_attention(row_data, _tagged(FINDINGS_MISTAKES, about_block))
+		quiet.append_array(_tagged(FINDINGS_MISTAKES, about_block))
+	if not quiet.is_empty():
+		_stamp_attention(row_data, quiet)
 	return row_data
 
 

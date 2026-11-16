@@ -51,8 +51,9 @@ func style(_block: CustomBlockRow) -> Dictionary:
 
 
 ## Optional live validation: return a short problem description (or "" when the block is fine).
-## The message renders as a red note on the row - catch bad fields at authoring time instead of
-## at compile.
+## The message is the row's quiet amber note: it marks the row and is said in full in the strip under
+## the selected row, so keep it to a short plain sentence or two. Catch bad fields at authoring time
+## instead of at compile.
 func validate(_block: CustomBlockRow) -> String:
 	return ""
 
