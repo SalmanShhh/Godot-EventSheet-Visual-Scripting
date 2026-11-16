@@ -15,6 +15,8 @@ extends RefCounted
 ## name (the category / sub-section / node-type text shown on the header) -> short description.
 static var _descriptions: Dictionary = {}
 static var _seeded: bool = false
+## What a registered name held before the registration (null: nothing), so taking it back restores it.
+static var _before_registered: Dictionary = {}
 
 
 ## Registers (or replaces) the description shown for a picker section by its exact header text.
@@ -38,7 +40,24 @@ static func has(name: String) -> bool:
 ## picker section shows when its header is selected - same channel as the built-ins.
 static func register_description(name: String, blurb: String) -> void:
 	_ensure_seeded()
-	_descriptions[name.strip_edges()] = blurb
+	var key: String = name.strip_edges()
+	if not _before_registered.has(key):
+		_before_registered[key] = _descriptions.get(key)
+	_descriptions[key] = blurb
+
+
+## Takes a registered description back: the one the name had before (a built-in's), else none.
+static func unregister_description(name: String) -> void:
+	_ensure_seeded()
+	var key: String = name.strip_edges()
+	if not _before_registered.has(key):
+		return
+	var before: Variant = _before_registered[key]
+	_before_registered.erase(key)
+	if before == null:
+		_descriptions.erase(key)
+	else:
+		_descriptions[key] = before
 
 
 ## A copy of every registered description (for tests / tooling).

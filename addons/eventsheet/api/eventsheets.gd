@@ -69,6 +69,7 @@ static func _release_registrations() -> void:
 	_inspector_preview_renderers.clear()
 	_toggle_icon_providers.clear()
 	_asset_drop_handlers.clear()
+	_asset_drop_replaced.clear()
 	_builtin_asset_drop_handlers_registered = false
 
 
@@ -1361,6 +1362,19 @@ static func on_sheet_compiled(callback: Callable) -> void:
 	DOCK_REGISTRY.on_lifecycle("compiled", callback)
 
 
+## Takes a listener back: the same Callable you gave on_sheet_opened / on_sheet_saved / on_sheet_compiled.
+static func off_sheet_opened(callback: Callable) -> void:
+	DOCK_REGISTRY.off_lifecycle("opened", callback)
+
+
+static func off_sheet_saved(callback: Callable) -> void:
+	DOCK_REGISTRY.off_lifecycle("saved", callback)
+
+
+static func off_sheet_compiled(callback: Callable) -> void:
+	DOCK_REGISTRY.off_lifecycle("compiled", callback)
+
+
 ## Internal: the dock's IO funnels announce lifecycle events here.
 static func _notify_lifecycle(event_name: String, payload: Dictionary) -> void:
 	DOCK_REGISTRY.notify_lifecycle(event_name, payload)
@@ -1380,6 +1394,13 @@ static func registered_starters() -> Array[Dictionary]:
 	return _starters
 
 
+## Takes back the starters registered under `label`.
+static func unregister_starter(label: String) -> void:
+	for index: int in range(_starters.size() - 1, -1, -1):
+		if str(_starters[index].get("label", "")) == label:
+			_starters.remove_at(index)
+
+
 ## Teaches the quick-add bar, the Ghost Row, and the picker your pack's phrases:
 ## {"dash forward": "dash", ...} - the key is what users type, the value is the search term
 ## that finds your ACE.
@@ -1387,10 +1408,20 @@ static func register_quick_add_synonyms(synonyms: Dictionary) -> void:
 	ACEPickerDialog.register_synonyms(synonyms)
 
 
+## Takes back phrases registered by register_quick_add_synonyms: pass the phrases (the keys you gave).
+static func unregister_quick_add_synonyms(keys: PackedStringArray) -> void:
+	ACEPickerDialog.unregister_synonyms(keys)
+
+
 ## Registers the blurb shown when a picker section header is selected (the same channel the
 ## built-in sections use).
 static func register_section_description(section_name: String, blurb: String) -> void:
 	EventSheetSectionInfo.register_description(section_name, blurb)
+
+
+## Takes the blurb back. A section that had a description of its own before yours gets it back.
+static func unregister_section_description(section_name: String) -> void:
+	EventSheetSectionInfo.unregister_description(section_name)
 
 
 ## Curates a provider script IN PLACE: writes `## @ace_*` annotations for the members described by
@@ -1634,6 +1665,11 @@ static func preference_builders() -> Array[Callable]:
 	return _preference_builders
 
 
+## Takes back a row registered by register_preference: pass the same Callable.
+static func unregister_preference(builder: Callable) -> void:
+	_preference_builders.erase(builder)
+
+
 ## Defines an ACE from a plain Dictionary - no provider script file:
 ##   {"id": "Dash", "kind": "action",              # action | condition | expression
 ##    "display_name": "Dash Forward", "category": "My Pack",
@@ -1676,6 +1712,16 @@ static func register_simple_ace(config: Dictionary) -> ACEDefinition:
 	if _dock_alive() and _dock.has_method("_refresh_ace_registry"):
 		_dock.call("_refresh_ace_registry")
 	return definition
+
+
+## Takes back the verb registered under `id` (and `provider_id`, "Extension" unless the config named one).
+static func unregister_simple_ace(id: String, provider_id: String = "Extension") -> void:
+	for index: int in range(_simple_aces.size() - 1, -1, -1):
+		if _simple_aces[index].id == id and _simple_aces[index].provider_id == provider_id:
+			_simple_aces.remove_at(index)
+	DOCK_REGISTRY.share_simple_aces(_simple_aces)
+	if _dock_alive() and _dock.has_method("_refresh_ace_registry"):
+		_dock.call("_refresh_ace_registry")
 
 
 static func simple_aces() -> Array[ACEDefinition]:
@@ -1721,6 +1767,11 @@ static func editor_preview_sampler_for(_script_path: String) -> Callable:
 ## signature and takes priority over the static.
 static func register_editor_gizmo(script_path: String, drawer: Callable) -> void:
 	_editor_gizmo_drawers[script_path] = drawer
+
+
+## Takes back the drawer registered for `script_path`.
+static func unregister_editor_gizmo(script_path: String) -> void:
+	_editor_gizmo_drawers.erase(script_path)
 
 
 static func editor_gizmo_drawer_for(script_path: String) -> Callable:
@@ -1874,6 +1925,8 @@ static func verify_pack(pack_gd_path: String) -> Dictionary:
 
 ## extension (lowercase, no dot) -> {"build": Callable, "description": String}
 static var _asset_drop_handlers: Dictionary = {}
+## The handler an extension's registration replaced, by extension, so unregistering puts it back.
+static var _asset_drop_replaced: Dictionary = {}
 static var _builtin_asset_drop_handlers_registered: bool = false
 
 
@@ -1896,7 +1949,24 @@ static func register_asset_drop_handler(extensions: PackedStringArray, build: Ca
 	# nested calls short-circuit.
 	_ensure_builtin_asset_drop_handlers()
 	for extension: String in extensions:
-		_asset_drop_handlers[extension.to_lower().trim_prefix(".")] = {"build": build, "description": description}
+		var key: String = extension.to_lower().trim_prefix(".")
+		# What this replaces (a built-in handler, or another pack's) is kept so taking this one back restores it.
+		if _asset_drop_handlers.has(key) and not _asset_drop_replaced.has(key):
+			_asset_drop_replaced[key] = _asset_drop_handlers[key]
+		_asset_drop_handlers[key] = {"build": build, "description": description}
+
+
+## Takes back the handlers registered for these extensions (a leading dot is fine). An extension the
+## plugin handles itself goes back to the plugin's own handler.
+static func unregister_asset_drop_handler(extensions: PackedStringArray) -> void:
+	_ensure_builtin_asset_drop_handlers()
+	for extension: String in extensions:
+		var key: String = extension.to_lower().trim_prefix(".")
+		if _asset_drop_replaced.has(key):
+			_asset_drop_handlers[key] = _asset_drop_replaced[key]
+			_asset_drop_replaced.erase(key)
+		else:
+			_asset_drop_handlers.erase(key)
 
 
 ## The registered builder for one extension (an invalid Callable when unhandled).

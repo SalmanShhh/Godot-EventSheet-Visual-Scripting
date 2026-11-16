@@ -1445,6 +1445,11 @@ static func register_synonyms(synonyms: Dictionary) -> void:
 		_extra_synonyms[str(phrase).to_lower()] = str(synonyms[phrase])
 
 
+static func unregister_synonyms(keys: PackedStringArray) -> void:
+	for phrase: String in keys:
+		_extra_synonyms.erase(phrase.to_lower())
+
+
 static func _c3_synonym_queries(query: String) -> Array[String]:
 	var lowered: String = query.to_lower().strip_edges()
 	var extra: Array[String] = []

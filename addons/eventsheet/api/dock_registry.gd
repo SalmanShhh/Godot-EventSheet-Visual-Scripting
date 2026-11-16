@@ -169,6 +169,11 @@ static func on_lifecycle(event_name: String, callback: Callable) -> void:
 	(_lifecycle[event_name] as Array).append(callback)
 
 
+## Takes a listener back (the same Callable that was added).
+static func off_lifecycle(event_name: String, callback: Callable) -> void:
+	(_lifecycle.get(event_name, []) as Array).erase(callback)
+
+
 ## Runs every listener for `event_name` with `payload`, skipping any whose object has gone.
 static func notify_lifecycle(event_name: String, payload: Dictionary) -> void:
 	for callback: Callable in (_lifecycle.get(event_name, []) as Array):

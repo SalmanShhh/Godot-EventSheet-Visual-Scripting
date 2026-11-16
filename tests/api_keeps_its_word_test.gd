@@ -3,6 +3,7 @@
 # Each block below is one promise of the extension API that had no test:
 #   block kinds   a kind can say "nothing to write for this row" and the compile still succeeds
 #   the compiler  a sheet with no file and no output path writes no stray script
+#   unregister    everything an extension can register can be taken back
 #   language      an empty string goes back to following Godot's editor language
 #   open_sheet    a file that is not there is refused; a file already open is brought forward, not opened twice
 @tool
@@ -43,6 +44,7 @@ static func run() -> bool:
 	ok = _stray_file() and ok
 	ok = _open_sheet() and ok
 	ok = _language() and ok
+	ok = _unregister_set() and ok
 	return ok
 
 
@@ -133,3 +135,77 @@ static func _language() -> bool:
 		["following an editor language of de speaks de", followed, wanted if not wanted.is_empty() else "en"],
 		["an empty string goes back to the editor's language", empty_means_editor, english],
 	])
+
+
+static func _has_method(name: String) -> bool:
+	return (load("res://addons/eventsheet/api/eventsheets.gd") as Script).get_script_method_list().any(func(m: Dictionary) -> bool: return m["name"] == name)
+
+
+static func _unregister_set() -> bool:
+	var names: PackedStringArray = PackedStringArray(["unregister_starter", "unregister_preference", "off_sheet_opened", "off_sheet_saved", "off_sheet_compiled", "unregister_quick_add_synonyms", "unregister_section_description", "unregister_asset_drop_handler", "unregister_simple_ace", "unregister_editor_gizmo"])
+	var missing: PackedStringArray = PackedStringArray()
+	for method_name: String in names:
+		if not _has_method(method_name):
+			missing.append(method_name)
+	var api: Script = load("res://addons/eventsheet/api/eventsheets.gd")
+	var rows: Array = [["every unregister call exists", ", ".join(missing), ""]]
+	if not missing.is_empty():
+		return SUPPORT.pins(P, rows)
+	# starters
+	EventSheets.register_starter({"label": "Keeps Its Word Starter", "build": func() -> EventSheetResource: return null})
+	var starter_in: bool = EventSheets.registered_starters().any(func(e: Dictionary) -> bool: return e.get("label") == "Keeps Its Word Starter")
+	api.call("unregister_starter", "Keeps Its Word Starter")
+	var starter_out: bool = EventSheets.registered_starters().any(func(e: Dictionary) -> bool: return e.get("label") == "Keeps Its Word Starter")
+	rows.append(["a starter is registered", starter_in, true])
+	rows.append(["and taken back by its label", starter_out, false])
+	# preference builders
+	var builder: Callable = func() -> Control: return null
+	EventSheets.register_preference(builder)
+	var pref_in: bool = EventSheets.preference_builders().has(builder)
+	api.call("unregister_preference", builder)
+	rows.append(["a preference is registered", pref_in, true])
+	rows.append(["and taken back by its builder", EventSheets.preference_builders().has(builder), false])
+	# lifecycle listeners
+	var seen: Array = []
+	var listener: Callable = func(payload: Dictionary) -> void: seen.append(payload)
+	for pair: Array in [["on_sheet_opened", "off_sheet_opened", "opened"], ["on_sheet_saved", "off_sheet_saved", "saved"], ["on_sheet_compiled", "off_sheet_compiled", "compiled"]]:
+		api.call(pair[0], listener)
+		EventSheets._notify_lifecycle(pair[2], {"n": 1})
+		api.call(pair[1], listener)
+		EventSheets._notify_lifecycle(pair[2], {"n": 2})
+	rows.append(["a listener hears each event while registered, and not after off_", seen.map(func(p: Dictionary) -> int: return int(p["n"])), [1, 1, 1]])
+	# synonyms
+	EventSheets.register_quick_add_synonyms({"keeps its word phrase": "dash"})
+	var synonym_in: bool = ACEPickerDialog._extra_synonyms.has("keeps its word phrase")
+	api.call("unregister_quick_add_synonyms", PackedStringArray(["Keeps Its Word Phrase"]))
+	rows.append(["a synonym is registered", synonym_in, true])
+	rows.append(["and taken back by its phrase, in any case", ACEPickerDialog._extra_synonyms.has("keeps its word phrase"), false])
+	# section descriptions: a new one goes, an overridden built-in comes back
+	var built_in: String = EventSheetSectionInfo.description_for("Debug")
+	EventSheets.register_section_description("Keeps Its Word Section", "words")
+	EventSheets.register_section_description("Debug", "replaced")
+	api.call("unregister_section_description", "Keeps Its Word Section")
+	api.call("unregister_section_description", "Debug")
+	rows.append(["a section description is taken back", EventSheetSectionInfo.has("Keeps Its Word Section"), false])
+	rows.append(["and a built-in one it replaced comes back", EventSheetSectionInfo.description_for("Debug"), built_in])
+	# asset drop handlers: a new extension goes, an overridden built-in comes back
+	var drop: Callable = func(_path: String, _target: Variant) -> Resource: return null
+	EventSheets.register_asset_drop_handler(PackedStringArray(["keepsword", "json"]), drop)
+	var drop_in: bool = EventSheets.asset_drop_builder_for("keepsword").is_valid()
+	api.call("unregister_asset_drop_handler", PackedStringArray([".keepsword", "json"]))
+	rows.append(["an asset drop handler is registered", drop_in, true])
+	rows.append(["and taken back, a leading dot allowed", EventSheets.asset_drop_builder_for("keepsword").is_valid(), false])
+	rows.append(["a built-in handler it replaced comes back", EventSheets.asset_drop_builder_for("json").is_valid() and EventSheets.asset_drop_builder_for("json") != drop, true])
+	# simple aces
+	EventSheets.register_simple_ace({"id": "KeepsItsWordAce", "display_name": "Keeps", "template": "pass", "kind": "action"})
+	var ace_in: bool = EventSheets.simple_aces().any(func(a: ACEDefinition) -> bool: return a.id == "KeepsItsWordAce")
+	api.call("unregister_simple_ace", "KeepsItsWordAce")
+	rows.append(["a simple verb is registered", ace_in, true])
+	rows.append(["and taken back by its id", EventSheets.simple_aces().any(func(a: ACEDefinition) -> bool: return a.id == "KeepsItsWordAce"), false])
+	# editor gizmos
+	EventSheets.register_editor_gizmo("res://keeps_its_word.gd", func(_p: Dictionary, _h: Node, _c: Control) -> void: pass)
+	var gizmo_in: bool = EventSheets.editor_gizmo_drawer_for("res://keeps_its_word.gd").is_valid()
+	api.call("unregister_editor_gizmo", "res://keeps_its_word.gd")
+	rows.append(["a gizmo drawer is registered", gizmo_in, true])
+	rows.append(["and taken back by its script path", EventSheets.editor_gizmo_drawer_for("res://keeps_its_word.gd").is_valid(), false])
+	return SUPPORT.pins(P, rows)
