@@ -249,7 +249,7 @@ const SUBCATEGORY_SEPARATOR: String = EventSheetACEIcons.SUBCATEGORY_SEPARATOR
 ## Categories deliberately left without a section icon, because nothing in the editor theme fits
 ## yet. The one list both the icon check tool and the suite read, so a category is only ever
 ## unmapped on purpose.
-const UNMAPPED_ICON_CATEGORIES: Array[String] = ["Performance"]
+const UNMAPPED_ICON_CATEGORIES: Array[String] = []
 
 ## The hand-picked category icons. One table, kept beside the icon lookups that read it - the sheet's
 ## rows draw the same section icons the picker does.

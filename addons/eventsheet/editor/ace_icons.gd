@@ -157,6 +157,12 @@ const CATEGORY_EDITOR_ICONS: Dictionary = {
 }
 
 
+## Where the drawn section icons live: one file per section, named for it (lower case, every run of
+## other characters one underscore: "Signals / Scene / Input" is signals_scene_input.svg). A section
+## with a file wears it; every other section keeps resolving a Godot editor icon by name.
+const SECTION_ICON_DIR: String = "res://addons/eventsheet/icons/sections"
+
+
 ## Fetches a named editor-theme icon ("EditorIcons" - class icons and member glyphs).
 ## Null outside the editor or when the name is unknown, so callers degrade gracefully.
 static func editor_icon(icon_name: String) -> Texture2D:
@@ -170,11 +176,27 @@ static func editor_icon(icon_name: String) -> Texture2D:
 ## resolve an icon without ever being listed anywhere.
 static func category_header_icon(group_key: String, host_hint: String = "") -> Texture2D:
 	var icon_name: String = category_icon_name(group_key, host_hint)
+	if icon_name.begins_with("res://"):
+		return path_icon(icon_name)
 	return null if icon_name.is_empty() else editor_icon(icon_name)
+
+
+## The drawn icon file a section wears (a `res://` path), or "" when it has none. Cached per section,
+## misses included: the picker asks once per header it draws.
+static func drawn_section_icon(section: String) -> String:
+	if not _drawn_section_cache.has(section):
+		var slug: String = RegEx.create_from_string("[^a-z0-9]+").sub(section.to_lower(), "_", true).trim_prefix("_").trim_suffix("_")
+		var path: String = "%s/%s.svg" % [SECTION_ICON_DIR, slug]
+		_drawn_section_cache[section] = path if not slug.is_empty() and (FileAccess.file_exists(path) or ResourceLoader.exists(path)) else ""
+	return str(_drawn_section_cache[section])
+
+
+static var _drawn_section_cache: Dictionary = {}
 
 
 ## Resolves a category to its EditorIcons name, DERIVING one wherever it can so that adding a
 ## category to the vocabulary is not also a chore in this file. In order:
+##   0. a drawn icon file of the section's own (a `res://` path instead of a name),
 ##   1. an explicit CATEGORY_EDITOR_ICONS entry (a human choice, and the override),
 ##   2. the category NAME read as a class, case-insensitively ("Raycast 2D" -> RayCast2D,
 ##      "Tilemap" -> TileMap) - the name a category already has is usually the icon it wants,
@@ -187,6 +209,9 @@ static func category_header_icon(group_key: String, host_hint: String = "") -> T
 ##   6. "" - a text-only header, exactly the pre-icon look.
 ## Pure + static so the mapping stays unit-testable without a display server.
 static func category_icon_name(group_key: String, host_hint: String = "") -> String:
+	var drawn: String = drawn_section_icon(group_key)
+	if not drawn.is_empty():
+		return drawn
 	var explicit: String = str(CATEGORY_EDITOR_ICONS.get(group_key, ""))
 	if not explicit.is_empty():
 		return explicit
@@ -195,6 +220,9 @@ static func category_icon_name(group_key: String, host_hint: String = "") -> Str
 		return from_name
 	var parts: PackedStringArray = split_subcategory(group_key)
 	if not parts.is_empty():
+		var parent_drawn: String = drawn_section_icon(parts[0])
+		if not parent_drawn.is_empty():
+			return parent_drawn
 		var parent_explicit: String = str(CATEGORY_EDITOR_ICONS.get(parts[0], ""))
 		if not parent_explicit.is_empty():
 			return parent_explicit

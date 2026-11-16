@@ -51,6 +51,35 @@ static func run() -> bool:
 		ok = SUPPORT.check(NAME, "the 3D icon of vector_shapes is drawn in Godot's style",
 			", ".join(shape_problems("vector_shapes_3d", svg_3d, path_3d, STYLE.INK_3D, false)), "") and ok
 		ok = SUPPORT.check(NAME, "the 3D icon is not the 2D one", svg_3d != FileAccess.get_file_as_string("%s/vector_shapes/icon.svg" % ADDONS_DIR), true) and ok
+	return _sections(ok)
+
+
+## The picker's section icons: drawn files of Godot's style, none sharing another's bytes, each section
+## resolving its own; the three wrong borrowings (Camera, the 3D header, Performance) are drawn ones.
+static func _sections(ok_so_far: bool) -> bool:
+	var ok: bool = ok_so_far
+	var seen: Dictionary = {}
+	var files: PackedStringArray = DirAccess.get_files_at(STYLE.SECTION_DIR)
+	files.sort()
+	for file_name: String in files:
+		if not file_name.ends_with(".svg"):
+			continue
+		var path: String = "%s/%s" % [STYLE.SECTION_DIR, file_name]
+		var svg: String = FileAccess.get_file_as_string(path)
+		ok = SUPPORT.check(NAME, "section icon %s is drawn in Godot's style" % file_name,
+			", ".join(shape_problems(file_name, svg, path, "", false, false)), "") and ok
+		ok = SUPPORT.check(NAME, "section icon %s draws a picture no other section draws" % file_name,
+			str(seen.get(svg.md5_text(), "")), "") and ok
+		seen[svg.md5_text()] = file_name
+	for section: String in ["Camera", "3D", "Performance", "Pin", "Move To", "Juice", "Compare: Numbers"]:
+		var resolved: String = EventSheetACEIcons.category_icon_name(section)
+		ok = SUPPORT.check(NAME, "section \"%s\" wears a drawn icon" % section, resolved.begins_with(STYLE.SECTION_DIR), true) and ok
+		ok = SUPPORT.check(NAME, "the drawn icon of \"%s\" is a file" % section, FileAccess.file_exists(resolved), true) and ok
+	for section: String in ["3D", "Pickups", "Spawn", "Weapons 3D", "World-space UI"]:
+		var svg_3d: String = FileAccess.get_file_as_string(EventSheetACEIcons.category_icon_name(section))
+		ok = SUPPORT.check(NAME, "section \"%s\" is drawn in the 3D ink" % section, inks_of(svg_3d), PackedStringArray([STYLE.INK_3D])) and ok
+	ok = SUPPORT.check(NAME, "a section without a drawing keeps Godot's own icon",
+		EventSheetACEIcons.category_icon_name("Audio"), "AudioStreamPlayer") and ok
 	return ok
 
 
@@ -65,7 +94,7 @@ static func problems_of(pack: String, svg: String, path: String) -> PackedString
 
 
 ## The rules every icon keeps. `ink` is the one ink it must be drawn in, `dot` whether it wears the dot.
-static func shape_problems(_owner: String, svg: String, path: String, ink: String, dot: bool) -> PackedStringArray:
+static func shape_problems(_owner: String, svg: String, path: String, ink: String, dot: bool, check_dot: bool = true) -> PackedStringArray:
 	var problems: PackedStringArray = PackedStringArray()
 	if not (svg.contains("width=\"16\"") and svg.contains("height=\"16\"") and svg.contains("viewBox=\"0 0 16 16\"")):
 		problems.append("not 16 x 16 on a 16 grid")
@@ -78,9 +107,9 @@ static func shape_problems(_owner: String, svg: String, path: String, ink: Strin
 		problems.append("%d inks" % inks.size())
 	elif not STYLE.INKS.has(inks[0]):
 		problems.append("ink %s is not in Godot's map" % inks[0])
-	elif inks[0] != ink:
+	elif not ink.is_empty() and inks[0] != ink:
 		problems.append("ink %s is not the family's %s" % [inks[0], ink])
-	if svg.contains(STYLE.DOT_PREFIX) != dot:
+	if check_dot and svg.contains(STYLE.DOT_PREFIX) != dot:
 		problems.append("the behaviour dot is %s" % ("missing" if dot else "worn by a pack with no host"))
 	var import_path: String = path + ".import"
 	if not (FileAccess.file_exists(import_path) and FileAccess.get_file_as_string(import_path).contains(STYLE.IMPORT_FLAG)):

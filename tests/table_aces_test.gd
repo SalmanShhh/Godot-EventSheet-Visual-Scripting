@@ -62,7 +62,7 @@ static func _run_registration() -> bool:
 	ok = _check("For Each Line In Text is a condition", int(by_id["ForEachLineInText"].ace_type), int(ACEDescriptor.ACEType.CONDITION)) and ok
 	# The picker's section header needs an icon for every live category; "Files: Tables" is a
 	# sub-category, so it inherits the Files entry rather than needing one of its own.
-	ok = _check("Files: Tables inherits the Files icon", ACEPickerDialog.category_icon_name("Files: Tables"), "File") and ok
+	ok = _check("Files: Tables inherits the Files section's drawn icon", ACEPickerDialog.category_icon_name("Files: Tables"), "res://addons/eventsheet/icons/sections/files.svg") and ok
 	# Defaults are what the row shows the moment it is dropped, so each must stand on its own.
 	ok = _check("the path default is a literal", _param_default(by_id, "TableFromFile", "path"), "\"res://data/items.csv\"") and ok
 	ok = _check("the separator default is a quoted comma", _param_default(by_id, "TableFromFile", "separator"), "\",\"") and ok

@@ -1,7 +1,8 @@
 # EventForge - does every builtin picker section's icon EXIST in the editor theme?
 #
-# The picker draws each builtin section header with an editor-theme icon resolved by name
-# (ACEPickerDialog.category_icon_name). The suite proves every live category resolves SOME name, but
+# The picker draws each builtin section header with an editor-theme icon resolved by name, or with
+# a drawn file of the section's own when it has one (ACEPickerDialog.category_icon_name returns the
+# `res://` path of that file in place of a name). The suite proves every live category resolves SOME name, but
 # it runs headless, where there is no editor theme to ask, so a name the theme does not carry looks
 # exactly like one it does - and the header silently goes text-only. This tool runs INSIDE a real
 # editor and asks the theme itself, once per live builtin category.
@@ -54,6 +55,15 @@ func _check() -> int:
 		if icon_name.is_empty():
 			missing += 1
 			print("  [MISS] \"%s\" resolves to no icon name" % category)
+		elif icon_name.begins_with("res://"):
+			# A drawn file: it must import to a texture, and its import must follow the editor theme.
+			var import_text: String = FileAccess.get_file_as_string(icon_name + ".import")
+			if not ResourceLoader.exists(icon_name) or not (load(icon_name) is Texture2D):
+				missing += 1
+				print("  [MISS] \"%s\" -> %s, which does not import to a texture" % [category, icon_name])
+			elif not import_text.contains("editor/convert_colors_with_editor_theme=true"):
+				missing += 1
+				print("  [MISS] \"%s\" -> %s, whose import does not follow the editor theme" % [category, icon_name])
 		elif not editor_theme.has_icon(icon_name, "EditorIcons"):
 			missing += 1
 			print("  [MISS] \"%s\" -> %s, which the editor theme does not carry" % [category, icon_name])
