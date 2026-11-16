@@ -274,7 +274,7 @@ provides a translation (a pass-through in the default English):
 
 ```gdscript
 # Translate any display string (English default; falls back to the source text).
-canvas.draw_string(font, position, EventSheets.translate("Nothing selected"), ...)
+canvas.draw_string(font, position, EventSheets.translate("Nothing selected"))
 
 # Ship translations WITH your pack - your ACE display names and Custom Block titles are
 # looked up through the same layer in the picker and menus.
