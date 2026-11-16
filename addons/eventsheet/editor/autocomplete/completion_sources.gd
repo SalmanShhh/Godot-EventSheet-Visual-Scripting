@@ -119,6 +119,8 @@ const SEPARATOR := "·"
 ## The stable `kind` words an entry can carry. Ids, not display strings - a popup may draw an icon
 ## per kind and a test pins them, so they are spelled once here.
 const KIND_VARIABLE := "variable"
+## A plain word an extension's source offered with no kind of its own: shown without a badge.
+const KIND_TEXT := "text"
 const KIND_MEMBER := "member"
 const KIND_FUNCTION := "function"
 const KIND_SIGNAL := "signal"
@@ -1769,7 +1771,7 @@ static func _typed(raw: Variant) -> Array[Dictionary]:
 		if item is Dictionary:
 			entries.append(item as Dictionary)
 		elif item is String:
-			entries.append({"text": str(item), "detail": "", "kind": KIND_VARIABLE})
+			entries.append({"text": str(item), "detail": "", "kind": KIND_TEXT})
 	return entries
 
 

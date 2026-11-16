@@ -9,6 +9,8 @@
 #   kinds         a block kind can be registered with a reason, and taken back
 #   copies        the lists the API hands out are copies: clearing one empties nothing
 #   extensions    an asset drop handler for ".DLG" is found for ".dlg", "dlg" and "DLG"
+#   quiet         a null sheet and a missing pack folder are answered without engine errors
+#   completions   a plain string a source offers is text, not a variable
 #   language      an empty string goes back to following Godot's editor language
 #   open_sheet    a file that is not there is refused; a file already open is brought forward, not opened twice
 @tool
@@ -34,6 +36,14 @@ class QuietKind extends EventSheetBlockKind:
 		return not bool(block.fields.get("on", false))
 
 
+## Counts every error and warning the engine prints while it is attached.
+class ErrorCounter extends Logger:
+	var errors: int = 0
+
+	func _log_error(_function: String, _file: String, _line: int, _code: String, _rationale: String, _editor_notify: bool, _error_type: int, _script_backtraces: Array[ScriptBacktrace]) -> void:
+		errors += 1
+
+
 class MutedKind extends EventSheetBlockKind:
 	func _init() -> void:
 		kind_id = "keeps_its_word.muted"
@@ -55,6 +65,8 @@ static func run() -> bool:
 	ok = _kind_registration() and ok
 	ok = _copies() and ok
 	ok = _drop_extensions() and ok
+	ok = _quiet_failures() and ok
+	ok = _text_completions() and ok
 	return ok
 
 
@@ -341,3 +353,31 @@ static func _drop_extensions() -> bool:
 	rows.append(["and the list of handled extensions holds it once, bare and lower-case", Array(EventSheets.handled_asset_extensions()).count("dlg"), 1])
 	EventSheets.unregister_asset_drop_handler(PackedStringArray(["dlg"]))
 	return SUPPORT.pins(P, rows)
+
+
+static func _quiet_failures() -> bool:
+	var counter: ErrorCounter = ErrorCounter.new()
+	OS.add_logger(counter)
+	EventSheets.stabilize_row_uids(null)
+	var after_null: int = counter.errors
+	var assets: Dictionary = EventSheets.pack_shipped_assets("res://no_such_pack_folder/pack.gd")
+	var after_missing: int = counter.errors
+	OS.remove_logger(counter)
+	return SUPPORT.pins(P, [
+		["stabilize_row_uids(null) raises no error", after_null, 0],
+		["pack_shipped_assets on a folder that is not there raises no error", after_missing - after_null, 0],
+		["and answers an empty shader and scene", assets, {"shader": "", "scene": ""}],
+	])
+
+
+static func _text_completions() -> bool:
+	EventSheets.register_completion_source("keeps_its_word", func(_sheet: EventSheetResource, _kind: String) -> Array: return ["plain word", {"text": "typed", "detail": "", "kind": "function"}])
+	var entries: Array = EventSheets.completions_for(EventSheets.new_sheet(), "keeps_its_word")
+	EventSheets.unregister_completion_source("keeps_its_word")
+	var kinds: Dictionary = {}
+	for entry: Dictionary in entries:
+		kinds[str(entry.get("text", ""))] = str(entry.get("kind", ""))
+	return SUPPORT.pins(P, [
+		["a plain string a source offers is text", kinds.get("plain word", "missing"), "text"],
+		["an entry that names its own kind keeps it", kinds.get("typed", "missing"), "function"],
+	])

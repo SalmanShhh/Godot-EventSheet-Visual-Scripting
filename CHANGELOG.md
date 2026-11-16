@@ -31,6 +31,10 @@ The box was a narrow list about 220 pixels wide that cut its last line in half. 
 ### Added: the Inspector's Play button shows the cards that move other nodes
 
 Play, Play this card and Play from here now show Particles, Animation, Sprite Animation, Show or Hide, Squash And Stretch, Punch Position, Punch Rotation, Pop, Fade, Count To, Reveal Text, Fill Bar, Shader Value and a Tween Property card that points at another node, and Debug view calls each of them played. Before the first frame the preview writes down every property those cards may move on every node they point at (a label's text, a bar's value, a node's visible, modulate and scale, the tracks of the clip it plays, the shader value on a copy of the material that lives for the pass), and puts exactly those back on Stop, Restore, at the end of a pass and before the editor saves or runs the scene, so a scene saved in the middle of a preview holds the same text it held before. Spawn Scene, Push, Force, Gravity, Freeze Body, Grab Focus, Call Method, Emit Signal and Play Player still say why they are not shown.
+### Fixed: smaller API answers
+
+`stabilize_row_uids(null)` and `pack_shipped_assets` on a folder that is not there answer quietly instead of raising engine errors. A plain string a registered completion source returns is offered as `text` rather than `variable`, so it no longer wears a variable's badge in the popup. `asset_drop_builder_for()` ignores case and a leading dot.
+
 ### Fixed: an asset drop handler registered for ".DLG" is found for ".dlg"
 
 `asset_drop_builder_for()` lower-cased the extension but kept its dot, so a handler registered as `.DLG` (stored as `dlg`) was missed when asked for `.dlg`. A leading dot and the case no longer matter on either side.

@@ -201,8 +201,7 @@ static func _chain_could_reach_block_kind(script_path: String, class_paths: Dict
 	var source: String = FileAccess.get_file_as_string(script_path)
 	if source.is_empty():
 		return false
-	for raw_line: String in source.split("
-"):
+	for raw_line: String in source.split("\n"):
 		var line: String = raw_line.strip_edges()
 		if not line.begins_with("extends "):
 			continue

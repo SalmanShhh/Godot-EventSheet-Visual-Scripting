@@ -905,6 +905,8 @@ static func publish_pack(sheet: EventSheetResource, base_path: String, icon_path
 ## _init(), churning every regeneration). publish_pack calls this; generators that compile
 ## sheets themselves (showcase builders) call it directly before compiling.
 static func stabilize_row_uids(sheet: EventSheetResource) -> void:
+	if sheet == null:
+		return
 	var class_seed: String = sheet.custom_class_name if not sheet.custom_class_name.is_empty() else "sheet"
 	_publish_assign_uids_in_list(sheet.events, class_seed + "/events")
 	for function_resource: Variant in sheet.functions:
@@ -2115,14 +2117,6 @@ static func _drop_build_preload(asset_path: String, _target_event: Resource) -> 
 # ── Collection declarations (a function-local `var x := {...}` held as structure) ──────
 
 
-## Builds a structured in-body collection declaration - the row an opened `.gd`'s canonical
-## multi-line dictionary or array lifts into, offered here so extensions and asset-drop
-## handlers can CREATE one too instead of assembling raw code text. `entries` is an Array of
-## [key, value] pairs for a dictionary ("calm" keys carry their own quotes: `"calm"`), or of
-## plain value strings for an array. Returns null when the name is not an identifier or any
-## entry is refused (blank value, keyless dictionary entry). Append the result to an
-## EventRow's actions like any other action; it emits as the literal, brackets and all, and
-## its entries stay individually editable rows on the canvas.
 ## Builds a Timeline block from [[at_seconds, gdscript_line], ...] pairs - the schedule-as-rows
 ## companion to collection_decl. Steps sort by time; a malformed pair returns null.
 static func timeline(steps: Array = []) -> TimelineRow:
@@ -2195,6 +2189,14 @@ static func _append_moment_statement(step: MomentStepRow, line: String) -> bool:
 	return true
 
 
+## Builds a structured in-body collection declaration - the row an opened `.gd`'s canonical
+## multi-line dictionary or array lifts into, offered here so extensions and asset-drop
+## handlers can CREATE one too instead of assembling raw code text. `entries` is an Array of
+## [key, value] pairs for a dictionary ("calm" keys carry their own quotes: `"calm"`), or of
+## plain value strings for an array. Returns null when the name is not an identifier or any
+## entry is refused (blank value, keyless dictionary entry). Append the result to an
+## EventRow's actions like any other action; it emits as the literal, brackets and all, and
+## its entries stay individually editable rows on the canvas.
 static func collection_decl(variable_name: String, entries: Array, dictionary: bool = true) -> CollectionDeclRow:
 	var name: String = variable_name.strip_edges()
 	var name_regex: RegEx = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*$")

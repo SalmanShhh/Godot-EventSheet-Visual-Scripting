@@ -97,7 +97,7 @@ static func _test_the_public_surface() -> bool:
 		return ["one", "two"])
 	ok = SUPPORT.pin_value("completions_public_api", "a registered source answers",
 		EventSheets.completions_for(sheet, "a_public_kind", "tw"),
-		[{"text": "two", "detail": "", "kind": "variable"}]) and ok
+		[{"text": "two", "detail": "", "kind": "text"}]) and ok
 	EventSheets.unregister_completion_source("a_public_kind")
 	ok = SUPPORT.pin_value("completions_public_api", "and stops when it is removed",
 		EventSheets.completions_for(sheet, "a_public_kind", "tw"), []) and ok
@@ -451,7 +451,7 @@ static func _test_a_pack_can_add_a_source() -> bool:
 		return ["quest_start", "quest_end", {"text": "quest_fail", "detail": "the losing branch",
 			"kind": "variable"}])
 	var ok: bool = SUPPORT.pin_table("completions_pack_source", {
-		"quest_s": [{"text": "quest_start", "detail": "", "kind": "variable"}],
+		"quest_s": [{"text": "quest_start", "detail": "", "kind": "text"}],
 		"losing": [{"text": "quest_fail", "detail": "the losing branch", "kind": "variable"}],
 	}, func(typed: String) -> Variant:
 		return EventSheetCompletions.for_field(sheet, "a_pack_kind", typed))

@@ -137,7 +137,7 @@ static func notice_new_files(paths: PackedStringArray) -> void:
 
 ## The one file with this extension in a folder, or "" when there is none or more than one.
 static func _only_file_with(folder: String, extension: String) -> String:
-	if folder.is_empty():
+	if folder.is_empty() or not DirAccess.dir_exists_absolute(folder):
 		return ""
 	var found: String = ""
 	for file_name: String in DirAccess.get_files_at(folder):
