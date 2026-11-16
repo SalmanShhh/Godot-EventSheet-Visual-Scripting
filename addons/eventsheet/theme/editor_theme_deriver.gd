@@ -260,6 +260,8 @@ const NATIVE_HEAD_STEP_LIGHT := 17.0 / 255.0
 const NATIVE_STARTER_PATH := "res://addons/eventsheet/themes/editor_native_theme.tres"
 ## The file that knows which theme a project names for every sheet.
 const THEME_FILES_PATH := "res://addons/eventsheet/theme/theme_files.gd"
+## The file that knows a theme's light colours.
+const LIGHT_COLORS_PATH := "res://addons/eventsheet/theme/light_colors.gd"
 
 ## The last native_style() built, by base colour. follow_editor() asks for two per call and a
 ## sheet is re-seated on every edit, so the rule runs once per editor base rather than per edit.
@@ -484,13 +486,18 @@ static func contrast_ratio(first: Color, second: Color) -> float:
 
 ## A style that asks to follow the editor (follow_editor_greys), moved onto `base_color`. Every
 ## token still holding the value the starter shipped with takes the value the rule builds for this
-## base; a token anyone changed is left exactly as they set it. Returns a NEW resource so a shared
-## theme file is never edited in place; a style that does not ask is returned untouched.
+## base; a token anyone changed is left exactly as they set it. A theme that holds light colours wears
+## them on a light base, over whatever the rule gave the rest. Returns a NEW resource so a shared theme
+## file is never edited in place; a style that asks for neither is returned untouched.
 static func follow_editor(style: EventSheetEditorStyle, base_color: Color) -> EventSheetEditorStyle:
-	if style == null or not style.follow_editor_greys:
+	if style == null:
+		return style
+	var wears_light: bool = is_light_base(base_color) and load(LIGHT_COLORS_PATH).has_entries(style)
+	if not style.follow_editor_greys and not wears_light:
 		return style
 	var reference: EventSheetEditorStyle = _cached_native_style(NATIVE_DARK_REFERENCE_BASE)
-	var target: EventSheetEditorStyle = _cached_native_style(base_color)
+	# A theme that does not follow the greys is moved onto the reference itself, which changes nothing.
+	var target: EventSheetEditorStyle = _cached_native_style(base_color if style.follow_editor_greys else NATIVE_DARK_REFERENCE_BASE)
 	var followed: EventSheetEditorStyle = style.duplicate(true) as EventSheetEditorStyle
 	followed.ensure_defaults()
 	var sections: Array[Array] = [
@@ -513,6 +520,8 @@ static func follow_editor(style: EventSheetEditorStyle, base_color: Color) -> Ev
 			var token_name: String = str(property.get("name"))
 			if own.get(token_name) == shipped.get(token_name):
 				own.set(token_name, wanted.get(token_name))
+	if wears_light:
+		load(LIGHT_COLORS_PATH).apply_entries(followed)
 	return followed
 
 
@@ -530,7 +539,7 @@ static func _cached_native_style(base_color: Color) -> EventSheetEditorStyle:
 ## follow_editor() against the RUNNING editor's base colour. Outside the editor (headless tests, a
 ## game build) and for a style that does not ask, the style comes back as it was saved.
 static func follow_running_editor(style: EventSheetEditorStyle) -> EventSheetEditorStyle:
-	if style == null or not style.follow_editor_greys:
+	if style == null or not (style.follow_editor_greys or load(LIGHT_COLORS_PATH).has_entries(style)):
 		return style
 	var base: Color = running_editor_base()
 	if base.a <= 0.0:

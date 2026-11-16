@@ -5604,9 +5604,11 @@ func _icons_stale() -> bool:
 
 
 ## Whether a switch of the editor's theme re-seats the open sheet: a sheet is open, and it either has
-## no theme of its own or wears one that follows the editor's greys (the Editor Native starter).
+## no theme of its own, or wears one that follows the editor's greys (the Editor Native starter) or holds
+## a light colour.
 static func reseats_on_editor_theme(sheet: EventSheetResource, active: EventSheetEditorStyle) -> bool:
-	return sheet != null and (active == null or active.follow_editor_greys)
+	return sheet != null and (active == null or active.follow_editor_greys
+		or load("res://addons/eventsheet/theme/light_colors.gd").has_entries(active))
 
 
 # ── Quick-add bar ("type to insert", and to ASK) - bodies in EventSheetAuthorActions
