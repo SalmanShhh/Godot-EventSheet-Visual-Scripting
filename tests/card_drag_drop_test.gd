@@ -63,7 +63,7 @@ static func _drawer_pins() -> bool:
 	drawer.move_cards_to_slot(drawer.selected_cards(), 0)
 	var selection: Array = _labels(drawer)
 	var still: Array = drawer.selected_cards()
-	var picture: Control = drawer.drag_picture(0, 200.0, Vector2(10, 5), 2)
+	var picture: Control = drawer.drag_picture(0, 200.0, 2)
 	var picture_text: String = ""
 	for label: Node in picture.find_children("*", "Label", true, false):
 		picture_text += (label as Label).text + "|"

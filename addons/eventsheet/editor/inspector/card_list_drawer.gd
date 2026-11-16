@@ -446,6 +446,11 @@ func _announce_selection() -> void:
 ## Scrolls the Inspector (or whatever scrolls this list) so the card at `index` is in view. Nothing happens where nothing
 ## scrolls.
 func reveal_card(index: int) -> void:
+	# A list folded shut opens, so there is a card to bring into view.
+	if _fold_button != null and not _fold_button.button_pressed:
+		_fold_button.button_pressed = true
+		call_deferred("reveal_card", index)
+		return
 	var line: Control = _lines.get(index) as Control
 	if line == null or not is_instance_valid(line) or not line.is_inside_tree():
 		return
@@ -602,9 +607,9 @@ func set_cards_faint(chosen: Array, faint: bool) -> void:
 
 
 ## What rides under the cursor during a drag: the card's own line, built again as it looks now, at the width of the
-## row it was picked up from and placed so the point that was grabbed stays under the pointer. A drag of several
+## row it was picked up from (less the room it hangs right of the pointer), just below and right of the pointer. A drag of several
 ## cards says how many beside it. The copy is only a picture: nothing in it takes the mouse.
-func drag_picture(index: int, width: float, grab: Vector2, count: int) -> Control:
+func drag_picture(index: int, width: float, count: int) -> Control:
 	var card: Dictionary = _cards[index]
 	# The line is made by the same builder as the real one, which records the controls it makes by position so a
 	# write can repaint them in place; a picture must not take their place in those records.
@@ -631,7 +636,8 @@ func drag_picture(index: int, width: float, grab: Vector2, count: int) -> Contro
 	line.size = Vector2(width, 0.0)
 	var holder: Control = Control.new()
 	holder.add_child(line)
-	line.position = -grab
+	# It hangs a little right of and below the pointer, so the line that shows where the card will land stays in view.
+	line.position = Vector2(EventSheetLookStyle.px(24.0), EventSheetLookStyle.px(18.0))
 	holder.modulate.a = 0.92
 	return holder
 
@@ -2357,6 +2363,8 @@ class _CardRow:
 	## A plain press on a card that is one of several selected waits for the release: it is the start of a drag of
 	## the whole selection unless the button comes up without one.
 	var _pending_click: bool = false
+	## The layer the drop line is drawn on, above the card.
+	var _mark_layer: Control = null
 
 	func _init(drawer: EventSheetCardListDrawer, index: int) -> void:
 		_drawer = drawer
@@ -2367,6 +2375,11 @@ class _CardRow:
 		inset.content_margin_left = 4.0
 		inset.content_margin_right = 4.0
 		add_theme_stylebox_override("panel", inset)
+		_mark_layer = Control.new()
+		_mark_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_mark_layer.z_index = 1
+		_mark_layer.draw.connect(_draw_mark)
+		add_child(_mark_layer)
 
 	func _gui_input(event: InputEvent) -> void:
 		var click: InputEventMouseButton = event as InputEventMouseButton
@@ -2395,7 +2408,7 @@ class _CardRow:
 			_drawer.open_card_menu(_index, Vector2i(get_screen_position() + click.position))
 			accept_event()
 
-	func _get_drag_data(position: Vector2) -> Variant:
+	func _get_drag_data(_position: Vector2) -> Variant:
 		if not _drawer.editable:
 			return null
 		_pending_click = false
@@ -2403,7 +2416,7 @@ class _CardRow:
 		if not _drawer.selected_cards().has(_index):
 			_drawer.select_card(_index, "click")
 		var chosen: Array = _drawer.selected_cards()
-		set_drag_preview(_drawer.drag_picture(_index, size.x, position, chosen.size()))
+		set_drag_preview(_drawer.drag_picture(_index, size.x - EventSheetLookStyle.px(24.0), chosen.size()))
 		_drawer.set_cards_faint(chosen, true)
 		return {EventSheetCardListDrawer.DRAG_KEY: _index, "drawer": _drawer, "cards": chosen}
 
@@ -2416,12 +2429,12 @@ class _CardRow:
 			mark = -1 if EventSheetCardListDrawer.drop_slot(_index, at_position.y, size.y) == _index else 1
 		if mark != _drop_mark:
 			_drop_mark = mark
-			queue_redraw()
+			_mark_layer.queue_redraw()
 		return wanted
 
 	func _drop_data(at_position: Vector2, data: Variant) -> void:
 		_drop_mark = 0
-		queue_redraw()
+		_mark_layer.queue_redraw()
 		var moving: Array = (data as Dictionary).get("cards", [int((data as Dictionary)[EventSheetCardListDrawer.DRAG_KEY])])
 		_drawer.move_cards_to_slot(moving, EventSheetCardListDrawer.drop_slot(_index, at_position.y, size.y))
 
@@ -2429,14 +2442,15 @@ class _CardRow:
 		if what == NOTIFICATION_MOUSE_EXIT or what == NOTIFICATION_DRAG_END:
 			if _drop_mark != 0:
 				_drop_mark = 0
-				queue_redraw()
+				_mark_layer.queue_redraw()
 		if what == NOTIFICATION_DRAG_END:
 			_drawer.set_cards_faint([], false)
 
-	## The line that says where the dragged card will land: the editor's own accent, as the Scene dock draws it.
-	func _draw() -> void:
+	## The line that says where the dragged card will land: the editor's own accent, as the Scene dock draws it. It is
+	## drawn by a layer above the card's own surface, which would otherwise cover it.
+	func _draw_mark() -> void:
 		if _drop_mark == 0:
 			return
 		var thickness: float = maxf(2.0, EventSheetLookStyle.px(2.0))
-		var y: float = 0.0 if _drop_mark < 0 else size.y - thickness
-		draw_rect(Rect2(2.0, y, maxf(size.x - 4.0, 1.0), thickness), EventSheetLookStyle.accent())
+		var y: float = 0.0 if _drop_mark < 0 else _mark_layer.size.y - thickness
+		_mark_layer.draw_rect(Rect2(0.0, y, maxf(_mark_layer.size.x, 1.0), thickness), EventSheetLookStyle.accent())

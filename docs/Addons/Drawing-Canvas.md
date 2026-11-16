@@ -250,12 +250,35 @@ it survives a move; a path typed by an older version still loads and saves as it
 its gap with the "=" beside them), open by itself when the line is not plain. The first and last
 cards carry two quiet captions, "Drawn first, underneath" and "Drawn last, on top". **Add shape**
 opens one flat list of the six shapes, each with its picture; typing narrows it, Enter adds the
-highlighted one, and the new card goes last and opens. Drag a card by its handle to change the draw
-order. A shape that would draw nothing (a stamp with no texture or one that does not load, a size of
+highlighted one, and the new card goes last and opens. Reordering is described just below.
+A shape that would draw nothing (a stamp with no texture or one that does not load, a size of
 0, a line with no length) says so in one quiet amber line, and a step whose shape is none of the six
 shows as an Unknown shape card and is kept as it is. **Open as a table** under the list shows the same
 list as a table for bulk edits, and the table's **Show as cards** link comes back; nothing about the
 choice is saved in the file.
+
+**Changing the order.** The order of the list is the draw order, so the first card is underneath and
+the last is on top. Three ways to change it, each one undo step:
+
+- **Drag** a card. The card's own line rides under the pointer, its old place stays faint, and a line
+  in the editor's accent colour shows the gap it will land in: in front of a card when the pointer is
+  in its upper half, behind it in its lower half. Dragging a card that is selected moves the whole
+  selection.
+- **Alt+Up and Alt+Down** move the selected cards one place and keep them selected, so holding the key
+  walks them, the way those keys walk lines in Godot's script editor. A card at the edge waits there
+  while the others move, and a press that would change nothing does nothing.
+- **The card menu** (a right click on a card, or the menu in an open card) has Move to top, Move up,
+  Move down and Move to bottom, with the Alt keys written beside Move up and Move down. They act on
+  every selected card when the card you clicked is one of them.
+
+Only the order of the list changes; each shape keeps every number it had.
+
+**Selecting from the picture.** Click a shape in the picture at the top of the Inspector to select
+its card: the list scrolls to it (and opens if it was folded). Shift+click and Ctrl+click select the
+way they do in the list. Where shapes overlap, the click takes the one drawn last, on top, which is
+the one you see; a click on empty space clears the selection. While cards are selected the picture
+draws their shapes at full strength and every other shape quietened, with no ring or outline.
+Dragging in the picture does nothing. A selection is a view: nothing is written to the file.
 
 The eight stored keys - `kind`, `x`, `y`, `p1`, `p2`, `p3`, `color`, `texture` - mean exactly what
 they always did, so a prefab saved before the card existed opens, edits and saves as the same file.
