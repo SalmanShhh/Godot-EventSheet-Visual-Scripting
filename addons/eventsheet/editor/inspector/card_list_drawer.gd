@@ -1276,7 +1276,7 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable, i
 			# A card holds its times in seconds, so the unit is a word beside the number, as it is for every
 			# other unit on a card (dB), and not a second dropdown on the one row that has seconds.
 			if unit_ids.has("s") and str(unit_spec.get("store", "s")) == "s":
-				return _number_with_unit(card, key, write, EventSheetL10n.translate("s"))
+				return _number_with_unit(card, key, write, "s")
 			var unit_field: EventSheetDrawerWidgets.DrawerUnitField = EventSheetDrawerWidgets.DrawerUnitField.new(
 				unit_ids, str(unit_spec.get("store", "")))
 			unit_field.set_value(float(card.get(key, 0.0)))
