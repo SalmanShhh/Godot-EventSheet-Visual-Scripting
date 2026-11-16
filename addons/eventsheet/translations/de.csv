@@ -10885,3 +10885,17 @@ Force y,Kraft y
 Force z,Kraft z
 Label node,Label-Node
 Pick a property first,Wähle zuerst eine Eigenschaft
+"A base for dark and a base for light, one accent, a text colour for each. Generate fills both columns at once; anything you then change by hand stays yours.","Eine Basis für Dunkel und eine für Hell, ein Akzent, je eine Textfarbe. Erzeugen füllt beide Spalten auf einmal; was du danach von Hand änderst, bleibt deins."
+"Rebuild every colour token, dark and light, from the colours above.","Jede Farbe neu aufbauen, dunkel und hell, aus den Farben oben."
+The open sheet keeps its own copy of a theme; pick the theme again to update it.,"Das offene Blatt behält seine eigene Kopie eines Themas; wähle das Thema erneut, um sie zu aktualisieren."
+Preview as,"Vorschau als"
+Dark,"Dunkel"
+Only the sample sheet changes. Your sheet wears the side that matches Godot's editor theme.,"Nur das Beispielblatt ändert sich. Dein Blatt trägt die Seite, die zum Editor-Thema von Godot passt."
+Contrast %s : 1 on %s (%s); %s : 1 reads comfortably.,"Kontrast %s : 1 auf %s (%s); %s : 1 liest sich angenehm."
+(no light line: one colour for both),"(keine Hell-Zeile: eine Farbe für beide)"
+(no light line: worked out from the editor),"(keine Hell-Zeile: aus dem Editor berechnet)"
+Same colour in dark and light: click to give light its own,"Gleiche Farbe in Dunkel und Hell: klicken, damit Hell eine eigene bekommt"
+Separate colours: click to use the dark colour in both,"Getrennte Farben: klicken, um in beiden die dunkle Farbe zu verwenden"
+Worked out from the editor. Pick a colour to give light its own.,"Aus dem Editor berechnet. Wähle eine Farbe, damit Hell eine eigene bekommt."
+auto,"auto"
+Follow the editor in light,"Dem Editor in Hell folgen"

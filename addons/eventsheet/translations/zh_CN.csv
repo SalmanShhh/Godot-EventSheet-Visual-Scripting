@@ -10885,3 +10885,17 @@ Force y,力 y
 Force z,力 z
 Label node,标签节点
 Pick a property first,请先选择属性
+"A base for dark and a base for light, one accent, a text colour for each. Generate fills both columns at once; anything you then change by hand stays yours.","为深色选一个底色，为浅色选一个底色，再选一个强调色，以及各自的文字颜色。生成会一次填好两列；之后你手动改的内容会保留。"
+"Rebuild every colour token, dark and light, from the colours above.","根据上面的颜色重新生成每一种深色和浅色。"
+The open sheet keeps its own copy of a theme; pick the theme again to update it.,"已打开的表单保留着自己的主题副本；请重新选择该主题来更新它。"
+Preview as,"预览为"
+Dark,"深色"
+Only the sample sheet changes. Your sheet wears the side that matches Godot's editor theme.,"只有示例表单会变化。你的表单使用与 Godot 编辑器主题相符的一侧。"
+Contrast %s : 1 on %s (%s); %s : 1 reads comfortably.,"对比度 %s : 1，位于 %s 上（%s）；%s : 1 阅读舒适。"
+(no light line: one colour for both),"（无浅色行：两侧同一种颜色）"
+(no light line: worked out from the editor),"（无浅色行：由编辑器计算）"
+Same colour in dark and light: click to give light its own,"深色与浅色相同：点击为浅色指定自己的颜色"
+Separate colours: click to use the dark colour in both,"两侧颜色不同：点击让两侧都使用深色"
+Worked out from the editor. Pick a colour to give light its own.,"由编辑器计算。选择一种颜色可为浅色指定自己的颜色。"
+auto,"自动"
+Follow the editor in light,"浅色时跟随编辑器"

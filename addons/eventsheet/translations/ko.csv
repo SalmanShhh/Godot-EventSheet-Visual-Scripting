@@ -10885,3 +10885,17 @@ Force y,힘 y
 Force z,힘 z
 Label node,라벨 노드
 Pick a property first,먼저 속성을 고르세요
+"A base for dark and a base for light, one accent, a text colour for each. Generate fills both columns at once; anything you then change by hand stays yours.","어두운 쪽 기본색과 밝은 쪽 기본색, 강조색 하나, 각각의 글자색을 고릅니다. 생성하면 두 열이 한꺼번에 채워지고, 이후 손으로 바꾼 것은 그대로 남습니다."
+"Rebuild every colour token, dark and light, from the colours above.","위의 색으로 어두운 쪽과 밝은 쪽의 모든 색을 다시 만듭니다."
+The open sheet keeps its own copy of a theme; pick the theme again to update it.,"열려 있는 시트는 테마의 자체 사본을 갖고 있습니다. 갱신하려면 테마를 다시 고르세요."
+Preview as,"미리보기 모드"
+Dark,"어두움"
+Only the sample sheet changes. Your sheet wears the side that matches Godot's editor theme.,"샘플 시트만 바뀝니다. 내 시트는 Godot 편집기 테마에 맞는 쪽으로 표시됩니다."
+Contrast %s : 1 on %s (%s); %s : 1 reads comfortably.,"대비 %s : 1 (%s 위, %s); %s : 1이면 편하게 읽힙니다."
+(no light line: one colour for both),"(밝은 줄 없음: 두 쪽에 같은 색)"
+(no light line: worked out from the editor),"(밝은 줄 없음: 편집기에서 계산됨)"
+Same colour in dark and light: click to give light its own,"어두운 쪽과 밝은 쪽이 같은 색: 클릭하면 밝은 쪽에 별도 색을 줍니다"
+Separate colours: click to use the dark colour in both,"서로 다른 색: 클릭하면 두 쪽 모두 어두운 색을 씁니다"
+Worked out from the editor. Pick a colour to give light its own.,"편집기에서 계산된 색입니다. 색을 고르면 밝은 쪽에 별도 색을 줍니다."
+auto,"자동"
+Follow the editor in light,"밝은 쪽에서 편집기를 따름"

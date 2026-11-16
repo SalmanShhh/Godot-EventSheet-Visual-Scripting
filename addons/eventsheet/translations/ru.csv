@@ -10885,3 +10885,17 @@ Force y,Сила y
 Force z,Сила z
 Label node,Узел метки
 Pick a property first,Сначала выберите свойство
+"A base for dark and a base for light, one accent, a text colour for each. Generate fills both columns at once; anything you then change by hand stays yours.","Основа для тёмной и основа для светлой, один акцент, цвет текста для каждой. «Создать» заполняет обе колонки сразу; то, что вы потом измените вручную, остаётся вашим."
+"Rebuild every colour token, dark and light, from the colours above.","Пересобирает каждый цвет, тёмный и светлый, из цветов выше."
+The open sheet keeps its own copy of a theme; pick the theme again to update it.,"Открытый лист хранит собственную копию темы; выберите тему снова, чтобы обновить её."
+Preview as,"Просмотр как"
+Dark,"Тёмная"
+Only the sample sheet changes. Your sheet wears the side that matches Godot's editor theme.,"Меняется только образец листа. Ваш лист использует сторону, которая соответствует теме редактора Godot."
+Contrast %s : 1 on %s (%s); %s : 1 reads comfortably.,"Контраст %s : 1 на %s (%s); %s : 1 читается комфортно."
+(no light line: one colour for both),"(нет светлой строки: один цвет для обеих)"
+(no light line: worked out from the editor),"(нет светлой строки: вычислено по редактору)"
+Same colour in dark and light: click to give light its own,"Один цвет для тёмной и светлой: нажмите, чтобы дать светлой свой"
+Separate colours: click to use the dark colour in both,"Разные цвета: нажмите, чтобы использовать тёмный цвет в обеих"
+Worked out from the editor. Pick a colour to give light its own.,"Вычислено по редактору. Выберите цвет, чтобы дать светлой свой."
+auto,"авто"
+Follow the editor in light,"Следовать за редактором в светлой"

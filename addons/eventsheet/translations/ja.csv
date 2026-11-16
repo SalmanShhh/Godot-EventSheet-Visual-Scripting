@@ -10885,3 +10885,17 @@ Force y,力 y
 Force z,力 z
 Label node,ラベルノード
 Pick a property first,先にプロパティを選んでください
+"A base for dark and a base for light, one accent, a text colour for each. Generate fills both columns at once; anything you then change by hand stays yours.","暗用のベースと明用のベース、アクセント1色、それぞれのテキスト色を選びます。生成すると両方の列が一度に埋まり、その後に手で変えたものはそのまま残ります。"
+"Rebuild every colour token, dark and light, from the colours above.","上の色から、暗と明のすべての色を作り直します。"
+The open sheet keeps its own copy of a theme; pick the theme again to update it.,"開いているシートはテーマの独自コピーを持っています。更新するにはテーマをもう一度選んでください。"
+Preview as,"プレビュー表示"
+Dark,"暗"
+Only the sample sheet changes. Your sheet wears the side that matches Godot's editor theme.,"サンプルシートだけが変わります。あなたのシートは Godot のエディターテーマに合う側で表示されます。"
+Contrast %s : 1 on %s (%s); %s : 1 reads comfortably.,"コントラスト %s : 1（%s 上、%s）。%s : 1 で読みやすくなります。"
+(no light line: one colour for both),"(明の行なし: 両方に同じ色)"
+(no light line: worked out from the editor),"(明の行なし: エディターから算出)"
+Same colour in dark and light: click to give light its own,"暗と明で同じ色: クリックで明に専用の色を設定"
+Separate colours: click to use the dark colour in both,"別々の色: クリックで両方に暗の色を使用"
+Worked out from the editor. Pick a colour to give light its own.,"エディターから算出された色です。色を選ぶと明に専用の色を設定できます。"
+auto,"自動"
+Follow the editor in light,"明でエディターに合わせる"
