@@ -76,59 +76,22 @@ static func draw_prefab_steps(canvas: CanvasItem, prefab_res: Resource, origin: 
 					canvas.draw_texture_rect(texture, Rect2(at - texture.get_size() * maxf(p1, 0.01) * 0.5, texture.get_size() * maxf(p1, 0.01)), false, tint)
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-## One line step's stroke: its ends, and its dash pattern when it has one. A step that says
-## neither draws the single plain line it always drew, so an older prefab is untouched.
+## One line step's stroke: its ends, and its dash pattern when it has one. The stroke code lives
+## on DrawingPrefabResource so the Drawing Canvas draws a prefab's line the same way; this name stays
+## for anything that already calls it.
 ## @ace_hidden
 static func draw_stroke(canvas: CanvasItem, from: Vector2, to: Vector2, width: float, tint: Color, entry: Dictionary) -> void:
-	if not bool(entry.get("dashed", false)):
-		draw_capped(canvas, from, to, width, tint, str(entry.get("caps", "none")))
-		return
-	var span: float = from.distance_to(to)
-	if span <= 0.001:
-		return
-	var direction: Vector2 = (to - from) / span
-	var dash: float = maxf(float(entry.get("dash_size", 8.0)), 0.5)
-	var period: float = dash + maxf(float(entry.get("dash_spacing", 6.0)), 0.0)
-	var style: String = str(entry.get("dash_style", "plain"))
-	# Whole periods of offset land where they started, so a scrolled pattern never jumps.
-	var along: float = -fposmod(float(entry.get("dash_offset", 0.0)) * period, period)
-	while along < span:
-		var starts: float = maxf(along, 0.0)
-		var ends: float = minf(along + dash, span)
-		if ends > starts:
-			if style == "angled":
-				draw_leaning_dash(canvas, from, direction, starts, ends, width, tint)
-			else:
-				draw_capped(canvas, from + direction * starts, from + direction * ends, width, tint, "round" if style == "rounded" else "none")
-		along += period
+	DrawingPrefabResource.draw_stroke(canvas, from, to, width, tint, entry)
 
-## One straight run with its ends: cut square at the point (none), half a width past it
-## (square), or rounded off with a disc at each end (round).
+## One straight run with its ends (none, square or round) - see DrawingPrefabResource.draw_capped.
 ## @ace_hidden
 static func draw_capped(canvas: CanvasItem, from: Vector2, to: Vector2, width: float, tint: Color, caps: String) -> void:
-	var line_from: Vector2 = from
-	var line_to: Vector2 = to
-	if caps == "square" and from.distance_to(to) > 0.001:
-		var reach: Vector2 = (to - from).normalized() * width * 0.5
-		line_from -= reach
-		line_to += reach
-	canvas.draw_line(line_from, line_to, tint, width)
-	if caps == "round":
-		canvas.draw_circle(from, width * 0.5, tint)
-		canvas.draw_circle(to, width * 0.5, tint)
+	DrawingPrefabResource.draw_capped(canvas, from, to, width, tint, caps)
 
-## One angled dash: the same run leaning over by half a width, drawn as the parallelogram it
-## is - which is what makes a row of them read as a slant rather than as ticks.
+## One angled dash - see DrawingPrefabResource.draw_leaning_dash.
 ## @ace_hidden
 static func draw_leaning_dash(canvas: CanvasItem, from: Vector2, direction: Vector2, starts: float, ends: float, width: float, tint: Color) -> void:
-	var half: float = width * 0.5
-	var side: Vector2 = Vector2(-direction.y, direction.x) * half
-	canvas.draw_colored_polygon(PackedVector2Array([
-		from + direction * (starts - half) + side,
-		from + direction * (ends - half) + side,
-		from + direction * (ends + half) - side,
-		from + direction * (starts + half) - side,
-	]), tint)
+	DrawingPrefabResource.draw_leaning_dash(canvas, from, direction, starts, ends, width, tint)
 
 ## Typed draw entries for a prefab: the resource's cached compiled_steps() (parsed once, shared by
 ## every stamp) when it exposes one, else a raw parse of any Resource's steps into the same shape -

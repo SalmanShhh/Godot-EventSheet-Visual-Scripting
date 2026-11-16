@@ -289,6 +289,8 @@ func _run_draw_commands() -> void:
 		match str(command["kind"]):
 			"line":
 				_drawer.draw_line(command["a"], command["b"], command["color"], command["width"])
+			"prefab_line":
+				DrawingPrefabResource.draw_stroke(_drawer, command["a"], command["b"], command["width"], command["color"], command["look"])
 			"circle":
 				_drawer.draw_circle(command["at"], command["radius"], command["color"])
 			"ring":
@@ -429,13 +431,34 @@ func prefab(prefab_res: Resource, x: float, y: float, scale_factor: float, rotat
 				_push({"kind": "polygon", "points": corners, "color": tint})
 			"line":
 				var to_point: Vector2 = origin + (Vector2(p1, p2) * scale_by).rotated(spin)
-				line(at.x, at.y, to_point.x, to_point.y, maxf(p3 * scale_by, 1.0), tint)
+				if _line_has_look(entry):
+					# A line that names its ends, a dash pattern or a fixed thickness is drawn with that look, the way the
+					# stamp node draws it: a dash and its gap grow with the prefab's scale, the offset is a share of one
+					# dash and gap so it does not, and a fixed line keeps its own thickness at any scale.
+					var look: Dictionary = {
+						"caps": str(entry["caps"]),
+						"dashed": bool(entry["dashed"]),
+						"dash_size": float(entry["dash_size"]) * scale_by,
+						"dash_spacing": float(entry["dash_spacing"]) * scale_by,
+						"dash_offset": float(entry["dash_offset"]),
+						"dash_style": str(entry["dash_style"]),
+					}
+					var thickness: float = maxf(p3, 1.0) if str(entry["scale_mode"]) == "fixed" else maxf(p3 * scale_by, 1.0)
+					_push({"kind": "prefab_line", "a": to_canvas(at), "b": to_canvas(to_point), "width": thickness, "color": tint, "look": look})
+				else:
+					line(at.x, at.y, to_point.x, to_point.y, maxf(p3 * scale_by, 1.0), tint)
 			"cone":
 				cone(at.x, at.y, p1 + rotation_deg, p2, p3 * scale_by, tint)
 			"stamp":
 				var stamp_texture: Texture2D = entry["tex"]
 				if stamp_texture != null:
 					stamp(stamp_texture, at.x, at.y, maxf(p1, 0.01) * scale_by, p2 + rotation_deg)
+
+## Whether a prefab line step carries a look - ends, a dash pattern or a fixed thickness. A step that
+## carries none is queued as the plain line it always was, so a prefab saved before these keys existed
+## draws the same commands.
+func _line_has_look(entry: Dictionary) -> bool:
+	return str(entry["caps"]) != "none" or bool(entry["dashed"]) or str(entry["scale_mode"]) == "fixed"
 
 ## Typed draw entries for a prefab: the resource's cached compiled_steps() (parsed once, shared by
 ## every draw) when it exposes one, else a raw parse of any Resource's steps into the same shape.
