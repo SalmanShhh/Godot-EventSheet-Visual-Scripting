@@ -247,7 +247,7 @@ func _populate_theme_menu() -> void:
 	_theme_menu.add_radio_check_item(load(THEME_CHOICES_PATH).first_entry_text(_project_theme_path()), 0)
 	_theme_menu.set_item_metadata(0, "")
 	for preset: Dictionary in EventSheetThemePresets.list_presets():
-		_theme_menu.add_radio_check_item(str(preset.get("name", "Theme")), _theme_menu.item_count)
+		_theme_menu.add_radio_check_item(load(THEME_CHOICES_PATH).entry_text(str(preset.get("name", "Theme")), str(preset.get("path", "")), _project_theme_path()), _theme_menu.item_count)
 		_theme_menu.set_item_metadata(_theme_menu.item_count - 1, str(preset.get("path", "")))
 	_theme_menu.add_separator()
 	_theme_menu.add_check_item(EventSheetL10n.translate("Use For Every Sheet"), _theme_menu.item_count)

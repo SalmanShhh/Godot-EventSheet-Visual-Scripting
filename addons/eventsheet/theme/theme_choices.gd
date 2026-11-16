@@ -65,3 +65,12 @@ static func first_entry_text(project_theme_path: String) -> String:
 	if project_theme_path.is_empty():
 		return EventSheetL10n.translate("Match Editor (default)")
 	return EventSheetL10n.translate("Project theme: %s") % EventSheetThemePresets._humanize(project_theme_path.get_file())
+
+
+## The words on a theme's entry in the Sheet theme menu. While the project names a theme for every sheet, the
+## first entry is that theme and cannot be the way back to the editor's own look, so the Editor Native starter,
+## which is that look, is the entry that says Match Editor.
+static func entry_text(preset_name: String, preset_path: String, project_theme_path: String) -> String:
+	if not project_theme_path.is_empty() and preset_path == EventSheetEditorThemeDeriver.NATIVE_STARTER_PATH:
+		return EventSheetL10n.translate("Match Editor")
+	return preset_name

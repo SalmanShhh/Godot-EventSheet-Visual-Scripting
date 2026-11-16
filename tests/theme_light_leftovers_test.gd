@@ -19,6 +19,7 @@ static func run() -> bool:
 	var ok: bool = true
 	ok = _reading_font_hint() and ok
 	ok = _shared_sheets_heading() and ok
+	ok = _the_way_back_to_the_editor() and ok
 	return ok
 
 
@@ -62,4 +63,13 @@ static func _shared_sheets_heading() -> bool:
 	return SUPPORT.pins(P + ": the Shared Sheets window", [
 		["the list is headed Shared Sheets", heading, "Shared Sheets"],
 		["and no heading says Included sheets", old_heading, false],
+	])
+
+
+static func _the_way_back_to_the_editor() -> bool:
+	var choices: GDScript = load(CHOICES_PATH)
+	return SUPPORT.pins(P + ": the Sheet theme menu", [
+		["with no project theme the starter keeps its own name", choices.entry_text("Editor Native", STARTER, ""), "Editor Native"],
+		["with a project theme the starter is the way back to Match Editor", choices.entry_text("Editor Native", STARTER, NORD), "Match Editor"],
+		["any other theme keeps its name either way", choices.entry_text("Nord", NORD, NORD), "Nord"],
 	])
