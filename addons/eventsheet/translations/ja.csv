@@ -10622,3 +10622,22 @@ Use in event sheets,イベントシートで使う
 "%s: no rows added. Give the script a class_name, so its functions have a name to be called by.",%s: 行は追加されませんでした。スクリプトに class_name を付けると、関数を呼び出す名前ができます。
 From %s.,%s から。
 Browse every row,すべての行を見る
+Stop.,停止。
+Play this card alone.,このカードだけを再生します。
+Play from here,ここから再生
+%s (not in this project),%s（このプロジェクトにありません）
+"Save it as a file first. A card keeps the file, not a copy inside the scene.",先にファイルとして保存してください。カードが保持するのはファイルであり、シーン内のコピーではありません。
+Each play lands between %.2f and %.2f.,再生のたびに %.2f から %.2f の間の値になります。
+Pick a sound. Until then this card is silent.,サウンドを選んでください。選ぶまでこのカードは無音です。
+"That sound is not in the project any more, so this card is silent.",そのサウンドはもうプロジェクトにないため、このカードは無音です。
+plays again each time it ends,終わるたびにもう一度再生します
+"Keeps playing while you tune. Each pass reads the list as it is then, so a number you change is the number the next pass uses.",調整しながら再生し続けます。各回はそのときのリストを読み込むため、変更した数値が次の回で使われます。
+Try at strength,強さを指定して試す
+"What the preview scales every amount by. The same number the toolbar's ""at"" box sets.",プレビューがすべての量に掛ける値です。ツールバーの「at」ボックスと同じ数値です。
+switched off,オフ
+played,再生
+shown as time,時間として表示
+not shown in the editor: %s,エディターでは表示されません: %s
+not in this pass,今回の再生には含まれません
+"Hear this card alone, with its own volume, pitch and bus. A new pitch is rolled each press. Press again to stop.",このカードだけを、カード自身の音量・ピッチ・バスで聴きます。押すたびに新しいピッチが選ばれます。もう一度押すと停止します。
+No sound picked.,サウンドが選ばれていません。

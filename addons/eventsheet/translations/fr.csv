@@ -10622,3 +10622,22 @@ Use in event sheets,Utiliser dans les feuilles d'événements
 "%s: no rows added. Give the script a class_name, so its functions have a name to be called by.",%s : aucune ligne ajoutée. Donnez un class_name au script pour que ses fonctions aient un nom sous lequel être appelées.
 From %s.,Depuis %s.
 Browse every row,Parcourir toutes les lignes
+Stop.,Arrêter.
+Play this card alone.,Jouer cette carte seule.
+Play from here,Jouer à partir d'ici
+%s (not in this project),%s (absent de ce projet)
+"Save it as a file first. A card keeps the file, not a copy inside the scene.","Enregistrez-le d'abord comme fichier. Une carte garde le fichier, pas une copie dans la scène."
+Each play lands between %.2f and %.2f.,Chaque lecture tombe entre %.2f et %.2f.
+Pick a sound. Until then this card is silent.,"Choisissez un son. D'ici là, cette carte reste silencieuse."
+"That sound is not in the project any more, so this card is silent.","Ce son n'est plus dans le projet, donc cette carte reste silencieuse."
+plays again each time it ends,rejoue à chaque fin
+"Keeps playing while you tune. Each pass reads the list as it is then, so a number you change is the number the next pass uses.","Continue à jouer pendant que vous réglez. Chaque passage relit la liste telle qu'elle est alors, donc un nombre modifié est celui que le passage suivant utilise."
+Try at strength,Essayer à l'intensité
+"What the preview scales every amount by. The same number the toolbar's ""at"" box sets.","Par quoi l'aperçu multiplie chaque valeur. Le même nombre que la case ""at"" de la barre d'outils."
+switched off,désactivée
+played,jouée
+shown as time,affichée comme durée
+not shown in the editor: %s,non affichée dans l'éditeur : %s
+not in this pass,absente de ce passage
+"Hear this card alone, with its own volume, pitch and bus. A new pitch is rolled each press. Press again to stop.","Écoutez cette carte seule, avec son propre volume, sa hauteur et son bus. Une nouvelle hauteur est tirée à chaque appui. Appuyez à nouveau pour arrêter."
+No sound picked.,Aucun son choisi.

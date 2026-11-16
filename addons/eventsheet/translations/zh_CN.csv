@@ -10622,3 +10622,22 @@ Use in event sheets,在事件表中使用
 "%s: no rows added. Give the script a class_name, so its functions have a name to be called by.",%s：未添加任何行。请给脚本加上 class_name，这样它的函数才有可调用的名字。
 From %s.,来自 %s。
 Browse every row,浏览所有行
+Stop.,停止。
+Play this card alone.,仅播放这张卡片。
+Play from here,从此处开始播放
+%s (not in this project),%s（不在此项目中）
+"Save it as a file first. A card keeps the file, not a copy inside the scene.",请先将其保存为文件。卡片保存的是文件，而不是场景内的副本。
+Each play lands between %.2f and %.2f.,每次播放都会落在 %.2f 和 %.2f 之间。
+Pick a sound. Until then this card is silent.,请选择一个声音。在此之前，这张卡片是静音的。
+"That sound is not in the project any more, so this card is silent.",该声音已不在项目中，所以这张卡片是静音的。
+plays again each time it ends,每次结束后再次播放
+"Keeps playing while you tune. Each pass reads the list as it is then, so a number you change is the number the next pass uses.",调整时持续播放。每一轮都会读取当时的列表，所以你修改的数值会用于下一轮。
+Try at strength,按强度试玩
+"What the preview scales every amount by. The same number the toolbar's ""at"" box sets.",预览用来缩放所有数值的倍率。与工具栏中的“at”框是同一个数字。
+switched off,已关闭
+played,已播放
+shown as time,以时间显示
+not shown in the editor: %s,编辑器中不显示：%s
+not in this pass,不在本轮中
+"Hear this card alone, with its own volume, pitch and bus. A new pitch is rolled each press. Press again to stop.",单独试听这张卡片，使用它自己的音量、音高和总线。每次按下都会随机一个新音高。再按一次停止。
+No sound picked.,尚未选择声音。

@@ -10622,3 +10622,22 @@ Use in event sheets,Использовать в листах событий
 "%s: no rows added. Give the script a class_name, so its functions have a name to be called by.","%s: строки не добавлены. Задайте скрипту class_name, чтобы у его функций было имя для вызова."
 From %s.,Из %s.
 Browse every row,Просмотреть все строки
+Stop.,Остановить.
+Play this card alone.,Воспроизвести только эту карточку.
+Play from here,Воспроизвести отсюда
+%s (not in this project),%s (нет в этом проекте)
+"Save it as a file first. A card keeps the file, not a copy inside the scene.","Сначала сохраните это как файл. Карточка хранит файл, а не копию внутри сцены."
+Each play lands between %.2f and %.2f.,Каждое воспроизведение попадает между %.2f и %.2f.
+Pick a sound. Until then this card is silent.,"Выберите звук. Пока он не выбран, эта карточка молчит."
+"That sound is not in the project any more, so this card is silent.","Этого звука больше нет в проекте, поэтому карточка молчит."
+plays again each time it ends,воспроизводится снова каждый раз по окончании
+"Keeps playing while you tune. Each pass reads the list as it is then, so a number you change is the number the next pass uses.","Воспроизведение продолжается, пока вы настраиваете. Каждый проход читает список в его текущем виде, поэтому изменённое число используется в следующем проходе."
+Try at strength,Проба с силой
+"What the preview scales every amount by. The same number the toolbar's ""at"" box sets.","На что предпросмотр умножает каждое значение. То же число, что задаёт поле ""at"" на панели инструментов."
+switched off,выключена
+played,воспроизведена
+shown as time,показана как время
+not shown in the editor: %s,не показывается в редакторе: %s
+not in this pass,не в этом проходе
+"Hear this card alone, with its own volume, pitch and bus. A new pitch is rolled each press. Press again to stop.","Прослушать только эту карточку с её громкостью, высотой и шиной. При каждом нажатии выбирается новая высота. Нажмите ещё раз, чтобы остановить."
+No sound picked.,Звук не выбран.

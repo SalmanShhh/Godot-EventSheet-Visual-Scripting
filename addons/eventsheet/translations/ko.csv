@@ -10622,3 +10622,22 @@ Use in event sheets,이벤트 시트에서 사용
 "%s: no rows added. Give the script a class_name, so its functions have a name to be called by.",%s: 추가된 행이 없습니다. 스크립트에 class_name을 지정하면 함수를 호출할 이름이 생깁니다.
 From %s.,%s에서.
 Browse every row,모든 행 둘러보기
+Stop.,정지.
+Play this card alone.,이 카드만 재생합니다.
+Play from here,여기서부터 재생
+%s (not in this project),%s (이 프로젝트에 없음)
+"Save it as a file first. A card keeps the file, not a copy inside the scene.",먼저 파일로 저장하세요. 카드는 씬 안의 복사본이 아니라 파일을 보관합니다.
+Each play lands between %.2f and %.2f.,재생할 때마다 %.2f에서 %.2f 사이의 값이 됩니다.
+Pick a sound. Until then this card is silent.,소리를 고르세요. 그때까지 이 카드는 소리가 나지 않습니다.
+"That sound is not in the project any more, so this card is silent.",그 소리는 더 이상 프로젝트에 없으므로 이 카드는 소리가 나지 않습니다.
+plays again each time it ends,끝날 때마다 다시 재생합니다
+"Keeps playing while you tune. Each pass reads the list as it is then, so a number you change is the number the next pass uses.",조정하는 동안 계속 재생합니다. 매번 그 시점의 목록을 읽으므로 바꾼 숫자가 다음 재생에 적용됩니다.
+Try at strength,강도로 시험
+"What the preview scales every amount by. The same number the toolbar's ""at"" box sets.","미리보기가 모든 양에 곱하는 값입니다. 도구 모음의 ""at"" 상자와 같은 숫자입니다."
+switched off,꺼짐
+played,재생됨
+shown as time,시간으로 표시
+not shown in the editor: %s,에디터에서 표시되지 않음: %s
+not in this pass,이번 재생에는 없음
+"Hear this card alone, with its own volume, pitch and bus. A new pitch is rolled each press. Press again to stop.","이 카드만 자체 볼륨, 피치, 버스로 들어봅니다. 누를 때마다 새 피치가 정해집니다. 다시 누르면 멈춥니다."
+No sound picked.,선택된 소리가 없습니다.

@@ -10622,3 +10622,22 @@ Use in event sheets,In Ereignisblättern verwenden
 "%s: no rows added. Give the script a class_name, so its functions have a name to be called by.","%s: keine Zeilen hinzugefügt. Gib dem Skript einen class_name, damit seine Funktionen einen Namen zum Aufrufen haben."
 From %s.,Aus %s.
 Browse every row,Alle Zeilen durchsuchen
+Stop.,Anhalten.
+Play this card alone.,Nur diese Karte abspielen.
+Play from here,Ab hier abspielen
+%s (not in this project),%s (nicht in diesem Projekt)
+"Save it as a file first. A card keeps the file, not a copy inside the scene.","Speichere es zuerst als Datei. Eine Karte behält die Datei, keine Kopie innerhalb der Szene."
+Each play lands between %.2f and %.2f.,Jede Wiedergabe liegt zwischen %.2f und %.2f.
+Pick a sound. Until then this card is silent.,Wähle einen Sound. Bis dahin bleibt diese Karte stumm.
+"That sound is not in the project any more, so this card is silent.","Dieser Sound ist nicht mehr im Projekt, daher bleibt diese Karte stumm."
+plays again each time it ends,"spielt jedes Mal erneut, wenn es endet"
+"Keeps playing while you tune. Each pass reads the list as it is then, so a number you change is the number the next pass uses.","Spielt weiter, während du feinstimmst. Jeder Durchlauf liest die Liste, wie sie dann ist, also gilt eine geänderte Zahl im nächsten Durchlauf."
+Try at strength,Mit Stärke testen
+"What the preview scales every amount by. The same number the toolbar's ""at"" box sets.","Womit die Vorschau jeden Wert skaliert. Dieselbe Zahl wie im ""at""-Feld der Werkzeugleiste."
+switched off,ausgeschaltet
+played,abgespielt
+shown as time,als Zeit dargestellt
+not shown in the editor: %s,im Editor nicht dargestellt: %s
+not in this pass,nicht in diesem Durchlauf
+"Hear this card alone, with its own volume, pitch and bus. A new pitch is rolled each press. Press again to stop.","Diese Karte allein anhören, mit eigener Lautstärke, Tonhöhe und eigenem Bus. Bei jedem Druck wird eine neue Tonhöhe gewürfelt. Erneut drücken zum Anhalten."
+No sound picked.,Kein Sound gewählt.

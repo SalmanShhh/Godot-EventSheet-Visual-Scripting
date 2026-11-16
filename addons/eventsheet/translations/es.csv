@@ -10622,3 +10622,22 @@ Use in event sheets,Usar en las hojas de eventos
 "%s: no rows added. Give the script a class_name, so its functions have a name to be called by.",%s: no se añadió ninguna fila. Dale al script un class_name para que sus funciones tengan un nombre con el que llamarlas.
 From %s.,De %s.
 Browse every row,Explorar todas las filas
+Stop.,Detener.
+Play this card alone.,Reproducir solo esta tarjeta.
+Play from here,Reproducir desde aquí
+%s (not in this project),%s (no está en este proyecto)
+"Save it as a file first. A card keeps the file, not a copy inside the scene.","Guárdalo primero como archivo. Una tarjeta guarda el archivo, no una copia dentro de la escena."
+Each play lands between %.2f and %.2f.,Cada reproducción cae entre %.2f y %.2f.
+Pick a sound. Until then this card is silent.,Elige un sonido. Hasta entonces esta tarjeta está en silencio.
+"That sound is not in the project any more, so this card is silent.","Ese sonido ya no está en el proyecto, así que esta tarjeta está en silencio."
+plays again each time it ends,se reproduce de nuevo cada vez que termina
+"Keeps playing while you tune. Each pass reads the list as it is then, so a number you change is the number the next pass uses.","Sigue reproduciendo mientras ajustas. Cada pasada lee la lista tal como esté entonces, así que un número que cambies es el que usa la siguiente pasada."
+Try at strength,Probar con intensidad
+"What the preview scales every amount by. The same number the toolbar's ""at"" box sets.","Por cuánto escala la vista previa cada cantidad. El mismo número que fija la casilla ""at"" de la barra de herramientas."
+switched off,desactivada
+played,reproducida
+shown as time,mostrada como tiempo
+not shown in the editor: %s,no se muestra en el editor: %s
+not in this pass,no está en esta pasada
+"Hear this card alone, with its own volume, pitch and bus. A new pitch is rolled each press. Press again to stop.","Escucha esta tarjeta sola, con su propio volumen, tono y bus. En cada pulsación se sortea un tono nuevo. Pulsa otra vez para detener."
+No sound picked.,No se ha elegido ningún sonido.

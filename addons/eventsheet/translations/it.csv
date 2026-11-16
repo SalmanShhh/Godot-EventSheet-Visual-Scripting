@@ -10622,3 +10622,22 @@ Use in event sheets,Usa nei fogli eventi
 "%s: no rows added. Give the script a class_name, so its functions have a name to be called by.","%s: nessuna riga aggiunta. Dai allo script un class_name, così le sue funzioni hanno un nome con cui essere chiamate."
 From %s.,Da %s.
 Browse every row,Sfoglia tutte le righe
+Stop.,Ferma.
+Play this card alone.,Riproduci solo questa carta.
+Play from here,Riproduci da qui
+%s (not in this project),%s (non è in questo progetto)
+"Save it as a file first. A card keeps the file, not a copy inside the scene.","Salvalo prima come file. Una carta conserva il file, non una copia dentro la scena."
+Each play lands between %.2f and %.2f.,Ogni riproduzione cade tra %.2f e %.2f.
+Pick a sound. Until then this card is silent.,Scegli un suono. Fino ad allora questa carta resta muta.
+"That sound is not in the project any more, so this card is silent.","Quel suono non è più nel progetto, quindi questa carta resta muta."
+plays again each time it ends,riparte ogni volta che finisce
+"Keeps playing while you tune. Each pass reads the list as it is then, so a number you change is the number the next pass uses.","Continua a riprodurre mentre regoli. Ogni passaggio legge la lista com'è in quel momento, quindi un numero che cambi è quello usato dal passaggio successivo."
+Try at strength,Prova con intensità
+"What the preview scales every amount by. The same number the toolbar's ""at"" box sets.","Per cosa l'anteprima scala ogni valore. Lo stesso numero della casella ""at"" della barra degli strumenti."
+switched off,disattivata
+played,riprodotta
+shown as time,mostrata come tempo
+not shown in the editor: %s,non mostrata nell'editor: %s
+not in this pass,non in questo passaggio
+"Hear this card alone, with its own volume, pitch and bus. A new pitch is rolled each press. Press again to stop.","Ascolta questa carta da sola, con il suo volume, tono e bus. A ogni pressione viene estratto un nuovo tono. Premi di nuovo per fermare."
+No sound picked.,Nessun suono scelto.
