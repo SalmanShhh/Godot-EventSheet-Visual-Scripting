@@ -10990,3 +10990,14 @@ Move to bottom,末尾へ移動
 Shapes (%d),図形 (%d)
 Dash offset,ダッシュのオフセット
 "Line %d: rename %s to %s. Nothing else changed.","%d 行目: %s を %s に変更してください。ほかに変更はありません。"
+Fade in,フェードイン
+Custom curve,カスタムカーブ
+rises from nothing,ゼロから上がる
+goes down to nothing,ゼロまで下がる
+This card still shakes for as long as the Juice node's Shake Decay says. Tick Fade in or Fade out to make Seconds the real length.,このカードは今も Juice ノードの Shake Decay が決めた長さだけ揺れます。フェードインかフェードアウトにチェックを入れると、秒数が実際の長さになります。
+"Follows your curve over %s s, at most %s.",%s 秒かけてカーブに沿い、最大 %s です。
+Swells to %s half way and is gone at %s s.,半分で %s まで強まり、%s 秒で消えます。
+Starts at nothing and reaches %s at %s s.,ゼロから始まり、%s 秒で %s に達します。
+Starts at %s and is gone at %s s.,%s から始まり、%s 秒で消えます。
+"Holds %s for %s s, then stops.",%s を %s 秒保ち、その後止まります。
+Save the new file where the card can find it,カードが見つけられる場所に新しいファイルを保存

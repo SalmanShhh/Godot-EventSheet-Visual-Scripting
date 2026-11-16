@@ -10990,3 +10990,14 @@ Move to bottom,Mover al final
 Shapes (%d),Formas (%d)
 Dash offset,Desplazamiento del trazo
 "Line %d: rename %s to %s. Nothing else changed.","Línea %d: cambia el nombre %s por %s. Nada más ha cambiado."
+Fade in,Aparecer
+Custom curve,Curva propia
+rises from nothing,sube desde cero
+goes down to nothing,baja hasta cero
+This card still shakes for as long as the Juice node's Shake Decay says. Tick Fade in or Fade out to make Seconds the real length.,Esta tarjeta sigue temblando el tiempo que diga el Shake Decay del nodo Juice. Marca Aparecer o Desvanecer para que Segundos sea la duración real.
+"Follows your curve over %s s, at most %s.","Sigue tu curva durante %s s, como máximo %s."
+Swells to %s half way and is gone at %s s.,Crece hasta %s a la mitad y termina a los %s s.
+Starts at nothing and reaches %s at %s s.,Empieza en cero y llega a %s a los %s s.
+Starts at %s and is gone at %s s.,Empieza en %s y termina a los %s s.
+"Holds %s for %s s, then stops.",Mantiene %s durante %s s y luego se detiene.
+Save the new file where the card can find it,Guarda el archivo nuevo donde la tarjeta pueda encontrarlo

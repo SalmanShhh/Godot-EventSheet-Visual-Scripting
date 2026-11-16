@@ -10990,3 +10990,14 @@ Move to bottom,Ganz nach unten
 Shapes (%d),Formen (%d)
 Dash offset,Strichversatz
 "Line %d: rename %s to %s. Nothing else changed.","Zeile %d: %s in %s umbenennen. Sonst hat sich nichts geändert."
+Fade in,Einblenden
+Custom curve,Eigene Kurve
+rises from nothing,steigt aus dem Nichts an
+goes down to nothing,sinkt auf null
+This card still shakes for as long as the Juice node's Shake Decay says. Tick Fade in or Fade out to make Seconds the real length.,"Diese Karte wackelt weiter so lange, wie der Shake Decay des Juice-Nodes es sagt. Hake Einblenden oder Ausblenden an, damit Sekunden die echte Dauer sind."
+"Follows your curve over %s s, at most %s.","Folgt deiner Kurve über %s s, höchstens %s."
+Swells to %s half way and is gone at %s s.,Schwillt bis zur Hälfte auf %s an und ist bei %s s vorbei.
+Starts at nothing and reaches %s at %s s.,Beginnt bei null und erreicht %s bei %s s.
+Starts at %s and is gone at %s s.,Beginnt bei %s und ist bei %s s vorbei.
+"Holds %s for %s s, then stops.",Hält %s für %s s und hört dann auf.
+Save the new file where the card can find it,"Speichere die neue Datei dort, wo die Karte sie findet"

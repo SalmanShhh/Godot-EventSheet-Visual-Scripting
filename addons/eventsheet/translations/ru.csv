@@ -10990,3 +10990,14 @@ Move to bottom,Переместить вниз
 Shapes (%d),Фигуры (%d)
 Dash offset,Смещение штриха
 "Line %d: rename %s to %s. Nothing else changed.","Строка %d: переименуйте %s в %s. Больше ничего не изменилось."
+Fade in,Нарастание
+Custom curve,Своя кривая
+rises from nothing,нарастает с нуля
+goes down to nothing,спадает до нуля
+This card still shakes for as long as the Juice node's Shake Decay says. Tick Fade in or Fade out to make Seconds the real length.,"Эта карточка всё ещё трясёт столько, сколько задаёт Shake Decay узла Juice. Отметьте «Нарастание» или «Затухание», и секунды станут настоящей длительностью."
+"Follows your curve over %s s, at most %s.","Следует вашей кривой %s с, не больше %s."
+Swells to %s half way and is gone at %s s.,Нарастает до %s к середине и пропадает на %s с.
+Starts at nothing and reaches %s at %s s.,Начинается с нуля и достигает %s на %s с.
+Starts at %s and is gone at %s s.,Начинается с %s и пропадает на %s с.
+"Holds %s for %s s, then stops.","Держит %s в течение %s с, затем останавливается."
+Save the new file where the card can find it,"Сохраните новый файл там, где карточка сможет его найти"

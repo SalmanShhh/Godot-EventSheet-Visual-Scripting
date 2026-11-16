@@ -10990,3 +10990,14 @@ Move to bottom,Déplacer tout en bas
 Shapes (%d),Formes (%d)
 Dash offset,Décalage du tiret
 "Line %d: rename %s to %s. Nothing else changed.","Ligne %d : renomme %s en %s. Rien d'autre n'a changé."
+Fade in,Fondu en entrée
+Custom curve,Courbe personnalisée
+rises from nothing,monte depuis zéro
+goes down to nothing,descend jusqu'à zéro
+This card still shakes for as long as the Juice node's Shake Decay says. Tick Fade in or Fade out to make Seconds the real length.,Cette carte secoue encore aussi longtemps que le Shake Decay du nœud Juice le dit. Cochez Fondu en entrée ou Fondu en sortie pour que Secondes soit la durée réelle.
+"Follows your curve over %s s, at most %s.","Suit votre courbe pendant %s s, au plus %s."
+Swells to %s half way and is gone at %s s.,Monte à %s à mi-parcours et disparaît à %s s.
+Starts at nothing and reaches %s at %s s.,Part de zéro et atteint %s à %s s.
+Starts at %s and is gone at %s s.,Part de %s et disparaît à %s s.
+"Holds %s for %s s, then stops.","Garde %s pendant %s s, puis s'arrête."
+Save the new file where the card can find it,Enregistrez le nouveau fichier là où la carte peut le trouver

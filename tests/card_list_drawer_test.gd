@@ -24,6 +24,7 @@ static func run() -> bool:
 	ok = _card_row_pins() and ok
 	ok = _array_pins() and ok
 	ok = _link_pins() and ok
+	ok = plain_number_pins() and ok
 	ok = _fold_pins() and ok
 	ok = _prefab_pins() and ok
 	ok = _number_cell_pins() and ok
@@ -459,3 +460,16 @@ static func _find(sheet: EventSheetResource, var_name: String) -> LocalVariable:
 
 static func _eq(label: String, actual: Variant, expected: Variant) -> bool:
 	return SUPPORT.check("card_list_drawer_test", label, actual, expected)
+
+
+## A number a card shows as a person writes it: a whole number has no decimal point ("100", not "100.0"), and
+## a fraction keeps what it has.
+static func plain_number_pins() -> bool:
+	var plain: Callable = Callable(EventSheetCardListDrawer, "plain_number_text")
+	return SUPPORT.pins("card_list_drawer_test", [
+		["a whole percentage reads 100", plain.call(100.0), "100"],
+		["zero reads 0", plain.call(0.0), "0"],
+		["a fraction keeps its digits", plain.call(12.5), "12.5"],
+		["three places at most", plain.call(0.3333333), "0.333"],
+		["a negative whole number", plain.call(-2.0), "-2"],
+	])

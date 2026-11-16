@@ -2076,7 +2076,7 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable, i
 			return attribute_fields().call("godot_field", self, card, field, write, index)
 		"node", "property", "typed", "choices", "arguments", "from":
 			return attribute_fields().call(drawer + "_field", self, card, field, write, index)
-	return _number_field(card, key, write, FLOAT_STEP)
+	return _number_field(card, key, write, FLOAT_STEP, bool(field.get("plain_number", false)))
 
 
 ## A number cell. The STEP is the value's own precision, not a taste: a Range SNAPS what it shows to
@@ -2084,7 +2084,7 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable, i
 ## would show as 12.3, and the next arrow press would write 12.4 back into the .tres. Floats therefore
 ## step by the same 0.001 the unit field and the corners boxes use, and only a field the schema calls
 ## an `int` steps by a whole one.
-func _number_field(card: Dictionary, key: String, write: Callable, step: float) -> Control:
+func _number_field(card: Dictionary, key: String, write: Callable, step: float, plain: bool = false) -> Control:
 	var spin: SpinBox = SpinBox.new()
 	spin.allow_greater = true
 	spin.allow_lesser = true
@@ -2093,7 +2093,19 @@ func _number_field(card: Dictionary, key: String, write: Callable, step: float) 
 	spin.editable = editable
 	spin.value = float(card.get(key, 0.0))
 	spin.value_changed.connect(func(value: float) -> void: write.call(value))
+	if plain:
+		# The box writes a whole number with a decimal point ("100.0"); a field that is a plain count of
+		# something shows it as a person writes it, now and again after each change or when the box loses focus.
+		var restyle: Callable = func() -> void: spin.get_line_edit().text = plain_number_text(spin.value)
+		spin.ready.connect(restyle)
+		spin.value_changed.connect(func(_value: float) -> void: restyle.call())
+		spin.get_line_edit().focus_exited.connect(restyle)
 	return spin
+
+
+## A number as a person writes it: no trailing ".0" on a whole number, and three places at most.
+static func plain_number_text(value: float) -> String:
+	return str(snappedf(value, 0.001)).trim_suffix(".0")
 
 
 ## A number box that says a word while the number is 0: "no limit" where 0 means there is none. Typing a number
@@ -2375,8 +2387,8 @@ func _resource_picker(base_type: String, current: Resource, on_changed: Callable
 	picker.resource_changed.connect(on_changed)
 	# Clicking the resource itself opens it in the Inspector, where Godot's own editor for it is (a Curve's
 	# is the curve editor), and the Inspector's back arrow returns to the node.
-	picker.resource_selected.connect(func(picked: Resource, inspect: bool) -> void:
-		if picked != null and inspect and ClassDB.can_instantiate("EditorInterface"):
+	picker.resource_selected.connect(func(picked: Resource, _inspect: bool) -> void:
+		if picked != null and Engine.is_editor_hint():
 			EditorInterface.edit_resource(picked))
 	return picker
 

@@ -10990,3 +10990,14 @@ Move to bottom,맨 아래로 이동
 Shapes (%d),도형 (%d)
 Dash offset,대시 오프셋
 "Line %d: rename %s to %s. Nothing else changed.","%d번째 줄: %s을(를) %s(으)로 바꾸세요. 다른 것은 바뀌지 않았습니다."
+Fade in,페이드 인
+Custom curve,사용자 지정 곡선
+rises from nothing,0에서 올라감
+goes down to nothing,0까지 내려감
+This card still shakes for as long as the Juice node's Shake Decay says. Tick Fade in or Fade out to make Seconds the real length.,이 카드는 아직 Juice 노드의 Shake Decay가 정한 시간만큼 흔들립니다. 페이드 인이나 페이드 아웃을 체크하면 초가 실제 길이가 됩니다.
+"Follows your curve over %s s, at most %s.",%s초 동안 곡선을 따르며 최대 %s입니다.
+Swells to %s half way and is gone at %s s.,중간에 %s까지 커졌다가 %s초에 사라집니다.
+Starts at nothing and reaches %s at %s s.,0에서 시작해 %s초에 %s에 이릅니다.
+Starts at %s and is gone at %s s.,%s에서 시작해 %s초에 사라집니다.
+"Holds %s for %s s, then stops.",%s을(를) %s초 동안 유지한 뒤 멈춥니다.
+Save the new file where the card can find it,카드가 찾을 수 있는 곳에 새 파일 저장
