@@ -68,6 +68,7 @@ static func run() -> bool:
 		return false
 	ok = _plan_pins(pack) and ok
 	ok = _length_pins(pack) and ok
+	ok = _preview_pins(pack) and ok
 	ok = _hold_pins(pack) and ok
 	ok = _row_pins(pack) and ok
 	ok = _fold_pins() and ok
@@ -91,6 +92,23 @@ static func _plan_pins(pack: GDScript) -> bool:
 			_starts(pack, DELAYED_PAUSE), ["A@0.0", "C@0.3"]],
 		["a Hold under a delayed card still waits for it",
 			_starts(pack, DELAYED_ABOVE_A_HOLD), ["A@0.3", "B@0.0", "C@0.5"]],
+	])
+
+
+## What the editor preview shows of a card that repeats: it is seen playing at each repeat, and still between them.
+## This is what playing one card on its own, the lit marks and the sample all read.
+static func _preview_pins(pack: GDScript) -> bool:
+	var plan: Array = pack.call("schedule_of", MIDDLE_DELAYED)
+	var b: Dictionary = plan[1] as Dictionary
+	var seen: Array = []
+	for at_time: float in [0.1, 0.35, 0.45, 0.55, 0.75, 0.95]:
+		seen.append(snappedf(float(pack.call("through_at", b, at_time)), 0.01))
+	var lit: PackedInt32Array = load("res://addons/eventsheet/editor/inspector/juice_preview.gd").call(
+		"playing_at", MIDDLE_DELAYED, PackedInt32Array([0, 1, 2]), 0.55)
+	return SUPPORT.pins(TEST_NAME, [
+		["a planned card carries its repeats and the gap between them", [b.get("repeat"), snappedf(float(b.get("every", 0.0)), 0.01)], [3, 0.2]],
+		["a card is seen at its first play, between plays not at all, and again at each repeat", seen, [-1.0, 0.5, -1.0, 0.5, 0.5, -1.0]],
+		["the lit mark follows the repeat", lit, PackedInt32Array([1])],
 	])
 
 

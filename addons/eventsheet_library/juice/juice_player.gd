@@ -1501,7 +1501,7 @@ static func _timeline(list: Array) -> Dictionary:
 		else:
 			var starts: float = at + delay
 			var ends_at: float = starts + card_span(card)
-			plan.append({"card": card, "at": starts, "seconds": seconds})
+			plan.append({"card": card, "at": starts, "seconds": seconds, "repeat": maxi(int(card.get("repeat", 1)), 1), "every": maxf(float(card.get("interval", 0.0)), 0.0)})
 			latest = maxf(latest, ends_at)
 			ends[card_label(card)] = maxf(float(ends.get(card_label(card), 0.0)), ends_at)
 	return {"plan": plan, "at": at, "latest": latest, "ends": ends}
@@ -2009,6 +2009,20 @@ func _close() -> void:
 static func schedule_of(list: Array) -> Array:
 	return _timeline(list)["plan"]
 
+## How far through a play of a card an editor preview is `time` seconds into the list: 0 to 1 while one of the
+## card's plays (the first, or a repeat) is going, -1 when none is. The preview, the lit marks on the cards and
+## the sample of a card all ask this, so a card that repeats is seen repeating in the editor.
+## @ace_hidden
+static func through_at(plan: Dictionary, time: float) -> float:
+	var span: float = maxf(float(plan.get("seconds", 0.0)), 0.05)
+	var repeats: int = maxi(int(plan.get("repeat", 1)), 1)
+	var gap: float = maxf(float(plan.get("every", 0.0)), 0.0)
+	for pass_index: int in range(repeats):
+		var through: float = (time - float(plan.get("at", 0.0)) - float(pass_index) * gap) / span
+		if through >= 0.0 and through <= 1.0:
+			return through
+	return -1.0
+
 ## What the object would be doing `time` into a play - the editor's look at the list, sampled rather
 ## than run. The shape is the plugin's shared behaviour-preview contract (exported values in, the
 ## host's rest state in, the properties to write out), so the Tools-menu preview and the Inspector's
@@ -2029,9 +2043,8 @@ static func editor_preview_sample(params: Dictionary, base: Dictionary, time: fl
 	for entry: Variant in schedule_of(list as Array):
 		var plan: Dictionary = entry as Dictionary
 		var card: Dictionary = plan.get("card") as Dictionary
-		var span: float = maxf(float(plan.get("seconds", 0.0)), 0.05)
-		var through: float = (time - float(plan.get("at", 0.0))) / span
-		if through < 0.0 or through > 1.0:
+		var through: float = through_at(plan, time)
+		if through < 0.0:
 			continue
 		var amount: float = float(card.get("amount", 1.0)) * at_strength
 		var word: String = word_of(card)

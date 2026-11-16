@@ -86,8 +86,7 @@ static func playing_at(list: Array, positions: PackedInt32Array, time: float) ->
 			planned.append(positions[at_index] if at_index < positions.size() else at_index)
 	for plan_index: int in range(mini(plan.size(), planned.size())):
 		var entry: Dictionary = plan[plan_index] as Dictionary
-		var starts: float = float(entry.get("at", 0.0))
-		if time >= starts and time <= starts + maxf(float(entry.get("seconds", 0.0)), 0.05):
+		if float(pack.call("through_at", entry, time)) >= 0.0:
 			lit.append(planned[plan_index])
 	return lit
 

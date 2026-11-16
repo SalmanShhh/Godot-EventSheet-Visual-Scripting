@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: playing one card on its own, and the strip's preview, play a card's repeats
+
+The mark that plays one card alone, the strip's Play, the lit marks on the cards and the sound of a Sound card in the editor now follow a card's Delay and Repeat as the game does: a shake with a delay of 0.05 s and three repeats 0.08 s apart is seen for 0.51 s, three times over, where it used to be seen once for 0.35 s (measured per frame in the editor).
+
 ### Changed: the example juice card of your own shows its unit
 
 A field of a card of your own is drawn by Godot's own editor for the export, which draws the unit an export hint carries (`@export_range(0.0, 2.0, 0.01, "suffix:s")` shows `0.1 s`). The shipped Screen Flash example card had no unit on its Seconds, so it read as a bare number beside the built-in cards; it carries `suffix:s` now, and a test holds the hint all the way to the editor for any card of your own.

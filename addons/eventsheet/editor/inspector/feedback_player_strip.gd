@@ -490,9 +490,12 @@ func _step_world(pack: Script, host: Node) -> void:
 		var card: Dictionary = entry.get("card") as Dictionary
 		if not bool(world.call("handles", card)):
 			continue
-		var through: float = (_time - float(entry.get("at", 0.0))) / maxf(float(entry.get("seconds", 0.0)), 0.05)
+		# A card that repeats is seen repeating; between its plays, and after the last, it rests at its end.
+		var through: float = float(pack.call("through_at", entry, _time))
 		if through < 0.0:
-			continue
+			if _time < float(entry.get("at", 0.0)):
+				continue
+			through = 1.0
 		world.call("step", card, world.call("node_of", _player, card, host), through, _strength(), _world_state, plan_index)
 
 
@@ -542,9 +545,17 @@ func _play_sounds_due(pack: Script) -> void:
 	for plan_index: int in range(plan.size()):
 		var entry: Dictionary = plan[plan_index] as Dictionary
 		var card: Dictionary = entry.get("card") as Dictionary
-		if str(card.get("verb", "")) != "sound" or _sounded.has(plan_index) or _time < float(entry.get("at", 0.0)):
+		if str(card.get("verb", "")) != "sound":
 			continue
-		_sounded[plan_index] = true
+		# One sound for each play of the card: the first at its start, and one for every repeat after it.
+		var due: int = -1
+		for pass_index: int in range(maxi(int(entry.get("repeat", 1)), 1)):
+			if _time >= float(entry.get("at", 0.0)) + float(pass_index) * float(entry.get("every", 0.0)) and not _sounded.has(plan_index * 1000 + pass_index):
+				due = pass_index
+				break
+		if due < 0:
+			continue
+		_sounded[plan_index * 1000 + due] = true
 		var settings: Dictionary = pack.call("sound_settings", card, _strength(), randf(), randf())
 		var path: String = str(settings.get("stream", ""))
 		var stream: AudioStream = load(path) as AudioStream if not path.is_empty() and ResourceLoader.exists(path) else null
