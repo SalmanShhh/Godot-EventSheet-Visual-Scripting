@@ -1,7 +1,1 @@
-<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-  <rect x="1" y="1" width="14" height="14" rx="3.5" fill="#2b3a4a" stroke="#4a6b8a" stroke-width="1"/>
-  <rect x="3.4" y="3.8" width="9.2" height="6" rx="0.8" fill="none" stroke="#9ab0c8" stroke-width="1.1"/>
-  <path d="M6.4 12.4 H9.6 M8 9.8 V12.4" stroke="#9ab0c8" stroke-width="1.1" stroke-linecap="round"/>
-  <circle cx="6" cy="6.2" r="0.8" fill="#c5d5e5"/>
-  <path d="M7.6 6.2 H10.6 M7.6 7.8 H9.2" stroke="#c5d5e5" stroke-width="0.9" stroke-linecap="round" opacity="0.85"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" fill="#e0e0e0" d="M1 1h8a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-8a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1zM2 3h6v4h-6z"/><rect x="3" y="10" width="4" height="1.5" fill="#e0e0e0"/><rect x="1.5" y="12" width="7" height="2" rx="1" fill="#e0e0e0"/><path fill-rule="evenodd" fill="#e0e0e0" d="M12 4h3a1 1 0 0 1 1 1v9a1 1 0 0 1 -1 1h-3a1 1 0 0 1 -1 -1v-9a1 1 0 0 1 1 -1zM12.5 5.5h2v6.5h-2z"/></svg>

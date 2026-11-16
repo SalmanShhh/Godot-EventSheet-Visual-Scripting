@@ -1,11 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16" fill="none">
-  <!-- the drawn route the camera rides -->
-  <path d="M56 396 C 156 396, 196 236, 296 236 S 436 156, 456 116" stroke="#64748b" stroke-width="26" stroke-linecap="round" opacity="0.55"/>
-  <!-- the route's control points -->
-  <circle cx="56" cy="396" r="30" fill="#64748b" opacity="0.7"/>
-  <circle cx="456" cy="116" r="30" fill="#64748b" opacity="0.7"/>
-  <!-- the camera body riding it -->
-  <rect x="176" y="176" width="150" height="112" rx="22" fill="#0ea5e9"/>
-  <!-- the lens cone, pointing along the route -->
-  <path d="M326 196 L 424 156 L 424 308 L 326 268 Z" fill="#f97316"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><rect x="0" y="0" width="8" height="6" rx="1" fill="#8da5f3"/><path fill="#8da5f3" d="M8 3L12 0.5L12 5.5z"/><path fill="none" stroke="#8da5f3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M1 13.5C3 9.5 6 9.5 8.5 11"/><circle cx="13" cy="13" r="2" fill="#8da5f3"/></svg>

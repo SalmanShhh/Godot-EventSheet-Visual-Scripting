@@ -1,13 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16" fill="none">
-  <!-- the ground plane the route runs across -->
-  <path d="M36 396 L 256 316 L 476 396 L 256 476 Z" stroke="#64748b" stroke-width="16" opacity="0.35"/>
-  <!-- the drawn route the camera rides -->
-  <path d="M76 396 C 176 356, 216 216, 316 216 S 436 156, 456 126" stroke="#64748b" stroke-width="26" stroke-linecap="round" opacity="0.55"/>
-  <!-- the route's control points -->
-  <circle cx="76" cy="396" r="28" fill="#64748b" opacity="0.7"/>
-  <circle cx="456" cy="126" r="28" fill="#64748b" opacity="0.7"/>
-  <!-- the camera body riding it -->
-  <rect x="156" y="156" width="140" height="106" rx="20" fill="#0ea5e9"/>
-  <!-- the lens cone, pointing along the route -->
-  <path d="M296 174 L 392 136 L 392 282 L 296 244 Z" fill="#f97316"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><rect x="0" y="0" width="8" height="6" rx="1" fill="#fc7f7f"/><path fill="#fc7f7f" d="M8 3L12 0.5L12 5.5z"/><path fill="none" stroke="#fc7f7f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M1 13.5C3 9.5 6 9.5 8.5 11"/><circle cx="13" cy="13" r="2" fill="#fc7f7f"/></svg>
