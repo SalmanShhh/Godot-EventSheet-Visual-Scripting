@@ -51,6 +51,7 @@ static func run() -> bool:
 	ok = _search_pins() and ok
 	ok = _band_pins() and ok
 	ok = _above_pins() and ok
+	ok = _surface_pins() and ok
 	return ok
 
 
@@ -75,10 +76,9 @@ static func _badge_pins() -> bool:
 
 
 static func _badge_of(drawer: EventSheetCardListDrawer, index: int) -> Label:
-	var line: PanelContainer = drawer._lines.get(index) as PanelContainer
-	var inside: HBoxContainer = line.get_child(0) as HBoxContainer
-	for child: Node in inside.get_children():
-		if child is Label and (child as Label).size_flags_horizontal == Control.SIZE_EXPAND_FILL:
+	var surface: PanelContainer = drawer._lines.get(index) as PanelContainer
+	for child: Node in surface.find_children("*", "Label", true, false):
+		if (child as Label).size_flags_horizontal == Control.SIZE_EXPAND_FILL:
 			return child as Label
 	return null
 
@@ -150,4 +150,36 @@ static func _above_pins() -> bool:
 		["choosing all of them erases the key, so a card nobody changed stores nothing new", after_all, ["verb"]],
 		["a stored name shows its card", one_selected, "Card One"],
 		["a stored name that is no card above is still shown, not silently dropped", gone_text.contains("Gone"), true]
+	])
+
+
+## An open card is ONE surface: its head and its fields share the same panel with one hairline round the
+## whole of it, and the card's menu sits in the head line rather than alone between the two.
+static func _surface_pins() -> bool:
+	var drawer: EventSheetCardListDrawer = EventSheetCardListDrawer.new({"kind_key": "verb", "schema_dict": _schema()})
+	drawer.set_value([{"verb": "a"}, {"verb": "wait"}])
+	var shut: PanelContainer = drawer._lines[1] as PanelContainer
+	var shut_children: int = shut.get_child(0).get_child_count()
+	var shut_border: int = (shut.get_theme_stylebox("panel") as StyleBoxFlat).border_width_left
+	drawer._unfolded[1] = true
+	drawer._rebuild()
+	var surface: PanelContainer = drawer._lines[1] as PanelContainer
+	var stack: Node = surface.get_child(0)
+	var alone: int = 0
+	for child: Node in stack.get_children():
+		if child is MenuButton:
+			alone += 1
+	var head: Node = stack.get_child(0)
+	var menus_in_head: int = head.find_children("*", "MenuButton", false, false).size()
+	var box: StyleBoxFlat = surface.get_theme_stylebox("panel") as StyleBoxFlat
+	var parts: int = stack.get_child_count()
+	var hairline: int = box.border_width_left + box.border_width_top + box.border_width_right + box.border_width_bottom
+	drawer.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["a shut card is its head alone on the surface", shut_children, 1],
+		["and has no hairline", shut_border, 0],
+		["an open card holds its head and its fields on the same surface", parts, 2],
+		["no menu button stands alone between them", alone, 0],
+		["the menu is in the head line", menus_in_head, 1],
+		["one hairline goes round the whole open card", hairline, 4]
 	])

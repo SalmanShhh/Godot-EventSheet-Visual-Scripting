@@ -168,6 +168,23 @@ static func selected_row_box(focused: bool = true) -> StyleBox:
 	return flat
 
 
+## The surface a card sits on: the field ground the head always had, and, once the card is open and holds
+## its fields, one hairline round the whole of it. The hairline is the editor's own ink, faint: a line
+## that says where the card ends, never a coloured outline.
+static func card_box(open: bool) -> StyleBox:
+	var box: StyleBox = field_box()
+	var flat: StyleBoxFlat = box as StyleBoxFlat
+	if flat == null:
+		return box
+	if open:
+		var line: Color = ink()
+		line.a = 0.22
+		flat.set_border_width_all(1)
+		flat.border_color = line
+		flat.set_content_margin_all(px(6.0))
+	return box
+
+
 ## A faint fill behind a group of cards that belong together: the editor's own ink at a whisper of opacity,
 ## rounded, with no border, so it reads as a background and never as an outline.
 static func band_box() -> StyleBox:

@@ -51,6 +51,14 @@ Click a juice card to select it, Shift+click for the run from the last click, Ct
 
 The clipboard hands every line back ending in a carriage return, so the marker line of copied cards no longer matched and Paste over and Paste all did nothing across objects. They are read without it now.
 
+### Changed: an open juice card is one surface
+
+A card's head and its fields used to be a dark bar with the fields drawn below it on the plain Inspector ground, so nothing tied them together, with the card menu alone on a line between the two. An open card is now one panel: the head (grip, arrow, tick, family tile, name, length, menu, play mark, remove mark) and the fields share the same surface, with one faint hairline round the whole card and no gap. Field labels and values use the Inspector's own text size; only the one-line description and the closing notes stay small and quiet. The same drawer draws the Drawing Prefab's cards.
+
+### Fixed: every pack's info paragraph spans the whole Inspector row
+
+An info line under a property (for instance the Juice Player's "One juice card per effect...") was drawn only in the value column, wrapping into a tall box beside an empty label column. It spans the full row now, in the quiet text colour, and wraps again when the Inspector is resized.
+
 ### Fixed: the card menu and the list's own words are translated, and the list's paragraph takes the full width
 
 Duplicate, Copy, Paste over, Move to top, Move up, Move down, Remove, the empty list's line, the Active and Label rows and a few tooltips were English in every language; they are in all eight now. The paragraph under a juice card list ("One juice card per effect...") sat in the right half of the Inspector and wrapped a dozen lines down a narrow strip; it spans the row now. A short badge such as 0.30 s is no longer broken one letter to a line when the card's title is long.

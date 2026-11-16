@@ -389,7 +389,8 @@ func _paint_line(index: int) -> void:
 	if line == null or not is_instance_valid(line) or index >= _cards.size():
 		return
 	var chosen: bool = _selected.has(index)
-	line.add_theme_stylebox_override("panel", EventSheetLookStyle.selected_row_box(has_focus()) if chosen else EventSheetLookStyle.field_box())
+	var open: bool = bool(_unfolded.get(index, false))
+	line.add_theme_stylebox_override("panel", EventSheetLookStyle.selected_row_box(has_focus()) if chosen else EventSheetLookStyle.card_box(open))
 	var title: Label = _titles.get(index) as Label
 	if title != null and is_instance_valid(title):
 		var enabled: bool = EventSheetCardSchemas.card_enabled(_schema, _cards[index])
@@ -761,14 +762,22 @@ func _build_card(index: int) -> Control:
 	var entry: Dictionary = _entry_for(card)
 	var enabled: bool = EventSheetCardSchemas.card_enabled(_schema, card)
 	var panel: _CardRow = _CardRow.new(self, index)
-	var body: VBoxContainer = VBoxContainer.new()
-	panel.add_child(body)
-	body.add_child(_build_header(index, card, entry, enabled))
+	# ONE surface holds the head line and, when the card is open, its fields: the same ground, one hairline
+	# round the whole card, no gap between the head and what it opens onto.
+	var surface: PanelContainer = PanelContainer.new()
+	# A panel keeps a click unless it is told to pass it on; the card behind it is what a right click (its
+	# menu), a click (its selection) and a drag (its place in the list) are meant for.
+	surface.mouse_filter = Control.MOUSE_FILTER_PASS
+	surface.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_lines[index] = surface
+	var stack: VBoxContainer = VBoxContainer.new()
+	stack.add_theme_constant_override("separation", int(EventSheetLookStyle.px(4.0)))
+	surface.add_child(stack)
+	panel.add_child(surface)
+	stack.add_child(_build_header(index, card, entry, enabled))
 	if bool(_unfolded.get(index, false)):
-		var opened: MarginContainer = MarginContainer.new()
-		opened.add_theme_constant_override("margin_left", int(EventSheetLookStyle.px(8.0)))
-		opened.add_child(_build_body(index, card, entry))
-		body.add_child(opened)
+		stack.add_child(_build_body(index, card, entry))
+	_paint_line(index)
 	return panel
 
 
@@ -778,15 +787,7 @@ func _build_card(index: int) -> Control:
 func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: bool) -> Control:
 	var header: HBoxContainer = HBoxContainer.new()
 	header.add_child(_glyph_control("TripleBar", "⋮⋮", EventSheetL10n.translate("Drag to reorder.")))
-	var line: PanelContainer = PanelContainer.new()
-	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line.add_theme_stylebox_override("panel", EventSheetLookStyle.field_box())
-	# A panel keeps a click unless it is told to pass it on; the card behind this line is what a right
-	# click (its menu), a click (its selection) and a drag (its place in the list) are meant for.
-	line.mouse_filter = Control.MOUSE_FILTER_PASS
-	_lines[index] = line
-	var inside: HBoxContainer = HBoxContainer.new()
-	line.add_child(inside)
+	var inside: HBoxContainer = header
 	var open: bool = bool(_unfolded.get(index, false))
 	var fold: Button = Button.new()
 	fold.flat = true
@@ -827,8 +828,10 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 	badge.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
 	badge.visible = not badge_text.is_empty()
 	inside.add_child(badge)
-	header.add_child(line)
-	_paint_line(index)
+	if open:
+		# The card's menu sits in the head line, before the play mark, so no control stands alone between
+		# the head and the fields.
+		inside.add_child(_build_menu(index))
 	if _marks_wanted():
 		var mark: Button = EventSheetLookStyle.icon_button(&"Play", "▶", EventSheetL10n.translate("Play this card alone."))
 		mark.pressed.connect(func() -> void: _on_mark_pressed(index))
@@ -838,7 +841,7 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 	var remove: Button = EventSheetLookStyle.icon_button(&"Remove", "✕", EventSheetL10n.translate("Remove this card."))
 	remove.disabled = not editable
 	remove.pressed.connect(func() -> void: remove_card(index))
-	header.add_child(remove)
+	inside.add_child(remove)
 	return header
 
 
@@ -1007,12 +1010,6 @@ func _choose(index: int) -> void:
 ## writing back. Per-card hooks are whatever the schema declared - a card with none shows none.
 func _build_body(index: int, card: Dictionary, entry: Dictionary) -> Control:
 	var body: VBoxContainer = VBoxContainer.new()
-	var menu_row: HBoxContainer = HBoxContainer.new()
-	var menu_gap: Control = Control.new()
-	menu_gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	menu_row.add_child(menu_gap)
-	menu_row.add_child(_build_menu(index))
-	body.add_child(menu_row)
 	var help: String = str(entry.get("help", "")).strip_edges()
 	if not help.is_empty():
 		var info: Label = Label.new()
@@ -1103,8 +1100,7 @@ func _titled_row(title: String, control: Control) -> HBoxContainer:
 	row.add_theme_constant_override("separation", 5)
 	var label: Label = Label.new()
 	label.text = title
-	label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
-	label.custom_minimum_size = Vector2(EventSheetPalette.scaled(84), 0.0)
+	label.custom_minimum_size = Vector2(EventSheetPalette.scaled(120), 0.0)
 	label.modulate = Color(1.0, 1.0, 1.0, 0.75)
 	row.add_child(label)
 	if control != null:
@@ -1155,7 +1151,6 @@ func _build_field(index: int, card: Dictionary, field: Dictionary) -> Control:
 	if not suffix.is_empty():
 		var unit: Label = Label.new()
 		unit.text = suffix
-		unit.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 		unit.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
 		row.add_child(unit)
 	if link_toggle != null:
