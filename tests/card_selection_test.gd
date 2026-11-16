@@ -195,7 +195,7 @@ static func _menu_pins() -> bool:
 	drawer.free()
 	return SUPPORT.pins(TEST_NAME, [
 		["the card menu offers Cut and Paste beside Copy", words, ["Duplicate", "Cut", "Copy", "Paste", "Paste over",
-			"Move to top", "Move up", "Move down", "Remove"]],
+			"Move to top", "Move up", "Move down", "Move to bottom", "Remove"]],
 		["Remove on a selected card removes everything selected", removed_both, ["C"]],
 		["Remove on a card outside the selection removes that card alone", removed_only_it, ["A", "B"]],
 		["and a selection elsewhere stays on its own card", chose_it, [0]],

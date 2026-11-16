@@ -35,6 +35,7 @@ const MENU_MOVE_DOWN: int = 5
 const MENU_REMOVE: int = 6
 const MENU_CUT: int = 7
 const MENU_PASTE_AFTER: int = 8
+const MENU_MOVE_TO_BOTTOM: int = 9
 ## And the one that only a list that can play its cards has.
 const MENU_PLAY_FROM: int = 20
 
@@ -283,7 +284,14 @@ func clear_selection() -> void:
 ## (no selection, or a clipboard that holds no cards) is NOT taken, so the editor's own answer still runs.
 func handle_key(event: InputEvent) -> bool:
 	var key: InputEventKey = event as InputEventKey
-	if key == null or not key.pressed or key.echo or not editable or key.alt_pressed:
+	if key == null or not key.pressed or not editable:
+		return false
+	# Alt+Up and Alt+Down walk the selected cards one place, as they walk lines in Godot's script editor. A held
+	# key repeats (an echo), so the selection keeps walking; any other Alt key is left to the editor.
+	if key.alt_pressed and not key.is_command_or_control_pressed() and not key.shift_pressed and not key.meta_pressed \
+			and (key.keycode == KEY_UP or key.keycode == KEY_DOWN):
+		return move_selected(-1 if key.keycode == KEY_UP else 1)
+	if key.echo or key.alt_pressed:
 		return false
 	var command: bool = key.is_command_or_control_pressed() and not key.shift_pressed
 	if command:
@@ -501,6 +509,79 @@ func _first_focusable(node: Node) -> Control:
 		if deeper != null:
 			return deeper
 	return null
+
+
+## Moves the selected cards one place (`step` -1 up, +1 down), together, and keeps them selected so the next press moves
+## them again. A card that meets the edge, or another selected card already stopped there, stays where it is. Returns
+## whether anything moved: a move that changes nothing makes no change and no undo step.
+func move_selected(step: int) -> bool:
+	return _move_set(selected_cards(), step)
+
+
+## Moves the selected cards all the way to the top (`to_end` false) or the bottom, keeping their order.
+func move_selected_to(to_end: bool) -> bool:
+	return _move_set(selected_cards(), 2 if to_end else -2)
+
+
+## The one place a move happens. `chosen` are card positions; `step` is -1 / +1 (one place) or -2 / +2 (to the
+## top / bottom). Written as ONE change, whatever number of cards travelled.
+func _move_set(chosen: Array, step: int) -> bool:
+	if not editable or chosen.is_empty():
+		return false
+	var order: Array = moved_order(_cards.size(), chosen, step)
+	var identity: bool = true
+	for slot: int in range(order.size()):
+		if int(order[slot]) != slot:
+			identity = false
+	if identity:
+		return false
+	var moved: Array = []
+	for slot: int in range(order.size()):
+		moved.append(_cards[int(order[slot])])
+	_cards = moved
+	_refold(order)
+	_commit()
+	return true
+
+
+## Where every card ends up after a move, as the list of old positions in new order (new index -> old index).
+## Pure, so a test can read it. `step` is -1 / +1 (one place) or -2 / +2 (top / bottom).
+static func moved_order(count: int, chosen: Array, step: int) -> Array:
+	var order: Array = []
+	if absi(step) == 1:
+		var slots: Dictionary = {}
+		var placed: Dictionary = {}
+		var walk: Array = chosen.duplicate()
+		walk.sort()
+		if step > 0:
+			walk.reverse()
+		for position: Variant in walk:
+			var from: int = int(position)
+			var target: int = from + step
+			if target < 0 or target >= count or slots.has(target):
+				target = from
+			slots[target] = from
+			placed[from] = true
+		var rest: Array = []
+		for card: int in range(count):
+			if not placed.has(card):
+				rest.append(card)
+		var next: int = 0
+		for slot: int in range(count):
+			if slots.has(slot):
+				order.append(slots[slot])
+			else:
+				order.append(rest[next])
+				next += 1
+		return order
+	var moving: Array = []
+	var staying: Array = []
+	for card: int in range(count):
+		if chosen.has(card):
+			moving.append(card)
+		else:
+			staying.append(card)
+	return (staying + moving) if step > 0 else (moving + staying)
 
 
 ## Move the card at `from` to `to` - what a finished drag, and "Move to top", write. The open cards
@@ -1252,10 +1333,12 @@ func _fill_card_menu(popup: PopupMenu) -> void:
 	popup.add_item(EventSheetL10n.translate("Move to top"), MENU_MOVE_TO_TOP)
 	popup.add_item(EventSheetL10n.translate("Move up"), MENU_MOVE_UP)
 	popup.add_item(EventSheetL10n.translate("Move down"), MENU_MOVE_DOWN)
+	popup.add_item(EventSheetL10n.translate("Move to bottom"), MENU_MOVE_TO_BOTTOM)
 	popup.add_item(EventSheetL10n.translate("Remove"), MENU_REMOVE)
 	# The keys that do the same thing from the list, shown beside the words the way Godot's own menus show them.
 	for hint: Array in [[MENU_DUPLICATE, KEY_D | KEY_MASK_CMD_OR_CTRL], [MENU_CUT, KEY_X | KEY_MASK_CMD_OR_CTRL],
-			[MENU_COPY, KEY_C | KEY_MASK_CMD_OR_CTRL], [MENU_PASTE_AFTER, KEY_V | KEY_MASK_CMD_OR_CTRL], [MENU_REMOVE, KEY_DELETE]]:
+			[MENU_COPY, KEY_C | KEY_MASK_CMD_OR_CTRL], [MENU_PASTE_AFTER, KEY_V | KEY_MASK_CMD_OR_CTRL], [MENU_REMOVE, KEY_DELETE],
+			[MENU_MOVE_UP, KEY_UP | KEY_MASK_ALT], [MENU_MOVE_DOWN, KEY_DOWN | KEY_MASK_ALT]]:
 		popup.set_item_accelerator(popup.get_item_index(int(hint[0])), int(hint[1]) as Key)
 	if _marks_wanted():
 		popup.add_separator()
@@ -1276,7 +1359,7 @@ func open_card_menu(index: int, at: Vector2i) -> void:
 
 ## What a menu entry does. Duplicate, Cut, Copy and Remove act on everything selected when the card the menu
 ## belongs to is part of the selection, and on that one card otherwise; Paste adds under the card (or under
-## the selection it is part of); Paste over and the moves are about this card alone.
+## the selection it is part of); Paste over is about this card alone.
 func _on_menu(index: int, id: int) -> void:
 	var in_selection: bool = _selected.has(index)
 	match id:
@@ -1296,12 +1379,11 @@ func _on_menu(index: int, id: int) -> void:
 			paste_after_selection(_clipboard_text())
 		MENU_PASTE_OVER:
 			paste_over(index, _clipboard_text())
-		MENU_MOVE_TO_TOP:
-			move_card(index, 0)
-		MENU_MOVE_UP:
-			move_card(index, index - 1)
-		MENU_MOVE_DOWN:
-			move_card(index, index + 1)
+		MENU_MOVE_TO_TOP, MENU_MOVE_UP, MENU_MOVE_DOWN, MENU_MOVE_TO_BOTTOM:
+			# The four moves follow the same rule as Remove: everything selected when this card is part of the
+			# selection, this card alone otherwise.
+			var step: int = {MENU_MOVE_TO_TOP: -2, MENU_MOVE_UP: -1, MENU_MOVE_DOWN: 1, MENU_MOVE_TO_BOTTOM: 2}[id]
+			_move_set(selected_cards() if in_selection else [index], step)
 		MENU_REMOVE:
 			if in_selection:
 				remove_selected()

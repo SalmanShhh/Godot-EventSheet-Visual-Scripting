@@ -42,7 +42,7 @@ static func run() -> bool:
 		["the Active row's title is translated", active_word != "Active", true],
 		["the Label row's title is translated", label_word != "Label", true]
 	]
-	for word: Variant in ["Duplicate", "Copy", "Paste over", "Move to top", "Move up", "Move down", "Remove"]:
+	for word: Variant in ["Duplicate", "Copy", "Paste over", "Move to top", "Move up", "Move down", "Move to bottom", "Remove"]:
 		rows.append(["the menu word %s is translated" % str(word), menu_words.has(word), false])
 	active_row.free()
 	label_row.free()
