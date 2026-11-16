@@ -76,6 +76,9 @@ const PREVIEW_PATH: String = "res://addons/eventsheet/editor/inspector/juice_pre
 ## The kinds that point at other nodes and at the world: particles, animation, spawning, bodies, UI, shaders.
 const WORLD_PATH: String = "res://addons/eventsheet/editor/inspector/juice_card_kinds.gd"
 
+## The cards a project wrote for itself (scripts that extend JuiceCard), read from its class list.
+const OWN_PATH: String = "res://addons/eventsheet/editor/inspector/juice_own_cards.gd"
+
 ## The strip of buttons that plays the whole list, drawn under it.
 const STRIP_PATH: String = "res://addons/eventsheet/editor/inspector/feedback_player_strip.gd"
 
@@ -121,7 +124,8 @@ const STRIPES: Dictionary = {
 	"scene": "#F2C744",
 	"device": "#F08A2B",
 	"loop": "#9A9A9A",
-	"signal": "#9A9A9A"
+	"signal": "#9A9A9A",
+	"yours": "#D08C60"
 }
 
 ## The same families for a light editor. The dark colours read 3:1 on a dark card line and several of
@@ -136,7 +140,8 @@ const STRIPES_LIGHT: Dictionary = {
 	"scene": "#a88a2f",
 	"device": "#cf7725",
 	"loop": "#8d8d8d",
-	"signal": "#8d8d8d"
+	"signal": "#8d8d8d",
+	"yours": "#B5703A"
 }
 
 ## What a family is called where a person reads it: a heading in the Add box. The words a family is
@@ -151,11 +156,12 @@ const GROUPS: Dictionary = {
 	"screen": "Screen",
 	"pause": "Time",
 	"loop": "Flow",
-	"signal": "Flow"
+	"signal": "Flow",
+	"yours": "Yours"
 }
 
 ## The order the headings come in.
-const GROUP_ORDER: PackedStringArray = ["Sound", "Scene", "Object", "Device", "Camera", "Screen", "Time", "Flow"]
+const GROUP_ORDER: PackedStringArray = ["Sound", "Scene", "Object", "Device", "Camera", "Screen", "Time", "Flow", "Yours"]
 
 ## The pack, read once per session: a file on disk that does not change while the editor is open.
 static var _reading_cache: Dictionary = {}
@@ -210,8 +216,20 @@ static func schema() -> Dictionary:
 		"tiles": true,
 		"together": start_together,
 		"footer": strip_footer,
-		"marks": {"run": play_card}
+		"marks": {"run": play_card},
+		"more_kinds": own_kinds,
+		"card_entry": own_entry
 	}
+
+
+## The cards the project wrote for itself, read fresh each time the list is drawn.
+static func own_kinds() -> Array:
+	return load(OWN_PATH).call("kinds")
+
+
+## The kind entry of a saved card that names the script it is made of.
+static func own_entry(card: Dictionary) -> Dictionary:
+	return load(OWN_PATH).call("entry_for", card)
 
 
 ## The file that holds the kinds that point at other nodes, loaded the first time the vocabulary is built.

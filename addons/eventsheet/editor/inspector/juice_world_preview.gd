@@ -41,10 +41,19 @@ const TWEEN_KEYS: PackedStringArray = ["node", "to", "from", "trans", "ease", "r
 
 ## Whether this file previews the card.
 static func handles(card: Dictionary) -> bool:
+	if card.has("card_script"):
+		return is_tool_card(card)
 	var word: String = str(card.get("verb", ""))
 	if word == "tween_property":
 		return is_whole_tween(card)
 	return WORDS.has(word)
+
+
+## Whether a card of your own is made of a tool script, which is the only kind the editor runs.
+static func is_tool_card(card: Dictionary) -> bool:
+	var pack: Script = load("res://addons/eventsheet/editor/inspector/juice_preview.gd").call("pack_script")
+	var script: Script = pack.call("own_script_of", card) as Script if pack != null else null
+	return script != null and script.is_tool()
 
 
 ## Whether a Tween Property card holds any of the keys that make it the whole card. A card without them
@@ -60,7 +69,7 @@ static func is_whole_tween(card: Dictionary) -> bool:
 ## points at, and the object itself again when a card that may leave its node empty does.
 static func node_of(player: Node, card: Dictionary, host: Node) -> Node:
 	var word: String = str(card.get("verb", ""))
-	if ON_HOST.has(word):
+	if card.has("card_script") or ON_HOST.has(word):
 		return host
 	var stored: Variant = card.get("node", NodePath())
 	var path: NodePath = stored if stored is NodePath else NodePath(str(stored))
@@ -72,7 +81,7 @@ static func node_of(player: Node, card: Dictionary, host: Node) -> Node:
 ## Every [object, property] a preview of this card may move, so the strip can write each down first.
 static func watched(card: Dictionary, node: Node) -> Array:
 	var made: Array = []
-	if node == null:
+	if node == null or card.has("card_script"):
 		return made
 	match str(card.get("verb", "")):
 		"particles":
@@ -128,6 +137,9 @@ static func step(card: Dictionary, node: Node, through: float, at: float, state:
 	var word: String = str(card.get("verb", ""))
 	var seconds: float = maxf(float(card.get("seconds", 0.0)), 0.05)
 	var held: float = clampf(through, 0.0, 1.0)
+	if card.has("card_script"):
+		_own(card, node, at, state, slot)
+		return
 	match word:
 		"particles":
 			_particles(card, node, state, slot)
@@ -180,6 +192,12 @@ static func remember(state: Dictionary, object: Object, property: String) -> Var
 ## Takes away what a step set up beyond a value: an animation player stops where it is, and the pass's own
 ## memory goes. The strip puts the recorded values back after this.
 static func finish(state: Dictionary) -> void:
+	for made: Variant in state.get("own", []):
+		var own_card: Resource = made as Resource
+		if own_card != null and is_instance_valid(own_card):
+			for door: String in ["stop", "restore"]:
+				if own_card.has_method(door):
+					own_card.call(door)
 	for entry: Variant in state.get("clips", []):
 		var animation_player: AnimationPlayer = entry as AnimationPlayer
 		if animation_player != null and is_instance_valid(animation_player):
@@ -240,6 +258,26 @@ static func _pop(card: Dictionary, node: Node, held: float, seconds: float, stat
 		node.set("scale", Tween.interpolate_value(rest, rest * peak - rest, elapsed, rise, Tween.TRANS_BACK, Tween.EASE_OUT))
 	else:
 		node.set("scale", Tween.interpolate_value(rest * peak, rest - rest * peak, elapsed - rise, seconds * 0.6, Tween.TRANS_SINE, Tween.EASE_IN_OUT))
+
+
+## A card of your own that is a tool script: played once, when its turn comes, and told to stop and to put
+## things back when the pass is over.
+static func _own(card: Dictionary, host: Node, at: float, state: Dictionary, slot: int) -> void:
+	var started: Dictionary = state.get("started", {})
+	if started.has(slot):
+		return
+	started[slot] = true
+	state["started"] = started
+	var pack: Script = load("res://addons/eventsheet/editor/inspector/juice_preview.gd").call("pack_script")
+	var made: Resource = pack.call("own_card_of", card) as Resource if pack != null else null
+	if made == null:
+		return
+	if "player" in made:
+		made.set("player", state.get("player"))
+	var running: Array = state.get("own", [])
+	running.append(made)
+	state["own"] = running
+	made.call("play", host, at)
 
 
 static func _particles(card: Dictionary, node: Node, state: Dictionary, slot: int) -> void:

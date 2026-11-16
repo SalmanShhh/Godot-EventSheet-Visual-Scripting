@@ -550,6 +550,12 @@ func _commit() -> void:
 
 
 func _entry_for(card: Dictionary) -> Dictionary:
+	# A card that names the script it is made of is found by that script, before its word.
+	var by_script: Variant = _schema.get("card_entry")
+	if by_script is Callable and card.has("card_script"):
+		var found: Dictionary = (by_script as Callable).call(card)
+		if not found.is_empty():
+			return found
 	return EventSheetCardSchemas.kind_entry(_schema, str(card.get(str(_spec.get("kind_key", "kind")), "")))
 
 
@@ -1412,6 +1418,8 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable, i
 			return _note_line(card, field, index)
 		"custom":
 			return _custom_field(index, field)
+		"godot":
+			return attribute_fields().call("godot_field", self, card, field, write, index)
 		"node", "property", "typed", "choices", "arguments", "from":
 			return attribute_fields().call(drawer + "_field", self, card, field, write, index)
 	return _number_field(card, key, write, FLOAT_STEP)

@@ -330,6 +330,11 @@ func _show_lines() -> void:
 static func what_editor_does(card: Dictionary, pack: Script) -> String:
 	if not bool(card.get("active", true)):
 		return EventSheetL10n.translate("switched off")
+	if card.has("card_script"):
+		var own_script: Script = pack.call("own_script_of", card) as Script if pack != null else null
+		if own_script != null and own_script.is_tool():
+			return EventSheetL10n.translate("played")
+		return EventSheetL10n.translate("not shown in the editor: %s") % EventSheetL10n.translate("a card of yours plays here only when its script is marked @tool")
 	var kind: String = str(pack.call("editor_kind", str(card.get("verb", "")))) if pack != null else "skipped:"
 	if kind == "felt":
 		return EventSheetL10n.translate("played")
@@ -443,7 +448,7 @@ func _tick() -> void:
 ## Writes down every property the cards that reach other nodes may move, and the value each holds now.
 func _record_world(host: Node) -> void:
 	_world_base = []
-	_world_state = {}
+	_world_state = {"player": _player}
 	var world: Script = load(WORLD_PATH) as Script
 	var seen: Dictionary = {}
 	for entry: Variant in _run_list:

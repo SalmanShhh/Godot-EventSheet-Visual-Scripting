@@ -10909,3 +10909,6 @@ hard to read on its row,"плохо читается в своей строке"
 A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,"Тема, поставляемая с демо. Сохранить копию создаёт вашу в eventsheet_themes/ и оставляет эту как поставлена."
 A file in your project. Save writes it in place (Ctrl+S) and every open sheet wearing it repaints.,"Файл вашего проекта. Сохранить записывает его на месте (Ctrl+S), и каждый открытый лист с этой темой перерисовывается."
 not a file: the colours come from Godot's editor theme,"не файл: цвета берутся из темы редактора Godot"
+a card of yours plays here only when its script is marked @tool,"собственная карточка проигрывается здесь, только если её скрипт помечен как @tool"
+Edit this value in the card's script.,Измените это значение в скрипте карточки.
+Yours,Ваши

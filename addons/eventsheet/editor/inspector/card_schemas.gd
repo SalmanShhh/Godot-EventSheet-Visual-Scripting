@@ -104,7 +104,12 @@ static func schema_for(spec: Dictionary) -> Dictionary:
 
 ## The kind entries of a schema, in declared order.
 static func kinds_of(schema: Dictionary) -> Array:
-	return schema.get("kinds") if schema.get("kinds") is Array else []
+	var own: Array = schema.get("kinds") if schema.get("kinds") is Array else []
+	# A schema may add kinds that are not in its own table (the cards a project wrote for itself), read fresh.
+	var more: Variant = schema.get("more_kinds")
+	if more is Callable and (more as Callable).is_valid():
+		return own + ((more as Callable).call() as Array)
+	return own
 
 
 ## The entry describing one kind, or empty when the schema does not know it. An unknown kind is not

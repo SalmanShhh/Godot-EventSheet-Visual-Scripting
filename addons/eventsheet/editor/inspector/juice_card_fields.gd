@@ -85,6 +85,11 @@ static func path_from_pick(edited: Object, picked: NodePath) -> NodePath:
 	return (edited as Node).get_path_to(node) if node != null else NodePath()
 
 
+## The editor for one export of a card of your own: Godot's own editor for its type.
+static func godot_field(drawer: Control, card: Dictionary, field: Dictionary, write: Callable, _index: int) -> Control:
+	return load("res://addons/eventsheet/editor/inspector/juice_own_cards.gd").call("field", drawer, card, field, write)
+
+
 ## A node field: the picked node's name in a read-only box, Godot's own node picker behind a Pick button,
 ## and a clear button. The quiet amber line under it says when the stored path finds no node.
 static func node_field(drawer: Control, card: Dictionary, field: Dictionary, write: Callable, index: int) -> Control:

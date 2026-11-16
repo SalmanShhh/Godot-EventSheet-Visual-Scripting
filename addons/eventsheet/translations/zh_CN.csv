@@ -10909,3 +10909,6 @@ hard to read on its row,"在其所在行上难以阅读"
 A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,"随演示提供的主题。保存副本会在 eventsheet_themes/ 中创建你自己的主题,此主题保持原样。"
 A file in your project. Save writes it in place (Ctrl+S) and every open sheet wearing it repaints.,"项目中的文件。保存会就地写入 (Ctrl+S),所有使用它的已打开表格都会重绘。"
 not a file: the colours come from Godot's editor theme,"不是文件:颜色来自 Godot 编辑器主题"
+a card of yours plays here only when its script is marked @tool,自定义卡片仅在其脚本标记为 @tool 时才会在此播放
+Edit this value in the card's script.,请在卡片的脚本中编辑此值。
+Yours,自定义

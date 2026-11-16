@@ -10909,3 +10909,6 @@ hard to read on its row,"그 줄에서 읽기 어려움"
 A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,"데모와 함께 제공되는 테마입니다. 사본 저장은 eventsheet_themes/ 에 내 것을 만들고 이것은 제공된 그대로 둡니다."
 A file in your project. Save writes it in place (Ctrl+S) and every open sheet wearing it repaints.,"프로젝트의 파일입니다. 저장하면 그 자리에 쓰이고 (Ctrl+S), 이 테마를 쓰는 열린 시트가 모두 다시 그려집니다."
 not a file: the colours come from Godot's editor theme,"파일이 아님: 색은 Godot 에디터 테마에서 옵니다"
+a card of yours plays here only when its script is marked @tool,직접 만든 카드는 스크립트가 @tool로 표시된 경우에만 여기서 재생됩니다
+Edit this value in the card's script.,이 값은 카드의 스크립트에서 편집하세요.
+Yours,내 카드

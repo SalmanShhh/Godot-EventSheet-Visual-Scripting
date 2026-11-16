@@ -10909,3 +10909,6 @@ hard to read on its row,"schwer lesbar in seiner Zeile"
 A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,"Ein Theme der Demos. Kopie speichern legt dein eigenes in eventsheet_themes/ an und lässt dieses unverändert."
 A file in your project. Save writes it in place (Ctrl+S) and every open sheet wearing it repaints.,"Eine Datei in deinem Projekt. Speichern schreibt sie an Ort und Stelle (Strg+S), und jedes offene Blatt mit diesem Theme wird neu gezeichnet."
 not a file: the colours come from Godot's editor theme,"keine Datei: die Farben kommen vom Godot-Editor-Theme"
+a card of yours plays here only when its script is marked @tool,"eine eigene Karte läuft hier nur, wenn ihr Skript als @tool markiert ist"
+Edit this value in the card's script.,Bearbeite diesen Wert im Skript der Karte.
+Yours,Deine

@@ -10909,3 +10909,6 @@ hard to read on its row,"その行では読みにくい"
 A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,"デモに付属するテーマです。コピーを保存すると eventsheet_themes/ に自分用が作られ、これはそのまま残ります。"
 A file in your project. Save writes it in place (Ctrl+S) and every open sheet wearing it repaints.,"プロジェクト内のファイルです。保存するとその場所に書き込まれ (Ctrl+S)、このテーマを使っている開いているシートがすべて描き直されます。"
 not a file: the colours come from Godot's editor theme,"ファイルではありません: 色は Godot のエディターテーマから来ています"
+a card of yours plays here only when its script is marked @tool,自作のカードは、スクリプトが @tool の場合のみここで再生されます
+Edit this value in the card's script.,この値はカードのスクリプトで編集してください。
+Yours,自作
