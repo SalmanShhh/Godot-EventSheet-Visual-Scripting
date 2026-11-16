@@ -3087,6 +3087,7 @@ static func behaviour_pack_index() -> Dictionary:
 		return _pack_index
 	var scripts: Array[String] = EventSheetAddonScanner.list_addon_scripts()
 	var index: Dictionary = {}
+	var classes: Dictionary = {}
 	for path: String in scripts:
 		var head: Dictionary = _pack_head(path)
 		var category: String = str(head.get("category", ""))
@@ -3095,13 +3096,18 @@ static func behaviour_pack_index() -> Dictionary:
 		var declared: String = str(head.get("class", ""))
 		if not declared.is_empty():
 			index[declared] = category
+			classes[declared] = declared
 		# A folder is named by the first script that claims it: a second script in the same folder (the
 		# Juice pack holds the effects node and the list node) is still found by its own class and category.
 		var folder_key: String = path.get_base_dir().get_file().to_pascal_case()
 		if not index.has(folder_key):
 			index[folder_key] = category
+			classes[folder_key] = declared
 		index[category.replace(" ", "")] = category
+		if not classes.has(category.replace(" ", "")):
+			classes[category.replace(" ", "")] = declared
 	_pack_index = index
+	_pack_classes = classes
 	_pack_index_built = true
 	return _pack_index
 
@@ -3110,10 +3116,14 @@ static func behaviour_pack_index() -> Dictionary:
 ## hook, next to the object and signal caches; tests call it between fixtures.
 static func clear_pack_index() -> void:
 	_pack_index = {}
+	_pack_classes = {}
 	_pack_index_built = false
 
 
 static var _pack_index: Dictionary = {}
+## The same keys as the index, each answering the script class of the pack's script rather than the
+## pack's display name: the class its icon is read off.
+static var _pack_classes: Dictionary = {}
 static var _pack_index_built: bool = false
 
 
@@ -3152,6 +3162,18 @@ static func behaviour_pack_of(object_label: String, class_map: Dictionary) -> St
 	if not declared.is_empty():
 		return str(index.get(declared, ""))
 	return str(index.get(label, ""))
+
+
+## The icon the pack behind a call's object wears: the icon its script class names with `@icon`. The
+## object is found the way `behaviour_pack_of` finds it (its declared class first, then its own name).
+## Null when the label names no pack, or the pack's class names no icon.
+static func behaviour_pack_icon(object_label: String, class_map: Dictionary) -> Texture2D:
+	var label: String = object_label.strip_edges()
+	if label.is_empty() or behaviour_pack_index().is_empty():
+		return null
+	var declared: String = str(class_map.get(label, ""))
+	var pack_class: String = str(_pack_classes.get(declared if not declared.is_empty() else label, ""))
+	return EventSheetACEIcons.script_class_icon(pack_class) if not pack_class.is_empty() else null
 
 
 ## Applied to a finished reading, at the one moment a lane holds both its object label and its
@@ -3193,7 +3215,11 @@ static func object_attribution(object_label: String, pieces: Array, script_objec
 	# The colon is translated: French typography puts a space before it ("Health : Take damage").
 	var chipped: Array = [[(EventSheetL10n.translate("%s:") % pack) + " ", "behaviour"]]
 	chipped.append_array(pieces)
-	return {"object": owner, "pieces": chipped, "icon": class_icon_for(owner, class_map)}
+	# The row leads with the picture of whose verb it is: the pack's own icon, and the mounted-on
+	# object's class icon only for a pack that names none.
+	var pack_icon: Texture2D = behaviour_pack_icon(label, class_map)
+	return {"object": owner, "pieces": chipped, "icon": pack_icon if pack_icon != null else class_icon_for(owner, class_map),
+		"pack_icon": pack_icon}
 
 
 # ── The census: every object an open file uses ────────────────────────────────────────────────

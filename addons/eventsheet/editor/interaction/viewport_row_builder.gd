@@ -18372,6 +18372,7 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	if not grammar.is_empty():
 		grammar = _attributed_grammar(grammar, global_owner)
 		_pending_object_label = str(grammar.get("object", ""))
+		_pending_pack_icon = grammar.get("pack_icon") as Texture2D
 		_pending_grammar_segments = grammar.get("segments", []) as Array
 		return _joined_segments(grammar)
 	_pending_object_label = global_owner
@@ -18714,6 +18715,7 @@ func _format_action_descriptor_base(action: ACEAction) -> String:
 			_note_pattern(claimed_pattern, EventSheetActionCodegen.generate_action(read_action))
 		grammar = _attributed_grammar(grammar, global_owner)
 		_pending_object_label = str(grammar.get("object", ""))
+		_pending_pack_icon = grammar.get("pack_icon") as Texture2D
 		# A write to the behaviour's own variable reads under the behaviour, where the sentence layer
 		# left it with System.
 		if _pending_object_label == EventSheetSentence.OBJECT_SYSTEM \
@@ -21102,6 +21104,9 @@ func _object_label_or_pending(provider_id: String, ace_id: String, params: Dicti
 # discipline _pending_object_label above uses: _object_label_or_pending writes it, _make_span reads
 # and clears it, and the two always run back to back.
 var _pending_object_note: String = ""
+## The icon of the pack a call's object is, left by the attribution for the span about to be made. One
+## shot like the note beside it: `_make_span` reads and clears it, so it can never land on the next row.
+var _pending_pack_icon: Texture2D = null
 
 
 ## What the grammar needs to know about THIS sheet: the class that owns its signals, and the
@@ -21535,7 +21540,7 @@ func _attributed_grammar(grammar: Dictionary, global_owner: String) -> Dictionar
 	var rebuilt: Array = []
 	for piece: Array in attributed_pieces:
 		rebuilt.append({"text": str(piece[0]), "tone": str(piece[1])})
-	return {"object": str(attribution.get("object", "")), "segments": rebuilt}
+	return {"object": str(attribution.get("object", "")), "segments": rebuilt, "pack_icon": attribution.get("pack_icon")}
 
 
 ## Always false: a behaviour's action keeps the node it is mounted on in the object column, with the
@@ -21824,6 +21829,13 @@ func _make_span(text: String, span_type: int, metadata: Dictionary = {}) -> Even
 			span.metadata.get("param_ranges", []))
 		if not variable_ranges.is_empty():
 			span.metadata["variable_ranges"] = variable_ranges
+	# A call on a pack's node leads with the pack's own icon, remembered as the pack's so the pass that
+	# dresses every line with its object's class icon leaves it alone.
+	if _pending_pack_icon != null:
+		if _viewport.show_object_icons and not str(span.metadata.get("object_label", "")).is_empty():
+			span.metadata["object_icon"] = _pending_pack_icon
+			_pack_icon_ids[_pending_pack_icon.get_instance_id()] = true
+		_pending_pack_icon = null
 	_pending_object_note = ""
 	_pending_display_bbcode = false
 	_pending_param_ranges = {}
