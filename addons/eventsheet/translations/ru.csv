@@ -10746,20 +10746,20 @@ Bus,Шина
 Call Method,Вызвать метод
 "Changes the gravity scale of a RigidBody for a time, then puts it back: a floaty moment at the top of a hit.","Меняет масштаб гравитации RigidBody на время, затем возвращает: невесомый миг на пике удара."
 Chromatic Kick,Хроматический удар
-Circ,Circ
+Circ,Круговая
 Control,Контрол
 Count To,Счёт до
-Cubic,Cubic
+Cubic,Кубическая
 Delay,Задержка
 Depth,Глубина
 Device,Устройство
 Drop it at,Разместить в
 Ease,Смягчение
 Effect,Эффект
-Elastic,Elastic
+Elastic,Упругая
 Emit Signal,Послать сигнал
 Everywhere,Везде
-Expo,Expo
+Expo,Экспонента
 Fade Bus,Затухание шины
 Fade out,Затухание
 Fade to,Затухнуть до
@@ -10817,9 +10817,9 @@ Punch Position,Толчок позиции
 Punch Rotation,Толчок поворота
 Punch Scale,Толчок масштаба
 Push,Толчок
-Quad,Quad
-Quart,Quart
-Quint,Quint
+Quad,Квадратичная
+Quart,Четвёртой степени
+Quint,Пятой степени
 Random pitch,Случайная высота
 Random volume,Случайная громкость
 "Restarts, starts or stops a particles node you pick. Its length is the node's lifetime when it is one shot.","Перезапускает, запускает или останавливает выбранный узел частиц. Для одноразового узла длительность равна его времени жизни."
@@ -10835,11 +10835,11 @@ Shockwave,Ударная волна
 Show for a time,Показать на время
 Show or Hide,Показать или скрыть
 "Shows a node, hides it, or shows it for a time and hides it again: a hit spark, a muzzle flash, a warning icon. A card that picks no node acts on the object this player is under.","Показывает узел, скрывает его или показывает на время и снова скрывает: искру удара, вспышку выстрела, значок предупреждения. Карточка без выбранного узла действует на объект, под которым стоит этот проигрыватель."
-Sine,Sine
+Sine,Синус
 Slowmo,Замедление
 Sound card,Карточка звука
 Spawn Scene,Создать сцену
-Spring,Spring
+Spring,Пружина
 Sprite Animation,Анимация спрайта
 Squash And Stretch,Сжатие и растяжение
 "Squashes and stretches the object this player is under, through the Juice node beside it. Put it on the sprite or mesh under a body, never on the body.","Сжимает и растягивает объект, под которым стоит этот проигрыватель, через соседний узел Juice. Ставьте на спрайт или меш под телом, а не на само тело."

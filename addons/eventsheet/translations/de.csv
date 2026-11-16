@@ -10741,25 +10741,25 @@ Add to the value,Zum Wert addieren
 Away from,Weg von
 Away from a node,Weg von einem Node
 Body,Körper
-Bounce,Bounce
-Bus,Bus
+Bounce,Abprallen
+Bus,Audiobus
 Call Method,Methode aufrufen
 "Changes the gravity scale of a RigidBody for a time, then puts it back: a floaty moment at the top of a hit.",Ändert den Gravitationsfaktor eines RigidBody für eine Zeit und setzt ihn dann zurück: ein schwebender Moment am Höhepunkt eines Treffers.
 Chromatic Kick,Chromatischer Stoß
-Circ,Circ
-Control,Control
+Circ,Kreisförmig
+Control,Steuerelement
 Count To,Zählen bis
-Cubic,Cubic
+Cubic,Kubisch
 Delay,Verzögerung
 Depth,Tiefe
 Device,Gerät
 Drop it at,Ablegen bei
-Ease,Ease
+Ease,Verlauf
 Effect,Effekt
-Elastic,Elastic
+Elastic,Elastisch
 Emit Signal,Signal senden
 Everywhere,Überall
-Expo,Expo
+Expo,Exponentiell
 Fade Bus,Bus ausblenden
 Fade out,Ausblenden
 Fade to,Ausblenden bis
@@ -10776,7 +10776,7 @@ Grab Focus,Fokus holen
 Gravity For A Time,Schwerkraft für eine Zeit
 Gravity scale,Gravitationsfaktor
 Heard from,Zu hören von
-Hitstop,Hitstop
+Hitstop,Trefferstopp
 Hold,Halten
 Hold Effect,Halteeffekt
 Holds one RigidBody still for a time: hitstop for a single object while the rest of the game runs.,"Hält einen RigidBody eine Zeit lang still: Hitstop für ein einzelnes Objekt, während der Rest des Spiels weiterläuft."
@@ -10811,15 +10811,15 @@ Play Player,Player abspielen
 "Plays a sound when the list reaches this card. Muted with the Sound family, retimed with the rest, and scaled by the play strength when you tick Follows strength.","Spielt einen Klang, wenn die Liste diese Karte erreicht. Wird mit der Klang-Familie stummgeschaltet, mit dem Rest neu getaktet und bei Folgt der Stärke von der Abspielstärke skaliert."
 "Plays an animation of an animated sprite you pick, stretched to this card's length.","Spielt eine Animation eines gewählten animierten Sprites ab, auf die Länge dieser Karte gedehnt."
 "Plays another Juice Player from inside this one, at a share of this play's strength - which is how a whole object's beat is built out of the beats of its parts.","Spielt aus diesem heraus einen anderen Juice Player ab, mit einem Anteil der Stärke dieses Abspielens - so setzt sich der Takt eines ganzen Objekts aus den Takten seiner Teile zusammen."
-Pop,Pop
+Pop,Plopp
 Pulse Vignette,Vignettenpuls
 Punch Position,Positionsstoß
 Punch Rotation,Drehungsstoß
 Punch Scale,Skalierungsstoß
 Push,Schieben
-Quad,Quad
-Quart,Quart
-Quint,Quint
+Quad,Quadratisch
+Quart,Quartisch
+Quint,Quintisch
 Random pitch,Zufällige Tonhöhe
 Random volume,Zufällige Lautstärke
 "Restarts, starts or stops a particles node you pick. Its length is the node's lifetime when it is one shot.","Startet neu, startet oder stoppt einen gewählten Partikel-Node. Seine Länge ist die Lebensdauer des Nodes, wenn er einmalig ist."
@@ -10835,17 +10835,17 @@ Shockwave,Schockwelle
 Show for a time,Für eine Zeit zeigen
 Show or Hide,Zeigen oder verbergen
 "Shows a node, hides it, or shows it for a time and hides it again: a hit spark, a muzzle flash, a warning icon. A card that picks no node acts on the object this player is under.","Zeigt einen Node, verbirgt ihn oder zeigt ihn für eine Zeit und verbirgt ihn wieder: ein Trefferfunke, ein Mündungsfeuer, ein Warnsymbol. Eine Karte ohne gewählten Node wirkt auf das Objekt, unter dem dieser Player liegt."
-Sine,Sine
+Sine,Sinus
 Slowmo,Zeitlupe
 Sound card,Klangkarte
 Spawn Scene,Szene erzeugen
-Spring,Spring
+Spring,Feder
 Sprite Animation,Sprite-Animation
 Squash And Stretch,Quetschen und Dehnen
 "Squashes and stretches the object this player is under, through the Juice node beside it. Put it on the sprite or mesh under a body, never on the body.","Quetscht und dehnt das Objekt, unter dem dieser Player liegt, über den Juice-Node daneben. Setze ihn auf den Sprite oder das Mesh unter einem Körper, nie auf den Körper selbst."
 Stop Sound,Klang stoppen
 "Stops the sound an earlier Sound card started, by that card's name, with a fade if you want one: a charge-up hum that ends on release. Pick no card to stop every sound this player has going.","Stoppt den Klang, den eine frühere Klangkarte gestartet hat, über den Namen dieser Karte, auf Wunsch mit Ausblenden: ein Aufladebrummen, das beim Loslassen endet. Ohne gewählte Karte werden alle Klänge dieses Players gestoppt."
-Stream,Stream
+Stream,Audiostream
 Stretch,Dehnung
 Strong motor,Starker Motor
 "Tells a node to act: calls a function of its script with the values below. For whatever no card covers: pop a score label, open a door, start your own effect.","Sagt einem Node, etwas zu tun: ruft eine Funktion seines Skripts mit den Werten unten auf. Für alles, was keine Karte abdeckt: ein Punktelabel aufploppen lassen, eine Tür öffnen, einen eigenen Effekt starten."

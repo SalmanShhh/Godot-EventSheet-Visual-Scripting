@@ -10746,20 +10746,20 @@ Bus,버스
 Call Method,메서드 호출
 "Changes the gravity scale of a RigidBody for a time, then puts it back: a floaty moment at the top of a hit.",RigidBody의 중력 배율을 일정 시간 바꿨다가 되돌립니다. 타격의 정점에서 둥실 뜨는 순간에 좋습니다.
 Chromatic Kick,색수차 킥
-Circ,Circ
+Circ,원형
 Control,컨트롤
 Count To,숫자 세기
-Cubic,Cubic
+Cubic,3차
 Delay,지연
 Depth,깊이
 Device,기기
 Drop it at,놓을 위치
 Ease,이즈
 Effect,효과
-Elastic,Elastic
+Elastic,탄성
 Emit Signal,시그널 보내기
 Everywhere,어디서나
-Expo,Expo
+Expo,지수
 Fade Bus,버스 페이드
 Fade out,페이드 아웃
 Fade to,페이드 목표
@@ -10817,9 +10817,9 @@ Punch Position,위치 펀치
 Punch Rotation,회전 펀치
 Punch Scale,크기 펀치
 Push,밀기
-Quad,Quad
-Quart,Quart
-Quint,Quint
+Quad,2차
+Quart,4차
+Quint,5차
 Random pitch,무작위 피치
 Random volume,무작위 볼륨
 "Restarts, starts or stops a particles node you pick. Its length is the node's lifetime when it is one shot.","고른 파티클 노드를 다시 시작, 시작, 정지합니다. 원샷일 때 길이는 노드의 수명입니다."
@@ -10835,11 +10835,11 @@ Shockwave,충격파
 Show for a time,잠시 표시
 Show or Hide,표시 또는 숨기기
 "Shows a node, hides it, or shows it for a time and hides it again: a hit spark, a muzzle flash, a warning icon. A card that picks no node acts on the object this player is under.","노드를 표시하거나 숨기거나, 잠시 표시했다가 다시 숨깁니다. 타격 불꽃, 총구 섬광, 경고 아이콘 등. 노드를 고르지 않은 카드는 이 플레이어가 속한 오브젝트에 작용합니다."
-Sine,Sine
+Sine,사인
 Slowmo,슬로모션
 Sound card,사운드 카드
 Spawn Scene,씬 생성
-Spring,Spring
+Spring,스프링
 Sprite Animation,스프라이트 애니메이션
 Squash And Stretch,스쿼시 앤 스트레치
 "Squashes and stretches the object this player is under, through the Juice node beside it. Put it on the sprite or mesh under a body, never on the body.","이 플레이어가 속한 오브젝트를 옆의 Juice 노드를 통해 찌그러뜨리고 늘립니다. 바디 아래의 스프라이트나 메시에 두고, 바디 자체에는 두지 마세요."

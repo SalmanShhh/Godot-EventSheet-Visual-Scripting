@@ -10746,20 +10746,20 @@ Bus,总线
 Call Method,调用方法
 "Changes the gravity scale of a RigidBody for a time, then puts it back: a floaty moment at the top of a hit.","在一段时间内改变 RigidBody 的重力缩放,然后还原:打击顶点处的悬浮瞬间。"
 Chromatic Kick,色差冲击
-Circ,Circ
+Circ,圆形
 Control,控件
 Count To,数到
-Cubic,Cubic
+Cubic,三次
 Delay,延迟
 Depth,纵深
 Device,设备
 Drop it at,放置位置
 Ease,缓动方式
 Effect,效果
-Elastic,Elastic
+Elastic,弹性
 Emit Signal,发出信号
 Everywhere,到处
-Expo,Expo
+Expo,指数
 Fade Bus,渐变总线
 Fade out,淡出
 Fade to,渐变到
@@ -10810,16 +10810,16 @@ Play Player,播放播放器
 "Plays a clip of an animation player you pick, stretched to this card's length.","播放所选动画播放器的片段,并拉伸到此卡的时长。"
 "Plays a sound when the list reaches this card. Muted with the Sound family, retimed with the rest, and scaled by the play strength when you tick Follows strength.","列表到达此卡时播放声音。随声音类别静音,随其余卡片重新计时,勾选“跟随强度”时按播放强度缩放。"
 "Plays an animation of an animated sprite you pick, stretched to this card's length.","播放所选动画精灵的动画,并拉伸到此卡的时长。"
-"Plays another Juice Player from inside this one, at a share of this play's strength - which is how a whole object's beat is built out of the beats of its parts.",在此播放器内部以本次播放强度的一部分播放另一个 Juice Player——整个对象的节奏就是这样由各部分的节奏组成的。
+"Plays another Juice Player from inside this one, at a share of this play's strength - which is how a whole object's beat is built out of the beats of its parts.",在此播放器内部以本次播放强度的一部分播放另一个 Juice Player-整个对象的节奏就是这样由各部分的节奏组成的。
 Pop,弹出
 Pulse Vignette,暗角脉冲
 Punch Position,位置冲击
 Punch Rotation,旋转冲击
 Punch Scale,缩放冲击
 Push,推动
-Quad,Quad
-Quart,Quart
-Quint,Quint
+Quad,二次
+Quart,四次
+Quint,五次
 Random pitch,随机音调
 Random volume,随机音量
 "Restarts, starts or stops a particles node you pick. Its length is the node's lifetime when it is one shot.","重新开始、开始或停止所选的粒子节点。一次性发射时,时长即该节点的生命周期。"
@@ -10835,11 +10835,11 @@ Shockwave,冲击波
 Show for a time,显示一段时间
 Show or Hide,显示或隐藏
 "Shows a node, hides it, or shows it for a time and hides it again: a hit spark, a muzzle flash, a warning icon. A card that picks no node acts on the object this player is under.","显示节点、隐藏节点,或显示一段时间后再隐藏:命中火花、枪口火焰、警告图标。未选节点的卡片作用于此播放器所在的对象。"
-Sine,Sine
+Sine,正弦
 Slowmo,慢动作
 Sound card,声音卡
 Spawn Scene,生成场景
-Spring,Spring
+Spring,弹簧
 Sprite Animation,精灵动画
 Squash And Stretch,挤压与拉伸
 "Squashes and stretches the object this player is under, through the Juice node beside it. Put it on the sprite or mesh under a body, never on the body.","通过旁边的 Juice 节点挤压拉伸此播放器所在的对象。请放在物体下面的精灵或网格上,不要放在物体本身上。"

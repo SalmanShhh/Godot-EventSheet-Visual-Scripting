@@ -10746,20 +10746,20 @@ Bus,バス
 Call Method,メソッドを呼ぶ
 "Changes the gravity scale of a RigidBody for a time, then puts it back: a floaty moment at the top of a hit.",RigidBody の重力スケールを一定時間変え、その後元に戻します。ヒットの頂点でふわっと浮く瞬間に。
 Chromatic Kick,色収差キック
-Circ,Circ
+Circ,円形
 Control,コントロール
 Count To,カウントアップ
-Cubic,Cubic
+Cubic,三次
 Delay,遅延
 Depth,奥行き
 Device,デバイス
 Drop it at,出す場所
 Ease,イーズ
 Effect,エフェクト
-Elastic,Elastic
+Elastic,弾性
 Emit Signal,シグナルを発する
 Everywhere,どこでも
-Expo,Expo
+Expo,指数
 Fade Bus,バスをフェード
 Fade out,フェードアウト
 Fade to,フェード先
@@ -10817,9 +10817,9 @@ Punch Position,位置パンチ
 Punch Rotation,回転パンチ
 Punch Scale,スケールパンチ
 Push,押す
-Quad,Quad
-Quart,Quart
-Quint,Quint
+Quad,二次
+Quart,四次
+Quint,五次
 Random pitch,ランダムなピッチ
 Random volume,ランダムな音量
 "Restarts, starts or stops a particles node you pick. Its length is the node's lifetime when it is one shot.",選んだパーティクルノードを再開・開始・停止します。ワンショットの場合、長さはそのノードのライフタイムです。
@@ -10835,11 +10835,11 @@ Shockwave,衝撃波
 Show for a time,一定時間表示
 Show or Hide,表示/非表示
 "Shows a node, hides it, or shows it for a time and hides it again: a hit spark, a muzzle flash, a warning icon. A card that picks no node acts on the object this player is under.",ノードを表示、非表示、または一定時間だけ表示してまた隠します。ヒットの火花、マズルフラッシュ、警告アイコンなど。ノードを選ばないカードは、このプレイヤーがぶら下がっているオブジェクトに作用します。
-Sine,Sine
+Sine,サイン
 Slowmo,スローモーション
 Sound card,サウンドカード
 Spawn Scene,シーンを生成
-Spring,Spring
+Spring,バネ
 Sprite Animation,スプライトアニメーション
 Squash And Stretch,スクワッシュ&ストレッチ
 "Squashes and stretches the object this player is under, through the Juice node beside it. Put it on the sprite or mesh under a body, never on the body.",このプレイヤーがぶら下がっているオブジェクトを、隣の Juice ノードを通して潰したり伸ばしたりします。ボディの下のスプライトやメッシュに付け、ボディ自体には付けないでください。

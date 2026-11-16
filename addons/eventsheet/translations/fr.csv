@@ -10742,31 +10742,31 @@ Away from,Loin de
 Away from a node,Loin d'un nœud
 Body,Corps
 Bounce,Rebond
-Bus,Bus
+Bus,Bus audio
 Call Method,Appeler une méthode
 "Changes the gravity scale of a RigidBody for a time, then puts it back: a floaty moment at the top of a hit.","Change l'échelle de gravité d'un RigidBody pendant un temps, puis la remet : un instant en apesanteur au sommet d'un coup."
 Chromatic Kick,Choc chromatique
-Circ,Circ
+Circ,Circulaire
 Control,Contrôle
 Count To,Compter jusqu'à
-Cubic,Cubic
+Cubic,Cubique
 Delay,Délai
 Depth,Profondeur
 Device,Appareil
 Drop it at,Le déposer à
-Ease,Ease
+Ease,Accélération
 Effect,Effet
-Elastic,Elastic
+Elastic,Élastique
 Emit Signal,Émettre un signal
 Everywhere,Partout
-Expo,Expo
+Expo,Exponentielle
 Fade Bus,Atténuer un bus
 Fade out,Fondu sortant
 Fade to,Fondu vers
 Fades a node in or out through its modulate.,Fait apparaître ou disparaître un nœud via son modulate.
 Fill Bar,Remplir la barre
 Fires a signal when the list reaches this card. Left on this player it says one word out of the player's On Juice Signal trigger; pick a node and a signal its script declares to fire that instead.,"Déclenche un signal quand la liste atteint cette carte. Laissée sur ce lecteur, elle dit un mot par le déclencheur Sur signal Juice du lecteur ; choisissez un nœud et un signal déclaré par son script pour déclencher celui-ci."
-Flash,Flash
+Flash,Éclair
 Flow,Flux
 Follows strength,Suit l'intensité
 Force For A Time,Force pendant un temps
@@ -10776,7 +10776,7 @@ Grab Focus,Prendre le focus
 Gravity For A Time,Gravité pendant un temps
 Gravity scale,Échelle de gravité
 Heard from,Entendu depuis
-Hitstop,Hitstop
+Hitstop,Arrêt sur impact
 Hold,Attendre
 Hold Effect,Effet de maintien
 Holds one RigidBody still for a time: hitstop for a single object while the rest of the game runs.,Fige un RigidBody pendant un temps : un hitstop pour un seul objet pendant que le reste du jeu continue.
@@ -10811,15 +10811,15 @@ Play Player,Lancer un lecteur
 "Plays a sound when the list reaches this card. Muted with the Sound family, retimed with the rest, and scaled by the play strength when you tick Follows strength.","Joue un son quand la liste atteint cette carte. Coupé avec la famille Son, recadencé avec le reste, et mis à l'échelle par l'intensité de lecture si vous cochez Suit l'intensité."
 "Plays an animation of an animated sprite you pick, stretched to this card's length.","Joue une animation d'un sprite animé de votre choix, étirée à la durée de cette carte."
 "Plays another Juice Player from inside this one, at a share of this play's strength - which is how a whole object's beat is built out of the beats of its parts.","Lance un autre Juice Player depuis celui-ci, avec une part de l'intensité de cette lecture - c'est ainsi que le rythme d'un objet entier se construit à partir de ceux de ses parties."
-Pop,Pop
+Pop,Éclat
 Pulse Vignette,Pulsation de vignette
 Punch Position,Coup de position
 Punch Rotation,Coup de rotation
 Punch Scale,Coup d'échelle
 Push,Pousser
-Quad,Quad
-Quart,Quart
-Quint,Quint
+Quad,Quadratique
+Quart,Quartique
+Quint,Quintique
 Random pitch,Hauteur aléatoire
 Random volume,Volume aléatoire
 "Restarts, starts or stops a particles node you pick. Its length is the node's lifetime when it is one shot.","Redémarre, démarre ou arrête un nœud de particules de votre choix. Sa durée est la durée de vie du nœud quand il est à tir unique."
@@ -10835,11 +10835,11 @@ Shockwave,Onde de choc
 Show for a time,Afficher un temps
 Show or Hide,Afficher ou masquer
 "Shows a node, hides it, or shows it for a time and hides it again: a hit spark, a muzzle flash, a warning icon. A card that picks no node acts on the object this player is under.","Affiche un nœud, le masque, ou l'affiche un temps puis le masque : une étincelle d'impact, un éclair de bouche, une icône d'alerte. Une carte sans nœud choisi agit sur l'objet sous lequel se trouve ce lecteur."
-Sine,Sine
+Sine,Sinus
 Slowmo,Ralenti
 Sound card,Carte de son
 Spawn Scene,Faire apparaître une scène
-Spring,Spring
+Spring,Ressort
 Sprite Animation,Animation de sprite
 Squash And Stretch,Écraser et étirer
 "Squashes and stretches the object this player is under, through the Juice node beside it. Put it on the sprite or mesh under a body, never on the body.","Écrase et étire l'objet sous lequel se trouve ce lecteur, via le nœud Juice à côté. Mettez-le sur le sprite ou le maillage sous un corps, jamais sur le corps."
@@ -10855,10 +10855,10 @@ Then come back,Puis revenir
 Then wait,Puis attendre
 This object,Cet objet
 This player,Ce lecteur
-Transition,Transition
+Transition,Passage
 Tween Property,Interpoler une propriété
 Vibrate,Vibrer
-Volume,Volume
+Volume,Volume sonore
 Waits for,Attend
 "Waits for the slowest card above to finish, or for the one card you pick, then this long. What is under a hold is what happens AFTER the hit rather than during it.","Attend la fin de la carte la plus lente au-dessus, ou de celle que vous choisissez, puis ce temps. Ce qui est sous une attente se passe APRÈS le coup, pas pendant."
 "Waits this long before the next card, whatever the cards above are still doing.","Attend ce temps avant la carte suivante, quoi que fassent encore les cartes au-dessus."
