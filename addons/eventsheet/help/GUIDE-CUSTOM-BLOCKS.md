@@ -243,7 +243,7 @@ The practical consequence: you cannot break a user's file with a bad kind. The w
 
 ## 10. Use Cases
 
-Brief sketches - each shows a kind's essence (fields in, GDScript out). The Quick Start above has the full class shape; every snippet here drops into it.
+Brief sketches - each shows a kind's essence (fields in, GDScript out). The Quick Start above has the full class shape; every snippet here drops into it. A sketch that shows only `fields` and `emit` writes its line, but it reopens as its row only once the kind also has a `lift` that claims that line (the Quick Start's does, for `## NOTE: `); until then the line reopens as the ordinary row for that line, a comment or a constant.
 
 ### 1. A TODO marker with an owner
 
@@ -356,7 +356,7 @@ func fields() -> Array[Dictionary]:
 	return [{"id": "enabled", "type": TYPE_BOOL, "default": false}]
 
 func emit(block: CustomBlockRow) -> PackedStringArray:
-	return PackedStringArray(["const DEBUG_DRAW := %s" % ("true" if bool(block.fields.get("enabled")) else "false")])
+	return PackedStringArray(["const DEBUG_DRAW := %s" % ("true" if bool(block.fields.get("enabled", false)) else "false")])
 ```
 
 ### 9. A scene requirement the Doctor enforces
@@ -366,8 +366,11 @@ func emit(block: CustomBlockRow) -> PackedStringArray:
 ```gdscript
 func emit(block: CustomBlockRow) -> PackedStringArray:
 	return PackedStringArray(["## REQUIRES: %s" % str(block.fields.get("requirement", ""))])
+```
 
-# Elsewhere, the pack teaches the Doctor to enforce it (see GUIDE-BUILDING-ON-EVENTSHEETS.md):
+Elsewhere, the pack teaches the Doctor to enforce it (see GUIDE-BUILDING-ON-EVENTSHEETS.md):
+
+```gdscript
 EventSheets.register_doctor_check("my_pack.requirements", _check_scene_requirements)
 ```
 
@@ -396,7 +399,7 @@ func fields() -> Array[Dictionary]:
 	return [{"id": "flag", "label": "Flag", "type": TYPE_STRING, "default": "FEATURE_X"}, {"id": "on", "type": TYPE_BOOL, "default": false}]
 
 func emit(block: CustomBlockRow) -> PackedStringArray:
-	return PackedStringArray(["const %s := %s" % [str(block.fields.get("flag", "")), "true" if bool(block.fields.get("on")) else "false"]])
+	return PackedStringArray(["const %s := %s" % [str(block.fields.get("flag", "")), "true" if bool(block.fields.get("on", false)) else "false"]])
 ```
 
 ### 12. A input-map contract for the whole level
@@ -547,8 +550,8 @@ func emit(block: CustomBlockRow) -> PackedStringArray:
 ```gdscript
 func emit(block: CustomBlockRow) -> PackedStringArray:
 	return PackedStringArray(["## A11Y: subtitles=%s colourblind_safe=%s" % [
-		"yes" if bool(block.fields.get("subtitles")) else "no",
-		"yes" if bool(block.fields.get("cb_safe")) else "no"]])
+		"yes" if bool(block.fields.get("subtitles", false)) else "no",
+		"yes" if bool(block.fields.get("cb_safe", false)) else "no"]])
 ```
 
 ### 25. A save-schema version marker
@@ -587,28 +590,27 @@ func emit(block: CustomBlockRow) -> PackedStringArray:
 
 ## 11. Testing Custom Blocks
 
-The pattern the built-ins use, runnable headlessly:
+The pattern the built-ins use, runnable headlessly. It tests the Quick Start's `demo.note` kind; put your own kind id and your own line in its place:
 
 ```gdscript
 # 1. Registration.
-assert(EventSheetBlockRegistry.get_kind("team.todo") != null)
+assert(EventSheetBlockRegistry.get_kind("demo.note") != null)
 
-# 2. Round-trip: emit -> import -> byte-identical recompile.
-var source := "extends Node\n\n# TODO(sam): fix the jump arc\n"
-var sheet := EventSheetGDScriptImporter.new().import_external_source(source)
-sheet.external_source_path = "user://todo_test.gd"
+# 2. Round-trip: a file holding your line opens as your row and saves back byte for byte.
+var source := "extends Node\n\n## NOTE: tune the jump arc\n"
 var lifted_kinds: Array = []
-for entry in sheet.events:
+for entry in EventSheets.open_gd_as_sheet(source).events:
 	if entry is CustomBlockRow:
 		lifted_kinds.append(entry.kind_id)
-assert(lifted_kinds == ["team.todo"])
-assert(str(EventSheetCompiler.compile(sheet, "user://todo_test.gd").get("output", "")) == source)
+assert(lifted_kinds == ["demo.note"])
+assert(EventSheets.round_trips(source))
 
 # 3. The near-miss stays raw (the byte gate working).
-var hostile := EventSheetGDScriptImporter.new().import_external_source("extends Node\n\n# todo: lowercase\n")
-for entry in hostile.events:
+for entry in EventSheets.open_gd_as_sheet("extends Node\n\n## note: lowercase\n").events:
 	assert(not (entry is CustomBlockRow))
 ```
+
+When step 2 fails, `EventSheets.round_trip_failure(source)` says which step refused instead of only that one did. `EventSheets.echo(sheet)` returns the compiled text without writing anything.
 
 Run tests with `godot --headless --path . --script tests/run_tests.gd`; any script in `tests/` with a `static func run() -> bool` is auto-discovered.
 
