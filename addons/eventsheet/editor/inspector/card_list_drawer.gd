@@ -528,7 +528,91 @@ func move_selected_to(to_end: bool) -> bool:
 func _move_set(chosen: Array, step: int) -> bool:
 	if not editable or chosen.is_empty():
 		return false
-	var order: Array = moved_order(_cards.size(), chosen, step)
+	return _apply_order(moved_order(_cards.size(), chosen, step))
+
+
+## Moves the cards in `chosen` (a drag's cargo) to the gap before position `slot` (0 to the list's size), keeping their
+## order. One change; nothing happens when they would land where they are.
+func move_cards_to_slot(chosen: Array, slot: int) -> bool:
+	if not editable or chosen.is_empty():
+		return false
+	return _apply_order(slot_order(_cards.size(), chosen, slot))
+
+
+## The gap a drop lands in when the pointer is over card `index`: before it in its upper half, after it in its lower.
+static func drop_slot(index: int, y: float, height: float) -> int:
+	return index if y < height * 0.5 else index + 1
+
+
+## Where every card ends up when `chosen` is dropped in the gap before `slot` (new index -> old index). Pure.
+static func slot_order(count: int, chosen: Array, slot: int) -> Array:
+	var before: Array = []
+	var after: Array = []
+	var moving: Array = []
+	for card: int in range(count):
+		if chosen.has(card):
+			moving.append(card)
+		elif card < slot:
+			before.append(card)
+		else:
+			after.append(card)
+	return before + moving + after
+
+
+## Dims the cards being dragged where they stand (their old place stays faint), or puts them back.
+func set_cards_faint(chosen: Array, faint: bool) -> void:
+	for index: Variant in _lines:
+		var line: Control = _lines[index] as Control
+		if line != null and is_instance_valid(line):
+			line.modulate.a = 0.35 if faint and chosen.has(int(index)) else 1.0
+
+
+## What rides under the cursor during a drag: the card's own line, built again as it looks now, at the width of the
+## row it was picked up from and placed so the point that was grabbed stays under the pointer. A drag of several
+## cards says how many beside it. The copy is only a picture: nothing in it takes the mouse.
+func drag_picture(index: int, width: float, grab: Vector2, count: int) -> Control:
+	var card: Dictionary = _cards[index]
+	# The line is made by the same builder as the real one, which records the controls it makes by position so a
+	# write can repaint them in place; a picture must not take their place in those records.
+	var kept: Array = [_head_tiles.duplicate(), _badges.duplicate(), _titles.duplicate(), _timing_marks.duplicate(), _marks.duplicate()]
+	var line: PanelContainer = PanelContainer.new()
+	line.add_theme_stylebox_override("panel", EventSheetLookStyle.selected_row_box(true))
+	var inside: HBoxContainer = HBoxContainer.new()
+	line.add_child(inside)
+	var head: Control = _build_header(index, card, _entry_for(card), EventSheetCardSchemas.card_enabled(_schema, card))
+	inside.add_child(head)
+	head.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if count > 1:
+		var more: Label = Label.new()
+		more.text = "+%d" % (count - 1)
+		more.add_theme_color_override("font_color", EventSheetLookStyle.selected_row_ink())
+		inside.add_child(more)
+	_head_tiles = kept[0]
+	_badges = kept[1]
+	_titles = kept[2]
+	_timing_marks = kept[3]
+	_marks = kept[4]
+	_make_picture(line)
+	line.custom_minimum_size.x = width
+	line.size = Vector2(width, 0.0)
+	var holder: Control = Control.new()
+	holder.add_child(line)
+	line.position = -grab
+	holder.modulate.a = 0.92
+	return holder
+
+
+## Makes every control of a drag picture ignore the mouse and the keyboard.
+func _make_picture(node: Node) -> void:
+	if node is Control:
+		(node as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+		(node as Control).focus_mode = Control.FOCUS_NONE
+	for child: Node in node.get_children():
+		_make_picture(child)
+
+
+## Writes a new order (new index -> old index) as ONE change, or nothing at all when it is the order already there.
+func _apply_order(order: Array) -> bool:
 	var identity: bool = true
 	for slot: int in range(order.size()):
 		if int(order[slot]) != slot:
@@ -2214,6 +2298,11 @@ class _CardRow:
 
 	var _drawer: EventSheetCardListDrawer = null
 	var _index: int = 0
+	## Where a drag would land relative to this card while it is over it: 0 none, -1 above, +1 below.
+	var _drop_mark: int = 0
+	## A plain press on a card that is one of several selected waits for the release: it is the start of a drag of
+	## the whole selection unless the button comes up without one.
+	var _pending_click: bool = false
 
 	func _init(drawer: EventSheetCardListDrawer, index: int) -> void:
 		_drawer = drawer
@@ -2227,9 +2316,21 @@ class _CardRow:
 
 	func _gui_input(event: InputEvent) -> void:
 		var click: InputEventMouseButton = event as InputEventMouseButton
-		if click == null or not click.pressed:
+		if click == null:
+			return
+		if click.button_index == MOUSE_BUTTON_LEFT and not click.pressed and _pending_click:
+			_pending_click = false
+			_drawer.select_card(_index, "click")
+			accept_event()
+			return
+		if not click.pressed:
 			return
 		if click.button_index == MOUSE_BUTTON_LEFT:
+			var plain: bool = not click.shift_pressed and not click.is_command_or_control_pressed()
+			if plain and _drawer.selected_cards().size() > 1 and _drawer.selected_cards().has(_index):
+				_pending_click = true
+				accept_event()
+				return
 			_drawer.select_card(_index, "shift" if click.shift_pressed else ("ctrl" if click.is_command_or_control_pressed() else "click"))
 			accept_event()
 		elif click.button_index == MOUSE_BUTTON_RIGHT:
@@ -2240,19 +2341,48 @@ class _CardRow:
 			_drawer.open_card_menu(_index, Vector2i(get_screen_position() + click.position))
 			accept_event()
 
-	func _get_drag_data(_position: Vector2) -> Variant:
+	func _get_drag_data(position: Vector2) -> Variant:
 		if not _drawer.editable:
 			return null
-		var labels: PackedStringArray = _drawer.card_labels()
-		var ghost: Label = Label.new()
-		ghost.text = "  %s  " % (labels[_index] if _index < labels.size() else EventSheetL10n.translate("card"))
-		set_drag_preview(ghost)
-		return {EventSheetCardListDrawer.DRAG_KEY: _index, "drawer": _drawer}
+		_pending_click = false
+		# Dragging a card that is part of a selection takes the whole selection; any other card goes alone.
+		if not _drawer.selected_cards().has(_index):
+			_drawer.select_card(_index, "click")
+		var chosen: Array = _drawer.selected_cards()
+		set_drag_preview(_drawer.drag_picture(_index, size.x, position, chosen.size()))
+		_drawer.set_cards_faint(chosen, true)
+		return {EventSheetCardListDrawer.DRAG_KEY: _index, "drawer": _drawer, "cards": chosen}
 
-	func _can_drop_data(_position: Vector2, data: Variant) -> bool:
+	func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 		if not (data is Dictionary):
 			return false
-		return (data as Dictionary).get("drawer") == _drawer and (data as Dictionary).has(EventSheetCardListDrawer.DRAG_KEY)
+		var wanted: bool = (data as Dictionary).get("drawer") == _drawer and (data as Dictionary).has(EventSheetCardListDrawer.DRAG_KEY) and _drawer.editable
+		var mark: int = 0
+		if wanted:
+			mark = -1 if EventSheetCardListDrawer.drop_slot(_index, at_position.y, size.y) == _index else 1
+		if mark != _drop_mark:
+			_drop_mark = mark
+			queue_redraw()
+		return wanted
 
-	func _drop_data(_position: Vector2, data: Variant) -> void:
-		_drawer.move_card(int((data as Dictionary)[EventSheetCardListDrawer.DRAG_KEY]), _index)
+	func _drop_data(at_position: Vector2, data: Variant) -> void:
+		_drop_mark = 0
+		queue_redraw()
+		var moving: Array = (data as Dictionary).get("cards", [int((data as Dictionary)[EventSheetCardListDrawer.DRAG_KEY])])
+		_drawer.move_cards_to_slot(moving, EventSheetCardListDrawer.drop_slot(_index, at_position.y, size.y))
+
+	func _notification(what: int) -> void:
+		if what == NOTIFICATION_MOUSE_EXIT or what == NOTIFICATION_DRAG_END:
+			if _drop_mark != 0:
+				_drop_mark = 0
+				queue_redraw()
+		if what == NOTIFICATION_DRAG_END:
+			_drawer.set_cards_faint([], false)
+
+	## The line that says where the dragged card will land: the editor's own accent, as the Scene dock draws it.
+	func _draw() -> void:
+		if _drop_mark == 0:
+			return
+		var thickness: float = maxf(2.0, EventSheetLookStyle.px(2.0))
+		var y: float = 0.0 if _drop_mark < 0 else size.y - thickness
+		draw_rect(Rect2(2.0, y, maxf(size.x - 4.0, 1.0), thickness), EventSheetLookStyle.accent())
