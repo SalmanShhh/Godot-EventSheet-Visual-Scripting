@@ -36,12 +36,12 @@ func _physics_process(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	__every_repath += delta
-	if __every_repath >= maxf(1.0, 0.001):
-		__every_repath = fmod(__every_repath, maxf(1.0, 0.001))
+	if __every_repath >= 1.0:
+		__every_repath = fmod(__every_repath, 1.0)
 		$Chaser/Pathfinding.find_path_to_node($Player, "nearest")
 	__every_bridge += delta
-	if __every_bridge >= maxf(3.0, 0.001):
-		__every_bridge = fmod(__every_bridge, maxf(3.0, 0.001))
+	if __every_bridge >= 3.0:
+		__every_bridge = fmod(__every_bridge, 3.0)
 		toggle_bridge()
 	if Input.is_action_just_pressed("ui_accept"):
 		$Player/Movement.jump()

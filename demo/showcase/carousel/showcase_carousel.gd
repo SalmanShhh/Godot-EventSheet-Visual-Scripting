@@ -19,16 +19,16 @@ var __every_spin_caro: float = 0.0
 func _process(delta: float) -> void:
 	__every_beat_caro += delta
 	# @group:juice
-	if __group_juice_active and __every_beat_caro >= maxf(0.5, 0.001):
-		__every_beat_caro = fmod(__every_beat_caro, maxf(0.5, 0.001))
+	if __group_juice_active and __every_beat_caro >= 0.5:
+		__every_beat_caro = fmod(__every_beat_caro, 0.5)
 		beat += 1
 		juice_tile(beat, intensity * 5.0)
 		$ScreenFx.pulse_post_effect("vignette", 0.45, 0.35)
 		$JuiceBehavior.chromatic_shake(4.0, 0.3, "reducing", randf_range(0.0, 360.0))
 	__every_spin_caro += delta
 	# @group:juice
-	if __group_juice_active and __every_spin_caro >= maxf(2.0, 0.001):
-		__every_spin_caro = fmod(__every_spin_caro, maxf(2.0, 0.001))
+	if __group_juice_active and __every_spin_caro >= 2.0:
+		__every_spin_caro = fmod(__every_spin_caro, 2.0)
 		$TweenBehavior.tween_rotation(rotation_degrees + 360.0, 1.8)
 		$FlashBehavior.flash(0.25)
 	if Input.is_action_just_pressed(&"ui_accept"):

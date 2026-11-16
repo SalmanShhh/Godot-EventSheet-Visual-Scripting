@@ -18,8 +18,8 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	__every_turn += delta
-	if __every_turn >= maxf(2.0, 0.001):
-		__every_turn = fmod(__every_turn, maxf(2.0, 0.001))
+	if __every_turn >= 2.0:
+		__every_turn = fmod(__every_turn, 2.0)
 		$Mirror/View/Twin.rotate_y(PI)
 
 # [b]Mirror and Flip[/b] - one verb, every host. The [b]hero[/b] mirrors as a whole object and drags its ray, its muzzle and its dust along. The [b]panel[/b] mirrors in place because its pivot moves to the middle first. The [b]sub-viewport[/b] mirrors its view. The third [b]tile[/b] carries the flip bit, so one drawing covers both sides. The [b]3D twin[/b] does NOT scale itself negative - it turns around, which is the honest 3D answer and leaves nothing inside out.

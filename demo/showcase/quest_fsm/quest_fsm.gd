@@ -27,8 +27,8 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	__every_quest += delta
-	if __every_quest >= maxf(1.0, 0.001):
-		__every_quest = fmod(__every_quest, maxf(1.0, 0.001))
+	if __every_quest >= 1.0:
+		__every_quest = fmod(__every_quest, 1.0)
 		tick += 1
 		match quest_state:
 			QuestState.OFFERED:

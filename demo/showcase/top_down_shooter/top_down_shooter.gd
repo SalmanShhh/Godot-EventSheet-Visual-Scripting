@@ -8,8 +8,8 @@ var __every_monster_arrives: float = 0.0
 func _process(delta: float) -> void:
 	$Player.rotation = $Player.global_position.direction_to(get_global_mouse_position()).angle()
 	__every_monster_arrives += delta
-	if __every_monster_arrives >= maxf(1.2, 0.001):
-		__every_monster_arrives = fmod(__every_monster_arrives, maxf(1.2, 0.001))
+	if __every_monster_arrives >= 1.2:
+		__every_monster_arrives = fmod(__every_monster_arrives, 1.2)
 		var __spawn_monster = load("res://demo/showcase/top_down_shooter/monster.tscn").instantiate()
 		__spawn_monster.position = [Vector2(randf_range(0.0, 1152.0), -30.0), Vector2(randf_range(0.0, 1152.0), 680.0)].pick_random()
 		add_child(__spawn_monster)

@@ -287,14 +287,18 @@ func _raw(code: String) -> RawCodeRow:
 
 func _every(uid: String, seconds: String) -> ACECondition:
 	var member: String = "var __every_%s: float = 0.0" % uid
-	return _condition(
+	var every: ACECondition = _condition(
 		"Core", "EveryXSeconds",
-		"__every_%s >= maxf(%s, 0.001)" % [uid, seconds],
+		"__every_%s >= maxf({seconds}, 0.001)" % uid,
 		{"seconds": seconds},
 		member,
 		"__every_%s += delta" % uid,
-		"__every_%s = fmod(__every_%s, maxf(%s, 0.001))" % [uid, uid, seconds]
+		"__every_%s = fmod(__every_%s, maxf({seconds}, 0.001))" % [uid, uid]
 	)
+	# The seconds stay a slot in the template, and the row asks for the short line, so a plain number
+	# is written as the number (`>= 2.0`) and a name or an expression keeps its guard.
+	every.folds_literals = true
+	return every
 
 
 func _attach_behavior(parent: Node, node_name: String, path: String, root: Node, props: Dictionary = {}) -> Node:

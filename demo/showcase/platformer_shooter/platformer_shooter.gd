@@ -19,8 +19,8 @@ func _physics_process(delta: float) -> void:
 		if "shots" != "": __spawn_shot.add_to_group("shots")
 	$Player.position.x = clampf($Player.position.x, 40.0, 1112.0)
 	__every_ps_spawn += delta
-	if __every_ps_spawn >= maxf(1.5, 0.001):
-		__every_ps_spawn = fmod(__every_ps_spawn, maxf(1.5, 0.001))
+	if __every_ps_spawn >= 1.5:
+		__every_ps_spawn = fmod(__every_ps_spawn, 1.5)
 		var __spawn_shot = load("res://demo/showcase/platformer_shooter/target.tscn").instantiate()
 		__spawn_shot.position = Vector2(1240.0, randf_range(120.0, 540.0))
 		__spawn_shot.rotation_degrees = 180.0

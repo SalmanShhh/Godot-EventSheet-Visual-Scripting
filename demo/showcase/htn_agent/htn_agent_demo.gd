@@ -18,8 +18,8 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	__every_chef += delta
-	if __every_chef >= maxf(1.0, 0.001) and $Chef/Planner.has_plan():
-		__every_chef = fmod(__every_chef, maxf(1.0, 0.001))
+	if __every_chef >= 1.0 and $Chef/Planner.has_plan():
+		__every_chef = fmod(__every_chef, 1.0)
 		$Chef/Planner.mark_complete()
 	$Screen.text = "CHEF PLANNER (HTN)
 	task: %s

@@ -10,8 +10,8 @@ func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("ui_focus_next"):
 		$Player/FPSController.toggle_camera_mode()
 	__every_stalk += delta
-	if __every_stalk >= maxf(1.0, 0.001):
-		__every_stalk = fmod(__every_stalk, maxf(1.0, 0.001))
+	if __every_stalk >= 1.0:
+		__every_stalk = fmod(__every_stalk, 1.0)
 		$Stalker/Navigator.find_path_to_node($Player, "nearest")
 
 # FPS Arena: the FPSController behavior does all the work - this sheet only prints the controls and flips the camera mode on Tab.
