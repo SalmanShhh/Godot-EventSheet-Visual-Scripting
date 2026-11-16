@@ -249,6 +249,8 @@ const NATIVE: Dictionary = {
 		"saved_badge_foreground_color": "#5b6900",
 		"saved_badge_background_color": "#e5e3b6",
 		"active_tab_edge_color": "#268bd2",
+		"trigger_mark_color": "#22700e",
+		"behaviour_name_color": "#7a4300",
 	},
 	"catppuccin_mocha": {
 		"type_number_color": "#a6e3a1",
@@ -298,8 +300,72 @@ func _init() -> void:
 		var palette: Dictionary = PALETTES[theme_name]
 		var path: String = "res://demo/themes/%s_theme.tres" % theme_name
 		var error: Error = ResourceSaver.save(_build_style(palette, theme_name), path)
+		if error == OK:
+			_state_defaults(path)
 		print("[build_theme_presets] %s -> %s (%d)" % [theme_name, path, error])
 	quit(0)
+
+
+## Tokens a preset states in its own file although they equal the script default, each written back after
+## the token it has always followed. A `.tres` leaves out every property equal to its default, but the
+## coverage test reads the FILE (it is the only place "this theme chose that colour" and "this theme never
+## heard of it" look different), and the presets already in the project state these. Keyed by the script
+## that owns the block; the inner key is the token the lines follow.
+const STATED_AFTER: Dictionary = {
+	"event_sheet_event_style.gd": {
+		"sheet_background_color": [
+			"inspector_variable_rows", "variable_quiet_marks", "hide_compiler_variables",
+			"fold_compiler_helpers", "pattern_in_help_strip", "variable_row_cards", "inspector_class_head",
+			"add_lines_on_hover", "comment_notes", "selection_as_outline", "trigger_icon_in_gutter",
+			"behaviour_in_object_column", "lane_chips_yield", "row_font_size",
+		],
+		"invert_marker_color": ["trigger_mark_color", "behaviour_name_color"],
+		"saved_badge_background_color": [
+			"variable_card_fill_color", "variable_card_border_color",
+			"variable_group_fill_color", "variable_group_border_color",
+		],
+	},
+	"event_sheet_editor_style.gd": {
+		"manual_style": ["tabs_above_toolbar", "status_bar_selection_line", "fold_workspace_bands"],
+	},
+}
+
+
+## Writes the tokens in STATED_AFTER back into a saved preset, at their defaults.
+func _state_defaults(path: String) -> void:
+	var text: String = FileAccess.get_file_as_string(path)
+	var lines: PackedStringArray = text.split("
+")
+	var scripts: Dictionary = {}
+	for line: String in lines:
+		if line.begins_with("[ext_resource") and line.contains("type=\"Script\""):
+			var id_at: int = line.find(" id=\"") + 5
+			scripts[line.substr(id_at, line.find("\"", id_at) - id_at)] = line.get_slice("path=\"", 1).get_slice("\"", 0)
+	var out: PackedStringArray = []
+	var owner: Dictionary = {}
+	var instance: Resource = null
+	for line: String in lines:
+		out.append(line)
+		if line.begins_with("[resource]"):
+			owner = STATED_AFTER["event_sheet_editor_style.gd"]
+			instance = EventSheetEditorStyle.new()
+		elif line.begins_with("["):
+			owner = {}
+		elif line.begins_with("script = ExtResource(\""):
+			var script_name: String = str(scripts.get(line.get_slice("\"", 1), "")).get_file()
+			owner = STATED_AFTER.get(script_name, {})
+			instance = (load(str(scripts.get(line.get_slice("\"", 1), ""))) as GDScript).new() if not owner.is_empty() else null
+		elif not owner.is_empty() and line.contains(" = "):
+			var token_name: String = line.get_slice(" = ", 0)
+			for follower: String in owner.get(token_name, []):
+				if text.contains("
+%s = " % follower):
+					continue
+				out.append("%s = %s" % [follower, var_to_str(instance.get(follower))])
+	var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	file.store_string("
+".join(out))
+	file.close()
 
 
 func _build_style(palette: Dictionary, theme_name: String) -> EventSheetEditorStyle:

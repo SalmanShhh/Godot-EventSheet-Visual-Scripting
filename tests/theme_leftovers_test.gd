@@ -30,4 +30,27 @@ static func run() -> bool:
 		var amber: Color = light.get_chrome_style().object_bar_warning_color
 		ok = SUPPORT.check(P, "the light demo theme's finding amber reads at 4.5 on its rows",
 			EventSheetEditorThemeDeriver.contrast_ratio(amber, row) >= 4.5, true) and ok
+	ok = _builder_keeps_its_stated_tokens() and ok
+	return ok
+
+
+## The preset builder writes back the tokens a saved preset would otherwise leave out for equalling their
+## default, so a regenerated preset still states everything the committed ones do.
+static func _builder_keeps_its_stated_tokens() -> bool:
+	var builder: GDScript = load("res://tools/build_theme_presets.gd") as GDScript
+	var stated_after: Dictionary = builder.get_script_constant_map()["STATED_AFTER"]
+	var ok: bool = true
+	for theme_name: String in builder.get_script_constant_map()["PALETTES"]:
+		var path: String = "res://demo/themes/%s_theme.tres" % theme_name
+		var stated: Array[String] = []
+		for block: Dictionary in EventSheetThemePresets.stated_tokens(path):
+			stated.append_array(block.get("tokens", []))
+		var missing: Array[String] = []
+		for script_name: String in stated_after:
+			for followers: Array in (stated_after[script_name] as Dictionary).values():
+				for token_name: String in followers:
+					if not stated.has(token_name):
+						missing.append(token_name)
+		ok = SUPPORT.check(P, "%s states every token the builder keeps (missing: %s)" % [theme_name, str(missing)],
+			missing, [] as Array[String]) and ok
 	return ok
