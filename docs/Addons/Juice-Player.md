@@ -168,6 +168,12 @@ func play(target: Node, strength: float) -> void:
 - **The preview.** Play in the editor runs a card of yours only when its script is marked `@tool`, which is Godot's rule for any script that runs in the editor, and Debug view says which. A tool card is told to `stop` and `restore` when the pass ends, so put back there whatever it changed.
 - **As an event sheet.** `eventsheet_addons/juice/screen_flash_card.gd` is this same card written as a Custom Resource sheet that extends `JuiceCard`: two variables marked editable, a `play` function and a `length` function. It is the plain script above with no trace of the plugin in it, so a card written as code opens as a sheet and a card made as a sheet can be read, shared and edited as code. Copy the file and rename the class to make another card.
 
+**When a card goes wrong.** Every message a running Juice Player prints in the Output panel names the player, the card's label and the reason, for example `the card "Spin" on HitJuice points at Crate, which has no property called "wobble", so it did nothing`, and says it once per card. Three more doors lead from the message to the cause:
+
+- **The Doctor** reads every saved scene for a card that points at a node the scene does not have, or names a sound, scene or card script the project does not have, and files a warning for each (two short sentences: what it points at, and to pick it again). It reads the scene's saved bytes without instancing anything, so it finds a lost node without running the game, and it stays quiet about a path that leads into a scene instanced inside this one or out of this one, because those cannot be judged from the file.
+- **Show its cards** is an entry on the right-click menu of a row that plays a Juice Player (Play Juice, Play Juice And Wait, Play Juice Backwards, written in the sheet or as a line of code the sheet shows as one). It opens the scene the sheet runs in if it is not open, selects that player and leaves the Inspector on its list. It is offered only when the scene the sheet runs in holds a Juice Player of that name.
+- **Find what plays this** is a button on the strip under the list. It lists the sheets of the project that play this player and opens the one you pick, or says in one quiet line that no sheet does.
+
 ---
 
 ## ACE reference

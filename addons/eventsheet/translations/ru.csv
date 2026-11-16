@@ -10912,3 +10912,10 @@ not a file: the colours come from Godot's editor theme,"не файл: цвет�
 a card of yours plays here only when its script is marked @tool,"собственная карточка проигрывается здесь, только если её скрипт помечен как @tool"
 Edit this value in the card's script.,Измените это значение в скрипте карточки.
 Yours,Ваши
+Show its cards,Показать его карточки
+"Opens the scene this sheet runs in and selects the Juice Player this row plays, so its cards are in the Inspector.","Открывает сцену, в которой работает этот лист, и выбирает Juice Player, который воспроизводит эта строка, чтобы его карточки были в инспекторе."
+"No scene runs this sheet, so there is no list to show.","Ни одна сцена не запускает этот лист, поэтому показывать нечего."
+%s has no node called %s.,В %s нет узла с именем %s.
+Showing the cards of %s.,Показаны карточки %s.
+No sheet in this project plays %s.,Ни один лист этого проекта не запускает %s.
+Find what plays this,"Найти, что это запускает"

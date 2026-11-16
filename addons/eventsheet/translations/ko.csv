@@ -10912,3 +10912,10 @@ not a file: the colours come from Godot's editor theme,"파일이 아님: 색은
 a card of yours plays here only when its script is marked @tool,직접 만든 카드는 스크립트가 @tool로 표시된 경우에만 여기서 재생됩니다
 Edit this value in the card's script.,이 값은 카드의 스크립트에서 편집하세요.
 Yours,내 카드
+Show its cards,카드 보기
+"Opens the scene this sheet runs in and selects the Juice Player this row plays, so its cards are in the Inspector.","이 시트가 실행되는 씬을 열고 이 행이 재생하는 Juice Player를 선택해, 그 카드가 인스펙터에 보이게 합니다."
+"No scene runs this sheet, so there is no list to show.",이 시트를 실행하는 씬이 없어서 보여 줄 목록이 없습니다.
+%s has no node called %s.,%s에는 %s라는 노드가 없습니다.
+Showing the cards of %s.,%s의 카드를 보여 주고 있습니다.
+No sheet in this project plays %s.,이 프로젝트에는 %s를 재생하는 시트가 없습니다.
+Find what plays this,이것을 재생하는 것 찾기

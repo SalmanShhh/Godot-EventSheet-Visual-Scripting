@@ -4,6 +4,18 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: every warning a running Juice Player prints names the player, the card and the reason
+
+A Tween Property card on a property the object does not have, a Fade Bus card on a bus the project does not have, Set Juice Card Field on a field no card holds (and on the word or script of a card, which it never changes), Copy Juice Cards From a node that is not a player, and the moment-file rows now all say which player and, where a card is the cause, the card's label and what is wrong, and say it once per card. Nothing about what the cards do changes.
+
+### Added: the Doctor finds a juice card that points at a node or a file that is not there
+
+A new check in the Juice Players section reads every saved scene, without instancing it, for a card whose node path finds no node in the scene (a node moved out or renamed away) and for a card that names a sound, a scene or a card script the project does not have. Each is a warning of two short sentences naming the card, the player and what it points at. A path that leads into a scene instanced inside this one, or out of this one, and any card of a scene that inherits another, is left alone, because the file cannot show it is wrong.
+
+### Added: Show its cards on a row that plays a Juice Player, and Find what plays this on the strip
+
+The right-click menu of a row that plays a Juice Player (Play Juice, Play Juice And Wait, Play Juice Backwards, or the line of code that does the same) gains **Show its cards**: it opens the scene the sheet runs in, selects that player and leaves the Inspector on its list. It is offered only when that scene holds a Juice Player of that name, and it is a menu entry, not anything drawn in the row. The strip under a player's list gains **Find what plays this**, which lists the sheets of the project that play it and opens the one you pick, or says in one quiet line that none does. Both read the project when they are used and keep nothing.
+
 ### Fixed: a sheet that extends a class of your own project that extends Resource is a Custom Resource sheet
 
 The Sheet Type dialog and the Variable drawer knew only the engine's classes, so a sheet that extended a Resource class you wrote (a card base, a stat block) fell back to a plain Resource host and its members read as instance variables. The project's own list of classes is now followed down to Resource, so such a sheet is a data asset and its members are fields.

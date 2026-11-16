@@ -10912,3 +10912,10 @@ not a file: the colours come from Godot's editor theme,"non è un file: i colori
 a card of yours plays here only when its script is marked @tool,una carta tua si riproduce qui solo se il suo script è marcato come @tool
 Edit this value in the card's script.,Modifica questo valore nello script della carta.
 Yours,Tue
+Show its cards,Mostra le sue carte
+"Opens the scene this sheet runs in and selects the Juice Player this row plays, so its cards are in the Inspector.","Apre la scena in cui gira questo foglio e seleziona il Juice Player che questa riga riproduce, così le sue carte sono nell'Ispettore."
+"No scene runs this sheet, so there is no list to show.","Nessuna scena esegue questo foglio, quindi non c'è nessuna lista da mostrare."
+%s has no node called %s.,%s non ha nessun nodo chiamato %s.
+Showing the cards of %s.,Mostro le carte di %s.
+No sheet in this project plays %s.,Nessun foglio di questo progetto riproduce %s.
+Find what plays this,Trova cosa lo riproduce

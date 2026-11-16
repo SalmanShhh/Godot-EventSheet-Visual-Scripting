@@ -32,6 +32,9 @@ const NAMES_PATH: String = "res://addons/eventsheet/editor/inspector/juice_playe
 ## What the preview writes down, restores and lights marks with. By path for the same reason.
 const PREVIEW_PATH: String = "res://addons/eventsheet/editor/inspector/juice_preview.gd"
 
+## The door to the sheets that play a player, and to opening one. By path, like the rest of the editor-only files.
+const ROW_MENU_PATH: String = "res://addons/eventsheet/editor/dock/juice_row_menu.gd"
+
 ## What the cards that reach other nodes are drawn by. By path, like the preview helper.
 const WORLD_PATH: String = "res://addons/eventsheet/editor/inspector/juice_world_preview.gd"
 
@@ -86,6 +89,10 @@ var _try_box: SpinBox = null
 var _sounded: Dictionary = {}
 var _voices: Array[AudioStreamPlayer] = []
 var _lit: PackedInt32Array = PackedInt32Array()
+## The quiet line that says no sheet plays this player, and the menu that lists the sheets that do.
+var _find_note: Label = null
+var _find_menu: PopupMenu = null
+var _find_button: Button = null
 ## What the cards that reach other nodes may move, written down before the first frame: each entry is
 ## [object, property, value]. The same list is what Stop, Restore, the end of a pass and the editor's save
 ## put back, so a preview of a card on another node can never be the thing the scene saves.
@@ -107,6 +114,12 @@ func _init(player: Node = null, drawer: Control = null) -> void:
 	_head.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 	add_child(_head)
 	add_child(_build_buttons())
+	_find_note = Label.new()
+	_find_note.hide()
+	_find_note.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	_find_note.add_theme_color_override("font_color", EventSheetLookStyle.warning())
+	_find_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	add_child(_find_note)
 	add_child(_build_try_rows())
 	_timeline = _build_timeline()
 	add_child(_timeline)
@@ -200,10 +213,12 @@ func _build_buttons() -> Control:
 	row.add_theme_constant_override("v_separation", 3)
 	for entry: Array in [["Play", play], ["Stop", stop], ["Skip", skip],
 			["Restore", restore], ["Debug view", _on_debug], ["Save as file", _on_save],
-			["Load from file", _on_load]]:
+			["Load from file", _on_load], ["Find what plays this", _on_find_plays]]:
 		var button: Button = Button.new()
-		button.text = str(entry[0])
+		button.text = EventSheetL10n.translate(str(entry[0]))
 		button.pressed.connect(entry[1] as Callable)
+		if entry[1] == _on_find_plays:
+			_find_button = button
 		row.add_child(button)
 	return row
 
@@ -589,6 +604,28 @@ func _host() -> Node:
 	if _player == null or not _player.is_inside_tree():
 		return null
 	return _player.get_parent()
+
+
+## "Find what plays this": the sheets of the project that play this player, as a menu that opens the one picked,
+## or one quiet line saying none does. The list is read when the button is pressed, never kept.
+func _on_find_plays() -> void:
+	if _player == null:
+		return
+	var sheets: PackedStringArray = load(ROW_MENU_PATH).call("sheets_playing", str(_player.name))
+	_find_note.visible = sheets.is_empty()
+	if sheets.is_empty():
+		_find_note.text = EventSheetL10n.translate("No sheet in this project plays %s.") % str(_player.name)
+		return
+	if _find_menu == null:
+		_find_menu = PopupMenu.new()
+		_find_menu.id_pressed.connect(func(id: int) -> void:
+			load(ROW_MENU_PATH).call("open_sheet", _find_menu.get_item_metadata(_find_menu.get_item_index(id))))
+		add_child(_find_menu)
+	_find_menu.clear()
+	for index: int in range(sheets.size()):
+		_find_menu.add_item(sheets[index].trim_prefix("res://"), index)
+		_find_menu.set_item_metadata(index, sheets[index])
+	EventSheetWindowPlacement.popup_below(_find_menu, Rect2i(Vector2i(_find_button.get_screen_position()), Vector2i(_find_button.size)))
 
 
 func _on_save() -> void:

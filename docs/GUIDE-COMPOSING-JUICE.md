@@ -25,6 +25,7 @@ GDScript in your own project folder. Nothing invents a parallel environment to l
 - [What a beat says while it plays](#what-a-beat-says-while-it-plays)
 - [The Juice Player: the list an object carries](#the-juice-player-the-list-an-object-carries)
 - [A card of your own](#a-card-of-your-own)
+- [Finding what went wrong](#finding-what-went-wrong)
 - [Every card, by its label](#every-card-by-its-label)
 - [Channels: one row heard by everything listening](#channels-one-row-heard-by-everything-listening)
 - [Springs under any property](#springs-under-any-property)
@@ -292,6 +293,14 @@ Three things about it that a plain list of cards would not tell you:
 - **The editor plays it only if it is a tool script.** That is Godot's rule for any script that runs in the editor, and Debug view says which of your cards it played and which it did not. In the game it always plays.
 
 The same card can be written as an event sheet: a Custom Resource sheet that extends `JuiceCard`, whose editable variables are the fields and whose `play` function holds the actions. `eventsheet_addons/juice/screen_flash_card.gd` is exactly that, and it is the same plain script a person would write by hand.
+
+## Finding what went wrong
+
+A card that does nothing is the hardest thing in a beat to see, so the player says so in words you can act on. Every warning it prints names the player, the card's label and the reason, once per card: a property the object does not have, a bus the project does not have, a sound that is not there, a node the card points at that is gone, a field no card holds.
+
+Before the game runs, the Doctor reads each saved scene for the same two mistakes (a card that points at a node the scene does not have, and a card that names a file the project does not have) and files a warning for each. It reads the scene's saved bytes without instancing it, and it says nothing about a path it cannot judge from the file.
+
+Between a sheet and its cards there are two doors. **Show its cards**, on the right-click menu of a row that plays a Juice Player, opens the scene the sheet runs in and selects that player so its list is in the Inspector. **Find what plays this**, on the strip under the list, lists the sheets that play the player and opens the one you pick.
 
 ## Every card, by its label
 

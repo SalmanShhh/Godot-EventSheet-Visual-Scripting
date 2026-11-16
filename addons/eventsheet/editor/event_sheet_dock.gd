@@ -5774,6 +5774,7 @@ func _on_viewport_context_menu_requested(row_data: EventRowData, hit: Dictionary
 		_refresh_convert_to_verb_item()
 		_refresh_collection_decl_items()
 		_refresh_timeline_items()
+		load("res://addons/eventsheet/editor/dock/juice_row_menu.gd").refresh(self, _action_context_menu)
 		_context_menus._show_popup_menu(_action_context_menu, global_position)
 		return
 	# Everything else - including data_class_field spans - routes to the row menu: the

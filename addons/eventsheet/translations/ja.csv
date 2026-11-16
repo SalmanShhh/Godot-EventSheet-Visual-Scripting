@@ -10912,3 +10912,10 @@ not a file: the colours come from Godot's editor theme,"ファイルではあり
 a card of yours plays here only when its script is marked @tool,自作のカードは、スクリプトが @tool の場合のみここで再生されます
 Edit this value in the card's script.,この値はカードのスクリプトで編集してください。
 Yours,自作
+Show its cards,カードを表示
+"Opens the scene this sheet runs in and selects the Juice Player this row plays, so its cards are in the Inspector.",このシートが動作するシーンを開き、この行が再生する Juice Player を選択して、そのカードをインスペクターに表示します。
+"No scene runs this sheet, so there is no list to show.",このシートを実行するシーンがないため、表示するリストがありません。
+%s has no node called %s.,%s に %s という名前のノードはありません。
+Showing the cards of %s.,%s のカードを表示しています。
+No sheet in this project plays %s.,このプロジェクトに %s を再生するシートはありません。
+Find what plays this,これを再生するものを探す

@@ -10912,3 +10912,10 @@ not a file: the colours come from Godot's editor theme,"不是文件:颜色来�
 a card of yours plays here only when its script is marked @tool,自定义卡片仅在其脚本标记为 @tool 时才会在此播放
 Edit this value in the card's script.,请在卡片的脚本中编辑此值。
 Yours,自定义
+Show its cards,显示其卡片
+"Opens the scene this sheet runs in and selects the Juice Player this row plays, so its cards are in the Inspector.",打开此表运行所在的场景，并选中这一行所播放的 Juice Player，使其卡片显示在检查器中。
+"No scene runs this sheet, so there is no list to show.",没有场景运行此表，因此没有可显示的列表。
+%s has no node called %s.,%s 中没有名为 %s 的节点。
+Showing the cards of %s.,正在显示 %s 的卡片。
+No sheet in this project plays %s.,此项目中没有表播放 %s。
+Find what plays this,查找谁在播放它
