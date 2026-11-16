@@ -10989,3 +10989,4 @@ Shows this list as cards again.,Zeigt diese Liste wieder als Karten.
 Move to bottom,Ganz nach unten
 Shapes (%d),Formen (%d)
 Dash offset,Strichversatz
+"%s names %s on line %d, which is now called %s. Replace the name; nothing else changed.","%s nennt %s in Zeile %d; diese Klasse heißt jetzt %s. Ersetze den Namen; sonst hat sich nichts geändert."

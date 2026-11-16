@@ -10989,3 +10989,4 @@ Shows this list as cards again.,Vuelve a mostrar esta lista como tarjetas.
 Move to bottom,Mover al final
 Shapes (%d),Formas (%d)
 Dash offset,Desplazamiento del trazo
+"%s names %s on line %d, which is now called %s. Replace the name; nothing else changed.","%s nombra %s en la línea %d, que ahora se llama %s. Sustituye el nombre; nada más ha cambiado."

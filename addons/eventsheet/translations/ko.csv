@@ -10989,3 +10989,4 @@ Shows this list as cards again.,이 목록을 다시 카드로 보여 줍니다.
 Move to bottom,맨 아래로 이동
 Shapes (%d),도형 (%d)
 Dash offset,대시 오프셋
+"%s names %s on line %d, which is now called %s. Replace the name; nothing else changed.","%s: %s(%d번째 줄)는 이제 %s라는 이름입니다. 이름만 바꾸면 되며 다른 것은 바뀌지 않았습니다."

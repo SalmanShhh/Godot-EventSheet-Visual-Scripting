@@ -10989,3 +10989,4 @@ Shows this list as cards again.,このリストをもう一度カードで表示
 Move to bottom,末尾へ移動
 Shapes (%d),図形 (%d)
 Dash offset,ダッシュのオフセット
+"%s names %s on line %d, which is now called %s. Replace the name; nothing else changed.","%s: %s(%d 行目)は現在 %s という名前です。名前を置き換えてください。ほかに変更はありません。"

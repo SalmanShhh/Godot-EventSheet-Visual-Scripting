@@ -257,6 +257,9 @@ static func run() -> Dictionary:
 	# The Class Name Clashes section: a script of the reader's whose class_name is one the plugin or
 	# a shipped behaviour already uses. Same seam, registered by path so it adds no class name of its own.
 	load("res://addons/eventforge/class_name_clash_doctor.gd").ensure_registered()
+	# The Renamed Classes section: a script of the reader's that still names one of the nine plugin
+	# classes that took the EventSheet prefix. Same seam, registered by path for the same reason.
+	load("res://addons/eventforge/renamed_classes_doctor.gd").ensure_registered()
 	# The Script Rows section: a line of a script's own `##` words that reads as nothing - a word one
 	# letter off, a parameter key nothing reads, a plain comment between the words and their function.
 	# Same seam, registered by path so it adds no class name of its own.
