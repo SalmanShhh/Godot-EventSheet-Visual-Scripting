@@ -109,3 +109,11 @@ static func write_in_place(path: String, working: EventSheetEditorStyle) -> Erro
 	if error == OK:
 		live.emit_changed()
 	return error
+
+
+## Names the theme every sheet wears by default ("" goes back to matching the editor). In the editor the
+## setting is written to project.godot, the way Project Settings writes it.
+static func set_project_default(path: String) -> void:
+	ProjectSettings.set_setting(DEFAULT_SETTING, path)
+	if Engine.is_editor_hint():
+		ProjectSettings.save()

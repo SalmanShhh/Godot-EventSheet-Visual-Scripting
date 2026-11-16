@@ -258,6 +258,8 @@ const NATIVE_HEAD_STEP_LIGHT := 17.0 / 255.0
 
 ## The Editor Native starter: the look a sheet with no theme of its own wears in the editor.
 const NATIVE_STARTER_PATH := "res://addons/eventsheet/themes/editor_native_theme.tres"
+## The file that knows which theme a project names for every sheet.
+const THEME_FILES_PATH := "res://addons/eventsheet/theme/theme_files.gd"
 
 ## The last native_style() built, by base colour. follow_editor() asks for two per call and a
 ## sheet is re-seated on every edit, so the rule runs once per editor base rather than per edit.
@@ -563,6 +565,9 @@ static func default_style() -> EventSheetEditorStyle:
 ## theme chosen, Editor Native. No project setting is consulted, so a project that used the plugin
 ## before Editor Native became the default draws it too once updated; only a chosen theme is kept.
 static func sheet_look(chosen: EventSheetEditorStyle, base: Color) -> EventSheetEditorStyle:
+	# A project may name the theme a sheet with none of its own wears (Project Settings, or Use For Every Sheet).
+	if chosen == null:
+		chosen = load(THEME_FILES_PATH).project_default_style()
 	if chosen != null:
 		chosen.ensure_defaults()
 		return follow_editor(chosen, base) if base.a > 0.0 else chosen
@@ -582,7 +587,9 @@ static func sheet_look(chosen: EventSheetEditorStyle, base: Color) -> EventSheet
 ## editor. A test passes one to ask the in-editor answer headless.
 static func promoted_default_style(base: Color = Color(0.0, 0.0, 0.0, -1.0)) -> EventSheetEditorStyle:
 	var editor_base: Color = running_editor_base() if base.a < 0.0 else base
-	var starter: EventSheetEditorStyle = load(NATIVE_STARTER_PATH) as EventSheetEditorStyle if editor_base.a > 0.0 else null
+	var starter: EventSheetEditorStyle = load(THEME_FILES_PATH).project_default_style()
+	if starter == null and editor_base.a > 0.0:
+		starter = load(NATIVE_STARTER_PATH) as EventSheetEditorStyle
 	var style: EventSheetEditorStyle = starter.duplicate(true) as EventSheetEditorStyle if starter != null else EventSheetEditorStyle.new()
 	style.ensure_defaults()
 	# The drag that led here edited the SHARED no-theme look live; forget it so the next sheet that

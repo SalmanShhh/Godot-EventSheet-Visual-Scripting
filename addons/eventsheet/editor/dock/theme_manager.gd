@@ -54,6 +54,10 @@ extends RefCounted
 ## classes here would compile it, and everything it names, into the first open of a sheet.
 const THEME_EDITOR_PATH := "res://addons/eventsheet/editor/theme_editor_dialog.gd"
 const LOOK_MEMORY_PATH := "res://addons/eventsheet/theme/sheet_look_memory.gd"
+const THEME_FILES_PATH := "res://addons/eventsheet/theme/theme_files.gd"
+const THEME_CHOICES_PATH := "res://addons/eventsheet/theme/theme_choices.gd"
+## The entry in the Sheet theme menu that makes the sheet's theme the project's, and the marker its item carries.
+const USE_FOR_EVERY_SHEET_METADATA := "action:use_for_every_sheet"
 
 const THEME_FILTERS: Array[String] = ["*.tres ; EventSheetEditorStyle", "*.res ; EventSheetEditorStyle"]
 
@@ -65,6 +69,9 @@ var _dock: Control = null
 var _active_theme_style: EventSheetEditorStyle = null
 var _theme_editor: RefCounted = null
 var _theme_file_dialog: FileDialog = null
+## The theme file a look with no file of its own was made from (a Density pick copies the sheet's style),
+## by the style's instance id, so the menu keeps ticking that theme.
+var _look_sources: Dictionary = {}
 
 
 func init(dock: Control) -> void:
@@ -109,8 +116,9 @@ func load_theme_style_from_path(path: String) -> bool:
 
 ## Puts a script sheet's remembered look on it, right as its tab comes to the front.
 func restore_remembered_look() -> void:
-	if _dock._current_sheet != null:
-		load(LOOK_MEMORY_PATH).restore(_dock._current_sheet, _dock._current_sheet_path)
+	if _dock._current_sheet != null and load(LOOK_MEMORY_PATH).restore(_dock._current_sheet, _dock._current_sheet_path):
+		var remembered: Dictionary = load(LOOK_MEMORY_PATH).record_for(_dock._current_sheet_path)
+		load(THEME_CHOICES_PATH).note_source(_look_sources, _dock._current_sheet.editor_style, str(remembered.get("theme", "")))
 
 
 ## Says a look choice was made for the open sheet. A sheet saved as a resource carries its look, so it
@@ -236,11 +244,15 @@ func _populate_theme_menu() -> void:
 	_theme_menu.clear()
 	# The default IS the editor-derived style (see _apply_editor_native_defaults) -
 	# label it so a Godot dev knows the sheet already matches their editor.
-	_theme_menu.add_radio_check_item(EventSheetL10n.translate("Match Editor (default)"), 0)
+	_theme_menu.add_radio_check_item(load(THEME_CHOICES_PATH).first_entry_text(_project_theme_path()), 0)
 	_theme_menu.set_item_metadata(0, "")
 	for preset: Dictionary in EventSheetThemePresets.list_presets():
 		_theme_menu.add_radio_check_item(str(preset.get("name", "Theme")), _theme_menu.item_count)
 		_theme_menu.set_item_metadata(_theme_menu.item_count - 1, str(preset.get("path", "")))
+	_theme_menu.add_separator()
+	_theme_menu.add_check_item(EventSheetL10n.translate("Use For Every Sheet"), _theme_menu.item_count)
+	_theme_menu.set_item_metadata(_theme_menu.item_count - 1, USE_FOR_EVERY_SHEET_METADATA)
+	_theme_menu.set_item_tooltip(_theme_menu.item_count - 1, EventSheetL10n.translate("Makes this theme the one every sheet wears unless it chose its own. Kept in Project Settings."))
 	# Density ▸ - how much room the sheet gives its rows, which is a separate question from what
 	# colour it is. Refilled with the theme list for the same reason: a starter dropped into the
 	# density folder mid-session is pickable the next time View opens.
@@ -303,6 +315,8 @@ func apply_density_path(path: String) -> void:
 		else EventSheetEditorThemeDeriver.default_style().duplicate(true) as EventSheetEditorStyle
 	)
 	(loaded as EventSheetDensityStyle).apply_to(style)
+	var choices: GDScript = load(THEME_CHOICES_PATH)
+	choices.note_source(_look_sources, style, choices.source_for(_look_sources, _dock._current_sheet.editor_style))
 	_dock._current_sheet.editor_style = style
 	# Through the same binding swap a tab switch uses, so the style that just stopped being active
 	# lets go of its `changed` signal and the new one takes it up. Setting the field by hand here
@@ -319,17 +333,26 @@ func _refresh_theme_menu_selection() -> void:
 		return
 	var active_path: String = ""
 	var has_style: bool = false
-	if _dock._current_sheet != null and _dock._current_sheet.editor_style != null:
+	var choices: GDScript = load(THEME_CHOICES_PATH)
+	var worn: EventSheetEditorStyle = _dock._current_sheet.editor_style if _dock._current_sheet != null else null
+	if worn != null:
 		has_style = true
-		active_path = _dock._current_sheet.editor_style.resource_path
+		active_path = worn.resource_path
+		# A copy of a theme (a Density pick makes one) still ticks the theme it was copied from.
+		if choices.has_source(_look_sources, worn):
+			active_path = choices.source_for(_look_sources, worn)
+			has_style = not active_path.is_empty()
 	var paths: Array = []
 	for i in range(_theme_menu.item_count):
 		paths.append(str(_theme_menu.get_item_metadata(i)))
-	var target_index: int = load("res://addons/eventsheet/theme/theme_choices.gd").menu_index_for(active_path, has_style, paths)
+	var target_index: int = choices.menu_index_for(active_path, has_style, paths)
 	for i in range(_theme_menu.item_count):
-		if str(_theme_menu.get_item_metadata(i)) == DENSITY_SUBMENU_METADATA:
-			continue
-		_theme_menu.set_item_checked(i, i == target_index)
+		var entry: String = str(_theme_menu.get_item_metadata(i))
+		if entry == USE_FOR_EVERY_SHEET_METADATA:
+			var project_path: String = _project_theme_path()
+			_theme_menu.set_item_checked(i, not project_path.is_empty() and project_path == active_path)
+		elif entry != DENSITY_SUBMENU_METADATA:
+			_theme_menu.set_item_checked(i, i == target_index)
 
 
 ## Applies the chosen theme preset (or the built-in default) to the current sheet. Per-sheet, out of
@@ -339,6 +362,9 @@ func _on_theme_preset_selected(index: int) -> void:
 		return
 	var path: String = str(_theme_menu.get_item_metadata(index))
 	if path == DENSITY_SUBMENU_METADATA:
+		return
+	if path == USE_FOR_EVERY_SHEET_METADATA:
+		use_for_every_sheet()
 		return
 	if path.is_empty():
 		_on_set_default_theme_requested()
@@ -350,7 +376,45 @@ func _on_theme_preset_selected(index: int) -> void:
 func _open_theme_editor() -> void:
 	if _theme_editor == null:
 		_theme_editor = load(THEME_EDITOR_PATH).new()
-	_theme_editor.open(_dock, _active_theme_style)
+	# A sheet with no theme of its own wears the project's, when the project names one.
+	_theme_editor.open(_dock, _active_theme_style if _active_theme_style != null else load(THEME_FILES_PATH).project_default_style())
+
+
+## Opens the Theme Editor on a theme FILE, whichever sheet is open (the FileSystem's right-click door).
+func open_theme_file(path: String) -> void:
+	var style: EventSheetEditorStyle = ResourceLoader.load(path) as EventSheetEditorStyle
+	if style == null:
+		_dock._set_status(EventSheetL10n.translate("That file is not an event sheet theme."), true)
+		return
+	if _theme_editor == null:
+		_theme_editor = load(THEME_EDITOR_PATH).new()
+	_theme_editor.open(_dock, style)
+
+
+## The theme file the project names for every sheet, or "" when it names none or the file is no theme.
+func _project_theme_path() -> String:
+	var files: GDScript = load(THEME_FILES_PATH)
+	return files.project_default_path() if files.project_default_style() != null else ""
+
+
+## View > Sheet theme > Use For Every Sheet: the sheet's theme file becomes the project's default look (kept in
+## Project Settings), or, when it already is, the project goes back to matching the editor.
+func use_for_every_sheet() -> void:
+	var files: GDScript = load(THEME_FILES_PATH)
+	var choices: GDScript = load(THEME_CHOICES_PATH)
+	var path: String = choices.source_for(_look_sources, _dock._current_sheet.editor_style) if _dock._current_sheet != null else ""
+	if path.is_empty():
+		_dock._set_status(EventSheetL10n.translate("This sheet's look has no theme file. Save it from the Theme Editor first."), true)
+		return
+	var clearing: bool = files.project_default_path() == path
+	files.set_project_default("" if clearing else path)
+	_publish_active_style()
+	_dock._refresh_after_edit()
+	_populate_theme_menu()
+	if clearing:
+		_dock._set_status(EventSheetL10n.translate("Sheets with no theme of their own match the editor again."))
+	else:
+		_dock._set_status(EventSheetL10n.translate("Every sheet with no theme of its own now wears %s.") % path.get_file())
 
 
 ## Called by the theme editor's "Apply To Current Sheet": assigns the working style to the
@@ -402,6 +466,7 @@ func _on_active_theme_style_changed() -> void:
 	if _dock._viewport == null or _dock._current_sheet == null:
 		return
 	_dock._viewport.set_sheet(_dock._current_sheet)
+	_publish_active_style()
 	_dock._set_status("Theme change detected and reloaded.")
 
 
