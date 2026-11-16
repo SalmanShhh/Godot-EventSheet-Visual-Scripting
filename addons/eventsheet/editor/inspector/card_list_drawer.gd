@@ -23,6 +23,9 @@ signal value_changed(value: Array)
 
 ## The ids of the card menu's entries. The first seven are the ones every list has had; the ids are kept
 ## so a saved shortcut or a test that names one still means the same entry.
+## How many whole lines the Add box shows before it scrolls.
+const ADD_BOX_LINES: int = 14
+
 const MENU_DUPLICATE: int = 0
 const MENU_COPY: int = 1
 const MENU_PASTE_OVER: int = 2
@@ -674,9 +677,25 @@ func _on_add_pressed() -> void:
 		add_child(_add_popup)
 	_add_filter.text = ""
 	_fill_add_tree()
+	_size_add_box()
 	var below: Vector2i = Vector2i(_add_button.get_screen_position()) + Vector2i(0, int(_add_button.size.y))
 	EventSheetWindowPlacement.popup_below(_add_popup, Rect2i(Vector2i(_add_button.get_screen_position()), Vector2i(_add_button.size)))
 	_add_filter.grab_focus()
+
+
+## The Add box is as wide as the Add card button above it, and as tall as a whole number of lines, so
+## the last line it shows is never cut in half.
+func _size_add_box() -> void:
+	var wide: float = maxf(_add_button.size.x, EventSheetPalette.scaled(220))
+	var line: float = EventSheetPalette.scaled(22)
+	var first: TreeItem = _add_tree.get_root().get_first_child() if _add_tree.get_root() != null else null
+	if first != null:
+		line = maxf(_add_tree.get_item_area_rect(first).size.y, 1.0)
+	_add_filter.custom_minimum_size = Vector2(wide, 0.0)
+	# The tree starts its first line a little below its own top edge; the box ends where its last whole
+	# line does, so no part of a next line shows under it.
+	var top: float = _add_tree.get_item_area_rect(first).position.y if first != null else 0.0
+	_add_tree.custom_minimum_size = Vector2(wide, top + line * float(ADD_BOX_LINES))
 
 
 func _fill_add_tree() -> void:
