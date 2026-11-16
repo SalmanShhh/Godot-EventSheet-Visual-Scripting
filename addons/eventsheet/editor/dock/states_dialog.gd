@@ -151,6 +151,8 @@ func _build() -> void:
 
 	_code = Label.new()
 	_code.name = "StatesCode"
+	# A Label draws a tab as nothing unless it has a tab stop, and this box shows the indented setter.
+	_code.tab_stops = PackedFloat32Array([28.0])
 	_code.add_theme_font_override("font", EventSheetPopupUI.editor_font("source"))
 	_code.add_theme_color_override("font_color", EventSheetPopupUI.secondary_text_color())
 	form.add_child(EventSheetPopupUI.panel_section(_code))
