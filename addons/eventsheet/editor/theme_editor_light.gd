@@ -17,6 +17,9 @@ const LIGHT_PATH := "res://addons/eventsheet/theme/light_colors.gd"
 const PAIRS_PATH := "res://addons/eventsheet/theme/theme_contrast_pairs.gd"
 const SWATCH_PATH := "res://addons/eventsheet/editor/theme_light_swatch.gd"
 const MARK_GLYPH := "!"
+## The width of the name column on a row that has a light side, wide enough for the longest token name, so the
+## dark swatches, the chains and the light swatches stand in columns down the form.
+const NAME_COLUMN_WIDTH := 230.0
 
 ## True while the sample sheet is previewed as a light editor would draw it.
 var preview_light: bool = false
@@ -200,7 +203,7 @@ func column_header() -> Control:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", EventSheetPopupUI.ROW_SEPARATION)
 	var spacer: Control = Control.new()
-	spacer.custom_minimum_size = Vector2(EventSheetPopupUI.LABEL_MIN_WIDTH, 0.0)
+	spacer.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(NAME_COLUMN_WIDTH), 0.0)
 	row.add_child(spacer)
 	var dark: Label = _column_label(EventSheetL10n.translate("Dark"))
 	var link_room: Control = Control.new()
@@ -234,6 +237,7 @@ func supports(block: Resource) -> bool:
 
 ## Adds the chain, the light swatch and the mark to a colour row whose dark swatch is already in it.
 func add_controls(row: HBoxContainer, block: Resource, token: String, hover: Callable) -> void:
+	(row.get_child(0) as Control).custom_minimum_size.x = EventSheetPalette.scaled_f(NAME_COLUMN_WIDTH)
 	var link: Button = _link_button(false)
 	var light: ColorPickerButton = load(SWATCH_PATH).new() as ColorPickerButton
 	light.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -241,7 +245,6 @@ func add_controls(row: HBoxContainer, block: Resource, token: String, hover: Cal
 	mark.text = MARK_GLYPH
 	mark.mouse_filter = Control.MOUSE_FILTER_STOP
 	mark.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_WARNING))
-	mark.visible = false
 	row.add_child(link)
 	row.add_child(light)
 	row.add_child(mark)
@@ -289,7 +292,10 @@ func _show(entry: Dictionary) -> void:
 	var mark: Label = entry["mark"]
 	var dark_weak: Dictionary = finding(block, token, false)
 	var light_weak: Dictionary = finding(block, token, true)
-	mark.visible = not dark_weak.is_empty() or not light_weak.is_empty()
+	var weak: bool = not dark_weak.is_empty() or not light_weak.is_empty()
+	# The mark keeps its room while it is not shown, so the swatches stand in the same columns on every row.
+	mark.modulate.a = 1.0 if weak else 0.0
+	mark.mouse_filter = Control.MOUSE_FILTER_STOP if weak else Control.MOUSE_FILTER_IGNORE
 	mark.tooltip_text = contrast_sentence(block, token)
 
 

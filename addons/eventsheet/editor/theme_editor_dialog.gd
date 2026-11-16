@@ -772,7 +772,7 @@ func _build_reading_comfort(form: VBoxContainer) -> void:
 func _quick_color_row(form: VBoxContainer, label_text: String, default_color: Color) -> ColorPickerButton:
 	var picker: ColorPickerButton = ColorPickerButton.new()
 	picker.color = default_color
-	form.add_child(EventSheetPopupUI.form_row(label_text, picker))
+	form.add_child(EventSheetPopupUI.form_row(label_text, picker, EventSheetPalette.scaled_f(load(LIGHT_SIDE_PATH).NAME_COLUMN_WIDTH)))
 	return picker
 
 
@@ -780,7 +780,7 @@ func _quick_color_row(form: VBoxContainer, label_text: String, default_color: Co
 func _quick_pair_row(form: VBoxContainer, label_text: String, dark_default: Color, light_default: Color) -> Array[ColorPickerButton]:
 	var dark_picker: ColorPickerButton = ColorPickerButton.new()
 	dark_picker.color = dark_default
-	var row: HBoxContainer = EventSheetPopupUI.form_row(label_text, dark_picker)
+	var row: HBoxContainer = EventSheetPopupUI.form_row(label_text, dark_picker, EventSheetPalette.scaled_f(load(LIGHT_SIDE_PATH).NAME_COLUMN_WIDTH))
 	var light_picker: ColorPickerButton = ColorPickerButton.new()
 	light_picker.color = light_default
 	light_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL

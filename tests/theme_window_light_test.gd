@@ -149,7 +149,7 @@ static func _hard_to_read() -> bool:
 	var window: EventSheetThemeEditor = FILES.open_window(path, dock)
 	var block: Resource = window._working_style.event_style
 	var row: Dictionary = _row_of(window, block, "comment_text_color")
-	var calm: bool = not (_row_of(window, block, "object_label_color")["mark"] as Label).visible
+	var calm: bool = not is_marked(_row_of(window, block, "object_label_color"))
 	_pick_light(window, block, "comment_row_background_color", Color("#f6edc6"))
 	_pick_light(window, block, "comment_text_color", Color("#e9ddb0"))
 	window._light_side.set_preview_light(true)
@@ -157,7 +157,7 @@ static func _hard_to_read() -> bool:
 	var finding: Dictionary = window._light_side.finding(block, "comment_text_color", true)
 	var ok: bool = SUPPORT.pins(P + ": a word colour on its ground", [
 		["a colour that reads well carries no mark", calm, true],
-		["a light colour that is too pale carries one", (row["mark"] as Label).visible, true],
+		["a light colour that is too pale carries one", is_marked(row), true],
 		["the ratio is under the bar for words", float(finding["ratio"]) < 4.5, true],
 		["the strip says the ratio, the ground and the side", sentence.begins_with("Contrast ") and sentence.contains(" : 1 on comment_row_background_color (Light); 4.5 : 1 reads comfortably."), true],
 		["nothing stops a save", window.save_button_text().is_empty() or window.save() == OK, true],
@@ -233,3 +233,8 @@ static func _the_tick_and_the_words() -> bool:
 	window._dialog.free()
 	dock.free()
 	return ok
+
+
+## Whether a row's mark is showing: it keeps its room either way, so it is shown by its opacity.
+static func is_marked(row: Dictionary) -> bool:
+	return (row["mark"] as Label).modulate.a > 0.5
