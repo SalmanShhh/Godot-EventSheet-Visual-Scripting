@@ -230,6 +230,132 @@ func clear_selection() -> void:
 	_paint_selection()
 
 
+## The keys a list that holds the keyboard answers to, as Godot's own lists do: Ctrl+C copies the selected
+## cards, Ctrl+X cuts them, Ctrl+V pastes under the last selected card (or at the end), Ctrl+D duplicates
+## them in place and Delete removes them. Returns whether the key was taken. A key with nothing to act on
+## (no selection, or a clipboard that holds no cards) is NOT taken, so the editor's own answer still runs.
+func handle_key(event: InputEvent) -> bool:
+	var key: InputEventKey = event as InputEventKey
+	if key == null or not key.pressed or key.echo or not editable or key.alt_pressed:
+		return false
+	var command: bool = key.is_command_or_control_pressed() and not key.shift_pressed
+	if command:
+		match key.keycode:
+			KEY_C:
+				return not _selected.is_empty() and not copy_selected().is_empty()
+			KEY_X:
+				return not cut_selected().is_empty()
+			KEY_V:
+				return paste_after_selection(DisplayServer.clipboard_get())
+			KEY_D:
+				return duplicate_selected()
+	elif (key.keycode == KEY_DELETE or key.keycode == KEY_BACKSPACE) and not key.shift_pressed:
+		return remove_selected()
+	return false
+
+
+func _gui_input(event: InputEvent) -> void:
+	if handle_key(event):
+		accept_event()
+
+
+## The selected cards as clipboard text, and on the clipboard. "" when nothing is selected.
+func copy_selected() -> String:
+	var chosen: Array = []
+	for index: Variant in selected_cards():
+		chosen.append(_cards[int(index)])
+	if chosen.is_empty():
+		return ""
+	var text: String = EventSheetCardSchemas.cards_to_text(chosen)
+	DisplayServer.clipboard_set(text)
+	return text
+
+
+## Copy, then remove: what Ctrl+X does. "" (and nothing removed) when nothing is selected.
+func cut_selected() -> String:
+	var text: String = copy_selected()
+	if not text.is_empty():
+		remove_selected()
+	return text
+
+
+## Removes every selected card, as one change. False when nothing is selected or the list is read-only.
+func remove_selected() -> bool:
+	if _selected.is_empty() or not editable:
+		return false
+	var order: Array = []
+	for index: int in range(_cards.size()):
+		if not _selected.has(index):
+			order.append(index)
+	var kept: Array = []
+	for old_index: Variant in order:
+		kept.append(_cards[int(old_index)])
+	_cards = kept
+	_refold(order)
+	_selected.clear()
+	_anchor = -1
+	_commit()
+	return true
+
+
+## Copies each selected card directly under itself, selects the copies and announces one change.
+func duplicate_selected() -> bool:
+	if _selected.is_empty() or not editable:
+		return false
+	var order: Array = []
+	var copies: Array = []
+	var grown: Array = []
+	for index: int in range(_cards.size()):
+		order.append(index)
+		grown.append(_cards[index])
+		if _selected.has(index):
+			# The copy is a card that did not exist a moment ago, so it starts shut and unselected until
+			# the selection is handed to it below.
+			order.append(-1)
+			grown.append((_cards[index] as Dictionary).duplicate(true))
+			copies.append(grown.size() - 1)
+	_cards = grown
+	_refold(order)
+	_selected.clear()
+	for copy_index: Variant in copies:
+		_selected[int(copy_index)] = true
+	_anchor = int(copies[0])
+	_commit()
+	return true
+
+
+## Adds the clipboard's cards under the last selected card, or at the end when none is selected, and
+## selects them. One change, however many cards: one Ctrl+Z takes them all back. False when the text
+## holds no cards or the list is read-only. Nothing is replaced - that is what "Paste over" and
+## "Paste all" are for.
+func paste_after_selection(text: String) -> bool:
+	var pasted: Array = EventSheetCardSchemas.cards_from_text(text)
+	if pasted.is_empty() or not editable:
+		return false
+	var chosen: Array = selected_cards()
+	var at: int = (int(chosen[chosen.size() - 1]) + 1) if not chosen.is_empty() else _cards.size()
+	var order: Array = []
+	for index: int in range(_cards.size()):
+		if index == at:
+			for _card: Variant in pasted:
+				order.append(-1)
+		order.append(index)
+	if at >= _cards.size():
+		for _card: Variant in pasted:
+			order.append(-1)
+	var grown: Array = _cards.slice(0, at)
+	grown.append_array(pasted)
+	grown.append_array(_cards.slice(at))
+	_cards = grown
+	_refold(order)
+	_selected.clear()
+	for offset: int in range(pasted.size()):
+		_selected[at + offset] = true
+	_anchor = at
+	_commit()
+	return true
+
+
 ## Paints every card's line in place: the selected ones in the fill Godot's lists select with.
 func _paint_selection() -> void:
 	for index: Variant in _lines:
