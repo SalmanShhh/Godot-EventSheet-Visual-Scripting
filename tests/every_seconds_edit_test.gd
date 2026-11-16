@@ -13,28 +13,8 @@ const SUPPORT := preload("res://tests/support.gd")
 const P := "every_seconds_edit_test"
 const APPLY_PATH := "res://addons/eventsheet/editor/dock/ace_apply.gd"
 const SOURCE := "extends Node\n\nvar fired: int = 0\nvar __every_tick: float = 0.0\n\nfunc _process(delta: float) -> void:\n\t__every_tick += delta\n\tif __every_tick >= maxf(0.5, 0.001):\n\t\t__every_tick = fmod(__every_tick, maxf(0.5, 0.001))\n\t\tfired += 1\n"
-const EDITED_BY_DOCK := "extends Node
-
-var fired: int = 0
-var __every_tick: float = 0.0
-
-func _process(delta: float) -> void:
-	__every_tick += delta
-	if __every_tick >= 1.0:
-		__every_tick = fmod(__every_tick, 1.0)
-		fired += 1
-"
-const FOLDED_SOURCE := "extends Node
-
-var fired: int = 0
-var __every_tick: float = 0.0
-
-func _process(delta: float) -> void:
-	__every_tick += delta
-	if __every_tick >= 0.5:
-		__every_tick = fmod(__every_tick, 0.5)
-		fired += 1
-"
+const EDITED_BY_DOCK := "extends Node\n\nvar fired: int = 0\nvar __every_tick: float = 0.0\n\nfunc _process(delta: float) -> void:\n\t__every_tick += delta\n\tif __every_tick >= 1.0:\n\t\t__every_tick = fmod(__every_tick, 1.0)\n\t\tfired += 1\n"
+const FOLDED_SOURCE := "extends Node\n\nvar fired: int = 0\nvar __every_tick: float = 0.0\n\nfunc _process(delta: float) -> void:\n\t__every_tick += delta\n\tif __every_tick >= 0.5:\n\t\t__every_tick = fmod(__every_tick, 0.5)\n\t\tfired += 1\n"
 const EDITED := "extends Node\n\nvar fired: int = 0\nvar __every_tick: float = 0.0\n\nfunc _process(delta: float) -> void:\n\t__every_tick += delta\n\tif __every_tick >= maxf(1.0, 0.001):\n\t\t__every_tick = fmod(__every_tick, maxf(1.0, 0.001))\n\t\tfired += 1\n"
 
 
