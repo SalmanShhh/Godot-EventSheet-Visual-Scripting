@@ -705,6 +705,8 @@ func _ensure_dialog() -> void:
 	_this_field = _strip.add_line(EventSheetL10n.translate("THIS FIELD"), true)
 	_in_file = _strip.add_line(EventSheetL10n.translate("IN FILE"))
 	_in_file.add_theme_font_override("font", _strip.in_code_value.get_theme_font("font"))
+	# What the small signs beside the swatches mean: one line that stays in view under the scrolling form.
+	box.add_child(_light_side.build_legend())
 	box.add_child(_strip)
 	_rebuild_detail_form()
 
@@ -836,8 +838,6 @@ func _rebuild_detail_form() -> void:
 		_detail_form.remove_child(child)
 		child.queue_free()
 	_focus_resource = null
-	# What the small signs beside the swatches mean, above the list they appear in.
-	_detail_form.add_child(_light_side.build_legend())
 	_build_section(_detail_form, EventSheetL10n.translate("Editor (hover, selection, lanes)"), _working_style, true)
 	_build_section(_detail_form, EventSheetL10n.translate("Sheet & rows (event style)"), _working_style.event_style, true)
 	_build_section(_detail_form, EventSheetL10n.translate("Condition cells"), _working_style.condition_style, false)

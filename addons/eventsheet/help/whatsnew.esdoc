@@ -8,7 +8,7 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ### Added: the Theme Editor's legend, a light accent, and a Theme field that says what each theme is
 
-A line under the Theme Editor's form explains the dashed box, the chain and the mark beside a swatch. Quick Style's Accent row has a Dark and a Light picker like Base and Text, and Generate uses each for its own column; the light accent moves with the dark one until it is picked on its own, so one accent still works. The Theme field lists each theme with a swatch of its sheet colour and its folder, a tooltip with the file, group titles (\"Follows the editor\", \"Starters (copy to edit)\"), and one sentence under the field about the open theme. Godot's drop-down has a single text column, so the folder shares the name's line rather than standing in a column of its own.
+One line of quiet words under the Theme Editor's scrolling form, always in view, explains the dashed box, the chain and the mark beside a swatch. Quick Style's Accent row has a Dark and a Light picker like Base and Text, and Generate uses each for its own column; the light accent moves with the dark one until it is picked on its own, so one accent still works. The Theme field lists each theme with a swatch of three stripes (its sheet colour, accent and text) and its folder, a tooltip with the file, group titles (\"Follows the editor\", \"Starters (copy to edit)\"), and one sentence under the field about the open theme. Godot's drop-down has a single text column, so the folder shares the name's line rather than standing in a column of its own.
 
 ### Fixed: closing a Theme Editor with changes asks over the window
 

@@ -226,25 +226,24 @@ class DashedBox extends Control:
 
 
 	func _init() -> void:
-		custom_minimum_size = Vector2(EventSheetPalette.scaled_f(18.0), EventSheetPalette.scaled_f(12.0))
-		size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 	func _draw() -> void:
 		var ink: Color = get_theme_color("font_color", "Label")
 		ink.a = 0.8
-		var box: Rect2 = Rect2(Vector2.ZERO, size).grow(-1.0)
+		var box: Rect2 = Rect2(Vector2(1.0, size.y * 0.5 - EventSheetPalette.scaled_f(6.0)), Vector2(size.x - 2.0, EventSheetPalette.scaled_f(12.0)))
 		var corners: Array[Vector2] = [box.position, Vector2(box.end.x, box.position.y), box.end, Vector2(box.position.x, box.end.y)]
 		for index: int in range(4):
 			draw_dashed_line(corners[index], corners[(index + 1) % 4], ink, 1.0, 3.0)
 
 
-## Three lines of quiet words that say what the small signs beside a swatch mean: the dashed box, the chain and
-## the mark. Each sign is drawn the way the rows draw it.
+## One line of quiet words under the form that says what the small signs beside a swatch mean: the dashed box,
+## the chain and the mark. Each sign is drawn the way the rows draw it and stands in a slot of one size, centred
+## on its words, so the three share a baseline; a narrow window lets the line wrap as a flow.
 func build_legend() -> Control:
 	var legend: HFlowContainer = HFlowContainer.new()
-	legend.add_theme_constant_override("h_separation", EventSheetPalette.scaled(14))
+	legend.add_theme_constant_override("h_separation", EventSheetPalette.scaled(18))
 	legend.add_theme_constant_override("v_separation", EventSheetPalette.scaled(2))
 	legend.name = "Legend"
 	var chain: Control = null
@@ -256,25 +255,42 @@ func build_legend() -> Control:
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		chain = icon
 	else:
-		var glyph: Label = Label.new()
-		glyph.text = "∞"
-		chain = glyph
-	var mark: Label = Label.new()
-	mark.text = MARK_GLYPH
+		chain = _sign_label("∞")
+	var mark: Label = _sign_label(MARK_GLYPH)
 	mark.add_theme_color_override("font_color", EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_WARNING))
 	for entry: Array in [
 			[DashedBox.new(), EventSheetL10n.translate("worked out from the editor")],
 			[chain, EventSheetL10n.translate("same colour in both")],
 			[mark, EventSheetL10n.translate("hard to read on its row")]]:
 		var item: HBoxContainer = HBoxContainer.new()
+		item.alignment = BoxContainer.ALIGNMENT_CENTER
 		item.add_theme_constant_override("separation", EventSheetPalette.scaled(6))
-		item.add_child(entry[0])
+		var slot: Control = Control.new()
+		slot.custom_minimum_size = Vector2(EventSheetPalette.scaled_f(20.0), EventSheetPalette.scaled_f(18.0))
+		slot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		var sign_control: Control = entry[0]
+		sign_control.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		if sign_control == mark:
+			# The exclamation mark's glyph sits low in its line box; lift it onto the centre line of the other two.
+			sign_control.offset_top = -EventSheetPalette.scaled_f(5.0)
+			sign_control.offset_bottom = -EventSheetPalette.scaled_f(5.0)
+		slot.add_child(sign_control)
+		item.add_child(slot)
 		var words: Label = Label.new()
 		words.text = str(entry[1])
+		words.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		words.modulate = Color(1.0, 1.0, 1.0, 0.74)
 		item.add_child(words)
 		legend.add_child(item)
 	return legend
+
+
+func _sign_label(text: String) -> Label:
+	var label: Label = Label.new()
+	label.text = text
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	return label
 
 
 # ── The swatches ──────────────────────────────────────────────────────────────────────────────────

@@ -29,7 +29,7 @@ Current additions on top of the model below:
   Save, Discard or Cancel, the way Godot asks for a changed scene. The question appears over the window,
   which stays on screen until you answer: Cancel leaves it as it is, Discard puts the file's colours back and
   closes it.
-  - The **Theme** field lists every theme with a small swatch of its sheet colour and the folder it lives in
+  - The **Theme** field lists every theme with a swatch of three stripes (its sheet colour, accent and text) and the folder it lives in
     (Godot's drop-down has one text column, so the folder shares the name's line). A tooltip gives the file,
     and one sentence under the field says what the open theme is and what Save does to it.
   - **Save** (or **Ctrl+S**) writes the file the window opened, and every sheet wearing it repaints.
@@ -64,7 +64,7 @@ Current additions on top of the model below:
   - A small amber **!** after a swatch says its words would read under the bar on their ground (4.5 to 1 for
     sentences, 3 to 1 for marks and badge letters); the strip at the foot gives the ratio. Nothing blocks a
     save.
-  - Under the swatch list a line of quiet words explains the three small signs: the dashed box, the chain and
+  - Under the scrolling form, always in view, one line of quiet words explains the three small signs: the dashed box, the chain and
     the mark.
   - **Quick Style** has a base, an accent and a text colour for dark and for light; the light accent moves with
     the dark one until you pick it on its own, so one accent still works. **Generate Theme**
