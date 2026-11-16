@@ -15,6 +15,8 @@ extends RefCounted
 ## skipped-folders setting: it is what makes registering it change nothing for a project that has
 ## never heard of it.
 const DEFAULT_SKIPPED_FOLDERS: PackedStringArray = []
+## Likewise for the extra vocabulary paths: empty means "only what the project declares", as before.
+const DEFAULT_EXTRA_PATHS: PackedStringArray = []
 
 ## Clicking a script in the FileSystem or the Inspector opens it as a sheet. Its old key was
 ## `auto_preview_gd_on_select`, from the days it opened a read-only preview; [constant RENAMED_SETTINGS]
@@ -81,6 +83,17 @@ const DEFINITIONS: Array[Dictionary] = [
 	# audit did before this setting existed - a project that declares nothing sees no change at all.
 	{"name": "eventsheets/doctor/skipped_folders", "default": DEFAULT_SKIPPED_FOLDERS, "type": TYPE_PACKED_STRING_ARRAY,
 		"doc": "Folders the Project Doctor does not audit, by name - matched at any depth, the way addons/ always has been. A test tree, a build-tool tree or a folder of imported samples is code nobody is going to fix a finding in, and walking it is most of what a large audit costs. Empty by default: every folder outside addons/ is audited."},
+	# The four the Manual and the Doctor tell a reader to turn on. Each default is what its reader
+	# already assumes when the key is absent, so registering them writes nothing to project.godot.
+	{"name": "eventsheets/angles/default_unit", "default": "degrees", "type": TYPE_STRING,
+		"hint": PROPERTY_HINT_ENUM, "hint_string": "degrees,radians",
+		"doc": "What a bare number means in an angle field: degrees (the default) or radians. It changes what is written from then on and never re-reads a value already stored; a value with its unit said (45 deg, 1.2 rad) or written as PI/4 always keeps its own unit."},
+	{"name": "eventsheets/doctor/caption_sounds", "default": false, "type": TYPE_BOOL,
+		"doc": "Ask the Project Doctor to note, per script, how many one-shot sounds play without a caption beside them, for players who cannot hear them. Off by default: a project that has not decided to caption its audio gets no notes."},
+	{"name": "eventsheets/doctor/suggest_error_report", "default": true, "type": TYPE_BOOL,
+		"doc": "Let the Project Doctor suggest sending a run's errors to a report file. Turn it off to say once that your game ignores its errors on purpose; the question is never asked again."},
+	{"name": "eventsheets/vocabulary/extra_paths", "default": DEFAULT_EXTRA_PATHS, "type": TYPE_PACKED_STRING_ARRAY,
+		"doc": "Extra scripts or folders whose code joins the picker's vocabulary, for code that has no class_name. A listed .gd file counts directly and a listed folder is searched in full. Empty by default: declared classes and autoloads are the safe automatic surface."},
 	{"name": "eventsheets/addons/composition_mode", "default": "allowed", "type": TYPE_STRING,
 		"hint": PROPERTY_HINT_ENUM, "hint_string": "allowed,off",
 		"doc": "Whether sheets may include other sheets (policy gates, never bytes)."},
