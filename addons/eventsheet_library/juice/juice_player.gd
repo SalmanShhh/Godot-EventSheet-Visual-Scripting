@@ -350,7 +350,10 @@ const CATEGORY_OF: Dictionary = {
 
 ## Keys that Set Juice Card Field and Juice Card Field accept.
 const FIELD_KEYS: PackedStringArray = ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"]
-
+## The keys beyond the eight above that the Set Juice Card Field row writes on any card: the clock and the strength window of the Timing foldout.
+const TIMING_FIELD_KEYS: PackedStringArray = ["clock", "min_strength", "max_strength"]
+## The keys a moment file's step can hold, plus the two every card carries that a file has no use for: its label and its switch.
+const MOMENT_KEYS: PackedStringArray = ["verb", "amount", "effect", "seconds", "label", "active"]
 ## Juice families muted right now.
 var _muted: Dictionary = {}
 
@@ -733,7 +736,7 @@ func feedbacks_duration() -> float:
 ## @ace_lift_example("$JuicePlayer.add_feedback([[step|expression: {"verb": "shake"}]], [[after_label|name: "shake"]])")
 ## @ace_lift_example("$JuicePlayer.add_feedback([[step|expression: {"verb": "shake"}]], "")")
 ## @ace_param(step, hint: feedback_step, default: {"verb": "shake", "amount": 0.4, "seconds": 0.2}, desc: "The juice card itself: pick its kind and fill the card, exactly as in the Inspector's list.")
-## @ace_param(after_label, desc: "The label of the card this one goes after. Empty puts it at the end of the list.")
+## @ace_param(after_label, hint: juice_card_label, desc: "The label of the card this one goes after. Empty puts it at the end of the list.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.add_feedback({step}, "{after_label}")")
 func add_feedback(step: Dictionary, after_label: String) -> void:
@@ -755,7 +758,7 @@ func add_feedback(step: Dictionary, after_label: String) -> void:
 ## @ace_lift_example("$FeedbackPlayer.insert_feedback_before([[step|expression: {"verb": "shake"}]], [[before_label|name: "shake"]])")
 ## @ace_lift_example("$JuicePlayer.insert_feedback_before([[step|expression: {"verb": "shake"}]], [[before_label|name: "shake"]])")
 ## @ace_param(step, hint: feedback_step, default: {"verb": "flash", "amount": 1.0, "seconds": 0.1}, desc: "The juice card itself: pick its kind and fill the card, exactly as in the Inspector's list.")
-## @ace_param(before_label, default: shake, desc: "The label of the card this one goes above.")
+## @ace_param(before_label, hint: juice_card_label, default: shake, desc: "The label of the card this one goes above.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.insert_feedback_before({step}, "{before_label}")")
 func insert_feedback_before(step: Dictionary, before_label: String) -> void:
@@ -773,8 +776,8 @@ func insert_feedback_before(step: Dictionary, before_label: String) -> void:
 ## @ace_display_template("Replace juice card [b]{label}[/b] with [b]{step}[/b]")
 ## @ace_lift_example("$FeedbackPlayer.replace_feedback([[label|name: "kick"]], [[step|expression: {"verb": "shake"}]])")
 ## @ace_lift_example("$JuicePlayer.replace_feedback([[label|name: "kick"]], [[step|expression: {"verb": "shake"}]])")
-## @ace_param(label, default: kick, desc: "The label of the card being swapped out.")
-## @ace_param(step, hint: feedback_step, default: {"verb": "recoil", "amount": 1.0, "seconds": 0.1}, desc: "What takes its place: a kind and its fields, as in the Inspector's list.")
+## @ace_param(label, hint: juice_card_label, default: kick, desc: "The label of the card being swapped out.")
+## @ace_param(step, hint: feedback_step, default: {"verb": "punch", "amount": 1.0, "seconds": 0.1}, desc: "What takes its place: a kind and its fields, as in the Inspector's list.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.replace_feedback("{label}", {step})")
 func replace_feedback(label: String, step: Dictionary) -> void:
@@ -795,7 +798,7 @@ func replace_feedback(label: String, step: Dictionary) -> void:
 ## @ace_display_template("Remove juice card [b]{label}[/b]")
 ## @ace_lift_example("$FeedbackPlayer.remove_feedback([[label|name: "shake"]])")
 ## @ace_lift_example("$JuicePlayer.remove_feedback([[label|name: "shake"]])")
-## @ace_param(label, default: shake, desc: "The label of the card to take out.")
+## @ace_param(label, hint: juice_card_label, default: shake, desc: "The label of the card to take out.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.remove_feedback("{label}")")
 func remove_feedback(label: String) -> void:
@@ -813,7 +816,7 @@ func remove_feedback(label: String) -> void:
 ## @ace_display_template("Move juice card [b]{label}[/b] to [b]{position}[/b]")
 ## @ace_lift_example("$FeedbackPlayer.move_feedback_to([[label|name: "shake"]], [[position|argument: 1]])")
 ## @ace_lift_example("$JuicePlayer.move_feedback_to([[label|name: "shake"]], [[position|argument: 1]])")
-## @ace_param(label, default: shake, desc: "The label of the card to move.")
+## @ace_param(label, hint: juice_card_label, default: shake, desc: "The label of the card to move.")
 ## @ace_param(position, default: 1, desc: "Where it lands. The first card in the list is 1.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.move_feedback_to("{label}", {position})")
@@ -834,7 +837,7 @@ func move_feedback_to(label: String, position: int) -> void:
 ## @ace_display_template("Enable juice card [b]{label}[/b]")
 ## @ace_lift_example("$FeedbackPlayer.enable_feedback([[label|name: "shake"]])")
 ## @ace_lift_example("$JuicePlayer.enable_feedback([[label|name: "shake"]])")
-## @ace_param(label, default: shake, desc: "The label of the card to switch on.")
+## @ace_param(label, hint: juice_card_label, default: shake, desc: "The label of the card to switch on.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.enable_feedback("{label}")")
 func enable_feedback(label: String) -> void:
@@ -849,7 +852,7 @@ func enable_feedback(label: String) -> void:
 ## @ace_display_template("Disable juice card [b]{label}[/b]")
 ## @ace_lift_example("$FeedbackPlayer.disable_feedback([[label|name: "shake"]])")
 ## @ace_lift_example("$JuicePlayer.disable_feedback([[label|name: "shake"]])")
-## @ace_param(label, default: shake, desc: "The label of the card to switch off.")
+## @ace_param(label, hint: juice_card_label, default: shake, desc: "The label of the card to switch off.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.disable_feedback("{label}")")
 func disable_feedback(label: String) -> void:
@@ -864,8 +867,8 @@ func disable_feedback(label: String) -> void:
 ## @ace_display_template("Set juice card [b]{label}[/b] [b]{field}[/b] to [b]{value}[/b]")
 ## @ace_lift_example("$FeedbackPlayer.set_feedback_field([[label|name: "shake"]], [[field|name: "amount"]], [[value|expression: 0.5]])")
 ## @ace_lift_example("$JuicePlayer.set_feedback_field([[label|name: "shake"]], [[field|name: "amount"]], [[value|expression: 0.5]])")
-## @ace_param(label, default: shake, desc: "The label of the card being tuned.")
-## @ace_param(field, hint: juice_card_field, options: amount|effect|seconds|delay|interval|repeat|chance|loops, autocomplete: amount|effect|seconds|delay|interval|repeat|chance|loops, default: amount, desc: "Which value on the card to write.")
+## @ace_param(label, hint: juice_card_label, default: shake, desc: "The label of the card being tuned.")
+## @ace_param(field, hint: juice_card_field, options: amount|effect|seconds|delay|interval|repeat|chance|loops|clock|min_strength|max_strength, autocomplete: amount|effect|seconds|delay|interval|repeat|chance|loops|clock|min_strength|max_strength, default: amount, desc: "Which value on the card to write.")
 ## @ace_param(value, default: 1.0, desc: "What to write. A number for an amount or a length, a word for the extra one.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.set_feedback_field("{label}", "{field}", {value})")
@@ -876,7 +879,7 @@ func set_feedback_field(label: String, field: String, value: Variant) -> void:
 	if field == "verb" or field == "card_script":
 		push_warning("Juice Player: the card \"%s\" on %s cannot have its %s changed, because that is what makes it the card it is, so Set Juice Card Field left it alone. Replace the card instead." % [label, name, field])
 		return
-	if not FIELD_KEYS.has(field) and not card.has(field):
+	if not FIELD_KEYS.has(field) and not TIMING_FIELD_KEYS.has(field) and not card.has(field):
 		push_warning("Juice Player: the card \"%s\" on %s has no field called \"%s\", so Set Juice Card Field did nothing." % [label, name, field])
 		return
 	card[field] = value
@@ -888,7 +891,7 @@ func set_feedback_field(label: String, field: String, value: Variant) -> void:
 ## @ace_display_template("Set juice card [b]{label}[/b] timing: delay [b]{delay}[/b] s, [b]{repeat}[/b] times")
 ## @ace_lift_example("$FeedbackPlayer.set_feedback_timing([[label|name: "shake"]], [[delay|argument: 0.0]], [[repeat|argument: 1]], [[interval|argument: 0.0]], [[clock|name: "game"]])")
 ## @ace_lift_example("$JuicePlayer.set_feedback_timing([[label|name: "shake"]], [[delay|argument: 0.0]], [[repeat|argument: 1]], [[interval|argument: 0.0]], [[clock|name: "game"]])")
-## @ace_param(label, default: shake, desc: "The label of the card being retimed.")
+## @ace_param(label, hint: juice_card_label, default: shake, desc: "The label of the card being retimed.")
 ## @ace_param(delay, default: 0.0, desc: "How long the card waits after the head reaches it, in seconds.")
 ## @ace_param(repeat, default: 1, desc: "How many times it is felt. 1 is once.")
 ## @ace_param(interval, default: 0.0, desc: "The gap between repeats, in seconds.")
@@ -911,7 +914,7 @@ func set_feedback_timing(label: String, delay: float, repeat: int, interval: flo
 ## @ace_display_template("Set juice card [b]{label}[/b] chance [b]{percent}[/b]%")
 ## @ace_lift_example("$FeedbackPlayer.set_feedback_chance([[label|name: "shake"]], [[percent|argument: 100.0]])")
 ## @ace_lift_example("$JuicePlayer.set_feedback_chance([[label|name: "shake"]], [[percent|argument: 100.0]])")
-## @ace_param(label, default: shake, desc: "The label of the card being rolled for.")
+## @ace_param(label, hint: juice_card_label, default: shake, desc: "The label of the card being rolled for.")
 ## @ace_param(percent, default: 100.0, desc: "The chance it is felt, 0 to 100.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.set_feedback_chance("{label}", {percent})")
@@ -927,7 +930,7 @@ func set_feedback_chance(label: String, percent: float) -> void:
 ## @ace_display_template("Rename juice card [b]{label}[/b] to [b]{new_label}[/b]")
 ## @ace_lift_example("$FeedbackPlayer.set_feedback_label([[label|name: "shake"]], [[new_label|name: "shake"]])")
 ## @ace_lift_example("$JuicePlayer.set_feedback_label([[label|name: "shake"]], [[new_label|name: "shake"]])")
-## @ace_param(label, default: shake, desc: "The card's name now.")
+## @ace_param(label, hint: juice_card_label, default: shake, desc: "The card's name now.")
 ## @ace_param(new_label, default: big shake, desc: "What it is called from here on.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.set_feedback_label("{label}", "{new_label}")")
@@ -945,7 +948,7 @@ func set_feedback_label(label: String, new_label: String) -> void:
 ## @ace_lift_example("$FeedbackPlayer.duplicate_feedback([[label|name: "shake"]], "")")
 ## @ace_lift_example("$JuicePlayer.duplicate_feedback([[label|name: "shake"]], [[new_label|name: "shake"]])")
 ## @ace_lift_example("$JuicePlayer.duplicate_feedback([[label|name: "shake"]], "")")
-## @ace_param(label, default: shake, desc: "The label of the card to copy.")
+## @ace_param(label, hint: juice_card_label, default: shake, desc: "The label of the card to copy.")
 ## @ace_param(new_label, desc: "What the copy is called. Empty names it after the original.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.duplicate_feedback("{label}", "{new_label}")")
@@ -1032,6 +1035,7 @@ func save_moment_file(path: String) -> void:
 		return
 	var written: Array[Dictionary] = []
 	var left_behind: PackedStringArray = PackedStringArray()
+	var left_keys: PackedStringArray = PackedStringArray()
 	for entry: Variant in _steps_now():
 		if not (entry is Dictionary):
 			continue
@@ -1041,11 +1045,16 @@ func save_moment_file(path: String) -> void:
 			left_behind.append(_label_of(card))
 			continue
 		written.append({"verb": str(card.get("verb", "")), "amount": float(card.get("amount", 1.0)), "effect": str(card.get("effect", "")), "seconds": float(card.get("seconds", 0.0))})
+		var dropped: PackedStringArray = keys_a_file_drops(card)
+		if not dropped.is_empty():
+			left_keys.append("%s (%s)" % [_label_of(card), ", ".join(dropped)])
 	var file: Resource = kind.new()
 	file.set("moment_name", name)
 	file.set("steps", written)
 	if not left_behind.is_empty():
 		push_warning("Juice Player: a moment file holds the ten moment words only - no timing, no card that is switched off, and none of this node's own three (a property tween, a signal, a nested player) - so %s left these out of the file: %s." % [name, ", ".join(left_behind)])
+	if not left_keys.is_empty():
+		push_warning("Juice Player: a moment file holds a card's kind, amount, effect and seconds and nothing else, so %s left these off the cards it kept: %s." % [name, "; ".join(left_keys)])
 	if ResourceSaver.save(file, path) != OK:
 		push_warning("Juice Player: %s could not write \"%s\", so Save Moment File saved nothing." % [name, path])
 
@@ -1226,7 +1235,7 @@ func pick_one_feedback_of(prefix: String) -> void:
 ## @ace_display_template("Jump to juice card [b]{label}[/b]")
 ## @ace_lift_example("$FeedbackPlayer.jump_to_feedback([[label|name: "impact"]])")
 ## @ace_lift_example("$JuicePlayer.jump_to_feedback([[label|name: "impact"]])")
-## @ace_param(label, default: impact, desc: "The label of the card to carry on from.")
+## @ace_param(label, hint: juice_card_label, default: impact, desc: "The label of the card to carry on from.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.jump_to_feedback("{label}")")
 func jump_to_feedback(label: String) -> void:
@@ -1239,7 +1248,7 @@ func jump_to_feedback(label: String) -> void:
 ## @ace_display_template("Skip juice card [b]{label}[/b] once")
 ## @ace_lift_example("$FeedbackPlayer.skip_feedback_once([[label|name: "shake"]])")
 ## @ace_lift_example("$JuicePlayer.skip_feedback_once([[label|name: "shake"]])")
-## @ace_param(label, default: shake, desc: "The label of the card to step over once.")
+## @ace_param(label, hint: juice_card_label, default: shake, desc: "The label of the card to step over once.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.skip_feedback_once("{label}")")
 func skip_feedback_once(label: String) -> void:
@@ -1255,7 +1264,7 @@ func skip_feedback_once(label: String) -> void:
 ## @ace_display_template("Set loop count [b]{label}[/b] to [b]{loops}[/b]")
 ## @ace_lift_example("$FeedbackPlayer.set_loop_count([[label|name: "loop_back"]], [[loops|argument: 2]])")
 ## @ace_lift_example("$JuicePlayer.set_loop_count([[label|name: "loop_back"]], [[loops|argument: 2]])")
-## @ace_param(label, default: loop_back, desc: "The label of the Loop Back card.")
+## @ace_param(label, hint: juice_card_label, default: loop_back, desc: "The label of the Loop Back card.")
 ## @ace_param(loops, default: 2, desc: "How many times round. 0 walks straight past it.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.set_loop_count("{label}", {loops})")
@@ -1298,7 +1307,7 @@ func release_hold() -> void:
 ## @ace_display_template("Juice card [b]{label}[/b] is playing")
 ## @ace_lift_example("$FeedbackPlayer.feedback_is_playing([[label|name: "shake"]])")
 ## @ace_lift_example("$JuicePlayer.feedback_is_playing([[label|name: "shake"]])")
-## @ace_param(label, default: shake, desc: "The label of the card being asked about.")
+## @ace_param(label, hint: juice_card_label, default: shake, desc: "The label of the card being asked about.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.feedback_is_playing("{label}")")
 func feedback_is_playing(label: String) -> bool:
@@ -1311,7 +1320,7 @@ func feedback_is_playing(label: String) -> bool:
 ## @ace_display_template("Has juice card [b]{label}[/b]")
 ## @ace_lift_example("$FeedbackPlayer.has_feedback([[label|name: "shake"]])")
 ## @ace_lift_example("$JuicePlayer.has_feedback([[label|name: "shake"]])")
-## @ace_param(label, default: shake, desc: "The label to look for.")
+## @ace_param(label, hint: juice_card_label, default: shake, desc: "The label to look for.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.has_feedback("{label}")")
 func has_feedback(label: String) -> bool:
@@ -1324,7 +1333,7 @@ func has_feedback(label: String) -> bool:
 ## @ace_display_template("Juice card [b]{label}[/b] is enabled")
 ## @ace_lift_example("$FeedbackPlayer.feedback_is_enabled([[label|name: "shake"]])")
 ## @ace_lift_example("$JuicePlayer.feedback_is_enabled([[label|name: "shake"]])")
-## @ace_param(label, default: shake, desc: "The label of the card being asked about.")
+## @ace_param(label, hint: juice_card_label, default: shake, desc: "The label of the card being asked about.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.feedback_is_enabled("{label}")")
 func feedback_is_enabled(label: String) -> bool:
@@ -1358,8 +1367,8 @@ func feedback_label_at(position: int) -> String:
 ## @ace_name("Juice Card Field")
 ## @ace_category("Juice Player")
 ## @ace_description("What one card says at one of its fields - the amount it does, how long it lasts, the extra word it carries. The read half of Set Juice Card Field, so a slider can be shown at the value the list actually holds.")
-## @ace_param(label, default: shake, desc: "The label of the card being read.")
-## @ace_param(field, hint: juice_card_field, options: amount|effect|seconds|delay|interval|repeat|chance|loops, autocomplete: amount|effect|seconds|delay|interval|repeat|chance|loops, default: amount, desc: "Which value to read.")
+## @ace_param(label, hint: juice_card_label, default: shake, desc: "The label of the card being read.")
+## @ace_param(field, hint: juice_card_field, options: amount|effect|seconds|delay|interval|repeat|chance|loops|clock|min_strength|max_strength, autocomplete: amount|effect|seconds|delay|interval|repeat|chance|loops|clock|min_strength|max_strength, default: amount, desc: "Which value to read.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.feedback_field("{label}", "{field}")")
 func feedback_field(label: String, field: String) -> Variant:
@@ -1369,7 +1378,7 @@ func feedback_field(label: String, field: String) -> Variant:
 ## @ace_name("Juice Card Progress")
 ## @ace_category("Juice Player")
 ## @ace_description("How far through one card the play is, 0 before it starts and 1 once it is done. Read off the plan rather than off a tick, so asking it costs nothing.")
-## @ace_param(label, default: shake, desc: "The label of the card being watched.")
+## @ace_param(label, hint: juice_card_label, default: shake, desc: "The label of the card being watched.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.feedback_progress("{label}")")
 func feedback_progress(label: String) -> float:
@@ -1379,7 +1388,7 @@ func feedback_progress(label: String) -> float:
 ## @ace_name("Juice Card Duration")
 ## @ace_category("Juice Player")
 ## @ace_description("How long ONE card lasts, its own wait included - beside Juice Duration, which is how long the whole beat lasts.")
-## @ace_param(label, default: shake, desc: "The label of the card being measured.")
+## @ace_param(label, hint: juice_card_label, default: shake, desc: "The label of the card being measured.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.feedback_duration("{label}")")
 func feedback_duration(label: String) -> float:
@@ -1400,7 +1409,7 @@ func current_feedback() -> String:
 ## @ace_name("Loops Left")
 ## @ace_category("Juice Player")
 ## @ace_description("How many times round a Loop Back card still has to go in the play that is running.")
-## @ace_param(label, default: loop_back, desc: "The label of the Loop Back card.")
+## @ace_param(label, hint: juice_card_label, default: loop_back, desc: "The label of the Loop Back card.")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.loops_left("{label}")")
 func loops_left(label: String) -> int:
@@ -2130,6 +2139,17 @@ static func editor_kind(word: String) -> String:
 		PLAY_PLAYER:
 			return "skipped:another player runs its own list"
 	return "skipped:the running game draws it"
+
+## The keys of a card that a moment file would leave off: everything but its kind, amount, effect and seconds,
+## and the label and switch every card carries. Save Moment File names them before it writes, so nothing
+## a card holds is dropped without being said.
+## @ace_hidden
+static func keys_a_file_drops(card: Dictionary) -> PackedStringArray:
+	var dropped: PackedStringArray = PackedStringArray()
+	for key: Variant in card:
+		if not MOMENT_KEYS.has(str(key)):
+			dropped.append(str(key))
+	return dropped
 
 ## The name one card answers to: what it was called in the list, or its own word when it was never
 ## named. THE ONE PLACE a label is derived, so every row addresses cards identically, and a Hold that

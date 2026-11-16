@@ -1047,7 +1047,7 @@ static func _editor_icon(icon_name: String) -> Texture2D:
 ## back correctly even when filtered. The one shared filler behind every autocomplete
 ## combo (ACE params, Replace Object References, the match/switch case patterns).
 static func fill_suggestion_popup(popup: PopupMenu, suggestions: PackedStringArray, filter_text: String,
-		note_provider: Callable = Callable()) -> void:
+		note_provider: Callable = Callable(), word_first: bool = false) -> void:
 	popup.clear()
 	var needle: String = filter_text.strip_edges().to_lower()
 	var any_added: bool = false
@@ -1057,7 +1057,7 @@ static func fill_suggestion_popup(popup: PopupMenu, suggestions: PackedStringArr
 			# A choice may carry the line that explains it (an input action's keys, how many
 			# nodes are in a group). The item's ID still indexes the POOL, so what a pick inserts is
 			# the bare value however much the item shows.
-			popup.add_item(suggestion_item_text(suggestion, note_provider), index)
+			popup.add_item(suggestion_item_text(suggestion, note_provider, word_first), index)
 			any_added = true
 	if not any_added:
 		popup.add_item("(no match - keep typing)", -1)
@@ -1065,12 +1065,16 @@ static func fill_suggestion_popup(popup: PopupMenu, suggestions: PackedStringArr
 
 
 ## What one suggestion READS as in the list: the value alone, or the value and the line that
-## explains it. Static and pure so a test can pin the composed line without opening a popup.
-static func suggestion_item_text(suggestion: String, note_provider: Callable = Callable()) -> String:
+## explains it. Static and pure so a test can pin the composed line without opening a popup. With
+## `word_first` the explaining word leads and the value follows, for a list whose reader knows the
+## words and not the keys.
+static func suggestion_item_text(suggestion: String, note_provider: Callable = Callable(), word_first: bool = false) -> String:
 	if not note_provider.is_valid():
 		return suggestion
 	var note: String = str(note_provider.call(suggestion)).strip_edges()
-	return suggestion if note.is_empty() else "%s    %s" % [suggestion, note]
+	if note.is_empty():
+		return suggestion
+	return "%s    %s" % [note, suggestion] if word_first else "%s    %s" % [suggestion, note]
 
 
 ## The editable autocomplete combo's ▾ picker, fully wired to `edit` (event-sheet-style
@@ -1085,7 +1089,7 @@ static func suggestion_item_text(suggestion: String, note_provider: Callable = C
 ## `note_provider` (optional) maps one suggestion to the line that explains it, shown beside the
 ## value in the list. The pick still inserts the bare value: item ids index the pool, never the text.
 static func autocomplete_combo(edit: LineEdit, suggestions_provider: Callable,
-		note_provider: Callable = Callable()) -> MenuButton:
+		note_provider: Callable = Callable(), word_first: bool = false) -> MenuButton:
 	var picker: MenuButton = MenuButton.new()
 	picker.text = "▾"
 	picker.tooltip_text = "Suggestions (you can still type any value)"
@@ -1095,7 +1099,7 @@ static func autocomplete_combo(edit: LineEdit, suggestions_provider: Callable,
 	var shown: Dictionary = {"pool": PackedStringArray()}
 	popup.about_to_popup.connect(func() -> void:
 		shown["pool"] = PackedStringArray(suggestions_provider.call())
-		fill_suggestion_popup(popup, shown["pool"], edit.text, note_provider))
+		fill_suggestion_popup(popup, shown["pool"], edit.text, note_provider, word_first))
 	# Whenever the popup closes (pick, Escape, click-away), return the caret to the field
 	# so Enter still confirms the dialog and typing continues seamlessly.
 	popup.popup_hide.connect(func() -> void: edit.grab_focus())
@@ -1113,7 +1117,7 @@ static func autocomplete_combo(edit: LineEdit, suggestions_provider: Callable,
 			return
 		if key_event != null and key_event.pressed and key_event.keycode == KEY_DOWN:
 			shown["pool"] = PackedStringArray(suggestions_provider.call())
-			fill_suggestion_popup(popup, shown["pool"], edit.text, note_provider)
+			fill_suggestion_popup(popup, shown["pool"], edit.text, note_provider, word_first)
 			# Don't pop a dead, disabled-only "(no match)" menu - keep the caret in the field.
 			if popup.item_count == 1 and popup.is_item_disabled(0):
 				edit.accept_event()

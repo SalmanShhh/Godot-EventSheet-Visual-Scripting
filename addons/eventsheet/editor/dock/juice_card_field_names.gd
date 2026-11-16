@@ -18,8 +18,16 @@ const NAMES_PATH: String = "res://addons/eventsheet/editor/inspector/juice_playe
 const SCHEMA_PATH: String = "res://addons/eventsheet/editor/inspector/feedback_card_schema.gd"
 const OWN_PATH: String = "res://addons/eventsheet/editor/inspector/juice_own_cards.gd"
 
-## The keys every card may hold, offered when the card cannot be found.
-const EVERY_CARD: PackedStringArray = ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"]
+## The keys every card may hold, offered when the card cannot be found, each with the word the Inspector
+## shows for it. The first eight are the ones the rows have always offered; the last three are the clock and
+## the strength window of the Timing foldout.
+const EVERY_CARD: Dictionary = {
+	"amount": "Amount", "effect": "Effect", "seconds": "Seconds", "delay": "Delay", "interval": "Every",
+	"repeat": "Repeat", "chance": "Chance", "loops": "Loops", "clock": "Clock",
+	"min_strength": "Only at strength", "max_strength": "Only at strength, up to"}
+
+## The words of the two keys every card carries that no kind draws as a field.
+const SHARED_WORDS: Dictionary = {"label": "Label", "active": "Active"}
 
 ## The keys that make a card the card it is, never offered.
 const NEVER: PackedStringArray = ["verb", "card_script"]
@@ -36,23 +44,59 @@ static func for_sheet(sheet_path: String, target: String, label: String) -> Arra
 	return fallback()
 
 
-## The eight names every card may hold, as the same {key, word} entries.
+## The names every card may hold, as the same {key, word} entries.
 static func fallback() -> Array:
 	var offered: Array = []
 	for key: String in EVERY_CARD:
-		offered.append({"key": key, "word": ""})
+		offered.append({"key": key, "word": EventSheetL10n.translate(str(EVERY_CARD[key]))})
 	return offered
+
+
+## The labels of the cards of the player a row acts on, read from the saved scene the sheet runs in: each
+## card's label, or its kind when it has none. Empty when no scene shows the player, which leaves the box a
+## plain one.
+static func labels_for_sheet(sheet_path: String, target: String) -> PackedStringArray:
+	var scenes: PackedStringArray = EventSheetSceneConnections.scenes_using_script(sheet_path) if sheet_path.begins_with("res://") else PackedStringArray()
+	for scene_path: String in scenes:
+		var steps: Variant = player_steps(scene_path, target)
+		if steps is Array:
+			return labels_of(steps as Array)
+	return PackedStringArray()
+
+
+## The labels of a list of cards, in order, each once.
+static func labels_of(steps: Array) -> PackedStringArray:
+	var labels: PackedStringArray = PackedStringArray()
+	for entry: Variant in steps:
+		if entry is Dictionary:
+			var named: String = str((entry as Dictionary).get("label", "")).strip_edges()
+			if named.is_empty():
+				named = str((entry as Dictionary).get("verb", "")).strip_edges()
+			if not named.is_empty() and not labels.has(named):
+				labels.append(named)
+	return labels
 
 
 ## The keys the card holds in one saved scene, or an empty list when the player or the card is not there. The
 ## player is the node named by `target` (its last name), or the scene's only Juice Player when the row names
 ## none that is there.
 static func in_scene(scene_path: String, target: String, label: String) -> Array:
-	if not ResourceLoader.exists(scene_path):
+	var steps: Variant = player_steps(scene_path, target)
+	if not (steps is Array):
 		return []
+	var card: Dictionary = card_named(steps as Array, label)
+	return [] if card.is_empty() else keys_of(card)
+
+
+## The cards of the Juice Player a row names in one saved scene, or null when the scene or the player is not
+## there. The player is the node named by `target` (its last name), or the scene's only Juice Player when the
+## row names none that is there. Read from the saved bytes; nothing is instanced.
+static func player_steps(scene_path: String, target: String) -> Variant:
+	if not ResourceLoader.exists(scene_path):
+		return null
 	var packed: PackedScene = load(scene_path) as PackedScene
 	if packed == null:
-		return []
+		return null
 	var state: SceneState = packed.get_state()
 	var wanted: String = target.strip_edges().trim_prefix("$").trim_prefix("%").trim_prefix("\"").trim_suffix("\"") if not target.strip_edges().is_empty() else ""
 	var players: Array = []
@@ -74,10 +118,7 @@ static func in_scene(scene_path: String, target: String, label: String) -> Array
 			chosen = player as Dictionary
 	if chosen.is_empty() and players.size() == 1:
 		chosen = players[0] as Dictionary
-	if chosen.is_empty():
-		return []
-	var card: Dictionary = card_named(chosen.get("steps") as Array, label)
-	return [] if card.is_empty() else keys_of(card)
+	return null if chosen.is_empty() else chosen.get("steps")
 
 
 ## The card a label (or a position counting from 1) names in a list, or an empty dictionary.
@@ -98,20 +139,20 @@ static func card_named(steps: Array, label: String) -> Dictionary:
 ## The keys one card holds, in the order it holds them, each with the word the Inspector shows for it (its
 ## field's label; the key itself when the kind has no word for it). `verb` and `card_script` are left out.
 static func keys_of(card: Dictionary) -> Array:
-	var words: Dictionary = {}
+	var words: Dictionary = SHARED_WORDS.duplicate()
 	var entry: Dictionary = {}
+	var schema: Dictionary = load(SCHEMA_PATH).call("schema")
 	if card.has("card_script"):
 		entry = load(OWN_PATH).call("entry_for", card)
 	else:
-		var schema: Dictionary = load(SCHEMA_PATH).call("schema")
 		entry = EventSheetCardSchemas.kind_entry(schema, str(card.get("verb", "")))
-	for field: Variant in entry.get("fields", []):
-		if field is Dictionary and not str((field as Dictionary).get("key", "")).is_empty():
+	for field: Variant in EventSheetCardSchemas.all_fields(schema, entry):
+		if field is Dictionary and not str((field as Dictionary).get("key", "")).is_empty() and not str((field as Dictionary).get("label", "")).is_empty():
 			words[str((field as Dictionary).get("key"))] = str((field as Dictionary).get("label", ""))
 	var offered: Array = []
 	for key: Variant in card:
 		if NEVER.has(str(key)):
 			continue
-		var shown: String = str(words.get(str(key), ""))
+		var shown: String = EventSheetL10n.translate(str(words.get(str(key), "")))
 		offered.append({"key": str(key), "word": shown if shown != str(key) else ""})
 	return offered

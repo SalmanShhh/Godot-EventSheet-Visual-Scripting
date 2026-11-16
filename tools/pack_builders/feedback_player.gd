@@ -143,6 +143,7 @@ static func build() -> bool:
 		"has_feedback": "Has juice card [b]{label}[/b]",
 		"feedback_is_enabled": "Juice card [b]{label}[/b] is enabled"
 	})
+	_label_hints(sheet)
 	_spell_all(sheet)
 	Lib.feature_verbs(sheet, ["play", "play_and_wait", "stop"])
 	if not Lib.save_pack(sheet, "res://eventsheet_addons/juice/juice_player"):
@@ -258,7 +259,7 @@ static func _list_verbs(sheet: EventSheetResource) -> void:
 		"var list: Array = _own_list()\nvar at: int = _index_in(list, label)\nif at < 0:\n\t_no_such(label, \"Replace Juice Card\")\n\treturn\nvar fresh: Dictionary = _carded(step)\nif str(fresh.get(\"label\", \"\")).strip_edges().is_empty():\n\tfresh[\"label\"] = _label_of(list[at] as Dictionary)\nlist[at] = fresh")
 	_default(sheet, "label", "kick")
 	_param_hint(sheet, "step", "feedback_step")
-	_default(sheet, "step", "{\"verb\": \"recoil\", \"amount\": 1.0, \"seconds\": 0.1}")
+	_default(sheet, "step", "{\"verb\": \"punch\", \"amount\": 1.0, \"seconds\": 0.1}")
 	_quoted_call(sheet, "replace_feedback(\"{label}\", {step})")
 	Lib.append_function(sheet, "remove_feedback", "Remove Juice Card", "Juice Player",
 		"Takes one card out of the list. What an upgrade that drops a part of a beat does, and the undo of Add Juice Card.",
@@ -291,10 +292,10 @@ static func _list_verbs(sheet: EventSheetResource) -> void:
 		[["label", "String", "The label of the card being tuned."],
 			["field", "String", "Which value on the card to write."],
 			["value", "Variant", "What to write. A number for an amount or a length, a word for the extra one."]],
-		"var card: Dictionary = _edited(label, \"Set Juice Card Field\")\nif card.is_empty():\n\treturn\nif field == \"verb\" or field == \"card_script\":\n\tpush_warning(\"Juice Player: the card \\\"%s\\\" on %s cannot have its %s changed, because that is what makes it the card it is, so Set Juice Card Field left it alone. Replace the card instead.\" % [label, name, field])\n\treturn\nif not FIELD_KEYS.has(field) and not card.has(field):\n\tpush_warning(\"Juice Player: the card \\\"%s\\\" on %s has no field called \\\"%s\\\", so Set Juice Card Field did nothing.\" % [label, name, field])\n\treturn\ncard[field] = value")
+		"var card: Dictionary = _edited(label, \"Set Juice Card Field\")\nif card.is_empty():\n\treturn\nif field == \"verb\" or field == \"card_script\":\n\tpush_warning(\"Juice Player: the card \\\"%s\\\" on %s cannot have its %s changed, because that is what makes it the card it is, so Set Juice Card Field left it alone. Replace the card instead.\" % [label, name, field])\n\treturn\nif not FIELD_KEYS.has(field) and not TIMING_FIELD_KEYS.has(field) and not card.has(field):\n\tpush_warning(\"Juice Player: the card \\\"%s\\\" on %s has no field called \\\"%s\\\", so Set Juice Card Field did nothing.\" % [label, name, field])\n\treturn\ncard[field] = value")
 	_default(sheet, "label", "shake")
-	_param_options(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
-	_param_autocomplete(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
+	_param_options(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops", "clock", "min_strength", "max_strength"])
+	_param_autocomplete(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops", "clock", "min_strength", "max_strength"])
 	_param_hint(sheet, "field", "juice_card_field")
 	_default(sheet, "field", "amount")
 	_default(sheet, "value", "1.0")
@@ -354,7 +355,7 @@ static func _list_verbs(sheet: EventSheetResource) -> void:
 	Lib.append_function(sheet, "save_moment_file", "Save Moment File", "Juice Player",
 		"Writes this list out as a moment file, so a beat tuned while the game ran can be shared, shipped or loaded back. Only the four keys a file holds are written, and only for the ten moment words a file can be played by: a card that is switched off, the timing words a list adds, and this node's own three (a property tween, a signal, a nested player) are named in a warning and left out.",
 		[["path", "String", "Where to write it. At run time that is a user:// path, which is the only place a game may write."]],
-		"var kind: Script = load(\"res://eventsheet_addons/moment_resource/moment_resource.gd\") as Script\nif kind == null:\n\tpush_warning(\"Juice Player: %s cannot save a moment file because this project has no moment file script, so Save Moment File did nothing.\" % name)\n\treturn\nvar written: Array[Dictionary] = []\nvar left_behind: PackedStringArray = PackedStringArray()\nfor entry: Variant in _steps_now():\n\tif not (entry is Dictionary):\n\t\tcontinue\n\tvar card: Dictionary = entry as Dictionary\n\tvar word: String = word_of(card)\n\tif not bool(card.get(\"active\", true)) or _is_timing(word) or _is_own_word(word):\n\t\tleft_behind.append(_label_of(card))\n\t\tcontinue\n\twritten.append({\"verb\": str(card.get(\"verb\", \"\")), \"amount\": float(card.get(\"amount\", 1.0)), \"effect\": str(card.get(\"effect\", \"\")), \"seconds\": float(card.get(\"seconds\", 0.0))})\nvar file: Resource = kind.new()\nfile.set(\"moment_name\", name)\nfile.set(\"steps\", written)\nif not left_behind.is_empty():\n\tpush_warning(\"Juice Player: a moment file holds the ten moment words only - no timing, no card that is switched off, and none of this node's own three (a property tween, a signal, a nested player) - so %s left these out of the file: %s.\" % [name, \", \".join(left_behind)])\nif ResourceSaver.save(file, path) != OK:\n\tpush_warning(\"Juice Player: %s could not write \\\"%s\\\", so Save Moment File saved nothing.\" % [name, path])")
+		"var kind: Script = load(\"res://eventsheet_addons/moment_resource/moment_resource.gd\") as Script\nif kind == null:\n\tpush_warning(\"Juice Player: %s cannot save a moment file because this project has no moment file script, so Save Moment File did nothing.\" % name)\n\treturn\nvar written: Array[Dictionary] = []\nvar left_behind: PackedStringArray = PackedStringArray()\nvar left_keys: PackedStringArray = PackedStringArray()\nfor entry: Variant in _steps_now():\n\tif not (entry is Dictionary):\n\t\tcontinue\n\tvar card: Dictionary = entry as Dictionary\n\tvar word: String = word_of(card)\n\tif not bool(card.get(\"active\", true)) or _is_timing(word) or _is_own_word(word):\n\t\tleft_behind.append(_label_of(card))\n\t\tcontinue\n\twritten.append({\"verb\": str(card.get(\"verb\", \"\")), \"amount\": float(card.get(\"amount\", 1.0)), \"effect\": str(card.get(\"effect\", \"\")), \"seconds\": float(card.get(\"seconds\", 0.0))})\n\tvar dropped: PackedStringArray = keys_a_file_drops(card)\n\tif not dropped.is_empty():\n\t\tleft_keys.append(\"%s (%s)\" % [_label_of(card), \", \".join(dropped)])\nvar file: Resource = kind.new()\nfile.set(\"moment_name\", name)\nfile.set(\"steps\", written)\nif not left_behind.is_empty():\n\tpush_warning(\"Juice Player: a moment file holds the ten moment words only - no timing, no card that is switched off, and none of this node's own three (a property tween, a signal, a nested player) - so %s left these out of the file: %s.\" % [name, \", \".join(left_behind)])\nif not left_keys.is_empty():\n\tpush_warning(\"Juice Player: a moment file holds a card's kind, amount, effect and seconds and nothing else, so %s left these off the cards it kept: %s.\" % [name, \"; \".join(left_keys)])\nif ResourceSaver.save(file, path) != OK:\n\tpush_warning(\"Juice Player: %s could not write \\\"%s\\\", so Save Moment File saved nothing.\" % [name, path])")
 	_default(sheet, "path", "user://my_moment.tres")
 	_quoted_call(sheet, "save_moment_file(\"{path}\")")
 	Lib.append_function(sheet, "set_player_strength", "Set Juice Player Strength", "Juice Player",
@@ -489,8 +490,8 @@ static func _asking_verbs(sheet: EventSheetResource) -> void:
 			["field", "String", "Which value to read."]],
 		"return _card_named(label).get(field, null)", TYPE_MAX)
 	_default(sheet, "label", "shake")
-	_param_options(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
-	_param_autocomplete(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"])
+	_param_options(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops", "clock", "min_strength", "max_strength"])
+	_param_autocomplete(sheet, "field", ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops", "clock", "min_strength", "max_strength"])
 	_param_hint(sheet, "field", "juice_card_field")
 	_default(sheet, "field", "amount")
 	_quoted_call(sheet, "feedback_field(\"{label}\", \"{field}\")")
@@ -515,6 +516,18 @@ static func _asking_verbs(sheet: EventSheetResource) -> void:
 		"if playing:\n\tvar at: int = _index_in(_order, label)\n\tif at >= 0:\n\t\treturn int(_loops_left.get(at, 0))\nreturn int(_card_named(label).get(\"loops\", 0))", TYPE_INT)
 	_default(sheet, "label", "loop_back")
 	_quoted_call(sheet, "loops_left(\"{label}\")")
+
+
+## The label boxes of the rows that name a card list the labels of the player the row acts on, when the saved
+## scene shows them; a label typed still works, since a list built while the game runs is not in the scene.
+static func _label_hints(sheet: EventSheetResource) -> void:
+	for entry: Variant in sheet.functions:
+		var fn: EventFunction = entry as EventFunction
+		if fn == null or not fn.expose_as_ace:
+			continue
+		for parameter: ACEParam in fn.params:
+			if parameter.hint.is_empty() and ["label", "after_label", "before_label"].has(parameter.id):
+				parameter.hint = "juice_card_label"
 
 
 ## The lines somebody who played a list by hand wrote, for EVERY action and condition the node has, so
@@ -1653,6 +1666,21 @@ static func _addressing_lines() -> PackedStringArray:
 		"",
 		"## Keys that Set Juice Card Field and Juice Card Field accept.",
 		"const FIELD_KEYS: PackedStringArray = [\"amount\", \"effect\", \"seconds\", \"delay\", \"interval\", \"repeat\", \"chance\", \"loops\"]",
+		"## The keys beyond the eight above that the Set Juice Card Field row writes on any card: the clock and the strength window of the Timing foldout.",
+		"const TIMING_FIELD_KEYS: PackedStringArray = [\"clock\", \"min_strength\", \"max_strength\"]",
+		"## The keys a moment file's step can hold, plus the two every card carries that a file has no use for: its label and its switch.",
+		"const MOMENT_KEYS: PackedStringArray = [\"verb\", \"amount\", \"effect\", \"seconds\", \"label\", \"active\"]",
+		"",
+		"## The keys of a card that a moment file would leave off: everything but its kind, amount, effect and seconds,",
+		"## and the label and switch every card carries. Save Moment File names them before it writes, so nothing",
+		"## a card holds is dropped without being said.",
+		"## @ace_hidden",
+		"static func keys_a_file_drops(card: Dictionary) -> PackedStringArray:",
+		"	var dropped: PackedStringArray = PackedStringArray()",
+		"	for key: Variant in card:",
+		"		if not MOMENT_KEYS.has(str(key)):",
+		"			dropped.append(str(key))",
+		"	return dropped",
 		"",
 		"## Juice families muted right now.",
 		"var _muted: Dictionary = {}",

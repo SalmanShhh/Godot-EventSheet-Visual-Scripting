@@ -308,6 +308,30 @@ static func fields_of(entry: Dictionary) -> Array:
 	return entry.get("fields") if entry.get("fields") is Array else []
 
 
+## The fields a card of this kind shows: its own, then the schema's `fold_fields` - the ones every kind
+## ends with (the Timing foldout), skipping any key the kind already draws itself. Every reader of "what
+## does this card hold" (the drawer, the field box of the rows) asks here, so none of them can miss the shared ones.
+static func all_fields(schema: Dictionary, entry: Dictionary) -> Array:
+	var own: Array = fields_of(entry)
+	var shared: Variant = schema.get("fold_fields")
+	if not (shared is Array):
+		return own
+	var held: Dictionary = {}
+	for field: Variant in own:
+		if field is Dictionary:
+			held[str((field as Dictionary).get("key", ""))] = true
+	var all: Array = own.duplicate()
+	for field: Variant in shared as Array:
+		if field is Dictionary and not held.has(str((field as Dictionary).get("key", ""))):
+			all.append(field)
+	return all
+
+
+## The name of the foldout a field is drawn inside, or "" for a field drawn in the open.
+static func field_fold(field: Dictionary) -> String:
+	return str(field.get("fold", ""))
+
+
 ## The read-only values a kind shows greyed at the foot of its card.
 static func live_of(entry: Dictionary) -> Array:
 	return entry.get("live") if entry.get("live") is Array else []

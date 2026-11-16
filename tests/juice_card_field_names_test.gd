@@ -1,6 +1,6 @@
 # Godot EventSheets - the field box of Set Juice Card Field offers the keys the named card really holds.
 #
-# THE ONE THING THIS FILE IS ABOUT: the eight shipped names are only the keys every card may hold. When the
+# THE ONE THING THIS FILE IS ABOUT: the eleven names offered when no card is found are only the keys every card may hold. When the
 # scene a sheet runs in is saved, the box reads the player and the card the row names out of its bytes and
 # offers THAT card's keys, with the word the Inspector shows beside each; a card of your own offers its
 # exports; `verb` and `card_script` are never offered; and when nothing can be found the eight are offered
@@ -29,9 +29,17 @@ static func run() -> bool:
 	var no_scene: Array = finder.call("in_scene", "res://no_such_scene.tscn", "$HitJuice", "Boom")
 	var fallback: Array = _keys(finder.call("for_sheet", "", "$HitJuice", "Boom"))
 	var volume_word: String = ""
+	var without_word: Array = []
 	for entry: Variant in sound_words:
 		if str((entry as Dictionary).get("key")) == "volume_db":
 			volume_word = str((entry as Dictionary).get("word"))
+		if str((entry as Dictionary).get("word")).is_empty():
+			without_word.append(str((entry as Dictionary).get("key")))
+	var fallback_without_word: Array = []
+	for entry: Variant in finder.call("for_sheet", "", "$HitJuice", "Boom"):
+		if str((entry as Dictionary).get("word")).is_empty():
+			fallback_without_word.append(str((entry as Dictionary).get("key")))
+	var scene_labels: PackedStringArray = finder.call("labels_of", [{"verb": "shake", "label": "kick"}, {"verb": "flash"}, {"verb": "shake", "label": "kick"}])
 	return SUPPORT.pins(TEST_NAME, [
 		["a Sound card offers the keys it holds, in the order the saved card lists them", sound, ["label", "stream", "volume_db"]],
 		["each key carries the word the Inspector shows for it", volume_word.is_empty() or volume_word == "volume_db", false],
@@ -40,7 +48,15 @@ static func run() -> bool:
 		["a row whose player is not in the scene finds the only player there is", only_player, ["label", "stream", "volume_db"]],
 		["a card the player does not hold finds nothing", no_card, []],
 		["a scene that is not there finds nothing", no_scene, []],
-		["and then the eight every card may hold are offered", fallback, ["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops"]],
+		["every key offered has its word beside it, the label included", without_word, []],
+		["and then the eleven every card may hold are offered, each with its word", [fallback, fallback_without_word],
+			[["amount", "effect", "seconds", "delay", "interval", "repeat", "chance", "loops", "clock", "min_strength", "max_strength"], []]],
+		["a list read by its words leads with the word and follows with the key",
+			[EventSheetPopupUI.suggestion_item_text("min_strength", func(_key: String) -> String: return "Only at strength", true),
+				EventSheetPopupUI.suggestion_item_text("min_strength", func(_key: String) -> String: return "Only at strength")],
+			["Only at strength    min_strength", "min_strength    Only at strength"]],
+		["the label box offers each card's label once, its kind when it has none", scene_labels, PackedStringArray(["kick", "flash"])],
+		["and reads them from the saved scene", finder.call("labels_for_sheet", "", "$HitJuice").size(), 0],
 		["verb and card_script are never offered", [sound.has("verb"), own.has("card_script"), own.has("verb")], [false, false, false]]
 	])
 

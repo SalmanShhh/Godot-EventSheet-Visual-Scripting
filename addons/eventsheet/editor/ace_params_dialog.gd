@@ -786,6 +786,8 @@ func _ensure_hint_factories() -> void:
 			"scene_node": _create_scene_node_field,
 			# The field of a juice card: the keys the card named by the row's other box really holds.
 			"juice_card_field": _create_juice_card_field,
+			# The label of a juice card: the labels the player the row acts on holds.
+			"juice_card_label": _create_juice_card_label_field,
 			"bbcode_text": _create_bbcode_field,
 			"audio_path": _create_audio_path_field,
 			"scene_path": _create_scene_path_field,
@@ -1211,7 +1213,7 @@ func _create_options_field(key: String, options: Array, default_value: Variant) 
 ## filtered by what's already typed. Picking inserts a suggestion verbatim; typing any
 ## other value is still allowed. The LineEdit IS the value-bearing field (read like text).
 func _create_autocomplete_field(key: String, suggestions: Array, default_value: Variant,
-		note_provider: Callable = Callable(), suggestions_provider: Callable = Callable()) -> Control:
+		note_provider: Callable = Callable(), suggestions_provider: Callable = Callable(), word_first: bool = false) -> Control:
 	var row: HBoxContainer = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
 	var edit: LineEdit = LineEdit.new()
@@ -1242,7 +1244,7 @@ func _create_autocomplete_field(key: String, suggestions: Array, default_value: 
 		for suggestion_text: String in offered_now:
 			if not pool.has(suggestion_text):
 				pool.append(suggestion_text)
-		return pool, note_provider))
+		return pool, note_provider, word_first))
 	# And the same list WHILE TYPING, through the one completion popup: the ▾ is for browsing, this
 	# is for the reader who already knows most of the name. Same keys here as in every other
 	# completing field - Tab or Enter accepts, Escape keeps what was typed.
@@ -1250,11 +1252,13 @@ func _create_autocomplete_field(key: String, suggestions: Array, default_value: 
 		var offered: Array[Dictionary] = []
 		var typed_from: PackedStringArray = PackedStringArray(suggestions_provider.call()) if suggestions_provider.is_valid() else suggestion_texts
 		for suggestion_text: String in typed_from:
-			offered.append({
-				"text": suggestion_text,
-				"detail": str(note_provider.call(suggestion_text)) if note_provider.is_valid() else "",
-				"kind": EventSheetCompletions.KIND_VARIABLE,
-			})
+			var word: String = str(note_provider.call(suggestion_text)).strip_edges() if note_provider.is_valid() else ""
+			var entry: Dictionary = {"text": suggestion_text, "detail": word, "kind": EventSheetCompletions.KIND_VARIABLE}
+			# A list read by its words shows the word as the row's name and the key it inserts at the right.
+			if word_first and not word.is_empty():
+				entry["label"] = word
+				entry["type"] = suggestion_text
+			offered.append(entry)
 		return EventSheetCompletions.rank(offered, typed))
 	_fields[key] = edit
 	return row
@@ -3309,7 +3313,19 @@ func _create_juice_card_field(key: String, default_value: Variant) -> Control:
 		return keys
 	read_now.call()
 	return _create_autocomplete_field(key, Array(read_now.call()), default_value,
-		func(name: String) -> String: return str(words.get(name, "")), read_now)
+		func(name: String) -> String: return str(words.get(name, "")), read_now, true)
+
+
+## The label of a Juice Player row's card, offered from the saved scene the sheet runs in: the labels the
+## player the row acts on holds, each as its position and kind says. A label typed that is not in the list
+## still works, because a list built while the game runs is not in the scene.
+func _create_juice_card_label_field(key: String, default_value: Variant) -> Control:
+	var finder: Script = load("res://addons/eventsheet/editor/dock/juice_card_field_names.gd")
+	var read_now: Callable = func() -> PackedStringArray:
+		var target_field: Variant = _fields.get("target")
+		var target: String = str(_extract_value(target_field)).strip_edges() if target_field != null and is_instance_valid(target_field) else _opening_value("target")
+		return PackedStringArray(finder.call("labels_for_sheet", _sheet_source_path(), target))
+	return _create_autocomplete_field(key, Array(read_now.call()), default_value, Callable(), read_now)
 
 
 ## The scenes this sheet's own spawners may make, as the quoted paths the row holds. An editable
