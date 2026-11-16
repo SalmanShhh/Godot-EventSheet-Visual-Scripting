@@ -28,6 +28,7 @@ static func run() -> bool:
 	ok = _restore_list_pins() and ok
 	ok = _pass_pins() and ok
 	ok = _mark_pins() and ok
+	ok = _try_pins() and ok
 	return ok
 
 
@@ -240,3 +241,32 @@ static func _mark_pins() -> bool:
 	plain_popup.free()
 	owner_object.free()
 	return result
+
+
+## Repeat and Try at strength are the strip's own view state: neither is an export on the player, one
+## number is shared with the toolbar's box, and the strip is findable by the object it plays for.
+static func _try_pins() -> bool:
+	var player: Node = _pack().new()
+	var strip: Control = (load(STRIP_PATH) as Script).new(player) as Control
+	var untouched: float = strip.call("_strength")
+	strip.call("set_try_strength", 0.6)
+	var tried: float = strip.call("_strength")
+	player.set("strength", 2.0)
+	var scaled: float = strip.call("_strength")
+	(strip.get("_repeat_box") as CheckBox).toggled.emit(true)
+	var repeating: bool = strip.get("_repeat")
+	var exports: PackedStringArray = PackedStringArray()
+	for property: Dictionary in player.get_property_list():
+		if int(property.get("usage", 0)) & PROPERTY_USAGE_STORAGE and str(property.get("name")) in ["repeat", "try_strength", "try_at_strength"]:
+			exports.append(str(property.get("name")))
+	var found: bool = (load(PREVIEW_PATH) as Script).call("strip_for", player) == null
+	strip.free()
+	player.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["untouched, the preview plays at the player's own strength", snappedf(untouched, 0.001), 1.0],
+		["the number set from the toolbar is the one tried", snappedf(tried, 0.001), 0.6],
+		["and it is scaled by the player's own, as a play row's strength is", snappedf(scaled, 0.001), 1.2],
+		["ticking Repeat is view state on the strip", repeating, true],
+		["and neither is saved on the player", exports, PackedStringArray()],
+		["a strip with no list under it is not the one a card mark means", found, true]
+	])
