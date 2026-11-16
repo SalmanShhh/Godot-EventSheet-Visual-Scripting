@@ -43,6 +43,33 @@ Declare and its entries, Docs Housekeeping, Familiar Words, Lift Workbench, Proj
 ### Changed: the building guide names every public function
 
 Thirty-eight functions of the `EventSheets` API added since the guide was written are now in it, in a new section: opening and searching the Manual, finding a pack's or a module's guide, reading what a project uses, and building rows and tables.
+### Added: select cards, and copy, cut, paste, duplicate and delete them with Godot's own keys
+
+Click a juice card to select it, Shift+click for the run from the last click, Ctrl+click to add or take one out. A selected card is filled the way a selected row is in the Scene dock, with no outline, and the list holds the keyboard from then on: Ctrl+C copies the selected cards, Ctrl+X cuts them, Ctrl+V pastes them under the last selected card (or at the end when nothing is selected) and nothing is replaced, Ctrl+D duplicates them in place, Delete removes them. Each is one change, so one Ctrl+Z takes it back. A right click on a card now opens its menu (it never did: the panel round the card's line kept the click), which acts on everything selected when the card is part of the selection, and gains Cut and Paste. Paste over, Paste all and Copy all are unchanged. Select the other object's list, click in it and paste: that is the whole trip between objects. Cards that start together now sit on one faint band, so the groups show without unfolding anything. The list's Drawing Prefab twin has all of it too.
+
+### Fixed: cards copied on Windows pasted nothing
+
+The clipboard hands every line back ending in a carriage return, so the marker line of copied cards no longer matched and Paste over and Paste all did nothing across objects. They are read without it now.
+
+### Fixed: the card menu and the list's own words are translated, and the list's paragraph takes the full width
+
+Duplicate, Copy, Paste over, Move to top, Move up, Move down, Remove, the empty list's line, the Active and Label rows and a few tooltips were English in every language; they are in all eight now. The paragraph under a juice card list ("One juice card per effect...") sat in the right half of the Inspector and wrapped a dozen lines down a narrow strip; it spans the row now. A short badge such as 0.30 s is no longer broken one letter to a line when the card's title is long.
+
+### Added: a Hold can wait for one card
+
+A Hold card has a new Waits for choice: all the cards above (as before) or one of them, by name. With one chosen it waits for that card alone, so a slower card above carries on beside what comes next. A name that is no card above any more waits for the slowest card, as a Hold with no name always did, and the line under the Hold's fields says so in quiet amber. The head says how long the Hold will wait and for which card, and the Add box finds Hold and Pause when you type wait. The walk, the length and the plan the Inspector draws all read the same functions.
+
+### Changed: Play Juice And Wait waits for the cards to finish
+
+Play Juice And Wait used to return as soon as the head had walked past the last card, so a list of cards that take time (a 0.3 s shake, a tween) let the rows under it run at once. It now waits until the last card has ended, which is what its description always said. The row's id and what it compiles to do not change. To get the old behaviour back use Play Juice, which carries straight on, or put the rows under a Hold row.
+
+### Added: Stop Sound, Fade Bus and Vibrate cards
+
+Stop Sound ends a sound an earlier Sound card started, by that card's name, with a fade if you want one (no name stops every sound the player has going). Fade Bus moves a bus volume to a value over a time and Restore Initial Values puts it back; a bus the project does not have is said once and left alone. Vibrate rumbles every connected controller (weak and strong motor, scaled by the strength of the play) and buzzes a phone for a time; it does nothing on the web. None is felt in the editor, and Debug view names each as skipped. The Add box gains a Device heading.
+
+### Added: Autoplay on the Juice Player
+
+A new Autoplay tick on the node plays its list once, at full strength, when the node enters the scene: a spawn pop, a pickup shimmer. It starts off, and while it is off nothing is written into the scene, so a saved scene stays the bytes it was.
 
 ### Added: play one card, or play from a card down, without running the game
 
