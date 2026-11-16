@@ -10951,3 +10951,18 @@ radius %s,rayon %s
 %s px long,%s px de long
 %s° wide,%s° de large
 no texture,pas de texture
+Line (shape),Ligne
+dashes,tirets
+Drawn right and down from the offset.,Dessiné vers la droite et vers le bas à partir du décalage.
+The colour tints the texture.,La couleur teinte la texture.
+End X,Fin X
+End Y,Fin Y
+FOV,Champ de vision
+Spin,Rotation
+End caps,Extrémités
+Follows scale,Suit l'échelle
+Dashed,En pointillés
+Dash,Tiret
+Style,Style
+Line look,Aspect de la ligne
+grows with the stamp,grandit avec le tampon

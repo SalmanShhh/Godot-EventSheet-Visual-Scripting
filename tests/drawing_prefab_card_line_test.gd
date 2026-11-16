@@ -39,7 +39,7 @@ static func _pin_the_summaries() -> bool:
 		["a line says its TRUE length, from its start to its end", steps_editor.call("summary_of", _step("line", {"x": -60.0, "p1": 60.0})), "120 px long"],
 		["a slanted line is measured along the slant", steps_editor.call("summary_of", _step("line", {"x": 0.0, "y": 0.0, "p1": 3.0, "p2": 4.0, "p3": 2.0})), "5 px long"],
 		["a cone says how wide it opens", steps_editor.call("summary_of", _step("cone", {"p2": 60.0})), "60° wide"],
-		["a stamp says its file's name", steps_editor.call("summary_of", _step("stamp", {"texture": "res://icon.svg"})), "icon.svg"],
+		["a stamp says its file's name", steps_editor.call("summary_of", _step("stamp", {"texture": "res://eventsheet_addons/drawing_prefab_stamp/icon.svg"})), "icon.svg"],
 		["a stamp with nothing picked says so", steps_editor.call("summary_of", _step("stamp", {})), "no texture"],
 		["a size that is not whole keeps its decimals", steps_editor.call("summary_of", _step("circle", {"p1": 2.5})), "radius 2.5"],
 		["a shape this list does not know is named as written", steps_editor.call("summary_of", _step("blob", {})), "blob"],

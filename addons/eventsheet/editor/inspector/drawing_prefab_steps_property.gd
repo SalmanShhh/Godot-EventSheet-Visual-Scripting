@@ -52,9 +52,9 @@ func _update_property() -> void:
 
 
 ## The shape-aware steps list: the SHARED card-list drawer, handed the prefab's own vocabulary. Each
-## step is a card titled by its shape, read top to bottom as four short sections - where it sits, its
-## geometry, its colour, and its dashes - and the Add button is the searchable
-## dropdown every card list has.
+## step is a card titled by its shape, one surface with no section headings: the shape, where it sits,
+## its own named fields and its colour, with a line's look in a fold - and the Add button is the
+## searchable box every card list has.
 ##
 ## A THICKNESS IS READ IN THE UNIT ITS OWN FIELD OFFERS. The Thickness row carries the unit dropdown
 ## (px, world, screen) and always STORES pixels, exactly as a shape node does, so switching the view
@@ -91,22 +91,21 @@ class ShapeStepsEditor:
 
 	const KINDS: Array[String] = ["circle", "ring", "rect", "line", "cone", "stamp"]
 	const SHAPE_TILE_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_shape_tile.gd"
-	## The four sections a card reads as, in order.
-	const GROUP_PLACEMENT: String = "Placement"
-	const GROUP_GEOMETRY: String = "Geometry"
-	const GROUP_COLOUR: String = "Colour"
-	const GROUP_DASHED: String = "Dashed"
 	## Per-shape fields, in display order. `key` is the frozen storage slot (p1/p2/p3/texture); `label` is
 	## the human title shown beside it; `drawer` names the editor, in the same words an export marker uses.
-	## The placement, colour and dash sections are common and are appended around these.
+	## The shape, offset, colour and line-look rows are common and are put around these.
 	const SHAPE_FIELDS: Dictionary = {
-		"circle": [{"key": "p1", "label": "Radius"}],
-		"ring": [{"key": "p1", "label": "Radius"}, {"key": "p2", "label": "Thickness", "drawer": "unit:kinds=px|world|screen,store=px"}],
-		"rect": [{"key": "p1", "label": "Width"}, {"key": "p2", "label": "Height"}],
-		"line": [{"key": "p1", "label": "End X"}, {"key": "p2", "label": "End Y"}, {"key": "p3", "label": "Thickness", "drawer": "unit:kinds=px|world|screen,store=px"}],
-		"cone": [{"key": "p1", "label": "Facing"}, {"key": "p2", "label": "FOV"}, {"key": "p3", "label": "Radius"}],
-		"stamp": [{"key": "p1", "label": "Scale"}, {"key": "p2", "label": "Spin"}, {"key": "texture", "label": "Texture", "drawer": "texture_preview"}],
+		"circle": [{"key": "p1", "label": "Radius", "suffix": "px"}],
+		"ring": [{"key": "p1", "label": "Radius", "suffix": "px"}, {"key": "p2", "label": "Thickness", "drawer": "unit:kinds=px|world|screen,store=px"}],
+		"rect": [{"key": "p1", "label": "Width", "suffix": "px"}, {"key": "p2", "label": "Height", "suffix": "px"}],
+		"line": [{"key": "p1", "label": "End X", "suffix": "px"}, {"key": "p2", "label": "End Y", "suffix": "px"}, {"key": "p3", "label": "Thickness", "drawer": "unit:kinds=px|world|screen,store=px"}],
+		"cone": [{"key": "p1", "label": "Facing", "suffix": "°"}, {"key": "p2", "label": "FOV", "suffix": "°"}, {"key": "p3", "label": "Radius", "suffix": "px"}],
+		"stamp": [{"key": "texture", "label": "Texture", "drawer": "resource:Texture2D"}, {"key": "p1", "label": "Scale", "suffix": "x"}, {"key": "p2", "label": "Spin", "suffix": "°"}],
 	}
+	## The word each shape's card says under its fields, where the shape has one worth saying.
+	const HELP_LINE_KINDS: Array[String] = ["rect", "stamp"]
+	## The fold a line's own look sits in, and the keys that make it open on its own when one differs.
+	const LOOK_FOLD: String = "Line look"
 	## Which shapes have a stroke with two ends, and so a Caps row - and which have a length a dash
 	## pattern can run along. The pattern is walked along LINE SEGMENTS, so a line has one and the
 	## curved shapes do not: a card never offers a field the picture would not change.
@@ -171,7 +170,8 @@ class ShapeStepsEditor:
 				"defaults": defaults_for(kind),
 				"badge": Callable(ShapeStepsEditor, "summary_of"),
 			})
-		return {"kinds": kinds, "head_tile": Callable(ShapeStepsEditor, "make_tile"), "live_head": true}
+		return {"kinds": kinds, "head_tile": Callable(ShapeStepsEditor, "make_tile"), "live_head": true,
+			"help_in_body": false, "fold_open": Callable(ShapeStepsEditor, "fold_open_for")}
 
 
 	## A shape's plain name, in the editor's language. The stored word (`rect`) never changes.
@@ -184,7 +184,10 @@ class ShapeStepsEditor:
 			"rect":
 				return EventSheetL10n.translate("Rectangle")
 			"line":
-				return EventSheetL10n.translate("Line")
+				# "Line" alone is a row of text in most languages, so the shape has a key of its own; a language
+				# with no row for it reads the plain English word.
+				var said: String = EventSheetL10n.translate("Line (shape)")
+				return "Line" if said == "Line (shape)" else said
 			"cone":
 				return EventSheetL10n.translate("Cone")
 			"stamp":
@@ -245,27 +248,55 @@ class ShapeStepsEditor:
 	## One shape's fields, in the order the card draws them: where it sits, what it is, what colour it
 	## is, and (for a shape with a length to run one along) its dashes.
 	static func fields_for(kind: String) -> Array:
+		var shape_choices: PackedStringArray = PackedStringArray()
+		for named: String in KINDS:
+			shape_choices.append("%s=%s" % [named, kind_label(named)])
+		# The card is one surface with no section headings: the shape first (changing it keeps p1, p2 and p3
+		# under the new names), the offset as ONE row of x and y, the shape's own named fields with their
+		# units as small plain text, the colour, and - on a line only - its look in a fold.
 		var fields: Array = [
-			{"key": "kind", "label": "Shape", "drawer": "options:%s" % ",".join(PackedStringArray(KINDS)), "group": GROUP_PLACEMENT},
-			{"key": "x", "label": "Offset X", "group": GROUP_PLACEMENT},
-			{"key": "y", "label": "Offset Y", "group": GROUP_PLACEMENT},
+			{"key": "kind", "label": "Shape", "drawer": "options:%s" % ",".join(shape_choices)},
+			{"key": "x", "label": "Offset", "drawer": "pair", "pair": "y", "suffix": "px"},
 		]
-		if THICKNESS_KINDS.has(kind):
-			fields.append({"key": "scale_mode", "label": "Scale", "drawer": "toggle_row:uniform,fixed:segmented", "group": GROUP_PLACEMENT})
 		for field: Variant in SHAPE_FIELDS.get(kind, []):
-			var shape_field: Dictionary = (field as Dictionary).duplicate()
-			shape_field["group"] = GROUP_GEOMETRY
-			fields.append(shape_field)
-		fields.append({"key": "color", "label": "Colour", "drawer": "swatch_row", "group": GROUP_COLOUR})
+			fields.append((field as Dictionary).duplicate())
+		fields.append({"key": "color", "label": "Colour", "drawer": "color_button"})
 		if CAPPED_KINDS.has(kind):
-			fields.append({"key": "caps", "label": "End caps", "drawer": "toggle_row:none,square,round:segmented", "group": GROUP_COLOUR})
+			fields.append({"key": "caps", "label": "End caps", "drawer": "toggle_row:none,square,round:segmented", "fold": LOOK_FOLD})
+		if THICKNESS_KINDS.has(kind):
+			fields.append({"key": "scale_mode", "label": "Follows scale", "drawer": "tick_words:uniform,fixed", "unset": "uniform",
+				"tick_text": "grows with the stamp", "fold": LOOK_FOLD})
 		if DASHABLE_KINDS.has(kind):
-			fields.append({"key": "dashed", "label": "Dashed", "drawer": "bool", "group": GROUP_DASHED})
-			fields.append({"key": "dash_size", "label": "Dash", "show_if": "dashed", "link": "dash_spacing", "group": GROUP_DASHED})
-			fields.append({"key": "dash_spacing", "label": "Gap", "show_if": "dashed", "link": "dash_size", "group": GROUP_DASHED})
-			fields.append({"key": "dash_offset", "label": "Offset", "show_if": "dashed", "group": GROUP_DASHED})
-			fields.append({"key": "dash_style", "label": "Style", "drawer": "toggle_row:plain,angled,rounded:segmented", "show_if": "dashed", "group": GROUP_DASHED})
+			fields.append({"key": "dashed", "label": "Dashed", "drawer": "bool", "redraw": true, "fold": LOOK_FOLD})
+			fields.append({"key": "dash_size", "label": "Dash", "show_if": "dashed", "link": "dash_spacing", "suffix": "px", "fold": LOOK_FOLD})
+			fields.append({"key": "dash_spacing", "label": "Gap", "show_if": "dashed", "link": "dash_size", "suffix": "px", "fold": LOOK_FOLD})
+			fields.append({"key": "dash_offset", "label": "Offset", "show_if": "dashed", "suffix": EventSheetL10n.translate("dashes"), "fold": LOOK_FOLD})
+			fields.append({"key": "dash_style", "label": "Style", "drawer": "toggle_row:plain,angled,rounded:segmented", "show_if": "dashed", "fold": LOOK_FOLD})
+		if HELP_LINE_KINDS.has(kind):
+			fields.append({"key": "help_note", "label": "", "drawer": "note", "text": Callable(ShapeStepsEditor, "help_line"), "full_width": true})
 		return fields
+
+
+	## The one quiet line a shape says under its fields: what a rectangle is measured from, what a stamp's
+	## colour does.
+	static func help_line(card: Dictionary) -> String:
+		match str(card.get("kind", "")):
+			"rect":
+				return EventSheetL10n.translate("Drawn right and down from the offset.")
+			"stamp":
+				return EventSheetL10n.translate("The colour tints the texture.")
+		return ""
+
+
+	## Whether a card's Line look fold opens by itself: when any of the look keys it holds is not at the value
+	## that draws the plain line. A step without them (everything saved before the look existed) stays shut.
+	static func fold_open_for(card: Dictionary, fold_name: String) -> bool:
+		if fold_name != LOOK_FOLD:
+			return false
+		for key: Variant in OPTIONAL_DEFAULTS:
+			if card.has(key) and str(card[key]) != str(OPTIONAL_DEFAULTS[key]):
+				return true
+		return false
 
 
 	## What one freshly added step of a shape holds: the eight shipped keys exactly as they were

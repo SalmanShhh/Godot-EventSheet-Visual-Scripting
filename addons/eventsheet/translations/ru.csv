@@ -10951,3 +10951,18 @@ radius %s,радиус %s
 %s px long,длина %s px
 %s° wide,шириной %s°
 no texture,нет текстуры
+Line (shape),Линия
+dashes,штрихов
+Drawn right and down from the offset.,Рисуется вправо и вниз от смещения.
+The colour tints the texture.,Цвет подкрашивает текстуру.
+End X,Конец X
+End Y,Конец Y
+FOV,Угол обзора
+Spin,Вращение
+End caps,Концы линии
+Follows scale,Следует масштабу
+Dashed,Пунктир
+Dash,Штрих
+Style,Стиль
+Line look,Вид линии
+grows with the stamp,растёт вместе со штампом

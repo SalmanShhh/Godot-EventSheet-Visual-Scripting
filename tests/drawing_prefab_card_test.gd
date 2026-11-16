@@ -77,11 +77,11 @@ static func _pin_the_card() -> bool:
 	var circle_fields: Array = steps_editor.call("fields_for", "circle")
 	return SUPPORT.pins(PREFIX, [
 		["a line's card, field by field", _keys_of(line_fields),
-			"kind,x,y,scale_mode,p1,p2,p3,color,caps,dashed,dash_size,dash_spacing,dash_offset,dash_style"],
-		["a line's card, section by section", _groups_of(line_fields),
-			"Placement,Placement,Placement,Placement,Geometry,Geometry,Geometry,Colour,Colour,Dashed,Dashed,Dashed,Dashed,Dashed"],
+			"kind,x,p1,p2,p3,color,caps,scale_mode,dashed,dash_size,dash_spacing,dash_offset,dash_style"],
+		["a line's card has no section headings, only its look sits in a fold", _groups_of(line_fields) + "|" + _folds_of(line_fields),
+			",".repeat(12) + "|" + ",".repeat(6) + ",".join(PackedStringArray(["Line look", "Line look", "Line look", "Line look", "Line look", "Line look", "Line look"]))],
 		["a circle has no ends and no dashes to offer", _keys_of(circle_fields),
-			"kind,x,y,p1,color"],
+			"kind,x,p1,color"],
 		["a new circle step, key by key", ",".join(PackedStringArray(
 			(steps_editor.call("defaults_for", "circle") as Dictionary).keys())),
 			"x,y,p1,p2,p3,color,texture"],
@@ -112,7 +112,7 @@ static func _pin_every_field_reaches_a_renderer() -> bool:
 		for field: Variant in steps_editor.call("fields_for", str(kind)):
 			var key: String = str((field as Dictionary).get("key", ""))
 			# `texture` is carried as the loaded `tex`, which is the same key under the renderer's name.
-			if key == "texture":
+			if key == "texture" or str((field as Dictionary).get("drawer", "")) == "note":
 				continue
 			if not entry.has(key) and not orphans.has(key):
 				orphans.append(key)
@@ -216,3 +216,11 @@ static func _field_named(fields: Array, key: String) -> Dictionary:
 		if str((field as Dictionary).get("key", "")) == key:
 			return field
 	return {}
+
+
+## The foldout each of those fields sits in, in the same order ("" for a field drawn in the open).
+static func _folds_of(fields: Array) -> String:
+	var folds: PackedStringArray = PackedStringArray()
+	for field: Variant in fields:
+		folds.append(EventSheetCardSchemas.field_fold(field as Dictionary))
+	return ",".join(folds)

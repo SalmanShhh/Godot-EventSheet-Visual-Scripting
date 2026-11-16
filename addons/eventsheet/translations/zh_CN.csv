@@ -10951,3 +10951,18 @@ radius %s,半径 %s
 %s px long,长 %s px
 %s° wide,宽 %s°
 no texture,无纹理
+Line (shape),线条
+dashes,段
+Drawn right and down from the offset.,从偏移位置向右下方绘制。
+The colour tints the texture.,颜色会为纹理着色。
+End X,终点 X
+End Y,终点 Y
+FOV,视野
+Spin,旋转
+End caps,端点样式
+Follows scale,跟随缩放
+Dashed,虚线
+Dash,线段
+Style,样式
+Line look,线条外观
+grows with the stamp,随图章一起缩放

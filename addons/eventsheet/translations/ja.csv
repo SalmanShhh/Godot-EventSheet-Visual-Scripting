@@ -10951,3 +10951,18 @@ radius %s,半径 %s
 %s px long,長さ %s px
 %s° wide,幅 %s°
 no texture,テクスチャなし
+Line (shape),線
+dashes,個分
+Drawn right and down from the offset.,オフセットから右下に向かって描かれます。
+The colour tints the texture.,色はテクスチャに色合いを付けます。
+End X,終点 X
+End Y,終点 Y
+FOV,視野
+Spin,回転
+End caps,端の形
+Follows scale,拡大率に従う
+Dashed,破線
+Dash,線の長さ
+Style,スタイル
+Line look,線の見た目
+grows with the stamp,スタンプと一緒に拡大

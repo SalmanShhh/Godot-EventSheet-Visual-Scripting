@@ -1102,7 +1102,8 @@ func _choose(index: int) -> void:
 func _build_body(index: int, card: Dictionary, entry: Dictionary) -> Control:
 	var body: VBoxContainer = VBoxContainer.new()
 	var help: String = _said(str(entry.get("help", "")).strip_edges())
-	if not help.is_empty():
+	# A schema may keep its explanation for the Add box's tooltips and say nothing above the fields.
+	if not help.is_empty() and bool(_schema.get("help_in_body", true)):
 		var info: Label = Label.new()
 		info.text = help
 		info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1138,7 +1139,7 @@ func _build_body(index: int, card: Dictionary, entry: Dictionary) -> Control:
 		last_row = _add_field_row(fields, index, card, field as Dictionary, last_row)
 	body.add_child(fields)
 	for fold_name: Variant in folded:
-		body.add_child(_build_foldout(index, str(fold_name), folded[fold_name] as VBoxContainer))
+		body.add_child(_build_foldout(index, str(fold_name), folded[fold_name] as VBoxContainer, card))
 	for live: Variant in EventSheetCardSchemas.live_of(entry):
 		if not (live is Dictionary):
 			continue
@@ -1174,11 +1175,15 @@ func _add_field_row(box: VBoxContainer, index: int, card: Dictionary, field: Dic
 
 ## A foldout inside an open card: Godot's own foldable container, closed until it is opened, remembered
 ## while the list is on screen and never written to the data.
-func _build_foldout(index: int, fold_name: String, rows: VBoxContainer) -> Control:
+func _build_foldout(index: int, fold_name: String, rows: VBoxContainer, card: Dictionary = {}) -> Control:
 	var key: String = "%d:%s" % [index, fold_name]
 	var fold: FoldableContainer = FoldableContainer.new()
 	fold.title = _said(fold_name)
-	fold.folded = not bool(_open_folds.get(key, false))
+	# Shut until opened - unless the schema says this card already holds something in it (a line that
+	# is dashed shows its look without being asked).
+	var opens_itself: Variant = _schema.get("fold_open")
+	var starts_open: bool = opens_itself is Callable and (opens_itself as Callable).is_valid() and bool((opens_itself as Callable).call(card, fold_name))
+	fold.folded = not bool(_open_folds.get(key, starts_open))
 	fold.add_child(rows)
 	# The card is already one surface, so the foldout is a heading on it and not a second panel: Godot's own
 	# container with its boxes left empty.
@@ -1259,7 +1264,13 @@ func _titled_row(title: String, control: Control) -> HBoxContainer:
 ## "=" carries, so one glyph never stands for two things. A ratio only exists between numbers, so a
 ## link declared on a field holding text or a colour writes nothing.
 func _build_field(index: int, card: Dictionary, field: Dictionary, into: HBoxContainer = null) -> Control:
-	var row: HBoxContainer = into if into != null else _titled_row(_said(str(field.get("label", field.get("key", "")))), null)
+	var row: HBoxContainer = into
+	if row == null:
+		if bool(field.get("full_width", false)):
+			# A line of words that runs under the whole card, with no title column in front of it.
+			row = HBoxContainer.new()
+		else:
+			row = _titled_row(_said(str(field.get("label", field.get("key", "")))), null)
 	if into != null and not str(field.get("to_word", "")).is_empty():
 		var joiner: Label = Label.new()
 		joiner.text = _said(str(field.get("to_word")))
@@ -1299,6 +1310,9 @@ func _build_field(index: int, card: Dictionary, field: Dictionary, into: HBoxCon
 		# Changing a card's KIND changes which fields it has, so the card is redrawn - deferred,
 		# because the control that just emitted is still finishing its own signal.
 		if written == str(_spec.get("kind_key", "kind")):
+			_rebuild.call_deferred()
+		# A field other fields show or hide on (a tick that reveals its settings) redraws the card too.
+		elif bool(field.get("redraw", false)):
 			_rebuild.call_deferred()
 	var editor: Control = _build_field_editor(card, field, write, index)
 	editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1350,6 +1364,27 @@ func _refresh_head(index: int) -> void:
 		badge.visible = not badge_text.is_empty()
 		badge.autowrap_mode = TextServer.AUTOWRAP_OFF if badge_text.length() <= 12 else TextServer.AUTOWRAP_WORD_SMART
 		badge.custom_minimum_size.x = _badge_room(badge, badge_text)
+
+
+## Opens or shuts one card, and draws the list again. A card's openness is a view, never stored.
+func set_unfolded(index: int, open: bool) -> void:
+	_unfolded[index] = open
+	_rebuild()
+
+
+func is_unfolded(index: int) -> bool:
+	return bool(_unfolded.get(index, false))
+
+
+## The keys of the fields an open card shows right now, in the order it draws them: what a test reads back.
+func field_keys_of(index: int) -> Array:
+	var keys: Array = []
+	if index < 0 or index >= _cards.size():
+		return keys
+	for field: Variant in EventSheetCardSchemas.all_fields(_schema, _entry_for(_cards[index])):
+		if field is Dictionary and EventSheetCardSchemas.field_visible(field as Dictionary, _cards[index]):
+			keys.append(str((field as Dictionary).get("key", "")))
+	return keys
 
 
 ## The tile on a card's line, or null: what a test and a repaint read back.
@@ -1488,6 +1523,18 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable, i
 			unit_field.set_editable(editable)
 			unit_field.value_changed.connect(func(value: float) -> void: write.call(value))
 			return unit_field
+		"pair":
+			return _pair_field(card, field, write, index)
+		"tick_words":
+			return _tick_field(card, field, write, tail)
+		"color_button":
+			var picker: ColorPickerButton = ColorPickerButton.new()
+			picker.edit_alpha = true
+			picker.color = _color_of(card.get(key))
+			picker.disabled = not editable
+			picker.custom_minimum_size.y = EventSheetLookStyle.px(22.0)
+			picker.color_changed.connect(func(picked: Color) -> void: write.call(picked))
+			return picker
 		"swatch_row":
 			var swatch: EventSheetDrawerWidgets.DrawerSwatchRow = EventSheetDrawerWidgets.DrawerSwatchRow.new()
 			swatch.set_value(_color_of(card.get(key)))
@@ -1590,6 +1637,50 @@ func _number_with_unit(card: Dictionary, key: String, write: Callable, unit_text
 	return box
 
 
+## Two numbers on ONE row, the way Godot's own Vector2 field is drawn: "x" and its box, "y" and its box. The
+## field's key holds the first number and its `pair` names the key of the second, so a card keeps two plain
+## keys and the row is only how they are shown.
+func _pair_field(card: Dictionary, field: Dictionary, write: Callable, index: int) -> Control:
+	var other: String = str(field.get("pair", ""))
+	var box: HBoxContainer = HBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+	var write_other: Callable = func(value: float) -> void:
+		_write_field(index, other, value)
+		value_changed.emit(get_value())
+		_refresh_notes(index)
+		_refresh_head(index)
+	var parts: Array = [[str(field.get("key", "")), "x", write, Color(0.9, 0.45, 0.45)], [other, "y", write_other, Color(0.55, 0.85, 0.45)]]
+	for part: Array in parts:
+		var axis: Label = Label.new()
+		axis.text = str(part[1])
+		axis.add_theme_color_override("font_color", _axis_ink(str(part[1]), part[3] as Color))
+		box.add_child(axis)
+		var number: Control = _number_field(card, str(part[0]), part[2] as Callable, FLOAT_STEP)
+		number.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		box.add_child(number)
+	return box
+
+
+## The colour of an axis letter: the editor's own x / y colours where there is an editor theme to ask.
+func _axis_ink(axis: String, fallback: Color) -> Color:
+	var colour_name: String = "property_color_" + axis
+	return get_theme_color(colour_name, "Editor") if has_theme_color(colour_name, "Editor") else fallback
+
+
+## A tick over two stored words: ticked writes the first, unticked the second. The words are the file's own
+## (`uniform` / `fixed`); the tick only says in plain words what the first one means.
+func _tick_field(card: Dictionary, field: Dictionary, write: Callable, tail: String) -> Control:
+	var words: PackedStringArray = tail.split(",")
+	var on_word: String = words[0] if words.size() > 0 else "true"
+	var off_word: String = words[1] if words.size() > 1 else "false"
+	var check: CheckBox = CheckBox.new()
+	check.text = _said(str(field.get("tick_text", "")))
+	check.button_pressed = str(card.get(str(field.get("key", "")), "")) == on_word
+	check.disabled = not editable
+	check.toggled.connect(func(pressed: bool) -> void: write.call(on_word if pressed else off_word))
+	return check
+
+
 ## A number with a plus-or-minus sign in front of it: how far a random roll may land either side of
 ## another number.
 func _spread_field(card: Dictionary, key: String, write: Callable) -> Control:
@@ -1648,8 +1739,9 @@ func _resource_text_field(card: Dictionary, key: String, write: Callable, base_t
 		# The notes under the picker (no sound picked, sound gone) change with the pick.
 		_rebuild.call_deferred()))
 	box.add_child(refusal)
-	# Godot's picker shows a picture of a sound, not its name, so the file's name is said under it.
-	if current != null:
+	# Godot's picker shows a picture of a sound, not its name, so the file's name is said under it. (A
+	# texture's picker already shows its own name.)
+	if current != null and base_type != "Texture2D":
 		var named: Label = Label.new()
 		named.text = stored.get_file() if not stored.begins_with("uid://") else current.resource_path.get_file()
 		named.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))

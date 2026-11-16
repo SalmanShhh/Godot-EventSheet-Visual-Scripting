@@ -10951,3 +10951,18 @@ radius %s,반지름 %s
 %s px long,길이 %s px
 %s° wide,너비 %s°
 no texture,텍스처 없음
+Line (shape),선
+dashes,대시
+Drawn right and down from the offset.,오프셋에서 오른쪽 아래로 그려집니다.
+The colour tints the texture.,색상이 텍스처에 색조를 입힙니다.
+End X,끝 X
+End Y,끝 Y
+FOV,시야각
+Spin,회전
+End caps,끝 모양
+Follows scale,배율을 따름
+Dashed,점선
+Dash,대시
+Style,스타일
+Line look,선 모양
+grows with the stamp,스탬프와 함께 커짐

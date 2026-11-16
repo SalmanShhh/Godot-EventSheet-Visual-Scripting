@@ -10951,3 +10951,18 @@ radius %s,Radius %s
 %s px long,%s px lang
 %s° wide,%s° breit
 no texture,keine Textur
+Line (shape),Linie
+dashes,Striche
+Drawn right and down from the offset.,Wird vom Versatz aus nach rechts und unten gezeichnet.
+The colour tints the texture.,Die Farbe tönt die Textur.
+End X,Ende X
+End Y,Ende Y
+FOV,Sichtfeld
+Spin,Drehung
+End caps,Linienenden
+Follows scale,Folgt der Skalierung
+Dashed,Gestrichelt
+Dash,Strich
+Style,Stil
+Line look,Linienstil
+grows with the stamp,wächst mit dem Stempel
