@@ -211,6 +211,7 @@ const TABLE: Dictionary = {
 		"summary_for(entry: Resource) -> String",
 		"validate(_block: CustomBlockRow) -> String",
 		"verified_claim(recovered_fields: Dictionary, source_lines: PackedStringArray, i: int, consumed: int) -> Dictionary",
+		"writes_nothing(_block: CustomBlockRow) -> bool",
 	],
 	"EventSheetBlockRegistry": [
 		"static addable_kinds() -> Array[EventSheetBlockKind]",
@@ -242,6 +243,7 @@ const TABLE: Dictionary = {
 		"summary_for(entry: Resource) -> String",
 		"validate(_block: CustomBlockRow) -> String",
 		"verified_claim(recovered_fields: Dictionary, source_lines: PackedStringArray, i: int, consumed: int) -> Dictionary",
+		"writes_nothing(_block: CustomBlockRow) -> bool",
 	],
 }
 

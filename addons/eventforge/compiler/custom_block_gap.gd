@@ -15,7 +15,7 @@ static func checked(block: CustomBlockRow, kind: EventSheetBlockKind, lines: Pac
 	var said: String = ""
 	if kind == null:
 		said = "This sheet has %s, but no behaviour pack provides that kind, so its line cannot be written. Put the pack back, or delete the row." % label(block)
-	elif lines.is_empty() and not block.fields.is_empty():
+	elif lines.is_empty() and not block.fields.is_empty() and not kind.writes_nothing(block):
 		said = "The %s wrote nothing, so its line is missing from the script. Its pack's emit code may have an error - check the Output panel." % label(block).trim_prefix("the ")
 	if not said.is_empty():
 		(result["warnings"] as Array).append(said)

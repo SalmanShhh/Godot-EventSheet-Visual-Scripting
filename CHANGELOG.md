@@ -31,6 +31,9 @@ The box was a narrow list about 220 pixels wide that cut its last line in half. 
 ### Added: the Inspector's Play button shows the cards that move other nodes
 
 Play, Play this card and Play from here now show Particles, Animation, Sprite Animation, Show or Hide, Squash And Stretch, Punch Position, Punch Rotation, Pop, Fade, Count To, Reveal Text, Fill Bar, Shader Value and a Tween Property card that points at another node, and Debug view calls each of them played. Before the first frame the preview writes down every property those cards may move on every node they point at (a label's text, a bar's value, a node's visible, modulate and scale, the tracks of the clip it plays, the shader value on a copy of the material that lives for the pass), and puts exactly those back on Stop, Restore, at the end of a pass and before the editor saves or runs the scene, so a scene saved in the middle of a preview holds the same text it held before. Spawn Scene, Push, Force, Gravity, Freeze Body, Grab Focus, Call Method, Emit Signal and Play Player still say why they are not shown.
+### Added: a block kind can say a row writes nothing
+
+A Custom Block kind can define `writes_nothing(block)` and return true for a row that rightly has no line to write, such as a marker that is switched off. The compile no longer fails for that row. A kind that does not define it keeps today's check: a row with fields that writes nothing still fails the compile and names the kind.
 
 ### Added: the Theme Editor's legend, a light accent, and a Theme field that says what each theme is
 

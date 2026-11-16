@@ -37,6 +37,13 @@ func emit(_block: CustomBlockRow) -> PackedStringArray:
 	return PackedStringArray()
 
 
+## Say true when this row rightly writes no line (a switched-off marker, an empty list). The compile
+## reports a row that has fields and writes nothing as an emit() that failed, so a kind whose row can
+## be quiet on purpose answers here; its row then compiles with no line and no complaint.
+func writes_nothing(_block: CustomBlockRow) -> bool:
+	return false
+
+
 ## Optional row styling: return {"accent": Color} to tint this block's badge in the sheet
 ## (default = the theme's behavior accent). Display only - never affects emission.
 func style(_block: CustomBlockRow) -> Dictionary:
