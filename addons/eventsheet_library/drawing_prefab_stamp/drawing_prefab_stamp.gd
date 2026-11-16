@@ -73,7 +73,16 @@ static func draw_prefab_steps(canvas: CanvasItem, prefab_res: Resource, origin: 
 			"stamp":
 				var texture: Texture2D = entry["tex"]
 				if texture != null:
-					canvas.draw_texture_rect(texture, Rect2(at - texture.get_size() * maxf(p1, 0.01) * 0.5, texture.get_size() * maxf(p1, 0.01)), false, tint)
+					var size: Vector2 = texture.get_size() * maxf(p1, 0.01)
+					if p2 == 0.0:
+						canvas.draw_texture_rect(texture, Rect2(at - size * 0.5, size), false, tint)
+					else:
+						# A spun stamp turns about its own centre, the way Draw Prefab turns one: draw it under its
+						# own frame (offset and Spin) on top of the prefab's, then put the prefab's back.
+						var base: Transform2D = Transform2D(deg_to_rad(rotation_deg), Vector2.ONE * maxf(scale_by, 0.001), 0.0, origin)
+						canvas.draw_set_transform_matrix(base * DrawingPrefabResource.stamp_frame(entry))
+						canvas.draw_texture_rect(texture, Rect2(-size * 0.5, size), false, tint)
+						canvas.draw_set_transform_matrix(base)
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 ## One line step's stroke: its ends, and its dash pattern when it has one. The stroke code lives

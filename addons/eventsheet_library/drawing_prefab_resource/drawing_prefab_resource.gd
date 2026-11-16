@@ -18,6 +18,10 @@ var _compiled: Array = []
 var _compiled_valid: bool = false
 ## Size the strokes were last compiled for; -1 until compiled.
 var _compiled_size: int = -1
+## The transform a stamp step is drawn under, in the prefab's own space: its offset, turned by its Spin
+## (degrees, about its centre). The stamp node draws every stamp under this, as Draw Prefab turns one.
+static func stamp_frame(entry: Dictionary) -> Transform2D:
+	return Transform2D(deg_to_rad(float(entry.get("p2", 0.0))), Vector2(float(entry.get("x", 0.0)), float(entry.get("y", 0.0))))
 
 ## Returns steps pre-parsed to typed entries {kind, x, y, p1, p2, p3, color: Color, tex: Texture2D},
 ## building and caching on first call and after any change. The size guard also rebuilds when steps

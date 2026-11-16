@@ -5,14 +5,14 @@
 #   - the Inspector panel (EventSheetDrawingPrefabInspector), and
 #   - the FileSystem / resource-picker thumbnail (EventSheetDrawingPrefabPreviewGenerator).
 # Software (not draw_* / SubViewport) so it is thread-safe - Godot generates resource thumbnails off the
-# main thread, where touching the tree would crash. Geometry mirrors DrawingCanvas.draw_prefab so the
-# preview matches what the pack actually paints (rotation is fixed at 0 - a preview shows the base pose).
+# main thread, where touching the tree would crash. It follows the same rules the pack paints with:
+# a line ends at its End measured from the prefab's origin, ends and dashes are drawn, and a stamp is
+# its texture turned by its Spin (the preview shows the base pose, so the prefab's own rotation is 0).
 @tool
 class_name EventSheetDrawingPrefabPreview
 extends RefCounted
 
 const _SUPERSAMPLE: int = 2  # render at 2x then shrink for cheap anti-aliasing
-const _STAMP_BASE: float = 12.0  # nominal stamp side (px, prefab-local) before its scale multiplier
 
 
 ## The prefab-local bounding box that encloses every step (before any fit/scale). Empty steps -> a unit box.
@@ -51,9 +51,27 @@ static func _step_bounds(entry: Dictionary) -> Rect2:
 			var cr: float = maxf(absf(p3), 1.0)
 			return Rect2(at.x - cr, at.y - cr, cr * 2.0, cr * 2.0)
 		"stamp":
-			var s: float = maxf(absf(p1), 0.01) * _STAMP_BASE
-			return Rect2(at.x - s * 0.5, at.y - s * 0.5, s, s)
+			# The box of the stamp's texture at its scale, turned by its Spin. A stamp with no texture
+			# that loads draws nothing, so it only holds its place.
+			var texture: Texture2D = _stamp_texture(entry)
+			if texture == null:
+				return Rect2(at.x - 2.0, at.y - 2.0, 4.0, 4.0)
+			var size: Vector2 = texture.get_size() * maxf(absf(p1), 0.01)
+			var turn: float = deg_to_rad(p2)
+			var half: Vector2 = Vector2(
+				absf(size.x * cos(turn)) + absf(size.y * sin(turn)),
+				absf(size.x * sin(turn)) + absf(size.y * cos(turn))) * 0.5
+			return Rect2(at - half, half * 2.0)
 	return Rect2(at.x - 2.0, at.y - 2.0, 4.0, 4.0)
+
+
+## The texture a stamp step names, by its path or its uid text - or null when there is none or it does
+## not load. Loading by path is safe off the main thread, which is where thumbnails are made.
+static func _stamp_texture(entry: Dictionary) -> Texture2D:
+	var path: String = str(entry.get("texture", "")).strip_edges()
+	if path.is_empty() or not ResourceLoader.exists(path):
+		return null
+	return ResourceLoader.load(path) as Texture2D
 
 
 ## Renders the steps into an Image of `size`, letterboxed on `bg`. Deterministic and tree-free.
@@ -106,8 +124,9 @@ static func _rasterize_step(img: Image, entry: Dictionary, scale: float, center_
 		"cone":
 			_fill_cone(img, at, maxf(p3, 0.5) * scale, p1, p2, tint)
 		"stamp":
-			var half: float = maxf(p1, 0.01) * _STAMP_BASE * scale * 0.5
-			_fill_rect(img, Rect2(at - Vector2(half, half), Vector2(half, half) * 2.0), tint)
+			var texture: Texture2D = _stamp_texture(entry)
+			if texture != null:
+				_fill_stamp(img, at, texture, maxf(p1, 0.01) * scale, p2, tint)
 
 
 # ── Software fills (each iterates only its own pixel bounding box, so cost tracks shape area, not image size) ──
@@ -204,6 +223,37 @@ static func _fill_span(img: Image, a: Vector2, b: Vector2, half: float, c: Color
 					within = within or offset.distance_to(direction * from_along) <= half or offset.distance_to(direction * to_along) <= half
 			if within:
 				_blend(img, x, y, c)
+
+
+## A stamp: the texture centred on a point, `zoom` pixels per texel, turned by `spin_deg` and tinted.
+## Each pixel in the turned box is mapped back into the texture, so the picture is the texture itself
+## rather than a square of its colour.
+static func _fill_stamp(img: Image, center: Vector2, texture: Texture2D, zoom: float, spin_deg: float, tint: Color) -> void:
+	var source: Image = texture.get_image()
+	if source == null or source.is_empty():
+		return
+	if source.is_compressed():
+		source.decompress()
+	var texels: Vector2i = source.get_size()
+	var size: Vector2 = Vector2(texels) * zoom
+	var turn: float = deg_to_rad(spin_deg)
+	var cos_turn: float = cos(turn)
+	var sin_turn: float = sin(turn)
+	var reach: Vector2 = Vector2(
+		absf(size.x * cos_turn) + absf(size.y * sin_turn),
+		absf(size.x * sin_turn) + absf(size.y * cos_turn)) * 0.5
+	var box: Rect2i = _px_bounds(img, Rect2(center - reach, reach * 2.0))
+	for y: int in range(box.position.y, box.position.y + box.size.y):
+		for x: int in range(box.position.x, box.position.x + box.size.x):
+			var offset: Vector2 = Vector2(x + 0.5, y + 0.5) - center
+			var local: Vector2 = Vector2(offset.x * cos_turn + offset.y * sin_turn, -offset.x * sin_turn + offset.y * cos_turn)
+			var across: float = local.x / size.x + 0.5
+			var down: float = local.y / size.y + 0.5
+			if across < 0.0 or across >= 1.0 or down < 0.0 or down >= 1.0:
+				continue
+			var texel: Color = source.get_pixel(int(across * texels.x), int(down * texels.y))
+			if texel.a > 0.0:
+				_blend(img, x, y, Color(texel.r * tint.r, texel.g * tint.g, texel.b * tint.b, texel.a * tint.a))
 
 
 static func _fill_cone(img: Image, center: Vector2, radius: float, facing_deg: float, fov_deg: float, c: Color) -> void:
