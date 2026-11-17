@@ -16,7 +16,7 @@ A note, never a warning, one per script: it counts the lines that are in an olde
 
 ### Changed: the hand-written provider scripts and the new-script template write annotation words with one hash
 
-The scripts under `eventsheet_addons/` that no pack builder generates (the bus mix, the haptics and sequencer scripts, the post-processing effects, the demo health and note-block add-ons and the loading screen), and the provider template in `script_templates/`, write their `@ace_` words as one-hash comments, so Godot's Help page for them shows the description and nothing else. They were moved by Tidy's own engine, each proven to open and save back byte for byte and to publish the same verbs. A project that already holds a copy of one of them keeps it unchanged and working.
+The hand-written scripts under `eventsheet_addons/` (the bus mix, the haptics and sequencer scripts, the post-processing effects, the demo health and note-block add-ons and the loading screen, 15 files and the builders' own copies of 8 of them), and the provider template in `script_templates/`, write their `@ace_` words as one-hash comments, so Godot's Help page for them shows the description and nothing else. They were moved by Tidy's own engine, each proven to open and save back byte for byte and to publish the same verbs. A project that already holds a copy of one of them keeps it unchanged and working.
 
 ### Changed: a script with one-hash annotation words reads description first in the sheet
 
