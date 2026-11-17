@@ -17,6 +17,25 @@ Dragging a node in the 2D view while a behaviour was previewing it was lost: the
 ### Changed: the Scene dock's Preview and Stop menu words are translated
 
 Right-clicking a node in the Scene dock offers \"Preview its behaviours\" and \"Stop previews\" for the behaviours that sit directly under it; both now read in the editor's language like the rest of the plugin's menus.
+### Added: a Juice Player can loop its whole list, stop everything, and switch all juice off
+
+The node has three new ticks: `loop`, `loop_times` (0 is until stopped) and `loop_wait`. The player waits at least one frame between passes, so a list with nothing in it that takes time cannot lock the game; the Inspector says so under the list when Loop is ticked on such a list, and a Loop Back card that loops over cards with no time at all says under itself that the play gives up after 4096 steps. New rows: Set Looping, Stop All Juice Players (with an `and_restore` option; it calls a method of the pack's own on a group every player joins by itself, never a bare `stop`), Set All Juice Players Enabled (one switch for the whole game while a cutscene or an options menu is up) and Toggle Juice Paused. A new card, Pause Or Resume A Juice Player, pauses, resumes or flips another player or this one. Juice 3D answers the two calls a player makes when its play ends, so a player beside it ends its shake.
+
+### Fixed: the Shake card's drawing follows its curve, and says when the curve has changes its file does not
+
+The little drawing of a Shake card that names a Custom curve used to keep the shape the curve had when the card was drawn: an edit made in Godot's curve editor changed the curve in memory and the bars stayed as they were until something else redrew the card. The drawing now listens to the curve and redraws at once, and one quiet amber sentence under it says \"This curve has changes that are not saved to its file yet. The game plays the saved file.\" while the curve in memory and the curve in its file differ; it goes when the curve is saved.
+
+### Fixed: the node box of Set Juice Card Field suggests paths the way a card stores them
+
+A card keeps a node as a path measured from the Juice Player that plays it, but the box of the row that writes one value on a card suggested paths measured from the scene's root, which the card would then look up from the wrong place. The suggestions are now measured from the player the row names (and stay the scene's own paths only when that player cannot be found).
+
+### Changed: the head bar's behaviours card reads a list of juice cards as a count
+
+A Juice Player's saved list used to show on the behaviours card as the array's text, a line as long as the list. It now reads `steps = 6 cards` (`1 card` for one).
+
+### Changed: Stop Juice ends what the cards started, Restore puts back the first value, and leaving the scene ends the play
+
+Stop Juice used to return at once for a list of instant cards (the walk is over before Stop is asked) and so left the shake, the slowmo or the tween the cards had started running. Its id and its template are the same; what it does is now what its name says: the shake, the slowmo, the hold on the clock, the tweens, the sounds and the forces the cards started end, whether or not the list is still being walked. A value being walked stays where it had got to. Measured frame by frame on a running tree, before and after: a Shake card (0.6) with Stop asked at frame 3 left the camera 1.47, 0.89, 0.74 and 0.72 away from rest at frames 5, 7, 9 and 11 and trauma at 0.34, and now leaves it at 0.00 each time with trauma 0; a Slowmo card (0.3) with Stop at frame 12 held the time scale at 0.30 for the next 24 frames and now returns it to 1.00 at once; a Tween Property card (to 1.0 over 0.5 s) stopped at frame 6 was at 0.200 and went on to 1.000, and now stays at 0.200; a Flash card stopped at frame 6 was still red (1.00, 0.05, 0.05) and is now white. Restore Initial Values used to write the value a property had at its LAST touch, so two cards that moved one rotation (0, then 1, then 2) were put back to 1.000; it now writes 0.000. A player that leaves the scene now ends its play and what it started (On Juice Finished is said a moment later, so a pooled player says it and a freed one does not): a player taken out of the tree during a Hitstop used to leave the time scale at 0.00 for 16 frames or more, and now leaves it at 1.00. A fade on an audio bus is not undone by leaving the scene. An older scene and an older row keep working; a list that relied on a shake outliving a Stop adds a card of its own or no longer calls Stop.
 
 ### Changed (breaking): nine plugin classes have new names
 
