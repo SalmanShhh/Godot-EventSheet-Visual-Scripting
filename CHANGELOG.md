@@ -31,6 +31,18 @@ Each asks first, in two plain sentences, and keeps the old file in Sheet Backups
 
 Changing a behaviour's class name shows how far the rename reaches, Save Studio says its fields are saved into the scene at once, the translation steps say they write the catalogs at once, the docs chores say they replace what they wrote last time, Include and Resolve Conflict say where the old version is kept, a new global sheet says Ctrl+Z removes the variable and not the global, and the Vocabulary Doc item says it replaces the file. All new words are in the nine translation files.
 
+### Fixed: the Scene dock's "Preview its behaviours" finds behaviours at any depth
+
+Right-clicking a node used to offer Preview only for behaviours that were its direct children. It now finds the behaviours anywhere below the node that act on it or on a node under it (a behaviour's host is its parent, or the node it is pointed at), so a behaviour sitting inside a holder node two levels down shows the entry and plays. A behaviour that acts on something outside the node is left out, and so is the inside of an instanced scene unless its children are opened up. The walk looks at no more than 600 nodes below the one you clicked, nearest first, so the menu stays instant in a very large scene (about half a millisecond over 2,000 nodes).
+
+### Changed: a denial placed now is written `if not level_over:`
+
+A condition you place on the sheet and invert now writes `if not level_over:` instead of `if not (level_over):` whenever what it denies is one plain name, member, call or index (`a`, `a.b`, `a.b()`, `a[b]`). Anything with an operator, `in`, `is`, `as`, `and`, `or`, an `if ... else`, a lambda or an `await` keeps its brackets, and an inverted comparison still writes the opposite comparison. Scripts and rows written before keep their bytes: opening one and saving it changes nothing, and both spellings open as the same row. Tidy This Script offers the short form for an older row when the result reads back identically. The Boomer Level showcase adopted it (one line).
+
+### Fixed: the Boomer Level and FPS Arena showcases describe themselves the way the others do, and the Carousel's 3D corner is fully in view
+
+Both showcases now open with the bold title the start page reads, so their cards take their line from the showcase and the two hand-written copies are gone; a test now fails for any listed showcase with no line to show. In the Carousel the small 3D corner sat against the top-right edge and its grey cube was hard to see on the grey ground: it now keeps a margin from the edges and the cube has a warm colour.
+
 ### Added: a spawn row's Scene field offers the scenes the sheet already holds, the Variable window has a Scene door, and the Doctor notes an empty scene slot
 
 The Instantiate rows take their scene as a value, so a sheet that declares `@export var enemy_scene: PackedScene` (or a typed constant that preloads one) can spawn it by name and the row writes `enemy_scene.instantiate()`, the line a Godot user would write. The Scene field now lists the sheet's own scene variables and constants first, above everything else it offers, so the name is one pick away. Nothing else changed in how a spawn is written: no new row, `load()` stays what a new row starts with, and the sheet never writes a `preload` on its own.
