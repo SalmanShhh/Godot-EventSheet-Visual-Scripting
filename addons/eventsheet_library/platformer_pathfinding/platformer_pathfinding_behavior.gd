@@ -3032,23 +3032,36 @@ func _astar(start: Vector2i, goal: Vector2i, allow_partial: bool = false) -> Arr
 	_last_route_edges = []
 	_last_search_fail = ""
 	var avoid: Dictionary = _agent_avoidance_costs() if multi_agent_avoidance else {}
-	var open: Array = [start]
+	# The open set is a binary heap of [estimate, order, cell], so taking the best node costs a few
+	# comparisons instead of a walk over every open node. `order` is when the cell JOINED the open set,
+	# which settles a tie the way a front-to-back scan did (the cell that has waited longest goes
+	# first), so the routes are the ones a scan would have chosen. A cell whose cost improves while it
+	# waits is pushed again with its better estimate and the same order; the older entry is skipped
+	# when it surfaces, because it no longer matches what the cell costs.
+	var open_heap: Array = [[Vector2(goal - start).length(), 0, start]]
+	var open_order: Dictionary = {start: 0}
+	var next_order: int = 1
 	var came_from: Dictionary = {}
 	var came_edge: Dictionary = {}
 	var cost_so_far: Dictionary = {start: 0.0}
 	var closest: Vector2i = start
 	var closest_gap: float = Vector2(goal - start).length()
 	var expanded: int = 0
-	while not open.is_empty():
+	while not open_order.is_empty():
 		if expanded >= maxi(max_search_nodes, 1):
 			_last_search_fail = "max_nodes_reached"
 			break
-		var best_index: int = 0
-		for index in range(1, open.size()):
-			var here: Vector2i = open[index]
-			if cost_so_far[here] + Vector2(goal - here).length() < cost_so_far[open[best_index]] + Vector2(goal - (open[best_index] as Vector2i)).length():
-				best_index = index
-		var current: Vector2i = open.pop_at(best_index)
+		var current: Vector2i = start
+		while true:
+			var top: Array = _heap_pop(open_heap)
+			var top_cell: Vector2i = top[2]
+			if int(open_order.get(top_cell, -1)) != int(top[1]):
+				continue
+			if float(top[0]) != float(cost_so_far[top_cell]) + Vector2(goal - top_cell).length():
+				continue
+			current = top_cell
+			open_order.erase(top_cell)
+			break
 		expanded += 1
 		var gap: float = Vector2(goal - current).length()
 		if gap < closest_gap:
@@ -3068,13 +3081,61 @@ func _astar(start: Vector2i, goal: Vector2i, allow_partial: bool = false) -> Arr
 				cost_so_far[next_cell] = next_cost
 				came_from[next_cell] = current
 				came_edge[next_cell] = edge
-				if not open.has(next_cell):
-					open.append(next_cell)
+				if not open_order.has(next_cell):
+					open_order[next_cell] = next_order
+					next_order += 1
+				_heap_push(open_heap, [float(next_cost) + Vector2(goal - next_cell).length(), int(open_order[next_cell]), next_cell])
 	if _last_search_fail == "":
 		_last_search_fail = "no_path"
 	if allow_partial:
 		return _reconstruct(closest, came_from, came_edge)
 	return []
+
+# @ace_hidden
+## Puts an entry on a binary min-heap kept in an Array: [estimate, order, cell], smallest estimate
+## first and the lower order first among equal estimates.
+func _heap_push(heap: Array, entry: Array) -> void:
+	heap.append(entry)
+	var child: int = heap.size() - 1
+	while child > 0:
+		var parent: int = (child - 1) >> 1
+		if not _heap_before(heap[child], heap[parent]):
+			break
+		var held: Array = heap[parent]
+		heap[parent] = heap[child]
+		heap[child] = held
+		child = parent
+
+# @ace_hidden
+## Takes the first entry off the heap and puts the heap back in order.
+func _heap_pop(heap: Array) -> Array:
+	var top: Array = heap[0]
+	var last: Array = heap.pop_back()
+	if not heap.is_empty():
+		heap[0] = last
+		var parent: int = 0
+		var size: int = heap.size()
+		while true:
+			var left: int = parent * 2 + 1
+			if left >= size:
+				break
+			var pick: int = left
+			if left + 1 < size and _heap_before(heap[left + 1], heap[left]):
+				pick = left + 1
+			if not _heap_before(heap[pick], heap[parent]):
+				break
+			var held: Array = heap[parent]
+			heap[parent] = heap[pick]
+			heap[pick] = held
+			parent = pick
+	return top
+
+# @ace_hidden
+## Whether heap entry `a` comes out before `b`.
+func _heap_before(a: Array, b: Array) -> bool:
+	if float(a[0]) != float(b[0]):
+		return float(a[0]) < float(b[0])
+	return int(a[1]) < int(b[1])
 
 # @ace_hidden
 ## Whether a link is a portal set to ignore hazards.
