@@ -590,6 +590,96 @@ static func juice_fx_overlay_lines() -> PackedStringArray:
 	])
 
 
+## The declarations of the Screen FX lookup a Juice pack shares with its twin: the group the post stack joins, the layer once found, the methods a step calls on it and the once-per-scene warning flags.
+static func juice_screen_fx_declaration_lines() -> PackedStringArray:
+	return PackedStringArray([
+		"# Asking the tree for a group is a",
+		"# dictionary read, so a game that has no post stack at all pays nothing to be told so again.",
+		"## Group the screen effects layer joins so moments can find it.",
+		"const POST_STACK_GROUP: StringName = &\"screen_fx_post_stack\"",
+		"",
+		"# The post stack layer is looked up lazily, and only a found layer is remembered:",
+		"# a game whose post stack arrives after the first beat has played - a level that adds its own",
+		"# effects, a pause screen built on demand - would otherwise be missed for ever, and every later",
+		"# moment would quietly fall back to this pack's own overlay.",
+		"## The Screen FX layer this game has, once one has been FOUND.",
+		"var _moment_screen: CanvasLayer = null",
+		"",
+		"## The methods a moment calls on the Screen FX layer; one that lacks any is reported once, by name.",
+		"const SCREEN_FX_METHODS: PackedStringArray = [\"shockwave\", \"chromatic_pulse\", \"pulse_post_effect\", \"post_strength\", \"add_post_effect\", \"fade_post_strength\"]",
+		"",
+		"## True once the Screen FX layer has been checked for the methods a moment calls.",
+		"var _moment_screen_checked: bool = false",
+		"",
+		"# The missing-post-stack warning is said once per scene rather than once per step: a moment that plays on",
+		"# every hit would otherwise write the same sentence sixty times a second, which is how a warning",
+		"# stops being read at all.",
+		"## Whether the missing post stack has already been mentioned in the current scene.",
+		"var _moment_told_screen: bool = false",
+		"## Scene in which the missing post stack was last mentioned, so it is said once per scene.",
+		"var _moment_told_scene: Node = null",
+	])
+
+
+## The functions of the Screen FX lookup both Juice packs share: finding the post stack layer, and saying once per scene that a step wanted one and the game has none.
+static func juice_screen_fx_function_lines() -> PackedStringArray:
+	return PackedStringArray([
+		"## The Screen FX layer this game has, or null. THE POINT OF LOOKING is that a moment must not build a",
+		"## second full-screen rectangle of its own: a hit that reads the whole screen twice costs twice as",
+		"## much and looks wrong wherever the two overlap. A game with no Screen FX layer falls back to this",
+		"## pack's own overlay for the two effects it can draw.",
+		"##",
+		"## ONLY A FOUND LAYER IS KEPT, and a layer that has left the tree is asked for again: a miss costs",
+		"## one group lookup, so re-asking on the next beat is cheaper than the mistake of never asking",
+		"## again. The layer must be in the group above, which the Screen FX pack's own layer joins as it",
+		"## enters the tree - a hand-built post layer joins it in one line to be found the same way.",
+		"## @ace_hidden",
+		"func _moment_screen_fx() -> CanvasLayer:",
+		"\tif _moment_screen != null and is_instance_valid(_moment_screen) and _moment_screen.is_inside_tree():",
+		"\t\treturn _moment_screen",
+		"\t_moment_screen = null",
+		"\tif not is_inside_tree():",
+		"\t\treturn null",
+		"\tvar found: Node = get_tree().get_first_node_in_group(POST_STACK_GROUP)",
+		"\tif found is CanvasLayer and found.has_method(\"pulse_post_effect\"):",
+		"\t\t_moment_screen = found as CanvasLayer",
+		"\t\tif not _moment_screen_checked:",
+		"\t\t\t_moment_screen_checked = true",
+		"\t\t\tvar missing: PackedStringArray = PackedStringArray()",
+		"\t\t\tfor method: String in SCREEN_FX_METHODS:",
+		"\t\t\t\tif not found.has_method(method):",
+		"\t\t\t\t\tmissing.append(method)",
+		"\t\t\tif not missing.is_empty():",
+		"\t\t\t\tpush_warning(\"Moment: the post stack layer %s has no %s - a step that needs one will not work.\" % [found.name, \", \".join(missing)])",
+		"\treturn _moment_screen",
+		"",
+		"## Says, ONCE PER SCENE, that a step asked for the post stack and this game has none. The three",
+		"## steps that reach the screen are the only ones that can want it, and without it a shockwave and a",
+		"## hold do nothing at all while a pulse draws only its vignette - each of them silently, which is a",
+		"## moment that looks broken and says nothing about why. The sentence names the step and the way out.",
+		"## @ace_hidden",
+		"func _moment_wants_screen(word: String) -> void:",
+		"\tif not _first_time_without_a_screen():",
+		"\t\treturn",
+		"\tpush_warning((\"Moment: the \\\"%s\\\" step needs a post stack and this scene has none - add the \"",
+		"\t\t+ \"Screen FX pack's screen_fx.tscn to the scene, or take the step out of the moment.\") % word)",
+		"",
+		"## Whether this is the FIRST time in this scene that a step has gone without the post stack -",
+		"## true once, then false until the scene changes. Its own function so the once-ness is a value",
+		"## that can be asked for, rather than a line in a log somebody has to notice.",
+		"## @ace_hidden",
+		"func _first_time_without_a_screen() -> bool:",
+		"\tvar here: Node = null",
+		"\tif is_inside_tree():",
+		"\t\there = get_tree().current_scene",
+		"\tif _moment_told_screen and _moment_told_scene == here:",
+		"\t\treturn false",
+		"\t_moment_told_screen = true",
+		"\t_moment_told_scene = here",
+		"\treturn true",
+	])
+
+
 ## The CHROMATIC SHAKE block: the state a running shake keeps, the four questions it answers each
 ## frame (how far through it is, which way the split points, how big it is right now, is the player
 ## asking for no flashing), the tick step, and the condition + expression a sheet reads it with.
@@ -601,22 +691,6 @@ static func juice_fx_overlay_lines() -> PackedStringArray:
 ## camera shake wobbles with (so the two read as one hit), and advanced by delta - which the engine
 ## has already scaled by time, so slow motion glides the split and a hitstop freezes it mid-frame.
 ## The radial Chromatic Kick's own dial is untouched: the two draw on top of each other.
-static func juice_player_ended_lines(ends_what: PackedStringArray) -> PackedStringArray:
-	var lines: PackedStringArray = PackedStringArray([
-		"## A Juice Player is opening a play. This node keeps no book of values, so there is nothing to write down.",
-		"## @ace_hidden",
-		"func juice_player_began(_key: String, _steps: Array) -> void:",
-		"\tpass",
-		"",
-		"## A Juice Player stopped or restored: every effect its cards set going on this node ends now, whether or",
-		"## not the list has finished walking.",
-		"## @ace_hidden",
-		"func juice_player_ended(_key: String, _put_back: bool) -> void:"
-	])
-	lines.append_array(ends_what)
-	return lines
-
-
 static func juice_chroma_shake_lines() -> PackedStringArray:
 	return PackedStringArray([
 		"# --- Chromatic shake: a directional channel split that moves while it lasts ---",

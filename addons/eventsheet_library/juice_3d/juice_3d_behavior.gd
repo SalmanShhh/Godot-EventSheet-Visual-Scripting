@@ -6,7 +6,9 @@
 @icon("res://eventsheet_addons/juice_3d/icon.svg")
 class_name Juice3DBehavior
 extends Node
-## 3D camera game feel on the active Camera3D: trauma-based shake, weapon recoil, directional kicks from a world point, head bob, jitter, a held lean, FOV punch/zoom, host blink and punches, screen FX (vignette, chromatic kick, speed lines), varied one-shot audio, and eased score tickers. Every camera effect is an additive offset that is removed and re-applied around whoever owns the camera, so mouse look and animations keep the real pose and your aim is never touched.
+## 3D camera game feel on the active Camera3D: trauma-based shake, weapon recoil, directional kicks from a world point, head bob, jitter, a held lean, FOV punch/zoom, host blink and punches, screen FX (vignette, chromatic kick, speed lines), varied one-shot audio, and eased score tickers. Every camera effect is an additive offset that is removed and re-applied around whoever owns the camera, so mouse look and animations keep the real pose and your aim is never touched. A Juice Player beside it plays its shake, zoom (the field of view), punch, flash, hitstop, slowmo and screen cards over a 3D view.
+##
+## Changes on its parent: modulate.
 
 # @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
@@ -487,6 +489,98 @@ var _chroma_shake_phase: float = 0.0
 ## True while the colour-fringe shake is running.
 var _chroma_shake_active: bool = false
 
+# --- Cards played through this node: what a Juice Player calls ---
+#
+# A Juice Player beside this node plays its shake, zoom, punch, flash, hitstop, slowmo and screen cards through
+# moment_step, the call the 2D Juice node answers too. Each word has its meaning over a 3D view: zoom is the
+# field of view, punch is the scale of the Node3D, flash tints a 3D sprite or label and otherwise the whole
+# screen. A scene that holds BOTH Juice nodes beside a player keeps playing through the 2D one.
+
+## Highest amount a card may reach while no flashing is on, from 0 to 1. The 2D Juice node holds its cards to the same number.
+const STEP_FLASH_CEILING: float = 0.3
+## Shortest a card may last while no flashing is on, in seconds.
+const STEP_FLASH_FLOOR_SECONDS: float = 0.4
+## The least an effect lasts when its card asks for nothing, in seconds.
+const STEP_NATURAL_SECONDS: float = 0.05
+## The step words whose amount is how much of something a player SEES: only these are held to the ceiling.
+const STEP_AMPLITUDE_VERBS: PackedStringArray = ["shake", "flash", "punch", "shockwave",
+		"chromatic", "pulse", "hold"]
+
+## True while a hit stop is freezing time.
+var _hitstop_active: bool = false
+## Time scale to put back when the hit stop ends.
+var _hitstop_prev_scale: float = 1.0
+## The tween that holds a slowmo and eases the time scale back to normal.
+var _slowmo_tween: Tween = null
+## The tween bringing the field of view to a zoom card's value.
+var _zoom_tween: Tween = null
+## The tween springing the host's scale back after a punch.
+var _punch_scale_tween: Tween = null
+## The tween fading a flash away, on the host's tint or on the whole screen.
+var _flash_tween: Tween = null
+## The tint a flash on the host fades back to.
+var _flash_rest: Color = Color.WHITE
+## True while a flash is washing the whole screen rather than tinting the host.
+var _flash_on_screen: bool = false
+## What each Juice Player's play first found, by player: the field of view, the scale, the tint and the time scale.
+var _step_rest: Dictionary = {}
+## What each Juice Player's play leaves behind when it is stopped: where its cards would have put each value.
+var _step_ends: Dictionary = {}
+
+# Asking the tree for a group is a
+# dictionary read, so a game that has no post stack at all pays nothing to be told so again.
+## Group the screen effects layer joins so moments can find it.
+const POST_STACK_GROUP: StringName = &"screen_fx_post_stack"
+
+# The post stack layer is looked up lazily, and only a found layer is remembered:
+# a game whose post stack arrives after the first beat has played - a level that adds its own
+# effects, a pause screen built on demand - would otherwise be missed for ever, and every later
+# moment would quietly fall back to this pack's own overlay.
+## The Screen FX layer this game has, once one has been FOUND.
+var _moment_screen: CanvasLayer = null
+
+## The methods a moment calls on the Screen FX layer; one that lacks any is reported once, by name.
+const SCREEN_FX_METHODS: PackedStringArray = ["shockwave", "chromatic_pulse", "pulse_post_effect", "post_strength", "add_post_effect", "fade_post_strength"]
+
+## True once the Screen FX layer has been checked for the methods a moment calls.
+var _moment_screen_checked: bool = false
+
+# The missing-post-stack warning is said once per scene rather than once per step: a moment that plays on
+# every hit would otherwise write the same sentence sixty times a second, which is how a warning
+# stops being read at all.
+## Whether the missing post stack has already been mentioned in the current scene.
+var _moment_told_screen: bool = false
+## Scene in which the missing post stack was last mentioned, so it is said once per scene.
+var _moment_told_scene: Node = null
+# @ace_hidden
+## The Screen FX layer this game has, or null. THE POINT OF LOOKING is that a moment must not build a
+## second full-screen rectangle of its own: a hit that reads the whole screen twice costs twice as
+## much and looks wrong wherever the two overlap. A game with no Screen FX layer falls back to this
+## pack's own overlay for the two effects it can draw.
+##
+## ONLY A FOUND LAYER IS KEPT, and a layer that has left the tree is asked for again: a miss costs
+## one group lookup, so re-asking on the next beat is cheaper than the mistake of never asking
+## again. The layer must be in the group above, which the Screen FX pack's own layer joins as it
+## enters the tree - a hand-built post layer joins it in one line to be found the same way.
+func _moment_screen_fx() -> CanvasLayer:
+	if _moment_screen != null and is_instance_valid(_moment_screen) and _moment_screen.is_inside_tree():
+		return _moment_screen
+	_moment_screen = null
+	if not is_inside_tree():
+		return null
+	var found: Node = get_tree().get_first_node_in_group(POST_STACK_GROUP)
+	if found is CanvasLayer and found.has_method("pulse_post_effect"):
+		_moment_screen = found as CanvasLayer
+		if not _moment_screen_checked:
+			_moment_screen_checked = true
+			var missing: PackedStringArray = PackedStringArray()
+			for method: String in SCREEN_FX_METHODS:
+				if not found.has_method(method):
+					missing.append(method)
+			if not missing.is_empty():
+				push_warning("Moment: the post stack layer %s has no %s - a step that needs one will not work." % [found.name, ", ".join(missing)])
+	return _moment_screen
+
 func _ready() -> void:
 	tree_exiting.connect(_on_tree_exiting)
 	_noise = FastNoiseLite.new()
@@ -500,6 +594,15 @@ func _ready() -> void:
 	set_process(false)
 
 func _on_tree_exiting() -> void:
+	# The global time scale is put back ONLY if this node is the one holding it away from 1: an unrelated node
+	# leaving the tree must not snap a slowmo or a game-owned pause back to normal.
+	var __owned_time := _hitstop_active or (_slowmo_tween != null and is_instance_valid(_slowmo_tween) and _slowmo_tween.is_running())
+	_hitstop_active = false
+	if _slowmo_tween != null and is_instance_valid(_slowmo_tween):
+		_slowmo_tween.kill()
+	_slowmo_tween = null
+	if __owned_time:
+		Engine.time_scale = 1.0
 	_unapply()
 
 func _process(delta: float) -> void:
@@ -669,9 +772,12 @@ func zoom_fov_to(fov: float, duration: float) -> void:
 	# the kick decays to ~0 during the tween, so the camera settled at fov + the initial kick.
 	_unapply()
 	_fov_kick = 0.0
+	if _zoom_tween != null and is_instance_valid(_zoom_tween):
+		_zoom_tween.kill()
 	var tw: Tween = create_tween()
 	tw.tween_property(cam, "fov", clampf(fov, 1.0, 179.0), maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tw.finished.connect(func() -> void: zoom_finished.emit())
+	_zoom_tween = tw
 
 # @ace_action
 # @ace_name("Use Camera")
@@ -721,10 +827,13 @@ func punch_scale(strength: float, duration: float) -> void:
 	var scaled: Node3D = host as Node3D
 	if scaled == null:
 		return
+	if _punch_scale_tween != null and is_instance_valid(_punch_scale_tween):
+		_punch_scale_tween.kill()
 	scaled.scale = _base_scale3 * (1.0 + clampf(strength, -0.9, 5.0))
 	var tw: Tween = create_tween()
 	tw.tween_property(scaled, "scale", _base_scale3, maxf(duration, 0.001)).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	tw.finished.connect(func() -> void: punch_finished.emit())
+	_punch_scale_tween = tw
 
 # @ace_action
 # @ace_name("Punch Position")
@@ -1228,17 +1337,275 @@ func chromatic_shake_magnitude() -> float:
 	return _chroma_shake_magnitude
 
 # @ace_hidden
-## A Juice Player is opening a play. This node keeps no book of values, so there is nothing to write down.
-func juice_player_began(_key: String, _steps: Array) -> void:
-	pass
+## Whether this node plays only when no other Juice node sits beside the Juice Player. It does: a scene with a
+## Juice node for 2D beside the player plays through that one, as it always did.
+func yields_to_other_juice() -> bool:
+	return true
 
 # @ace_hidden
-## A Juice Player stopped or restored: every effect its cards set going on this node ends now, whether or
-## not the list has finished walking.
-func juice_player_ended(_key: String, _put_back: bool) -> void:
+## The field of view that shows a view a percent closer (100 is no change, 110 a tenth closer), measured on the
+## size of the view the way a lens zooms.
+static func fov_for_zoom(fov: float, percent: float) -> float:
+	if percent <= 0.0:
+		return fov
+	return clampf(rad_to_deg(2.0 * atan(tan(deg_to_rad(fov) * 0.5) * (100.0 / percent))), 1.0, 179.0)
+
+# @ace_hidden
+## What an amount really becomes: scaled by the strength of the play, then held under the ceiling while no flashing is on.
+func _step_allowed(amount: float, strength: float) -> float:
+	var wanted: float = amount * maxf(strength, 0.0)
+	if bool(Engine.get_meta(NO_FLASHING_META, false)):
+		return clampf(wanted, -STEP_FLASH_CEILING, STEP_FLASH_CEILING)
+	return wanted
+
+# @ace_hidden
+## And what a time really becomes: never quicker than the floor while no flashing is on.
+func _step_seconds(seconds: float) -> float:
+	if bool(Engine.get_meta(NO_FLASHING_META, false)):
+		return maxf(seconds, STEP_FLASH_FLOOR_SECONDS)
+	return maxf(seconds, 0.0)
+
+# @ace_hidden
+## Plays ONE card: the same call, with the same five arguments, the 2D Juice node answers to.
+func moment_step(verb: String, amount: float, effect: String, seconds: float, strength: float) -> void:
+	var word: String = verb.strip_edges().to_lower()
+	var named: String = effect.strip_edges().to_lower()
+	var span: float = maxf(seconds, 0.0)
+	if STEP_AMPLITUDE_VERBS.has(word):
+		amount = _step_allowed(amount, strength)
+		span = _step_seconds(span)
+	var screen: CanvasLayer = null
+	if word == "shockwave" or word == "chromatic" or word == "pulse" or word == "hold":
+		screen = _moment_screen_fx()
+	match word:
+		"shake":
+			shake(amount)
+		"hitstop":
+			_step_hitstop(span, clampf(amount, 0.0, 1.0))
+		"slowmo":
+			_step_slowmo(clampf(amount, 0.0, 1.0), span)
+		"flash":
+			_step_flash(named, amount, maxf(span, STEP_NATURAL_SECONDS))
+		"punch":
+			punch_scale(amount, maxf(span, STEP_NATURAL_SECONDS))
+		"zoom":
+			_step_zoom(amount, maxf(span, STEP_NATURAL_SECONDS))
+		"shockwave":
+			if screen != null:
+				screen.call("shockwave", _step_here(), amount)
+			else:
+				_moment_wants_screen(word)
+		"chromatic":
+			if screen != null:
+				screen.call("chromatic_pulse", amount, maxf(span, STEP_NATURAL_SECONDS))
+			else:
+				chromatic_kick(amount, maxf(span, STEP_NATURAL_SECONDS))
+		"pulse":
+			if screen != null:
+				screen.call("pulse_post_effect", named, amount, maxf(span, STEP_NATURAL_SECONDS))
+			elif named == "vignette":
+				pulse_vignette(amount, Color.BLACK, maxf(span, STEP_NATURAL_SECONDS))
+			else:
+				_moment_wants_screen(word)
+		"hold":
+			if screen == null:
+				_moment_wants_screen(word)
+			else:
+				if float(screen.call("post_strength", named)) <= 0.0001:
+					screen.call("add_post_effect", named, named, 0.0)
+				screen.call("fade_post_strength", named, amount, span, 0.0)
+		_:
+			push_warning("Juice 3D: no card word is called \"%s\" here." % word)
+
+# @ace_hidden
+## Where the thing that caused a card is on the screen, in pixels: the host's place seen through the camera, or the middle of the view.
+func _step_here() -> Vector2:
+	var cam: Camera3D = _camera()
+	if cam != null and host != null and not cam.is_position_behind(host.global_position):
+		return cam.unproject_position(host.global_position)
+	var view: Viewport = get_viewport()
+	return view.get_visible_rect().size * 0.5 if view != null else Vector2.ZERO
+
+# @ace_hidden
+func _set_time_scale(scale_now: float) -> void:
+	Engine.time_scale = scale_now
+
+# @ace_hidden
+## A hit pause: time stops (or slows to the scale given) for a few frames, then goes back to what it was. It ignores
+## repeat hits already mid-freeze and holds a slowmo still for the duration.
+func _step_hitstop(freeze_seconds: float, freeze_scale: float) -> void:
+	if _hitstop_active:
+		return
+	_hitstop_active = true
+	_hitstop_prev_scale = Engine.time_scale
+	if _slowmo_tween != null and is_instance_valid(_slowmo_tween) and _slowmo_tween.is_running():
+		_slowmo_tween.pause()
+	Engine.time_scale = maxf(freeze_scale, 0.0)
+	await get_tree().create_timer(maxf(freeze_seconds, 0.0), true, false, true).timeout
+	if not _hitstop_active:
+		return
+	_hitstop_active = false
+	Engine.time_scale = _hitstop_prev_scale
+	if _slowmo_tween != null and is_instance_valid(_slowmo_tween):
+		_slowmo_tween.play()
+
+# @ace_hidden
+## Slow motion: time eases down to the scale, holds for the seconds given, and eases back. It counts in real time.
+func _step_slowmo(target_scale: float, hold_seconds: float) -> void:
+	if _slowmo_tween != null and is_instance_valid(_slowmo_tween):
+		_slowmo_tween.kill()
+	var tw: Tween = create_tween()
+	tw.set_ignore_time_scale(true)
+	tw.tween_method(_set_time_scale, Engine.time_scale, target_scale, 0.15).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_interval(maxf(hold_seconds, 0.0))
+	tw.tween_method(_set_time_scale, target_scale, 1.0, 0.35).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	_slowmo_tween = tw
+
+# @ace_hidden
+## A flash: a 3D sprite or label is tinted towards the colour and fades back; any other host flashes the whole screen.
+func _step_flash(tint_word: String, amount: float, span: float) -> void:
+	var tint: Color = Color.from_string(tint_word, Color.WHITE)
+	var share: float = clampf(amount, 0.0, 1.0)
+	var fading: bool = _flash_tween != null and is_instance_valid(_flash_tween) and _flash_tween.is_running()
+	if fading:
+		_flash_tween.kill()
+	if host is SpriteBase3D or host is Label3D:
+		if not fading or _flash_on_screen:
+			_flash_rest = host.modulate
+		_flash_on_screen = false
+		host.modulate = _flash_rest.lerp(Color(tint.r, tint.g, tint.b, _flash_rest.a), share)
+		_flash_tween = create_tween()
+		_flash_tween.tween_property(host, "modulate", _flash_rest, span)
+	else:
+		set_screen_tint(tint, share * 0.5)
+		if _tint_rect != null:
+			_flash_on_screen = true
+			_flash_tween = create_tween()
+			_flash_tween.tween_property(_tint_rect, "color:a", 0.0, span)
+
+# @ace_hidden
+## A zoom: the field of view narrows to show the view this percent closer, and stays there until the play is put back.
+func _step_zoom(percent: float, span: float) -> void:
+	var cam: Camera3D = _camera()
+	if cam == null or percent <= 0.0:
+		return
+	_unapply()
+	zoom_fov_to(fov_for_zoom(cam.fov, percent), span)
+
+# @ace_hidden
+## A Juice Player is opening a play: write down, ONCE for that player, what the cards will touch is worth now
+## (the first value is the one a Restore puts back), and what each will be worth when the cards have run.
+func juice_player_began(key: String, steps: Array) -> void:
+	var kept: Dictionary = _step_rest.get(key, {})
+	var ends: Dictionary = {}
+	var cam: Camera3D = _camera()
+	var tinted: bool = host is SpriteBase3D or host is Label3D
+	for step: Variant in steps:
+		if not (step is Dictionary):
+			continue
+		var card: Dictionary = step as Dictionary
+		match str(card.get("verb", "")).strip_edges().to_lower():
+			"zoom":
+				if cam != null:
+					if not kept.has("fov"):
+						kept["fov"] = cam.fov - _applied_fov
+					ends["fov"] = fov_for_zoom(float(ends.get("fov", kept["fov"])), float(card.get("amount", 100.0)))
+			"punch":
+				if host is Node3D:
+					kept["scale"] = _base_scale3
+					ends["scale"] = _base_scale3
+			"flash":
+				if tinted:
+					if not kept.has("tint"):
+						kept["tint"] = _flash_rest if _flash_tween != null and is_instance_valid(_flash_tween) and _flash_tween.is_running() else host.modulate
+					ends["tint"] = kept["tint"]
+			"hitstop", "slowmo":
+				if not kept.has("time"):
+					kept["time"] = Engine.time_scale
+				ends["time"] = 1.0
+			"chromatic", "pulse":
+				kept["screen"] = true
+				ends["screen"] = true
+	_step_rest[key] = kept
+	_step_ends[key] = ends
+
+# @ace_hidden
+## A Juice Player stopped (put_back false) or restored (put_back true): every effect its cards set going on this node
+## ends now, whether or not the list has finished walking. A value lands where the cards would have left it, or goes
+## back to the first value the player saw. The shakes end either way.
+func juice_player_ended(key: String, put_back: bool) -> void:
 	if trauma > 0.0 or _shaking:
 		stop_shake()
 	if _chroma_shake_active:
 		stop_chromatic_shake()
+	var values: Dictionary = _step_rest.get(key, {}) if put_back else _step_ends.get(key, {})
+	if values.has("time"):
+		if _slowmo_tween != null and is_instance_valid(_slowmo_tween):
+			_slowmo_tween.kill()
+		_slowmo_tween = null
+		_hitstop_active = false
+		Engine.time_scale = float(values["time"])
+	if values.has("fov"):
+		if _zoom_tween != null and is_instance_valid(_zoom_tween):
+			_zoom_tween.kill()
+		var cam: Camera3D = _camera()
+		if cam != null:
+			_unapply()
+			cam.fov = clampf(float(values["fov"]), 1.0, 179.0)
+	if values.has("scale") and host is Node3D:
+		if _punch_scale_tween != null and is_instance_valid(_punch_scale_tween):
+			_punch_scale_tween.kill()
+		(host as Node3D).scale = values["scale"]
+	if values.has("tint") and (host is SpriteBase3D or host is Label3D):
+		if _flash_tween != null and is_instance_valid(_flash_tween):
+			_flash_tween.kill()
+		host.modulate = values["tint"]
+	if values.has("screen"):
+		_step_clear_screen()
+	if _flash_on_screen and _flash_tween != null and is_instance_valid(_flash_tween):
+		_flash_tween.kill()
+		_flash_on_screen = false
+		clear_screen_tint()
+	if put_back:
+		_step_rest.erase(key)
+	_step_ends.erase(key)
+
+# @ace_hidden
+## Ends a vignette pulse and a chromatic kick on the spot, so the screen is clear.
+func _step_clear_screen() -> void:
+	if _fx_material == null:
+		return
+	if _vignette_tween != null and _vignette_tween.is_valid():
+		_vignette_tween.kill()
+	if _chroma_tween != null and _chroma_tween.is_valid():
+		_chroma_tween.kill()
+	_fx_material.set_shader_parameter("vignette_strength", 0.0)
+	_fx_material.set_shader_parameter("chroma_strength", 0.0)
+	_fx_update_visibility()
+
+# @ace_hidden
+## Says, ONCE PER SCENE, that a step asked for the post stack and this game has none. The three
+## steps that reach the screen are the only ones that can want it, and without it a shockwave and a
+## hold do nothing at all while a pulse draws only its vignette - each of them silently, which is a
+## moment that looks broken and says nothing about why. The sentence names the step and the way out.
+func _moment_wants_screen(word: String) -> void:
+	if not _first_time_without_a_screen():
+		return
+	push_warning(("Moment: the \"%s\" step needs a post stack and this scene has none - add the "
+		+ "Screen FX pack's screen_fx.tscn to the scene, or take the step out of the moment.") % word)
+
+# @ace_hidden
+## Whether this is the FIRST time in this scene that a step has gone without the post stack -
+## true once, then false until the scene changes. Its own function so the once-ness is a value
+## that can be asked for, rather than a line in a log somebody has to notice.
+func _first_time_without_a_screen() -> bool:
+	var here: Node = null
+	if is_inside_tree():
+		here = get_tree().current_scene
+	if _moment_told_screen and _moment_told_scene == here:
+		return false
+	_moment_told_screen = true
+	_moment_told_scene = here
+	return true
 
 # 3D camera game feel: shake, recoil, head bob, jitter, lean, and FOV punch/zoom on the active Camera3D - auto-found, applied as additive offsets so they never fight the controller that owns the camera. Verbs mirror the 2D Juice pack.

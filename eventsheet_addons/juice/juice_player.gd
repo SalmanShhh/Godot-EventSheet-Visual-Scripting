@@ -694,10 +694,13 @@ var _told_switched_off: bool = false
 
 ## Counts the plays, so a loop that was stopped or replaced can tell and end after its pass.
 var _loop_run: int = 0
-## The Juice behaviour beside this node, without a word of complaint when there is none.
+## The Juice behaviour beside this node, without a word of complaint when there is none. A node that says it
+## yields to other Juice nodes (the one for a 3D view does) is played through only when no other answers, so a
+## scene that has both keeps playing through the one it always played through.
 func _juice_quiet() -> Node:
-	if _juice_node != null and is_instance_valid(_juice_node):
+	if _juice_node != null and is_instance_valid(_juice_node) and not _yields_to_other(_juice_node):
 		return _juice_node
+	var yielding: Node = null
 	var looked: Array = []
 	if host != null:
 		looked.append_array(host.get_children())
@@ -705,9 +708,13 @@ func _juice_quiet() -> Node:
 	for child: Variant in looked:
 		var node: Node = child as Node
 		if node != null and node.has_method("moment_step"):
-			_juice_node = node
-			return _juice_node
-	return null
+			if not _yields_to_other(node):
+				_juice_node = node
+				return _juice_node
+			if yielding == null:
+				yielding = node
+	_juice_node = yielding
+	return yielding
 
 # @ace_action
 # @ace_featured
@@ -3754,6 +3761,10 @@ func _keep_first(object: Object, property: String, before: Variant) -> void:
 		if held.get("object") == object and str(held.get("property", "")) == property:
 			return
 	_restore_to.append({"object": object, "property": property, "value": before})
+
+## Whether a Juice node plays only when no other Juice node sits beside the player.
+static func _yields_to_other(node: Node) -> bool:
+	return node.has_method("yields_to_other_juice") and bool(node.call("yields_to_other_juice"))
 
 ## Tells the Juice node a play is beginning, so it writes down what every value its cards will touch is
 ## worth now (once) and what each will be worth when the cards have run their course.
