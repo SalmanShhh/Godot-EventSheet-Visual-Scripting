@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: eleven more behaviour icons are redrawn with one large, simple shape each
+
+Ability Set, State Machine, Skill Tree, Eight Direction, Physics Car, Prestige, Rotate, Hit Flash, Light Pulse, Combo Box and Fade were still hard to read at 16 pixels after the first redraw. Each is now one silhouette with fewer, larger parts and a gap of at least a pixel between them: two sparkles, three linked states, a sideways tree, a body with eight pips, a car with floating wheels, a rising arrow, a block with a turning arrow, a framed sprite with flash ticks, a bulb with glow bars, key-arrow-key, and a bar breaking into squares. File names and `@icon` paths are unchanged.
+
 ### Fixed: a behaviour added from the library arrives with its icon already set to follow the editor's colours
 
 The behaviour library now carries the small import file that sits beside each pack icon, and adding a pack copies it in with the icon. Before, a pack added from the library was first imported with the icon's colours as drawn, and the editor turned the recolouring on a moment later and imported the icon a second time while the add was still running, which could print "reimport" errors and leave the add waiting. Now the first import is the right one on a light and on a dark editor and nothing is imported twice. The add also waits until the icon is really imported, not only until its import file exists. A project with no behaviours yet no longer prints a "Couldn't open directory" error when the editor starts.
