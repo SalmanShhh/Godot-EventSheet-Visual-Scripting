@@ -78,11 +78,37 @@ static func _scene_pins() -> bool:
 		["one that slows time for the calm key", nodes.has("./CalmPlayer"), true],
 		["one on a tile that loops by itself", [tile.get("loop", false), tile.get("autoplay", false)], [true, true]],
 		["one beside a Juice 3D node in a small 3D view", [nodes.has("./Corner/View/World3D/Cube/JuicePlayer"), str(cube.get("script_path", ""))], [true, JUICE_3D]],
+		["the 3D corner sits fully inside a 1152 by 648 view with a margin", _corner_margins(), [true, true]],
+		["the cube has a colour of its own", _cube_has_paint(), true],
 		["there are five players", players, 5],
 		["every list is saved as the typed list the export holds", untyped, 0],
 		["every family is seen at least once", ",".join(missing), ""],
 		["the showcase count does not move", folders, 30],
 	])
+
+
+## The state of one node of the saved scene, by its path under the root.
+static func _saved_node(node_path: String) -> Dictionary:
+	var state: SceneState = (load(SCENE) as PackedScene).get_state()
+	for index: int in state.get_node_count():
+		if str(state.get_node_path(index)) != node_path:
+			continue
+		var found: Dictionary = {}
+		for slot: int in state.get_node_property_count(index):
+			found[str(state.get_node_property_name(index, slot))] = state.get_node_property_value(index, slot)
+		return found
+	return {}
+
+
+## Whether the corner's edges keep at least 24 pixels from the right and the top of the window.
+static func _corner_margins() -> Array:
+	var corner: Dictionary = _saved_node("./Corner")
+	var placed: bool = corner.has("offset_right")
+	return [placed and float(corner.get("offset_top", 0.0)) >= 24.0, placed and 1152.0 - float(corner.get("offset_right", 9999.0)) >= 24.0]
+
+
+static func _cube_has_paint() -> bool:
+	return _saved_node("./Corner/View/World3D/Cube").has("material_override")
 
 
 static func _sheet_pins() -> bool:

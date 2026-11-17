@@ -1,5 +1,5 @@
 extends Node3D
-## FPS Arena: the FPSController behavior does all the work - this sheet only prints the controls and flips the camera mode on Tab.
+## [b]FPS Arena[/b] - A first-person controller with a weapon and targets. The FPSController behavior does all the work, and this sheet only prints the controls and flips the camera mode on Tab.
 
 var __every_stalk: float = 0.0
 

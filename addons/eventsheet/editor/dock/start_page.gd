@@ -59,9 +59,8 @@ const SHOWCASE_KINDS: Dictionary = {
 	"utility_ai": "AI",
 }
 
-## The pitches still WRITTEN here rather than read off the showcase. Two of them carry no about
-## comment at all; the rest were written for this page back when it listed a handful of showcases by
-## hand, and they still read better on a card than the showcase's own opening clause does. Every
+## The pitches still WRITTEN here rather than read off the showcase. They were written for this page
+## back when it listed a handful of showcases by hand, and they still read better on a card than the showcase's own opening clause does. Every
 ## other folder gets its line from the showcase itself, and an entry here retires the day its
 ## showcase says it as well - nothing else has to change when it does.
 const SHOWCASE_PITCHES: Dictionary = {
@@ -70,8 +69,6 @@ const SHOWCASE_PITCHES: Dictionary = {
 	"menu_starter": "A title screen, options and a pause menu that already talk to each other.",
 	"quest_fsm": "A quest that remembers where you are, as a state machine you can read.",
 	"family_arena": "Every enemy moves itself, and one family rule strikes them all.",
-	"fps_arena": "A first-person controller with a weapon and targets.",
-	"boomer_level": "A keycard, a locked door, grunts that fight each other, and an exit tally.",
 	"swarm": "Hundreds of things moving at once, and still readable.",
 	"draw_lab": "Draw shapes from events - a sandbox for the Drawing pack.",
 	"input_rebind": "A rebinding screen that saves what the player chose.",

@@ -663,7 +663,7 @@ func _build_carousel_juice(root: Node2D, hero: Node2D) -> void:
 	# The 3D corner: a cube in a small view, played by a Juice Player beside a Juice 3D node.
 	var corner: SubViewportContainer = SubViewportContainer.new()
 	corner.name = "Corner"
-	corner.position = Vector2(900, 12)
+	corner.position = Vector2(876, 24)
 	corner.size = Vector2(240, 180)
 	corner.stretch = true
 	root.add_child(corner)
@@ -679,18 +679,26 @@ func _build_carousel_juice(root: Node2D, hero: Node2D) -> void:
 	world.owner = root
 	var camera: Camera3D = Camera3D.new()
 	camera.name = "Camera3D"
-	camera.position = Vector3(0, 0, 3)
+	camera.position = Vector3(0, 0, 3.6)
 	camera.current = true
 	world.add_child(camera)
 	camera.owner = root
 	var sun: DirectionalLight3D = DirectionalLight3D.new()
 	sun.name = "Sun"
 	sun.rotation_degrees = Vector3(-40, 30, 0)
+	sun.light_energy = 1.6
 	world.add_child(sun)
 	sun.owner = root
 	var cube: MeshInstance3D = MeshInstance3D.new()
 	cube.name = "Cube"
 	cube.mesh = BoxMesh.new()
+	# A warm colour with a little glow of its own, so the shaded faces still read on the grey ground.
+	var cube_paint: StandardMaterial3D = StandardMaterial3D.new()
+	cube_paint.albedo_color = Color(1.0, 0.62, 0.2)
+	cube_paint.emission_enabled = true
+	cube_paint.emission = Color(1.0, 0.45, 0.1)
+	cube_paint.emission_energy_multiplier = 0.35
+	cube.material_override = cube_paint
 	cube.rotation_degrees = Vector3(20, 35, 0)
 	world.add_child(cube)
 	cube.owner = root
@@ -1890,7 +1898,7 @@ func _build_fps_arena() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node3D"
 	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
-	sheet.class_description = "FPS Arena: the FPSController behavior does all the work - this sheet only prints the controls and flips the camera mode on Tab."
+	sheet.class_description = "[b]FPS Arena[/b] - A first-person controller with a weapon and targets. The FPSController behavior does all the work, and this sheet only prints the controls and flips the camera mode on Tab."
 	var ready_event: EventRow = EventRow.new()
 	ready_event.trigger_provider_id = "Core"
 	ready_event.trigger_id = "OnReady"
@@ -4368,7 +4376,7 @@ func _build_boomer_level_sheet() -> bool:
 			"attributes": {"tooltip": "True once the exit is reached - the clock stops and the tally is written."}}
 	}
 	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
-	sheet.class_description += "\n\n" + "Boomer Level: WASD moves, the mouse looks, Tab throws a rocket at the grunts. Find the red keycard, open the door, take the exit."
+	sheet.class_description += "\n\n" + "[b]Boomer Level[/b] - A keycard, a locked door and two grunts that turn on each other, ending in an exit tally. WASD moves, the mouse looks, Tab throws a rocket at the grunts. Find the red keycard, open the door, take the exit."
 
 	var ready_event: EventRow = EventRow.new()
 	ready_event.trigger_provider_id = "Core"

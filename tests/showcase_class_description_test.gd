@@ -33,6 +33,12 @@ static func run() -> bool:
 		var main_script: String = FileAccess.get_file_as_string("res://demo/showcase/%s/%s.gd" % [folder, folder])
 		if main_script.contains("\n# [b]"):
 			closing_notes.append(folder)
-	ok = SUPPORT.check(P, "every showcase folder has a description for the start page, except the two whose descriptions never opened with a bold title", missing, PackedStringArray(["boomer_level", "fps_arena"])) and ok
+	ok = SUPPORT.check(P, "every showcase folder the start page lists has a description for its card", missing, PackedStringArray()) and ok
+	# The card shows the first sentence after the bold title, so a description that reads as nothing there is no description either.
+	var blank_card: PackedStringArray = PackedStringArray()
+	for folder: String in EventSheetStartPage.showcase_folders():
+		if EventSheetStartPage.pitch_from_about(EventSheetStartPage.showcase_about(folder)).strip_edges().is_empty():
+			blank_card.append(folder)
+	ok = SUPPORT.check(P, "every showcase folder the start page lists has a line to show on its card", blank_card, PackedStringArray()) and ok
 	ok = SUPPORT.check(P, "no showcase closes on a note any more", closing_notes, PackedStringArray()) and ok
 	return ok

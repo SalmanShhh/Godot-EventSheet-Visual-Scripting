@@ -41,7 +41,13 @@ background_mode = 3
 glow_enabled = true
 glow_intensity = 0.8
 
-[sub_resource type="BoxMesh" id="BoxMesh_j66u2"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_j66u2"]
+albedo_color = Color(1, 0.62, 0.2, 1)
+emission_enabled = true
+emission = Color(1, 0.45, 0.1, 1)
+emission_energy_multiplier = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_ocjtl"]
 
 [node name="Carousel" type="Node2D"]
 script = ExtResource("1_r4s3w")
@@ -126,10 +132,10 @@ steps = Array[Dictionary]([{
 environment = SubResource("Environment_q0kyh")
 
 [node name="Corner" type="SubViewportContainer" parent="."]
-offset_left = 900.0
-offset_top = 12.0
-offset_right = 1140.0
-offset_bottom = 192.0
+offset_left = 876.0
+offset_top = 24.0
+offset_right = 1116.0
+offset_bottom = 204.0
 stretch = true
 
 [node name="View" type="SubViewport" parent="Corner"]
@@ -138,15 +144,17 @@ size = Vector2i(240, 180)
 [node name="World3D" type="Node3D" parent="Corner/View"]
 
 [node name="Camera3D" type="Camera3D" parent="Corner/View/World3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.6)
 current = true
 
 [node name="Sun" type="DirectionalLight3D" parent="Corner/View/World3D"]
 transform = Transform3D(0.8660254, -0.3213938, 0.38302222, 0, 0.76604444, 0.6427876, -0.5, -0.55667037, 0.66341394, 0, 0, 0)
+light_energy = 1.6
 
 [node name="Cube" type="MeshInstance3D" parent="Corner/View/World3D"]
 transform = Transform3D(0.81915206, 0.1961747, 0.53898555, 0, 0.9396926, -0.34202012, -0.57357645, 0.28016648, 0.76975113, 0, 0, 0)
-mesh = SubResource("BoxMesh_j66u2")
+material_override = SubResource("StandardMaterial3D_j66u2")
+mesh = SubResource("BoxMesh_ocjtl")
 
 [node name="Juice3DBehavior" type="Node" parent="Corner/View/World3D/Cube"]
 script = ExtResource("11_h327q")

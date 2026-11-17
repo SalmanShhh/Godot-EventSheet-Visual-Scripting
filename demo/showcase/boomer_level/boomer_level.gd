@@ -2,7 +2,7 @@ class_name BoomerLevel
 extends Node3D
 ## A small shooter level: a red keycard, the door that wants it, two grunts that turn on each other, a respawning pickup, a secret and the exit tally.
 ##
-## Boomer Level: WASD moves, the mouse looks, Tab throws a rocket at the grunts. Find the red keycard, open the door, take the exit.
+## [b]Boomer Level[/b] - A keycard, a locked door and two grunts that turn on each other, ending in an exit tally. WASD moves, the mouse looks, Tab throws a rocket at the grunts. Find the red keycard, open the door, take the exit.
 
 var keys: Array = []
 var secrets_found: Array = []
