@@ -30,6 +30,7 @@ static func run() -> bool:
 	all_passed = _test_wait_timeout(script) and all_passed
 	all_passed = _test_wait_success_and_group() and all_passed
 	all_passed = _test_wait_forever_never_gives_up() and all_passed
+	all_passed = _test_wait_runs_on_game_time() and all_passed
 	all_passed = _test_event_log_is_capped_and_printable(script) and all_passed
 	all_passed = _test_persistence(script) and all_passed
 	return all_passed
@@ -43,7 +44,7 @@ static func _test_wait_forever_never_gives_up() -> bool:
 	if script == null:
 		return _check("the stand-in harness parses", false, true)
 	var fake_script: GDScript = GDScript.new()
-	fake_script.source_code = "extends Node\n\nsignal process_frame\n"
+	fake_script.source_code = "extends Node\n\nsignal process_frame\n\nclass FakeTimer extends RefCounted:\n\tvar time_left: float = 100.0\n\nvar made: Array = []\n\nfunc create_timer(seconds: float, always: bool = true) -> Object:\n\tvar timer: FakeTimer = FakeTimer.new()\n\ttimer.time_left = seconds\n\tmade.append([seconds, always, timer])\n\treturn timer"
 	fake_script.reload()
 	var fake: Node = Node.new()
 	fake.set_script(fake_script)
@@ -62,6 +63,61 @@ static func _test_wait_forever_never_gives_up() -> bool:
 	fake.process_frame.emit()
 	all_passed = _check("the message it was waiting for still resolves it",
 		bus.wait_for_event_succeeded("curtain_up"), true) and all_passed
+	bus.free()
+	fake.free()
+	return all_passed
+
+
+## The give-up time is GAME time: a timer made with process_always off (so it stops while the tree is
+## paused) at the game's time scale, and the wait gives up when THAT timer runs out, not when a wall
+## clock does. Two waiters on one channel each keep their own count in flight.
+static func _test_wait_runs_on_game_time() -> bool:
+	var all_passed: bool = true
+	var script: GDScript = _harness_script()
+	if script == null:
+		return _check("the stand-in harness parses", false, true)
+	var fake_script: GDScript = GDScript.new()
+	fake_script.source_code = "extends Node
+
+signal process_frame
+
+class FakeTimer extends RefCounted:
+	var time_left: float = 100.0
+
+var made: Array = []
+
+func create_timer(seconds: float, always: bool = true) -> Object:
+	var timer: FakeTimer = FakeTimer.new()
+	timer.time_left = seconds
+	made.append([seconds, always, timer])
+	return timer
+"
+	fake_script.reload()
+	var fake: Node = Node.new()
+	fake.set_script(fake_script)
+	var bus: Node = script.new()
+	bus.fake_tree = fake
+	bus.in_tree = true
+	bus.wait_for("gate", 2.0)
+	var made: Array = fake.made
+	all_passed = _check("a timed wait asks the tree for a timer of the give-up time", (made[0] as Array)[0], 2.0) and all_passed
+	all_passed = _check("that stops while the game is paused", (made[0] as Array)[1], false) and all_passed
+	for _frame: int in 3:
+		fake.process_frame.emit()
+	all_passed = _check("a long wall-clock wait is not a give-up: the game's timer still has time", bus.wait_for_event_timed_out("gate"), false) and all_passed
+	((made[0] as Array)[2] as RefCounted).time_left = 0.0
+	fake.process_frame.emit()
+	all_passed = _check("when the game's timer runs out the wait gives up", bus.wait_for_event_timed_out("gate"), true) and all_passed
+	all_passed = _check("and nothing is still counted in flight", int(bus._wait_pending.get("gate", 0)), 0) and all_passed
+	# Two waiters on one channel: the second one starting does not clear what the first is waiting on.
+	bus.wait_for("lobby", 9.0)
+	bus.wait_for("lobby", 9.0)
+	all_passed = _check("two waits on one channel are both counted", int(bus._wait_pending.get("lobby", 0)), 2) and all_passed
+	all_passed = _check("and neither has an outcome yet", bus.wait_for_event_succeeded("lobby") or bus.wait_for_event_timed_out("lobby"), false) and all_passed
+	bus.broadcast("lobby", {})
+	fake.process_frame.emit()
+	all_passed = _check("one message resolves both", int(bus._wait_pending.get("lobby", 0)), 0) and all_passed
+	all_passed = _check("as a success", bus.wait_for_event_succeeded("lobby"), true) and all_passed
 	bus.free()
 	fake.free()
 	return all_passed
@@ -222,7 +278,7 @@ static func _test_wait_success_and_group() -> bool:
 		return all_passed
 
 	var fake_script: GDScript = GDScript.new()
-	fake_script.source_code = "extends Node\n\nsignal process_frame\n\nvar members: Array = []\n\nfunc get_nodes_in_group(group: String) -> Array:\n\treturn members\n"
+	fake_script.source_code = "extends Node\n\nsignal process_frame\n\nvar members: Array = []\n\nfunc get_nodes_in_group(group: String) -> Array:\n\treturn members\n\nclass FakeTimer extends RefCounted:\n\tvar time_left: float = 100.0\n\nvar made: Array = []\n\nfunc create_timer(seconds: float, always: bool = true) -> Object:\n\tvar timer: FakeTimer = FakeTimer.new()\n\ttimer.time_left = seconds\n\tmade.append([seconds, always, timer])\n\treturn timer"
 	all_passed = _check("the tree stand-in parses", fake_script.reload(), OK) and all_passed
 	var fake: Node = Node.new()
 	fake.set_script(fake_script)

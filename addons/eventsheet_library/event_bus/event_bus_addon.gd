@@ -23,6 +23,8 @@ var _counts: Dictionary = {}
 # still in flight has not timed out, and a bool would have to answer one of the two anyway.
 ## How each event's latest wait ended: 0 still waiting, 1 the event arrived, 2 it gave up.
 var _wait_outcomes: Dictionary = {}
+## How many waits on each event are still in flight, so a second wait does not clear the first one's state.
+var _wait_pending: Dictionary = {}
 # channel -> Array of {node, method}: one-shot listeners, run once and then dropped.
 ## Listeners that remove themselves after their first event, by event name.
 var _once_listeners: Dictionary = {}
@@ -173,13 +175,23 @@ func wait_for(channel: String = "door_opened", seconds: float = 8.0) -> void:
 	# Watching the counter rather than awaiting the signal is what lets the give-up time
 	# interrupt the wait: GDScript cannot await two signals and take whichever lands first.
 	var seen: int = int(_counts.get(channel, 0))
-	var deadline: int = Time.get_ticks_msec() + int(maxf(seconds, 0.0) * 1000.0)
-	_wait_outcomes[channel] = 0
+	# The give-up time is GAME time: a timer that stops while the tree is paused and runs at the
+	# game's time scale, so a paused game does not give up on a door the player has not reached.
+	var give_up: Object = get_tree().create_timer(seconds, false) if seconds > 0.0 and is_inside_tree() else null
+	# With no tree to keep the time there is no pause or time scale to follow, and the clock answers.
+	var wall_deadline: int = Time.get_ticks_msec() + int(maxf(seconds, 0.0) * 1000.0)
+	# A wait that starts while another on the channel is still in flight leaves that one's state
+	# alone: the slot is cleared only when nothing else is waiting on the channel.
+	if int(_wait_pending.get(channel, 0)) == 0:
+		_wait_outcomes[channel] = 0
+	_wait_pending[channel] = int(_wait_pending.get(channel, 0)) + 1
 	while int(_counts.get(channel, 0)) == seen:
-		if seconds > 0.0 and Time.get_ticks_msec() >= deadline:
+		if seconds > 0.0 and ((give_up != null and give_up.time_left <= 0.0) or (give_up == null and Time.get_ticks_msec() >= wall_deadline)):
+			_wait_pending[channel] = int(_wait_pending[channel]) - 1
 			_wait_outcomes[channel] = 2
 			return
 		await get_tree().process_frame
+	_wait_pending[channel] = int(_wait_pending[channel]) - 1
 	_wait_outcomes[channel] = 1
 
 # @ace_hidden
