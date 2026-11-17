@@ -41,7 +41,7 @@ Right-clicking a node used to offer Preview only for behaviours that were its di
 
 ### Changed: a denial placed now is written `if not level_over:`
 
-A condition you place on the sheet and invert now writes `if not level_over:` instead of `if not (level_over):` whenever what it denies is one plain name, member, call or index (`a`, `a.b`, `a.b()`, `a[b]`). Anything with an operator, `in`, `is`, `as`, `and`, `or`, an `if ... else`, a lambda or an `await` keeps its brackets, and an inverted comparison still writes the opposite comparison. Scripts and rows written before keep their bytes: opening one and saving it changes nothing, and both spellings open as the same row. Tidy This Script offers the short form for an older row when the result reads back identically. The Boomer Level showcase adopted it (one line).
+A condition you place on the sheet and invert now writes `if not level_over:` instead of `if not (level_over):` whenever what it denies is one plain name, member, call or index (`a`, `a.b`, `a.b()`, `a[b]`). Anything with an operator, `in`, `is`, `as`, `and`, `or`, an `if ... else`, a lambda or an `await` keeps its brackets, and an inverted comparison still writes the opposite comparison. Scripts and rows written before keep their bytes: opening one and saving it changes nothing, whichever spelling it uses, and a line written `if not x:` by hand still reads the way it always did. Tidy This Script offers the short form for an older row when the result reads back identically. The Boomer Level showcase adopted it (one line).
 
 ### Fixed: the Boomer Level and FPS Arena showcases describe themselves the way the others do, and the Carousel's 3D corner is fully in view
 

@@ -132,11 +132,8 @@ static func _bound() -> bool:
 			_plain(holder, "Leaf%d" % leaf)
 	var far_holder: Node = _plain(_plain(selected, "FarHolder"), "Deeper")
 	var far: Node = _behaviour(far_holder, "Far")
-	var started: int = Time.get_ticks_usec()
 	var walked: Dictionary = WALK.walk(selected, null, WALK.MAX_VISITED)
-	var microseconds: int = Time.get_ticks_usec() - started
 	var everything: Dictionary = WALK.walk(selected, null, 100000)
-	print("  [perf] right-click walk over %d nodes (stopped at %d): %.2f ms" % [selected.get_child_count() + 2000, int(walked["visited"]), float(microseconds) / 1000.0])
 	var table: Array = [
 		["the walk looks at no more than its limit", int(walked["visited"]), WALK.MAX_VISITED],
 		["and says it stopped early", bool(walked["cut"]), true],

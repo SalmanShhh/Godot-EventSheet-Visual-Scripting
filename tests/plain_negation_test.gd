@@ -100,14 +100,11 @@ static func _reading() -> bool:
 		var source: String = _file(header)
 		var back: String = SUPPORT.reemit(source, SUPPORT.own_path("plain_negation_rt.gd"))
 		table.append(["`if %s:` opens and saves back byte for byte" % header, back, source])
-	var short_row: ACECondition = _lifted_first(_file("not level_over"))
 	var long_row: ACECondition = _lifted_first(_file("not (level_over)"))
-	var short_shape: Array = [short_row != null and short_row.negated, short_row != null and short_row.plain_negation]
 	var long_shape: Array = [long_row != null and long_row.negated, long_row != null and long_row.plain_negation]
-	table.append(["the short denial opens as a denied condition that remembers it", short_shape, [true, true]])
-	table.append(["the bracketed one opens as the same denied condition", long_shape, [true, false]])
-	var same_verb: bool = short_row != null and long_row != null and short_row.ace_id == long_row.ace_id and short_row.params == long_row.params
-	table.append(["both name the same verb and operand", same_verb, true])
+	table.append(["the bracketed denial opens as a denied condition that keeps its brackets", long_shape, [true, false]])
+	var short_row: ACECondition = _lifted_first(_file("not level_over"))
+	table.append(["a hand-written short denial keeps the reading it has always had", [short_row != null and short_row.negated, short_row != null and short_row.plain_negation], [false, false]])
 	return SUPPORT.pins(P, table)
 
 
@@ -118,14 +115,14 @@ static func _reopened(header: String) -> EventSheetResource:
 
 
 static func _tidy() -> bool:
-	var Tidy: GDScript = load("res://addons/eventsheet/editor/dock/tidy_script.gd")
-	var plan: Dictionary = Tidy.plan(_reopened("not (level_over)"))
+	var tidy: GDScript = load("res://addons/eventsheet/editor/dock/tidy_script.gd")
+	var plan: Dictionary = tidy.plan(_reopened("not (level_over)"))
 	var changes: Array = plan.get("changes", [])
 	var first: Dictionary = changes[0] if not changes.is_empty() else {}
 	var table: Array = [
 		["Tidy offers the short form for the old row", str(first.get("after", "")).strip_edges(), "if not level_over:"],
 		["and lists exactly one changed line", changes.size(), 1],
-		["a row that denies a comparison is left alone", (Tidy.plan(_reopened("not (a == b)")).get("changes", []) as Array).size(), 0],
-		["a row already short has nothing to tidy", (Tidy.plan(_reopened("not level_over")).get("changes", []) as Array).size(), 0],
+		["a row that denies a comparison is left alone", (tidy.plan(_reopened("not (a == b)")).get("changes", []) as Array).size(), 0],
+		["a row already short has nothing to tidy", (tidy.plan(_reopened("not level_over")).get("changes", []) as Array).size(), 0],
 	]
 	return SUPPORT.pins(P, table)
