@@ -49,7 +49,7 @@ func open(initial_query: String = "") -> void:
 func _build_project_find() -> void:
 	var parts: Dictionary = EventSheetPopupUI.action_window(
 		EventSheetL10n.translate("Find and replace in every sheet"), EventSheetL10n.translate("Replace in Project"),
-		EventSheetL10n.translate("Close"), Vector2i(560, 480), _dock)
+		EventSheetL10n.translate("Close"), Vector2i(640, 640), _dock)
 	_project_find_window = parts["window"]
 	_project_find_window.confirmed.connect(_run_project_replace)
 	# What the main button cannot take back, said beside it.
@@ -73,7 +73,7 @@ func _build_project_find() -> void:
 	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Replace with"), _project_replace_edit))
 	box.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Find and replace"), form))
 	_project_find_results = EventSheetPopupUI.table(PackedStringArray([EventSheetL10n.translate("Sheet"),
-		EventSheetL10n.translate("Event"), EventSheetL10n.translate("Match")]), 170.0, {1: 64.0})
+		EventSheetL10n.translate("Event"), EventSheetL10n.translate("Match")]), 300.0, {1: 64.0})
 	_project_find_results.item_edited.connect(_on_tick_edited)
 	_project_find_results.item_selected.connect(_on_project_find_selected)
 	_project_find_results.item_activated.connect(_on_project_find_activated)
@@ -426,12 +426,13 @@ func _fill_results() -> void:
 		elif kind == module.KIND_SCRIPT:
 			scripts = files.size()
 		var group_item: TreeItem = _project_find_results.create_item(root_item)
-		group_item.set_text(0, str(titles[kind]) % files.size())
-		group_item.set_metadata(0, {"group": kind})
 		if kind != module.KIND_PACK:
+			# The mode first: changing a cell's mode clears its text.
 			group_item.set_cell_mode(0, TreeItem.CELL_MODE_CHECK)
 			group_item.set_editable(0, true)
 			group_item.set_checked(0, _group_ticked(kind))
+		group_item.set_text(0, str(titles[kind]) % files.size())
+		group_item.set_metadata(0, {"group": kind})
 		for index: int in range(mini(files.size(), module.MAX_FILES_SHOWN)):
 			_add_file_item(group_item, files[index])
 		if files.size() > module.MAX_FILES_SHOWN:
@@ -446,6 +447,10 @@ func _add_file_item(group_item: TreeItem, entry: Dictionary) -> void:
 	var module: GDScript = _replace_module()
 	var kind: String = str(entry["kind"])
 	var item: TreeItem = _project_find_results.create_item(group_item)
+	if kind != module.KIND_PACK:
+		item.set_cell_mode(0, TreeItem.CELL_MODE_CHECK)
+		item.set_editable(0, int(entry["hits"]) > 0)
+		item.set_checked(0, int(entry["hits"]) > 0 and bool(_ticks.get(str(entry["path"]), module.default_ticked(kind))))
 	item.set_text(0, str(entry["path"]).get_file())
 	item.set_tooltip_text(0, str(entry["path"]))
 	var places: String = EventSheetL10n.translate("%d place(s)") % int(entry["hits"])
@@ -453,10 +458,6 @@ func _add_file_item(group_item: TreeItem, entry: Dictionary) -> void:
 		places += " - " + EventSheetL10n.translate("open in a tab")
 	item.set_text(2, places)
 	item.set_metadata(0, {"file": str(entry["path"]), "kind": kind})
-	if kind != module.KIND_PACK:
-		item.set_cell_mode(0, TreeItem.CELL_MODE_CHECK)
-		item.set_editable(0, int(entry["hits"]) > 0)
-		item.set_checked(0, int(entry["hits"]) > 0 and bool(_ticks.get(str(entry["path"]), module.default_ticked(kind))))
 	var replaced: bool = not _project_replace_edit.text.is_empty()
 	for line: Dictionary in entry["lines"]:
 		var line_item: TreeItem = _project_find_results.create_item(item)
