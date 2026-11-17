@@ -94,6 +94,18 @@ const ABOUT_LEAD_LIMIT: int = 48
 
 const SHOWCASE_DIR: String = "res://demo/showcase"
 
+## What a column's cells may ask for, in unscaled pixels. A kind (the quiet word beside a name) wraps past TAG_LIMIT; a name
+## is never squeezed under NAME_FLOOR before the window is too small to help, and is shown whole up to NAME_LIMIT, past which it
+## wraps. CELL_SLACK is the room a row spends on its icon, the gaps and the scroll bar; CELL_GAP the breathing space between
+## a name and its kind.
+const TAG_LIMIT: float = 110.0
+const NAME_FLOOR: float = 110.0
+const NAME_LIMIT: float = 230.0
+const CELL_SLACK: float = 56.0
+const CELL_GAP: float = 14.0
+## How much more of the window than its words ask for the template column is given.
+const TEMPLATE_WEIGHT: float = 1.3
+
 var _dock: Control = null
 var _window: Window = null
 var _columns_row: HBoxContainer = null
@@ -439,7 +451,8 @@ func _build() -> void:
 		return
 	_window = Window.new()
 	_window.title = EventSheetL10n.translate("Start - open a sheet or make one")
-	_window.size = Vector2i(EventSheetPalette.scaled(1120), EventSheetPalette.scaled(640))
+	_window.size = Vector2i(EventSheetPalette.scaled(1240), EventSheetPalette.scaled(640))
+	_window.min_size = Vector2i(EventSheetPalette.scaled(760), EventSheetPalette.scaled(420))
 	_window.close_requested.connect(_window.hide)
 	var outer: VBoxContainer = EventSheetPopupUI.form_box()
 	_columns_row = HBoxContainer.new()
@@ -493,8 +506,10 @@ func _fill() -> void:
 		list.columns = 2
 		list.hide_root = true
 		list.select_mode = Tree.SELECT_ROW
-		# The kind is the quieter, narrower column; the name gets three parts of four.
-		list.set_column_expand_ratio(0, 3)
+		# The kind is the quieter, narrower column: it asks for just the room its words need (set below, once the
+		# list is in the window and its font is known) and the name takes the rest.
+		list.set_column_expand(0, true)
+		list.set_column_expand(1, false)
 		list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		list.item_selected.connect(func() -> void:
 			for other: Tree in _lists:
@@ -511,8 +526,50 @@ func _fill() -> void:
 		# Without these the cards shrink to their titles: an HBoxContainer hands out no space a
 		# child did not ask for. The template column is the one with the most to show.
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.size_flags_stretch_ratio = 2.0 if str(section.get("id", "")) == "templates" else 1.0
 		_columns_row.add_child(card)
+		_fit_column(card, list, section)
+
+
+## Gives a column the room its words ask for. The list is in the window by now, so its own font measures the
+## translated words: the kind column is as wide as its widest kind (up to a limit, past which a kind wraps) and
+## the column shares the row in proportion to what it would like, so a column with nothing in it gives its room
+## to the ones with long names, and a long name wraps onto a second line instead of being cut.
+func _fit_column(card: PanelContainer, list: Tree, section: Dictionary) -> void:
+	var plan: Dictionary = plan_for(section, list.get_theme_font("font"), list.get_theme_font_size("font_size"), EventSheetPalette.scaled(13))
+	card.custom_minimum_size.x = float(plan["minimum"])
+	# The template list is the long one: a name that wraps there costs a row in a list that scrolls, so it is given more of
+	# the room than its words alone would earn.
+	card.size_flags_stretch_ratio = float(plan["ideal"]) * (TEMPLATE_WEIGHT if str(section.get("id", "")) == "templates" else 1.0)
+	list.set_column_custom_minimum_width(1, int(ceil(float(plan["tag"]))))
+	list.set_column_custom_minimum_width(0, int(ceil(float(plan["name_floor"]))))
+
+
+## The plan for one column of `columns()`, its words measured in the language the page speaks now with `font` (the list's own).
+static func plan_for(section: Dictionary, font: Font, font_size: int, title_font_size: int) -> Dictionary:
+	var widest_name: float = 0.0
+	var widest_tag: float = 0.0
+	for entry: Variant in section.get("entries", []):
+		var row: Dictionary = entry
+		widest_name = maxf(widest_name, font.get_string_size(EventSheetL10n.translate(str(row.get("label", ""))), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x)
+		widest_tag = maxf(widest_tag, font.get_string_size(EventSheetL10n.translate(str(row.get("tag", ""))), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x)
+	if (section.get("entries", []) as Array).is_empty():
+		widest_name = font.get_string_size(EventSheetL10n.translate("Nothing here yet."), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+	var widest_title: float = font.get_string_size(EventSheetL10n.translate(str(section.get("title", ""))), HORIZONTAL_ALIGNMENT_LEFT, -1.0, title_font_size).x
+	var plan: Dictionary = column_plan(widest_name, widest_tag, widest_title)
+	plan["widest_tag"] = widest_tag
+	return plan
+
+
+## How much room a column asks for, from the widest name and the widest kind it holds and the width of its title (all in
+## pixels, as drawn): the kind column's width, the least the name column may shrink to, the least the whole column may
+## shrink to, and the width it would like. Pure, so the suite pins the sums without a window.
+static func column_plan(widest_name: float, widest_tag: float, widest_title: float) -> Dictionary:
+	var tag: float = minf(widest_tag, EventSheetPalette.scaled_f(TAG_LIMIT)) + (EventSheetPalette.scaled_f(CELL_GAP) if widest_tag > 0.0 else 0.0)
+	var slack: float = EventSheetPalette.scaled_f(CELL_SLACK)
+	var name_floor: float = minf(widest_name, EventSheetPalette.scaled_f(NAME_FLOOR))
+	var minimum: float = maxf(widest_title + EventSheetPalette.scaled_f(CELL_SLACK), tag + name_floor + slack)
+	var ideal: float = maxf(minimum, tag + minf(widest_name, EventSheetPalette.scaled_f(NAME_LIMIT)) + slack)
+	return {"tag": tag, "name_floor": name_floor, "minimum": minimum, "ideal": ideal}
 
 
 ## One row per entry - its name, and its kind in the quieter second column - under the heading of
@@ -544,11 +601,17 @@ func _fill_list(list: Tree, entries: Array, shelf: String = "") -> void:
 			item.set_icon_max_width(0, EventSheetPalette.scaled(16))
 		item.set_text(1, str(row.get("tag", "")))
 		item.set_tooltip_text(0, str(row.get("label", "")))
+		item.set_tooltip_text(1, str(row.get("tag", "")))
+		# A name or a kind too long for its column goes on to a second line, and the tooltip holds the whole of it.
+		item.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
+		item.set_autowrap_mode(1, TextServer.AUTOWRAP_WORD_SMART)
 		item.set_custom_color(1, EventSheetPopupUI.muted_text_color())
 		item.set_metadata(0, row)
 	if root.get_child_count() == 0:
 		var empty: TreeItem = list.create_item(root)
 		empty.set_text(0, "Nothing here yet.")
+		empty.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
+		empty.set_tooltip_text(0, "Nothing here yet.")
 		empty.set_custom_color(0, EventSheetPopupUI.muted_text_color())
 		empty.set_selectable(0, false)
 		empty.set_selectable(1, false)

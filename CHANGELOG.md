@@ -50,6 +50,10 @@ The give-up time stops while the game is paused and follows the time scale, and 
 
 A large map cost the square of its size; the routes are the same.
 
+### Fixed: the Start window cut its names while the window had room
+
+The Learn column showed "Your first ev..." and "5 mi", the This editor column one cut line, and the Recent column stood nearly empty. Each column now measures its own words in the language in use: the kind column is as wide as its widest kind, a long name wraps onto a second line, an empty column gives its room away, the template list gets a larger share, and the window opens a little wider. A smaller window narrows the columns evenly and every row keeps a tooltip with the whole of its name and kind.
+
 ### Changed: a large Drawing Prefab's picture is drawn several times faster
 
 The picture at the top of a prefab's Inspector is cut into bands that are drawn at once, each shape visits only the pixels it can cover (a long slanted line no longer walks its whole bounding box), and an opaque disc, rectangle, rounded rectangle, polygon or line is written a row at a time. A change starts its picture at once instead of waiting for the next frame. The picture is exactly the one drawn before, pixel for pixel: the suite draws random shapes both ways and compares them, and a spread of prefabs was compared across the old and new code.
