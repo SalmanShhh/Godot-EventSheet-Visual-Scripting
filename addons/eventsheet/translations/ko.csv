@@ -11112,21 +11112,21 @@ The scene's WorldEnvironment,씬의 WorldEnvironment
 "Flares a light to a brightness and a colour and lets it go back by itself: a muzzle flash. It works on the 2D and 3D lights, and a light that was off is switched on for the flare.","라이트를 지정한 밝기와 색까지 번쩍이게 한 뒤 저절로 되돌립니다. 총구 섬광 같은 효과입니다. 2D와 3D 라이트에서 쓸 수 있고, 꺼져 있던 라이트는 번쩍이는 동안만 켜집니다."
 "Moves one value of the look of the scene to a number and back: glow, brightness, contrast, saturation, exposure, fog. It changes the scene's own copy, so no other scene changes. In a 2D game the glow needs a WorldEnvironment whose background is set to Canvas.","씬 룩의 값 하나를 지정한 숫자까지 움직였다가 되돌립니다. 글로우, 밝기, 대비, 채도, 노출, 안개 등이 있습니다. 씬 자신의 복사본을 바꾸므로 다른 씬은 바뀌지 않습니다. 2D 게임에서 글로우를 쓰려면 배경이 Canvas인 WorldEnvironment가 필요합니다."
 Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end and stays. Never shown in the editor.,오디오 버스의 이펙트를 일정 시간 유지했다가 되돌립니다. 피격 시 세상을 먹먹하게 만드는 로우패스 같은 데 씁니다. 버스에 없는 이펙트는 끝에 추가되어 그대로 남습니다. 에디터에서는 재생되지 않습니다.
-Tidy This Script…,
-"Write this script the way the editor writes it today: a guard around a plain number as the number, the annotation words as one-hash comments. Every line that would change is listed first, and nothing is written until you press Apply.",
-"This script cannot be tidied: it does not write back the same text from a copy, so nothing was planned.",
-Nothing to tidy.,
-Tidy this script,
-"This sheet changed while the window was open, so nothing was written. Nothing to tidy.",
-"This sheet changed while the window was open, so nothing was written - here is what it says now.",
-Nothing was tidied.,
-(no line),
-(line removed),
-1 line would be rewritten in one step you can undo.,
-%d lines would be rewritten in one step you can undo.,
-1 line is left as it is.,
-%d lines are left as they are.,
-1 line tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,
-%d lines tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,
-1 line uses an older spelling. Sheet > Tidy This Script lists it first.,
-%d lines use an older spelling. Sheet > Tidy This Script lists them first.,
+Tidy This Script…,이 스크립트 정리…
+"Write this script the way the editor writes it today: a guard around a plain number as the number, the annotation words as one-hash comments. Every line that would change is listed first, and nothing is written until you press Apply.","이 스크립트를 지금 에디터가 쓰는 방식으로 다시 씁니다. 단순한 숫자를 감싼 가드는 숫자 그대로가 되고, 어노테이션 단어는 # 하나짜리 주석이 됩니다. 바뀔 모든 줄을 먼저 목록으로 보여 주며, 적용을 누르기 전에는 아무것도 쓰지 않습니다."
+"This script cannot be tidied: it does not write back the same text from a copy, so nothing was planned.",이 스크립트는 정리할 수 없습니다. 복사본에서 같은 텍스트를 다시 쓰지 못하므로 아무것도 계획되지 않았습니다.
+Nothing to tidy.,정리할 것이 없습니다.
+Tidy this script,이 스크립트 정리
+"This sheet changed while the window was open, so nothing was written. Nothing to tidy.",창이 열려 있는 동안 이 시트가 바뀌어 아무것도 쓰지 않았습니다. 정리할 것이 없습니다.
+"This sheet changed while the window was open, so nothing was written - here is what it says now.",창이 열려 있는 동안 이 시트가 바뀌어 아무것도 쓰지 않았습니다 - 지금 내용은 다음과 같습니다.
+Nothing was tidied.,정리된 것이 없습니다.
+(no line),(줄 없음)
+(line removed),(줄 삭제됨)
+1 line would be rewritten in one step you can undo.,1개 줄이 되돌릴 수 있는 한 단계로 다시 쓰여집니다.
+%d lines would be rewritten in one step you can undo.,%d개 줄이 되돌릴 수 있는 한 단계로 다시 쓰여집니다.
+1 line is left as it is.,1개 줄은 그대로 둡니다.
+%d lines are left as they are.,%d개 줄은 그대로 둡니다.
+1 line tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,"1개 줄을 정리하고 저장했습니다. 실행 취소하면 시트가 되돌아가며, 이전 파일은 시트 백업에 있습니다."
+%d lines tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,"%d개 줄을 정리하고 저장했습니다. 실행 취소하면 시트가 되돌아가며, 이전 파일은 시트 백업에 있습니다."
+1 line uses an older spelling. Sheet > Tidy This Script lists it first.,1개 줄이 예전 표기를 씁니다. 시트 > 이 스크립트 정리가 먼저 목록으로 보여 줍니다.
+%d lines use an older spelling. Sheet > Tidy This Script lists them first.,%d개 줄이 예전 표기를 씁니다. 시트 > 이 스크립트 정리가 먼저 목록으로 보여 줍니다.

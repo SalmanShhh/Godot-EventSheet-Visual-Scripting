@@ -11112,21 +11112,21 @@ The scene's WorldEnvironment,El WorldEnvironment de la escena
 "Flares a light to a brightness and a colour and lets it go back by itself: a muzzle flash. It works on the 2D and 3D lights, and a light that was off is switched on for the flare.","Hace destellar una luz hasta un brillo y un color y la deja volver sola: un fogonazo. Funciona con las luces 2D y 3D, y una luz apagada se enciende para el destello."
 "Moves one value of the look of the scene to a number and back: glow, brightness, contrast, saturation, exposure, fog. It changes the scene's own copy, so no other scene changes. In a 2D game the glow needs a WorldEnvironment whose background is set to Canvas.","Mueve un valor del aspecto de la escena a un número y de vuelta: brillo, luminosidad, contraste, saturación, exposición, niebla. Cambia la copia propia de la escena, así que ninguna otra escena cambia. En un juego 2D el brillo necesita un WorldEnvironment con el fondo en Canvas."
 Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end and stays. Never shown in the editor.,"Mantiene un efecto de un bus de audio durante un tiempo y lo devuelve a como estaba: un filtro paso bajo que amortigua el mundo cuando te hieren. Si al bus le falta un efecto, se añade al final y se queda. Nunca se muestra en el editor."
-Tidy This Script…,
-"Write this script the way the editor writes it today: a guard around a plain number as the number, the annotation words as one-hash comments. Every line that would change is listed first, and nothing is written until you press Apply.",
-"This script cannot be tidied: it does not write back the same text from a copy, so nothing was planned.",
-Nothing to tidy.,
-Tidy this script,
-"This sheet changed while the window was open, so nothing was written. Nothing to tidy.",
-"This sheet changed while the window was open, so nothing was written - here is what it says now.",
-Nothing was tidied.,
-(no line),
-(line removed),
-1 line would be rewritten in one step you can undo.,
-%d lines would be rewritten in one step you can undo.,
-1 line is left as it is.,
-%d lines are left as they are.,
-1 line tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,
-%d lines tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,
-1 line uses an older spelling. Sheet > Tidy This Script lists it first.,
-%d lines use an older spelling. Sheet > Tidy This Script lists them first.,
+Tidy This Script…,Ordenar este script…
+"Write this script the way the editor writes it today: a guard around a plain number as the number, the annotation words as one-hash comments. Every line that would change is listed first, and nothing is written until you press Apply.","Escribe este script como lo escribe hoy el editor: una protección alrededor de un número simple pasa a ser el número, y las palabras de anotación pasan a comentarios con una sola almohadilla. Cada línea que cambiaría se muestra antes, y no se escribe nada hasta que pulses Aplicar."
+"This script cannot be tidied: it does not write back the same text from a copy, so nothing was planned.","Este script no se puede ordenar: desde una copia no escribe el mismo texto, así que no se planeó nada."
+Nothing to tidy.,Nada que ordenar.
+Tidy this script,Ordenar este script
+"This sheet changed while the window was open, so nothing was written. Nothing to tidy.","Esta hoja cambió mientras la ventana estaba abierta, así que no se escribió nada. Nada que ordenar."
+"This sheet changed while the window was open, so nothing was written - here is what it says now.","Esta hoja cambió mientras la ventana estaba abierta, así que no se escribió nada - esto es lo que dice ahora."
+Nothing was tidied.,No se ordenó nada.
+(no line),(sin línea)
+(line removed),(línea eliminada)
+1 line would be rewritten in one step you can undo.,1 línea se reescribiría en un solo paso que puedes deshacer.
+%d lines would be rewritten in one step you can undo.,%d líneas se reescribirían en un solo paso que puedes deshacer.
+1 line is left as it is.,1 línea se queda como está.
+%d lines are left as they are.,%d líneas se quedan como están.
+1 line tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,1 línea ordenada y guardada. Deshacer devuelve la hoja; el archivo anterior está en las copias de seguridad de la hoja.
+%d lines tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,%d líneas ordenadas y guardadas. Deshacer devuelve la hoja; el archivo anterior está en las copias de seguridad de la hoja.
+1 line uses an older spelling. Sheet > Tidy This Script lists it first.,1 línea usa una escritura antigua. Hoja > Ordenar este script la muestra primero.
+%d lines use an older spelling. Sheet > Tidy This Script lists them first.,%d líneas usan una escritura antigua. Hoja > Ordenar este script las muestra primero.

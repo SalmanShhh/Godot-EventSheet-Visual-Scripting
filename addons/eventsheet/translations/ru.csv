@@ -11112,21 +11112,21 @@ The scene's WorldEnvironment,WorldEnvironment сцены
 "Flares a light to a brightness and a colour and lets it go back by itself: a muzzle flash. It works on the 2D and 3D lights, and a light that was off is switched on for the flare.","Вспыхивает светом до заданной яркости и цвета и сам возвращает его обратно: вспышка выстрела. Работает с 2D- и 3D-светом, а выключенный свет на время вспышки включается."
 "Moves one value of the look of the scene to a number and back: glow, brightness, contrast, saturation, exposure, fog. It changes the scene's own copy, so no other scene changes. In a 2D game the glow needs a WorldEnvironment whose background is set to Canvas.","Сдвигает одно значение вида сцены к числу и возвращает обратно: свечение, яркость, контраст, насыщенность, экспозиция, туман. Меняется собственная копия сцены, поэтому другие сцены не затрагиваются. В 2D-игре для свечения нужен WorldEnvironment с фоном Canvas."
 Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end and stays. Never shown in the editor.,"Удерживает эффект аудиошины на время и возвращает обратно: фильтр низких частот, приглушающий мир при ранении. Отсутствующий на шине эффект добавляется в конец и остаётся. В редакторе никогда не показывается."
-Tidy This Script…,
-"Write this script the way the editor writes it today: a guard around a plain number as the number, the annotation words as one-hash comments. Every line that would change is listed first, and nothing is written until you press Apply.",
-"This script cannot be tidied: it does not write back the same text from a copy, so nothing was planned.",
-Nothing to tidy.,
-Tidy this script,
-"This sheet changed while the window was open, so nothing was written. Nothing to tidy.",
-"This sheet changed while the window was open, so nothing was written - here is what it says now.",
-Nothing was tidied.,
-(no line),
-(line removed),
-1 line would be rewritten in one step you can undo.,
-%d lines would be rewritten in one step you can undo.,
-1 line is left as it is.,
-%d lines are left as they are.,
-1 line tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,
-%d lines tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,
-1 line uses an older spelling. Sheet > Tidy This Script lists it first.,
-%d lines use an older spelling. Sheet > Tidy This Script lists them first.,
+Tidy This Script…,Привести скрипт в порядок…
+"Write this script the way the editor writes it today: a guard around a plain number as the number, the annotation words as one-hash comments. Every line that would change is listed first, and nothing is written until you press Apply.","Записывает этот скрипт так, как редактор записывает его сегодня: защита вокруг простого числа становится самим числом, а слова аннотаций - комментариями с одним знаком #. Каждая строка, которая изменится, сначала выводится списком, и ничего не записывается, пока ты не нажмёшь Применить."
+"This script cannot be tidied: it does not write back the same text from a copy, so nothing was planned.","Этот скрипт нельзя привести в порядок: из копии он не записывает тот же текст, поэтому ничего не было запланировано."
+Nothing to tidy.,Приводить в порядок нечего.
+Tidy this script,Привести скрипт в порядок
+"This sheet changed while the window was open, so nothing was written. Nothing to tidy.","Этот лист изменился, пока окно было открыто, поэтому ничего не записано. Приводить в порядок нечего."
+"This sheet changed while the window was open, so nothing was written - here is what it says now.","Этот лист изменился, пока окно было открыто, поэтому ничего не записано - вот что в нём сейчас."
+Nothing was tidied.,Ничего не приведено в порядок.
+(no line),(нет строки)
+(line removed),(строка удалена)
+1 line would be rewritten in one step you can undo.,"1 строка будет переписана одним шагом, который можно отменить."
+%d lines would be rewritten in one step you can undo.,"%d строк будут переписаны одним шагом, который можно отменить."
+1 line is left as it is.,1 строка остаётся как есть.
+%d lines are left as they are.,%d строк остаются как есть.
+1 line tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,1 строка приведена в порядок и сохранена. Отмена вернёт лист; старый файл лежит в резервных копиях листа.
+%d lines tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,%d строк приведены в порядок и сохранены. Отмена вернёт лист; старый файл лежит в резервных копиях листа.
+1 line uses an older spelling. Sheet > Tidy This Script lists it first.,1 строка записана по-старому. Лист > Привести скрипт в порядок показывает её первой.
+%d lines use an older spelling. Sheet > Tidy This Script lists them first.,%d строк записаны по-старому. Лист > Привести скрипт в порядок показывает их первыми.

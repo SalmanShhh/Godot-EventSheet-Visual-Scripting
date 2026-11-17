@@ -11112,21 +11112,21 @@ The scene's WorldEnvironment,场景的 WorldEnvironment
 "Flares a light to a brightness and a colour and lets it go back by itself: a muzzle flash. It works on the 2D and 3D lights, and a light that was off is switched on for the flare.",让灯光闪到指定的亮度和颜色，然后自动恢复：比如枪口火光。它适用于 2D 和 3D 灯光，原本关闭的灯会在闪光期间被打开。
 "Moves one value of the look of the scene to a number and back: glow, brightness, contrast, saturation, exposure, fog. It changes the scene's own copy, so no other scene changes. In a 2D game the glow needs a WorldEnvironment whose background is set to Canvas.",让场景外观的某个值变到指定数字再变回来：辉光、亮度、对比度、饱和度、曝光、雾。它修改的是场景自己的副本，所以其他场景不受影响。在 2D 游戏中使用辉光，需要背景设为 Canvas 的 WorldEnvironment。
 Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end and stays. Never shown in the editor.,让音频总线的某个效果持续一段时间再恢复：比如受伤时让世界声音发闷的低通。总线上没有的效果会添加到末尾并保留。不会在编辑器中显示。
-Tidy This Script…,
-"Write this script the way the editor writes it today: a guard around a plain number as the number, the annotation words as one-hash comments. Every line that would change is listed first, and nothing is written until you press Apply.",
-"This script cannot be tidied: it does not write back the same text from a copy, so nothing was planned.",
-Nothing to tidy.,
-Tidy this script,
-"This sheet changed while the window was open, so nothing was written. Nothing to tidy.",
-"This sheet changed while the window was open, so nothing was written - here is what it says now.",
-Nothing was tidied.,
-(no line),
-(line removed),
-1 line would be rewritten in one step you can undo.,
-%d lines would be rewritten in one step you can undo.,
-1 line is left as it is.,
-%d lines are left as they are.,
-1 line tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,
-%d lines tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,
-1 line uses an older spelling. Sheet > Tidy This Script lists it first.,
-%d lines use an older spelling. Sheet > Tidy This Script lists them first.,
+Tidy This Script…,整理此脚本…
+"Write this script the way the editor writes it today: a guard around a plain number as the number, the annotation words as one-hash comments. Every line that would change is listed first, and nothing is written until you press Apply.",按编辑器现在的写法重写此脚本：包着简单数字的保护会变成数字本身，注解词会变成单个 # 的注释。会改动的每一行都会先列出，按下应用之前不会写入任何内容。
+"This script cannot be tidied: it does not write back the same text from a copy, so nothing was planned.",无法整理此脚本：它从副本写不回相同的文本，所以没有做任何计划。
+Nothing to tidy.,没有需要整理的内容。
+Tidy this script,整理此脚本
+"This sheet changed while the window was open, so nothing was written. Nothing to tidy.",窗口打开期间此事件表发生了变化，所以没有写入任何内容。没有需要整理的内容。
+"This sheet changed while the window was open, so nothing was written - here is what it says now.",窗口打开期间此事件表发生了变化，所以没有写入任何内容 - 下面是它现在的内容。
+Nothing was tidied.,没有整理任何内容。
+(no line),（无此行）
+(line removed),（行已删除）
+1 line would be rewritten in one step you can undo.,1 行将以可撤销的一步被改写。
+%d lines would be rewritten in one step you can undo.,%d 行将以可撤销的一步被改写。
+1 line is left as it is.,1 行保持原样。
+%d lines are left as they are.,%d 行保持原样。
+1 line tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,已整理并保存 1 行。撤销会还原事件表；旧文件在事件表备份中。
+%d lines tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,已整理并保存 %d 行。撤销会还原事件表；旧文件在事件表备份中。
+1 line uses an older spelling. Sheet > Tidy This Script lists it first.,1 行使用了旧写法。事件表 > 整理此脚本 会先列出它。
+%d lines use an older spelling. Sheet > Tidy This Script lists them first.,%d 行使用了旧写法。事件表 > 整理此脚本 会先列出它们。
