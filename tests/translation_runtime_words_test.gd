@@ -152,38 +152,33 @@ static func _test_language_menu() -> bool:
 
 
 ## Use Saved Language reads the same file the shipped Save Setting action writes, so the proof has
-## to go through that real file. Any settings file already on disk is put back afterwards.
+## to go through that real file - one in this process's own folder, so no other run is disturbed.
 static func _test_use_saved_language() -> bool:
 	var passed: bool = true
-	var path: String = "user://settings.cfg"
-	var backup: PackedByteArray = FileAccess.get_file_as_bytes(path) if FileAccess.file_exists(path) else PackedByteArray()
-	var had_file: bool = FileAccess.file_exists(path)
+	# The settings file lives in this process's own folder: the emitted statements name user://settings.cfg, so the
+	# text that is RUN has that one name swapped for the test's own path, and the text that is pinned is untouched.
+	var path: String = SUPPORT.own_path("settings.cfg")
 
 	var emitted: String = _emit_action("UseSavedLanguage", {"fallback": "\"de\"", "uid": "7"})
 	passed = _check("Use Saved Language reads the settings file Save Setting writes",
 		emitted,
 		"var __lang_cfg_7 = ConfigFile.new()\n__lang_cfg_7.load(\"user://settings.cfg\")\nTranslationServer.set_locale(str(__lang_cfg_7.get_value(\"game\", \"language\", \"de\")))") and passed
 
+	var runnable: String = emitted.replace("user://settings.cfg", path)
 	# A saved choice wins.
 	var saved: ConfigFile = ConfigFile.new()
 	saved.set_value("game", "language", "ja")
 	saved.save(path)
 	TranslationServer.set_locale("en")
-	_perform(emitted)
+	_perform(runnable)
 	passed = _check("the saved language is applied at boot", TranslationServer.get_locale(), "ja") and passed
 
 	# EDGE: a first run has no file at all, and must land on the fallback rather than an empty locale.
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	TranslationServer.set_locale("en")
-	_perform(emitted)
+	_perform(runnable)
 	passed = _check("a first run falls back instead of blanking the language",
 		TranslationServer.get_locale(), "de") and passed
-
-	if had_file:
-		var restore: FileAccess = FileAccess.open(path, FileAccess.WRITE)
-		if restore != null:
-			restore.store_buffer(backup)
-			restore.close()
 	return passed
 
 

@@ -1190,7 +1190,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 	progress_phase = "verifying"
 	var saved_path: String = sheet.external_source_path
 	sheet.external_source_path = "user://eventforge_lift_verify.gd"
-	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_lift_verify.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.echo(sheet).get("output", ""))
 	sheet.external_source_path = saved_path
 	# Group markers (## @ace_group declarations + # @group:<slug> row tags) are cosmetic comments with
 	# zero runtime weight - the groups dissolve into the flat trigger sections at compile, so a sheet
@@ -1309,7 +1309,7 @@ static func _adopt_state_change_triggers(sheet: EventSheetResource, source: Stri
 		return
 	var saved_path: String = sheet.external_source_path
 	sheet.external_source_path = "user://eventforge_lift_verify.gd"
-	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventforge_lift_verify.gd").get("output", ""))
+	var output: String = str(EventSheetCompiler.echo(sheet).get("output", ""))
 	sheet.external_source_path = saved_path
 	if _strip_group_markers(output) != _strip_group_markers(source):
 		EventForgeStateLift.restore(adopted)

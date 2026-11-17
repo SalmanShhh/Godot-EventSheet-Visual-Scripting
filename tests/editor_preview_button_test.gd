@@ -192,6 +192,8 @@ static func _scene_dock_shortcut() -> bool:
 		["the Preview menu word is looked up in the editor's language", menu_source.contains("translate(\"Preview its behaviours\")"), true],
 		["the Stop menu word is looked up in the editor's language", menu_source.contains("translate(\"Stop previews\")"), true],
 		["both words have a German row", german.contains("\nPreview its behaviours,\"") and german.contains("\nStop previews,\""), true],
+		["the Preview entry wears the editor's own Play icon, as Godot's own entries wear theirs", menu_source.contains("_on_preview_behaviours_requested, _editor_icon(\"Play\")"), true],
+		["the Stop entry wears the editor's own Stop icon", menu_source.contains("_on_stop_previews_requested, _editor_icon(\"Stop\")"), true],
 	]) and passed
 	host.free()
 	return passed

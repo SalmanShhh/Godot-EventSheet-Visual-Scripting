@@ -67,7 +67,7 @@ static func lift(sheet: EventSheetResource, source: String) -> bool:
 		doc_row.code = "\n".join(doc_lines.slice(0, doc_lines.size() - 2))
 	var saved_path: String = sheet.external_source_path
 	sheet.external_source_path = VERIFY_PATH
-	var output: String = str(EventSheetCompiler.compile(sheet, VERIFY_PATH).get("output", ""))
+	var output: String = str(EventSheetCompiler.echo(sheet).get("output", ""))
 	sheet.external_source_path = saved_path
 	if output == source:
 		return true

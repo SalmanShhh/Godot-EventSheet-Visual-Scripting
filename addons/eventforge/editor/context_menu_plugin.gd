@@ -45,8 +45,8 @@ func _popup_menu(paths: PackedStringArray) -> void:
 				var previewing: Array[Node] = _previewing_behaviours_of_selection()
 				if not previewing.is_empty():
 					var words: GDScript = load(L10N_PATH)
-					add_context_menu_item(words.translate("Preview its behaviours"), _on_preview_behaviours_requested)
-					add_context_menu_item(words.translate("Stop previews"), _on_stop_previews_requested)
+					add_context_menu_item(words.translate("Preview its behaviours"), _on_preview_behaviours_requested, _editor_icon("Play"))
+					add_context_menu_item(words.translate("Stop previews"), _on_stop_previews_requested, _editor_icon("Stop"))
 		EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM:
 			# Right-clicking ANY .gd (or a sheet .tres) in the FileSystem offers "Open as Event Sheet" -
 			# a GDScript-backed sheet opens an arbitrary script losslessly. The Script glyph makes the item
@@ -180,6 +180,15 @@ static func directory_from_targets(targets: Variant) -> String:
 		return candidate
 	var parent: String = candidate.get_base_dir()
 	return parent if not parent.is_empty() else "res://"
+
+
+## One of the editor's own icons by name (Play and Stop are the ones Godot's own scene menu entries wear); null headless / pre-theme.
+static func _editor_icon(icon_name: String) -> Texture2D:
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		var editor_theme: Theme = EditorInterface.get_editor_theme()
+		if editor_theme != null and editor_theme.has_icon(icon_name, "EditorIcons"):
+			return editor_theme.get_icon(icon_name, "EditorIcons")
+	return null
 
 
 ## The editor "Script" glyph for the menu item (a .gd opened as a sheet); null headless / pre-theme.
