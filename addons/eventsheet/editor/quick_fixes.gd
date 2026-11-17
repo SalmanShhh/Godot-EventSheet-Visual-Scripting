@@ -692,7 +692,7 @@ static func _never_ask_error_report() -> Dictionary:
 
 
 ## "Move it under": on the scene that is open it is a step of Godot's own undo (nothing is reloaded
-## and unsaved changes stay); a scene open behind another is asked to be brought forward; a closed
+## and unsaved changes stay); a scene open behind another is brought forward and changed there the same way; a closed
 ## scene is changed only after the reader says yes, with its old file kept in Sheet Backups.
 static func _move_behaviour_under(finding: Dictionary, dock: Variant) -> Dictionary:
 	var scene_path: String = str(finding.get("path", ""))
@@ -704,7 +704,16 @@ static func _move_behaviour_under(finding: Dictionary, dock: Variant) -> Diction
 		if edited != null and edited.scene_file_path == scene_path:
 			return EventSheetBehaviourHostDoctor.move_under_open(edited, node_path, to_path)
 		if (editor.call("get_open_scenes") as PackedStringArray).has(scene_path):
-			return {"ok": false, "message": EventSheetL10n.translate("Bring %s to the front and press this again. The move is made in the open scene, so Ctrl+Z can take it back.") % scene_path.get_file()}
+			# A scene open behind another comes to the front (its tab keeps every unsaved change), and
+			# the move is made there as one step of that scene's own undo.
+			editor.call("open_scene_from_path", scene_path)
+			edited = editor.call("get_edited_scene_root") as Node
+			if edited == null or edited.scene_file_path != scene_path:
+				return {"ok": false, "message": EventSheetL10n.translate("Bring %s to the front and press this again. The move is made in the open scene, so Ctrl+Z can take it back.") % scene_path.get_file()}
+			var moved_here: Dictionary = EventSheetBehaviourHostDoctor.move_under_open(edited, node_path, to_path)
+			if bool(moved_here.get("ok", false)):
+				moved_here["message"] = str(moved_here.get("message", "")) + " " + EventSheetL10n.translate("%s was brought to the front for it.") % scene_path.get_file()
+			return moved_here
 	var move_it: Callable = func() -> void:
 		EventSheetBackups.backup_sheet(scene_path)
 		var moved: Dictionary = EventSheetBehaviourHostDoctor.move_under(scene_path, node_path, to_path)

@@ -16,6 +16,10 @@ The suite now measures every behaviour and section icon at 16 pixels: enough lit
 
 The window now opens wide (and can be resized; it remembers the size you leave it at), so a group's label, the line column and the match are no longer cut while the screen has room, and a cut line still shows in full in its tooltip. It is titled "Find and replace in the project" and its first column is "File", because it lists scripts as well as sheets. A hand-written script that happens to be open in a tab is no longer counted as a sheet: it stays under "Scripts you wrote", unticked, and ticking it still changes it through that tab's Ctrl+Z. Whether a file is a sheet or a script is read from the file's own markers, never from an open tab; a sheet saved as a `.gd` with none of the plugin's markers is listed with the scripts, with a short hint. After a replace, "Put them all back" sits under the form and in Sheet Backups, with how many files it restores and when they were written.
 
+### Fixed: Doctor "Move it under" works on a scene open in another tab
+
+The scene is brought to the front and the move is made there as one Ctrl+Z step, keeping its unsaved changes, instead of asking you to switch tabs and press again.
+
 ### Changed: the first open of the editor no longer compiles the scene reader
 
 Drawing an ordinary sheet only asks whether it came from a scene, and that answer is read off the sheet's own marks. Those reads now live in a small file of their own, so the scene reader, with the importer pieces only it names, loads when a scene is opened instead of on the first sheet of a session. The set of scripts the first open compiles went from 171,085 to 156,597 lines (315 to 284 files); its budget is now that figure plus 1,500 lines, so the next overrun shows while it is small. The first open's wall time did not measurably change (the importer is still needed to read the first sheet).
