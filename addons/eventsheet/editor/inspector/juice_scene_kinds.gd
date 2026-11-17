@@ -18,6 +18,7 @@ extends RefCounted
 
 const FIELDS_PATH: String = "res://addons/eventsheet/editor/inspector/juice_card_fields.gd"
 const SHAKE_PATH: String = "res://addons/eventsheet/editor/inspector/juice_shake_fields.gd"
+const SPRING_PICTURE_PATH: String = "res://addons/eventsheet/editor/inspector/juice_spring_picture.gd"
 const ENVIRONMENT_WORDS_PATH: String = "res://addons/eventforge/registration/environment_words.gd"
 const CAMERA_WORDS_PATH: String = "res://addons/eventforge/registration/camera_attribute_words.gd"
 
@@ -231,6 +232,11 @@ static func _light_look_sound_kinds(family_of: Dictionary) -> Array:
 	]
 
 
+## The little drawing of the bounce the card makes, from its damping and its swings a second.
+static func spring_picture(card: Dictionary, now: Callable, edited: Object) -> Control:
+	return (load(SPRING_PICTURE_PATH) as Script).call("shape_strip", card, now, edited) as Control
+
+
 static func _time_kinds(family_of: Dictionary) -> Array:
 	return [
 		_kind("spring", "Spring",
@@ -239,8 +245,9 @@ static func _time_kinds(family_of: Dictionary) -> Array:
 				_node("node", "Node", ["Node2D"], "This object"),
 				{"key": "property", "label": "Property", "drawer": "property", "node_key": "node", "default": "scale", "on_change": spring_reseed},
 				{"key": "kick", "label": "Kick", "drawer": "typed", "node_key": "node", "property_key": "property"},
-				{"key": "damping", "label": "Damping", "drawer": "num", "unset": 0.85},
-				{"key": "frequency", "label": "Swings a second", "drawer": "num", "unset": 2.075},
+				{"key": "damping", "label": "Damping", "drawer": "num", "unset": 0.85, "redraw": true},
+				{"key": "frequency", "label": "Swings a second", "drawer": "num", "unset": 2.075, "redraw": true},
+				{"key": "spring_shape", "label": "", "drawer": "custom", "build": spring_picture},
 				_node_line("spring")
 			], {"property": "scale", "kick": Vector2(3.0, 3.0)}, ["Node2D"], ["bounce", "wobble", "overshoot", "bump", "kick"]),
 		_kind("slow_object", "Slow One Object",
