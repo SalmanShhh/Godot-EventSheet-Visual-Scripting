@@ -431,7 +431,7 @@ static func run() -> bool:
 		"enum State {\n\t## Stars fall, the ship moves and every catch scores.\n\tPLAYING,",
 		"match state:",
 		"for star in get_tree().get_nodes_in_group(\"stars\")",
-		"if not (star.position.y > 560.0):",
+		"if star.position.y <= 560.0:",
 		"load(\"res://demo/showcase/starfall/star.tscn\").instantiate()",
 	]) and passed
 	passed = _check_scene("starfall scene has Ship + ScoreLabel",

@@ -705,7 +705,7 @@ func _build_starfall() -> bool:
 	var collect: EventRow = EventRow.new()
 	collect.trigger_provider_id = "Core"; collect.trigger_id = "OnPhysicsProcess"
 	collect.conditions.append(_condition("Core", "CompareVar", "{var_name} {op} {value}", {"var_name": "state", "op": "==", "value": "State.PLAYING"}))
-	var pf: PickFilter = PickFilter.new()
+	var pf: PickFilter = PickFilter.for_new_row()
 	pf.enabled = true
 	pf.collection_kind = PickFilter.CollectionKind.GROUP
 	pf.collection_value = "stars"
@@ -1435,7 +1435,7 @@ for __i: int in range(spawn_count):
 	var strike: EventRow = EventRow.new()
 	strike.trigger_provider_id = "Core"; strike.trigger_id = "OnProcess"
 	strike.conditions.append(_every("strike_fam", "0.5"))
-	var pf: PickFilter = PickFilter.new()
+	var pf: PickFilter = PickFilter.for_new_row()
 	pf.enabled = true
 	pf.collection_kind = PickFilter.CollectionKind.GROUP
 	pf.collection_value = "family_enemy"
@@ -2703,7 +2703,7 @@ func _build_top_down_shooter() -> bool:
 	# The picking row: every monster that has run out of health, at once.
 	var explode: EventRow = EventRow.new()
 	explode.trigger_provider_id = "Core"; explode.trigger_id = "OnProcess"
-	var picked: PickFilter = PickFilter.new()
+	var picked: PickFilter = PickFilter.for_new_row()
 	picked.collection_kind = PickFilter.CollectionKind.GROUP
 	picked.collection_value = "family_shooter_monster"
 	picked.iterator_name = "shooter_monster"

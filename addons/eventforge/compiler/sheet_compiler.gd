@@ -129,6 +129,8 @@ const LAMBDA_CONNECT_ID_META: String = "__lambda_connect_id"
 ## a sub-event, written back in place as the connect statement with its rows as the body.
 const LAMBDA_IN_PLACE_META: String = "__source_lambda_in_place"
 
+static var _plain_comparison_re: RegEx = null
+
 # Set per-compile from sheet.emit_breakpoints (single-threaded compiles).
 static var _emit_breakpoints_flag: bool = false
 static var _emit_event_trace_flag: bool = false
@@ -3499,11 +3501,17 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 				lines.append("%sif %s is Object and not is_instance_valid(%s): continue" % [indent, iterator, iterator])
 		var predicate: String = pick.predicate_expression.strip_edges()
 		if not predicate.is_empty():
-			lines.append("%sif not (%s):" % [indent, predicate])
+			lines.append(_skip_unless_line(indent, predicate, pick.filter_flipped))
 			lines.append("%s\tcontinue" % indent)
 		var filter_guard: String = _compile_filter_conditions(pick, iterator)
 		if not filter_guard.is_empty():
-			lines.append("%sif not (%s):" % [indent, filter_guard])
+			# A filter placed now whose guard is one condition has no brackets of its own around it, so it
+			# never writes `not ((a > b))`; a guard of several conditions keeps the brackets that group them.
+			var single_part: String = _unwrapped_single_part(filter_guard) if pick.filter_flipped else ""
+			if single_part.is_empty():
+				lines.append("%sif not (%s):" % [indent, filter_guard])
+			else:
+				lines.append(_skip_unless_line(indent, single_part, true))
 			lines.append("%s\tcontinue" % indent)
 		if not is_budgeted and pick.pick_first_n > 0:
 			lines.append("%s%s += 1" % [indent, counter_name])
@@ -3511,6 +3519,62 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 			lines.append("%s\tbreak" % indent)
 		loop_index += 1
 	return body_depth
+
+
+## The line that skips an item unless `test` holds. A row placed now (`flipped`) whose test is one plain
+## comparison writes the comparison it means, `if star.y <= 560.0:`; every other test keeps the
+## `if not (...)` it always had. The flip is the one the condition rows already make for an inverted
+## comparison, so a NaN reads the way it does there.
+static func _skip_unless_line(indent: String, test: String, flipped: bool) -> String:
+	if flipped:
+		var opposite: String = _opposite_plain_comparison(test)
+		if not opposite.is_empty():
+			return "%sif %s:" % [indent, opposite]
+	return "%sif not (%s):" % [indent, test]
+
+
+## `a op b` with plain operands (a name, a dotted path or a number) turned into the opposite comparison,
+## or "" when the text is anything else.
+static func _opposite_plain_comparison(text: String) -> String:
+	if _plain_comparison_re == null:
+		var operand: String = "([A-Za-z_][A-Za-z0-9_.]*|-?[0-9]+(?:\\.[0-9]+)?)"
+		_plain_comparison_re = RegEx.create_from_string("^%s (<=|>=|==|!=|<|>) %s$" % [operand, operand])
+	var hit: RegExMatch = _plain_comparison_re.search(text.strip_edges())
+	if hit == null:
+		return ""
+	var opposite: String = EventForgeACEFactory.opposite_operator(hit.get_string(2))
+	if opposite.is_empty():
+		return ""
+	return "%s %s %s" % [hit.get_string(1), opposite, hit.get_string(3)]
+
+
+## The text inside one pair of brackets that wraps the whole of `guard` (`(a > b)` gives `a > b`), or ""
+## when the brackets close before the end (`(a) and (b)`) or there are none. Brackets inside a string are
+## not counted.
+static func _unwrapped_single_part(guard: String) -> String:
+	if not guard.begins_with("(") or not guard.ends_with(")"):
+		return ""
+	var depth: int = 0
+	var quote: String = ""
+	var index: int = -1
+	while index < guard.length() - 1:
+		index += 1
+		var letter: String = guard[index]
+		if not quote.is_empty():
+			if letter == "\\":
+				index += 1
+			elif letter == quote:
+				quote = ""
+			continue
+		if letter == "\"" or letter == "'":
+			quote = letter
+		elif letter == "(":
+			depth += 1
+		elif letter == ")":
+			depth -= 1
+			if depth == 0 and index < guard.length() - 1:
+				return ""
+	return guard.substr(1, guard.length() - 2) if depth == 0 else ""
 
 
 ## Whether an event's body (actions, raw blocks, sub-events) contains an await - i.e. the

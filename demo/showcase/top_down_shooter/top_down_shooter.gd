@@ -14,7 +14,7 @@ func _process(delta: float) -> void:
 		__spawn_monster.position = [Vector2(randf_range(0.0, 1152.0), -30.0), Vector2(randf_range(0.0, 1152.0), 680.0)].pick_random()
 		add_child(__spawn_monster)
 	for shooter_monster in get_tree().get_nodes_in_group("family_shooter_monster"):
-		if not (shooter_monster.health <= 0):
+		if shooter_monster.health > 0:
 			continue
 		var __spawn_boom = load("res://demo/showcase/top_down_shooter/explosion.tscn").instantiate()
 		__spawn_boom.position = shooter_monster.position

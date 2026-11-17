@@ -56,7 +56,7 @@ static func _the_loop_it_writes() -> bool:
 	var output: String = SUPPORT.compile_output(sheet)
 	return SUPPORT.pins("picking_offer_test", [
 		["it walks the family's group", output.contains("for enemy in get_tree().get_nodes_in_group(\"family_enemy\"):"), true],
-		["the test filters each one", output.contains("\t\tif not (enemy.health <= 0):\n\t\t\tcontinue"), true],
+		["the test filters each one, as the comparison it means", output.contains("\t\tif enemy.health > 0:\n\t\t\tcontinue"), true],
 		["and the actions act on the one picked", output.contains("\t\tenemy.queue_free()"), true],
 	])
 

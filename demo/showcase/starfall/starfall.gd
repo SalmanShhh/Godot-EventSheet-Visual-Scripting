@@ -49,7 +49,7 @@ func _physics_process(delta: float) -> void:
 		add_child(__spawn_star)
 	if state == State.PLAYING:
 		for star in get_tree().get_nodes_in_group("stars"):
-			if not (star.position.y > 560.0):
+			if star.position.y <= 560.0:
 				continue
 			if absf(star.position.x - $Ship.position.x) < 64.0:
 				score += 1
