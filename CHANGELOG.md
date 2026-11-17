@@ -4,6 +4,14 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: a spawn row's Scene field offers the scenes the sheet already holds, the Variable window has a Scene door, and the Doctor notes an empty scene slot
+
+The Instantiate rows take their scene as a value, so a sheet that declares `@export var enemy_scene: PackedScene` (or a typed constant that preloads one) can spawn it by name and the row writes `enemy_scene.instantiate()`, the line a Godot user would write. The Scene field now lists the sheet's own scene variables and constants first, above everything else it offers, so the name is one pick away. Nothing else changed in how a spawn is written: no new row, `load()` stays what a new row starts with, and the sheet never writes a `preload` on its own.
+
+The Variable window has a Scene entry in its type list ("A scene", also found by Search types). Picking it types the variable as a PackedScene and puts it in the Inspector in the same step, so a new scene slot is `@export var enemy_scene: PackedScene` after one pick and a name.
+
+The Doctor gets a quiet note for an exported scene slot that is still empty where it is spawned from: when a scene runs a script that declares such a slot, the script runs `.instantiate()` on it, and the scene never fills it, the note names the slot and the scene in two short sentences and says to pick a scene in the Inspector. It reads text only, never names a script the plugin ships, and is a note, not a warning.
+
 ### Fixed: a variable's look mark is back when a pack is opened
 
 Since a member's annotation words moved above its description, a variable of a built pack that wears an Inspector look (the unit dropdown on a shape's thickness, the toggle row on its dash style, the progress bar) opened without its look mark, and the line above it opened as a separate comment row: 18 shape scripts opened with one to six more rows than before. The look is read through the words again, so those variables open as one row with their mark, the file still writes back byte for byte, and the description stays directly above the member, which is where Godot reads it. A file with the words below the description reads the same rows, and a block of comments that begins with an Inspector comment line shows its description before its words, as the other packs do.

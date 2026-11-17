@@ -11155,3 +11155,7 @@ Slows %d: %s. Scripts of your own keep their speed.,Verlangsamt %d: %s. Eigene S
 This is the line that adds this card from an event sheet or from code. Run it on a Juice Player.,"Das ist die Zeile, die diese Karte aus einem Event-Sheet oder aus Code hinzufügt. Führe sie an einem Juice Player aus."
 a 2D node (a Spring node does not move a UI or a 3D node),ein 2D-Node (ein Spring-Node bewegt weder eine Oberfläche noch einen 3D-Node)
 an animation tree,ein Animationsbaum
+A scene this sheet holds.,"Eine Szene, die dieses Blatt hält."
+%s is empty in %s. Pick a scene for it in the Inspector.,%s ist in %s leer. Wähle im Inspektor eine Szene dafür.
+A scene,Eine Szene
+"A scene file kept in a slot, to make copies of: a bullet, an enemy, a pickup. The Inspector shows a slot you drop a .tscn file into, and a spawn row copies it with its own instantiate().","Eine Szenendatei in einem Feld, von der Kopien gemacht werden: eine Kugel, ein Gegner, ein Pickup. Der Inspektor zeigt ein Feld, in das du eine .tscn-Datei ziehst, und eine Spawn-Zeile kopiert sie mit ihrem eigenen instantiate()."

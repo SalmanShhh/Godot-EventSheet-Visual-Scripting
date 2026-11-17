@@ -11155,3 +11155,7 @@ Slows %d: %s. Scripts of your own keep their speed.,Замедляет %d: %s. �
 This is the line that adds this card from an event sheet or from code. Run it on a Juice Player.,"Это строка, которая добавляет эту карточку из таблицы событий или из кода. Выполните её на Juice Player."
 a 2D node (a Spring node does not move a UI or a 3D node),2D-узел (узел Spring не двигает интерфейс или 3D-узел)
 an animation tree,дерево анимации
+A scene this sheet holds.,"Сцена, которую хранит этот лист."
+%s is empty in %s. Pick a scene for it in the Inspector.,%s пуст в %s. Выберите для него сцену в Инспекторе.
+A scene,Сцена
+"A scene file kept in a slot, to make copies of: a bullet, an enemy, a pickup. The Inspector shows a slot you drop a .tscn file into, and a spawn row copies it with its own instantiate().","Файл сцены в слоте, с которого делают копии: пуля, враг, предмет. Инспектор показывает слот, в который перетаскивают файл .tscn, а строка создания копирует его своим instantiate()."

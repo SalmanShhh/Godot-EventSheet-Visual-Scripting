@@ -28,8 +28,8 @@ var _kind: String = EventSheetCompletions.FIELD_EXPRESSION
 
 
 ## Rides `field`. `extras_provider` (optional) returns entries offered beside the sheet's own names in
-## plain-name position - the expression dictionary's words, for the dialog.
-static func attach(field: Control, sheet_provider: Callable, within_provider: Callable = Callable(), extras_provider: Callable = Callable()) -> EventSheetExpressionAssist:
+## plain-name position - the expression dictionary's words, for the dialog. `front_provider` (optional) takes the sheet, the ranked list and the typed word and returns the list with some entries put in front.
+static func attach(field: Control, sheet_provider: Callable, within_provider: Callable = Callable(), extras_provider: Callable = Callable(), front_provider: Callable = Callable()) -> EventSheetExpressionAssist:
 	var assist: EventSheetExpressionAssist = EventSheetExpressionAssist.new()
 	assist._field = field
 	assist._sheet_provider = sheet_provider
@@ -43,7 +43,10 @@ static func attach(field: Control, sheet_provider: Callable, within_provider: Ca
 			if bool(answer.get("flat", false)) and extras_provider.is_valid():
 				pool = pool.duplicate()
 				pool.append_array(extras_provider.call())
-			return EventSheetCompletions.rank(pool, str(answer["needle"])))
+			var ranked: Array[Dictionary] = EventSheetCompletions.rank(pool, str(answer["needle"]))
+			if bool(answer.get("flat", false)) and front_provider.is_valid():
+				ranked = front_provider.call(assist.sheet(), ranked, str(answer["needle"]))
+			return ranked)
 	assist.popup.replaces_word = true
 	assist.popup.note_provider = func(typed: String) -> String:
 		return EventSheetCompletions.empty_note(assist.sheet(), typed, assist.within())

@@ -267,6 +267,9 @@ static func run() -> Dictionary:
 	# The Older Spellings note: a script that still writes lines the editor writes differently today, and the
 	# door that tidies them. Same seam, registered by path so it adds no class name of its own.
 	load("res://addons/eventforge/older_spellings_doctor.gd").ensure_registered()
+	# The Scene Slot note: an exported scene slot that is empty in a scene whose script spawns from it. Same
+	# seam, registered by path.
+	load("res://addons/eventforge/scene_slot_doctor.gd").ensure_registered()
 	# The Damage section: a row dealing a kind of damage no DamageTypeSet in this project names, and
 	# a node guarding against a kind nothing deals. Both are a mistyped word rather than a broken line,
 	# which is why neither is an error and both stay quiet on a project that has written no set down.

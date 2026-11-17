@@ -11155,3 +11155,7 @@ Slows %d: %s. Scripts of your own keep their speed.,减慢 %d 个：%s。你自�
 This is the line that adds this card from an event sheet or from code. Run it on a Juice Player.,这是从事件表或代码里添加这张卡片的那一行。请在 Juice Player 上运行它。
 a 2D node (a Spring node does not move a UI or a 3D node),2D 节点（Spring 节点不会移动界面或 3D 节点）
 an animation tree,动画树
+A scene this sheet holds.,这个表保存的场景。
+%s is empty in %s. Pick a scene for it in the Inspector.,%s 在 %s 中为空。请在检查器中为它选一个场景。
+A scene,场景
+"A scene file kept in a slot, to make copies of: a bullet, an enemy, a pickup. The Inspector shows a slot you drop a .tscn file into, and a spawn row copies it with its own instantiate().",存放在槽里、用来制作副本的场景文件：子弹、敌人、拾取物。检查器会显示一个可以拖入 .tscn 文件的槽，生成行用它自己的 instantiate() 来复制。

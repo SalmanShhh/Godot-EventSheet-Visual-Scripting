@@ -125,6 +125,7 @@ const TYPES: Array = [
 	["Colour", "Gradient", "Colour ramp", "A smooth colour ramp (fire, sky, a health bar), edited in the Inspector's gradient editor.", "class"],
 	["Nodes and resources", "Node2D", "A node in the scene", "A link to another node, picked from the scene tree. Any node class works (Node, Node3D, Control, Area2D...); only nodes of that class can be picked.", "class"],
 	["Nodes and resources", "Resource", "A resource file", "A saved data file (.tres) such as stats or a curve, shared by everything that uses it. Any resource class or your own class_name works.", "class"],
+	["Nodes and resources", "PackedScene", "A scene", "A scene file kept in a slot, to make copies of: a bullet, an enemy, a pickup. The Inspector shows a slot you drop a .tscn file into, and a spawn row copies it with its own instantiate().", "class"],
 	["Nodes and resources", "Texture2D", "Image", "An image or sprite resource.", "class"],
 	["Nodes and resources", "Curve", "Curve", "A shape over 0 to 1 (easing, falloff, ramps), edited in the Inspector's curve editor.", "class"],
 	["Nodes and resources", "Callable", "A function to call", "A function stored as a value. Exported, it becomes an Inspector button that runs in the editor (@tool).", "callable"],
@@ -976,6 +977,10 @@ func _on_type_changed(reset_class: bool = true) -> void:
 		_class_edit.text = meta if is_class else ""
 	_class_row.visible = is_class or _onready_check.button_pressed
 	_type_row.visible = not _onready_check.button_pressed
+	# The Scene door: a scene slot is only useful in the Inspector, where a scene file is dropped into it, so
+	# picking it on a variable being made turns the Inspector on in the same step.
+	if meta == "PackedScene" and not bool(_context.get("editing", false)) and not _const_check.button_pressed:
+		_exported_check.button_pressed = true
 	_refresh_value_editor()
 	_refresh_const_ui()
 	_refresh_default_hint()

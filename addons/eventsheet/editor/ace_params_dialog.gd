@@ -36,6 +36,7 @@ const ICON_TILE_DARK := Color("#3a4350")
 const ICON_TILE_LIGHT := Color("#d3dce6")
 ## The one shape every quick question takes, loaded the first time a value asks one.
 const SMALL_PROMPT_PATH := "res://addons/eventsheet/editor/small_prompt.gd"
+const SCENE_SLOTS_PATH := "res://addons/eventsheet/editor/autocomplete/scene_slots.gd"
 const SCRIPT_READER_PATH := "res://addons/eventsheet/ace/script_reader.gd"
 const ADD_ANOTHER_ACTION := "add_another"
 
@@ -1424,6 +1425,15 @@ func _create_state_reference_field(key: String, default_value: Variant) -> Contr
 		func(member_value: String) -> String:
 			var word: String = EventSheetStateFacts.word_for(member_value)
 			return "" if word.is_empty() else EventSheetL10n.translate("the %s state") % word)
+
+
+## For a parameter the row runs `.instantiate()` on, the list's front: the scene variables and constants this
+## sheet declares, so the Scene field offers them before anything else. An invalid Callable for every other field.
+func _scene_slot_front(key: String) -> Callable:
+	var slots: GDScript = load(SCENE_SLOTS_PATH) as GDScript
+	if not slots.is_scene_slot(_definition_template(), key):
+		return Callable()
+	return Callable(slots, "in_front")
 
 
 ## The codegen template of the ACE being edited, or "" when the dialog has no definition.
@@ -3143,7 +3153,7 @@ func _create_expression_field(key: String, default_value: Variant) -> Control:
 	# The completion list and the signature hint, asked with the text before the caret and the event
 	# this field belongs to. The expressions dictionary's words are offered beside the sheet's names.
 	var assist: EventSheetExpressionAssist = EventSheetExpressionAssist.attach(edit, _lint_context_provider,
-		func() -> Resource: return _scope_event(), _expression_dictionary_entries)
+		func() -> Resource: return _scope_event(), _expression_dictionary_entries, _scene_slot_front(key))
 	edit.set_meta("expression_assist", assist)
 	# Registered BEFORE the first check, so what the check finds is filed under this parameter and the
 	# window opens already saying what is wrong with a value it was handed.
