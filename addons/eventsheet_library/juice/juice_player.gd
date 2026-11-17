@@ -66,7 +66,7 @@ signal on_loop(loops_left: int)
 @export_enum("restart", "ignore", "overlap") var while_playing: String = "restart"
 ## Plays the list once, at full strength, when this node enters the scene: a spawn pop, a pickup shimmer.
 @export var autoplay: bool = false
-## Plays the whole list again and again while this node is in the scene, until Stop Juice or Set Looping turns it off. Each pass waits at least one frame, so a list with nothing that takes time cannot lock the game.
+## Plays the whole list again and again until Stop Juice or Set Looping ends it. A pass waits at least a frame, so a list with no time in it cannot lock the game.
 @export var loop: bool = false
 ## How many passes a loop makes before it stops by itself. 0 is until stopped.
 @export_range(0, 100, 1, "or_greater") var loop_times: int = 0
@@ -523,16 +523,13 @@ func _player_to_play(card: Dictionary, typed: String) -> Node:
 # STARTED as well as the walk: a list of instant cards has finished walking long before the shake it
 # began does, so ending the walk alone would end nothing.
 
-## The group every Juice Player joins by itself, so one call on the scene tree reaches all of them.
-## It is not the default channel of Play Juice On Channel: a channel is a group a person picks.
+## The group every Juice Player joins by itself, so one call on the tree reaches all. Not the default channel of Play Juice On Channel.
 const PLAYERS_GROUP: String = "every_juice_player"
 
-## Whether juice plays at all, for the whole game. Set by Set All Juice Players Enabled. It lives on the
-## script, so it is the same for every player and holds across a change of scene.
+## Whether juice plays at all, for the whole game, set by Set All Juice Players Enabled. It lives on the script, so it holds across scenes.
 static var _all_enabled: bool = true
 
-## True once this player has said it was asked to play while every player was switched off, so the quiet
-## row is said once rather than on every hit.
+## True once this player has said it was asked to play while every player was switched off, so it is said once.
 var _told_switched_off: bool = false
 
 ## Counts the plays, so a loop that was stopped or replaced can tell and end after its pass.
