@@ -154,7 +154,8 @@ static func apply_closed(chosen: Array[Dictionary], needle: String, replacement:
 				landed = handle.get_error() == OK
 				handle.close()
 		else:
-			landed = ResourceSaver.save(sheet, path) == OK 				and ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) is EventSheetResource
+			landed = ResourceSaver.save(sheet, path) == OK
+			landed = landed and ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) is EventSheetResource
 			if not landed:
 				_write_bytes(path, before_bytes)
 		if not landed:

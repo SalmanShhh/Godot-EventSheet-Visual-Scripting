@@ -5266,7 +5266,8 @@ var _backups_list: ItemList = null
 
 
 func _open_sheet_backups() -> void:
-	if (_current_sheet == null or _current_sheet_path.is_empty()) 			and load("res://addons/eventsheet/editor/dock/project_replace.gd").list_sets().is_empty():
+	var nothing_to_put_back: bool = load("res://addons/eventsheet/editor/dock/project_replace.gd").list_sets().is_empty()
+	if (_current_sheet == null or _current_sheet_path.is_empty()) and nothing_to_put_back:
 		_set_status("Backups track saved sheets - save this sheet first.", true)
 		return
 	if _backups_window == null:
