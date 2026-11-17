@@ -35,9 +35,9 @@ static func _test_the_finding(ok: bool) -> bool:
 	ok = SUPPORT.check(P, "it is a note, never a warning", str(finding["severity"]), "info") and ok
 	ok = SUPPORT.check(P, "it names the file it is about", [str(finding["path"]), str(finding["check"])], ["res://scripts/player.gd", "older-spellings"]) and ok
 	ok = SUPPORT.check(P, "two short sentences, with the count", str(finding["message"]),
-		"3 lines are written in an older spelling. Sheet > Tidy This Script lists them before changing anything.") and ok
+		"3 lines use an older spelling. Sheet > Tidy This Script lists them first.") and ok
 	ok = SUPPORT.check(P, "and one line says it in the singular", str(DOCTOR.report("res://a.gd", 1)["message"]),
-		"1 line is written in an older spelling. Sheet > Tidy This Script lists it before changing anything.") and ok
+		"1 line uses an older spelling. Sheet > Tidy This Script lists it first.") and ok
 	ok = SUPPORT.check(P, "the chip on it is the Tidy door",
 		EventSheetQuickFixes.fixes_for(finding).map(func(fix: Dictionary) -> String: return str(fix["id"])), ["tidy_script"]) and ok
 	return ok

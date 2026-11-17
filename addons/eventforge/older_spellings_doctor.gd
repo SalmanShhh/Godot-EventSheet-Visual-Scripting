@@ -37,8 +37,8 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 ## The finding for one script that holds `counted` lines in an older spelling: two short sentences.
 static func report(script_path: String, counted: int) -> Dictionary:
 	var message: String = EventSheetL10n.counted(
-		"1 line is written in an older spelling. Sheet > Tidy This Script lists it before changing anything.",
-		"%d lines are written in an older spelling. Sheet > Tidy This Script lists them before changing anything.",
+		"1 line uses an older spelling. Sheet > Tidy This Script lists it first.",
+		"%d lines use an older spelling. Sheet > Tidy This Script lists them first.",
 		counted)
 	return _finding("info", CHECK_ID, script_path, message, script_path.get_file())
 
