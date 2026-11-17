@@ -3418,14 +3418,23 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 			lines.append("%s\t__loop_cursor_%s = 0" % [indent, uid])
 			lines.append("%sif __loop_cursor_%s == 0:" % [indent, uid])
 			lines.append("%s\t__loop_items_%s = Array(%s)" % [indent, uid, collection])
-			lines.append("%svar __loop_end_%s: int = Time.get_ticks_usec() + int(%s * 1000.0)" % [indent, uid, budget_str])
+			# A loop placed now declares the deadline only when it has a time limit to read it.
+			if not pick.tidy_budget or pick.frame_spread_budget_ms > 0.0:
+				lines.append("%svar __loop_end_%s: int = Time.get_ticks_usec() + int(%s * 1000.0)" % [indent, uid, budget_str])
 			lines.append("%svar __done_%s: int = 0" % [indent, uid])
 			lines.append("%swhile __loop_cursor_%s < __loop_items_%s.size():" % [indent, uid, uid])
 			body_depth += 1
 			indent = "\t".repeat(body_depth)
 			# Break only AFTER at least one item this frame (__done > 0); otherwise a tiny ms budget that is
 			# already spent at loop entry would break with the cursor unmoved and stall the pass forever.
-			lines.append("%sif __done_%s > 0 and ((%d > 0 and __done_%s >= %d) or (%s > 0.0 and Time.get_ticks_usec() >= __loop_end_%s)):" % [indent, uid, count_lit, uid, count_lit, budget_str, uid])
+			if not pick.tidy_budget:
+				lines.append("%sif __done_%s > 0 and ((%d > 0 and __done_%s >= %d) or (%s > 0.0 and Time.get_ticks_usec() >= __loop_end_%s)):" % [indent, uid, count_lit, uid, count_lit, budget_str, uid])
+			elif count_lit > 0 and pick.frame_spread_budget_ms > 0.0:
+				lines.append("%sif __done_%s > 0 and (__done_%s >= %d or Time.get_ticks_usec() >= __loop_end_%s):" % [indent, uid, uid, count_lit, uid])
+			elif count_lit > 0:
+				lines.append("%sif __done_%s >= %d:" % [indent, uid, count_lit])
+			else:
+				lines.append("%sif __done_%s > 0 and Time.get_ticks_usec() >= __loop_end_%s:" % [indent, uid, uid])
 			lines.append("%s\tbreak" % indent)
 			lines.append("%svar %s = __loop_items_%s[__loop_cursor_%s]" % [indent, iterator, uid, uid])
 			lines.append("%s__loop_cursor_%s += 1" % [indent, uid])

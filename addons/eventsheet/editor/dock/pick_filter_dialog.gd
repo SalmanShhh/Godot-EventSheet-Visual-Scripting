@@ -40,7 +40,7 @@ func open(event_resource: Resource, pick_index: int = -1) -> void:
 	_pick_target_event = event_row
 	_pick_target_index = pick_index
 	var editing: bool = pick_index >= 0 and pick_index < event_row.pick_filters.size()
-	var pick: PickFilter = event_row.pick_filters[pick_index] if editing else PickFilter.new()
+	var pick: PickFilter = event_row.pick_filters[pick_index] if editing else PickFilter.for_new_row()
 	_pick_iterator_edit.text = pick.iterator_name
 	_pick_index_edit.text = pick.index_name
 	_pick_kind_option.select(_pick_kind_to_option(pick.collection_kind))
@@ -238,7 +238,7 @@ func _on_pick_filter_confirmed() -> void:
 	var predicate: String = _pick_predicate_edit.text.strip_edges()
 	var first_n: int = int(_pick_first_n_spin.value)
 	var changed: bool = _dock._perform_undoable_sheet_edit("Edit Pick Filter", func() -> bool:
-		var pick: PickFilter = event_row.pick_filters[target_index] if target_index >= 0 and target_index < event_row.pick_filters.size() else PickFilter.new()
+		var pick: PickFilter = event_row.pick_filters[target_index] if target_index >= 0 and target_index < event_row.pick_filters.size() else PickFilter.for_new_row()
 		pick.iterator_name = iterator if not iterator.is_empty() else "item"
 		pick.index_name = index_name
 		pick.collection_kind = kind

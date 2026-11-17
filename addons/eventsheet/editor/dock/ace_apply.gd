@@ -921,7 +921,7 @@ func _is_looping_condition(definition: ACEDefinition) -> bool:
 ## the annotation's iterator name scopes the loop variable. Everything downstream (the for
 ## emission, the pick lane UI, frame-spreading, round-trip lift) comes for free.
 func _create_pick_filter_from_definition(definition: ACEDefinition, params: Dictionary) -> PickFilter:
-	var pick: PickFilter = PickFilter.new()
+	var pick: PickFilter = PickFilter.for_new_row()
 	var resolved: Dictionary = _resolve_definition_params(definition, params)
 	# A drain loop: the row's list field is the collection, its name field the local each item arrives
 	# in, and a typed array gives that local its element type (`var scene: PackedScene = queue.pop_front()`).

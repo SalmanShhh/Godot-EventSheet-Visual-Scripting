@@ -21,10 +21,9 @@ func _process(delta: float) -> void:
 		__loop_cursor_7647f9_0 = 0
 	if __loop_cursor_7647f9_0 == 0:
 		__loop_items_7647f9_0 = Array(get_tree().get_nodes_in_group("swarm"))
-	var __loop_end_7647f9_0: int = Time.get_ticks_usec() + int(0.0 * 1000.0)
 	var __done_7647f9_0: int = 0
 	while __loop_cursor_7647f9_0 < __loop_items_7647f9_0.size():
-		if __done_7647f9_0 > 0 and ((90 > 0 and __done_7647f9_0 >= 90) or (0.0 > 0.0 and Time.get_ticks_usec() >= __loop_end_7647f9_0)):
+		if __done_7647f9_0 >= 90:
 			break
 		var dot = __loop_items_7647f9_0[__loop_cursor_7647f9_0]
 		__loop_cursor_7647f9_0 += 1

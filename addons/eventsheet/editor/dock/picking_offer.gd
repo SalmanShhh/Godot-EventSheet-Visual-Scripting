@@ -100,7 +100,7 @@ static func label_for(offer: Dictionary) -> String:
 ## The loop an offer is: a For each over the family's group, iterating under the family's own
 ## lower-case name, with the test as its filter. One PickFilter; nothing new to compile.
 static func pick_filter_for(offer: Dictionary) -> PickFilter:
-	var pick: PickFilter = PickFilter.new()
+	var pick: PickFilter = PickFilter.for_new_row()
 	pick.collection_kind = PickFilter.CollectionKind.GROUP
 	pick.collection_value = str(offer["group"])
 	pick.iterator_name = str(offer["iterator"])

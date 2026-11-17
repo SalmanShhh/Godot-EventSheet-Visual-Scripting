@@ -632,7 +632,7 @@ static func _pick_here(dock: Control, finding: Dictionary, fix_id: String) -> bo
 	if event_row == null or item.is_empty():
 		return false
 	var done: bool = bool(dock.call("_perform_undoable_sheet_edit", EventSheetL10n.translate("Pick the %s") % item, func() -> bool:
-		var pick: PickFilter = PickFilter.new()
+		var pick: PickFilter = PickFilter.for_new_row()
 		pick.iterator_name = item
 		pick.iterator_type = str(finding.get("pick_type", ""))
 		if fix_id == EventSheetPickScope.FIX_PICK_FROM_GROUP:

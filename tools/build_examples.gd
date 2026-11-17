@@ -1327,7 +1327,7 @@ func _build_swarm() -> bool:
 	# frame_spread_count = 90 makes it process only ~90 sprites per frame, resuming next frame.
 	var wobble: EventRow = EventRow.new()
 	wobble.trigger_provider_id = "Core"; wobble.trigger_id = "OnProcess"
-	var pf: PickFilter = PickFilter.new()
+	var pf: PickFilter = PickFilter.for_new_row()
 	pf.enabled = true
 	pf.collection_kind = PickFilter.CollectionKind.GROUP
 	pf.collection_value = "swarm"

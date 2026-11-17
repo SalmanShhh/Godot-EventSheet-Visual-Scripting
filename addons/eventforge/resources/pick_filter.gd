@@ -49,9 +49,26 @@ enum CollectionKind {
 ## from an unbounded one.
 @export var frame_spread_count: int = 0
 @export var frame_spread_budget_ms: float = 0.0
+## A loop placed now writes only the limit it has: a count alone writes `if __done_x >= 90:` with no deadline
+## local, a time alone writes no count test. Off for every loop read from a file or saved before this
+## existed, which keep the long guard they were written with.
+@export var tidy_budget: bool = false
+## A filter placed now that is one plain comparison writes the comparison it means (`if star.y <= 560.0:`)
+## where it used to write `if not (star.y > 560.0):`, and a single condition is not bracketed twice. Off for
+## every filter saved before this existed.
+@export var filter_flipped: bool = false
 ## Event-sheet loop index: name it and the loop counts 0, 1, 2... in a local of that name,
 ## readable anywhere in the body (the Loop Index expression). Works on For Each, Repeat, and
 ## While alike - and stays 0-based even when a Repeat's range starts elsewhere. Distinct names
 ## on nested loops give each its own loop index counter. "" (the default) emits nothing, so
 ## every existing loop's output is byte-unchanged. Ignored on budgeted (frame-spread) loops.
 @export var index_name: String = ""
+
+
+## A pick filter for a row being placed now: it writes the plain spellings (`tidy_budget`, `filter_flipped`).
+## A loop read from a file or a sheet saved earlier is built with `new()` and keeps the spellings it had.
+static func for_new_row() -> PickFilter:
+	var pick: PickFilter = PickFilter.new()
+	pick.tidy_budget = true
+	pick.filter_flipped = true
+	return pick

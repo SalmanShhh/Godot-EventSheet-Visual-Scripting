@@ -175,7 +175,7 @@ static func event_for(offer: Dictionary, loop: ACEDefinition, move: ACEDefinitio
 		make_action: Callable) -> EventRow:
 	if offer.is_empty() or loop == null or move == null:
 		return null
-	var pick: PickFilter = PickFilter.new()
+	var pick: PickFilter = PickFilter.for_new_row()
 	pick.collection_kind = PickFilter.CollectionKind.EXPRESSION
 	pick.collection_value = EventSheetACEApply.build_looping_collection(loop, {"target": str(offer["from"])})
 	pick.iterator_name = str(loop.metadata.get("looping_iterator", "child"))
