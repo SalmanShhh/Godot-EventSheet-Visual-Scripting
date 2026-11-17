@@ -5266,7 +5266,7 @@ var _backups_list: ItemList = null
 
 
 func _open_sheet_backups() -> void:
-	if _current_sheet == null or _current_sheet_path.is_empty():
+	if (_current_sheet == null or _current_sheet_path.is_empty()) 			and load("res://addons/eventsheet/editor/dock/project_replace.gd").list_sets().is_empty():
 		_set_status("Backups track saved sheets - save this sheet first.", true)
 		return
 	if _backups_window == null:
@@ -5285,6 +5285,12 @@ func _open_sheet_backups() -> void:
 		restore_button.text = EventSheetL10n.translate("Restore into editor (unsaved - Save to keep)")
 		restore_button.pressed.connect(_on_restore_backup_pressed)
 		box.add_child(restore_button)
+		var put_back_button: Button = Button.new()
+		put_back_button.text = EventSheetL10n.translate("Put them all back")
+		put_back_button.tooltip_text = EventSheetL10n.translate("Puts every file the last Replace in Project wrote back as it was.")
+		put_back_button.pressed.connect(func() -> void:
+			_set_status(load("res://addons/eventsheet/editor/dock/project_replace.gd").put_back_newest()))
+		box.add_child(put_back_button)
 		_backups_window.add_child(EventSheetPopupUI.window_body(box))
 		add_child(_backups_window)
 	_backups_list.clear()

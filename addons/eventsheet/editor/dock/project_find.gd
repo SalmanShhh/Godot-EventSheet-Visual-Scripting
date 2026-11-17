@@ -26,6 +26,12 @@ var _project_find_results: Tree = null
 var _project_find_count: Label = null
 var _project_find_strip: EventSheetPopupUI.HelpStrip = null
 var _project_find_this_row: Label = null
+var _project_put_back: Button = null
+## What the last Find would replace: one entry per file (the plan in project_replace.gd), and the
+## ticks the reader changed since. A file not in `_ticks` follows its kind's default.
+var _plan: Array[Dictionary] = []
+var _ticks: Dictionary = {}
+var _needle: String = ""
 
 
 func open(initial_query: String = "") -> void:
@@ -47,8 +53,10 @@ func _build_project_find() -> void:
 	_project_find_window = parts["window"]
 	_project_find_window.confirmed.connect(_run_project_replace)
 	# What the main button cannot take back, said beside it.
+	_project_find_window.dialog_hide_on_ok = false
 	(parts["note"] as EventSheetPopupUI.StateNote).say(EventSheetL10n.translate(
-		"Closed sheets are saved at once; only the open sheet can be undone."), EventSheetPopupUI.TONE_WARNING)
+		"Closed files are saved at once, each with a backup in Sheet Backups. Ctrl+Z takes back an open tab, and Put them all back takes back the rest."),
+		EventSheetPopupUI.TONE_WARNING)
 	var box: VBoxContainer = parts["box"]
 	var form: VBoxContainer = EventSheetPopupUI.form_box()
 	var query_row: HBoxContainer = HBoxContainer.new()
@@ -66,12 +74,19 @@ func _build_project_find() -> void:
 	box.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Find and replace"), form))
 	_project_find_results = EventSheetPopupUI.table(PackedStringArray([EventSheetL10n.translate("Sheet"),
 		EventSheetL10n.translate("Event"), EventSheetL10n.translate("Match")]), 170.0, {1: 64.0})
+	_project_find_results.item_edited.connect(_on_tick_edited)
 	_project_find_results.item_selected.connect(_on_project_find_selected)
 	_project_find_results.item_activated.connect(_on_project_find_activated)
 	var results: Dictionary = EventSheetPopupUI.add_results(box, EventSheetL10n.translate("Results"), _project_find_results, true)
 	_project_find_count = results["count"]
 	_project_find_strip = results["strip"]
 	_project_find_this_row = results["this_row"]
+	_project_put_back = Button.new()
+	_project_put_back.text = EventSheetL10n.translate("Put them all back")
+	_project_put_back.tooltip_text = EventSheetL10n.translate("Puts every file the last Replace in Project wrote back as it was.")
+	_project_put_back.pressed.connect(put_back_last)
+	_project_put_back.visible = not _replace_module().list_sets().is_empty()
+	box.add_child(_project_put_back)
 
 
 ## Every .tres EventSheetResource under res:// (skips .godot and addons internals). `.tres` ONLY: a
@@ -350,27 +365,135 @@ static func _collect_findable_text(rows: Array, into: Array, uid: String = "") -
 
 ## Fills the results and the count under them. Returns the number of matches (testable headless).
 func _run_project_find() -> int:
-	var needle: String = _project_find_edit.text
+	_needle = _project_find_edit.text
 	_project_find_results.clear()
 	_project_find_strip.visible = false
-	var root_item: TreeItem = _project_find_results.create_item()
+	_project_find_results.create_item()
 	_project_find_count.text = ""
-	if needle.strip_edges().is_empty():
+	_plan = []
+	if _needle.strip_edges().is_empty():
 		return 0
-	var found: Array = find_in_project(needle, list_all_project_sheets(), EventSheetFindReferences.open_sheets_of(_dock))
-	var sheets: Dictionary = {}
-	for match_entry: Dictionary in found:
-		var item: TreeItem = _project_find_results.create_item(root_item)
-		item.set_text(0, str(match_entry["path"]).get_file())
-		item.set_text(1, where_in_sheet(match_entry))
-		item.set_text(2, "…%s…" % str(match_entry.get("preview", "")))
-		# Where the match IS, not only which file: the event it sits in, or the line of a closed
-		# script, so activating the result lands on the row rather than at the top of the sheet.
-		item.set_metadata(0, match_entry)
-		sheets[match_entry["path"]] = true
-	_project_find_count.text = EventSheetL10n.translate("%d match(es) for \"%s\" in %d sheet(s). Searched every sheet, .tres and .gd.") % [
-		found.size(), needle, sheets.size()]
+	var open_sheets: Dictionary = EventSheetFindReferences.open_sheets_of(_dock)
+	var found: Array = find_in_project(_needle, list_all_project_sheets(), open_sheets)
+	var open_paths: Dictionary = {}
+	for open_path: Variant in open_sheets.keys():
+		open_paths[str(open_path)] = true
+	_plan = _replace_module().plan(found, _needle, _project_replace_edit.text, open_paths)
+	for entry: Dictionary in _plan:
+		for line: Dictionary in entry["lines"]:
+			line["match"] = _match_of(found, str(entry["path"]), line)
+	_fill_results()
 	return found.size()
+
+
+## The Find match a shown line was made from, so a double-click can land on it.
+func _match_of(found: Array, path: String, line: Dictionary) -> Dictionary:
+	for match_entry: Dictionary in found:
+		if str(match_entry["path"]) == path and where_in_sheet(match_entry) == str(line["where"]) \
+				and str(match_entry.get("preview", "")) == str(line["before"]):
+			return match_entry
+	return {}
+
+
+## Draws the plan as three groups - sheets, scripts you wrote, behaviour packs - each showing at most
+## MAX_FILES_SHOWN files and MAX_LINES_SHOWN lines a file, so a project of thousands of scripts is a
+## list a window can hold. A group's tick covers every file in it, shown or not.
+func _fill_results() -> void:
+	_project_find_results.clear()
+	var root_item: TreeItem = _project_find_results.create_item()
+	var module: GDScript = _replace_module()
+	var titles: Dictionary = {
+		module.KIND_SHEET: EventSheetL10n.translate("Event sheets - %d file(s)"),
+		module.KIND_SCRIPT: EventSheetL10n.translate("Scripts you wrote - %d file(s), not ticked until you tick them"),
+		module.KIND_PACK: EventSheetL10n.translate("Behaviour packs - %d file(s), never changed"),
+	}
+	var sheets: int = 0
+	var scripts: int = 0
+	for kind: String in [module.KIND_SHEET, module.KIND_SCRIPT, module.KIND_PACK]:
+		var files: Array[Dictionary] = []
+		for entry: Dictionary in _plan:
+			if str(entry["kind"]) == kind:
+				files.append(entry)
+		if files.is_empty():
+			continue
+		if kind == module.KIND_SHEET:
+			sheets = files.size()
+		elif kind == module.KIND_SCRIPT:
+			scripts = files.size()
+		var group_item: TreeItem = _project_find_results.create_item(root_item)
+		group_item.set_text(0, str(titles[kind]) % files.size())
+		group_item.set_metadata(0, {"group": kind})
+		if kind != module.KIND_PACK:
+			group_item.set_cell_mode(0, TreeItem.CELL_MODE_CHECK)
+			group_item.set_editable(0, true)
+			group_item.set_checked(0, _group_ticked(kind))
+		for index: int in range(mini(files.size(), module.MAX_FILES_SHOWN)):
+			_add_file_item(group_item, files[index])
+		if files.size() > module.MAX_FILES_SHOWN:
+			var more_item: TreeItem = _project_find_results.create_item(group_item)
+			more_item.set_text(0, EventSheetL10n.translate("...and %d more file(s)") % (files.size() - module.MAX_FILES_SHOWN))
+			more_item.set_metadata(0, {})
+	_project_find_count.text = EventSheetL10n.translate("%d file(s) have \"%s\": %d sheet(s) and %d script(s). Searched every sheet, .tres and .gd.") % [
+		_plan.size(), _needle, sheets, scripts] + "\n" + module.summary(_plan, _ticks)
+
+
+func _add_file_item(group_item: TreeItem, entry: Dictionary) -> void:
+	var module: GDScript = _replace_module()
+	var kind: String = str(entry["kind"])
+	var item: TreeItem = _project_find_results.create_item(group_item)
+	item.set_text(0, str(entry["path"]).get_file())
+	item.set_tooltip_text(0, str(entry["path"]))
+	var places: String = EventSheetL10n.translate("%d place(s)") % int(entry["hits"])
+	if bool(entry["open"]):
+		places += " - " + EventSheetL10n.translate("open in a tab")
+	item.set_text(2, places)
+	item.set_metadata(0, {"file": str(entry["path"]), "kind": kind})
+	if kind != module.KIND_PACK:
+		item.set_cell_mode(0, TreeItem.CELL_MODE_CHECK)
+		item.set_editable(0, int(entry["hits"]) > 0)
+		item.set_checked(0, int(entry["hits"]) > 0 and bool(_ticks.get(str(entry["path"]), module.default_ticked(kind))))
+	var replaced: bool = not _project_replace_edit.text.is_empty()
+	for line: Dictionary in entry["lines"]:
+		var line_item: TreeItem = _project_find_results.create_item(item)
+		line_item.set_text(1, str(line["where"]))
+		line_item.set_text(2, ("%s => %s" % [line["before"], line["after"]]) if replaced else str(line["before"]))
+		line_item.set_metadata(0, line["match"])
+	if int(entry["more"]) > 0:
+		var more_item: TreeItem = _project_find_results.create_item(item)
+		more_item.set_text(2, EventSheetL10n.translate("...and %d more place(s) in this file") % int(entry["more"]))
+		more_item.set_metadata(0, {})
+
+
+func _group_ticked(kind: String) -> bool:
+	var any: bool = false
+	for entry: Dictionary in _plan:
+		if str(entry["kind"]) == kind and int(entry["hits"]) > 0:
+			any = true
+			if not bool(_ticks.get(str(entry["path"]), _replace_module().default_ticked(kind))):
+				return false
+	return any
+
+
+## A tick changed: a file's own, or a group's, which sets every file of its kind - the ones the list
+## does not show as well. The count line follows.
+func _on_tick_edited() -> void:
+	var item: TreeItem = _project_find_results.get_edited()
+	if item == null or not (item.get_metadata(0) is Dictionary):
+		return
+	var meta: Dictionary = item.get_metadata(0)
+	if meta.has("file"):
+		_ticks[str(meta["file"])] = item.is_checked(0)
+	elif meta.has("group"):
+		for entry: Dictionary in _plan:
+			if str(entry["kind"]) == str(meta["group"]) and int(entry["hits"]) > 0:
+				_ticks[str(entry["path"])] = item.is_checked(0)
+		_fill_results.call_deferred()
+		return
+	_project_find_count.text = _project_find_count.text.get_slice("\n", 0) + "\n" + _replace_module().summary(_plan, _ticks)
+
+
+func _replace_module() -> GDScript:
+	return load("res://addons/eventsheet/editor/dock/project_replace.gd")
 
 
 ## The Event column of one result: the event's number, the line of a closed script, or "-" for
@@ -386,11 +509,10 @@ static func where_in_sheet(match_entry: Dictionary) -> String:
 ## The strip under the results names the selected one: which sheet, where in it, what a
 ## double-click does, and the matched text as it reads in the code.
 func _on_project_find_selected() -> void:
-	var selected: TreeItem = _project_find_results.get_selected()
-	if selected == null or not (selected.get_metadata(0) is Dictionary):
+	var target: Dictionary = _selected_target()
+	if target.is_empty():
 		return
-	var target: Dictionary = selected.get_metadata(0)
-	var sheet_name: String = str(target.get("path", "")).get_file()
+	var sheet_name: String =str(target.get("path", "")).get_file()
 	var place: String = where_in_sheet(target)
 	var told: String = EventSheetL10n.translate("%s, outside any event. Double-click opens the sheet and fills the Find bar.") % sheet_name
 	if place != "-":
@@ -401,11 +523,22 @@ func _on_project_find_selected() -> void:
 	_project_find_strip.visible = true
 
 
-func _on_project_find_activated() -> void:
+## Where the selected row takes the reader: a match is itself, a file is its path, a group or a
+## "more" line is nowhere.
+func _selected_target() -> Dictionary:
 	var selected: TreeItem = _project_find_results.get_selected()
 	if selected == null or not (selected.get_metadata(0) is Dictionary):
+		return {}
+	var meta: Dictionary = selected.get_metadata(0)
+	if meta.has("file"):
+		return {"path": str(meta["file"])}
+	return meta if meta.has("path") else {}
+
+
+func _on_project_find_activated() -> void:
+	var target: Dictionary = _selected_target()
+	if target.is_empty():
 		return
-	var target: Dictionary = selected.get_metadata(0)
 	var sheet_path: String = str(target.get("path", ""))
 	var uid: String = str(target.get("uid", ""))
 	var line: int = int(target.get("line", 0))
@@ -425,34 +558,71 @@ func _on_project_find_activated() -> void:
 	_project_find_window.hide()
 
 
-## Replace across every project sheet (undo covers only the OPEN sheet - closed sheets
-## save directly; the status names every touched file so nothing changes silently).
+## Replace what is ticked. An open tab changes through its own undo step (one in each tab); a closed
+## file is written only if the result is known to be good, and each one written is kept in a set that
+## Put them all back takes back whole.
 func _run_project_replace() -> void:
 	var needle: String = _project_find_edit.text
 	var replacement: String = _project_replace_edit.text
 	if needle.is_empty():
 		_dock._set_status("Type something to find first.", true)
 		return
-	# The open sheet is left out of the file pass under either name it is known by - a `.gd` opened as
-	# a sheet answers to the file it came from - and goes through the undoable path below.
-	var skip: Dictionary = {}
-	if not str(_dock._current_sheet_path).is_empty():
-		skip[_dock._current_sheet_path] = true
-	if _dock._current_sheet != null and not _dock._current_sheet.external_source_path.is_empty():
-		skip[_dock._current_sheet.external_source_path] = true
-	var outcome: Dictionary = replace_in_closed_sheets(needle, replacement,
-		list_all_project_sheets(), skip, _dock._replace_in_rows)
-	var touched: PackedStringArray = outcome["touched"]
+	if _plan.is_empty() or _needle != needle:
+		_run_project_find()
+	var module: GDScript = _replace_module()
+	var chosen: Array[Dictionary] = module.selected(_plan, _ticks)
+	var outcome: Dictionary = module.apply_closed(chosen, needle, replacement, _dock._replace_in_rows)
+	var tabs: int = 0
+	for entry: Dictionary in chosen:
+		if bool(entry["open"]) and _replace_in_open_tab(str(entry["path"]), needle, replacement):
+			tabs += 1
+	_ticks = {}
+	_run_project_find()
+	_project_put_back.visible = not module.list_sets().is_empty()
 	var failed: PackedStringArray = outcome["failed"]
-	# The open sheet goes through the undoable path.
-	if _dock._current_sheet != null:
+	var skipped: PackedStringArray = outcome["skipped"]
+	var written: Array = outcome["written"]
+	var told: String = EventSheetL10n.translate("Replace in Project: %d file(s) written, %d open tab(s) changed (Ctrl+Z in each takes it back).") % [written.size(), tabs]
+	if not skipped.is_empty():
+		told += " " + EventSheetL10n.translate("%d file(s) were left as they were because the result would not have opened or parsed.") % skipped.size()
+	if not written.is_empty():
+		told += " " + EventSheetL10n.translate("Put them all back is in Find in Project and in Sheet Backups.")
+	if not failed.is_empty():
+		told += " " + EventSheetL10n.translate("COULD NOT SAVE: %s (files unchanged).") % ", ".join(failed)
+	_dock._set_status(told, not failed.is_empty())
+
+
+## Puts the file's tab through Replace All, and the reader's own tab back in front. True when the tab
+## existed. The step lands on that tab's own undo, not on the one in front.
+func _replace_in_open_tab(path: String, needle: String, replacement: String) -> bool:
+	var original: int = _dock._active_tab_index
+	for index: int in range(_dock._open_tabs.size()):
+		var tab: Dictionary = _dock._open_tabs[index]
+		var sheet: EventSheetResource = tab.get("sheet") as EventSheetResource
+		if sheet == null:
+			continue
+		var tab_path: String = str(tab.get("path", ""))
+		if tab_path.is_empty():
+			tab_path = sheet.external_source_path
+		if tab_path != path:
+			continue
+		if index != original:
+			_dock._activate_tab(index)
 		_dock._ensure_find_bar()
 		_dock._find_edit.text = needle
 		_dock._replace_edit.text = replacement
 		_dock._replace_all_in_sheet()
-	_run_project_find()
-	if not failed.is_empty():
-		_dock._set_status("Replace in Project: %s - COULD NOT SAVE: %s (files unchanged)." % [", ".join(touched) if not touched.is_empty() else "no sheets saved", ", ".join(failed)], true)
-		return
-	_dock._set_status("Replace in Project: %s" % (", ".join(touched) if not touched.is_empty() else "only the open sheet had matches."))
+		if index != original:
+			_dock._activate_tab(original)
+		return true
+	return false
 
+
+## Puts back every file the newest replace wrote, each only if it is still as that replace left it.
+func put_back_last() -> void:
+	var module: GDScript = _replace_module()
+	_dock._set_status(module.put_back_newest())
+	if _project_put_back != null:
+		_project_put_back.visible = not module.list_sets().is_empty()
+	if _project_find_edit != null and not _project_find_edit.text.is_empty():
+		_run_project_find()
