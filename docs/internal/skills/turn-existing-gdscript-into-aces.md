@@ -113,7 +113,7 @@ grep -rn '"StartCooldown"\|"Start Cooldown"' addons/eventforge/registration/modu
 - `tools/pack_builders/*.gd` - the behaviour packs' SOURCE (`eventsheet_addons/` is their
   compiler output; a pack edit belongs in the builder). A pack whose behaviour code lives in
   real files keeps it under `tools/pack_builders/src/<pack>/`, so grep both.
-- `eventsheet_addons/**` - shipped packs, whose names live in `## @ace_name(...)` lines.
+- `eventsheet_addons/**` - shipped packs, whose names live in `# @ace_name(...)` lines.
 
 What the suite catches for you, and what it does not:
 
@@ -134,7 +134,7 @@ by `tools/vocabulary_doc.gd`) before writing anything.
 
 | Your code is | Route | What you write | Ceiling |
 |---|---|---|---|
-| A script you can edit | `## @ace_*` comment annotations | doc-comment lines above each member | everything except per-row state and node scoping |
+| A script you can edit | `# @ace_*` comment annotations | doc-comment lines above each member | everything except per-row state and node scoping |
 | The same script, and you want autocomplete | `static func _eventforge_register(reg: EventForgeRegistrar)` | typed chained calls | as above, minus starting values and looping |
 | Third-party, generated, or otherwise un-annotatable | `EventSheets.register_simple_ace({...})` | a Dictionary from any `@tool` script | template + params only, session-scoped |
 | Already a function in a sheet | publish the verb (ACE Studio / the verb row) | no code | full annotation set, written for you |
@@ -161,7 +161,7 @@ Details that decide the choice:
   name, category, description, display template, param options/hints, icon, and
   `@ace_codegen_template("$Class.fn({args})")`. A compiled pack IS a provider script, which
   is why publishing needs no separate registration step. An unexposed function emits
-  `## @ace_hidden`, because reflection would otherwise publish every public method.
+  `# @ace_hidden`, because reflection would otherwise publish every public method.
 - **A NEW PACK is authored as real GDScript, not as quoted strings.** `Lib.pack_from_source`
   (`tools/pack_builders/_lib.gd`) reads a folder of ordinary `.gd` files under
   `tools/pack_builders/src/<pack>/`; the builder names the pieces it wants. A PIECE is either a
@@ -319,9 +319,9 @@ Verified by round-tripping real annotations through the analyzer:
 
 ```gdscript
 ## Adds coins to the purse.
-## @ace_action
-## @ace_name(Give Coins)
-## @ace_param(amount, hint: expression, default: 10)
+# @ace_action
+# @ace_name(Give Coins)
+# @ace_param(amount, hint: expression, default: 10)
 func give_coins(amount: int) -> void:
 	coins += amount
 ```
@@ -333,8 +333,8 @@ already lands reading 25.0.
 ### A computed check
 
 ```gdscript
-## @ace_condition
-## @ace_name(Can See Player)
+# @ace_condition
+# @ace_name(Can See Player)
 func can_see_player() -> bool:
 	return _ray.is_colliding()
 ```
@@ -407,7 +407,7 @@ static func build() -> bool:
 Expression, and `src.object_expression(..., returns_class)` one that returns a Texture2D, a Node or
 a Resource - Godot's `TYPE_*` numbers only reach as far as "an object". Each takes its body from the
 piece NAMED AFTER THE FUNCTION, so `set_wrap_enabled` in the builder is `func set_wrap_enabled(...)`
-in `tools/pack_builders/src/wrap/wrap.gd`, where the `## @ace_*` annotations live too. `src.block`
+in `tools/pack_builders/src/wrap/wrap.gd`, where the `# @ace_*` annotations live too. `src.block`
 emits a named `#region` verbatim; `src.on_ready` / `on_process` / `on_physics_process` /
 `on_tree_exiting` hang a piece off the engine callback of the same shape.
 
@@ -455,8 +455,8 @@ the connection.
 
 ```gdscript
 ## Loops the event's actions once per applied buff id.
-## @ace_looping(buff_id)
-## @ace_name(For Each Buff)
+# @ace_looping(buff_id)
+# @ace_name(For Each Buff)
 func each_buff() -> Array:
 	return _buffs.keys()
 ```

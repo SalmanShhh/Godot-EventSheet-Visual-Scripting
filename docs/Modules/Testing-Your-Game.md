@@ -35,7 +35,7 @@ with no runtime library behind them, so a test script keeps working after the pl
 
 - **A Test sheet is a sheet type.** Sheet > Sheet Type… > **Test**. It compiles to an `extends Node`
   script that declares `signal test_started(test_name: String)` and carries the marker comment
-  `## @ace_test_sheet` on a line of its own. The marker is how a runner finds the file: there is no
+  `# @ace_test_sheet` on a line of its own. The marker is how a runner finds the file: there is no
   registry to keep in sync, and a test copied into another project is still a test.
 - **The runner starts the test, the test answers.** **On Test Start** is a real signal-backed
   trigger, not a bare hook: the runner emits `test_started` with the file's name, which arrives as
@@ -300,7 +300,7 @@ words, same order, because both shells read the same runner.
 ## Tips and common mistakes
 
 - **"No test sheets found."** The marker line is missing. Set the sheet's type to Test in
-  Sheet > Sheet Type… and save, so the compiled `.gd` carries `## @ace_test_sheet`.
+  Sheet > Sheet Type… and save, so the compiled `.gd` carries `# @ace_test_sheet`.
 - **"no claims were recorded".** The test started but nothing asserted: the rows sit under a
   condition that never came true, or they sit on a blank event (which runs every tick, not once at
   the start - give it On Test Start).

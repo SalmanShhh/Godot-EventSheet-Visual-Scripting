@@ -320,7 +320,7 @@ Two routes:
 
 Prefer to see the vocabulary before committing to it? **Sheet ▸ Custom Actions…** lists everything a
 script gives sheets as plain sentences, lets you untick what sheets should not see and change how a
-function reads, and writes those choices back into the file as `## @ace_*` comments (after a backup).
+function reads, and writes those choices back into the file as `# @ace_*` comments (after a backup).
 
 ---
 

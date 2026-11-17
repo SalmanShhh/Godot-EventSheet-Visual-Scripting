@@ -111,7 +111,7 @@ two guards. That is a convention, not a rule the plugin enforces.
 | `set_visibility_for(id, true)` / `(id, false)`, `public_visibility = true`, `add_visibility_filter(f)` | **Show to player** / **Hide from player** / **Show to everyone** / **Ask f who may see it** |
 | `set_multiplayer_authority(str(name).to_int())`, `(name.to_int())`, `(id, true)` | read as who owns this object |
 | `if not is_multiplayer_authority(): return`, and the `if is_multiplayer_authority():` that wraps a whole body (and the `multiplayer.is_server()` pair) | read as who runs this function; the early return keeps its `return` |
-| `## @ace_group(name="Scoring", runs_on="host")` and the guard the group wraps its events in | the group's **Runs on** word, with the guard off the rows |
+| `# @ace_group(name="Scoring", runs_on="host")` and the guard the group wraps its events in | the group's **Runs on** word, with the guard off the rows |
 
 And the honest other half. A `create_server` given channel or bandwidth limits, `peer.host.compress`,
 `put_packet` / `get_packet`, and the `var error = peer.create_client(...)` spelling that checks what

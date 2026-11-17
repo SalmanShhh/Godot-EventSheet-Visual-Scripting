@@ -718,7 +718,7 @@ of the game entirely, so Set group active cannot reach it; the Edit group window
 press Apply. A group that is off at start but CAN be switched is in the game behind its flag, which
 starts false (`var __group_boss_active: bool = false`), and an event turns it on.
 
-**Its colour is saved in the file.** The `## @ace_group(...)` line writes the colour the group
+**Its colour is saved in the file.** The `# @ace_group(...)` line writes the colour the group
 shows (`color="#D9534F"`), so a `.gd` sheet reopens in it.
 
 **How you get there.** `G` with rows selected groups THEM and opens the name editor; `G` with
@@ -751,7 +751,7 @@ host*, or *The owner*. The head shows the answer as one muted word beside the na
 wraps the group's events in `multiplayer.is_server()` or `is_multiplayer_authority()` - the same
 guard path a runtime-switchable group already used, so a group that is both asks the switch first.
 Nested groups inherit until one answers for itself, and then the innermost answer wins. The word
-rides the file in the group's own `## @ace_group(name="Scoring", runs_on="host")` header, so a saved
+rides the file in the group's own `# @ace_group(name="Scoring", runs_on="host")` header, so a saved
 sheet reopens with it. A sheet that never says it compiles to exactly what it compiled to before.
 
 **A group's own variables are rows.** Its local variables render as Local rows at the top of its
@@ -776,7 +776,7 @@ var __group_juice_active: bool = true
 The group itself is one class-scope annotation line, which is how it survives the round trip:
 
 ```gdscript
-## @ace_group(uid="juice", name="Juice", toggleable=true)
+# @ace_group(uid="juice", name="Juice", toggleable=true)
 ```
 
 **Scrolled inside a group**, what pins at the top of the canvas is that group's own head - title,

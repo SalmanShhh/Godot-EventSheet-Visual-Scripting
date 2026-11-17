@@ -113,7 +113,7 @@ Add a **Function** (a name and which kind it is). The dialog is the **ACE Studio
 
 Tick **"Other sheets can use this"** and the function becomes a picker entry in every sheet - that's how your behaviour publishes its own vocabulary. The three details that decide how it reads there - its display name, description, and picker category - are edited inline on its own row (double-click the name, the caption above it, or the muted category chip), not in the dialog.
 
-Each published function reads on the canvas the same way every other event row does: a two-lane row with the **kind badge and the function's name on the left**, and on the right what it **hands back** - `gives back <type>` for a Condition or Expression, plus markers like `waits`, `static` or `internal`. The `## @ace_description(...)` you wrote sits directly above it as a caption. It is an ordinary event row, drawn like any other - the kind badge is the cue, not a colour wash. (If you WANT each kind colour-coded, `verb_row_tint_strength` in the theme editor turns the wash back on.)
+Each published function reads on the canvas the same way every other event row does: a two-lane row with the **kind badge and the function's name on the left**, and on the right what it **hands back** - `gives back <type>` for a Condition or Expression, plus markers like `waits`, `static` or `internal`. The `# @ace_description(...)` you wrote sits directly above it as a caption. It is an ordinary event row, drawn like any other - the kind badge is the cue, not a colour wash. (If you WANT each kind colour-coded, `verb_row_tint_strength` in the theme editor turns the wash back on.)
 
 A function's parameters render as condition-style cells beneath its name: click one and you get a small **Edit Parameter** dialog holding just that input - its name, type, optional default and description - with `Edit the whole function…` inside it if the function itself is what you meant. `+ Add parameter` opens the same small dialog, blank. A function's body is **open by default** (only one nested inside a group or a `#region` starts collapsed), and a body row with no conditions reads **Always** - it runs whenever the function is called, which is why it does not say "Every Tick" like a sheet-level event would. Hover a function to read its full declaration, including its category and each parameter's type, default and blurb.
 
@@ -128,7 +128,7 @@ cannot: *how will my vocabulary actually read in the picker?* It renders every p
 live from the unsaved sheet - kind badge, display name, the featured star, the parameter
 list, the category - so a rename or a category change shows its picker face immediately,
 before you save. Exported variables appear once each, labelled with the get / set / add /
-subtract rows they will publish, and a not-yet-lifted `## @ace_*` shell previews under its
+subtract rows they will publish, and a not-yet-lifted `# @ace_*` shell previews under its
 declared name too.
 
 <img src="images/picker-preview-panel.png" alt="The Picker preview panel expanded on the Health pack: 44 entries, each with its action pill, the featured star on Take Damage and Heal, the parameter list in parentheses, and the Health category chip." width="300">

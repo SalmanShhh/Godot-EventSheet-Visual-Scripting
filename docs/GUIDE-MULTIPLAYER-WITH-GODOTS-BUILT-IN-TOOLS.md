@@ -202,7 +202,7 @@ group's events in the matching test:
 
 ```gdscript
 extends CharacterBody2D
-## @ace_group(uid="movement", name="Movement", runs_on="owner")
+# @ace_group(uid="movement", name="Movement", runs_on="owner")
 
 
 func _physics_process(delta: float) -> void:
@@ -215,7 +215,7 @@ Nested groups inherit until one answers for itself, and then the innermost answe
 one the reader put closest to the rows. A group that also has **Can be switched at runtime** asks the
 switch first and who-runs-it second.
 
-The answer lives in the group's own `## @ace_group(...)` header, so it rides the file. Opening that
+The answer lives in the group's own `# @ace_group(...)` header, so it rides the file. Opening that
 file again puts the word back on the group and takes the guard back off the events, and re-saving
 reproduces the file byte for byte. Single player is untouched either way: `multiplayer.is_server()`
 is true when no peer is connected at all.
@@ -541,7 +541,7 @@ both open as the same row and each saves back as itself:
 | `OS.has_feature("dedicated_server")` | **Platform Has Feature** - the same line **Started as** writes, so a file that already asked keeps the row it was written with |
 | `set_multiplayer_authority(str(name).to_int())`, `(name.to_int())` or `(id, true)` in `_enter_tree` or `_ready` | the head's owner band - who owns this object |
 | `if not is_multiplayer_authority(): return`, and the `if is_multiplayer_authority():` that wraps a whole body (the `multiplayer.is_server()` pair too) | who runs this function; the early-return form keeps its `return` |
-| `## @ace_group(name="Scoring", runs_on="host")` and the guard the group wraps its events in | the group's **Runs on** word, with the guard off the rows |
+| `# @ace_group(name="Scoring", runs_on="host")` and the guard the group wraps its events in | the group's **Runs on** word, with the guard off the rows |
 | the four lines of an automatic spawn - instantiate, name, place, `add_child(copy, true)` under the spawner's `spawn_path` | one **Spawn a scene** row, re-emitting your own variable name, your `load` or `preload`, and whether you passed `true` |
 | `$Spawner.spawn(id)`, `spawner.spawn({...})` | **Spawn**, with the spawner in the object column |
 | `$Spawner.spawned.connect(...)`, `despawned`, `$Sync.synchronized.connect(...)` | **On spawned** / **On despawned** / **On synchronized**, on that node |

@@ -34,7 +34,7 @@ Where the line sits per kind, following what the file already does rather than i
 | --- | --- |
 | the sheet | the `##` block right after `extends` (Godot's class-doc position) |
 | a plain function | its `##` block |
-| a function published as a verb | its `## @ace_description(...)` line, because that is the text the picker shows |
+| a function published as a verb | its `# @ace_description(...)` line, because that is the text the picker shows |
 | a variable | the `##` line above the declaration, which is also its Inspector tooltip |
 | a signal | the `##` prose above its annotation block |
 | a group | the group header's `description=` field - a group has no GDScript declaration to sit above |

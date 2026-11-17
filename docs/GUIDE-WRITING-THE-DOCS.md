@@ -310,7 +310,7 @@ extends CharacterBody2D
 
 ## The player, and the one rule that makes a late jump still count.
 
-## @ace_group(uid="ground_rules", name="Ground rules", description="Everything that decides whether the player is standing on something.")
+# @ace_group(uid="ground_rules", name="Ground rules", description="Everything that decides whether the player is standing on something.")
 
 ## How long after leaving a ledge a jump is still allowed.
 var coyote_time: float = 0.12
@@ -334,10 +334,10 @@ Every surface, and the line of that file it is:
 | What carries a description | The line above, exactly | Why there |
 |---|---|---|
 | the sheet | `## The player, and the one rule ...`, the `##` block right after `extends` | Godot's own class-doc position |
-| a group | the `description=` field inside `## @ace_group(...)` | a group has no GDScript declaration of its own to sit above |
+| a group | the `description=` field inside `# @ace_group(...)` | a group has no GDScript declaration of its own to sit above |
 | a variable | the `##` line above `var coyote_time`, which is also its Inspector tooltip | where a Godot reader already looks |
 | a signal | the `##` prose above `signal slipped_off` | same |
-| a function | the `##` line above `func still_forgiven` | a function *published* as a verb carries its prose in `## @ace_description(...)` instead, because the picker's words and the reader's words must be one text |
+| a function | the `##` line above `func still_forgiven` | a function *published* as a verb carries its prose in `# @ace_description(...)` instead, because the picker's words and the reader's words must be one text |
 | a documentation comment row | `## The numbers this sheet is built on.`, inside the body | prose of the manual page, in sheet order |
 | a private comment row | `# measured against the six-frame input buffer ...` | never leaves the sheet: not the manual, not the search, not an export |
 

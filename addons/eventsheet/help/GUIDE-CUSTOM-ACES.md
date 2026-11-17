@@ -101,6 +101,15 @@ category is covenant-safe, because the category is display only).
 The fastest custom ACE is a plain script. Make a script with a `class_name`, then point a
 sheet at it.
 
+Annotation lines are ordinary comments, and they can be written with one hash (`# @ace_name("Wave")`)
+or two (`## @ace_name("Wave")`); every reader accepts both, in any file. One hash is what the plugin
+writes now, because Godot shows every `##` line as documentation: a pack's Help page and its Inspector
+tooltips then carry only the sentences you wrote for people, not the words the picker reads. A file
+keeps the spelling it has, so nothing moves when you open and save it. A one-hash line is an annotation
+only when it is a known word alone or followed by a bracket that closes at the end of the line
+(`# @ace_hidden is what the old version used` stays an ordinary comment), and the older space form
+(`## @ace_category Score`) is two-hash only.
+
 <!-- no-figure -->
 ```gdscript
 # res://scripts/score_keeper.gd
@@ -108,12 +117,12 @@ sheet at it.
 extends Node
 class_name ScoreKeeper
 
-## @ace_category Score
+# @ace_category("Score")
 signal high_score_beaten
 
 @export var score: int = 0
 
-## @ace_category Score
+# @ace_category("Score")
 func add_points(amount: int) -> void:
     score += amount
 
@@ -208,7 +217,7 @@ For a **Node behavior** you attach to a node - where the ACE should act on *that
 script and skip the per-method annotations entirely:
 
 ```gdscript
-## @ace_expose_all(node)
+# @ace_expose_all(node)
 class_name Health
 extends Node
 
@@ -222,7 +231,7 @@ field defaulting to `$Health` - pick or type any node path to retarget it (Godot
 the Construct "act on the object you picked" model). No `@ace_codegen_template`, `@ace_condition`, or
 `@ace_name` per method - reflection derives type, name, and the call.
 
-Plain `## @ace_expose_all` (no `node`) is the explicit "treat me as a provider, expose everything"
+Plain `# @ace_expose_all` (no `node`) is the explicit "treat me as a provider, expose everything"
 marker that keeps the instance-backed default - best for stateless `RefCounted` helpers. Either way,
 per-member `@ace_*` annotations still override the auto-derived value for that one member, so you only
 annotate the exceptions (a custom name the humanizer can't guess, a dropdown, a description).
@@ -264,7 +273,7 @@ Three shortcuts keep annotation blocks short (all additive - every long form bel
 ```gdscript
 @tool
 ## A weapon helper.
-## @ace_category("Weapons")
+# @ace_category("Weapons")
 class_name WeaponHelper
 extends Node
 
@@ -393,9 +402,9 @@ Three rules hold you to it, and all three are enforced rather than advised:
 it is dropped:
 
 ```gdscript
-## @ace_param(seconds, default: 1.0, desc: "How long the shield holds.")
-## @ace_param(quality, options: low=Potato|med=Balanced|high=Ultra, default: med)
-## @ace_param(op, hint: comparison)
+# @ace_param(seconds, default: 1.0, desc: "How long the shield holds.")
+# @ace_param(quality, options: low=Potato|med=Balanced|high=Ultra, default: med)
+# @ace_param(op, hint: comparison)
 func hold_shield(seconds: float, quality: String, op: String) -> void:
 	pass
 ```
@@ -470,26 +479,26 @@ build the pair lists on their own.
 extends Node
 class_name Player
 
-## @ace_category Combat
+# @ace_category("Combat")
 signal died
 
 @export var health: int = 100
 
-## @ace_category Combat
-## @ace_description Reduce health and emit died at zero.
+# @ace_category("Combat")
+# @ace_description("Reduce health and emit died at zero.")
 func take_damage(amount: int) -> void:
     health -= amount
     if health <= 0:
         died.emit()
 
-## @ace_param_options(slot head,chest,legs)
+# @ace_param_options(slot head,chest,legs)
 func equip(slot: String) -> void:
     pass
 
 func is_dead() -> bool:   # bool return -> Condition
     return health <= 0
 
-## @ace_hidden
+# @ace_hidden
 func _internal_recalc() -> void:   # underscore + hidden: never shows
     pass
 ```
@@ -513,9 +522,9 @@ dropdown), and **Is Dead** (condition). `_internal_recalc` stays private.
 everything above. It lists the scripts this sheet reads (and the project's own, added with **Use in event
 sheets** on a script in the FileSystem) and, for the one you pick, every row it gives sheets as a plain
 sentence with a tick, so what you see is what you will actually get. A row the script already leaves
-out (`## @ace_hidden`) is listed too, marked **left out**, so unticking is never a one-way door.
+out (`# @ace_hidden`) is listed too, marked **left out**, so unticking is never a one-way door.
 
-Untick what sheets should not see, then press **Done**: the window writes `## @ace_hidden` above those
+Untick what sheets should not see, then press **Done**: the window writes `# @ace_hidden` above those
 members straight into your script, after a backup (**Tools > Sheet Backups** restores it), and its status
 line names the lines it wrote. Ticking a left-out member again removes only that line, and every other
 `##` word you wrote stays. Only `##` comments above a declaration are ever added or removed - never a
@@ -525,7 +534,7 @@ behaviour itself.
 
 - **Click a sentence** (or press Enter or F2 on it) to open **How should this read?**: type the sentence
   with `{slot}` gaps, see what it reads as with the row's starting values, and press **Done**; the
-  `## @ace_display_template` line is written above the function and every row that uses it, in every
+  `# @ace_display_template` line is written above the function and every row that uses it, in every
   sheet, follows. A slot the function does not have is named before anything is written. The same box
   opens from **Change how this reads...** on a placed row's right-click menu and from F2 on a row of your
   script in the picker.
@@ -993,7 +1002,7 @@ Instead of letting sheets call `queue_free()` on anything, expose `despawn_safel
 
 ### 6. A hardware trigger
 
-A provider that polls a gamepad's gyro (or a MIDI pedal, or an Arduino over serial) and emits `## @ace_trigger` signals turns exotic input into ordinary event rows.
+A provider that polls a gamepad's gyro (or a MIDI pedal, or an Arduino over serial) and emits `# @ace_trigger` signals turns exotic input into ordinary event rows.
 
 ### 7. A game-jam save/load pair in one afternoon
 
@@ -1009,7 +1018,7 @@ Your strings live in `tr()` keys. Expose `text_for(key: String)` as an expressio
 
 ### 10. A deprecation that never breaks the old levels
 
-You shipped `add_score(n)` in the demo, then the real game needed `award_score(n, source)`. Annotate the old method `## @ace_deprecated("Use Award Score instead")`: the twenty tutorial sheets that already call Add Score keep compiling untouched, while the picker only offers the newer action to anyone building fresh content.
+You shipped `add_score(n)` in the demo, then the real game needed `award_score(n, source)`. Annotate the old method `# @ace_deprecated("Use Award Score instead")`: the twenty tutorial sheets that already call Add Score keep compiling untouched, while the picker only offers the newer action to anyone building fresh content.
 
 ### 11. A physics helper wrapped as one safe expression
 
@@ -1021,9 +1030,9 @@ Everyone on the team kept hand-writing the same raycast-from-mouse snippet sligh
   compiles fine and crashes only when the generated code runs. Compile, parse, then run it in a test.
 - **Templates are frozen once shipped.** Changing an `ace_id` or `codegen_template` breaks every sheet
   that used it. To change behavior, add a new ACE and **deprecate** the old one - on Path 1, annotate it
-  `## @ace_deprecated("Use <NewName> instead")`: it keeps compiling in sheets that already use it (so
+  `# @ace_deprecated("Use <NewName> instead")`: it keeps compiling in sheets that already use it (so
   nothing breaks), but is hidden from the picker, flagged on hover, and warned at compile. An optional
-  SECOND argument names the successor - `## @ace_deprecated("Renamed.", "method:begin_wave")` - so the
+  SECOND argument names the successor - `# @ace_deprecated("Renamed.", "method:begin_wave")` - so the
   hover says where the member went. (`@ace_hidden` only hides a member; use `@ace_deprecated` to retire one
   with a pointer to its successor.) Do not edit the shipped template.
 - **Renaming a provider function breaks sheets silently.** The member name IS the ace_id

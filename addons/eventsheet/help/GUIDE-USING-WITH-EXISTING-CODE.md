@@ -110,7 +110,7 @@ These are stored in `res://eventsheet_vocabulary.tres`, **never written into you
 and they change presentation only - ids and emitted calls are untouched. Delete that file and
 every entry returns to its inferred name with no sheet affected. If you would rather your
 script describe itself (so a teammate reading the file sees the same vocabulary), call
-`EventSheets.bake_overrides(script_path, class_name)` to write them in as `## @ace_*`
+`EventSheets.bake_overrides(script_path, class_name)` to write them in as `# @ace_*`
 comments; the file is backed up first and only comment lines are ever added.
 
 The tooltip tells you which layer a name came from: *"From your project's Inventory -
@@ -1882,7 +1882,7 @@ events around it.
     | `$Sync.set_visibility_for(id, true)` / `(id, false)`, `$Sync.public_visibility = true`, `$Sync.add_visibility_filter(f)` | **Show to player** / **Hide from player** / **Show to everyone** / **Ask f who may see it**, and `f`'s own function row then reads `visibility filter` |
     | `set_multiplayer_authority(str(name).to_int())`, `(name.to_int())`, `(id, true)` | read as who owns this object |
     | `if not is_multiplayer_authority(): return` and the `if is_multiplayer_authority():` that wraps a whole body (and the `multiplayer.is_server()` pair) | read as who runs this function; the early return keeps its `return` |
-    | `## @ace_group(name="Scoring", runs_on="host")` above a group's events, and the `if multiplayer.is_server():` the group wraps them in | the group's **Runs on** word; the guard comes off the rows and rides the group, and re-saving writes it back exactly |
+    | `# @ace_group(name="Scoring", runs_on="host")` above a group's events, and the `if multiplayer.is_server():` the group wraps them in | the group's **Runs on** word; the guard comes off the rows and rides the group, and re-saving writes it back exactly |
     | a `create_server` or `create_client` given channels and bandwidth limits, in the same three-line run | **Host a game (Advanced)** / **Join a game (Advanced)**, writing back only the arguments you wrote |
     | `peer.host.compress(ENetConnection.COMPRESS_*)`, whatever the connection was reached through | **Compress network traffic**, the receiver a value that rides back out unchanged |
     | `multiplayer.multiplayer_peer.put_packet(bytes)` and its `get_packet()` twin | **Send raw bytes** / the **Next raw packet** expression |
@@ -2131,8 +2131,8 @@ is instantiated to answer a question.
   one is putting its folder there - from the Asset Library, or a .zip you unpack yourself - and its
   conditions, actions and expressions are in the picker on the next refresh. Removing one is deleting
   its folder; version control undoes that like any other delete. A pack's version is the
-  `## @ace_version(...)` line at the top of its own script, and where it publishes from is its
-  `## @ace_source(...)` line. Taking a newer version is replacing the folder's files with the new
+  `# @ace_version(...)` line at the top of its own script, and where it publishes from is its
+  `# @ace_source(...)` line. Taking a newer version is replacing the folder's files with the new
   ones and reading the diff version control shows you: a verb the new version retires keeps its id,
   its template and its place in the picker, so rows written on it compile to the same line as ever,
   and the Project Doctor names any row whose verb is gone altogether.
@@ -2288,7 +2288,7 @@ Doctor section that reports nothing wrong - it is a ledger of where a curated ta
 and `tools/reading_shape_census.gd` prints the same ranking headless over any folder you point it at.
 
 **A pack can teach the reader the lines its own verbs are written as.** If the code you are opening
-calls into a behaviour pack, that pack may ship `## @ace_lift_example` beside a verb - the line the
+calls into a behaviour pack, that pack may ship `# @ace_lift_example` beside a verb - the line the
 way a person writes it, with the value spans marked - and those calls read as the pack's own rows
 rather than as generic method calls. The author's line is stored on the row, so the file still saves
 back byte for byte, and a pack whose example cannot keep that promise fails its own build rather than
@@ -2717,10 +2717,10 @@ autocomplete, turning the stringly *Call Method* calls into first-class, type-sa
 upgrade for ergonomics, not a requirement for interop.
 
 **The one-line version:** if the system is your own class, you don't author a pack at all - add
-`## @ace_expose_all(node)` at the top of the script and register it (`add_ace_provider_script("res://…")`,
+`# @ace_expose_all(node)` at the top of the script and register it (`add_ace_provider_script("res://…")`,
 or drop the file in `res://eventsheet_addons/`). Every public method/signal becomes a node-targeted ACE
 with **zero per-member annotations** - see the [Custom ACEs Guide](GUIDE-CUSTOM-ACES.md#5-path-1-auto-ace-provider-scripts).
-For a stateless helper (scoring, inventory math) use plain `## @ace_expose_all` (the owned-instance form).
+For a stateless helper (scoring, inventory math) use plain `# @ace_expose_all` (the owned-instance form).
 
 ### See what a script gives sheets, and change how it reads
 
@@ -2728,12 +2728,12 @@ You never have to hand-write those annotations and hope. **Sheet ▸ Custom Acti
 **Scripts in event sheets** window: it lists the scripts this sheet reads, and for the one you pick it
 shows every row the script gives sheets as a plain sentence with a tick. A member the script already
 leaves out is listed too, marked *left out*. Untick what sheets should not see and press **Done**: the
-window writes `## @ace_hidden` above those members into your script, after a backup (Tools ▸ Sheet
+window writes `# @ace_hidden` above those members into your script, after a backup (Tools ▸ Sheet
 Backups restores it), and the status line names the lines it wrote. Only `##` comments are added or
 removed - no signature and no body is ever touched.
 
 - **Click a sentence** (Enter or F2 works too) to open **How should this read?**, which writes
-  `## @ace_display_template` above the function. It shows what the sentence reads as with the row's
+  `# @ace_display_template` above the function. It shows what the sentence reads as with the row's
   starting values and names a slot the function does not have. Every row that uses the function, in every
   sheet, follows.
 - **Go to the line** opens Godot's script editor on the selected function.
@@ -2794,7 +2794,7 @@ An artist wants to tweak enemy spawn timing but should never edit `spawner.gd`. 
 
 ### 11. Trial run before committing to a pack
 
-You suspect your inventory manager deserves first-class ACEs, but you are not sure the shape is right yet. Wire a few sheets to it with stringly Call Method calls first; if the same three methods keep showing up, that is your signal to add `## @ace_expose_all(node)` and promote them to type-safe vocabulary - no rewrite of the sheets that already use it.
+You suspect your inventory manager deserves first-class ACEs, but you are not sure the shape is right yet. Wire a few sheets to it with stringly Call Method calls first; if the same three methods keep showing up, that is your signal to add `# @ace_expose_all(node)` and promote them to type-safe vocabulary - no rewrite of the sheets that already use it.
 
 ## 9b. The Doctor's Tidiness Sweep
 

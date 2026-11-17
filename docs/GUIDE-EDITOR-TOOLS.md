@@ -833,7 +833,7 @@ A run that leans on an event-local variable or a For Each item is listed and mar
 
 A **Test sheet** is a sheet whose whole job is to make claims about your game and report which held. It is the same rows as ever - a trigger, some conditions, some actions - but the actions assert instead of shoot, and the run ends in a verdict rather than a score.
 
-**Sheet > Sheet Type… > Test** makes one. What that compiles to is plain GDScript with no plugin dependency, like every sheet: a `Node` script that declares `signal test_started(test_name: String)` and carries the marker comment `## @ace_test_sheet` on a line of its own. The marker is how a runner finds the file - there is no registry to keep in sync, and a test copied into another project is still a test.
+**Sheet > Sheet Type… > Test** makes one. What that compiles to is plain GDScript with no plugin dependency, like every sheet: a `Node` script that declares `signal test_started(test_name: String)` and carries the marker comment `# @ace_test_sheet` on a line of its own. The marker is how a runner finds the file - there is no registry to keep in sync, and a test copied into another project is still a test.
 
 ### 11.1 The shape of a test
 
@@ -905,7 +905,7 @@ Two rules the runner keeps, because a test suite that lies is worse than none:
 
 ### 11.4 Troubleshooting
 
-- **"No test sheets found."** The marker line is missing: set the sheet's type to **Test** in Sheet > Sheet Type… and save, so the compiled `.gd` carries `## @ace_test_sheet`.
+- **"No test sheets found."** The marker line is missing: set the sheet's type to **Test** in Sheet > Sheet Type… and save, so the compiled `.gd` carries `# @ace_test_sheet`.
 - **"no claims were recorded".** The test started but nothing asserted - the rows are under a condition that never came true, or they sit on a blank event, which runs every tick rather than once at the start - give it On Test Start.
 - **A test hangs until the timeout.** It never said it was finished. End it with **Pass Test** / **Fail Test**, or let it record its last claim and fall quiet - the runner stops on either.
 - **"a test sheet has to be a Node script".** The sheet's host was changed to something that is not a node (a Resource). A test runs in a tree; Test sheets force `extends Node`.

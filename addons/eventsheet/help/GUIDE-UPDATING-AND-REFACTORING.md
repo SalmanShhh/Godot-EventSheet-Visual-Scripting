@@ -96,7 +96,7 @@ On a pack it is one annotation line, read off the file the way every other `@ace
 
 <!-- no-figure -->
 ```gdscript
-## @ace_succeeded_by(Core::GoToState, renames: next=state, defaults: seconds=1.0)
+# @ace_succeeded_by(Core::GoToState, renames: next=state, defaults: seconds=1.0)
 ```
 
 **The map says three things and no more:** the successor's id, what this row's parameters are called
@@ -189,7 +189,7 @@ one line:
 
 <!-- no-figure -->
 ```gdscript
-## @ace_succeeded_by(SpeechPack::method:announce, renames: message=text)
+# @ace_succeeded_by(SpeechPack::method:announce, renames: message=text)
 func say_it(message: String) -> void:
 ```
 
