@@ -31,6 +31,10 @@ Each asks first, in two plain sentences, and keeps the old file in Sheet Backups
 
 Changing a behaviour's class name shows how far the rename reaches, Save Studio says its fields are saved into the scene at once, the translation steps say they write the catalogs at once, the docs chores say they replace what they wrote last time, Include and Resolve Conflict say where the old version is kept, a new global sheet says Ctrl+Z removes the variable and not the global, and the Vocabulary Doc item says it replaces the file. All new words are in the nine translation files.
 
+### Fixed: reordering shapes in a very large Drawing Prefab keeps up
+
+At 200 shapes a held Alt+Down walked a card about once a second, because every card of the list was drawn again for each step and the picture at the top was drawn on the main thread, twice. A move now draws again only the cards that changed place, adding a shape draws one card, removing the last one draws none, and the picture is asked for rather than waited on: any number of edits in one frame make one picture, drawn on a worker thread from its own copy of the steps, so the list answers at once and the picture follows a moment later. The picture, what is saved and the undo steps are exactly what they were (the same drawing function makes the same pixels).
+
 ### Fixed: the Scene dock's "Preview its behaviours" finds behaviours at any depth
 
 Right-clicking a node used to offer Preview only for behaviours that were its direct children. It now finds the behaviours anywhere below the node that act on it or on a node under it (a behaviour's host is its parent, or the node it is pointed at), so a behaviour sitting inside a holder node two levels down shows the entry and plays. A behaviour that acts on something outside the node is left out, and so is the inside of an instanced scene unless its children are opened up. The walk looks at no more than 600 nodes below the one you clicked, nearest first, so the menu stays instant in a very large scene (about half a millisecond over 2,000 nodes).
