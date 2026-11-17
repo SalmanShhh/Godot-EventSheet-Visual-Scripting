@@ -19,6 +19,7 @@ extends RefCounted
 const FIELDS_PATH: String = "res://addons/eventsheet/editor/inspector/juice_card_fields.gd"
 const SHAKE_PATH: String = "res://addons/eventsheet/editor/inspector/juice_shake_fields.gd"
 const SPRING_PICTURE_PATH: String = "res://addons/eventsheet/editor/inspector/juice_spring_picture.gd"
+const CHROMA_PICTURE_PATH: String = "res://addons/eventsheet/editor/inspector/juice_chroma_picture.gd"
 const ENVIRONMENT_WORDS_PATH: String = "res://addons/eventforge/registration/environment_words.gd"
 const CAMERA_WORDS_PATH: String = "res://addons/eventforge/registration/camera_attribute_words.gd"
 
@@ -58,6 +59,7 @@ static func kinds(family_of: Dictionary) -> Array:
 	all.append_array(_turning_kinds(family_of))
 	all.append_array(_light_look_sound_kinds(family_of))
 	all.append_array(_time_kinds(family_of))
+	all.append_array(_screen_kinds(family_of))
 	return all
 
 
@@ -229,6 +231,41 @@ static func _light_look_sound_kinds(family_of: Dictionary) -> Array:
 				{"key": "back_seconds", "label": "Back over", "drawer": "unit:time", "default": 0.2, "visible_when": bus_has_a_value}
 			], {"bus": "Master", "how": "muffle", "to": 400.0, "seconds": 0.5, "back_seconds": 0.2}, [],
 			["muffle", "low pass", "underwater", "reverb", "duck", "audio effect"])
+	]
+
+
+## The little drawing of the split the card makes, from its amount and its direction.
+static func chroma_picture(card: Dictionary, now: Callable, edited: Object) -> Control:
+	return (load(CHROMA_PICTURE_PATH) as Script).call("shape_strip", card, now, edited) as Control
+
+
+## The quiet line under a Chromatic Shake card when no Juice node sits beside its player to play it.
+static func chroma_says(_card: Dictionary, _cards: Array, _index: int, edited: Object) -> String:
+	if not (edited is Node) or pack().call("juice_beside", edited) != null:
+		return ""
+	return EventSheetL10n.translate("There is no Juice node beside this player, so this card does nothing. Add a Juice node under the same object.")
+
+
+## Whether the Juice node is missing, so the line above is the quiet amber one.
+static func chroma_without_juice(card: Dictionary, cards: Array, index: int, edited: Object) -> bool:
+	return not chroma_says(card, cards, index, edited).is_empty()
+
+
+## The cards that change what the whole screen looks like.
+static func _screen_kinds(family_of: Dictionary) -> Array:
+	return [
+		_kind("chromatic_shake", "Chromatic Shake",
+			"Splits the red, green and blue of the screen apart along a direction for a moment, then lets them close again: the colour fringe of a hit, a dash or a landing. It plays through the Juice node beside the player, with the same no-flashing and reduced-effects choices as its Chromatic Shake row.",
+			family_of, [
+				{"key": "amount", "label": "Amount", "drawer": "num", "default": 12.0, "suffix": "px", "redraw": true},
+				_over("Seconds", 0.3),
+				{"key": "mode", "label": "Ends", "drawer": "options:reducing=Closes steadily,constant=Holds then snaps shut", "default": "reducing", "redraw": true},
+				{"key": "direction", "label": "Direction", "drawer": "options:wander=Wanders,angle=Along an angle", "default": "wander", "redraw": true},
+				{"key": "angle", "label": "Angle", "drawer": "num", "default": 0.0, "suffix": "degrees", "show_if": "direction==angle", "redraw": true},
+				{"key": "chroma_shape", "label": "", "drawer": "custom", "build": chroma_picture},
+				{"key": "chroma_note", "label": "", "drawer": "note", "text": chroma_says, "hide_empty": true, "warn_when": chroma_without_juice}
+			], {"amount": 12.0, "seconds": 0.3, "mode": "reducing", "direction": "wander"}, [],
+			["aberration", "rgb", "split", "glitch", "colour fringe", "color fringe", "offset", "channels", "hit"])
 	]
 
 

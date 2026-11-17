@@ -358,7 +358,8 @@ const CATEGORY_OF: Dictionary = {
 	"bus_effect": "audio",
 	"spring": "transform",
 	"slow_object": "pause",
-	"animation_parameter": "transform"
+	"animation_parameter": "transform",
+	"chromatic_shake": "screen"
 }
 
 ## Keys that Set Juice Card Field and Juice Card Field accept.
@@ -463,6 +464,8 @@ const SPRING: String = "spring"
 const SLOW_OBJECT: String = "slow_object"
 ## Step word: move one parameter of an AnimationTree and bring it back.
 const ANIMATION_PARAMETER: String = "animation_parameter"
+## Step word: split the screen's colours apart along a direction for a time and let them close.
+const CHROMATIC_SHAKE: String = "chromatic_shake"
 
 ## Every word this node plays itself that points at another node or at the world.
 const WORLD_WORDS: PackedStringArray = [
@@ -470,7 +473,7 @@ const WORLD_WORDS: PackedStringArray = [
 	"force_for_a_time", "gravity_for_a_time", "freeze_body", "squash_stretch", "punch_position",
 	"punch_rotation", "pop", "fade", "grab_focus", "count_to", "reveal_text", "fill_bar", "shader_value", "pause_player",
 	"collision_for", "collision_layer_for", "remove_node", "draw_order", "switch_node", "look_at", "rotate_by",
-	"rotate_to", "rotation_shake", "light", "scene_look", "bus_effect", "spring", "slow_object", "animation_parameter"
+	"rotate_to", "rotation_shake", "light", "scene_look", "bus_effect", "spring", "slow_object", "animation_parameter", "chromatic_shake"
 ]
 
 ## Particles word: play the burst again from the start.
@@ -534,6 +537,26 @@ func _new_tween() -> Tween:
 	var made: Tween = create_tween()
 	_tweens.append(made)
 	return made
+## The Juice node a Chromatic Shake card started a shake on, so Stop, Restore and leaving the scene can close the split.
+var _chroma_node: Node = null
+# @ace_hidden
+## The Juice node a player would play through, found from where it is saved: under the same object or under the
+## player. The editor asks it to say in amber that a Chromatic Shake card has nothing to play it.
+static func juice_beside(player: Node) -> Node:
+	if player == null:
+		return null
+	var looked: Array = player.get_children()
+	var parent: Node = player.get_parent()
+	if parent != null:
+		looked.append_array(parent.get_children())
+	var chosen: Variant = player.get("acts_on")
+	if chosen is Node:
+		looked.append_array((chosen as Node).get_children())
+	for child: Variant in looked:
+		var node: Node = child as Node
+		if node != null and node != player and node.has_method("chromatic_shake"):
+			return node
+	return null
 ## The body a body card acts on, or null (said once) when the card names one that is not there.
 func _body_of(card: Dictionary) -> Node:
 	var body: Node = _target(card, "body", true)
@@ -600,7 +623,7 @@ const SHAKE_HERTZ: float = 12.0
 ## The words whose effect a skip to the end leaves out, because they last only a time and the skip is already past it.
 const LASTS_ONLY_A_TIME: PackedStringArray = [
 	"collision_for", "collision_layer_for", "draw_order", "switch_node", "rotation_shake", "light", "scene_look", "bus_effect",
-	"spring", "slow_object", "animation_parameter"
+	"spring", "slow_object", "animation_parameter", "chromatic_shake"
 ]
 
 ## The switch a value of the look does nothing without, by the start of its name. The longest start comes first.
@@ -807,6 +830,7 @@ func skip_to_end() -> void:
 	var late: Array = _waiting.values()
 	_waiting.clear()
 	_close()
+	_end_chroma_shake()
 	_told_nested("skip_to_end")
 	for index: int in range(from, left.size()):
 		if not (left[index] is Dictionary):
@@ -2605,6 +2629,36 @@ func _play_world_card(word: String, card: Dictionary, at: float, seconds: float,
 			_slow_object(card, seconds)
 		ANIMATION_PARAMETER:
 			_animation_parameter(card, seconds)
+		CHROMATIC_SHAKE:
+			_chromatic_shake(card, at, seconds)
+
+# @ace_hidden
+## What a Chromatic Shake card asks the Juice node's own row for: [amount in pixels, seconds, mode, angle]. The strength
+## scales the amount and nothing else; the Juice node then holds it to the no-flashing choice and the effect-strength
+## dial, as it does for the row. A direction that wanders is the row's angle below zero; an angle is turned into the
+## 0 to 360 the row takes.
+static func chromatic_shake_asked(card: Dictionary, at: float, seconds: float) -> Array:
+	var angle: float = -1.0
+	if str(card.get("direction", "wander")) == "angle":
+		angle = fposmod(float(card.get("angle", 0.0)), 360.0)
+	var mode: String = "constant" if str(card.get("mode", "reducing")) == "constant" else "reducing"
+	return [maxf(float(card.get("amount", 12.0)), 0.0) * maxf(at, 0.0), maxf(seconds, 0.01), mode, angle]
+
+## Splits the screen's colours apart through the Juice node's Chromatic Shake row, and keeps the node so the split can be closed.
+func _chromatic_shake(card: Dictionary, at: float, seconds: float) -> void:
+	var juice: Node = _juice()
+	if juice == null or not juice.has_method("chromatic_shake"):
+		return
+	var asked: Array = chromatic_shake_asked(card, at, seconds)
+	juice.call("chromatic_shake", asked[0], asked[1], asked[2], asked[3])
+	_chroma_node = juice
+
+## Puts the colours together at once if a Chromatic Shake card of this player split them.
+func _end_chroma_shake() -> void:
+	var juice: Node = _chroma_node
+	_chroma_node = null
+	if juice != null and is_instance_valid(juice) and juice.has_method("stop_chromatic_shake"):
+		juice.call("stop_chromatic_shake")
 
 ## Restarts, starts or stops a particles node.
 func _particles(card: Dictionary) -> void:
@@ -3777,6 +3831,7 @@ func _tell_juice_began(list: Array) -> void:
 ## cards would have left it, with true it goes back to what it was before the first card. The shake, the
 ## slowmo and the hold on the clock end either way.
 func _tell_juice_ended(put_back: bool) -> void:
+	_end_chroma_shake()
 	var juice: Node = _juice_quiet()
 	if juice != null and juice.has_method("juice_player_ended"):
 		juice.call("juice_player_ended", _key(), put_back)

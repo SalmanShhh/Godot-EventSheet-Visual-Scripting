@@ -444,6 +444,8 @@ static func as_gdscript(card: Dictionary, player: Node = null) -> String:
 			var effect_class: Dictionary = {"muffle": ["AudioEffectLowPassFilter", "cutoff_hz", "20500.0"], "dive": ["AudioEffectAmplify", "volume_db", "0.0"], "wash": ["AudioEffectReverb", "wet", "0.0"]}
 			var entry: Array = effect_class.get(how, effect_class["muffle"])
 			return "# The bus must already carry a %s.\nvar bus := AudioServer.get_bus_index(\"%s\")\nvar effect: %s\nfor slot in AudioServer.get_bus_effect_count(bus):\n\tif AudioServer.get_bus_effect(bus, slot) is %s:\n\t\teffect = AudioServer.get_bus_effect(bus, slot)\neffect.%s = %s\nawait get_tree().create_timer(%s).timeout\neffect.%s = %s" % [entry[0], bus, entry[0], entry[0], entry[1], _n(card.get("to", 400.0)), seconds, entry[1], entry[2]]
+		"chromatic_shake":
+			return _chromatic_shake_by_hand(card, seconds)
 		"spring":
 			var property: String = str(card.get("property", "scale"))
 			return "# Needs a Spring node under this node; it settles the value back to rest.\n%s.bump_property(\"%s\", %s)" % [_spring_name(card, player), property, _value(card.get("kick", 3.0))]
@@ -457,3 +459,46 @@ static func as_gdscript(card: Dictionary, player: Node = null) -> String:
 				tween_line += "\ntween.tween_method(func(value: float) -> void: tree.set(\"%s\", value), %s, float(before), %s)" % [parameter, _n(card.get("to", 1.0)), _n(card.get("back_seconds", 0.2))]
 			return rest_line + tween_line
 	return ""
+
+
+## A colour split by hand: a full-screen rectangle whose shader reads the screen three times the way the Juice node does,
+## red a little one way, green a little the other and blue four times as far as red, and a tween that closes the split. A
+## steady direction is the card's angle; a wandering one is picked once here, where the Juice node keeps turning it.
+static func _chromatic_shake_by_hand(card: Dictionary, seconds: String) -> String:
+	var lines: PackedStringArray = PackedStringArray([
+		"var layer := CanvasLayer.new()",
+		"var screen := ColorRect.new()",
+		"screen.set_anchors_preset(Control.PRESET_FULL_RECT)",
+		"screen.mouse_filter = Control.MOUSE_FILTER_IGNORE",
+		"var shader := Shader.new()",
+		"shader.code = \"\"\"",
+		"shader_type canvas_item;",
+		"uniform sampler2D screen_texture : hint_screen_texture, filter_linear;",
+		"uniform vec2 split;",
+		"void fragment() {",
+		"\tvec2 shift = split * SCREEN_PIXEL_SIZE;",
+		"\tvec3 split_colour = vec3(",
+		"\t\ttexture(screen_texture, SCREEN_UV + shift).r,",
+		"\t\ttexture(screen_texture, SCREEN_UV - shift).g,",
+		"\t\ttexture(screen_texture, SCREEN_UV + shift * 4.0).b);",
+		"\tCOLOR = vec4(mix(split_colour, texture(screen_texture, SCREEN_UV + shift * 1.25).rgb, 0.25), 1.0);",
+		"}\"\"\"",
+		"screen.material = ShaderMaterial.new()",
+		"screen.material.shader = shader",
+		"layer.add_child(screen)",
+		"add_child(layer)"
+	])
+	var amount: String = _n(card.get("amount", 12.0))
+	if str(card.get("direction", "wander")) == "angle":
+		lines.append("screen.material.set_shader_parameter(\"split\", Vector2.from_angle(deg_to_rad(%s)) * %s)" % [_n(card.get("angle", 0.0)), amount])
+	else:
+		lines.append("screen.material.set_shader_parameter(\"split\", Vector2.from_angle(randf() * TAU) * %s)" % amount)
+	if str(card.get("mode", "reducing")) == "constant":
+		lines.append("await get_tree().create_timer(%s).timeout" % seconds)
+		lines.append("screen.material.set_shader_parameter(\"split\", Vector2.ZERO)")
+	else:
+		lines.append("var tween := create_tween()")
+		lines.append("tween.tween_property(screen.material, \"shader_parameter/split\", Vector2.ZERO, %s)" % seconds)
+		lines.append("await tween.finished")
+	lines.append("layer.queue_free()")
+	return "\n".join(lines)
