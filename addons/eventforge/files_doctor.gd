@@ -122,7 +122,10 @@ static func ensure_registered() -> void:
 ## The section, with the contract every registered check has: append findings, never write inside
 ## res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(project_sources()))
+	# The same answer as `report`, asked a few scripts at a time so a big project does not hold a frame.
+	findings.append_array(await EventSheetProjectDoctor.sliced_findings(await project_sources_sliced(), [
+		res_write_findings, absolute_path_findings, unguarded_read_findings, loads_outside_findings,
+		untrusted_scene_findings, untrusted_code_file_findings, watch_never_stops_findings]))
 
 
 ## The whole section over one corpus of {script path: source text}. Pure, so a test hands it two
@@ -141,6 +144,20 @@ static func report(sources: Dictionary) -> Array[Dictionary]:
 
 ## The project's own scripts and their text, read ONCE for the whole section, through the audit's
 ## shared listing and its shared read - so this adds no walk of the tree and no second read.
+static func project_sources_sliced() -> Dictionary:
+	var sources: Dictionary = {}
+	var looked: int = 0
+	for script_path: String in ReadingDoors.doctor()._project_scripts():
+		looked += 1
+		await ReadingDoors.doctor().breathe_every(looked)
+		if _is_someone_elses(script_path):
+			continue
+		var text: String = ReadingDoors.doctor().source_of(script_path)
+		if not text.is_empty():
+			sources[script_path] = text
+	return sources
+
+
 static func project_sources() -> Dictionary:
 	var sources: Dictionary = {}
 	for script_path: String in ReadingDoors.doctor()._project_scripts():

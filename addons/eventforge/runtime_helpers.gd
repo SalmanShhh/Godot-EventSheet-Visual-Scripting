@@ -38,11 +38,12 @@ static func class_files(library_dir: String = LIBRARY_DIR) -> Dictionary:
 ## The helper files `text` names (a codegen template, emitted code, a row's parameter), each once and
 ## sorted, with the helpers those helpers name in turn. Whole-word match, so `EventForgeFreeSpotX`
 ## is not `EventForgeFreeSpot`.
-static func files_named_in(text: String, library_dir: String = LIBRARY_DIR) -> PackedStringArray:
+static func files_named_in(text: String, library_dir: String = LIBRARY_DIR, held_index: Dictionary = {}) -> PackedStringArray:
 	var out: PackedStringArray = PackedStringArray()
 	if text.is_empty():
 		return out
-	var index: Dictionary = class_files(library_dir)
+	# A caller asking about many scripts reads the library once and hands the table in.
+	var index: Dictionary = held_index if not held_index.is_empty() else class_files(library_dir)
 	var queue: PackedStringArray = PackedStringArray([text])
 	while not queue.is_empty():
 		var current: String = queue[0]
@@ -95,8 +96,8 @@ static func ensure_for_text(text: String, library_dir: String = LIBRARY_DIR,
 ## The helper files a script's source calls that the project does not hold. The Doctor
 ## asks this of each sheet's code.
 static func lacking_for_text(text: String, library_dir: String = LIBRARY_DIR,
-		project_dir: String = PROJECT_DIR) -> PackedStringArray:
-	return missing_in_project(files_named_in(text, library_dir), project_dir)
+		project_dir: String = PROJECT_DIR, held_index: Dictionary = {}) -> PackedStringArray:
+	return missing_in_project(files_named_in(text, library_dir, held_index), project_dir)
 
 
 static func _names_class(text: String, class_name_text: String) -> bool:

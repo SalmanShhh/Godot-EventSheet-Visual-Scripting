@@ -28,10 +28,13 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 		return
 	var scripts: PackedStringArray = EventSheetProjectDoctor._list_files_with_extension("gd")
 	scripts.sort()
+	# The library's class table is read once for the whole project, not once per script.
+	var index: Dictionary = HELPERS.class_files()
 	for script_path: String in scripts:
 		if script_path.begins_with("res://addons/"):
 			continue
-		var lacking: PackedStringArray = HELPERS.lacking_for_text(EventSheetProjectDoctor.source_of(script_path))
+		var lacking: PackedStringArray = HELPERS.lacking_for_text(EventSheetProjectDoctor.source_of(script_path),
+			HELPERS.LIBRARY_DIR, HELPERS.PROJECT_DIR, index)
 		if lacking.is_empty():
 			continue
 		var found: Dictionary = _finding("warning", CHECK_ID, script_path,

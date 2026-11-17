@@ -77,7 +77,17 @@ static func ensure_registered() -> void:
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(EventSheetProjectDoctor._project_scripts()))
+	# The sheets the report is about to open are opened here, one turn each, so the editor draws between
+	# them; the report then finds each one already held for the audit.
+	var scripts: PackedStringArray = EventSheetProjectDoctor._project_scripts()
+	var opened: int = 0
+	for script_path: String in ranked(scripts):
+		if opened >= MEASURED_LIMIT:
+			break
+		await EventSheetProjectDoctor.breathe()
+		EventSheetProjectDoctor.sheet_of(script_path)
+		opened += 1
+	findings.append_array(report(scripts))
 
 
 ## The whole section as findings, the summary first (only when something was found: a project with
@@ -113,8 +123,9 @@ static func sheet_findings(script_path: String) -> Array[Dictionary]:
 	var sheet: EventSheetResource = EventSheetProjectDoctor.sheet_of(script_path)
 	if sheet == null:
 		return []
-	return script_findings(script_path, EventSheetMistakeFindings.findings(sheet, script_path),
-		EventSheetProjectDoctor.margin_numbers_of(sheet))
+	var mine: Array[Dictionary] = EventSheetMistakeFindings.findings(sheet, script_path)
+	# The margin is numbered only for a script that has something to say: it builds a whole canvas.
+	return script_findings(script_path, mine, EventSheetProjectDoctor.margin_numbers_of(sheet) if not mine.is_empty() else {})
 
 
 ## Pure over the findings it earned, so the wording is pinned without going through the importer.

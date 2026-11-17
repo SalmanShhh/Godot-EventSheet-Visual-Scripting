@@ -93,11 +93,29 @@ static func _read_names(folder: String, pattern: RegEx, out: Dictionary) -> void
 		var file: FileAccess = FileAccess.open(folder.path_join(file_name), FileAccess.READ)
 		if file == null:
 			continue
-		var found: RegExMatch = pattern.search(file.get_buffer(HEAD_BYTES).get_string_from_utf8())
+		var found: RegExMatch = pattern.search(_whole_characters(file.get_buffer(HEAD_BYTES)))
 		if found != null:
 			out[found.get_string(1)] = folder.path_join(file_name)
 	for child: String in DirAccess.get_directories_at(folder):
 		_read_names(folder.path_join(child), pattern, out)
+
+
+## The text of the first bytes of a file, cut back to the last whole character: a cut through the
+## middle of a multi-byte character would decode with an error line in Godot's Output.
+static func _whole_characters(bytes: PackedByteArray) -> String:
+	var end: int = bytes.size()
+	var back: int = 0
+	while back < 4 and end - back > 0:
+		var byte: int = bytes[end - back - 1]
+		if byte < 0x80:
+			break
+		if byte >= 0xC0:
+			var needed: int = 2 if byte < 0xE0 else (3 if byte < 0xF0 else 4)
+			if back + 1 < needed:
+				end -= back + 1
+			break
+		back += 1
+	return bytes.slice(0, end).get_string_from_utf8()
 
 
 ## The findings, pure over what was read: `user_classes` is the reader's script -> its class name,

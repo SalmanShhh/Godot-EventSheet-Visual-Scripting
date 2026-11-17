@@ -32,6 +32,9 @@ static var _extension_checks: Array[Dictionary] = []
 static var _project_scripts_cache: PackedStringArray = PackedStringArray()
 static var _project_scripts_walked: bool = false
 
+## extension -> the project's files with it, listed once per audit - see `_list_files_with_extension`.
+static var _listed_by_extension: Dictionary = {}
+
 ## path -> that file's text, for the length of one audit - see `source_of`.
 static var _source_cache: Dictionary = {}
 
@@ -45,6 +48,12 @@ static var _sheet_cache: Dictionary = {}
 ## tested) may be handed a fixture that was just rewritten under it, and a read held from before the
 ## write would answer with the file that is no longer there.
 static var _run_in_progress: bool = false
+
+## How long a sliced audit works before it gives the editor a frame, and where it is in that slice.
+const SLICE_USEC: int = 8000
+static var _frame_source: SceneTree = null
+static var _slice_end_usec: int = 0
+static var _spent_slice: bool = true
 
 ## Margin numbers by sheet instance id, held for one run like the sheets they were read from: the
 ## margin's numbering is read off a whole throwaway canvas, and six sections ask it of every sheet.
@@ -80,7 +89,19 @@ static func unregister_check(check_id: String) -> void:
 ## Full audit over every sheet in the project. Returns
 ## {findings: Array[Dictionary{severity, check, path, message}], errors, warnings, infos}.
 static func run() -> Dictionary:
+	var session: Dictionary = begin()
+	while step(session):
+		pass
+	return finish(session)
+
+
+## The same audit in pieces, for a caller that must not hold the editor still: `begin()` opens it,
+## each `step(session)` runs one check and answers whether any are left, `run_sliced` hands the same
+## steps to a running editor a frame at a time, `finish()` closes it and returns what `run()` returns.
+## `session["current"]` names the step in hand and `progress_of` says how far it is.
+static func begin() -> Dictionary:
 	var findings: Array[Dictionary] = []
+	var steps: Array = []
 	# One listing of the project's scripts serves the whole audit; dropping it here is what makes an
 	# audit see files that appeared since the last one.
 	clear_project_scripts()
@@ -113,204 +134,341 @@ static func run() -> Dictionary:
 	# The sheet checks read the project's `.gd` sheets as well: `.gd` is the default sheet format, and a
 	# check handed only the `.tres` list said nothing at all about a project of scripts. The few checks
 	# that cannot apply to a script skip it themselves, and one note below says which and why.
-	var script_sheets: PackedStringArray = GdSheets.script_sheets()
-	var sheet_paths: PackedStringArray = tres_paths + script_sheets
-	var coverage: Dictionary = GdSheets.coverage_finding(tres_paths.size(), script_sheets.size())
-	if not coverage.is_empty():
-		findings.append(coverage)
-	check_generated_outputs(sheet_paths, findings)
-	check_debug_residue(sheet_paths, findings)
-	check_autoload_registration(sheet_paths, findings)
-	check_scene_attachment(sheet_paths, findings)
-	check_unused_variables(sheet_paths, findings)
-	check_duplicated_globals(sheet_paths, findings)
-	check_fanout_god_sheets(sheet_paths, findings)
-	check_fragile_node_paths(sheet_paths, findings)
-	check_unbounded_loops(sheet_paths, findings)
-	check_every_tick_setup(sheet_paths, findings)
-	check_coroutine_in_per_frame_trigger(sheet_paths, findings)
-	check_unused_packs(sheet_paths, findings)
-	check_pack_dependencies(sheet_paths, findings)
-	check_rotated_gravity_pathfinding(findings)
-	check_param_type_mismatches(sheet_paths, findings)
-	check_shadowed_variables(sheet_paths, findings)
-	check_variable_notes(sheet_paths, findings)
-	check_region_fences(sheet_paths, findings)
-	check_untranslated_project(sheet_paths, findings)
-	check_unmarked_player_text(sheet_paths, findings)
-	check_stale_translated_labels(sheet_paths, findings)
+	# Which of the scripts ARE sheets is told by the compiler's banner on their first line, the same
+	# test Replace in Project uses. It is a step of its own, taken a handful of files at a time, because
+	# a project can hold thousands of plain scripts and the editor must keep drawing while it looks.
+	var candidates: PackedStringArray = GdSheets.own_scripts()
+	var context: Dictionary = {"sheet_paths": tres_paths}
+	steps.append(["which_scripts_are_sheets", func() -> void:
+		var script_sheets: PackedStringArray = PackedStringArray()
+		var looked: int = 0
+		for script_path: String in candidates:
+			if GdSheets.is_sheet_script(script_path):
+				script_sheets.append(script_path)
+			looked += 1
+			await breathe_every(looked)
+		context["sheet_paths"] = tres_paths + script_sheets
+		var coverage: Dictionary = GdSheets.coverage_finding(tres_paths.size(), script_sheets.size(), candidates.size() - script_sheets.size())
+		if not coverage.is_empty():
+			findings.insert(0, coverage)])
+	# The texts the checks below ask for, read a few at a time: most checks begin by asking for the same
+	# files, and reading them here (held for the audit, see `source_of`) keeps each of those checks short.
+	steps.append(["read_scripts", func() -> void:
+		var count: int = 0
+		for script_path: String in _project_scripts():
+			source_of(script_path)
+			count += 1
+			await breathe_every(count)])
+	steps.append(["generated_outputs", func() -> void: check_generated_outputs(context["sheet_paths"], findings)])
+	steps.append(["debug_residue", func() -> void: check_debug_residue(context["sheet_paths"], findings)])
+	steps.append(["autoload_registration", func() -> void: check_autoload_registration(context["sheet_paths"], findings)])
+	steps.append(["scene_attachment", func() -> void: check_scene_attachment(context["sheet_paths"], findings)])
+	steps.append(["unused_variables", func() -> void: check_unused_variables(context["sheet_paths"], findings)])
+	steps.append(["duplicated_globals", func() -> void: check_duplicated_globals(context["sheet_paths"], findings)])
+	steps.append(["fanout_god_sheets", func() -> void: check_fanout_god_sheets(context["sheet_paths"], findings)])
+	steps.append(["fragile_node_paths", func() -> void: check_fragile_node_paths(context["sheet_paths"], findings)])
+	steps.append(["unbounded_loops", func() -> void: check_unbounded_loops(context["sheet_paths"], findings)])
+	steps.append(["every_tick_setup", func() -> void: check_every_tick_setup(context["sheet_paths"], findings)])
+	steps.append(["coroutine_in_per_frame_trigger", func() -> void: check_coroutine_in_per_frame_trigger(context["sheet_paths"], findings)])
+	steps.append(["unused_packs", func() -> void: check_unused_packs(context["sheet_paths"], findings)])
+	steps.append(["pack_dependencies", func() -> void: check_pack_dependencies(context["sheet_paths"], findings)])
+	steps.append(["rotated_gravity_pathfinding", func() -> void: check_rotated_gravity_pathfinding(findings)])
+	steps.append(["param_type_mismatches", func() -> void: check_param_type_mismatches(context["sheet_paths"], findings)])
+	steps.append(["shadowed_variables", func() -> void: check_shadowed_variables(context["sheet_paths"], findings)])
+	steps.append(["variable_notes", func() -> void: check_variable_notes(context["sheet_paths"], findings)])
+	steps.append(["region_fences", func() -> void: check_region_fences(context["sheet_paths"], findings)])
+	steps.append(["untranslated_project", func() -> void: check_untranslated_project(context["sheet_paths"], findings)])
+	steps.append(["unmarked_player_text", func() -> void: check_unmarked_player_text(context["sheet_paths"], findings)])
+	steps.append(["stale_translated_labels", func() -> void: check_stale_translated_labels(context["sheet_paths"], findings)])
 	# Required fields read every sheet in BOTH formats: a `.gd` sheet is its own output and is the
 	# default format, so the `.tres`-only list above would skip most real projects.
-	check_required_fields(EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_all_project_sheets()), findings)
-	check_missing_save_support(sheet_paths, findings)
-	check_save_key_symmetry(sheet_paths, findings)
-	check_editor_tool_undo(sheet_paths, findings)
-	check_sheet_edit_funnel(findings)
-	check_editor_tool_safety(sheet_paths, findings)
-	check_background_thread_safety(sheet_paths, findings)
-	check_unknown_input_actions(sheet_paths, findings)
-	check_unsaved_rebindings(sheet_paths, findings)
-	check_caption_less_sounds(sheet_paths, findings)
-	check_orphaned_provider_calls(sheet_paths, findings)
-	check_sheet_signal_declarations(sheet_paths, findings)
-	check_pattern_smells(sheet_paths, findings)
-	check_unresolved_conflicts(findings)
+	steps.append(["required_fields", func() -> void: check_required_fields(EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_all_project_sheets()), findings)])
+	steps.append(["missing_save_support", func() -> void: check_missing_save_support(context["sheet_paths"], findings)])
+	steps.append(["save_key_symmetry", func() -> void: check_save_key_symmetry(context["sheet_paths"], findings)])
+	steps.append(["editor_tool_undo", func() -> void: check_editor_tool_undo(context["sheet_paths"], findings)])
+	steps.append(["sheet_edit_funnel", func() -> void: check_sheet_edit_funnel(findings)])
+	steps.append(["editor_tool_safety", func() -> void: check_editor_tool_safety(context["sheet_paths"], findings)])
+	steps.append(["background_thread_safety", func() -> void: check_background_thread_safety(context["sheet_paths"], findings)])
+	steps.append(["unknown_input_actions", func() -> void: check_unknown_input_actions(context["sheet_paths"], findings)])
+	steps.append(["unsaved_rebindings", func() -> void: check_unsaved_rebindings(context["sheet_paths"], findings)])
+	steps.append(["caption_less_sounds", func() -> void: check_caption_less_sounds(context["sheet_paths"], findings)])
+	steps.append(["orphaned_provider_calls", func() -> void: check_orphaned_provider_calls(context["sheet_paths"], findings)])
+	steps.append(["sheet_signal_declarations", func() -> void: check_sheet_signal_declarations(context["sheet_paths"], findings)])
+	steps.append(["pattern_smells", func() -> void: check_pattern_smells(context["sheet_paths"], findings)])
+	steps.append(["unresolved_conflicts", func() -> void: check_unresolved_conflicts(findings)])
 	# What a merge leaves behind once the markers are gone: two rows that mint the same baked local
 	# in one scope. Beside the conflict sweep because it is the same event seen a step later.
-	check_duplicate_local_tokens(findings)
+	steps.append(["duplicate_local_tokens", func() -> void: check_duplicate_local_tokens(findings)])
 	# And the setting that makes such merges routine instead of rare. A note, and the last word on it
 	# is a line the reader commits themselves.
-	check_sheet_line_endings(findings)
-	check_shared_sheet_includes(findings)
-	check_blocking_waits(sheet_paths, findings)
-	check_hierarchy_footguns(sheet_paths, findings)
-	check_vocabulary_doc(findings)
-	check_pack_reading(findings)
-	check_pack_spellings(findings)
-	check_old_disabled_packs_setting(findings)
-	check_threaded_shader_import(findings)
-	check_family_group_agreement(findings)
-	check_imported_rows(sheet_paths, findings)
-	check_task_notes(findings)
-	check_menu_ids(findings)
-	check_game_modes(findings)
-	check_object_states(findings)
-	check_animation_method_tracks(findings)
-	check_plugin_reading_health(findings)
-	check_facing_follows(sheet_paths, findings)
-	check_skill_trees(findings)
-	check_raw_error_notes(sheet_paths, findings)
+	steps.append(["sheet_line_endings", func() -> void: check_sheet_line_endings(findings)])
+	steps.append(["shared_sheet_includes", func() -> void: check_shared_sheet_includes(findings)])
+	steps.append(["blocking_waits", func() -> void: check_blocking_waits(context["sheet_paths"], findings)])
+	steps.append(["hierarchy_footguns", func() -> void: await check_hierarchy_footguns(context["sheet_paths"], findings)])
+	steps.append(["vocabulary_doc", func() -> void: check_vocabulary_doc(findings)])
+	steps.append(["pack_reading", func() -> void: check_pack_reading(findings)])
+	steps.append(["pack_spellings", func() -> void: check_pack_spellings(findings)])
+	steps.append(["old_disabled_packs_setting", func() -> void: check_old_disabled_packs_setting(findings)])
+	steps.append(["threaded_shader_import", func() -> void: check_threaded_shader_import(findings)])
+	steps.append(["family_group_agreement", func() -> void: await check_family_group_agreement(findings)])
+	steps.append(["imported_rows", func() -> void: check_imported_rows(context["sheet_paths"], findings)])
+	steps.append(["task_notes", func() -> void: await check_task_notes(findings)])
+	steps.append(["menu_ids", func() -> void: check_menu_ids(findings)])
+	steps.append(["game_modes", func() -> void: check_game_modes(findings)])
+	steps.append(["object_states", func() -> void: check_object_states(findings)])
+	steps.append(["animation_method_tracks", func() -> void: check_animation_method_tracks(findings)])
+	steps.append(["plugin_reading_health", func() -> void: check_plugin_reading_health(findings)])
+	steps.append(["facing_follows", func() -> void: check_facing_follows(context["sheet_paths"], findings)])
+	steps.append(["skill_trees", func() -> void: check_skill_trees(findings)])
+	steps.append(["raw_error_notes", func() -> void: check_raw_error_notes(context["sheet_paths"], findings)])
 	# The tidiness sweep: what is declared but dead, said twice, or typed three times. Advisory
 	# notes only, and last of the built-ins so the established report never reorders.
-	EventSheetDoctorTidiness.check_tidiness(tres_paths, findings)
+	steps.append(["tidiness", func() -> void: EventSheetDoctorTidiness.check_tidiness(tres_paths, findings)])
 	# Declarations nobody reaches (dead enum values, signals nothing hears) - driven by the
 	# project's generated scripts, not by sheet_paths. After the tidiness sweep for the same
 	# reason the sweep runs last: new notes append, the established report never reorders.
-	EventSheetDoctorTidiness.check_declaration_reach(findings)
+	steps.append(["declaration_reach", func() -> void: EventSheetDoctorTidiness.check_declaration_reach(findings)])
 	# The Multiplayer and Lighting sections ship as EXTENSION checks, registered through the
 	# same public seam a pack uses, so "a pack adds its own networking scripts to that section" is the
 	# shipped path rather than a special case. Registering here is what puts them in all four runners.
-	EventSheetMultiplayerDoctor.ensure_registered()
-	EventSheetLightingDoctor.ensure_registered()
-	EventSheetEffectsDoctor.ensure_registered()
-	EventSheetInteropDoctor.ensure_registered()
-	EventSheetPerformanceDoctor.ensure_registered()
-	EventSheetOptionsDoctor.ensure_registered()
-	EventSheetSelfDocDoctor.ensure_registered()
+	steps.append(["EventSheetMultiplayerDoctor", func() -> void: EventSheetMultiplayerDoctor.ensure_registered()])
+	steps.append(["EventSheetLightingDoctor", func() -> void: EventSheetLightingDoctor.ensure_registered()])
+	steps.append(["EventSheetEffectsDoctor", func() -> void: EventSheetEffectsDoctor.ensure_registered()])
+	steps.append(["EventSheetInteropDoctor", func() -> void: EventSheetInteropDoctor.ensure_registered()])
+	steps.append(["EventSheetPerformanceDoctor", func() -> void: EventSheetPerformanceDoctor.ensure_registered()])
+	steps.append(["EventSheetOptionsDoctor", func() -> void: EventSheetOptionsDoctor.ensure_registered()])
+	steps.append(["EventSheetSelfDocDoctor", func() -> void: EventSheetSelfDocDoctor.ensure_registered()])
 	# The Spawning section: the four ways putting a node into the world and taking it out again go
 	# wrong at run time while the editor says nothing. Same seam, same reason.
-	EventSheetSpawningDoctor.ensure_registered()
+	steps.append(["EventSheetSpawningDoctor", func() -> void: EventSheetSpawningDoctor.ensure_registered()])
 	# The Mistake checks section: the lines that cannot run or do not do what they say (a node of the
 	# wrong type, a path or group that is not there, a signal sent the wrong number of values, a While
 	# that cannot end, a local hiding a variable, a division by a literal zero). Same seam, same reason.
-	EventSheetMistakeChecksDoctor.ensure_registered()
+	steps.append(["EventSheetMistakeChecksDoctor", func() -> void: EventSheetMistakeChecksDoctor.ensure_registered()])
 	# The Collision Layers section: a row about a layer number the project no longer names. Same
 	# seam, same reason - a pack shipping collision verbs of its own lands in this section too.
-	EventSheetCollisionLayerDoctor.ensure_registered()
+	steps.append(["EventSheetCollisionLayerDoctor", func() -> void: EventSheetCollisionLayerDoctor.ensure_registered()])
 	# The Collisions section beside it: a trigger that is correct and can never fire, because the
 	# mask, the monitoring switch or the missing shape is in the `.tscn` and the row is in the `.gd`.
 	# It is the ONLY place those words appear - the sheet itself stays quiet - so it rides the same
 	# seam and shows up in all four runners.
-	EventSheetCollisionsDoctor.ensure_registered()
+	steps.append(["EventSheetCollisionsDoctor", func() -> void: EventSheetCollisionsDoctor.ensure_registered()])
 	# The Docs section: whether the guides still describe the packs they are about. It rides the same
 	# seam for the same reason - a studio's own pack guide is audited exactly like a shipped one - and
 	# it asks EventSheetDocCoverage, which is also what the help-bundle builder asks, so the page and
 	# the build output can never say different things about the same guide.
-	EventSheetDocsDoctor.ensure_registered()
+	steps.append(["EventSheetDocsDoctor", func() -> void: EventSheetDocsDoctor.ensure_registered()])
 	# The Migration section: the rows in this project holding a verb the installed vocabulary no
 	# longer has. Same seam, same reason - and the ONLY place those words appear, because the sheet
 	# itself stays quiet and puts such a row into the amber state and nothing else.
-	EventSheetMigrationDoctor.ensure_registered()
+	steps.append(["EventSheetMigrationDoctor", func() -> void: EventSheetMigrationDoctor.ensure_registered()])
 	# The Renames section: the rows left pointing at a name that went out of its own file while this
 	# session was watching. Same seam, same reason, and the same quiet sheet behind it. It answers
 	# only for saves it saw, so a headless run reports its summary and no findings - which is the
 	# honest answer to a question whose evidence is a file changing under a running editor.
-	EventSheetRenameDoctor.ensure_registered()
+	steps.append(["EventSheetRenameDoctor", func() -> void: EventSheetRenameDoctor.ensure_registered()])
 	# Ship It rides the same seam: whether the game can leave the building is a question about the
 	# PROJECT rather than about any one sheet, so it is registered rather than wired in beside the
 	# sheet checks, and a studio's own release rule joins it the same way.
-	EventSheetShipItDoctor.ensure_registered()
+	steps.append(["EventSheetShipItDoctor", func() -> void: EventSheetShipItDoctor.ensure_registered()])
 	# The Files section: the three path mistakes that run perfectly here and behave differently on
 	# the machine the game is sent to - a write aimed at res://, a folder that exists on one
 	# computer, and a read of a file the first run has not written yet. Same seam, same reason.
-	EventSheetFilesDoctor.ensure_registered()
+	steps.append(["EventSheetFilesDoctor", func() -> void: EventSheetFilesDoctor.ensure_registered()])
 	# The Reading section: the project's stays-code lines, grouped by the shape they share. The one
 	# page here that reports nothing wrong - it is a ledger of where curation has not reached yet,
 	# and it takes its head percentage through the same shared reader the head bar's chip and the
 	# corpus pins use, so the three can never quote different numbers for the same bytes.
-	EventSheetReadingDoctor.ensure_registered()
+	steps.append(["EventSheetReadingDoctor", func() -> void: EventSheetReadingDoctor.ensure_registered()])
 	# The Tool edits section: the tools in this project that change the scene somebody has open, and
 	# whether they do it as a step the editor can take back. Same seam, same reason - and a corpus
 	# narrowed to tools that reach for the edited scene, so an ordinary @tool node script never
 	# appears in it.
-	EventSheetToolEditsDoctor.ensure_registered()
+	steps.append(["EventSheetToolEditsDoctor", func() -> void: EventSheetToolEditsDoctor.ensure_registered()])
 	# The Tilemap section: a tile question asked under a custom data layer name no tileset in this
 	# project declares, and a terrain painted into a set the tilesets do not have. Both run today and
 	# do nothing, which is why they are a report rather than an error. Same seam, same reason, and
 	# the same quiet sheet behind it - the row itself only ever goes amber.
-	EventSheetTilemapDoctor.ensure_registered()
+	steps.append(["EventSheetTilemapDoctor", func() -> void: EventSheetTilemapDoctor.ensure_registered()])
 	# The Save Memory section: a per-save memory row in a project that registers no SaveSystem
 	# autoload, where it quietly answers per COMPUTER instead. A note rather than a warning - the
 	# fallback is documented behaviour a single-save game may have chosen - and the sheet says it
 	# the way the sheet says everything: amber on the row, words in the inbox and the strip.
-	EventSheetSaveMemoryDoctor.ensure_registered()
+	steps.append(["EventSheetSaveMemoryDoctor", func() -> void: EventSheetSaveMemoryDoctor.ensure_registered()])
 	# The Class Name Clashes section: a script of the reader's whose class_name is one the plugin or
 	# a shipped behaviour already uses. Same seam, registered by path so it adds no class name of its own.
-	load("res://addons/eventforge/class_name_clash_doctor.gd").ensure_registered()
+	steps.append(["class_name_clash_doctor", func() -> void: load("res://addons/eventforge/class_name_clash_doctor.gd").ensure_registered()])
 	# The Renamed Classes section: a script of the reader's that still names one of the nine plugin
 	# classes that took the EventSheet prefix. Same seam, registered by path for the same reason.
-	load("res://addons/eventforge/renamed_classes_doctor.gd").ensure_registered()
+	steps.append(["renamed_classes_doctor", func() -> void: load("res://addons/eventforge/renamed_classes_doctor.gd").ensure_registered()])
 	# The Script Rows section: a line of a script's own `##` words that reads as nothing - a word one
 	# letter off, a parameter key nothing reads, a plain comment between the words and their function.
 	# Same seam, registered by path so it adds no class name of its own.
-	load("res://addons/eventforge/script_rows_doctor.gd").ensure_registered()
+	steps.append(["script_rows_doctor", func() -> void: load("res://addons/eventforge/script_rows_doctor.gd").ensure_registered()])
 	# The Older Spellings note: a script that still writes lines the editor writes differently today, and the
 	# door that tidies them. Same seam, registered by path so it adds no class name of its own.
-	load("res://addons/eventforge/older_spellings_doctor.gd").ensure_registered()
+	steps.append(["older_spellings_doctor", func() -> void: load("res://addons/eventforge/older_spellings_doctor.gd").ensure_registered()])
 	# The Scene Slot note: an exported scene slot that is empty in a scene whose script spawns from it. Same
 	# seam, registered by path.
-	load("res://addons/eventforge/scene_slot_doctor.gd").ensure_registered()
+	steps.append(["scene_slot_doctor", func() -> void: load("res://addons/eventforge/scene_slot_doctor.gd").ensure_registered()])
 	# The Damage section: a row dealing a kind of damage no DamageTypeSet in this project names, and
 	# a node guarding against a kind nothing deals. Both are a mistyped word rather than a broken line,
 	# which is why neither is an error and both stay quiet on a project that has written no set down.
-	EventSheetDamageDoctor.ensure_registered()
+	steps.append(["EventSheetDamageDoctor", func() -> void: EventSheetDamageDoctor.ensure_registered()])
 	# The Streaming section: a hole in a folder of chunk scenes, and a chunk carrying a camera.
 	# Both are facts about FILES rather than about rows, both behave perfectly while a chunk is the
 	# scene being edited and only go wrong once it is one tile of a streamed world. Same seam, same
 	# reason - a project streaming with a loader of its own is audited in exactly the same section.
-	EventSheetStreamingDoctor.ensure_registered()
+	steps.append(["EventSheetStreamingDoctor", func() -> void: EventSheetStreamingDoctor.ensure_registered()])
 	# The Animation section: a blend tree travelled to a state its own tree does not declare, and a
 	# vector written into a blend space that is a line. Both are magic strings the engine accepts in
 	# silence, which is why neither is an error and both stay quiet on a script no scene can be
 	# paired with. Same seam, same reason.
-	EventSheetAnimationDoctor.ensure_registered()
+	steps.append(["EventSheetAnimationDoctor", func() -> void: EventSheetAnimationDoctor.ensure_registered()])
 	# The Juice Players section: a row that names a juice card by a label no Juice Player in its scene
 	# has. A renamed card leaves the row compiling and running and doing nothing, which is exactly
 	# the shape of mistake that never surfaces on its own. Quiet on a sheet no scene runs and on a
 	# scene with no player in it - without a list to hold the row up against there is no evidence.
-	EventSheetFeedbackDoctor.ensure_registered()
+	steps.append(["EventSheetFeedbackDoctor", func() -> void: EventSheetFeedbackDoctor.ensure_registered()])
 	# The Behaviour hosts section: a behaviour sitting under a node of the wrong type, read from the
 	# scene files as text. The behaviour only logs one line at run time and does nothing, so the
 	# report says it before the game runs. Same seam, same reason.
-	EventSheetBehaviourHostDoctor.ensure_registered()
+	steps.append(["EventSheetBehaviourHostDoctor", func() -> void: EventSheetBehaviourHostDoctor.ensure_registered()])
 	# The Runtime scripts section: a script calling one of the loose runtime scripts (free spot,
 	# retire, bus mix...) the project does not hold, with the door that copies it in.
-	EventSheetRuntimeHelperDoctor.ensure_registered()
+	steps.append(["EventSheetRuntimeHelperDoctor", func() -> void: EventSheetRuntimeHelperDoctor.ensure_registered()])
 	# The Compiler section: the warnings the compiler returned the last time a sheet was written in this
 	# editor. They were only ever read by the MCP server; here they are in the inbox with the file in
 	# front, beside the amber the same sentence puts on the event it belongs to.
-	EventSheetCompilerWarningsDoctor.ensure_registered()
+	steps.append(["EventSheetCompilerWarningsDoctor", func() -> void: EventSheetCompilerWarningsDoctor.ensure_registered()])
 	# The Shapes section: a row that marches a shape's dashes on a shape whose Dashed box is off.
 	# Scroll Dashes moves a pattern along and does not make one, so the offset climbs and the line
 	# sits still with nothing anywhere reporting it. Whether a shape is dashed is an Inspector fact,
 	# so the check stays quiet unless it can find the node in a scene and read the box for itself.
-	EventSheetShapesDoctor.ensure_registered()
+	steps.append(["EventSheetShapesDoctor", func() -> void: EventSheetShapesDoctor.ensure_registered()])
 	# Extension checks (packs and plugins, via EventSheets.register_doctor_check) run
-	# after the built-ins so their findings never reorder the established report.
-	for entry: Dictionary in _extension_checks:
-		var extension_check: Callable = entry.get("run") as Callable
-		if extension_check.is_valid():
-			extension_check.call(tres_paths, findings)
+	# after the built-ins so their findings never reorder the established report. They are listed
+	# only once every section above has registered its own, so this one step adds a step per check.
+	steps.append(["extension_checks", func() -> void:
+		for entry: Dictionary in _extension_checks:
+			var extension_check: Callable = entry.get("run") as Callable
+			if extension_check.is_valid():
+				steps.append([str(entry.get("id", "extension")), func() -> void: await extension_check.call(tres_paths, findings)])])
+	return {
+		"findings": findings,
+		"steps": steps,
+		"index": 0,
+		"current": "",
+		"importer_calls_before": importer_calls_before,
+		"timings": {},
+	}
+
+
+## Runs the next step of an audit opened by `begin()` and says whether more are left. A step is run
+## whole: this is the way the command line, the tests and the MCP tool read the audit.
+static func step(session: Dictionary) -> bool:
+	var steps: Array = session["steps"]
+	if int(session["index"]) >= steps.size():
+		return false
+	var entry: Array = steps[int(session["index"])]
+	session["current"] = str(entry[0])
+	var started: int = Time.get_ticks_usec()
+	(entry[1] as Callable).call()
+	var timings: Dictionary = session["timings"]
+	timings[entry[0]] = int(timings.get(entry[0], 0)) + Time.get_ticks_usec() - started
+	session["index"] = int(session["index"]) + 1
+	return int(session["index"]) < steps.size()
+
+
+## The same audit given to the editor a little at a time: a coroutine (await it) that works for about
+## `SLICE_USEC`, then waits for the next frame of `tree` so the editor keeps drawing, until every step
+## is done or `cancelled` (a Callable answering a bool) says stop. `on_progress` (a Callable taking the
+## session) is called after each step with `session["findings"]` as far as it has got. It returns the
+## report, or an empty Dictionary when it was cancelled. A check yields in the middle of its own loop
+## through `breathe`, so a section that walks every script of a big project does not hold a frame.
+static func run_sliced(session: Dictionary, tree: SceneTree, cancelled: Callable, on_progress: Callable) -> Dictionary:
+	_frame_source = tree
+	_spent_slice = true
+	var steps: Array = session["steps"]
+	while int(session["index"]) < steps.size():
+		if cancelled.is_valid() and bool(cancelled.call()):
+			_frame_source = null
+			_run_in_progress = false
+			return {}
+		var entry: Array = steps[int(session["index"])]
+		session["current"] = str(entry[0])
+		var started: int = Time.get_ticks_usec()
+		await (entry[1] as Callable).call()
+		var timings: Dictionary = session["timings"]
+		timings[entry[0]] = int(timings.get(entry[0], 0)) + Time.get_ticks_usec() - started
+		session["index"] = int(session["index"]) + 1
+		if on_progress.is_valid():
+			on_progress.call(session)
+		var wait: Variant = breathe()
+		if wait != null:
+			await wait
+	_frame_source = null
+	return finish(session)
+
+
+## Called inside a long loop of a check: `await EventSheetProjectDoctor.breathe()`. Outside a sliced
+## audit it answers null and the await goes straight on. Inside one it answers null while the slice has
+## time left and, once the slice is spent, the signal of the next frame, so the loop resumes there.
+static func breathe() -> Variant:
+	if _frame_source == null:
+		return null
+	var now: int = Time.get_ticks_usec()
+	if _spent_slice:
+		# The first look after a frame began: a fresh slice starts now.
+		_spent_slice = false
+		_slice_end_usec = now + SLICE_USEC
+		return null
+	if now < _slice_end_usec:
+		return null
+	_spent_slice = true
+	return _frame_source.process_frame
+
+
+## Runs finders over a corpus a few files at a time. Each finder is a Callable taking {path: text} and
+## answering findings, and must judge each file on its own text (as the section's `report` does); the
+## answer is what running them one after the other over the whole corpus gives - finder by finder, in
+## path order - so slicing never reorders a report. The place to yield between the slices.
+static func sliced_findings(sources: Dictionary, finders: Array) -> Array[Dictionary]:
+	var answers: Array = []
+	for _finder: Variant in finders:
+		answers.append([] as Array[Dictionary])
+	var keys: Array = sources.keys()
+	keys.sort()
+	var at: int = 0
+	while at < keys.size():
+		var slice: Dictionary = {}
+		for index: int in range(at, mini(at + 12, keys.size())):
+			slice[keys[index]] = sources[keys[index]]
+		for number: int in range(finders.size()):
+			(answers[number] as Array).append_array((finders[number] as Callable).call(slice))
+		at += 12
+		await breathe()
+	var all: Array[Dictionary] = []
+	for answer: Variant in answers:
+		all.append_array(answer)
+	return all
+
+
+## `breathe()` for a loop that counts its turns: looks at the clock only every 16th, which is cheap
+## enough to leave inside the tightest loop.
+static func breathe_every(turn: int) -> Variant:
+	return breathe() if (turn & 15) == 0 else null
+
+
+## How many steps are listed and how many are done: what a progress line says.
+static func progress_of(session: Dictionary) -> Vector2i:
+	return Vector2i(int(session["index"]), (session["steps"] as Array).size())
+
+
+## Closes an audit: the report in the shape `run()` has always returned.
+static func finish(session: Dictionary) -> Dictionary:
+	var findings: Array[Dictionary] = session["findings"]
+	var importer_calls_before: int = int(session["importer_calls_before"])
 	# The report is complete, so the texts the checks shared are dead weight - a dock that ran the
 	# audit once should not carry the project's source for the rest of the session.
 	_run_in_progress = false
@@ -1195,10 +1353,9 @@ static func check_unbounded_loops(sheet_paths: PackedStringArray, findings: Arra
 		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
-		var numbers: Dictionary = margin_numbers_of(sheet)
 		for entry: Variant in sheet.events:
 			if entry is EventRow and _is_per_frame_trigger((entry as EventRow).trigger_id):
-				_scan_unbounded_loops(entry as EventRow, sheet_path, threshold, findings, numbers)
+				_scan_unbounded_loops(entry as EventRow, sheet_path, threshold, findings, sheet)
 
 
 static func _is_per_frame_trigger(trigger_id: String) -> bool:
@@ -1218,7 +1375,6 @@ static func check_every_tick_setup(sheet_paths: PackedStringArray, findings: Arr
 		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
-		var numbers: Dictionary = margin_numbers_of(sheet)
 		for entry: Variant in sheet.events:
 			if not (entry is EventRow):
 				continue
@@ -1227,7 +1383,7 @@ static func check_every_tick_setup(sheet_paths: PackedStringArray, findings: Arr
 				continue
 			_add(findings, "info", "every-tick-setup", sheet_path,
 				"This blank event runs on process and only sets values - did you mean On ready?",
-				int(numbers.get(event.get_instance_id(), 0)))
+				_margin_number(sheet, event))
 
 
 ## True for a blank top-level event whose whole body is setting things: no trigger picked, no
@@ -1250,7 +1406,7 @@ static func _is_setup_only_blank_event(event: EventRow) -> bool:
 
 
 ## Walks an event + its sub-events for unbounded, unbudgeted For Each loops with >= threshold actions.
-static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold: int, findings: Array[Dictionary], numbers: Dictionary = {}) -> void:
+static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold: int, findings: Array[Dictionary], sheet: EventSheetResource = null) -> void:
 	# An event with a condition of its own does not run every frame: it runs while the condition holds,
 	# which a script writes as a key press or a "once" flag as often as a continuous state, and the audit
 	# cannot tell them apart. So a condition ends the walk, rather than accuse a loop that a guard may
@@ -1270,11 +1426,11 @@ static func _scan_unbounded_loops(event: EventRow, sheet_path: String, threshold
 		if event.actions.size() >= threshold:
 			_add(findings, "info", "unbounded-loop", sheet_path,
 				"A per-frame For Each here loops over '%s' with %d actions, uncapped and unbudgeted - if it's slow, spread it across frames with the Time Slicer pack or a Budgeted For Each." % [pick.iterator_name, event.actions.size()],
-					int(numbers.get(event.get_instance_id(), 0)))
+					_margin_number(sheet, event))
 			break
 	for sub: Variant in event.sub_events:
 		if sub is EventRow:
-			_scan_unbounded_loops(sub as EventRow, sheet_path, threshold, findings, numbers)
+			_scan_unbounded_loops(sub as EventRow, sheet_path, threshold, findings, sheet)
 
 ## ACE ids whose codegen `await`s - they suspend the handler into a coroutine (Begin Frame Budget alone
 ## does not await, so it is intentionally absent).
@@ -1300,13 +1456,12 @@ static func check_coroutine_in_per_frame_trigger(sheet_paths: PackedStringArray,
 		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null:
 			continue
-		var numbers: Dictionary = margin_numbers_of(sheet)
 		for entry: Variant in sheet.events:
 			if entry is EventRow and _is_per_frame_trigger((entry as EventRow).trigger_id):
-				_scan_coroutine_misuse(entry as EventRow, sheet_path, findings, numbers)
+				_scan_coroutine_misuse(entry as EventRow, sheet_path, findings, sheet)
 
 
-static func _scan_coroutine_misuse(event: EventRow, sheet_path: String, findings: Array[Dictionary], numbers: Dictionary = {}) -> void:
+static func _scan_coroutine_misuse(event: EventRow, sheet_path: String, findings: Array[Dictionary], sheet: EventSheetResource = null) -> void:
 	# A Once At A Time gate makes the overlap impossible (the event skips itself while a
 	# previous run is still suspended), so the warning would be crying wolf - stay silent.
 	for condition: Variant in event.conditions:
@@ -1328,11 +1483,11 @@ static func _scan_coroutine_misuse(event: EventRow, sheet_path: String, findings
 		if not flagged.is_empty():
 			_add(findings, "warning", "coroutine-in-per-frame", sheet_path,
 				"A coroutine action ('%s') runs under a per-frame trigger (On Process / On Physics Process). The next tick fires while the previous run may still be suspended, so the handler overlaps itself and double-processes. Move it to a one-shot trigger (On Ready / On Signal / a custom function), or use the Time Slicer pack." % flagged,
-					int(numbers.get(event.get_instance_id(), 0)))
+					_margin_number(sheet, event))
 			break
 	for sub: Variant in event.sub_events:
 		if sub is EventRow:
-			_scan_coroutine_misuse(sub as EventRow, sheet_path, findings, numbers)
+			_scan_coroutine_misuse(sub as EventRow, sheet_path, findings, sheet)
 
 
 ## Walks a sheet's rows collecting DISTINCT external node references (normalised: $path / %unique,
@@ -2324,11 +2479,18 @@ static func check_family_group_agreement(findings: Array[Dictionary]) -> void:
 	var base_by_group: Dictionary = {}
 	for base: String in families:
 		base_by_group[base.to_lower()] = base
+	var walked_classes: int = 0
 	for entry: Variant in ProjectSettings.get_global_class_list():
 		var record: Dictionary = entry
 		var class_text: String = str(record.get("class", "")).strip_edges()
 		var path: String = str(record.get("path", ""))
 		if class_text.is_empty() or path.is_empty():
+			continue
+		# A script is in a group only by saying add_to_group, so a script that never does is not read
+		# line by line (the reading below is, for a class-heavy project, most of this section's time).
+		walked_classes += 1
+		if not path.begins_with("res://addons/") and not source_of(path).contains("add_to_group("):
+			await breathe_every(walked_classes)
 			continue
 		var facts: Dictionary = EventSheetObjectFacts.script_facts(path)
 		for group: Variant in (facts.get("families", PackedStringArray()) as PackedStringArray):
@@ -2396,11 +2558,9 @@ static func check_unknown_input_actions(_sheet_paths: PackedStringArray, finding
 		# not the reader's to fix: the finding belongs on the game's own scripts.
 		if script_path.begins_with("res://eventsheet_addons/"):
 			continue
-		var file: FileAccess = FileAccess.open(script_path, FileAccess.READ)
-		if file == null:
+		var source: String = source_of(script_path)
+		if source.is_empty():
 			continue
-		var source: String = file.get_as_text()
-		file.close()
 		var missing: PackedStringArray = PackedStringArray()
 		for action_name: String in EventSheetInputMapFacts.action_names_in(source):
 			if not EventSheetInputMapFacts.has_action(action_name) \
@@ -2446,11 +2606,7 @@ static func _address_missing_control(script_path: String, missing: PackedStringA
 ## rebind screen forgets.
 static func check_unsaved_rebindings(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for script_path: String in _list_files_with_extension("gd"):
-		var file: FileAccess = FileAccess.open(script_path, FileAccess.READ)
-		if file == null:
-			continue
-		var source: String = file.get_as_text()
-		file.close()
+		var source: String = source_of(script_path)
 		if not (source.contains("InputMap.action_add_event") or source.contains("InputMap.action_erase_events")):
 			continue
 		# Anything that persists them counts: the sheet's own Save bindings, a ConfigFile, a save
@@ -2578,8 +2734,15 @@ static func threaded_shader_import_finding(threaded: bool, shaders: PackedString
 
 
 static func _list_files_with_extension(extension: String) -> PackedStringArray:
-	return _walk_files(_PLUGIN_DIRECTORIES, func(path: String) -> bool:
+	# One walk per extension per audit, like the script listing: a dozen sections ask for the scenes or
+	# the scripts and each walk is every directory of the project.
+	# A copy each time: a packed array is shared by reference and a caller may append to what it gets.
+	if _listed_by_extension.has(extension):
+		return (_listed_by_extension[extension] as PackedStringArray).duplicate()
+	var listed: PackedStringArray = _walk_files(_PLUGIN_DIRECTORIES, func(path: String) -> bool:
 		return path.get_extension() == extension)
+	_listed_by_extension[extension] = listed
+	return listed.duplicate()
 
 
 ## Calls to a behaviour verb that no longer exists - the ONE failure in this plugin that compiles
@@ -3049,6 +3212,7 @@ static func clear_project_scripts() -> void:
 	GdSheets.forget()
 	_project_scripts_cache = PackedStringArray()
 	_project_scripts_walked = false
+	_listed_by_extension.clear()
 	ProjectFiles.clear()
 	_source_cache.clear()
 	_sheet_cache.clear()
@@ -3119,6 +3283,14 @@ static func sheet_at(sheet_path: String) -> EventSheetResource:
 	if _is_script(sheet_path):
 		return sheet_of(sheet_path)
 	return load(sheet_path) as EventSheetResource
+
+
+## The margin number of one event, asked only when a finding is about to name it: numbering the margin
+## builds a whole throwaway canvas for the sheet, so a check that has nothing to say never pays for it.
+static func _margin_number(sheet: EventSheetResource, event: EventRow) -> int:
+	if sheet == null:
+		return 0
+	return int(margin_numbers_of(sheet).get(event.get_instance_id(), 0))
 
 
 ## The numbers `sheet`'s margin draws (EventSheetResource.margin_numbers), read once per sheet per run
@@ -3993,7 +4165,10 @@ static func _is_plain_name(text: String) -> bool:
 
 
 static func check_hierarchy_footguns(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	var looked: int = 0
 	for script_path: String in _project_scripts():
+		looked += 1
+		await breathe_every(looked)
 		var source: String = source_of(script_path)
 		if source.is_empty():
 			continue
@@ -4150,12 +4325,16 @@ const _TASK_NOTE_SKIPPED_DIRS: PackedStringArray = ["addons", "eventsheet_addons
 ## Every TODO / FIXME / HACK / NOTE comment in the project's own scripts, one finding per line,
 ## with the file and the line number so the report can jump straight to it.
 static func check_task_notes(findings: Array[Dictionary]) -> void:
+	var looked: int = 0
 	for script_path: String in _project_script_paths():
-		var handle: FileAccess = FileAccess.open(script_path, FileAccess.READ)
-		if handle == null:
+		looked += 1
+		await breathe_every(looked)
+		var source: String = source_of(script_path)
+		# Every marker is spelled after a `#`, so a file with no `#` has no note to find.
+		if source.is_empty() or not source.contains("#"):
 			continue
-		var lines: PackedStringArray = handle.get_as_text().split("\n")
-		handle.close()
+		var lines: PackedStringArray = source.split("
+")
 		for line_index: int in range(lines.size()):
 			var note: Dictionary = task_note_in(lines[line_index])
 			if note.is_empty():

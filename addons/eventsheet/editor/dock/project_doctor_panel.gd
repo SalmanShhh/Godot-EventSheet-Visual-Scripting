@@ -52,6 +52,24 @@ var _page: Array[Dictionary] = []
 var _fix_pending: bool = false
 ## The door every row finding has: its sheet opened on that row.
 const SHOW_ROW := "show_row"
+## The window opens wide enough to read a real finding, never under its least, and keeps the size the
+## reader leaves it at.
+const DEFAULT_WIDTH: int = 1120
+const DEFAULT_HEIGHT: int = 720
+const MIN_WIDTH: int = 720
+const MIN_HEIGHT: int = 440
+const SIZE_SECTION: String = "eventsheets"
+const SIZE_KEY: String = "doctor_window_size"
+## Headless twin of the editor's metadata store, so the remembered size is testable without an editor.
+static var _size_memory: Array = []
+## While an audit is running: the line saying how far it is, the button that stops it, and the flag it reads.
+var _progress_label: Label = null
+var _cancel_button: Button = null
+var _rerun_button: Button = null
+var _running: bool = false
+var _cancel_requested: bool = false
+## The selected finding's whole sentence, wrapped, under the list: a cell cuts a long one.
+var _whole_finding: EventSheetPopupUI.HelpStrip = null
 ## Where each check's Learn more goes, found once a session: reading the whole Manual is not free.
 static var _learn_more_cache: Dictionary = {}
 
@@ -76,15 +94,39 @@ static func offers_for(finding: Dictionary) -> Array[Dictionary]:
 func open() -> void:
 	if _doctor_window == null:
 		_build()
+	_doctor_window.size = _wanted_size()
 	EventSheetWindowPlacement.popup_centered(_doctor_window)
 	_run_project_doctor()
+
+
+## The size the window opens at: what the reader last left it at, else the default, never under the least.
+func _wanted_size() -> Vector2i:
+	var stored: Variant = _size_memory
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		stored = EditorInterface.get_editor_settings().get_project_metadata(SIZE_SECTION, SIZE_KEY, [])
+	var wanted: Vector2i = Vector2i(EventSheetPalette.scaled(DEFAULT_WIDTH), EventSheetPalette.scaled(DEFAULT_HEIGHT))
+	if stored is Array and (stored as Array).size() == 2:
+		wanted = Vector2i(int((stored as Array)[0]), int((stored as Array)[1]))
+	return wanted.max(Vector2i(EventSheetPalette.scaled(MIN_WIDTH), EventSheetPalette.scaled(MIN_HEIGHT)))
+
+
+## Keeps the size the reader left the window at, for the next time it opens.
+func _remember_size() -> void:
+	if _doctor_window == null or _doctor_window.visible:
+		return
+	var kept: Array = [_doctor_window.size.x, _doctor_window.size.y]
+	_size_memory = kept
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		EditorInterface.get_editor_settings().set_project_metadata(SIZE_SECTION, SIZE_KEY, kept)
 
 
 ## The window: the summary, the inbox, what a finding and a fix do, and the ways out.
 func _build() -> void:
 	_doctor_window = Window.new()
 	_doctor_window.title = EventSheetL10n.translate("Check the project")
-	_doctor_window.size = Vector2i(EventSheetPalette.scaled(940), EventSheetPalette.scaled(500))
+	_doctor_window.size = Vector2i(EventSheetPalette.scaled(DEFAULT_WIDTH), EventSheetPalette.scaled(DEFAULT_HEIGHT))
+	_doctor_window.min_size = Vector2i(EventSheetPalette.scaled(MIN_WIDTH), EventSheetPalette.scaled(MIN_HEIGHT))
+	_doctor_window.visibility_changed.connect(_remember_size)
 	# Closing the window is what "I have looked at this" means: the identities on the page are written
 	# down then, so the next open marks what appeared in between and nothing else. Doing it on OPEN
 	# instead would erase the marks the reader came to read.
@@ -92,6 +134,17 @@ func _build() -> void:
 	var box: VBoxContainer = EventSheetPopupUI.form_box()
 	_summary_label = Label.new()
 	box.add_child(_summary_label)
+	# How far an audit has got, and the way to stop it; hidden while none is running.
+	var progress_row: HBoxContainer = HBoxContainer.new()
+	progress_row.visible = false
+	_progress_label = Label.new()
+	_progress_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_progress_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	progress_row.add_child(_progress_label)
+	_cancel_button = _button(EventSheetL10n.translate("Cancel"), func() -> void: _cancel_requested = true)
+	progress_row.add_child(_cancel_button)
+	box.add_child(progress_row)
+	_progress_label.set_meta("row", progress_row)
 	_doctor_tree = inbox_tree()
 	# Deferred: a Tree refuses to create items while it is handling the click that selected one, so
 	# the fix and Learn more rows under a finding are built once that click is over.
@@ -105,10 +158,14 @@ func _build() -> void:
 	var findings_card: PanelContainer = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Inbox"), _doctor_tree)
 	findings_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(findings_card)
+	_whole_finding = EventSheetPopupUI.help_strip()
+	_whole_finding.visible = false
+	box.add_child(_whole_finding)
 	_this_finding = EventSheetPopupUI.StateNote.new(EventSheetPalette.scaled_f(600.0))
 	box.add_child(_this_finding)
 	var buttons: HBoxContainer = HBoxContainer.new()
-	buttons.add_child(_button(EventSheetL10n.translate("Re-run Checks"), _run_project_doctor))
+	_rerun_button = _button(EventSheetL10n.translate("Re-run Checks"), _run_project_doctor)
+	buttons.add_child(_rerun_button)
 	# The reader's own "I have dealt with this page" - the same thing closing the window does, for a
 	# reader who wants to keep it open and start again from a clean page.
 	var read_button: Button = _button(EventSheetL10n.translate("Mark All as Read"), func() -> void:
@@ -144,28 +201,72 @@ static func _button(text: String, pressed: Callable) -> Button:
 
 
 func _close() -> void:
+	# Closing the window stops an audit still running behind it.
+	_cancel_requested = true
 	_mark_page_as_read()
 	_doctor_window.hide()
 
 
 func _run_project_doctor() -> void:
+	if _running:
+		return
+	_running = true
+	_cancel_requested = false
 	_fix_pending = false
+	_set_running(true)
 	_doctor_tree.clear()
 	_fixed_item = null
-	var root_item: TreeItem = _doctor_tree.create_item()
-	# Through the public API so extension-registered checks (EventSheets.register_doctor_check)
-	# report in the panel exactly like built-ins.
-	var report: Dictionary = EventSheets.doctor()
+	_doctor_tree.create_item()
+	# The audit is taken in slices of a few milliseconds with a frame between them, so the editor keeps
+	# drawing and the Cancel button works; the page is drawn again as findings come in. Extension-registered
+	# checks (EventSheets.register_doctor_check) report here exactly like built-ins, because the same
+	# steps run.
+	var session: Dictionary = EventSheetProjectDoctor.begin()
+	var report: Dictionary = await EventSheetProjectDoctor.run_sliced(session, _dock.get_tree(),
+		func() -> bool: return _cancel_requested or _doctor_window == null,
+		func(partial: Dictionary) -> void: _show_progress(partial))
+	_running = false
+	_set_running(false)
+	if report.is_empty():
+		# Stopped: what had come in stays on the page, and the summary says it is not the whole.
+		_summary_label.text = EventSheetL10n.translate("Stopped - %d finding(s) so far; run it again for the whole project.") % (session["findings"] as Array).size()
+		_dock._set_status(_summary_label.text)
+		return
 	# One store, so every page that wants to say what the Doctor found reads this run rather than
 	# starting one of its own.
 	set_doctor_findings(report.get("findings", []))
-	# The page, decided once and headlessly: worst first, and what is new against the last read.
-	_page = EventSheetDoctorInbox.triage(report.get("findings", []) as Array,
-		EventSheetDoctorInbox.load_seen())
+	_draw_page(report.get("findings", []) as Array)
+	_dock._set_status(_summary_label.text, int(report.get("errors", 0)) > 0)
+
+
+## Draws the page for the findings so far: worst first, and what is new against the last read.
+func _draw_page(findings: Array) -> void:
+	_doctor_tree.clear()
+	_fixed_item = null
+	var root_item: TreeItem = _doctor_tree.create_item()
+	_page = EventSheetDoctorInbox.triage(findings, EventSheetDoctorInbox.load_seen())
 	fill_inbox(_doctor_tree, root_item, _page)
 	_summary_label.text = EventSheetDoctorInbox.summary_line(_page)
 	_on_finding_selected()
-	_dock._set_status(_summary_label.text, int(report.get("errors", 0)) > 0)
+
+
+## The progress line after each step, and the page again when something new has come in.
+func _show_progress(session: Dictionary) -> void:
+	var progress: Vector2i = EventSheetProjectDoctor.progress_of(session)
+	_progress_label.text = EventSheetL10n.translate("Checking the project - step %d of %d") % [progress.x, progress.y]
+	var found: int = (session["findings"] as Array).size()
+	if found != int(_progress_label.get_meta("drawn", -1)) and _doctor_tree.get_selected() == null:
+		_progress_label.set_meta("drawn", found)
+		_draw_page((session["findings"] as Array).duplicate())
+
+
+func _set_running(running: bool) -> void:
+	(_progress_label.get_meta("row") as Control).visible = running
+	_rerun_button.disabled = running
+	if running:
+		_progress_label.text = EventSheetL10n.translate("Checking the project...")
+		_progress_label.set_meta("drawn", -1)
+		_summary_label.text = ""
 
 
 ## Writes down every identity on the page, so the next audit marks only what appeared after it.
@@ -186,6 +287,9 @@ func _on_finding_selected() -> void:
 	_fixed_item = item
 	var finding: Variant = item.get_metadata(1) if item != null else null
 	var is_finding: bool = finding is Dictionary
+	_whole_finding.visible = is_finding
+	if is_finding:
+		_whole_finding.describe(EventSheetL10n.translate("Finding"), str((finding as Dictionary).get("message", "")))
 	_open_button.disabled = not is_finding
 	_open_button.text = EventSheetL10n.translate("Open %s") % item.get_tooltip_text(2).get_file() \
 		if is_finding else EventSheetL10n.translate("Open")

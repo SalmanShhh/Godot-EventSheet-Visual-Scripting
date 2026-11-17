@@ -66,8 +66,19 @@ const SUGGEST_SETTING := "eventsheets/doctor/suggest_error_report"
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	var swept: Dictionary = sweep()
-	findings.append_array(report(PackedStringArray(swept.get("busy", PackedStringArray()))))
+	var swept: Dictionary = await _sweep_in_turns()
+	var busy: PackedStringArray = PackedStringArray(swept.get("busy", PackedStringArray()))
+	# The scripts the report is about to open are opened here a turn at a time, so the editor draws
+	# between them; the report then finds each one held for the audit.
+	var opened: int = 0
+	if not busy.is_empty():
+		for script_path: String in _smallest_first(busy):
+			if opened >= MEASURED_LIMIT:
+				break
+			await EventSheetProjectDoctor.breathe()
+			EventSheetProjectDoctor.sheet_of(script_path)
+			opened += 1
+	findings.append_array(report(busy))
 	if not bool(swept.get("handles_trouble", true)) and _still_asking():
 		findings.append(_finding("info", CHECK_NO_REPORT, "",
 			"Nothing in this game hears about its own errors. Add an On Something Went Wrong event to the Game sheet and a build can save the report, show the player something, or skip the broken thing and keep playing - the editor's error strip only helps while you are the one running it.", ""))
@@ -76,14 +87,34 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 ## ONE read per script, answering both questions this section asks of the corpus: which scripts are
 ## worth opening, and whether any of them already hears about trouble.
 static func sweep() -> Dictionary:
+	return sweep_paths(own_paths(EventSheetProjectDoctor._project_scripts()))
+
+
+## `sweep` over a list of scripts, so the audit can ask a few at a time and merge the answers.
+static func sweep_paths(script_paths: PackedStringArray) -> Dictionary:
 	var busy: PackedStringArray = PackedStringArray()
 	var handles_trouble: bool = false
-	for script_path: String in own_paths(EventSheetProjectDoctor._project_scripts()):
+	for script_path: String in script_paths:
 		var text: String = EventSheetProjectDoctor.source_of(script_path)
 		if text.contains(EventSheetCompiler.TROUBLE_SIGNAL):
 			handles_trouble = true
 		if _mentions(text, PER_FRAME_LINES) and _mentions(text, SHAPES):
 			busy.append(script_path)
+	return {"busy": busy, "handles_trouble": handles_trouble}
+
+
+## `sweep` taken a few scripts at a time, so a big project does not hold a frame.
+static func _sweep_in_turns() -> Dictionary:
+	var scripts: PackedStringArray = own_paths(EventSheetProjectDoctor._project_scripts())
+	var busy: PackedStringArray = PackedStringArray()
+	var handles_trouble: bool = false
+	var at: int = 0
+	while at < scripts.size():
+		var part: Dictionary = sweep_paths(scripts.slice(at, at + 24))
+		busy.append_array(PackedStringArray(part["busy"]))
+		handles_trouble = handles_trouble or bool(part["handles_trouble"])
+		at += 24
+		await EventSheetProjectDoctor.breathe()
 	return {"busy": busy, "handles_trouble": handles_trouble}
 
 

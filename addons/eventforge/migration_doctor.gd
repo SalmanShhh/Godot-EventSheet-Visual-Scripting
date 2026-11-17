@@ -67,7 +67,13 @@ static func check(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -
 	# taken from the same open rather than from two walks of the same corpus.
 	var own_sheets: PackedStringArray = own_paths(sheet_paths)
 	var scripts: PackedStringArray = own_paths(EventSheetProjectDoctor._project_scripts())
-	var audited: Dictionary = _audit(corpus(own_sheets, scripts), {},
+	# Opened here a turn at a time (the audit below finds each one held), so the editor draws between them.
+	var read: PackedStringArray = corpus(own_sheets, scripts)
+	for path: String in read:
+		await EventSheetProjectDoctor.breathe()
+		if path.get_extension().to_lower() == "gd":
+			_opened(path)
+	var audited: Dictionary = _audit(read, {},
 		sample_note(own_sheets, scripts))
 	var said: Array[Dictionary] = []
 	said.assign(audited.get("findings", []))
