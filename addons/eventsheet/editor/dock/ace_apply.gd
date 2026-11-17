@@ -1667,18 +1667,19 @@ func _on_viewport_drag_status_requested(message: String, is_error: bool) -> void
 	_dock._set_status(message, is_error)
 
 
-## An Every X Seconds row read from a file keeps the clock it was read with when its seconds are edited.
-## The file already holds that clock - the `+= delta` line that feeds it and the rebase line that restarts
+## A row read from a file that keeps state (a clock, a seen flag, a deadline) keeps that state when it is edited.
+## For Every X Seconds the state is a clock. The file already holds that clock - the `+= delta` line that feeds it and the rebase line that restarts
 ## it - as two rows beside this one, so a replacement built from the picker would add a second clock of its
 ## own (a new member, a second accumulating line, a rebase still naming the old seconds) and leave the first
 ## one running for nothing. The replacement takes the file's clock instead, writes no member, and the
 ## rebase row follows the new seconds. A row with no clock of its own (one placed from the picker) is left
-## as built.
+## as built. Every other verb that owns a member is handled the same way up to the rebase: the file already
+## holds its member and helper, so the edit keeps the uid and writes neither again.
 static func keep_lifted_clock(previous: Variant, edited: ACECondition, event_row: EventRow) -> void:
 	if not (previous is ACECondition) or edited == null or event_row == null:
 		return
 	var old: ACECondition = previous as ACECondition
-	if old.ace_id != "EveryXSeconds" or edited.ace_id != "EveryXSeconds":
+	if old.ace_id != edited.ace_id or edited.member_declaration.is_empty():
 		return
 	if not old.member_declaration.is_empty() or not old.params.has("uid"):
 		return
@@ -1690,6 +1691,8 @@ static func keep_lifted_clock(previous: Variant, edited: ACECondition, event_row
 	edited.codegen_prelude = ""
 	edited.codegen_on_true = ""
 	edited.codegen_on_exit = ""
+	if edited.ace_id != "EveryXSeconds":
+		return
 	var rebase_template: String = "fmod(%s, maxf({seconds}, 0.001))" % clock
 	var new_rebase: String = rebase_template
 	if edited.folds_literals:

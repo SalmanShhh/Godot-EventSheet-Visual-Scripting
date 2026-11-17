@@ -38,7 +38,11 @@ Some rows guarded a value with a floor so a typed name could never be zero: an E
 
 Existing files do not move. Opening a `.gd` or a `.tres` and saving it untouched writes the same bytes as before, and editing one row changes that row's lines only (an Every X Seconds row's own rebase line follows it) and never the rows beside it. The thirty showcases are regenerated and read this way now (34 lines in 12 files).
 
-Also fixed: editing the seconds of an Every X Seconds row that came from an existing script used to add a second clock to the script (a second member, a second accumulating line and a rebase that still named the old seconds) and leave the first one running for nothing. The edited row now keeps the clock the script already had and its rebase line follows the new seconds. Other timers that keep a clock, such as Every X To Y Seconds, still build their own when a reopened row is edited.
+Also fixed: editing the seconds of an Every X Seconds row that came from an existing script used to add a second clock to the script (a second member, a second accumulating line and a rebase that still named the old seconds) and leave the first one running for nothing. The edited row now keeps the clock the script already had and its rebase line follows the new seconds.
+
+### Fixed: editing any row that keeps state, from an existing script, no longer adds a second copy of that state
+
+Every X Seconds already kept its one clock when its row was edited from an existing script. Every other verb that owns a member did not: editing Every X To Y Seconds, Trigger Once, Has Changed, Has Been True For, Only Once Ever, At Most Every, Just Landed and the other twenty or so of them added a second member and a second helper function beside the first (and a second accumulating line where there is one), and the row then called the new, empty copy while the old one stayed in the file unused. The edited row now keeps the member the script already had, so the script holds one of each and the new values are written into the call. Rows placed from the picker are unchanged, and no existing file moves when it is opened and saved untouched.
 
 ### Added: the Shake card fades in and out, follows a curve of your own, and lasts the seconds it says
 
