@@ -252,7 +252,20 @@ static func _read_scene_facts(path: String) -> Dictionary:
 	var packs: Dictionary = EventSheetViewportReadingRows.behaviour_pack_index()
 	var current: Dictionary = {}
 	var nodes: Array = []
+	# A value Godot writes over several lines (a list of juice cards, a dictionary) is one value: its lines are
+	# joined until its brackets close, so a reader sees the whole of it and not its first line.
+	var joining: String = ""
+	var joined_depth: int = 0
+	var joined_quoted: bool = false
 	for line: String in text.split("\n"):
+		if not joining.is_empty():
+			var continued: Array = _depth_after(line, joined_depth, joined_quoted)
+			current[joining] = str(current[joining]) + " " + line.strip_edges()
+			joined_depth = int(continued[0])
+			joined_quoted = bool(continued[1])
+			if joined_depth <= 0 and not joined_quoted:
+				joining = ""
+			continue
 		if line.begins_with("[ext_resource "):
 			resources[_attribute(line, "id")] = _attribute(line, "path")
 			continue
@@ -282,7 +295,14 @@ static func _read_scene_facts(path: String) -> Dictionary:
 		elif line.begins_with("texture = ExtResource("):
 			current["texture"] = str(resources.get(_first_quoted(line), ""))
 		elif line.contains(" = ") and not line.begins_with("metadata/"):
-			current[_property_key(line)] = line.get_slice(" = ", 1).strip_edges()
+			var written: String = line.get_slice(" = ", 1).strip_edges()
+			var kept: String = _property_key(line)
+			current[kept] = written
+			var opened: Array = _depth_after(written, 0, false)
+			if int(opened[0]) > 0 or bool(opened[1]):
+				joining = kept
+				joined_depth = int(opened[0])
+				joined_quoted = bool(opened[1])
 	for entry: Variant in nodes:
 		var node: Dictionary = entry
 		(facts["tree"] as Array).append({
@@ -621,5 +641,28 @@ static func _first_quoted(line: String) -> String:
 
 
 ## The property name a `key = value` scene line sets.
+## How far inside brackets a text leaves a value, and whether it ends inside a quoted string: the depth and the
+## quote state to carry into the next line. A bracket inside a quoted string does not count.
+static func _depth_after(text: String, depth: int, quoted: bool) -> Array:
+	var level: int = depth
+	var inside: bool = quoted
+	var index: int = 0
+	while index < text.length():
+		var character: String = text[index]
+		if inside:
+			if character == "\\":
+				index += 1
+			elif character == "\"":
+				inside = false
+		elif character == "\"":
+			inside = true
+		elif character == "[" or character == "{" or character == "(":
+			level += 1
+		elif character == "]" or character == "}" or character == ")":
+			level -= 1
+		index += 1
+	return [level, inside]
+
+
 static func _property_key(line: String) -> String:
 	return line.get_slice(" = ", 0).strip_edges()
