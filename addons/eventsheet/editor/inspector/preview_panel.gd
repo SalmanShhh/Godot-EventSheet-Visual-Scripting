@@ -149,10 +149,14 @@ static func raster_point(control: Vector2, picture: Vector2, at: Vector2) -> Vec
 	return (at - (control - shown) * 0.5) / fit
 
 
-## Asks for a new picture. Any number of asks in one frame make ONE picture, drawn on a worker thread when the
-## caller gave a maker for it, so a held key that edits the object many times a second never waits for the drawing.
+## Asks for a new picture. An ask that comes while no picture is being drawn starts one at once, on a worker thread when
+## the caller gave a maker for it; asks that come while one is being drawn make ONE more when it is done, so a held key
+## that edits the object many times a second never waits for the drawing and never queues a picture for every edit.
+## A card that is not on screen (no tree to pump it) waits for `pump` instead.
 func request_refresh() -> void:
 	_wanted = true
+	if is_inside_tree() and _task < 0 and _image_maker.is_valid():
+		pump()
 
 
 func set_image_maker(maker: Callable) -> void:

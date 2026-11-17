@@ -15,6 +15,14 @@ extends RefCounted
 const _SUPERSAMPLE: int = 2  # render at 2x then shrink for cheap anti-aliasing
 ## How strong a step is drawn while another step is the chosen one.
 const QUIET_STRENGTH: float = 0.28
+## How many bands a large picture is drawn in at once, and the fewest steps that are worth drawing in bands.
+const BAND_COUNT: int = 8
+const BAND_MIN_STEPS: int = 24
+## Room to spare, in pixels, when a fill works out which columns of a row can hold its shape.
+const PRUNE_MARGIN: float = 1.5
+## Whether a fill visits only the columns of a row that can hold its shape. It always draws the same pixels either way;
+## a test turns it off to draw every pixel of the bounding box the long way and compares.
+static var prune_columns: bool = true
 
 
 ## The prefab-local bounding box that encloses every step (before any fit/scale). Empty steps -> a unit box.
@@ -87,12 +95,50 @@ static func _stamp_texture(entry: Dictionary) -> Texture2D:
 ## Renders the steps into an Image of `size`, letterboxed on `bg`. Deterministic and tree-free. When `quiet_except`
 ## names steps (by position in `steps`), every other step is drawn quietened to a fraction of its strength so the named
 ## ones stand out; an empty list quietens nothing and draws the very same pixels as before it existed.
-static func rasterize(steps: Array, size: Vector2i, bg: Color, quiet_except: Array = []) -> Image:
+static func rasterize(steps: Array, size: Vector2i, bg: Color, quiet_except: Array = [], bands: int = -1) -> Image:
 	var w: int = maxi(size.x, 8) * _SUPERSAMPLE
 	var h: int = maxi(size.y, 8) * _SUPERSAMPLE
-	var img: Image = Image.create(w, h, false, Image.FORMAT_RGBA8)
-	img.fill(bg)
 	var layout: Dictionary = _layout(steps, size)
+	var parts: int = _bands_for(steps) if bands < 0 else bands
+	var img: Image = null
+	if parts <= 1:
+		var whole: _Canvas = _Canvas.new(w, 0, h, bg)
+		_draw_steps(whole, steps, layout, quiet_except)
+		img = whole.image
+	else:
+		# A large picture is drawn in horizontal bands at once. Every pixel belongs to one band and is blended by the
+		# same steps in the same order, so the picture is exactly the one a single pass draws.
+		var rows_per: int = ceili(float(h) / float(parts))
+		var canvases: Array = []
+		var top: int = 0
+		while top < h:
+			canvases.append(_Canvas.new(w, top, mini(rows_per, h - top), bg))
+			top += rows_per
+		var group: int = WorkerThreadPool.add_group_task(func(index: int) -> void:
+			_draw_steps(canvases[index] as _Canvas, steps, layout, quiet_except), canvases.size(), -1, true)
+		WorkerThreadPool.wait_for_group_task_completion(group)
+		img = Image.create(w, h, false, Image.FORMAT_RGBA8)
+		for part: Variant in canvases:
+			var band: _Canvas = part
+			img.blit_rect(band.image, Rect2i(0, 0, w, band.rows), Vector2i(0, band.top))
+	if _SUPERSAMPLE > 1:
+		img.resize(maxi(size.x, 8), maxi(size.y, 8), Image.INTERPOLATE_LANCZOS)
+	return img
+
+
+## How many bands a picture of these steps is drawn in. A picture with a stamp is drawn whole (a stamp loads its texture
+## while it is drawn, and every band would load it again), and so is one too small for the bands to pay for themselves.
+static func _bands_for(steps: Array) -> int:
+	if steps.size() < BAND_MIN_STEPS:
+		return 1
+	for step: Variant in steps:
+		if step is Dictionary and str((step as Dictionary).get("kind", "")) == "stamp":
+			return 1
+	return BAND_COUNT
+
+
+## Blends every step, in order, into the rows of one canvas.
+static func _draw_steps(canvas: _Canvas, steps: Array, layout: Dictionary, quiet_except: Array) -> void:
 	var scale: float = float(layout["scale"])
 	var center_local: Vector2 = layout["center_local"]
 	var center_px: Vector2 = layout["center_px"]
@@ -100,10 +146,25 @@ static func rasterize(steps: Array, size: Vector2i, bg: Color, quiet_except: Arr
 		var step: Variant = steps[position]
 		if step is Dictionary:
 			var fade: float = 1.0 if quiet_except.is_empty() or quiet_except.has(position) else QUIET_STRENGTH
-			_rasterize_step(img, step as Dictionary, scale, center_local, center_px, fade)
-	if _SUPERSAMPLE > 1:
-		img.resize(maxi(size.x, 8), maxi(size.y, 8), Image.INTERPOLATE_LANCZOS)
-	return img
+			_rasterize_step(canvas, step as Dictionary, scale, center_local, center_px, fade)
+
+
+## A strip of the picture being drawn: `rows` rows starting at row `top` of the whole, as an image of its own that the
+## fills write into by the whole picture's own row numbers.
+class _Canvas:
+	extends RefCounted
+
+	var image: Image = null
+	var width: int = 0
+	var top: int = 0
+	var rows: int = 0
+
+	func _init(wide: int, first_row: int, row_count: int, ground: Color) -> void:
+		width = wide
+		top = first_row
+		rows = row_count
+		image = Image.create(wide, row_count, false, Image.FORMAT_RGBA8)
+		image.fill(ground)
 
 
 ## How the steps are laid into a picture of `size`: the scale (in supersampled pixels per local unit), the local point
@@ -205,7 +266,7 @@ static func _to_px(local: Vector2, scale: float, center_local: Vector2, center_p
 	return (local - center_local) * scale + center_px
 
 
-static func _rasterize_step(img: Image, entry: Dictionary, scale: float, center_local: Vector2, center_px: Vector2, fade: float = 1.0) -> void:
+static func _rasterize_step(img: _Canvas, entry: Dictionary, scale: float, center_local: Vector2, center_px: Vector2, fade: float = 1.0) -> void:
 	var at_local: Vector2 = Vector2(float(entry.get("x", 0.0)), float(entry.get("y", 0.0)))
 	var at: Vector2 = _to_px(at_local, scale, center_local, center_px)
 	var p1: float = float(entry.get("p1", 0.0))
@@ -241,40 +302,118 @@ static func _rasterize_step(img: Image, entry: Dictionary, scale: float, center_
 
 
 # ── Software fills (each iterates only its own pixel bounding box, so cost tracks shape area, not image size) ──
-static func _px_bounds(img: Image, r: Rect2) -> Rect2i:
-	var clip: Rect2i = Rect2i(0, 0, img.get_width(), img.get_height())
+static func _px_bounds(img: _Canvas, r: Rect2) -> Rect2i:
+	var clip: Rect2i = Rect2i(0, img.top, img.width, img.rows)
 	return Rect2i(int(floor(r.position.x)), int(floor(r.position.y)), int(ceil(r.size.x)) + 1, int(ceil(r.size.y)) + 1).intersection(clip)
 
 
-static func _blend(img: Image, x: int, y: int, c: Color) -> void:
+static func _blend(img: _Canvas, x: int, y: int, c: Color) -> void:
+	var row: int = y - img.top
 	if c.a >= 0.999:
-		img.set_pixel(x, y, c)
+		img.image.set_pixel(x, row, c)
 	else:
-		img.set_pixel(x, y, img.get_pixel(x, y).lerp(c, c.a))
+		img.image.set_pixel(x, row, img.image.get_pixel(x, row).lerp(c, c.a))
 
 
-static func _fill_disc(img: Image, center: Vector2, radius: float, c: Color) -> void:
+## The half width of a circle of `radius` along a pixel row `dy` from its centre, plus a pixel and a half to spare, or -1
+## when the row cannot touch the circle. Every pixel the circle's own test accepts lies inside it, so a fill that visits
+## only these columns and still asks the circle's own test of each draws the very same pixels as one that visits the
+## whole bounding box: the spare room is what keeps rounding from ever mattering.
+static func _chord(radius: float, dy: float) -> float:
+	if not prune_columns:
+		return 1.0e9
+	if absf(dy) > radius + PRUNE_MARGIN:
+		return -1.0
+	return sqrt(maxf(radius * radius - dy * dy, 0.0)) + PRUNE_MARGIN
+
+
+## The columns of `box` whose pixel centres lie within `reach` of `middle`: [first, one past the last].
+static func _columns(box: Rect2i, middle: float, reach: float) -> Vector2i:
+	return Vector2i(maxi(box.position.x, int(floor(middle - reach - 0.5))), mini(box.position.x + box.size.x, int(floor(middle + reach - 0.5)) + 1))
+
+
+## The columns of `columns` whose pixel centres are within `half_width` of `middle`, which a fill that knows them to be
+## inside its shape (with the same spare room as above) writes in one go: [first, one past the last], or an empty run
+## when there are none or the long way was asked for.
+static func _solid_columns(columns: Vector2i, middle: float, half_width: float) -> Vector2i:
+	if not prune_columns or half_width <= 0.0:
+		return Vector2i(columns.x, columns.x)
+	var first: int = maxi(columns.x, int(ceil(middle - half_width - 0.5)))
+	var last: int = mini(columns.y, int(floor(middle + half_width - 0.5)) + 1)
+	if last <= first:
+		return Vector2i(columns.x, columns.x)
+	return Vector2i(first, last)
+
+
+## Writes the pixels of row `y` from column `first` up to `last`. An opaque colour sets every one of them to it, which is
+## what setting them one at a time does; a see-through one is blended into each as ever.
+static func _fill_run(img: _Canvas, y: int, first: int, last: int, c: Color) -> void:
+	if last <= first:
+		return
+	if c.a >= 0.999:
+		img.image.fill_rect(Rect2i(first, y - img.top, last - first, 1), c)
+	else:
+		for x: int in range(first, last):
+			_blend(img, x, y, c)
+
+
+static func _fill_disc(img: _Canvas, center: Vector2, radius: float, c: Color) -> void:
 	var r: float = maxf(radius, 1.0)
 	var box: Rect2i = _px_bounds(img, Rect2(center - Vector2(r, r), Vector2(r, r) * 2.0))
 	for y: int in range(box.position.y, box.position.y + box.size.y):
-		for x: int in range(box.position.x, box.position.x + box.size.x):
+		var dy: float = y + 0.5 - center.y
+		var reach: float = _chord(r, dy)
+		if reach < 0.0:
+			continue
+		var columns: Vector2i = _columns(box, center.x, reach)
+		var solid: Vector2i = _solid_columns(columns, center.x, sqrt(maxf(r * r - dy * dy, 0.0)) - PRUNE_MARGIN)
+		for x: int in range(columns.x, solid.x):
+			if Vector2(x + 0.5, y + 0.5).distance_to(center) <= r:
+				_blend(img, x, y, c)
+		_fill_run(img, y, solid.x, solid.y, c)
+		for x: int in range(solid.y, columns.y):
 			if Vector2(x + 0.5, y + 0.5).distance_to(center) <= r:
 				_blend(img, x, y, c)
 
 
-static func _fill_ring(img: Image, center: Vector2, radius: float, width: float, c: Color) -> void:
+static func _fill_ring(img: _Canvas, center: Vector2, radius: float, width: float, c: Color) -> void:
 	var r: float = maxf(radius, 1.0)
 	var half: float = maxf(width, 1.0) * 0.5
 	var box: Rect2i = _px_bounds(img, Rect2(center - Vector2(r + half, r + half), Vector2(r + half, r + half) * 2.0))
 	for y: int in range(box.position.y, box.position.y + box.size.y):
-		for x: int in range(box.position.x, box.position.x + box.size.x):
+		for x: int in _band_columns(box, center, r, half, y):
 			if absf(Vector2(x + 0.5, y + 0.5).distance_to(center) - r) <= half:
 				_blend(img, x, y, c)
 
 
-static func _fill_rect(img: Image, r: Rect2, c: Color) -> void:
+## The pixel columns of row `y` that can lie in a band `half` either side of a circle of `radius`: the columns of the
+## outer circle, less the ones inside the hole the inner circle leaves.
+static func _band_columns(box: Rect2i, center: Vector2, radius: float, half: float, y: int) -> Array[int]:
+	var found: Array[int] = []
+	var dy: float = y + 0.5 - center.y
+	var outer: float = _chord(radius + half, dy)
+	if outer < 0.0:
+		return found
+	var outside: Vector2i = _columns(box, center.x, outer)
+	var inner_radius: float = radius - half
+	var hole: float = sqrt(inner_radius * inner_radius - dy * dy) - PRUNE_MARGIN if prune_columns and inner_radius > 0.0 and absf(dy) < inner_radius else 0.0
+	if hole <= 0.0:
+		found.assign(range(outside.x, outside.y))
+		return found
+	# The pixels whose centres are nearer the middle than the hole's half width are all inside the hole.
+	var left_end: int = mini(outside.y, int(floor(center.x - hole - 0.5)) + 1)
+	var right_start: int = maxi(maxi(outside.x, left_end), int(ceil(center.x + hole - 0.5)))
+	found.assign(range(outside.x, left_end))
+	found.append_array(range(right_start, outside.y))
+	return found
+
+
+static func _fill_rect(img: _Canvas, r: Rect2, c: Color) -> void:
 	var box: Rect2i = _px_bounds(img, r)
 	for y: int in range(box.position.y, box.position.y + box.size.y):
+		if prune_columns:
+			_fill_run(img, y, box.position.x, box.position.x + box.size.x, c)
+			continue
 		for x: int in range(box.position.x, box.position.x + box.size.x):
 			_blend(img, x, y, c)
 
@@ -284,7 +423,7 @@ static func _fill_rect(img: Image, r: Rect2, c: Color) -> void:
 ##
 ## THE PATTERN IS WALKED IN PIXELS, along the segment, so the thumbnail of a dashed line differs
 ## from the thumbnail of a plain one at the pixels a reader would look at rather than by a hair.
-static func _fill_stroke(img: Image, a: Vector2, b: Vector2, width: float, c: Color, entry: Dictionary, scale: float) -> void:
+static func _fill_stroke(img: _Canvas, a: Vector2, b: Vector2, width: float, c: Color, entry: Dictionary, scale: float) -> void:
 	var span: float = a.distance_to(b)
 	var half: float = maxf(width, 1.0) * 0.5
 	# A step that never named its ends is a step from before the card could ask, and the canvas draws
@@ -310,7 +449,7 @@ static func _fill_stroke(img: Image, a: Vector2, b: Vector2, width: float, c: Co
 ## at the end), `square` (half a width past it), `round` (a half-disc) or `angled` (a 45 degree lean,
 ## which is what an angled dash is). One pixel loop answers all four - the end shape is the test at
 ## the two ends rather than a second pass over the same pixels.
-static func _fill_span(img: Image, a: Vector2, b: Vector2, half: float, c: Color, from_along: float, to_along: float, ends: String) -> void:
+static func _fill_span(img: _Canvas, a: Vector2, b: Vector2, half: float, c: Color, from_along: float, to_along: float, ends: String) -> void:
 	if to_along <= from_along:
 		return
 	var direction: Vector2 = (b - a).normalized() if a.distance_to(b) > 0.001 else Vector2.RIGHT
@@ -318,28 +457,85 @@ static func _fill_span(img: Image, a: Vector2, b: Vector2, half: float, c: Color
 	var start_point: Vector2 = a + direction * from_along
 	var end_point: Vector2 = a + direction * to_along
 	var box: Rect2i = _px_bounds(img, Rect2(start_point, end_point - start_point).abs().grow(half + 1.0))
+	# A slanted run only touches a diagonal strip of its bounding box. Per row, the columns where the strip (a width of
+	# `half` either side of the line) and the run (from a little before the start to a little after the end, the room the
+	# end shapes may take) meet are the only ones asked; the rest cannot pass the test, so the pixels are the same. Inside
+	# the strip, the middle of the run (clear of its edges and of its ends) is inside whatever the ends look like, and is
+	# written in one go.
+	var reach: float = half + PRUNE_MARGIN if prune_columns else 1.0e9
+	var behind: float = from_along - half - PRUNE_MARGIN if prune_columns else -1.0e9
+	var ahead: float = to_along + half + PRUNE_MARGIN if prune_columns else 1.0e9
+	var core_reach: float = half - PRUNE_MARGIN
+	var core_from: float = from_along + (half + PRUNE_MARGIN if ends == "angled" else PRUNE_MARGIN)
+	var core_to: float = to_along - (half + PRUNE_MARGIN if ends == "angled" else PRUNE_MARGIN)
+	var has_core: bool = prune_columns and core_reach > 0.0 and core_to > core_from
 	for y: int in range(box.position.y, box.position.y + box.size.y):
-		for x: int in range(box.position.x, box.position.x + box.size.x):
-			var offset: Vector2 = Vector2(x + 0.5, y + 0.5) - a
-			var along: float = offset.dot(direction)
-			var perp: float = absf(offset.dot(normal))
-			var within: bool = perp <= half and along >= from_along and along <= to_along
-			match ends:
-				"square":
-					within = perp <= half and along >= from_along - half and along <= to_along + half
-				"angled":
-					var leaned: float = along + offset.dot(normal)
-					within = perp <= half and leaned >= from_along and leaned <= to_along
-				"round":
-					within = within or offset.distance_to(direction * from_along) <= half or offset.distance_to(direction * to_along) <= half
-			if within:
+		var rel_y: float = y + 0.5 - a.y
+		var outer: Vector2 = _strip_row(direction, normal, rel_y, reach, behind, ahead)
+		if outer.x > outer.y:
+			continue
+		var columns: Vector2i = Vector2i(maxi(box.position.x, int(floor(a.x + outer.x - 0.5)) - 1), mini(box.position.x + box.size.x, int(floor(a.x + outer.y - 0.5)) + 2))
+		var solid: Vector2i = Vector2i(columns.x, columns.x)
+		if has_core:
+			var inner: Vector2 = _strip_row(direction, normal, rel_y, core_reach, core_from, core_to)
+			if inner.x <= inner.y:
+				var first: int = maxi(columns.x, int(ceil(a.x + inner.x - 0.5)))
+				var last: int = mini(columns.y, int(floor(a.x + inner.y - 0.5)) + 1)
+				if last > first:
+					solid = Vector2i(first, last)
+		for x: int in range(columns.x, solid.x):
+			if _in_stroke(Vector2(x + 0.5, y + 0.5) - a, direction, normal, half, from_along, to_along, ends):
 				_blend(img, x, y, c)
+		_fill_run(img, y, solid.x, solid.y, c)
+		for x: int in range(solid.y, columns.y):
+			if _in_stroke(Vector2(x + 0.5, y + 0.5) - a, direction, normal, half, from_along, to_along, ends):
+				_blend(img, x, y, c)
+
+
+## The offsets from a line's start, along the x axis at one row `rel_y` below it, of the pixel centres that lie within
+## `reach` of the line and between `behind` and `ahead` along it: [first, last], or first past last when there are none.
+static func _strip_row(direction: Vector2, normal: Vector2, rel_y: float, reach: float, behind: float, ahead: float) -> Vector2:
+	var first_x: float = -1.0e9
+	var last_x: float = 1.0e9
+	var across_y: float = rel_y * normal.y
+	if absf(normal.x) > 0.0001:
+		var low_x: float = (-reach - across_y) / normal.x
+		var high_x: float = (reach - across_y) / normal.x
+		first_x = maxf(first_x, minf(low_x, high_x))
+		last_x = minf(last_x, maxf(low_x, high_x))
+	elif absf(across_y) > reach:
+		return Vector2(1.0, 0.0)
+	var along_y: float = rel_y * direction.y
+	if absf(direction.x) > 0.0001:
+		var start_x: float = (behind - along_y) / direction.x
+		var end_x: float = (ahead - along_y) / direction.x
+		first_x = maxf(first_x, minf(start_x, end_x))
+		last_x = minf(last_x, maxf(start_x, end_x))
+	elif along_y < behind or along_y > ahead:
+		return Vector2(1.0, 0.0)
+	return Vector2(first_x, last_x)
+
+
+## Whether a pixel centre, `offset` from a line's start, is inside the stroke with the ends named.
+static func _in_stroke(offset: Vector2, direction: Vector2, normal: Vector2, half: float, from_along: float, to_along: float, ends: String) -> bool:
+	var along: float = offset.dot(direction)
+	var perp: float = absf(offset.dot(normal))
+	var within: bool = perp <= half and along >= from_along and along <= to_along
+	match ends:
+		"square":
+			within = perp <= half and along >= from_along - half and along <= to_along + half
+		"angled":
+			var leaned: float = along + offset.dot(normal)
+			within = perp <= half and leaned >= from_along and leaned <= to_along
+		"round":
+			within = within or offset.distance_to(direction * from_along) <= half or offset.distance_to(direction * to_along) <= half
+	return within
 
 
 ## A stamp: the texture centred on a point, `zoom` pixels per texel, turned by `spin_deg` and tinted.
 ## Each pixel in the turned box is mapped back into the texture, so the picture is the texture itself
 ## rather than a square of its colour.
-static func _fill_stamp(img: Image, center: Vector2, texture: Texture2D, zoom: float, spin_deg: float, tint: Color) -> void:
+static func _fill_stamp(img: _Canvas, center: Vector2, texture: Texture2D, zoom: float, spin_deg: float, tint: Color) -> void:
 	var source: Image = texture.get_image()
 	if source == null or source.is_empty():
 		return
@@ -367,13 +563,17 @@ static func _fill_stamp(img: Image, center: Vector2, texture: Texture2D, zoom: f
 				_blend(img, x, y, Color(texel.r * tint.r, texel.g * tint.g, texel.b * tint.b, texel.a * tint.a))
 
 
-static func _fill_cone(img: Image, center: Vector2, radius: float, facing_deg: float, fov_deg: float, c: Color) -> void:
+static func _fill_cone(img: _Canvas, center: Vector2, radius: float, facing_deg: float, fov_deg: float, c: Color) -> void:
 	var r: float = maxf(radius, 1.0)
 	var facing: float = deg_to_rad(facing_deg)
 	var half_fov: float = deg_to_rad(maxf(fov_deg, 1.0)) * 0.5
 	var box: Rect2i = _px_bounds(img, Rect2(center - Vector2(r, r), Vector2(r, r) * 2.0))
 	for y: int in range(box.position.y, box.position.y + box.size.y):
-		for x: int in range(box.position.x, box.position.x + box.size.x):
+		var reach: float = _chord(r, y + 0.5 - center.y)
+		if reach < 0.0:
+			continue
+		var columns: Vector2i = _columns(box, center.x, reach)
+		for x: int in range(columns.x, columns.y):
 			var d: Vector2 = Vector2(x + 0.5, y + 0.5) - center
 			if d.length() <= r and absf(wrapf(d.angle() - facing, -PI, PI)) <= half_fov:
 				_blend(img, x, y, c)
@@ -418,50 +618,113 @@ static func _polygon_distance(offset: Vector2, radius: float, sides: float, angl
 	return best
 
 
-static func _fill_arc(img: Image, center: Vector2, radius: float, width: float, start_deg: float, end_deg: float, c: Color) -> void:
+## `_in_sweep` worked out once for a whole shape rather than once per pixel: the lowest angle of the sweep and its length in
+## radians, and whether the sweep covers nothing (0), part of the turn (1) or all of it (2). The arithmetic is the same,
+## so the pixels are.
+static func _sweep_plan(start_deg: float, end_deg: float) -> Vector3:
+	var start: float = deg_to_rad(start_deg)
+	var sweep: float = clampf(deg_to_rad(end_deg) - start, -TAU, TAU)
+	if absf(sweep) < 0.0005:
+		return Vector3(0.0, 0.0, 0.0)
+	if absf(sweep) >= TAU - 0.0005:
+		return Vector3(0.0, 0.0, 2.0)
+	return Vector3(minf(start, start + sweep), absf(sweep), 1.0)
+
+
+static func _fill_arc(img: _Canvas, center: Vector2, radius: float, width: float, start_deg: float, end_deg: float, c: Color) -> void:
 	if radius <= 0.0:
+		return
+	var plan: Vector3 = _sweep_plan(start_deg, end_deg)
+	if plan.z == 0.0:
 		return
 	var half: float = maxf(width, 1.0) * 0.5
 	var box: Rect2i = _px_bounds(img, Rect2(center - Vector2(radius + half, radius + half), Vector2(radius + half, radius + half) * 2.0))
 	for y: int in range(box.position.y, box.position.y + box.size.y):
-		for x: int in range(box.position.x, box.position.x + box.size.x):
+		for x: int in _band_columns(box, center, radius, half, y):
 			var d: Vector2 = Vector2(x + 0.5, y + 0.5) - center
-			if absf(d.length() - radius) <= half and _in_sweep(d, start_deg, end_deg):
+			if absf(d.length() - radius) <= half and (plan.z == 2.0 or fposmod(d.angle() - plan.x, TAU) <= plan.y):
 				_blend(img, x, y, c)
 
 
-static func _fill_pie(img: Image, center: Vector2, radius: float, start_deg: float, end_deg: float, c: Color) -> void:
+static func _fill_pie(img: _Canvas, center: Vector2, radius: float, start_deg: float, end_deg: float, c: Color) -> void:
 	if radius <= 0.0:
+		return
+	var plan: Vector3 = _sweep_plan(start_deg, end_deg)
+	if plan.z == 0.0:
 		return
 	var box: Rect2i = _px_bounds(img, Rect2(center - Vector2(radius, radius), Vector2(radius, radius) * 2.0))
 	for y: int in range(box.position.y, box.position.y + box.size.y):
-		for x: int in range(box.position.x, box.position.x + box.size.x):
+		var reach: float = _chord(radius, y + 0.5 - center.y)
+		if reach < 0.0:
+			continue
+		var columns: Vector2i = _columns(box, center.x, reach)
+		for x: int in range(columns.x, columns.y):
 			var d: Vector2 = Vector2(x + 0.5, y + 0.5) - center
-			if d.length() <= radius and _in_sweep(d, start_deg, end_deg):
+			if d.length() <= radius and (plan.z == 2.0 or fposmod(d.angle() - plan.x, TAU) <= plan.y):
 				_blend(img, x, y, c)
 
 
 ## A rectangle with round corners: a pixel is in when its distance to the box with the corners cut is not past zero. The
 ## corner is held to half the shorter side, the rule the pack's outline uses.
-static func _fill_rounded_rect(img: Image, r: Rect2, corner: float, c: Color) -> void:
+static func _fill_rounded_rect(img: _Canvas, r: Rect2, corner: float, c: Color) -> void:
 	if r.size.x <= 0.0 or r.size.y <= 0.0:
 		return
 	var round_by: float = clampf(corner, 0.0, minf(r.size.x, r.size.y) * 0.5)
 	var half: Vector2 = r.size * 0.5
 	var middle: Vector2 = r.get_center()
 	var box: Rect2i = _px_bounds(img, r)
+	var columns: Vector2i = Vector2i(box.position.x, box.position.x + box.size.x)
 	for y: int in range(box.position.y, box.position.y + box.size.y):
-		for x: int in range(box.position.x, box.position.x + box.size.x):
-			var q: Vector2 = (Vector2(x + 0.5, y + 0.5) - middle).abs() - (half - Vector2(round_by, round_by))
-			if Vector2(maxf(q.x, 0.0), maxf(q.y, 0.0)).length() + minf(maxf(q.x, q.y), 0.0) - round_by <= 0.0:
+		# Rows clear of the corners are filled right across, and rows beside them all but their corners: those are inside
+		# whatever the corner, so only the pixels near a corner are asked.
+		var down: float = absf(y + 0.5 - middle.y)
+		var solid_half: float = 0.0
+		if down <= half.y - round_by - PRUNE_MARGIN:
+			solid_half = half.x - PRUNE_MARGIN
+		elif down <= half.y - PRUNE_MARGIN:
+			solid_half = half.x - round_by - PRUNE_MARGIN
+		var solid: Vector2i = _solid_columns(columns, middle.x, solid_half)
+		for x: int in range(columns.x, solid.x):
+			if _in_rounded(Vector2(x + 0.5, y + 0.5), middle, half, round_by):
+				_blend(img, x, y, c)
+		_fill_run(img, y, solid.x, solid.y, c)
+		for x: int in range(solid.y, columns.y):
+			if _in_rounded(Vector2(x + 0.5, y + 0.5), middle, half, round_by):
 				_blend(img, x, y, c)
 
 
-static func _fill_polygon(img: Image, center: Vector2, radius: float, sides: float, angle_deg: float, c: Color) -> void:
+## Whether a point is inside a rectangle with round corners (the box with its corners cut, by the signed distance to it).
+static func _in_rounded(point: Vector2, middle: Vector2, half: Vector2, round_by: float) -> bool:
+	var q: Vector2 = (point - middle).abs() - (half - Vector2(round_by, round_by))
+	return Vector2(maxf(q.x, 0.0), maxf(q.y, 0.0)).length() + minf(maxf(q.x, q.y), 0.0) - round_by <= 0.0
+
+
+static func _fill_polygon(img: _Canvas, center: Vector2, radius: float, sides: float, angle_deg: float, c: Color) -> void:
 	if radius <= 0.0:
 		return
+	# The pixels nearer the middle than the polygon's flat sides are inside it whichever way it faces.
+	var count: int = _sides_of(sides)
+	var apothem: float = radius * cos(PI / float(count))
+	# What `_in_polygon` works out from the shape alone, once for every pixel of it rather than once for each.
+	var turn: float = deg_to_rad(angle_deg)
+	var wedge: float = TAU / float(count)
+	var half_wedge: float = PI / float(count)
+	var limit: float = radius * cos(PI / float(count))
 	var box: Rect2i = _px_bounds(img, Rect2(center - Vector2(radius, radius), Vector2(radius, radius) * 2.0))
 	for y: int in range(box.position.y, box.position.y + box.size.y):
-		for x: int in range(box.position.x, box.position.x + box.size.x):
-			if _in_polygon(Vector2(x + 0.5, y + 0.5) - center, radius, sides, angle_deg):
+		# A regular polygon lies inside the circle through its corners, which is the circle of its radius.
+		var dy: float = y + 0.5 - center.y
+		var reach: float = _chord(radius, dy)
+		if reach < 0.0:
+			continue
+		var columns: Vector2i = _columns(box, center.x, reach)
+		var solid: Vector2i = _solid_columns(columns, center.x, sqrt(maxf(apothem * apothem - dy * dy, 0.0)) - PRUNE_MARGIN)
+		for x: int in range(columns.x, solid.x):
+			var d: Vector2 = Vector2(x + 0.5, y + 0.5) - center
+			if d.length() * cos(fposmod(d.angle() - turn, wedge) - half_wedge) <= limit:
+				_blend(img, x, y, c)
+		_fill_run(img, y, solid.x, solid.y, c)
+		for x: int in range(solid.y, columns.y):
+			var d: Vector2 = Vector2(x + 0.5, y + 0.5) - center
+			if d.length() * cos(fposmod(d.angle() - turn, wedge) - half_wedge) <= limit:
 				_blend(img, x, y, c)

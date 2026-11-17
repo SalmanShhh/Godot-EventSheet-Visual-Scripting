@@ -50,6 +50,10 @@ The give-up time stops while the game is paused and follows the time scale, and 
 
 A large map cost the square of its size; the routes are the same.
 
+### Changed: a large Drawing Prefab's picture is drawn several times faster
+
+The picture at the top of a prefab's Inspector is cut into bands that are drawn at once, each shape visits only the pixels it can cover (a long slanted line no longer walks its whole bounding box), and an opaque disc, rectangle, rounded rectangle, polygon or line is written a row at a time. A change starts its picture at once instead of waiting for the next frame. The picture is exactly the one drawn before, pixel for pixel: the suite draws random shapes both ways and compares them, and a spread of prefabs was compared across the old and new code.
+
 ### Changed: taking a card out of, or putting one into, a long list touches only that card
 
 Deleting a card from the middle of a Drawing Prefab of 500 shapes drew all the 499 that were left (about 680 ms), and so did an insert, a paste, a duplicate and the undo or redo of any of them. A card that stays now keeps its controls: they are renumbered, and the line beside its title is written again only where the list works it out from the cards around it (a Juice Hold waits for the cards above it). The Juice Player's list is the same drawer and gains the same. A list drawn in bands (Juice cards that start together) keeps its bands when every band keeps its cards; a change that would join, split or add a band draws the list whole, as before. What the list shows, what is saved and every undo step are unchanged. A table view nobody is looking at is no longer rebuilt on each undo, and the Juice strip under a list asks how long the beat lasts once per edit instead of twice.
