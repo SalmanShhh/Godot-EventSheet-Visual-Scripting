@@ -3373,7 +3373,9 @@ func _juice_card_value_kind(finder: Script) -> Dictionary:
 		texts[word] = said.trim_prefix("\"").trim_suffix("\"")
 	if str(texts["field"]).is_empty():
 		return {"kind": ""}
-	return finder.call("value_kind", _sheet_source_path(), str(texts["target"]), str(texts["label"]), str(texts["field"]))
+	var found: Dictionary = (finder.call("value_kind", _sheet_source_path(), str(texts["target"]), str(texts["label"]), str(texts["field"])) as Dictionary).duplicate()
+	found["target"] = str(texts["target"])
+	return found
 
 
 ## One typed value box, or null when the value the row holds cannot be shown in it.
@@ -3419,10 +3421,8 @@ func _juice_card_typed_box(word: String, picked: Dictionary, key: String, carrie
 			if not text.is_empty() and not text.begins_with("NodePath(") and not text.begins_with("^"):
 				return null
 			var names: Array = []
-			var scene_root: Node = _validation_scene_root()
-			if scene_root != null:
-				for scene_path: String in scene_node_paths(scene_root):
-					names.append("NodePath(\"%s\")" % scene_path)
+			for stored: String in load("res://addons/eventsheet/editor/dock/juice_card_field_names.gd").call("paths_for_player", _validation_scene_root(), _sheet_host_node(), str(picked.get("target", ""))):
+				names.append("NodePath(\"%s\")" % stored)
 			return _create_autocomplete_field(key, names, text)
 		"choice":
 			if not text.is_empty() and not (text.begins_with("\"") and text.ends_with("\"")):

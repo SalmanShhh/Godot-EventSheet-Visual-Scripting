@@ -159,6 +159,47 @@ static func keys_of(card: Dictionary) -> Array:
 	return offered
 
 
+## What a scene's saved list of juice cards reads as on the behaviours card of the sheet's head bar: "6 cards"
+## in place of the array's text. Any other text comes back as it was.
+static func list_summary(written: String) -> String:
+	if not written.begins_with("Array[Dictionary]("):
+		return written
+	var parsed: Variant = str_to_var(written)
+	if not (parsed is Array) or (parsed as Array).is_empty():
+		return written
+	for entry: Variant in (parsed as Array):
+		if not (entry is Dictionary) or not (entry as Dictionary).has("verb"):
+			return written
+	var count: int = (parsed as Array).size()
+	return EventSheetL10n.translate("1 card") if count == 1 else EventSheetL10n.translate("%d cards") % count
+
+
+## The node a row plays: the player the row's target text names, found from the node the sheet runs on (a
+## `$Name` is read from there) or, for a `%Name`, from the scene's own root. Null when it cannot be found.
+static func player_node(scene_root: Node, host: Node, target: String) -> Node:
+	var said: String = target.strip_edges().trim_prefix("\"").trim_suffix("\"")
+	if said.is_empty() or scene_root == null:
+		return null
+	if said.begins_with("%"):
+		return scene_root.get_node_or_null(said)
+	var base: Node = host if host != null else scene_root
+	return base.get_node_or_null(said.trim_prefix("$").trim_prefix("\"").trim_suffix("\""))
+
+
+## The paths of the scene's nodes the way a card STORES a node: relative to the player that plays the card, not
+## to the scene root, so a card that holds one keeps finding its node when the scene is moved or copied. When the
+## player cannot be found the paths stay the scene's own.
+static func paths_for_player(scene_root: Node, host: Node, target: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	if scene_root == null:
+		return found
+	var player: Node = player_node(scene_root, host, target)
+	for scene_path: String in EventSheetSceneUniqueNames.scene_node_paths(scene_root):
+		var node: Node = scene_root.get_node_or_null(scene_path) if player != null else null
+		found.append(str(player.get_path_to(node)) if node != null else scene_path)
+	return found
+
+
 ## What KIND of value one field of one card holds, so the value box of Set Juice Card Field can be the box
 ## that kind needs: {"kind": "number" | "colour" | "file" | "node" | "bool" | "choice" | "text" | "", "choices": [...]}.
 ## The kind comes from the drawer the Inspector draws that field with, and where the drawer does not say (a
