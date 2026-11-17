@@ -64,6 +64,10 @@ static var _shaders_3d: Dictionary = {}
 ## The quad that flat and billboard shapes are drawn on, shared by all.
 static var _quad: QuadMesh = null
 
+# Whether Set Shape Colour From Palette has already said why it did nothing, so a row that runs every frame warns once.
+## True once the palette row has warned about a palette, set or role that is not there.
+var _palette_warned: bool = false
+
 # How fast the dashes are scrolling, in patterns per second. Zero parks the tick entirely.
 ## How fast the dashes slide along the line, in patterns per second.
 var _dash_scroll_speed: float = 0.0
@@ -294,6 +298,23 @@ func set_geometry(mode: String) -> void:
 func set_shape_colour(colour: Color) -> void:
 	set("colour", colour)
 	shape_changed()
+
+## @ace_action
+## @ace_name("Set Shape Colour From Palette")
+## @ace_category("Vector Shapes")
+## @ace_description("Sets the shape's main colour to one role of a colour palette - Danger, Safe - taken from the colour set you name, so one row draws the right colour for every kind of colour vision. Leave the set name empty to use the palette's first set. A palette, set or role that is not there leaves the colour as it is and says so once in the Output panel, naming the shape. Like Set Shape Colour, it changes the colour field, so a Shape Style worn by the shape speaks for the colour until it is taken off.")
+## @ace_display_template("Set shape colour to [b]{role}[/b] from [b]{palette}[/b] ([b]{colour_set}[/b])")
+## @ace_icon("res://eventsheet_addons/vector_shapes/icon_3d.svg")
+## @ace_codegen_template("$VectorShape3D.set_shape_colour_from_palette({palette}, {colour_set}, {role})")
+func set_shape_colour_from_palette(palette: Resource, colour_set: String, role: String) -> void:
+	var picked: Variant = SHAPE_WORDS.palette_colour(palette, colour_set, role)
+	if picked is Color:
+		_palette_warned = false
+		set_shape_colour(picked as Color)
+		return
+	if not _palette_warned:
+		_palette_warned = true
+		push_warning("%s: Set Shape Colour From Palette left the colour as it was, because %s." % [str(get_path()) if is_inside_tree() else str(name), str(picked)])
 
 ## @ace_action
 ## @ace_name("Set Colours")

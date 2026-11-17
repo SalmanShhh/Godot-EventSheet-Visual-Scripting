@@ -122,6 +122,10 @@ static var _dash_icons: Dictionary = {}
 ## True once the dash icons have been offered to the editor.
 static var _icons_offered: bool = false
 
+# Whether Set Shape Colour From Palette has already said why it did nothing, so a row that runs every frame warns once.
+## True once the palette row has warned about a palette, set or role that is not there.
+var _palette_warned: bool = false
+
 # How fast the dashes are scrolling, in patterns per second. Zero parks the tick entirely.
 ## How fast the dashes slide along the line, in patterns per second.
 var _dash_scroll_speed: float = 0.0
@@ -354,6 +358,41 @@ func shape_changed() -> void:
 	_gradient_strip = null
 	queue_redraw()
 
+## The colour a palette resource holds for a role in a colour set: a Color, or a plain sentence saying what
+## is missing. Role and set names match without regard to capitals, so "danger" finds Danger. An empty set
+## name is the palette's first set. Both bases ask this one function.
+## @ace_hidden
+static func palette_colour(palette: Resource, colour_set: String, role: String) -> Variant:
+	if palette == null:
+		return "no palette was given"
+	var roles: Variant = palette.get("role_names")
+	var sets: Variant = palette.get("set_colors")
+	var names: Variant = palette.get("set_names")
+	if not (roles is PackedStringArray) or not (sets is Array):
+		return "that resource is not a colour palette"
+	var role_at: int = -1
+	for position: int in (roles as PackedStringArray).size():
+		if (roles as PackedStringArray)[position].nocasecmp_to(role) == 0:
+			role_at = position
+			break
+	if role_at < 0:
+		return "the palette has no role named \"%s\"" % role
+	var set_at: int = 0
+	if not colour_set.is_empty():
+		set_at = -1
+		if names is PackedStringArray:
+			for position: int in (names as PackedStringArray).size():
+				if (names as PackedStringArray)[position].nocasecmp_to(colour_set) == 0:
+					set_at = position
+					break
+		if set_at < 0:
+			return "the palette has no colour set named \"%s\"" % colour_set
+	if set_at >= (sets as Array).size():
+		return "the palette has no colour set to read"
+	var colours: Variant = (sets as Array)[set_at]
+	if not (colours is PackedColorArray) or role_at >= (colours as PackedColorArray).size():
+		return "that colour set has no colour for \"%s\"" % role
+	return (colours as PackedColorArray)[role_at]
 ## The thickness to draw with, in the shape's own units, after the scale rule. A stroke that follows
 ## the node is the number typed. A stroke fixed on screen is that number divided by the scale the
 ## shape is SHOWN at - its own scale, any parent's, a camera's zoom, and the editor view's zoom - so
@@ -702,6 +741,22 @@ func set_thickness(value: float = 2.0, unit: String = "px") -> void:
 func set_shape_colour(colour: Color = Color.WHITE) -> void:
 	set("colour", colour)
 	shape_changed()
+
+## Sets the shape's main colour to one role of a colour palette resource - Danger, Safe - taken from the
+## named colour set, so one row draws the right colour for every kind of colour vision. The palette is read
+## by the names its fields carry (role_names, set_names, set_colors), so this pack needs no palette pack.
+## An empty set name uses the palette's first set. A palette, set or role that is not there leaves the colour
+## as it was and says so once in the Output panel, naming the node.
+func set_shape_colour_from_palette(palette: Resource = null, colour_set: String = "", role: String = "") -> void:
+	var picked: Variant = palette_colour(palette, colour_set, role)
+	if picked is Color:
+		_palette_warned = false
+		set_shape_colour(picked as Color)
+		return
+	if not _palette_warned:
+		_palette_warned = true
+		push_warning("%s: Set Shape Colour From Palette left the colour as it was, because %s." % [str(get_path()) if is_inside_tree() else str(name), str(picked)])
+
 
 ## Sets both ends of a two-colour shape at once and switches a single-colour one to that mode: a
 ## line that goes red to transparent, an arc that goes danger to healthy along its sweep.

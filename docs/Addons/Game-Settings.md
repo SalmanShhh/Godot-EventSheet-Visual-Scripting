@@ -592,8 +592,13 @@ the path you typed:
 
 <img src="../images/palette-param-swatches.png" alt="The Use Palette parameters window: a Palette dropdown holding the variable, a palette asset path field with a Browse button, and under it a swatch grid whose rows are the colour roles Danger, Safe, Neutral and Highlight and whose columns are the colour sets Default, Deuteranopia and Tritanopia, each cell a filled colour chip." width="600">
 
-The pack publishes no verbs of its own - it is the shape of the data, and the accessibility words are
-what spend it. Bind the swap to a setting (`Set setting "palette"` then a reaction that runs Use
+The pack publishes no verbs of its own - it is the shape of the data, and other packs spend it. The
+accessibility words swap a whole palette in with **Use palette**, and the Vector Shapes pack's **Set Shape
+Colour From Palette** row (palette, colour set, role) sets a shape's colour to one role of it, by name:
+`Set shape colour to "Danger" from palette ("Deuteranopia")` colours a health ring with the Danger entry of
+the Deuteranopia set, and an empty set name reads the palette's first set. A palette, a set or a role that
+is not there leaves the colour as it was and says so once in the Output panel. The row reads the palette
+by the names its fields carry, so the Vector Shapes pack works with or without this pack beside it. Bind the swap to a setting (`Set setting "palette"` then a reaction that runs Use
 palette) and the choice survives a restart with everything else in `user://settings.cfg`.
 
 ## Its other companion data asset: Quality Preset

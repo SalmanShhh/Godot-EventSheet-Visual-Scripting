@@ -94,6 +94,9 @@ static func _build_base() -> bool:
 	src.verb("set_shape_colour", "Set Shape Colour",
 		"Sets the shape's main colour - the whole of it in single mode, and the first end of the blend in every other mode.",
 		[["colour", "Color"]])
+	src.verb("set_shape_colour_from_palette", "Set Shape Colour From Palette",
+		"Sets the shape's main colour to one role of a colour palette - Danger, Safe - taken from the colour set you name, so one row draws the right colour for every kind of colour vision. Leave the set name empty to use the palette's first set. A palette, set or role that is not there leaves the colour as it is and says so once in the Output panel, naming the shape. Like Set Shape Colour, it changes the colour field, so a Shape Style worn by the shape speaks for the colour until it is taken off.",
+		[["palette", "Resource"], ["colour_set", "String"], ["role", "String"]])
 	src.verb("set_colours", "Set Colours",
 		"Sets both ends of a two-colour shape at once, and switches a single-colour one to that mode: a line that goes red to transparent, an arc that goes danger to healthy along its sweep.",
 		[["from_colour", "Color"], ["to_colour", "Color"]])
@@ -183,6 +186,7 @@ static func _build_base() -> bool:
 	Lib.verb_sentences(src.sheet, {
 		"set_thickness": "Set thickness to [b]{value}[/b] [b]{unit}[/b]",
 		"set_shape_colour": "Set shape colour to [b]{colour}[/b]",
+		"set_shape_colour_from_palette": "Set shape colour to [b]{role}[/b] from [b]{palette}[/b] ([b]{colour_set}[/b])",
 		"set_colours": "Set colours [b]{from_colour}[/b] to [b]{to_colour}[/b]",
 		"set_fill": "Set fill to [b]{filled}[/b]",
 		"set_dashes": "Set dashes [b]{count}[/b], spacing [b]{spacing}[/b], [b]{style}[/b]",
@@ -349,6 +353,9 @@ static func _build_base_3d() -> bool:
 	src.verb("set_shape_colour", "Set Shape Colour",
 		"Sets the shape's main colour - the whole of it in single mode, and the first end of the blend in every other mode.",
 		[["colour", "Color"]])
+	src.verb("set_shape_colour_from_palette", "Set Shape Colour From Palette",
+		"Sets the shape's main colour to one role of a colour palette - Danger, Safe - taken from the colour set you name, so one row draws the right colour for every kind of colour vision. Leave the set name empty to use the palette's first set. A palette, set or role that is not there leaves the colour as it is and says so once in the Output panel, naming the shape. Like Set Shape Colour, it changes the colour field, so a Shape Style worn by the shape speaks for the colour until it is taken off.",
+		[["palette", "Resource"], ["colour_set", "String"], ["role", "String"]])
 	src.verb("set_colours", "Set Colours",
 		"Sets both ends of a two-colour shape at once, and switches a single-colour one to that mode: a rope that goes bright at the hand and dark at the anchor, an arc that goes danger to healthy along its sweep.",
 		[["from_colour", "Color"], ["to_colour", "Color"]])
@@ -400,6 +407,7 @@ static func _build_base_3d() -> bool:
 		"set_thickness": "Set thickness to [b]{value}[/b] [b]{unit}[/b]",
 		"set_geometry": "Set geometry to [b]{mode}[/b]",
 		"set_shape_colour": "Set shape colour to [b]{colour}[/b]",
+		"set_shape_colour_from_palette": "Set shape colour to [b]{role}[/b] from [b]{palette}[/b] ([b]{colour_set}[/b])",
 		"set_colours": "Set colours [b]{from_colour}[/b] to [b]{to_colour}[/b]",
 		"set_fill": "Set fill to [b]{filled}[/b]",
 		"set_dashes": "Set dashes [b]{count}[/b], spacing [b]{spacing}[/b], [b]{style}[/b]",

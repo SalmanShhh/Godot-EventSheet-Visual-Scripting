@@ -72,6 +72,10 @@ static var _shaders_3d: Dictionary = {}
 ## The quad that flat and billboard shapes are drawn on, shared by all.
 static var _quad: QuadMesh = null
 
+# Whether Set Shape Colour From Palette has already said why it did nothing, so a row that runs every frame warns once.
+## True once the palette row has warned about a palette, set or role that is not there.
+var _palette_warned: bool = false
+
 # How fast the dashes are scrolling, in patterns per second. Zero parks the tick entirely.
 ## How fast the dashes slide along the line, in patterns per second.
 var _dash_scroll_speed: float = 0.0
@@ -572,6 +576,22 @@ func set_geometry(mode: String = "billboard") -> void:
 func set_shape_colour(colour: Color = Color.WHITE) -> void:
 	set("colour", colour)
 	shape_changed()
+
+## Sets the shape's main colour to one role of a colour palette resource - Danger, Safe - taken from the
+## named colour set, so one row draws the right colour for every kind of colour vision. The palette is read
+## by the names its fields carry (role_names, set_names, set_colors), so this pack needs no palette pack.
+## An empty set name uses the palette's first set. A palette, set or role that is not there leaves the colour
+## as it was and says so once in the Output panel, naming the node.
+func set_shape_colour_from_palette(palette: Resource = null, colour_set: String = "", role: String = "") -> void:
+	var picked: Variant = SHAPE_WORDS.palette_colour(palette, colour_set, role)
+	if picked is Color:
+		_palette_warned = false
+		set_shape_colour(picked as Color)
+		return
+	if not _palette_warned:
+		_palette_warned = true
+		push_warning("%s: Set Shape Colour From Palette left the colour as it was, because %s." % [str(get_path()) if is_inside_tree() else str(name), str(picked)])
+
 
 ## Sets both ends of a two-colour shape at once and switches a single-colour one to that mode: a
 ## rope that goes bright at the hand and dark at the anchor, an arc that goes danger to healthy.
