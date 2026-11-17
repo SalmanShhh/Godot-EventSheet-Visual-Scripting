@@ -1,3 +1,4 @@
+# @ace_version(1.0.0)
 ## The frame the camera just drew, run once through a compute shader. Every Post Kit effect is one
 ## of these: a CompositorEffect the pack hangs on a Camera3D's or a WorldEnvironment's Compositor,
 ## which reads the colour buffer, changes it in place, and writes it back.
@@ -10,7 +11,6 @@
 ## A subclass says three things and nothing else: which shader file it is, what colour it works in,
 ## and what its own dials hold. The push constant is the same 64 bytes for every effect, so one
 ## shader header is the whole contract.
-## @ace_version(1.0.0)
 @tool
 extends CompositorEffect
 
@@ -20,8 +20,8 @@ const SHADER_DIRECTORY: String = "res://eventsheet_addons/post_kit/effects/"
 ## Compute workgroup size in both directions; every shader declares the same number.
 const GROUP_SIZE: int = 8
 
+# @ace_hidden
 ## How far the effect goes, 0 to 1; 0 hands the frame back exactly as it arrived.
-## @ace_hidden
 @export_range(0.0, 1.0, 0.01) var strength: float = 0.6
 
 # The rendering device the frame belongs to, and the two things compiled out of the shader file.

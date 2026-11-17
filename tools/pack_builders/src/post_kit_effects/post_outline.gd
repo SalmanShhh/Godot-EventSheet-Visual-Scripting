@@ -1,3 +1,4 @@
+# @ace_version(1.0.0)
 ## Outline through walls: a mask of one visual layer, edge-detected over the frame.
 ##
 ## The mask is drawn by a second camera that can see NOTHING except the layer the pack marks its
@@ -8,20 +9,19 @@
 ##
 ## Fill turns the same mask into a silhouette instead of an edge, which is the other half of the
 ## same question - where is the thing, rather than what shape is it.
-## @ace_version(1.0.0)
 @tool
 extends "post_effect.gd"
 
+# @ace_hidden
 ## The colour the outline is drawn in.
-## @ace_hidden
 @export var ink: Color = Color(1.0, 0.85, 0.2)
 
+# @ace_hidden
 ## How thick the outline is, in pixels of the frame.
-## @ace_hidden
 @export_range(1.0, 16.0, 1.0) var width: float = 2.0
 
+# @ace_hidden
 ## 0 draws the edge of the mask (an outline); 1 draws the whole mask (a silhouette). Between the two, a silhouette with a brighter rim.
-## @ace_hidden
 @export_range(0.0, 1.0, 0.01) var fill: float = 0.0
 
 ## The mask texture this effect reads; while it is empty the effect draws nothing.
