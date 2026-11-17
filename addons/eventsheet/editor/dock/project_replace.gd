@@ -40,11 +40,16 @@ static func kind_of(path: String, source: String, open_paths: Dictionary) -> Str
 		return KIND_PACK
 	if path.get_extension().to_lower() != "gd" or open_paths.has(path):
 		return KIND_SHEET
+	return KIND_SHEET if has_sheet_marker(source) else KIND_SCRIPT
+
+
+## True when a script's text carries what the plugin writes into its own files.
+static func has_sheet_marker(source: String) -> bool:
 	var text: String = "\n" + source
 	for marker: String in SHEET_MARKERS:
 		if text.contains(marker):
-			return KIND_SHEET
-	return KIND_SCRIPT
+			return true
+	return false
 
 
 ## Whether a file of this kind starts ticked.
@@ -56,18 +61,26 @@ static func default_ticked(kind: String) -> bool:
 ## [{path, kind, hits, places, open, lines: [{where, before, after}], more}]. `hits` counts the places
 ## the replace would change (Find ignores case, a replace does not, so a place that differs only in
 ## case is found but not counted).
-static func plan(found: Array, needle: String, replacement: String, open_paths: Dictionary) -> Array[Dictionary]:
+static func plan(found: Array, needle: String, replacement: String, open_paths: Dictionary,
+		markers: Dictionary = {}) -> Array[Dictionary]:
 	var entries: Array[Dictionary] = []
 	var by_path: Dictionary = {}
+	var line_format: String = EventSheetL10n.translate("line %d")
 	for match_entry: Dictionary in found:
 		var path: String = str(match_entry.get("path", ""))
 		if not by_path.has(path):
-			var source: String = ""
-			if path.get_extension().to_lower() == "gd" and not open_paths.has(path) \
-					and not EventSheetProjectFind.is_pack_script(path):
-				source = FileAccess.get_file_as_string(path)
+			var kind: String = ""
+			if markers.has(path) and not open_paths.has(path) and not EventSheetProjectFind.is_pack_script(path):
+				# Find already read this file and noted what it says about itself.
+				kind = KIND_SHEET if bool(markers[path]) else KIND_SCRIPT
+			else:
+				var source: String = ""
+				if path.get_extension().to_lower() == "gd" and not open_paths.has(path) \
+						and not EventSheetProjectFind.is_pack_script(path):
+					source = FileAccess.get_file_as_string(path)
+				kind = kind_of(path, source, open_paths)
 			by_path[path] = entries.size()
-			entries.append({"path": path, "kind": kind_of(path, source, open_paths), "hits": 0,
+			entries.append({"path": path, "kind": kind, "hits": 0,
 				"places": 0, "open": open_paths.has(path), "lines": [], "more": 0})
 		var entry: Dictionary = entries[int(by_path[path])]
 		entry["places"] = int(entry["places"]) + 1
@@ -77,11 +90,20 @@ static func plan(found: Array, needle: String, replacement: String, open_paths: 
 		entry["hits"] = int(entry["hits"]) + 1
 		if (entry["lines"] as Array).size() < MAX_LINES_SHOWN:
 			(entry["lines"] as Array).append({
-				"where": EventSheetProjectFind.where_in_sheet(match_entry),
+				"where": _where(match_entry, line_format),
 				"before": preview, "after": preview.replace(needle, replacement)})
 		else:
 			entry["more"] = int(entry["more"]) + 1
 	return entries
+
+
+## Where a match is, in the words the Event column uses (translated once for the whole plan).
+static func _where(match_entry: Dictionary, line_format: String) -> String:
+	if int(match_entry.get("event", 0)) > 0:
+		return str(int(match_entry["event"]))
+	if int(match_entry.get("line", 0)) > 0:
+		return line_format % int(match_entry["line"])
+	return "-"
 
 
 ## The entries a press of the button writes: ticked, with something to change, never a pack. `ticks`

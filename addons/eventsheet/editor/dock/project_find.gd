@@ -164,7 +164,7 @@ static func find_in_script_text(source: String, needle: String) -> Array:
 ## one, and for a closed `.gd`, which is never imported to be searched); `line` is the file line of
 ## a closed `.gd` match (0 otherwise). Together they are where a result takes the reader.
 static func find_in_project(needle: String, sheet_paths: PackedStringArray,
-		open_sheets: Dictionary = {}) -> Array:
+		open_sheets: Dictionary = {}, markers: Dictionary = {}) -> Array:
 	var found: Array = []
 	if needle.strip_edges().is_empty():
 		return found
@@ -191,7 +191,11 @@ static func find_in_project(needle: String, sheet_paths: PackedStringArray,
 		if open_sheets.has(sheet_path):
 			sheet = open_sheets[sheet_path] as EventSheetResource
 		elif sheet_path.get_extension().to_lower() == "gd":
-			matches = find_in_script_text(FileAccess.get_file_as_string(sheet_path), needle)
+			var script_text: String = FileAccess.get_file_as_string(sheet_path)
+			matches = find_in_script_text(script_text, needle)
+			if not matches.is_empty():
+				# What the replace plan needs to tell a sheet from a script, so it never reads the file again.
+				markers[sheet_path] = load("res://addons/eventsheet/editor/dock/project_replace.gd").has_sheet_marker(script_text)
 		else:
 			sheet = load(sheet_path) as EventSheetResource
 		if sheet != null:
@@ -374,11 +378,12 @@ func _run_project_find() -> int:
 	if _needle.strip_edges().is_empty():
 		return 0
 	var open_sheets: Dictionary = EventSheetFindReferences.open_sheets_of(_dock)
-	var found: Array = find_in_project(_needle, list_all_project_sheets(), open_sheets)
+	var markers: Dictionary = {}
+	var found: Array = find_in_project(_needle, list_all_project_sheets(), open_sheets, markers)
 	var open_paths: Dictionary = {}
 	for open_path: Variant in open_sheets.keys():
 		open_paths[str(open_path)] = true
-	_plan = _replace_module().plan(found, _needle, _project_replace_edit.text, open_paths)
+	_plan = _replace_module().plan(found, _needle, _project_replace_edit.text, open_paths, markers)
 	for entry: Dictionary in _plan:
 		for line: Dictionary in entry["lines"]:
 			line["match"] = _match_of(found, str(entry["path"]), line)
