@@ -21,6 +21,8 @@ const BUILDER_PATH: String = "res://tools/build_examples.gd"
 ## that keeps compiling the string it holds.
 const KNOWN_DIFFERENT: PackedStringArray = [
 	"BlendModesAddon::method:blend_as",
+	"FeedbackPlayer::method:play",
+	"FeedbackPlayer::method:stop_all_juice_players",
 	"JuiceBehavior::method:chromatic_shake",
 	"JuiceBehavior::method:moment",
 	"ScreenFx::method:add_post_effect",
