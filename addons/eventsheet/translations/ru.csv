@@ -11049,7 +11049,6 @@ Pick the node to look at. Until then this card does nothing.,"Выберите �
 "This node holds the player, so the player's own tweens freeze with it while it is off.","Этот узел содержит проигрыватель, поэтому, пока он выключен, собственные твины проигрывателя замирают вместе с ним."
 "This camera ignores rotation, so the shake cannot be seen. Turn off Ignore Rotation on it.","Эта камера игнорирует поворот, поэтому тряска не видна. Отключите на ней Ignore Rotation."
 "This scene has no WorldEnvironment to change. Add one, or pick the camera that holds the look.","В этой сцене нет WorldEnvironment для изменения. Добавьте его или выберите камеру, которая хранит вид."
-Layer %d has no name in Project Settings.,У слоя %d нет имени в настройках проекта.
 Layer %d is called %s in Project Settings.,Слой %d называется %s в настройках проекта.
 "Swings up to %s degrees over %s s, following your curve, and ends at rest.",Качается до %s градусов за %s с по вашей кривой и заканчивает в покое.
 Swings up to %s degrees half way and is at rest at %s s.,"К середине качается до %s градусов, а на %s с приходит в покой."

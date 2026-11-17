@@ -45,6 +45,7 @@ static func run() -> bool:
 	ok = _family_pins() and ok
 	ok = _hold_pins() and ok
 	ok = _length_pins() and ok
+	ok = _note_pins() and ok
 	return ok
 
 
@@ -202,7 +203,9 @@ static func _length_pins() -> bool:
 	var felt: Array = []
 	for word: String in ["look_at", "rotate_by", "rotate_to", "rotation_shake", "draw_order"]:
 		felt.append(script.call("editor_kind", word))
+	var kinds: Script = load("res://addons/eventsheet/editor/inspector/juice_scene_kinds.gd") as Script
 	return SUPPORT.pins(TEST_NAME, [
+		["a layer nobody named in Project Settings says nothing under its number", kinds.call("layer_note", {"layer": 31}, [], 0, null), ""],
 		["a Collision card is as long as its seconds", script.call("card_length", {"verb": "collision_for", "seconds": 0.5}), 0.5],
 		["a Draw Order card too", script.call("card_length", {"verb": "draw_order", "seconds": 0.7}), 0.7],
 		["a Rotate By card too", script.call("card_length", {"verb": "rotate_by", "seconds": 0.2}), 0.2],
@@ -239,3 +242,28 @@ static func _class_has_property(named: String, property: String) -> bool:
 		if str(entry.get("name", "")) == property:
 			return true
 	return false
+
+
+## Every line a card draws under its fields answers the way the drawer asks it: a sentence for `text`, a yes or no
+## for `warn_when`. A drawer that is handed a sentence where it wanted a yes or no cannot draw the card at all, so
+## each new card is asked once with the numbers a new card starts with.
+static func _note_pins() -> bool:
+	var rows: Array = []
+	var asked: int = 0
+	for card: Array in CARDS + [["light"], ["scene_look"], ["bus_effect"]]:
+		var kind: Dictionary = _kind(card[0])
+		var start: Dictionary = (kind.get("defaults", {}) as Dictionary).duplicate()
+		start["verb"] = card[0]
+		for field: Variant in kind.get("fields", []):
+			var spec: Dictionary = field as Dictionary
+			for part: String in ["text", "warn_when", "visible_when"]:
+				var maker: Variant = spec.get(part)
+				if not (maker is Callable):
+					continue
+				var answer: Variant = EventSheetCardSchemas.ask(maker as Callable, start, [start], 0, null)
+				var wants_text: bool = part == "text"
+				rows.append(["%s: %s of %s answers with %s" % [card[0], part, spec.get("key"), "a sentence" if wants_text else "a yes or no"],
+					typeof(answer) == (TYPE_STRING if wants_text else TYPE_BOOL), true])
+				asked += 1
+	rows.append(["some lines were asked", asked > 15, true])
+	return SUPPORT.pins(TEST_NAME, rows)

@@ -11049,7 +11049,6 @@ Pick the node to look at. Until then this card does nothing.,请选择要注视�
 "This node holds the player, so the player's own tweens freeze with it while it is off.",这个节点包含播放器，所以它关闭期间，播放器自己的补间也会一起冻结。
 "This camera ignores rotation, so the shake cannot be seen. Turn off Ignore Rotation on it.",这个相机忽略旋转，所以看不到抖动。请关闭它的 Ignore Rotation。
 "This scene has no WorldEnvironment to change. Add one, or pick the camera that holds the look.",这个场景里没有可修改的 WorldEnvironment。请添加一个，或选择持有该效果的相机。
-Layer %d has no name in Project Settings.,第 %d 层在项目设置中没有名称。
 Layer %d is called %s in Project Settings.,第 %d 层在项目设置中名为 %s。
 "Swings up to %s degrees over %s s, following your curve, and ends at rest.",最多摆动 %s 度，用时 %s 秒，按你的曲线变化，最后回到静止。
 Swings up to %s degrees half way and is at rest at %s s.,中途最多摆动 %s 度，在 %s 秒时静止。

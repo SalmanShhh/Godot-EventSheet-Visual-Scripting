@@ -11049,7 +11049,6 @@ Pick the node to look at. Until then this card does nothing.,見る対象のノ�
 "This node holds the player, so the player's own tweens freeze with it while it is off.",このノードはプレイヤーを含んでいるため、オフの間はプレイヤー自身のトゥイーンも一緒に止まります。
 "This camera ignores rotation, so the shake cannot be seen. Turn off Ignore Rotation on it.",このカメラは回転を無視するため、揺れは見えません。Ignore Rotation をオフにしてください。
 "This scene has no WorldEnvironment to change. Add one, or pick the camera that holds the look.",このシーンには変更できる WorldEnvironment がありません。追加するか、見た目を持つカメラを選んでください。
-Layer %d has no name in Project Settings.,レイヤー %d にはプロジェクト設定で名前が付いていません。
 Layer %d is called %s in Project Settings.,レイヤー %d はプロジェクト設定で「%s」という名前です。
 "Swings up to %s degrees over %s s, following your curve, and ends at rest.",最大 %s 度まで揺れ、%s 秒かけてあなたのカーブに従い、静止します。
 Swings up to %s degrees half way and is at rest at %s s.,途中で最大 %s 度まで揺れ、%s 秒で静止します。

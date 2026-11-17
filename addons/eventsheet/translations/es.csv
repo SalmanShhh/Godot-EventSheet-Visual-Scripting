@@ -11049,7 +11049,6 @@ Pick the node to look at. Until then this card does nothing.,Elige el nodo al qu
 "This node holds the player, so the player's own tweens freeze with it while it is off.","Este nodo contiene al reproductor, así que los tweens del propio reproductor se congelan con él mientras está apagado."
 "This camera ignores rotation, so the shake cannot be seen. Turn off Ignore Rotation on it.","Esta cámara ignora la rotación, así que no se ve el temblor. Desactiva Ignore Rotation en ella."
 "This scene has no WorldEnvironment to change. Add one, or pick the camera that holds the look.",Esta escena no tiene ningún WorldEnvironment que cambiar. Añade uno o elige la cámara que guarda el aspecto.
-Layer %d has no name in Project Settings.,La capa %d no tiene nombre en Ajustes del proyecto.
 Layer %d is called %s in Project Settings.,La capa %d se llama %s en Ajustes del proyecto.
 "Swings up to %s degrees over %s s, following your curve, and ends at rest.","Oscila hasta %s grados durante %s s, siguiendo tu curva, y termina en reposo."
 Swings up to %s degrees half way and is at rest at %s s.,Oscila hasta %s grados a mitad de camino y está en reposo a los %s s.

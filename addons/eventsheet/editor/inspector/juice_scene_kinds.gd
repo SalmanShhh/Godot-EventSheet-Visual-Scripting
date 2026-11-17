@@ -90,7 +90,9 @@ static func _over(label: String, default_seconds: float, show_if: String = "") -
 static func _node_line(word: String, key: String = "node") -> Dictionary:
 	var text: Callable = func(card: Dictionary, _cards: Array, _index: int, edited: Object) -> String:
 		return node_note(word, card, edited, key)
-	return {"key": key + "_note", "label": "", "drawer": "note", "text": text, "hide_empty": true, "warn_when": text}
+	var care: Callable = func(card: Dictionary, _cards: Array, _index: int, edited: Object) -> bool:
+		return not node_note(word, card, edited, key).is_empty()
+	return {"key": key + "_note", "label": "", "drawer": "note", "text": text, "hide_empty": true, "warn_when": care}
 
 
 static func _scene_kinds(family_of: Dictionary) -> Array:
@@ -296,14 +298,14 @@ static func _scene_has_a_look(card: Dictionary, edited: Object) -> bool:
 	return root == null or root is WorldEnvironment or not root.find_children("*", "WorldEnvironment", true, false).is_empty()
 
 
-## What the layer a card names is called in Project Settings, said under its number.
+## What the layer a card names is called in Project Settings, said under its number. A layer nobody named says nothing.
 static func layer_note(card: Dictionary, _cards: Array, _index: int, edited: Object) -> String:
 	var number: int = clampi(int(card.get("layer", 1)), 1, 32)
 	var picked: Node = _picked(card, edited, "node", false)
 	var space: String = "3d_physics" if picked is CollisionObject3D else "2d_physics"
 	var named: String = str(ProjectSettings.get_setting("layer_names/%s/layer_%d" % [space, number], "")).strip_edges()
 	if named.is_empty():
-		return EventSheetL10n.translate("Layer %d has no name in Project Settings.") % number
+		return ""
 	return EventSheetL10n.translate("Layer %d is called %s in Project Settings.") % [number, named]
 
 
