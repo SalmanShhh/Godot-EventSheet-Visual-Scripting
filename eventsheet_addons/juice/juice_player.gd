@@ -69,9 +69,9 @@ signal on_loop(loops_left: int)
 ## Plays the whole list again and again while this node is in the scene, until Stop Juice or Set Looping turns it off. Each pass waits at least one frame, so a list with nothing that takes time cannot lock the game.
 @export var loop: bool = false
 ## How many passes a loop makes before it stops by itself. 0 is until stopped.
-@export var loop_times: int = 0
+@export_range(0, 100, 1, "or_greater") var loop_times: int = 0
 ## Seconds between one pass and the next. 0 waits one frame.
-@export var loop_wait: float = 0.0
+@export_range(0, 10, 0.01, "or_greater", "suffix:s") var loop_wait: float = 0.0
 ## Seconds that must pass between plays; sooner requests are refused.
 @export var cooldown: float = 0.0
 ## Optional: a moment file to play INSTEAD of the list. Drop one here to share a beat between objects; Save As File writes this list out as one.
