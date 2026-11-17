@@ -336,7 +336,8 @@ func _load_settings() -> void:
 	elif scene_path.is_empty():
 		_scene_note.say(EventSheetL10n.translate("The Save System is not a global yet, so these are the pack's defaults. Keep them in a scene: it is added to Project Settings > Globals as SaveSystem."), EventSheetPopupUI.TONE_WARNING)
 	else:
-		_scene_note.say("")
+		# The fields below write into the scene as they change; say so before one is touched.
+		_scene_note.say(EventSheetL10n.translate("Each change is saved into %s at once. Ctrl+Z does not take it back.") % scene_path.get_file(), EventSheetPopupUI.TONE_WARNING)
 	_scene_button.visible = scene_path.is_empty() and installed
 	var editable: bool = not scene_path.is_empty()
 	var fmt: String = str(_settings.get("format", "config"))

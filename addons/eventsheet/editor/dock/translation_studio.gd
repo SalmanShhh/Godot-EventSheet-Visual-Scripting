@@ -94,6 +94,9 @@ func _build_window() -> void:
 	box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(
 		"Turn a finished language on in Project Settings > Localization > Translations. Godot makes the translation file from the CSV when it imports it."),
 		EventSheetPalette.scaled_f(560.0)))
+	var catalog_note: EventSheetPopupUI.StateNote = EventSheetPopupUI.StateNote.new(EventSheetPalette.scaled_f(560.0))
+	catalog_note.say(EventSheetL10n.translate("The steps below write the catalog files at once. Ctrl+Z does not take them back."), EventSheetPopupUI.TONE_WARNING)
+	box.add_child(catalog_note)
 	_step(box, "1", EventSheetL10n.translate("Find the text in your game"),
 		EventSheetL10n.translate("Collects every piece of text players read (labels, dialogue, buttons) into the table."),
 		[["find", EventSheetL10n.translate("Find text"), EventSheetL10n.translate("Found the text in your game"), run_extract]])

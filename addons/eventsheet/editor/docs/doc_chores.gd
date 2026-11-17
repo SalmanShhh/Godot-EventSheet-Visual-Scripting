@@ -68,7 +68,7 @@ static func chores() -> Array[Dictionary]:
 	return [
 		{"id": CHORE_MANUAL,
 			"label": EventSheetL10n.translate("Rewrite the project manual and refresh the search"),
-			"note": EventSheetL10n.translate("Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable.")},
+			"note": EventSheetL10n.translate("Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable. It replaces the pages it wrote before, and Ctrl+Z does not take that back.")},
 		{"id": CHORE_HARVEST,
 			"label": EventSheetL10n.translate("Harvest the engine's documentation"),
 			"note": EventSheetL10n.translate("Only when this version of Godot has not been harvested yet. Nothing is downloaded: the engine writes out every class and member it has, without their descriptions.")},
@@ -77,16 +77,16 @@ static func chores() -> Array[Dictionary]:
 			"note": EventSheetL10n.translate("The descriptions the harvest cannot write, because the engine keeps them inside the editor rather than in a file. This is the one chore that downloads anything: the class reference for this exact version of Godot, once, kept on this machine. It never runs on its own.")},
 		{"id": CHORE_DRAFTS,
 			"label": EventSheetL10n.translate("Draft the descriptions nothing has written yet"),
-			"note": EventSheetL10n.translate("Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it.")},
+			"note": EventSheetL10n.translate("Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it. It replaces the last drafts file, and Ctrl+Z does not take that back.")},
 		{"id": CHORE_CHECK,
 			"label": EventSheetL10n.translate("Check coverage and drift"),
 			"note": EventSheetL10n.translate("Reports what the guides do not answer and where a shipped copy has drifted from the page it was copied from.")},
 		{"id": CHORE_SITE,
 			"label": EventSheetL10n.translate("Export the Manual as a site"),
-			"note": EventSheetL10n.translate("The whole Manual as plain HTML files, with its search, that open in a browser with no server.")},
+			"note": EventSheetL10n.translate("The whole Manual as plain HTML files, with its search, that open in a browser with no server. It replaces the files the last export wrote and leaves your own.")},
 		{"id": CHORE_KEYS,
 			"label": EventSheetL10n.translate("Write out the translator's missing keys"),
-			"note": EventSheetL10n.translate("One spreadsheet of every key your game asks for that a catalog does not answer yet.")},
+			"note": EventSheetL10n.translate("One spreadsheet of every key your game asks for that a catalog does not answer yet. It replaces the last file it wrote, and Ctrl+Z does not take that back.")},
 	]
 
 

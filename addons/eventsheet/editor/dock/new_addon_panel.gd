@@ -301,7 +301,13 @@ func _refresh() -> void:
 	if not _editing.is_empty():
 		_path_label.text = (EventSheetL10n.translate("Saves into %s itself: its ## @ace_category line, @icon, the ## description line and its row in Project Settings > Globals > Autoload.")
 			if _global else EventSheetL10n.translate("Saves into %s itself: its ## @ace_category line, @icon, the ## description line and the type of its host.")) % str(_editing["path"])
-		_name_note.say(name_problem(addon_name, _global, str(_editing["name"])))
+		var problem_now: String = name_problem(addon_name, _global, str(_editing["name"]))
+		if problem_now.is_empty() and addon_name != str(_editing["name"]):
+			# A new name is written into every file that uses the old one: say how far that reaches
+			# before OK, in the words the head's own rename uses.
+			_name_note.say(_dock._head_actions.class_rename_reach_text(), EventSheetPopupUI.TONE_WARNING)
+		else:
+			_name_note.say(problem_now)
 		return
 	var path: String = Scaffold.script_path_for(addon_name if not addon_name.is_empty() else _name_edit.placeholder_text)
 	_path_label.text = EventSheetL10n.translate("Makes %s and opens it as a sheet.") % path

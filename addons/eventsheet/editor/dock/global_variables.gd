@@ -191,6 +191,7 @@ var _type_picker: OptionButton = null
 var _value_edit: LineEdit = null
 var _target_picker: OptionButton = null
 var _preview: Label = null
+var _new_sheet_note: EventSheetPopupUI.StateNote = null
 
 
 func init(dock: Control) -> void:
@@ -236,8 +237,13 @@ func _build_dialog() -> void:
 	_dialog.register_text_enter(_value_edit)
 	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Value"), _value_edit))
 	_target_picker = OptionButton.new()
-	_target_picker.item_selected.connect(func(_index: int) -> void: _refresh_preview())
+	_target_picker.item_selected.connect(func(_index: int) -> void:
+		_refresh_preview()
+		_new_sheet_note.say(EventSheetL10n.translate("This makes a new global sheet and adds it to Project Settings > Globals. Ctrl+Z takes the variable out, not the global itself.")
+			if (_target_picker.get_item_metadata(_index) as Dictionary).is_empty() else "", EventSheetPopupUI.TONE_WARNING))
 	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Write into"), _target_picker))
+	_new_sheet_note = EventSheetPopupUI.StateNote.new()
+	form.add_child(_new_sheet_note)
 	_preview = Label.new()
 	_preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	# A width of its own: with none, the first layout wraps it a letter a line and the window opens

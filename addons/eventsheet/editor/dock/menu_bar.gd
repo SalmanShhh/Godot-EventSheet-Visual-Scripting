@@ -891,6 +891,7 @@ func build(root: Node) -> void:
 	tools_popup.add_item("Project Doctor…", 7)
 	tools_popup.add_item("Check Sheet for Errors", 14)
 	tools_popup.add_item("Vocabulary Doc", 8)
+	tools_popup.set_item_tooltip(tools_popup.get_item_index(8), EventSheetL10n.translate("Writes EVENTSHEETS-VOCABULARY.md in the project folder, replacing the one there. Ctrl+Z does not take it back."))
 	tools_popup.add_item("Docs Housekeeping…", 25)
 	tools_popup.add_separator()
 	tools_popup.add_item("Sheet Backups…", 9)

@@ -86,6 +86,7 @@ func build() -> void:
 	save_button = Button.new()
 	save_button.text = EventSheetL10n.translate("Save resolved file")
 	save_button.tooltip_text = EventSheetL10n.translate("Write the file back with the markers gone. Every byte outside the conflicted region is left exactly as it is.")
+	save_button.tooltip_text = EventSheetL10n.translate("The file with its markers is kept in Sheet Backups first. Ctrl+Z does not take this save back.")
 	save_button.pressed.connect(_save_resolved)
 	buttons.add_child(save_button)
 	body.add_child(buttons)
