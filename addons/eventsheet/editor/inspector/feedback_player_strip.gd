@@ -160,8 +160,10 @@ func _exit_tree() -> void:
 ## The head line and the timeline, re-read from the player as it is edited.
 func refresh() -> void:
 	var list: Array = steps_of(_player)
-	_head.text = head_text(list.size(), seconds_text(duration_of(list)))
-	_loop_note.text = loop_note_text(bool(_player.get("loop")) if _player != null else false, duration_of(list))
+	# The pack walks every card to answer how long the beat lasts, so it is asked once for both lines.
+	var total: float = duration_of(list)
+	_head.text = head_text(list.size(), seconds_text(total))
+	_loop_note.text = loop_note_text(bool(_player.get("loop")) if _player != null else false, total)
 	_loop_note.visible = not _loop_note.text.is_empty()
 	if _timeline != null:
 		_timeline.queue_redraw()

@@ -39,7 +39,7 @@ static func run() -> bool:
 	var whole: Array = []
 	for round: int in 3:
 		var started: int = Time.get_ticks_usec()
-		drawer.set_value(drawer.get_value())
+		drawer.call("_rebuild")
 		whole.append(float(Time.get_ticks_usec() - started) / 1000.0)
 	drawer.select_card(0)
 	var steps: Array = []

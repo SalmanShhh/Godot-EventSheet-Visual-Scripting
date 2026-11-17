@@ -138,6 +138,9 @@ var _junk: Array = []
 ## schema that draws pictures (`icons`) fills these.
 var _pictures: Dictionary = {}
 var _picture_tints: Dictionary = {}
+## Whether each card's line is painted as selected right now, by index, so a change to the list repaints only the lines
+## whose look differs from what they wear.
+var _painted: Dictionary = {}
 
 
 ## `spec` is the parsed marker - {kind_key, schema, stripe_key} - and may carry `schema_dict` instead
@@ -162,20 +165,53 @@ func schema() -> Dictionary:
 
 
 func set_value(cards: Array) -> void:
-	_cards = []
-	_junk = []
+	var incoming: Array = []
+	var junk: Array = []
 	for position: int in range(cards.size()):
 		var card: Variant = cards[position]
 		if card is Dictionary:
-			_cards.append((card as Dictionary).duplicate(true))
+			incoming.append((card as Dictionary).duplicate(true))
 		else:
-			_junk.append([position, card])
+			junk.append([position, card])
+	# What changed against the cards drawn now: usually a few cards added, taken away or replaced (an undo, a redo, an
+	# edit from outside), and then only those are drawn again. The list ends up exactly as a fresh drawing of `cards`.
+	var order: Array = _order_towards(incoming)
+	var was_open: Dictionary = _unfolded.duplicate()
+	_cards = incoming
+	_junk = junk
 	_unfolded.clear()
 	_open_folds.clear()
 	_selected.clear()
 	_anchor = -1
-	_rebuild()
+	if order.is_empty() or not _patch_to(order, was_open):
+		_rebuild()
 	_announce_selection()
+
+
+## The cards of `incoming` as the cards drawn now with one run replaced: new index -> old index, -1 for a card with no
+## drawn counterpart. Empty when the two lists share nothing at their ends, so drawing the list again is no worse.
+func _order_towards(incoming: Array) -> Array:
+	var old_count: int = _cards.size()
+	var new_count: int = incoming.size()
+	if _list == null or old_count == 0 or new_count == 0 or _lines.size() != old_count:
+		return []
+	var common: int = mini(old_count, new_count)
+	var head: int = 0
+	while head < common and _cards[head] == incoming[head]:
+		head += 1
+	var tail: int = 0
+	while tail < common - head and _cards[old_count - 1 - tail] == incoming[new_count - 1 - tail]:
+		tail += 1
+	if head + tail == 0:
+		return []
+	var order: Array = []
+	for index: int in range(head):
+		order.append(index)
+	for index: int in range(new_count - head - tail):
+		order.append(-1)
+	for index: int in range(old_count - tail, old_count):
+		order.append(index)
+	return order
 
 
 func get_value() -> Array:
@@ -371,34 +407,11 @@ func remove_selected() -> bool:
 	var kept: Array = []
 	for old_index: Variant in order:
 		kept.append(_cards[int(old_index)])
-	var removed_last_only: bool = _selected.size() == 1 and _selected.has(_cards.size() - 1)
 	_cards = kept
 	_refold(order)
 	_selected.clear()
 	_anchor = -1
-	if removed_last_only and _drop_last_drawn():
-		_announce_selection()
-		value_changed.emit(get_value())
-	else:
-		_commit()
-	return true
-
-
-## Takes away the control of the card that was last in the list and nothing else, when the list has no bands and
-## still has cards. The cards that remain keep their places, so none of them is drawn again. False (nothing done)
-## when the whole list has to be drawn.
-func _drop_last_drawn() -> bool:
-	if _list == null or _cards.is_empty() or _has_bands():
-		return false
-	var gone: int = _cards.size()
-	var surface: Control = _lines.get(gone) as Control
-	var holder: Node = surface.get_parent() if surface != null and is_instance_valid(surface) else null
-	if holder == null or holder.get_parent() != _list:
-		return false
-	_forget_card_controls(gone)
-	_list.remove_child(holder)
-	holder.queue_free()
-	_show_fold()
+	_commit_patched(order)
 	return true
 
 
@@ -424,7 +437,7 @@ func duplicate_selected() -> bool:
 	for copy_index: Variant in copies:
 		_selected[int(copy_index)] = true
 	_anchor = int(copies[0])
-	_commit()
+	_commit_patched(order)
 	return true
 
 
@@ -456,7 +469,7 @@ func paste_after_selection(text: String) -> bool:
 	for offset: int in range(pasted.size()):
 		_selected[at + offset] = true
 	_anchor = at
-	_commit()
+	_commit_patched(order)
 	return true
 
 
@@ -500,6 +513,7 @@ func _paint_line(index: int) -> void:
 	if line == null or not is_instance_valid(line) or index >= _cards.size():
 		return
 	var chosen: bool = _selected.has(index)
+	_painted[index] = chosen
 	var open: bool = bool(_unfolded.get(index, false))
 	line.add_theme_stylebox_override("panel", EventSheetLookStyle.selected_row_box(has_focus()) if chosen else EventSheetLookStyle.card_box(open))
 	var title: Label = _titles.get(index) as Label
@@ -785,7 +799,7 @@ func _redraw_moved(order: Array) -> bool:
 
 ## Lets go of what the list remembers about the controls of the card at `index`, before they are drawn again.
 func _forget_card_controls(index: int) -> void:
-	for kept: Dictionary in [_marks, _timing_marks, _lines, _titles, _head_tiles, _badges, _pictures, _picture_tints]:
+	for kept: Dictionary in [_marks, _timing_marks, _lines, _titles, _head_tiles, _badges, _pictures, _picture_tints, _painted]:
 		kept.erase(index)
 	var remaining: Array = []
 	for note: Variant in _notes:
@@ -854,7 +868,7 @@ func duplicate_card(index: int) -> void:
 		order.insert(index + 1, -1)
 	_cards = EventSheetCardSchemas.duplicate_card(_cards, index)
 	_refold(order)
-	_commit()
+	_commit_patched(order)
 
 
 func remove_card(index: int) -> void:
@@ -863,7 +877,7 @@ func remove_card(index: int) -> void:
 		order.remove_at(index)
 	_cards = EventSheetCardSchemas.remove_card(_cards, index)
 	_refold(order)
-	_commit()
+	_commit_patched(order)
 
 
 ## The cards' current positions, as the starting point every reorder rewrites.
@@ -943,6 +957,244 @@ func _commit() -> void:
 	_rebuild()
 	_announce_selection()
 	value_changed.emit(get_value())
+
+
+## `_commit` for an edit whose result is the old cards with some taken away or put in: only those cards are touched, and
+## the list is drawn again whole only when that cannot be done safely.
+func _commit_patched(order: Array) -> void:
+	if not _patch_to(order):
+		_rebuild()
+	_announce_selection()
+	value_changed.emit(get_value())
+
+
+## Brings the drawn list to the cards it holds now without drawing again the ones that kept their place in the data.
+## `order` reads new index -> old index, -1 for a card that did not exist before; the old cards it names keep their
+## order. A card that stays keeps its controls: they are renumbered, and the summary beside its title is written
+## again where the schema computes it from the cards around it. A card that is gone loses its controls, a new one is
+## built, and a card that was open (which holds its own fields) is built again shut or open as the list now says.
+## The list's bands are kept as they are when every band keeps the cards it had; a change that would move a card from
+## one band to another, join or split bands, or make a new band, is drawn whole. `was_open` is the open map before the
+## change when the caller already replaced `_unfolded`. False (and nothing touched) when the drawn list is not in the
+## state this needs; the caller then draws the whole list.
+func _patch_to(order: Array, was_open: Dictionary = {}) -> bool:
+	var old_count: int = _lines.size()
+	var new_count: int = _cards.size()
+	if _list == null or new_count == 0 or old_count == 0 or order.size() != new_count:
+		return false
+	# Where the new list stops being the old one: the cards before `first` keep their numbers and their controls, so none
+	# of the work below looks at them (the work follows the cards from here on, and any card that was open).
+	var first: int = 0
+	while first < new_count and int(order[first]) == first:
+		first += 1
+	var kept_of: Dictionary = {}
+	var previous: int = first - 1
+	for new_index: int in range(first, new_count):
+		var old_index: int = int(order[new_index])
+		if old_index < 0:
+			continue
+		if old_index <= previous or old_index >= old_count:
+			return false
+		previous = old_index
+		kept_of[old_index] = new_index
+	if first == 0 and kept_of.is_empty():
+		return false
+	# The cards that were open (or are), wherever they are: they hold their own fields, so each is drawn again.
+	var rebuilt: Dictionary = {}
+	for key: Variant in _unfolded:
+		var now: int = int(key)
+		if now < new_count and int(order[now]) >= 0:
+			rebuilt[now] = true
+	for key: Variant in was_open:
+		var then: int = int(key)
+		if then < old_count and bool(was_open[key]):
+			var found: int = then if then < first else int(kept_of.get(then, -1))
+			if found >= 0:
+				rebuilt[found] = true
+	# The runs of the new list that reach the change: a band of two or more cards that start together, or a card on its
+	# own. A list with no bands is all cards on their own.
+	var groups: Array = EventSheetCardSchemas.together_groups(_schema, _cards)
+	var runs: Array = []
+	var walk: int = 0
+	while walk < new_count:
+		var group: int = int(groups[walk]) if walk < groups.size() else -1
+		var last: int = walk
+		while group >= 0 and last + 1 < new_count and last + 1 < groups.size() and int(groups[last + 1]) == group:
+			last += 1
+		if last >= first - 1:
+			runs.append([walk, last])
+		walk = last + 1
+	# The row of every old card this touches, and what holds it, read off the controls; the list is drawn whole instead
+	# when they are not as this needs.
+	var wanted: Dictionary = {}
+	for old_index: int in range(maxi(first - 1, 0), old_count):
+		wanted[old_index] = true
+	for run: Variant in runs:
+		for member: int in range(int((run as Array)[0]), int((run as Array)[1]) + 1):
+			if member < first and int(order[member]) >= 0:
+				wanted[int(order[member])] = true
+	for key: Variant in rebuilt:
+		if int(key) < first:
+			wanted[int(key)] = true
+	var rows: Dictionary = {}
+	for key: Variant in wanted:
+		var surface: Control = _lines.get(int(key)) as Control
+		var row: Node = surface.get_parent() if surface != null and is_instance_valid(surface) else null
+		if not (row is _CardRow) or (row as _CardRow).card_index() != int(key):
+			return false
+		var home: Node = row.get_parent()
+		if home == null or (home != _list and not (home.get_parent() != null and home.get_parent().has_meta("band"))):
+			return false
+		rows[int(key)] = row
+	var claimed: Dictionary = {}
+	var run_home: Array = []
+	var top_walk: int = -1
+	for run: Variant in runs:
+		var run_first: int = int((run as Array)[0])
+		var run_last: int = int((run as Array)[1])
+		var home_node: Node = null
+		for member: int in range(run_first, run_last + 1):
+			var old_index: int = int(order[member])
+			if old_index < 0:
+				continue
+			var holder: Node = (rows[old_index] as Node).get_parent()
+			var top: Node = holder if holder == _list else holder.get_parent()
+			if run_last > run_first:
+				if holder == _list or (home_node != null and home_node != top):
+					return false
+				home_node = top
+			elif holder != _list:
+				return false
+		if run_last > run_first:
+			if home_node == null or claimed.has(home_node):
+				return false
+			claimed[home_node] = true
+			if home_node.get_index() <= top_walk:
+				return false
+			top_walk = home_node.get_index()
+		else:
+			var only: int = int(order[run_first])
+			if only >= 0:
+				var row_top: int = (rows[only] as Node).get_index()
+				if row_top <= top_walk:
+					return false
+				top_walk = row_top
+		run_home.append(home_node)
+	# Where the first of those runs starts in the list, read before anything is taken away.
+	var top_cursor: int = 1 if not _order_captions().is_empty() else 0
+	if first > 0:
+		var before_row: Node = rows[first - 1] as Node
+		var before_holder: Node = before_row.get_parent()
+		top_cursor = (before_row if before_holder == _list else before_holder.get_parent()).get_index()
+	# Every check passed: from here the list is changed.
+	var gone: Array = []
+	for old_index: int in range(first, old_count):
+		if not kept_of.has(old_index) or rebuilt.has(int(kept_of[old_index])):
+			gone.append(old_index)
+	for key: Variant in rebuilt:
+		if int(key) < first:
+			gone.append(int(key))
+	for old_index: Variant in gone:
+		_forget_card_controls(int(old_index))
+		var row: Node = rows.get(int(old_index)) as Node
+		if row != null:
+			var holder: Node = row.get_parent()
+			var place: int = row.get_index()
+			holder.remove_child(row)
+			row.queue_free()
+			# A card before the change that was open is drawn again where it stood.
+			if int(old_index) < first - 1:
+				var again: Control = _build_card(int(old_index))
+				holder.add_child(again)
+				holder.move_child(again, place)
+	# A band left with no card goes with them.
+	for child: Node in _list.get_children():
+		if child.has_meta("band") and not claimed.has(child) and child.get_child(0).get_child_count() <= 1:
+			_list.remove_child(child)
+			child.queue_free()
+	# The cards that stayed and now stand elsewhere carry their controls to their new numbers: every record is read
+	# before any is written, because a card's new number may be the number another card has just left.
+	var moved: Array = [_marks, _timing_marks, _lines, _titles, _head_tiles, _badges, _pictures, _picture_tints, _painted]
+	var shifts: Array = []
+	for new_index: int in range(first, new_count):
+		var old_index: int = int(order[new_index])
+		if old_index >= 0 and old_index != new_index and not rebuilt.has(new_index):
+			shifts.append([old_index, new_index])
+	for record: Dictionary in moved:
+		var carried: Dictionary = {}
+		for shift: Variant in shifts:
+			var from_index: int = int((shift as Array)[0])
+			if record.has(from_index):
+				carried[int((shift as Array)[1])] = record[from_index]
+				record.erase(from_index)
+		record.merge(carried, true)
+	for shift: Variant in shifts:
+		(rows[int((shift as Array)[0])] as _CardRow).set_card_index(int((shift as Array)[1]))
+	for run_number: int in range(runs.size()):
+		var run_first: int = int((runs[run_number] as Array)[0])
+		var run_last: int = int((runs[run_number] as Array)[1])
+		if run_last == run_first:
+			var old_card: int = int(order[run_first])
+			if old_card >= 0 and not rebuilt.has(run_first):
+				top_cursor = (rows[old_card] as Node).get_index() + 1
+			else:
+				var fresh: Control = _build_card(run_first)
+				_list.add_child(fresh)
+				_list.move_child(fresh, top_cursor)
+				top_cursor += 1
+			continue
+		var band: Node = run_home[run_number]
+		var stack: Node = band.get_child(0)
+		var inside: int = 1
+		for member: int in range(run_first, run_last + 1):
+			var old_card: int = int(order[member])
+			if old_card >= 0 and not rebuilt.has(member):
+				inside = (rows[old_card] as Node).get_index() + 1
+			else:
+				var fresh_card: Control = _build_card(member)
+				stack.add_child(fresh_card)
+				stack.move_child(fresh_card, inside)
+				inside += 1
+		var caption: Label = band.get_meta("caption") as Label
+		if caption != null and is_instance_valid(caption):
+			caption.text = _band_caption(run_first)
+		top_cursor = band.get_index() + 1
+	# Summaries that follow the cards around them are written again for the cards from the change on; the lines that
+	# are painted as selected, and the marks that are lit, are painted as they now are.
+	var warn: Variant = _schema.get("badge_warn")
+	var warns_by_place: bool = warn is Callable and (warn as Callable).is_valid() and (warn as Callable).get_argument_count() >= 3
+	var by_place: Dictionary = {}
+	var entries: Dictionary = {}
+	for new_index: int in range(first, new_count):
+		if not _lines.has(new_index) or rebuilt.has(new_index) or int(order[new_index]) < 0:
+			continue
+		var card: Dictionary = _cards[new_index]
+		var kind_word: String = str(card.get(str(_spec.get("kind_key", "kind")), ""))
+		# The schema's kinds are read once for the whole change, not once for each card: a schema may read them fresh.
+		if entries.is_empty():
+			for entry: Variant in EventSheetCardSchemas.kinds_of(_schema):
+				if entry is Dictionary and not entries.has(str((entry as Dictionary).get("kind", ""))):
+					entries[str((entry as Dictionary).get("kind", ""))] = entry
+		var found: Variant = entries.get(kind_word) if not card.has("card_script") else null
+		var line_entry: Dictionary = found if found is Dictionary else _entry_for(card)
+		if not by_place.has(kind_word):
+			var maker: Variant = line_entry.get("badge")
+			by_place[kind_word] = warns_by_place or (maker is Callable and (maker as Callable).is_valid() and (maker as Callable).get_argument_count() >= 3)
+		if bool(by_place[kind_word]):
+			_repaint_badge(new_index, line_entry)
+		if not _lit.is_empty():
+			_paint_mark(new_index)
+	var to_paint: Dictionary = {}
+	for index: Variant in _painted:
+		if bool(_painted[index]) != _selected.has(index):
+			to_paint[int(index)] = true
+	for index: Variant in _selected:
+		if not bool(_painted.get(index, false)):
+			to_paint[int(index)] = true
+	for index: Variant in to_paint:
+		_paint_line(int(index))
+	_show_fold()
+	return true
 
 
 func _entry_for(card: Dictionary) -> Dictionary:
@@ -1276,6 +1528,7 @@ func _rebuild() -> void:
 	_badges.clear()
 	_pictures.clear()
 	_picture_tints.clear()
+	_painted.clear()
 	_show_fold()
 	var nothing_to_add: bool = not editable or EventSheetCardSchemas.kinds_of(_schema).is_empty()
 	_add_button.disabled = nothing_to_add
@@ -1335,6 +1588,12 @@ func order_caption_texts() -> PackedStringArray:
 	return texts
 
 
+## What a band whose first card is at `first` says it is: cards that start together, or the ones that follow a Hold.
+func _band_caption(first: int) -> String:
+	var after_hold: bool = first > 0 and str((_cards[first - 1] as Dictionary).get(str(_spec.get("kind_key", "kind")), "")) == "hold_until"
+	return EventSheetL10n.translate("After the hold") if after_hold else EventSheetL10n.translate("Start together")
+
+
 ## Cards that start together on one faint band: a fill behind them and nothing drawn round them, so the groups
 ## read without unfolding anything.
 func _band_of(first: int, last: int) -> Control:
@@ -1346,8 +1605,8 @@ func _band_of(first: int, last: int) -> Control:
 	band.add_child(stack)
 	# A small quiet caption says what the band is: cards that start together, or the ones that follow a Hold.
 	var caption: Label = Label.new()
-	var after_hold: bool = first > 0 and str((_cards[first - 1] as Dictionary).get(str(_spec.get("kind_key", "kind")), "")) == "hold_until"
-	caption.text = EventSheetL10n.translate("After the hold") if after_hold else EventSheetL10n.translate("Start together")
+	band.set_meta("caption", caption)
+	caption.text = _band_caption(first)
 	caption.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 	caption.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
 	caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1380,7 +1639,7 @@ func _build_card(index: int) -> Control:
 	stack.add_theme_constant_override("separation", int(EventSheetLookStyle.px(4.0)))
 	surface.add_child(stack)
 	panel.add_child(surface)
-	stack.add_child(_build_header(index, card, entry, enabled))
+	stack.add_child(_build_header(index, card, entry, enabled, panel))
 	if bool(_unfolded.get(index, false)):
 		stack.add_child(_build_body(index, card, entry))
 	_paint_line(index)
@@ -1390,7 +1649,7 @@ func _build_card(index: int) -> Control:
 ## One card's line: a grip, then a field-coloured line holding the fold arrow, the kind in bold and the
 ## one grey sentence the schema computes for it, then a remove button. A right click on the line opens
 ## the card's menu (Duplicate, Copy, Paste over, Move ...); the same menu is inside the opened card.
-func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: bool) -> Control:
+func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: bool, row: _CardRow = null) -> Control:
 	var header: HBoxContainer = HBoxContainer.new()
 	header.add_child(_glyph_control("TripleBar", "⋮⋮", EventSheetL10n.translate("Drag to reorder.")))
 	var inside: HBoxContainer = header
@@ -1403,8 +1662,12 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 	else:
 		fold.text = "▾" if open else "▸"
 	fold.tooltip_text = EventSheetL10n.translate("Open this card.")
+	# What a control calls its card is read from the card's row when it is used, so a card that kept its controls through a
+	# change of the list (one before it went) is still the card it was.
+	var place: Callable = func() -> int: return row.card_index() if row != null else index
 	fold.pressed.connect(func() -> void:
-		_unfolded[index] = not bool(_unfolded.get(index, false))
+		var now: int = place.call()
+		_unfolded[now] = not bool(_unfolded.get(now, false))
 		_rebuild())
 	inside.add_child(fold)
 	if not EventSheetCardSchemas.enabled_key(_schema).is_empty():
@@ -1412,7 +1675,7 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 		box.button_pressed = enabled
 		box.disabled = not editable
 		box.tooltip_text = EventSheetL10n.translate("Untick to skip this card.")
-		box.toggled.connect(func(pressed: bool) -> void: set_card_enabled(index, pressed))
+		box.toggled.connect(func(pressed: bool) -> void: set_card_enabled(place.call(), pressed))
 		inside.add_child(box)
 	var head_tile: Variant = _schema.get("head_tile")
 	if head_tile is Callable and (head_tile as Callable).is_valid():
@@ -1456,13 +1719,13 @@ func _build_header(index: int, card: Dictionary, entry: Dictionary, enabled: boo
 		inside.add_child(_build_menu(index))
 	if _marks_wanted():
 		var mark: Button = EventSheetLookStyle.icon_button(&"Play", "▶", EventSheetL10n.translate("Play this card alone."))
-		mark.pressed.connect(func() -> void: _on_mark_pressed(index))
+		mark.pressed.connect(func() -> void: _on_mark_pressed(place.call()))
 		_marks[index] = mark
 		_paint_mark(index)
 		inside.add_child(mark)
 	var remove: Button = EventSheetLookStyle.icon_button(&"Remove", "✕", EventSheetL10n.translate("Remove this card."))
 	remove.disabled = not editable
-	remove.pressed.connect(func() -> void: remove_card(index))
+	remove.pressed.connect(func() -> void: remove_card(place.call()))
 	inside.add_child(remove)
 	return header
 
@@ -1976,9 +2239,15 @@ func _refresh_head(index: int) -> void:
 	var tile: Control = _head_tiles.get(index) as Control
 	if tile != null and is_instance_valid(tile) and tile.has_method("set_card"):
 		tile.call("set_card", card)
+	_repaint_badge(index)
+
+
+## Writes the summary beside a card's title again, and its colour, from the cards as they are now.
+func _repaint_badge(index: int, known: Dictionary = {}) -> void:
 	var badge: Label = _badges.get(index) as Label
 	if badge != null and is_instance_valid(badge):
-		var entry: Dictionary = _entry_for(card)
+		var card: Dictionary = _cards[index]
+		var entry: Dictionary = known if not known.is_empty() else _entry_for(card)
 		var badge_text: String = EventSheetCardSchemas.card_badge(entry, card, _cards, index)
 		badge.text = badge_text
 		badge.visible = not badge_text.is_empty()
@@ -2609,6 +2878,10 @@ class _CardRow:
 	## The position of the card this row was built for.
 	func card_index() -> int:
 		return _index
+
+	## The card this row holds moved to another place in the list while its controls stayed.
+	func set_card_index(index: int) -> void:
+		_index = index
 
 	func _gui_input(event: InputEvent) -> void:
 		var click: InputEventMouseButton = event as InputEventMouseButton

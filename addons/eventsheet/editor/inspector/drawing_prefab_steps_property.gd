@@ -572,7 +572,9 @@ class ShapeStepsView:
 			if not (steps[position] is Dictionary):
 				_junk.append([position, steps[position]])
 		_cards.set_steps(steps)
-		_table.call("set_value", steps)
+		# A table nobody is looking at is not drawn: showing it hands it the list first.
+		if _table_on:
+			_table.call("set_value", steps)
 
 
 	func get_steps() -> Array:
