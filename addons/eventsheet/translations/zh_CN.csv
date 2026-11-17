@@ -11175,3 +11175,53 @@ Swings past rest %d times and settles in about %s s.,"越过静止位置 %d 次,
 "Holds then snaps shut","保持后骤然合拢"
 "Wanders","游走"
 "Along an angle","沿一个角度"
+Replace scenes?,替换场景?
+"This writes over %d scene(s), starting with %s, and Ctrl+Z cannot take it back.","这会覆盖 %d 个场景(从 %s 开始),Ctrl+Z 无法撤销。"
+Each is kept in Sheet Backups first.,每个文件都会先保存到工作表备份中。
+Put them all back,全部恢复
+Puts every file the last Replace in Project wrote back as it was.,把上一次项目内替换写入的每个文件恢复成原样。
+Replace your unsaved changes?,替换未保存的更改?
+"Your unsaved changes to this sheet are replaced, and Ctrl+Z cannot bring them back. They are kept in Sheet Backups first.","此工作表中未保存的更改将被替换,Ctrl+Z 无法找回。它们会先保存到工作表备份中。"
+Restore,恢复
+"Bring %s to the front and press this again. The move is made in the open scene, so Ctrl+Z can take it back.","请先把 %s 切换到前台再按一次。移动在已打开的场景中进行,所以 Ctrl+Z 可以撤销。"
+The old file is in Sheet Backups.,旧文件在工作表备份中。
+Change the scene file?,修改场景文件?
+"%s is not open, so this rewrites the file and Ctrl+Z cannot take it back. The old file is kept in Sheet Backups.","%s 没有打开,所以这会重写该文件,Ctrl+Z 无法撤销。旧文件会保存到工作表备份中。"
+Move it,移动
+Waiting for your answer about %s.,正在等待你对 %s 的回答。
+Attach %s to %s,把 %s 挂到 %s
+The file with its markers is kept in Sheet Backups first. Ctrl+Z does not take this save back.,带标记的文件会先保存到工作表备份中。Ctrl+Z 无法撤销这次保存。
+Replace the pack?,替换该包?
+"%s already holds this pack, and exporting replaces its script, sheet and README. The old files are kept in Sheet Backups.","%s 已有这个包,导出会替换它的脚本、工作表和 README。旧文件会保存到工作表备份中。"
+"This makes a new global sheet and adds it to Project Settings > Globals. Ctrl+Z takes the variable out, not the global itself.","这会新建一个全局工作表并加入项目设置 > Globals。Ctrl+Z 只移除变量,不会移除全局本身。"
+Replace the file?,替换该文件?
+"%s already exists, and this replaces it. The old file is kept in Sheet Backups.","%s 已存在,这会替换它。旧文件会保存到工作表备份中。"
+"Writes EVENTSHEETS-VOCABULARY.md in the project folder, replacing the one there. Ctrl+Z does not take it back.","在项目文件夹中写入 EVENTSHEETS-VOCABULARY.md,并替换已有的那个。Ctrl+Z 无法撤销。"
+"%s already exists, and saving replaces it. The old file is kept in Sheet Backups.","%s 已存在,保存会替换它。旧文件会保存到工作表备份中。"
+"Closed files are saved at once, each with a backup in Sheet Backups. Ctrl+Z takes back an open tab, and Put them all back takes back the rest.","已关闭的文件会立即保存,每个都在工作表备份中留有备份。Ctrl+Z 撤销已打开的标签页,“全部恢复”撤销其余部分。"
+Event sheets - %d file(s),事件表 - %d 个文件
+"Scripts you wrote - %d file(s), not ticked until you tick them","你自己写的脚本 - %d 个文件,勾选前不会被选中"
+"Behaviour packs - %d file(s), never changed","行为包 - %d 个文件,绝不修改"
+...and %d more file(s),...还有 %d 个文件
+"%d file(s) have ""%s"": %d sheet(s) and %d script(s). Searched every sheet, .tres and .gd.","%d 个文件含有“%s”:%d 个工作表和 %d 个脚本。已搜索所有工作表,包括 .tres 和 .gd。"
+%d place(s),%d 处
+open in a tab,已在标签页中打开
+...and %d more place(s) in this file,...此文件中还有 %d 处
+"Replace in Project: %d file(s) written, %d open tab(s) changed (Ctrl+Z in each takes it back).","项目内替换:写入了 %d 个文件,更改了 %d 个已打开的标签页(在每个标签页中按 Ctrl+Z 可撤销)。"
+%d file(s) were left as they were because the result would not have opened or parsed.,"%d 个文件保持原样,因为结果无法打开或解析。"
+Put them all back is in Find in Project and in Sheet Backups.,“全部恢复”在项目内查找和工作表备份中。
+COULD NOT SAVE: %s (files unchanged).,无法保存:%s(文件未更改)。
+%d place(s) will change: %d sheet(s) and %d script(s) you wrote.,将更改 %d 处:%d 个工作表和 %d 个你自己写的脚本。
+There is no Replace in Project to put back.,没有可恢复的项目内替换。
+Put back %d file(s) as they were before the replace.,已把 %d 个文件恢复成替换前的样子。
+%d file(s) changed since and were left alone.,"%d 个文件在此之后被更改,已保持不动。"
+Each change is saved into %s at once. Ctrl+Z does not take it back.,每次更改都会立即保存到 %s。Ctrl+Z 无法撤销。
+"Ctrl+Z does not take an include out, and the version before it is in Sheet Backups.","Ctrl+Z 不会移除 include,之前的版本在工作表备份中。"
+The steps below write the catalog files at once. Ctrl+Z does not take them back.,下面的步骤会立即写入目录文件。Ctrl+Z 无法撤销。
+"Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable. It replaces the pages it wrote before, and Ctrl+Z does not take that back.","写出每个工作表对自己的说明页,然后重新读取手册,使新页面可被搜索。它会替换之前写出的页面,Ctrl+Z 无法撤销。"
+"Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it. It replaces the last drafts file, and Ctrl+Z does not take that back.","汇集到一个草稿文件中。不会对工作表或指南做任何修改:草稿在你移动它之前一直是草稿。它会替换上一次的草稿文件,Ctrl+Z 无法撤销。"
+"The whole Manual as plain HTML files, with its search, that open in a browser with no server. It replaces the files the last export wrote and leaves your own.","把整本手册导出为带搜索的普通 HTML 文件,无需服务器即可在浏览器中打开。它会替换上次导出写入的文件,并保留你自己的文件。"
+"One spreadsheet of every key your game asks for that a catalog does not answer yet. It replaces the last file it wrote, and Ctrl+Z does not take that back.","一份电子表格,列出你的游戏请求但目录尚未回答的所有键。它会替换上次写出的文件,Ctrl+Z 无法撤销。"
+Load Juice Player file,加载 Juice Player 文件
+Move %s under %s,把 %s 移到 %s 下面
+Attach event sheet to %s,把事件表挂到 %s

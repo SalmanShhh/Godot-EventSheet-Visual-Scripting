@@ -11175,3 +11175,53 @@ Swings past rest %d times and settles in about %s s.,"Проходит мимо 
 "Holds then snaps shut","Держится, затем резко сходится"
 "Wanders","Блуждает"
 "Along an angle","Вдоль угла"
+Replace scenes?,Заменить сцены?
+"This writes over %d scene(s), starting with %s, and Ctrl+Z cannot take it back.","Это перезапишет сцен: %d (начиная с %s), и Ctrl+Z этого не отменит."
+Each is kept in Sheet Backups first.,Каждая сначала сохраняется в резервных копиях листов.
+Put them all back,Вернуть всё
+Puts every file the last Replace in Project wrote back as it was.,"Возвращает каждый файл, записанный последней заменой в проекте, как он был."
+Replace your unsaved changes?,Заменить несохранённые изменения?
+"Your unsaved changes to this sheet are replaced, and Ctrl+Z cannot bring them back. They are kept in Sheet Backups first.","Несохранённые изменения этого листа будут заменены, и Ctrl+Z их не вернёт. Сначала они сохраняются в резервных копиях листов."
+Restore,Восстановить
+"Bring %s to the front and press this again. The move is made in the open scene, so Ctrl+Z can take it back.","Выведите %s на передний план и нажмите это снова. Перемещение выполняется в открытой сцене, поэтому Ctrl+Z может его отменить."
+The old file is in Sheet Backups.,Старый файл лежит в резервных копиях листов.
+Change the scene file?,Изменить файл сцены?
+"%s is not open, so this rewrites the file and Ctrl+Z cannot take it back. The old file is kept in Sheet Backups.","%s не открыта, поэтому файл будет переписан, и Ctrl+Z этого не отменит. Старый файл сохраняется в резервных копиях листов."
+Move it,Переместить
+Waiting for your answer about %s.,Ждём вашего ответа про %s.
+Attach %s to %s,Прикрепить %s к %s
+The file with its markers is kept in Sheet Backups first. Ctrl+Z does not take this save back.,Файл с маркерами сначала сохраняется в резервных копиях листов. Ctrl+Z не отменяет это сохранение.
+Replace the pack?,Заменить пакет?
+"%s already holds this pack, and exporting replaces its script, sheet and README. The old files are kept in Sheet Backups.","В %s уже есть этот пакет, и экспорт заменит его скрипт, лист и README. Старые файлы сохраняются в резервных копиях листов."
+"This makes a new global sheet and adds it to Project Settings > Globals. Ctrl+Z takes the variable out, not the global itself.","Это создаёт новый глобальный лист и добавляет его в Настройки проекта > Globals. Ctrl+Z убирает переменную, но не сам глобал."
+Replace the file?,Заменить файл?
+"%s already exists, and this replaces it. The old file is kept in Sheet Backups.","%s уже существует, и это его заменит. Старый файл сохраняется в резервных копиях листов."
+"Writes EVENTSHEETS-VOCABULARY.md in the project folder, replacing the one there. Ctrl+Z does not take it back.","Записывает EVENTSHEETS-VOCABULARY.md в папку проекта, заменяя имеющийся. Ctrl+Z этого не отменяет."
+"%s already exists, and saving replaces it. The old file is kept in Sheet Backups.","%s уже существует, и сохранение его заменит. Старый файл сохраняется в резервных копиях листов."
+"Closed files are saved at once, each with a backup in Sheet Backups. Ctrl+Z takes back an open tab, and Put them all back takes back the rest.","Закрытые файлы сохраняются сразу, каждый с копией в резервных копиях листов. Ctrl+Z отменяет открытую вкладку, а «Вернуть всё» отменяет остальное."
+Event sheets - %d file(s),Листы событий - файлов: %d
+"Scripts you wrote - %d file(s), not ticked until you tick them","Скрипты, написанные вами - файлов: %d, без отметки, пока вы её не поставите"
+"Behaviour packs - %d file(s), never changed","Пакеты поведения - файлов: %d, не меняются никогда"
+...and %d more file(s),...и ещё файлов: %d
+"%d file(s) have ""%s"": %d sheet(s) and %d script(s). Searched every sheet, .tres and .gd.","Файлов со строкой ""%s"": %d - листов: %d, скриптов: %d. Искали во всех листах, .tres и .gd."
+%d place(s),мест: %d
+open in a tab,открыт во вкладке
+...and %d more place(s) in this file,...и ещё мест в этом файле: %d
+"Replace in Project: %d file(s) written, %d open tab(s) changed (Ctrl+Z in each takes it back).","Замена в проекте: записано файлов - %d, изменено открытых вкладок - %d (Ctrl+Z в каждой её отменяет)."
+%d file(s) were left as they were because the result would not have opened or parsed.,"Файлов оставлено как есть, потому что результат не открылся бы или не разобрался: %d."
+Put them all back is in Find in Project and in Sheet Backups.,«Вернуть всё» есть в «Найти в проекте» и в резервных копиях листов.
+COULD NOT SAVE: %s (files unchanged).,НЕ УДАЛОСЬ СОХРАНИТЬ: %s (файлы не изменены).
+%d place(s) will change: %d sheet(s) and %d script(s) you wrote.,Изменится мест: %d - листов: %d и написанных вами скриптов: %d.
+There is no Replace in Project to put back.,"Нет замены в проекте, которую можно вернуть."
+Put back %d file(s) as they were before the replace.,Возвращено файлов: %d - как до замены.
+%d file(s) changed since and were left alone.,"Файлов, изменившихся с тех пор и оставленных как есть: %d."
+Each change is saved into %s at once. Ctrl+Z does not take it back.,Каждое изменение сразу сохраняется в %s. Ctrl+Z его не отменяет.
+"Ctrl+Z does not take an include out, and the version before it is in Sheet Backups.","Ctrl+Z не убирает include, а прежняя версия лежит в резервных копиях листов."
+The steps below write the catalog files at once. Ctrl+Z does not take them back.,Шаги ниже сразу записывают файлы каталога. Ctrl+Z их не отменяет.
+"Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable. It replaces the pages it wrote before, and Ctrl+Z does not take that back.","Записывает страницу, которую каждый лист пишет о себе, затем перечитывает Руководство, чтобы новые страницы находились поиском. Заменяет страницы, записанные раньше, и Ctrl+Z этого не отменяет."
+"Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it. It replaces the last drafts file, and Ctrl+Z does not take that back.","Собирается в один файл черновиков. Ничего не применяется к листу или руководству: черновик остаётся черновиком, пока вы его не перенесёте. Заменяет прошлый файл черновиков, и Ctrl+Z этого не отменяет."
+"The whole Manual as plain HTML files, with its search, that open in a browser with no server. It replaces the files the last export wrote and leaves your own.",Всё Руководство простыми HTML-файлами с поиском; открываются в браузере без сервера. Заменяет файлы прошлого экспорта и не трогает ваши.
+"One spreadsheet of every key your game asks for that a catalog does not answer yet. It replaces the last file it wrote, and Ctrl+Z does not take that back.","Одна таблица всех ключей, которые просит ваша игра и на которые пока не отвечает ни один каталог. Заменяет последний записанный файл, и Ctrl+Z этого не отменяет."
+Load Juice Player file,Загрузить файл Juice Player
+Move %s under %s,Переместить %s под %s
+Attach event sheet to %s,Прикрепить лист событий к %s

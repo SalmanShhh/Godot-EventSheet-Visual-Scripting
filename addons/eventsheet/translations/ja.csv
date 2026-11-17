@@ -11175,3 +11175,53 @@ Swings past rest %d times and settles in about %s s.,"静止位置を%d回行き
 "Holds then snaps shut","保持してから一気に閉じる"
 "Wanders","さまよう"
 "Along an angle","角度に沿って"
+Replace scenes?,シーンを置き換えますか?
+"This writes over %d scene(s), starting with %s, and Ctrl+Z cannot take it back.",%d 個のシーン(%s など)を上書きします。Ctrl+Z では元に戻せません。
+Each is kept in Sheet Backups first.,それぞれ先にシートのバックアップに保存されます。
+Put them all back,すべて元に戻す
+Puts every file the last Replace in Project wrote back as it was.,直前のプロジェクト内置換が書き込んだファイルを、すべて元の状態に戻します。
+Replace your unsaved changes?,保存していない変更を置き換えますか?
+"Your unsaved changes to this sheet are replaced, and Ctrl+Z cannot bring them back. They are kept in Sheet Backups first.",このシートの保存していない変更は置き換えられ、Ctrl+Z では戻せません。先にシートのバックアップに保存されます。
+Restore,復元
+"Bring %s to the front and press this again. The move is made in the open scene, so Ctrl+Z can take it back.",%s を前面に出してから、もう一度押してください。移動は開いているシーンで行うので、Ctrl+Z で元に戻せます。
+The old file is in Sheet Backups.,元のファイルはシートのバックアップにあります。
+Change the scene file?,シーンファイルを変更しますか?
+"%s is not open, so this rewrites the file and Ctrl+Z cannot take it back. The old file is kept in Sheet Backups.",%s は開いていないため、ファイルを書き換えます。Ctrl+Z では元に戻せません。元のファイルはシートのバックアップに保存されます。
+Move it,移動する
+Waiting for your answer about %s.,%s についてのお返事を待っています。
+Attach %s to %s,%s を %s にアタッチ
+The file with its markers is kept in Sheet Backups first. Ctrl+Z does not take this save back.,マーカー付きのファイルは先にシートのバックアップに保存されます。Ctrl+Z ではこの保存は戻せません。
+Replace the pack?,パックを置き換えますか?
+"%s already holds this pack, and exporting replaces its script, sheet and README. The old files are kept in Sheet Backups.",%s にはすでにこのパックがあり、エクスポートするとスクリプト、シート、README が置き換わります。古いファイルはシートのバックアップに保存されます。
+"This makes a new global sheet and adds it to Project Settings > Globals. Ctrl+Z takes the variable out, not the global itself.",新しいグローバルシートを作り、プロジェクト設定 > Globals に追加します。Ctrl+Z で消えるのは変数だけで、グローバル自体は残ります。
+Replace the file?,ファイルを置き換えますか?
+"%s already exists, and this replaces it. The old file is kept in Sheet Backups.",%s はすでに存在し、これで置き換わります。古いファイルはシートのバックアップに保存されます。
+"Writes EVENTSHEETS-VOCABULARY.md in the project folder, replacing the one there. Ctrl+Z does not take it back.",プロジェクトフォルダに EVENTSHEETS-VOCABULARY.md を書き込み、既存のものを置き換えます。Ctrl+Z では戻せません。
+"%s already exists, and saving replaces it. The old file is kept in Sheet Backups.",%s はすでに存在し、保存すると置き換わります。古いファイルはシートのバックアップに保存されます。
+"Closed files are saved at once, each with a backup in Sheet Backups. Ctrl+Z takes back an open tab, and Put them all back takes back the rest.",閉じているファイルはすぐに保存され、それぞれシートのバックアップに保存されます。Ctrl+Z は開いているタブを戻し、「すべて元に戻す」は残りを戻します。
+Event sheets - %d file(s),イベントシート - %d ファイル
+"Scripts you wrote - %d file(s), not ticked until you tick them",自分で書いたスクリプト - %d ファイル、チェックするまで未選択
+"Behaviour packs - %d file(s), never changed",ビヘイビアパック - %d ファイル、変更されません
+...and %d more file(s),...ほか %d ファイル
+"%d file(s) have ""%s"": %d sheet(s) and %d script(s). Searched every sheet, .tres and .gd.",%d ファイルに「%s」があります: シート %d 件、スクリプト %d 件。すべてのシート、.tres と .gd を検索しました。
+%d place(s),%d か所
+open in a tab,タブで開いています
+...and %d more place(s) in this file,...このファイルにあと %d か所
+"Replace in Project: %d file(s) written, %d open tab(s) changed (Ctrl+Z in each takes it back).",プロジェクト内置換: %d ファイルを書き込み、開いているタブ %d 件を変更しました(各タブで Ctrl+Z すると戻せます)。
+%d file(s) were left as they were because the result would not have opened or parsed.,%d ファイルは、結果が開けない、または解析できないため、そのままにしました。
+Put them all back is in Find in Project and in Sheet Backups.,「すべて元に戻す」はプロジェクト内検索とシートのバックアップにあります。
+COULD NOT SAVE: %s (files unchanged).,保存できませんでした: %s(ファイルは変更されていません)。
+%d place(s) will change: %d sheet(s) and %d script(s) you wrote.,%d か所が変わります: シート %d 件と、自分で書いたスクリプト %d 件。
+There is no Replace in Project to put back.,元に戻せるプロジェクト内置換はありません。
+Put back %d file(s) as they were before the replace.,置換前の状態に %d ファイルを戻しました。
+%d file(s) changed since and were left alone.,%d ファイルはその後変更されたため、そのままにしました。
+Each change is saved into %s at once. Ctrl+Z does not take it back.,変更は毎回すぐに %s に保存されます。Ctrl+Z では戻せません。
+"Ctrl+Z does not take an include out, and the version before it is in Sheet Backups.",Ctrl+Z ではインクルードは外せません。変更前のバージョンはシートのバックアップにあります。
+The steps below write the catalog files at once. Ctrl+Z does not take them back.,以下の手順はカタログファイルをすぐに書き込みます。Ctrl+Z では戻せません。
+"Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable. It replaces the pages it wrote before, and Ctrl+Z does not take that back.",各シートが自分について書くページを書き出し、新しいページを検索できるようマニュアルを読み直します。以前書いたページを置き換え、Ctrl+Z では戻せません。
+"Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it. It replaces the last drafts file, and Ctrl+Z does not take that back.",1 つの下書きファイルにまとめます。シートやガイドには何も適用されず、下書きは移すまで下書きのままです。前回の下書きファイルを置き換え、Ctrl+Z では戻せません。
+"The whole Manual as plain HTML files, with its search, that open in a browser with no server. It replaces the files the last export wrote and leaves your own.",マニュアル全体を、検索付きのシンプルな HTML ファイルとして書き出します。サーバーなしでブラウザで開けます。前回のエクスポートが書いたファイルを置き換え、あなた自身のファイルはそのままにします。
+"One spreadsheet of every key your game asks for that a catalog does not answer yet. It replaces the last file it wrote, and Ctrl+Z does not take that back.",ゲームが要求していて、まだどのカタログにも答えがないキーをすべて並べた表です。前回書いたファイルを置き換え、Ctrl+Z では戻せません。
+Load Juice Player file,Juice Player ファイルを読み込む
+Move %s under %s,%s を %s の下へ移動
+Attach event sheet to %s,イベントシートを %s にアタッチ

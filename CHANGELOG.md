@@ -7,6 +7,21 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 ### Added: a Chromatic Shake card splits the screen's colours apart along a direction
 
 The Juice Player has a new Screen card, Chromatic Shake, for the colour-offset trick: the red and the blue of the screen are pulled apart, one each way, for a moment on a hit, a dash or a landing, then close again. Its fields are Amount in pixels, Seconds, Ends (closes steadily, or holds then snaps shut), Direction (wanders, or along an angle) and, for an angle, the Angle in degrees. A new card starts at 12 pixels over 0.3 seconds, closing steadily and wandering, which is the classic hit. A small picture under the fields draws the split at the chosen amount and direction, with one sentence saying how far the colours part and when they are back together. The card plays through the Juice node's own Chromatic Shake row, so the no-flashing choice and the reduced-effects dial apply as they do to the row, and the player's strength scales the Amount; beside a Juice 3D node it plays over the 3D view. Stop, Restore, Skip To End and a player leaving the scene put the colours together at once. When no Juice node sits beside the player, a quiet amber line says so. The card menu's Show as GDScript writes the same effect by hand with a small screen shader. The Add box finds the card by chromatic, aberration, rgb, split and glitch. Cards saved before this one play exactly as they did.
+### Fixed: Replace in Project lists what it will change, leaves your own scripts alone by default, and can be put back whole
+
+The Find in Project window now shows the places a replace would change, file by file with a tick on each, and splits them into event sheets and scripts you wrote by hand. Sheets start ticked and scripts start unticked, so pressing the button with the defaults never rewrites a comment or a string in your own code. The count line gives sheets and scripts separately, and the list shows a bounded number of files and lines so a project of thousands of scripts stays smooth. A sheet open in a tab changes through that tab's own undo step (Ctrl+Z in the tab takes it back) instead of being rewritten behind its back. A file whose new text would not parse, or a sheet that would not reopen as exactly what is written, is left as it was and counted. Every file it writes is kept in a set of its own beside the sheet backups, and Put them all back, in the window and in Sheet Backups, restores exactly that set (a file you changed since is left alone).
+
+### Fixed: attaching, moving and Input Map changes are one Ctrl+Z step in Godot
+
+Tools > Attach to Selected Node, the Scene dock's Attach Event Sheet, the Doctor's Move it under, and adding a control to the Input Map (from the Doctor or the picker) each put one step on Godot's own undo, so Ctrl+Z takes them back. The Doctor's Move it under no longer reloads the open scene from disk: it moves the node in the scene as it is, so unsaved changes to the scene stay. When the scene is closed it asks first and keeps the old file in Sheet Backups. The Juice Player's Load from file is a step too.
+
+### Fixed: Export Addon, Restore, Save Moment, the grid and chunk files, and Include ask before they overwrite
+
+Each asks first, in two plain sentences, and keeps the old file in Sheet Backups. Restore from Sheet Backups also keeps your unsaved edits there before replacing them. The docs site export removes only the four files it writes at the top of its folder, so pages, stylesheets and scripts of your own that sit there are kept.
+
+### Added: quiet notes on the actions Ctrl+Z cannot take back
+
+Changing a behaviour's class name shows how far the rename reaches, Save Studio says its fields are saved into the scene at once, the translation steps say they write the catalogs at once, the docs chores say they replace what they wrote last time, Include and Resolve Conflict say where the old version is kept, a new global sheet says Ctrl+Z removes the variable and not the global, and the Vocabulary Doc item says it replaces the file. All new words are in the nine translation files.
 
 ### Added: a spawn row's Scene field offers the scenes the sheet already holds, the Variable window has a Scene door, and the Doctor notes an empty scene slot
 

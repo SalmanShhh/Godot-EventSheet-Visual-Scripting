@@ -11175,3 +11175,53 @@ Swings past rest %d times and settles in about %s s.,"Se pasa del reposo %d vece
 "Holds then snaps shut","Se mantiene y se cierra de golpe"
 "Wanders","Vaga"
 "Along an angle","A lo largo de un ángulo"
+Replace scenes?,¿Reemplazar escenas?
+"This writes over %d scene(s), starting with %s, and Ctrl+Z cannot take it back.","Esto sobrescribe %d escena(s), empezando por %s, y Ctrl+Z no puede deshacerlo."
+Each is kept in Sheet Backups first.,Cada una se guarda antes en las copias de hojas.
+Put them all back,Devolver todo
+Puts every file the last Replace in Project wrote back as it was.,Devuelve cada archivo que escribió el último Reemplazar en el proyecto tal como estaba.
+Replace your unsaved changes?,¿Reemplazar tus cambios sin guardar?
+"Your unsaved changes to this sheet are replaced, and Ctrl+Z cannot bring them back. They are kept in Sheet Backups first.",Tus cambios sin guardar en esta hoja se reemplazan y Ctrl+Z no puede recuperarlos. Antes se guardan en las copias de hojas.
+Restore,Restaurar
+"Bring %s to the front and press this again. The move is made in the open scene, so Ctrl+Z can take it back.","Trae %s al frente y vuelve a pulsar esto. El movimiento se hace en la escena abierta, así que Ctrl+Z puede deshacerlo."
+The old file is in Sheet Backups.,El archivo anterior está en las copias de hojas.
+Change the scene file?,¿Cambiar el archivo de escena?
+"%s is not open, so this rewrites the file and Ctrl+Z cannot take it back. The old file is kept in Sheet Backups.","%s no está abierta, así que esto reescribe el archivo y Ctrl+Z no puede deshacerlo. El archivo anterior se guarda en las copias de hojas."
+Move it,Moverlo
+Waiting for your answer about %s.,Esperando tu respuesta sobre %s.
+Attach %s to %s,Adjuntar %s a %s
+The file with its markers is kept in Sheet Backups first. Ctrl+Z does not take this save back.,El archivo con sus marcadores se guarda antes en las copias de hojas. Ctrl+Z no deshace este guardado.
+Replace the pack?,¿Reemplazar el paquete?
+"%s already holds this pack, and exporting replaces its script, sheet and README. The old files are kept in Sheet Backups.","%s ya contiene este paquete y exportar reemplaza su script, su hoja y su README. Los archivos anteriores se guardan en las copias de hojas."
+"This makes a new global sheet and adds it to Project Settings > Globals. Ctrl+Z takes the variable out, not the global itself.","Esto crea una hoja global nueva y la añade a Ajustes del proyecto > Globals. Ctrl+Z quita la variable, no el global en sí."
+Replace the file?,¿Reemplazar el archivo?
+"%s already exists, and this replaces it. The old file is kept in Sheet Backups.",%s ya existe y esto lo reemplaza. El archivo anterior se guarda en las copias de hojas.
+"Writes EVENTSHEETS-VOCABULARY.md in the project folder, replacing the one there. Ctrl+Z does not take it back.","Escribe EVENTSHEETS-VOCABULARY.md en la carpeta del proyecto, reemplazando el que haya. Ctrl+Z no lo deshace."
+"%s already exists, and saving replaces it. The old file is kept in Sheet Backups.",%s ya existe y guardar lo reemplaza. El archivo anterior se guarda en las copias de hojas.
+"Closed files are saved at once, each with a backup in Sheet Backups. Ctrl+Z takes back an open tab, and Put them all back takes back the rest.","Los archivos cerrados se guardan al instante, cada uno con una copia en las copias de hojas. Ctrl+Z deshace una pestaña abierta y Devolver todo deshace el resto."
+Event sheets - %d file(s),Hojas de eventos - %d archivo(s)
+"Scripts you wrote - %d file(s), not ticked until you tick them","Scripts que escribiste - %d archivo(s), sin marcar hasta que los marques"
+"Behaviour packs - %d file(s), never changed","Paquetes de comportamiento - %d archivo(s), nunca se cambian"
+...and %d more file(s),...y %d archivo(s) más
+"%d file(s) have ""%s"": %d sheet(s) and %d script(s). Searched every sheet, .tres and .gd.","%d archivo(s) tienen ""%s"": %d hoja(s) y %d script(s). Se buscó en todas las hojas, .tres y .gd."
+%d place(s),%d lugar(es)
+open in a tab,abierto en una pestaña
+...and %d more place(s) in this file,...y %d lugar(es) más en este archivo
+"Replace in Project: %d file(s) written, %d open tab(s) changed (Ctrl+Z in each takes it back).","Reemplazar en el proyecto: %d archivo(s) escritos, %d pestaña(s) abiertas cambiadas (Ctrl+Z en cada una lo deshace)."
+%d file(s) were left as they were because the result would not have opened or parsed.,%d archivo(s) se dejaron como estaban porque el resultado no se habría abierto o analizado.
+Put them all back is in Find in Project and in Sheet Backups.,Devolver todo está en Buscar en el proyecto y en las copias de hojas.
+COULD NOT SAVE: %s (files unchanged).,NO SE PUDO GUARDAR: %s (archivos sin cambios).
+%d place(s) will change: %d sheet(s) and %d script(s) you wrote.,%d lugar(es) cambiarán: %d hoja(s) y %d script(s) que escribiste.
+There is no Replace in Project to put back.,No hay ningún Reemplazar en el proyecto que devolver.
+Put back %d file(s) as they were before the replace.,Se devolvieron %d archivo(s) tal como estaban antes del reemplazo.
+%d file(s) changed since and were left alone.,%d archivo(s) cambiaron desde entonces y se dejaron como están.
+Each change is saved into %s at once. Ctrl+Z does not take it back.,Cada cambio se guarda en %s al instante. Ctrl+Z no lo deshace.
+"Ctrl+Z does not take an include out, and the version before it is in Sheet Backups.","Ctrl+Z no quita un include, y la versión anterior está en las copias de hojas."
+The steps below write the catalog files at once. Ctrl+Z does not take them back.,Los pasos de abajo escriben los archivos de catálogo al instante. Ctrl+Z no los deshace.
+"Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable. It replaces the pages it wrote before, and Ctrl+Z does not take that back.",Escribe la página que cada hoja escribe sobre sí misma y luego vuelve a leer el Manual para que las páginas nuevas se puedan buscar. Reemplaza las páginas que escribió antes y Ctrl+Z no lo deshace.
+"Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it. It replaces the last drafts file, and Ctrl+Z does not take that back.",Reunido en un solo archivo de borradores. No se aplica nada a una hoja ni a una guía: un borrador sigue siendo un borrador hasta que lo muevas. Reemplaza el último archivo de borradores y Ctrl+Z no lo deshace.
+"The whole Manual as plain HTML files, with its search, that open in a browser with no server. It replaces the files the last export wrote and leaves your own.","Todo el Manual como archivos HTML sencillos, con su búsqueda, que se abren en un navegador sin servidor. Reemplaza los archivos de la última exportación y respeta los tuyos."
+"One spreadsheet of every key your game asks for that a catalog does not answer yet. It replaces the last file it wrote, and Ctrl+Z does not take that back.",Una hoja de cálculo con cada clave que tu juego pide y que un catálogo aún no responde. Reemplaza el último archivo que escribió y Ctrl+Z no lo deshace.
+Load Juice Player file,Cargar archivo de Juice Player
+Move %s under %s,Mover %s bajo %s
+Attach event sheet to %s,Adjuntar hoja de eventos a %s

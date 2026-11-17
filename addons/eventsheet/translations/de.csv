@@ -11175,3 +11175,53 @@ Swings past rest %d times and settles in about %s s.,"Schwingt %d-mal über die 
 "Holds then snaps shut","Hält, dann schnappt zu"
 "Wanders","Wandert"
 "Along an angle","Entlang eines Winkels"
+Replace scenes?,Szenen ersetzen?
+"This writes over %d scene(s), starting with %s, and Ctrl+Z cannot take it back.","Dies überschreibt %d Szene(n), angefangen mit %s, und Strg+Z kann es nicht zurücknehmen."
+Each is kept in Sheet Backups first.,Jede wird vorher in den Sheet-Backups aufbewahrt.
+Put them all back,Alle zurücksetzen
+Puts every file the last Replace in Project wrote back as it was.,"Setzt jede Datei, die das letzte Ersetzen im Projekt geschrieben hat, wieder so zurück, wie sie war."
+Replace your unsaved changes?,Ungespeicherte Änderungen ersetzen?
+"Your unsaved changes to this sheet are replaced, and Ctrl+Z cannot bring them back. They are kept in Sheet Backups first.","Deine ungespeicherten Änderungen an diesem Sheet werden ersetzt, und Strg+Z kann sie nicht zurückholen. Sie werden vorher in den Sheet-Backups aufbewahrt."
+Restore,Wiederherstellen
+"Bring %s to the front and press this again. The move is made in the open scene, so Ctrl+Z can take it back.","Hol %s in den Vordergrund und drücke das hier erneut. Die Verschiebung geschieht in der offenen Szene, daher kann Strg+Z sie zurücknehmen."
+The old file is in Sheet Backups.,Die alte Datei liegt in den Sheet-Backups.
+Change the scene file?,Szenendatei ändern?
+"%s is not open, so this rewrites the file and Ctrl+Z cannot take it back. The old file is kept in Sheet Backups.","%s ist nicht geöffnet, daher wird die Datei neu geschrieben, und Strg+Z kann es nicht zurücknehmen. Die alte Datei wird in den Sheet-Backups aufbewahrt."
+Move it,Verschieben
+Waiting for your answer about %s.,Warte auf deine Antwort zu %s.
+Attach %s to %s,%s an %s anhängen
+The file with its markers is kept in Sheet Backups first. Ctrl+Z does not take this save back.,Die Datei mit ihren Markierungen wird vorher in den Sheet-Backups aufbewahrt. Strg+Z nimmt dieses Speichern nicht zurück.
+Replace the pack?,Das Paket ersetzen?
+"%s already holds this pack, and exporting replaces its script, sheet and README. The old files are kept in Sheet Backups.","%s enthält dieses Paket bereits, und der Export ersetzt Skript, Sheet und README. Die alten Dateien werden in den Sheet-Backups aufbewahrt."
+"This makes a new global sheet and adds it to Project Settings > Globals. Ctrl+Z takes the variable out, not the global itself.","Das legt ein neues globales Sheet an und trägt es in Projekteinstellungen > Globals ein. Strg+Z nimmt die Variable heraus, nicht das Global selbst."
+Replace the file?,Die Datei ersetzen?
+"%s already exists, and this replaces it. The old file is kept in Sheet Backups.","%s existiert bereits, und das hier ersetzt sie. Die alte Datei wird in den Sheet-Backups aufbewahrt."
+"Writes EVENTSHEETS-VOCABULARY.md in the project folder, replacing the one there. Ctrl+Z does not take it back.",Schreibt EVENTSHEETS-VOCABULARY.md in den Projektordner und ersetzt die vorhandene. Strg+Z nimmt das nicht zurück.
+"%s already exists, and saving replaces it. The old file is kept in Sheet Backups.","%s existiert bereits, und das Speichern ersetzt sie. Die alte Datei wird in den Sheet-Backups aufbewahrt."
+"Closed files are saved at once, each with a backup in Sheet Backups. Ctrl+Z takes back an open tab, and Put them all back takes back the rest.","Geschlossene Dateien werden sofort gespeichert, jede mit einem Backup in den Sheet-Backups. Strg+Z nimmt einen offenen Tab zurück, und Alle zurücksetzen nimmt den Rest zurück."
+Event sheets - %d file(s),Event-Sheets - %d Datei(en)
+"Scripts you wrote - %d file(s), not ticked until you tick them","Von dir geschriebene Skripte - %d Datei(en), nicht angehakt, bis du sie ankreuzt"
+"Behaviour packs - %d file(s), never changed","Verhaltenspakete - %d Datei(en), nie geändert"
+...and %d more file(s),...und %d weitere Datei(en)
+"%d file(s) have ""%s"": %d sheet(s) and %d script(s). Searched every sheet, .tres and .gd.","%d Datei(en) enthalten ""%s"": %d Sheet(s) und %d Skript(e). Jedes Sheet durchsucht, .tres und .gd."
+%d place(s),%d Stelle(n)
+open in a tab,in einem Tab geöffnet
+...and %d more place(s) in this file,...und %d weitere Stelle(n) in dieser Datei
+"Replace in Project: %d file(s) written, %d open tab(s) changed (Ctrl+Z in each takes it back).","Ersetzen im Projekt: %d Datei(en) geschrieben, %d offene(r) Tab(s) geändert (Strg+Z in jedem nimmt es zurück)."
+%d file(s) were left as they were because the result would not have opened or parsed.,"%d Datei(en) blieben unverändert, weil das Ergebnis sich nicht hätte öffnen oder parsen lassen."
+Put them all back is in Find in Project and in Sheet Backups.,Alle zurücksetzen findest du in Im Projekt suchen und in den Sheet-Backups.
+COULD NOT SAVE: %s (files unchanged).,KONNTE NICHT SPEICHERN: %s (Dateien unverändert).
+%d place(s) will change: %d sheet(s) and %d script(s) you wrote.,%d Stelle(n) ändern sich: %d Sheet(s) und %d von dir geschriebene(s) Skript(e).
+There is no Replace in Project to put back.,Es gibt kein Ersetzen im Projekt zum Zurücksetzen.
+Put back %d file(s) as they were before the replace.,"%d Datei(en) so zurückgesetzt, wie sie vor dem Ersetzen waren."
+%d file(s) changed since and were left alone.,%d Datei(en) haben sich seitdem geändert und blieben unberührt.
+Each change is saved into %s at once. Ctrl+Z does not take it back.,Jede Änderung wird sofort in %s gespeichert. Strg+Z nimmt sie nicht zurück.
+"Ctrl+Z does not take an include out, and the version before it is in Sheet Backups.","Strg+Z nimmt ein Include nicht heraus, und die Version davor liegt in den Sheet-Backups."
+The steps below write the catalog files at once. Ctrl+Z does not take them back.,Die Schritte unten schreiben die Katalogdateien sofort. Strg+Z nimmt sie nicht zurück.
+"Writes the page each sheet writes about itself, then re-reads the Manual so the new pages are searchable. It replaces the pages it wrote before, and Ctrl+Z does not take that back.","Schreibt die Seite, die jedes Sheet über sich selbst schreibt, und liest dann das Handbuch neu ein, damit die neuen Seiten durchsuchbar sind. Es ersetzt die Seiten, die es zuvor geschrieben hat, und Strg+Z nimmt das nicht zurück."
+"Collected into one drafts file. Nothing is applied to a sheet or a guide - a draft stays a draft until you move it. It replaces the last drafts file, and Ctrl+Z does not take that back.","In einer Entwurfsdatei gesammelt. Nichts wird auf ein Sheet oder eine Anleitung angewendet - ein Entwurf bleibt ein Entwurf, bis du ihn verschiebst. Es ersetzt die letzte Entwurfsdatei, und Strg+Z nimmt das nicht zurück."
+"The whole Manual as plain HTML files, with its search, that open in a browser with no server. It replaces the files the last export wrote and leaves your own.","Das ganze Handbuch als einfache HTML-Dateien mit Suche, die sich ohne Server im Browser öffnen. Es ersetzt die Dateien des letzten Exports und lässt deine eigenen in Ruhe."
+"One spreadsheet of every key your game asks for that a catalog does not answer yet. It replaces the last file it wrote, and Ctrl+Z does not take that back.","Eine Tabelle mit jedem Schlüssel, den dein Spiel anfragt und den ein Katalog noch nicht beantwortet. Es ersetzt die zuletzt geschriebene Datei, und Strg+Z nimmt das nicht zurück."
+Load Juice Player file,Juice-Player-Datei laden
+Move %s under %s,%s unter %s verschieben
+Attach event sheet to %s,Event-Sheet an %s anhängen
