@@ -96,16 +96,91 @@ static func shape_at(card: Dictionary, through: float) -> float:
 ## The drawing of the shape: left is the start of the shake, right is the end, and the height is how much
 ## of the amount is felt. A card with none of the keys draws nothing, because its shake has no shape of its own.
 static func shape_strip(card: Dictionary, _now: Callable, _edited: Object) -> Control:
-	var strip: Strip = Strip.new()
-	strip.card = card
-	strip.visible = not is_old_card(card)
-	strip.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled(24))
-	strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	return strip
+	var box: ShapeBox = ShapeBox.new()
+	box.setup(card)
+	return box
+
+
+## The curve a card names, the one Godot keeps in memory for that file (so an edit made in the Inspector's
+## curve editor is the one this reads), or null when it names none or the file is not there.
+static func curve_of(card: Dictionary) -> Curve:
+	var kept: String = str(card.get("curve", "")).strip_edges()
+	return load(kept) as Curve if not kept.is_empty() and ResourceLoader.exists(kept) else null
+
+
+## Whether the curve in memory differs from the curve in its file. The game plays the file, so a curve that has
+## been edited and not saved is not what the game will shake by.
+static func has_unsaved_edits(card: Dictionary) -> bool:
+	var live: Curve = curve_of(card)
+	if live == null:
+		return false
+	var kept: String = str(card.get("curve", "")).strip_edges()
+	var saved: Curve = ResourceLoader.load(kept, "Curve", ResourceLoader.CACHE_MODE_IGNORE) as Curve
+	return saved != null and _signature(live) != _signature(saved)
+
+
+## Everything about a curve that changes what it draws, as one text, so two curves can be told apart.
+static func _signature(curve: Curve) -> String:
+	var parts: PackedStringArray = PackedStringArray([str(curve.min_value), str(curve.max_value), str(curve.min_domain), str(curve.max_domain), str(curve.point_count)])
+	for index: int in range(curve.point_count):
+		parts.append("%s %s %s %d %d" % [curve.get_point_position(index), curve.get_point_left_tangent(index), curve.get_point_right_tangent(index), curve.get_point_left_mode(index), curve.get_point_right_mode(index)])
+	return "|".join(parts)
+
+
+## The one quiet sentence under the drawing when the curve has edits that are not saved to its file.
+static func unsaved_line(card: Dictionary) -> String:
+	if not has_unsaved_edits(card):
+		return ""
+	return EventSheetL10n.translate("This curve has changes that are not saved to its file yet. The game plays the saved file.")
 
 
 static func _plain(value: float) -> String:
 	return str(snappedf(value, 0.001)).trim_suffix(".0")
+
+
+## The drawing and the sentence under it. It redraws when the curve it follows changes, so the bars are the shape
+## the curve has now, and it says so when the curve has edits the file does not.
+class ShapeBox:
+	extends VBoxContainer
+
+	var strip: Strip = null
+	var note: Label = null
+	var card: Dictionary = {}
+	var curve: Curve = null
+	## How many times the curve told this it changed, so a test can see that it was listening.
+	var refreshes: int = 0
+
+	func setup(shaken: Dictionary) -> void:
+		card = shaken
+		var shake_fields: Script = load("res://addons/eventsheet/editor/inspector/juice_shake_fields.gd") as Script
+		strip = Strip.new()
+		strip.card = card
+		strip.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled(24))
+		strip.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		add_child(strip)
+		note = EventSheetLookStyle.message_line("", EventSheetLookStyle.Tone.WARNING)
+		note.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+		note.hide()
+		add_child(note)
+		visible = not bool(shake_fields.call("is_old_card", card))
+		curve = shake_fields.call("curve_of", card) as Curve
+		if curve != null:
+			curve.changed.connect(_on_curve_changed)
+		_show_note()
+
+	func _on_curve_changed() -> void:
+		refreshes += 1
+		strip.queue_redraw()
+		_show_note()
+
+	func _show_note() -> void:
+		var shake_fields: Script = load("res://addons/eventsheet/editor/inspector/juice_shake_fields.gd") as Script
+		note.text = str(shake_fields.call("unsaved_line", card))
+		note.visible = not note.text.is_empty()
+
+	func _exit_tree() -> void:
+		if curve != null and curve.changed.is_connected(_on_curve_changed):
+			curve.changed.disconnect(_on_curve_changed)
 
 
 ## The bars.
