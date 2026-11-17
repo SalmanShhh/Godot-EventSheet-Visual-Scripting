@@ -341,7 +341,7 @@ func _read_path(path: String, fmt: String) -> Dictionary:
 			var eq: int = line.find("=")
 			if not in_section or eq < 0:
 				continue
-			var ini_key: String = line.substr(0, eq).strip_edges()
+			var ini_key: String = _ini_key_in(line.substr(0, eq).strip_edges())
 			var raw: String = line.substr(eq + 1).strip_edges()
 			var parsed: Variant = str_to_var(raw)
 			data[ini_key] = parsed if parsed != null or raw == "null" else raw
@@ -384,6 +384,68 @@ func _read_path(path: String, fmt: String) -> Dictionary:
 # XML entities on write; XMLParser un-escapes on read.
 func _xml_escape(text: String) -> String:
 	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
+
+# var_to_str text on ONE line, for the line-based formats (csv, ini, xml). The newlines it pretty-prints
+# between container elements are dropped; a newline, a carriage return or another control character
+# INSIDE a text becomes its escape (\n, \r, \u0001), which str_to_var reads back as the character. The
+# text is followed quote by quote, with its backslash escapes kept as they are, so a text that merely
+# contains a backslash and an n is not turned into a newline. Text with nothing to change is returned
+# as it came, which is what keeps a file written for older data byte for byte what it was.
+func _one_line(text: String) -> String:
+	if text.find("\n") < 0 and text.find("\r") < 0 and not _has_control(text):
+		return text
+	var out: PackedStringArray = PackedStringArray()
+	var in_text: bool = false
+	var at: int = 0
+	while at < text.length():
+		var letter: String = text[at]
+		if in_text:
+			if letter == "\\" and at + 1 < text.length():
+				out.append(letter + text[at + 1])
+				at += 2
+				continue
+			if letter == "\"":
+				in_text = false
+				out.append(letter)
+			elif letter == "\n":
+				out.append("\\n")
+			elif letter == "\r":
+				out.append("\\r")
+			elif letter.unicode_at(0) < 32 and letter != "\t":
+				out.append("\\u%04x" % letter.unicode_at(0))
+			else:
+				out.append(letter)
+		else:
+			if letter == "\"":
+				in_text = true
+				out.append(letter)
+			elif letter != "\n" and letter != "\r":
+				out.append(letter)
+		at += 1
+	return "".join(out)
+
+func _has_control(text: String) -> bool:
+	for index: int in range(text.length()):
+		var code: int = text.unicode_at(index)
+		if code < 32 and code != 9:
+			return true
+	return false
+
+# An INI key that reads back as itself: the percent sign, the equals sign, line breaks, and a first
+# character the format reads as a comment or a section are written as %XX; spaces at either end too,
+# which the reader trims. A key with none of those is written as it is, as older files have it.
+func _ini_key_out(key: String) -> String:
+	var out: String = key.replace("%", "%25").replace("=", "%3D").replace("\n", "%0A").replace("\r", "%0D")
+	if out.begins_with(";") or out.begins_with("#") or out.begins_with("[") or out.begins_with(" ") or out.begins_with("\t"):
+		out = "%%%02X" % out.unicode_at(0) + out.substr(1)
+	if out.ends_with(" ") or out.ends_with("\t"):
+		out = out.substr(0, out.length() - 1) + "%%%02X" % out.unicode_at(out.length() - 1)
+	return out
+
+func _ini_key_in(key: String) -> String:
+	if not key.contains("%"):
+		return key
+	return key.replace("%0A", "\n").replace("%0D", "\r").replace("%3D", "=").replace("%3B", ";").replace("%23", "#").replace("%5B", "[").replace("%20", " ").replace("%09", "\t").replace("%25", "%")
 
 # Best-effort format detection for a save file. The extension is authoritative for
 # the pack's own files (config and ini are otherwise identical on disk); an unknown
@@ -467,11 +529,10 @@ func _write_file(data: Dictionary, stamp_current_version: bool = false) -> bool:
 		var file: FileAccess = _open_write(tmp)
 		if file == null:
 			return false
-		# var_to_str escapes newlines inside strings, so the only real newlines are the
-		# ones it pretty-prints between container elements - stripping those keeps each
-		# value on one CSV row without a second escape layer to conflict with str_to_var.
+		# One row per key: _one_line keeps every value on a single line and a newline INSIDE a text as
+		# its own escape, which str_to_var reads back as the newline.
 		for key: Variant in data.keys():
-			file.store_csv_line(PackedStringArray([str(key), var_to_str(data[key]).replace("\n", "")]))
+			file.store_csv_line(PackedStringArray([str(key), _one_line(var_to_str(data[key]))]))
 		var write_ok: bool = file.get_error() == Error.OK
 		file.close()
 		if not write_ok:
@@ -480,11 +541,12 @@ func _write_file(data: Dictionary, stamp_current_version: bool = false) -> bool:
 		var file: FileAccess = _open_write(tmp)
 		if file == null:
 			return false
-		# A plain, portable [section] + key=value INI; var_to_str keeps each value
-		# on one line and exact-typed, so other INI tools can read the structure.
+		# A plain, portable [section] + key=value INI; each value is on one line and exact-typed, so other
+		# INI tools can read the structure, and a key with a character the format reads as its own
+		# (an equals sign, a leading bracket) is written escaped.
 		file.store_line("[%s]" % section)
 		for key: Variant in data.keys():
-			file.store_line("%s=%s" % [str(key), var_to_str(data[key]).replace("\n", "")])
+			file.store_line("%s=%s" % [_ini_key_out(str(key)), _one_line(var_to_str(data[key]))])
 		var write_ok: bool = file.get_error() == Error.OK
 		file.close()
 		if not write_ok:
@@ -496,7 +558,7 @@ func _write_file(data: Dictionary, stamp_current_version: bool = false) -> bool:
 		file.store_line("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
 		file.store_line("<save section=\"%s\">" % _xml_escape(section))
 		for key: Variant in data.keys():
-			file.store_line("\t<entry key=\"%s\">%s</entry>" % [_xml_escape(str(key)), _xml_escape(var_to_str(data[key]).replace("\n", ""))])
+			file.store_line("\t<entry key=\"%s\">%s</entry>" % [_xml_escape(str(key)), _xml_escape(_one_line(var_to_str(data[key])))])
 		file.store_line("</save>")
 		var write_ok: bool = file.get_error() == Error.OK
 		file.close()
