@@ -60,6 +60,20 @@ The row's value box now follows the field named in the box above it, as the card
 
 The open state of a card's Timing foldout was remembered by position, so after a card above it was moved or removed a different card showed open. It now moves with its card. A card dragged in a card list hung to the lower right of the pointer and was cut off by the Inspector's edge; it now stays inside the width of the list. Chance in a card's Timing foldout showed 100.0 where it holds a whole number and now shows 100. Save Moment File's two warnings are one function and their sentences are pinned by a test.
 
+### Changed: a loop, a filter and a handler you place now read the way you would type them
+
+Four lines a placed row used to write the long way now read plainly. A Budgeted For Each with a count writes `if __done_x >= 90:` and no deadline local (a time alone writes only the time test, both write both; they used to write one long guard that tested both whichever was set). A For Each filter that is one comparison writes `if star.position.y <= 560.0:` where it wrote `if not (star.position.y > 560.0):`, and a single filter condition is no longer bracketed twice (`not ((a > b))`); anything that is not one plain comparison keeps its `not (...)`. A handler on a plain node path connects with `$RedCard.body_entered.connect(...)` where it wrote `get_node("RedCard").body_entered.connect(...)` (a path with a space, `..` or `%` keeps `get_node`). The flip reads a NaN the way an inverted comparison row already does.
+
+Existing files do not move. Opening a `.gd` or a `.tres` and saving it untouched writes the same bytes, a loop, filter or handler saved before keeps what it wrote, and a script you wrote by hand keeps its own lines. The swarm, starfall, top_down_shooter and boomer_level showcases are regenerated this way.
+
+### Changed: each showcase says what it is as its class description
+
+The thirty showcases used to end on a bold-titled `#` note that only the sheet could read. The description now sits under `extends` as the class description, where Godot shows it as the class's own documentation (the Create Node tooltip and the script's Help page). Five scripts that already had a one-line description keep it as the first paragraph. The start page reads either spelling, so a script of your own that closes on a note still gets its card. The boomer_level clock reads `if not (level_over):` where it read `if level_over == false:`.
+
+### Changed: a behaviour with no host says which node it is
+
+The warning a behaviour writes when it has no node to act on ends `This one is at <path>.` now, so a scene with forty of one behaviour says which one is wrong. A behaviour you create writes it; a behaviour file written before opens and saves back byte for byte with the sentence it has. The 84 shipped packs that carry the warning are rebuilt with it, one line each.
+
 ### Added: every kind of Juice card has an icon, drawn in Godot's style
 
 The 41 kinds of Juice card and the default for a card of your own each have a 16 x 16 drawing in Godot's neutral icon ink (`eventsheet_addons/juice/cards/<kind>.svg`, made by `tools/build_icons.gd` from a glyph source in `tools/pack_builders/icons/cards/`, so a project that has the pack has them). The card line draws it where the small family square was, tinted with the family colour (the same colours as before; every family still reads 3:1 or better against the card line on a dark and on a light editor, as the colour and as the tinted drawing, and a test pins that), on folded and open cards; a muted card's icon is quietened the way its name is and a selected card's takes the selected ink. Add card shows each kind's drawing beside its name and keeps the coloured square on the family headings. A card of your own wears the icon its script names with `@icon` (in its own colours) and a plain blank-card drawing in the Yours colour until it names one. The card lists share one drawer: a schema opts in with an `icons` callable, so the Drawing Prefab's list is unchanged. A card kind the pack has no drawing for keeps the square. No saved key changed; no emitted bytes changed.
