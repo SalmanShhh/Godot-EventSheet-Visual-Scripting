@@ -26,8 +26,11 @@ static func run() -> bool:
 	var ok: bool = SUPPORT.pins(P, [
 		["the card says each kind, its settings and the nodes wearing it", notes, PackedStringArray([
 			"Spring ×10 · on Carousel … Tile7", "Tween ×10 · on Carousel … Tile7", "Flash ×2 · on Carousel · Hero",
-			"Juice · on Carousel", "Scenes · on Carousel", "Blend Modes · on Carousel",
-			"Screen FX · layer = 100 · on Carousel",
+			"Juice · on Carousel", "Juice · steps = 5 cards · on Hero", "Juice · steps = 6 cards · on Cube",
+			"Juice · steps = 12 cards · on Carousel", "Juice · steps = 1 card · on Carousel",
+			"Juice · steps = 2 cards · autoplay = true · loop = true · loop wait = 0.5 · on Tile5",
+			"Scenes · on Carousel", "Blend Modes · on Carousel",
+			"Screen FX · layer = 100 · on Carousel", "Juice 3D · on Cube",
 			"Sine ×8 · movement = \"vertical\" · period = 1.6 · magnitude = 18.0 · on Tile0 … Tile7"])],
 		["one node is named on its own line", built.behaviour_detail_lines([{"name": "Juice", "host": "Carousel", "script": ""}]),
 			PackedStringArray(["Juice · on Carousel"])],

@@ -422,6 +422,8 @@ const HTN_AGENT := "res://eventsheet_addons/htn_agent/htn_agent_behavior.gd"
 const UHTN_PLANNER := "res://eventsheet_addons/uhtn_planning/uhtn_planning_behavior.gd"
 const UHTN_RESOURCE := "res://eventsheet_addons/uhtn_plan_resource/uhtn_plan_resource.gd"
 const JUICE := "res://eventsheet_addons/juice/juice_behavior.gd"
+const JUICE_PLAYER := "res://eventsheet_addons/juice/juice_player.gd"
+const JUICE_3D := "res://eventsheet_addons/juice_3d/juice_3d_behavior.gd"
 const SCENE_FLOW := "res://eventsheet_addons/scene_flow/scene_flow_behavior.gd"
 const BLEND_MODES := "res://eventsheet_addons/blend_modes/blend_modes_addon.gd"
 const SCREEN_FX_SCENE := "res://eventsheet_addons/screen_fx/screen_fx.tscn"
@@ -440,11 +442,13 @@ func _build_carousel() -> bool:
 		"party_on": {"type": "bool", "default": true, "exported": true,
 			"attributes": {"tooltip": "Is the Juice group running."}},
 		"moments_played": {"type": "int", "default": 0, "exported": true,
-			"attributes": {"tooltip": "Impact moments played.", "range": {"min": "0", "max": "9999", "step": "1"}}}
+			"attributes": {"tooltip": "Impact moments played.", "range": {"min": "0", "max": "9999", "step": "1"}}},
+		"party_heard": {"type": "int", "default": 0, "exported": true,
+			"attributes": {"tooltip": "Times the party's Emit Signal card was heard.", "range": {"min": "0", "max": "9999", "step": "1"}}}
 	}
 
 	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
-	sheet.class_description = "[b]Carousel of Juice[/b] - 8 tiles sine-sway and spring-pop on the beat (one reused juice_tile function), and every beat pulses a vignette over the screen and pulls the colour channels apart along a fresh angle. A runtime-toggleable Juice group plus an if/elif/else keypress chain re-skin the board: [b]ui_accept[/b] starts the party - an impact moment at your own intensity, one more effect on the post stack, then the live look written to user:// and worn straight back off disk - and [b]ui_cancel[/b] calms it and starts over behind a fade. One tile is drawn blended as screen - Blend Modes ships as an autoload, and this row is that autoload's verb called on a child node of the same name, so the showcase runs with no project setting added. Watch beat/intensity/moments_played stream in Live Values."
+	sheet.class_description = "[b]Carousel of Juice[/b] - 8 tiles sine-sway and spring-pop on the beat (one reused juice_tile function), and every beat pulses a vignette over the screen and pulls the colour channels apart along a fresh angle. A runtime-toggleable Juice group plus an if/elif/else keypress chain re-skin the board: [b]ui_accept[/b] starts the party - one row plays the Juice Player on the root, a list of juice cards that shakes and zooms the camera, freezes a few frames, splits the colours, pulses the vignette, glows the scene, muffles the sound, says a word the sheet counts and plays the players of the hero and of the 3D corner (where Juice 3D shakes, zooms, punches and flashes a cube); one tile keeps a looping player of its own - then one more effect on the post stack, then the live look written to user:// and worn straight back off disk - and [b]ui_cancel[/b] stops every Juice Player and puts back what they moved, slows time for a moment, calms it and starts over behind a fade. One tile is drawn blended as screen - Blend Modes ships as an autoload, and this row is that autoload's verb called on a child node of the same name, so the showcase runs with no project setting added. Watch beat/intensity/moments_played stream in Live Values."
 
 	# Reused function: juice one tile by index.
 	var fn: EventFunction = EventFunction.new()
@@ -499,7 +503,7 @@ func _build_carousel() -> bool:
 	start_row.actions.append(_action("FlashBehavior", "method:flash", "{target}.flash({seconds})", {"target": "$Hero/FlashBehavior", "seconds": "0.4"}))
 	# A whole beat of feedback as ONE row: the impact starter's shake, freeze, split and vignette,
 	# every amount in it scaled by the board's own intensity dial.
-	start_row.actions.append(_action("JuiceBehavior", "method:moment", "$JuiceBehavior.moment(\"{moment_name}\", {strength})", {"moment_name": "impact", "strength": "intensity * 0.6"}))
+	start_row.actions.append(_action("JuicePlayer", "method:play", "$JuicePlayer.play({at_strength})", {"at_strength": "intensity * 0.6"}))
 	start_row.actions.append(_action("Core", "AddVar", "{var_name} += {amount}", {"var_name": "moments_played", "amount": "1"}))
 	# And the look the party runs at is a file the PLAYER owns rather than a name this plugin chose:
 	# one more effect on the live stack, the stack written out to user://, and that file worn back.
@@ -519,6 +523,9 @@ func _build_carousel() -> bool:
 	calm_row.actions.append(_action("Core", "SetVar", "{var_name} = {value}", {"var_name": "party_on", "value": "false"}))
 	calm_row.actions.append(_action("Core", "SetGroupActive", "set(\"__group_\" + {group} + \"_active\", {active})", {"group": "\"juice\"", "active": "false"}))
 	calm_row.actions.append(_action("TweenBehavior", "method:tween_rotation", "{target}.tween_rotation({degrees}, {duration})", {"target": "$Hero/TweenBehavior", "degrees": "0.0", "duration": "0.4"}))
+	# Every Juice Player stops and puts back what it moved, then the calm player slows time for a moment.
+	calm_row.actions.append(_action("JuicePlayer", "method:stop_all_juice_players", "$JuicePlayer.stop_all_juice_players({and_restore})", {"and_restore": "true"}))
+	calm_row.actions.append(_action("JuicePlayer", "method:play", "$CalmPlayer.play({at_strength})", {"at_strength": "1.0"}))
 	# Calm is a moment as much as impact is, and the board starts over behind a fade rather than a cut.
 	calm_row.actions.append(_action("JuiceBehavior", "method:moment", "$JuiceBehavior.moment(\"{moment_name}\", {strength})", {"moment_name": "calm", "strength": "1.0"}))
 	calm_row.actions.append(_action("SceneFlowBehavior", "method:reload_scene_with", "$SceneFlowBehavior.reload_scene_with(\"{transition}\", {seconds}, \"{ease}\")", {"transition": "fade", "seconds": "0.6", "ease": "smooth"}))
@@ -530,6 +537,14 @@ func _build_carousel() -> bool:
 	idle_row.else_mode = EventRow.ElseMode.ELSE
 	idle_row.actions.append(_action("SpringBehavior", "method:spring_host_scale", "{on_node}.spring_host_scale({target})", {"on_node": "$Hero/SpringBehavior", "target": "1.0 + sin(Time.get_ticks_msec() / 1000.0) * 0.04"}))
 	sheet.events.append(idle_row)
+
+	var heard_row: EventRow = EventRow.new()
+	heard_row.trigger_provider_id = "Core"
+	heard_row.trigger_id = "signal:on_feedback_signal"
+	heard_row.trigger_args = "word: String"
+	heard_row.trigger_source_path = "JuicePlayer"
+	heard_row.actions.append(_action("Core", "AddVar", "{var_name} += {amount}", {"var_name": "party_heard", "amount": "1"}))
+	sheet.events.append(heard_row)
 
 	var seed_row: EventRow = EventRow.new()
 	seed_row.trigger_provider_id = "Core"
@@ -586,6 +601,7 @@ func _build_carousel() -> bool:
 	_attach_behavior(hero, "SpringBehavior", SPRING, root)
 	_attach_behavior(hero, "TweenBehavior", TWEEN, root)
 	_attach_behavior(hero, "FlashBehavior", FLASH, root)
+	_build_carousel_juice(root, hero)
 	# Tiles ring
 	var tiles: Node2D = Node2D.new()
 	tiles.name = "Tiles"
@@ -603,8 +619,119 @@ func _build_carousel() -> bool:
 		_attach_behavior(tile, "SineBehavior", SINE, root, {"magnitude": 18.0, "period": 1.6, "movement": "vertical", "active": true})
 		_attach_behavior(tile, "SpringBehavior", SPRING, root)
 		_attach_behavior(tile, "TweenBehavior", TWEEN, root)
+		if i == 5:
+			# One tile keeps a looping player of its own: it shakes its angle and comes to the front, again and again.
+			var turning: Array[Dictionary] = [
+				{"verb": "rotation_shake", "degrees": 12.0, "fade_out": true, "seconds": 0.4},
+				{"verb": "draw_order", "z_index": 10, "seconds": 0.5}]
+			_attach_behavior(tile, "JuicePlayer", JUICE_PLAYER, root, {"steps": turning, "autoplay": true, "loop": true, "loop_wait": 0.5})
 
 	return _save_scene(root, "res://demo/showcase/carousel/showcase_carousel.tscn")
+
+
+## The Juice Players of the carousel: the party on the root, the nod and the bounce of the hero, a calm one that slows
+## time, the glow and the light they use, and a corner that shows a 3D view played by Juice 3D.
+func _build_carousel_juice(root: Node2D, hero: Node2D) -> void:
+	# The light the hero's flare uses, dark at rest, and the look the glow card changes.
+	var gradient: Gradient = Gradient.new()
+	gradient.set_color(0, Color(1, 1, 1, 1))
+	gradient.set_color(1, Color(1, 1, 1, 0))
+	var glow_texture: GradientTexture2D = GradientTexture2D.new()
+	glow_texture.gradient = gradient
+	glow_texture.fill = GradientTexture2D.FILL_RADIAL
+	glow_texture.fill_from = Vector2(0.5, 0.5)
+	glow_texture.fill_to = Vector2(1.0, 0.5)
+	glow_texture.width = 256
+	glow_texture.height = 256
+	var lamp: PointLight2D = PointLight2D.new()
+	lamp.name = "HeroLight"
+	lamp.texture = glow_texture
+	lamp.energy = 0.0
+	lamp.texture_scale = 2.0
+	hero.add_child(lamp)
+	lamp.owner = root
+	var look: Environment = Environment.new()
+	look.background_mode = Environment.BG_CANVAS
+	look.glow_enabled = true
+	look.glow_intensity = 0.8
+	var sky: WorldEnvironment = WorldEnvironment.new()
+	sky.name = "Sky"
+	sky.environment = look
+	root.add_child(sky)
+	sky.owner = root
+
+	# The 3D corner: a cube in a small view, played by a Juice Player beside a Juice 3D node.
+	var corner: SubViewportContainer = SubViewportContainer.new()
+	corner.name = "Corner"
+	corner.position = Vector2(900, 12)
+	corner.size = Vector2(240, 180)
+	corner.stretch = true
+	root.add_child(corner)
+	corner.owner = root
+	var view: SubViewport = SubViewport.new()
+	view.name = "View"
+	view.size = Vector2i(240, 180)
+	corner.add_child(view)
+	view.owner = root
+	var world: Node3D = Node3D.new()
+	world.name = "World3D"
+	view.add_child(world)
+	world.owner = root
+	var camera: Camera3D = Camera3D.new()
+	camera.name = "Camera3D"
+	camera.position = Vector3(0, 0, 3)
+	camera.current = true
+	world.add_child(camera)
+	camera.owner = root
+	var sun: DirectionalLight3D = DirectionalLight3D.new()
+	sun.name = "Sun"
+	sun.rotation_degrees = Vector3(-40, 30, 0)
+	world.add_child(sun)
+	sun.owner = root
+	var cube: MeshInstance3D = MeshInstance3D.new()
+	cube.name = "Cube"
+	cube.mesh = BoxMesh.new()
+	cube.rotation_degrees = Vector3(20, 35, 0)
+	world.add_child(cube)
+	cube.owner = root
+	_attach_behavior(cube, "Juice3DBehavior", JUICE_3D, root)
+	var cube_beat: Array[Dictionary] = [
+		{"verb": "shake", "amount": 0.6, "effect": "", "seconds": 0.0},
+		{"verb": "punch", "amount": 0.5, "effect": "", "seconds": 0.35},
+		{"verb": "flash", "amount": 0.5, "effect": "#ff5050", "seconds": 0.25},
+		{"verb": "zoom", "amount": 110.0, "effect": "", "seconds": 0.2},
+		{"verb": "pause", "amount": 0.0, "effect": "", "seconds": 0.3},
+		{"verb": "zoom", "amount": 90.9091, "effect": "", "seconds": 0.2}]
+	_attach_behavior(cube, "JuicePlayer", JUICE_PLAYER, root, {"steps": cube_beat})
+
+	# The hero: a nod, a bounce of its scale from its Spring node, and a flare of its light.
+	var nod: Array[Dictionary] = [
+		{"verb": "tween_property", "amount": 0.3, "effect": "rotation", "seconds": 0.08},
+		{"verb": "spring", "property": "scale", "kick": Vector2(1.5, 1.5)},
+		{"verb": "light", "node": NodePath("../HeroLight"), "energy_to": 1.6, "colour_to": Color(1.0, 0.6, 0.2, 1.0), "seconds": 0.1, "back": true, "back_seconds": 0.3, "ease": "out"},
+		{"verb": "pause", "amount": 0.0, "effect": "", "seconds": 0.08},
+		{"verb": "tween_property", "amount": 0.0, "effect": "rotation", "seconds": 0.2}]
+	_attach_behavior(hero, "JuicePlayer", JUICE_PLAYER, root, {"steps": nod})
+
+	# The party: every family in one list, started by one row.
+	var party: Array[Dictionary] = [
+		{"verb": "shake", "amount": 0.8, "effect": "", "fade_out": true, "seconds": 0.4},
+		{"verb": "zoom", "amount": 110.0, "effect": "", "seconds": 0.2},
+		{"verb": "hitstop", "amount": 0.0, "effect": "", "seconds": 0.06},
+		{"verb": "chromatic", "amount": 0.55, "effect": "", "seconds": 0.25},
+		{"verb": "pulse", "amount": 0.45, "effect": "vignette", "seconds": 0.35},
+		{"verb": "scene_look", "node": NodePath("../Sky"), "property": "glow_intensity", "to": 2.0, "seconds": 0.1, "back_seconds": 0.3},
+		{"verb": "bus_effect", "bus": "Master", "how": "muffle", "to": 400.0, "seconds": 0.5, "back_seconds": 0.2},
+		{"verb": "emit_signal", "effect": "party"},
+		{"verb": "play_player", "amount": 1.0, "effect": "", "player": NodePath("../Hero/JuicePlayer")},
+		{"verb": "play_player", "amount": 1.0, "effect": "", "player": NodePath("../Corner/View/World3D/Cube/JuicePlayer")},
+		{"verb": "pause", "amount": 0.0, "effect": "", "seconds": 0.25},
+		{"verb": "zoom", "amount": 90.9091, "effect": "", "seconds": 0.2}]
+	_attach_behavior(root, "JuicePlayer", JUICE_PLAYER, root, {"steps": party})
+
+	# The calm one: time slows for a moment while the board starts over.
+	var calm: Array[Dictionary] = [{"verb": "slowmo", "amount": 0.3, "effect": "", "seconds": 0.3}]
+	_attach_behavior(root, "CalmPlayer", JUICE_PLAYER, root, {"steps": calm})
 
 # ── 2. Starfall (arcade mini-game) ───────────────────────────────────────────
 

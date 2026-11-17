@@ -1,6 +1,6 @@
 class_name CarouselOfJuice
 extends Node2D
-## [b]Carousel of Juice[/b] - 8 tiles sine-sway and spring-pop on the beat (one reused juice_tile function), and every beat pulses a vignette over the screen and pulls the colour channels apart along a fresh angle. A runtime-toggleable Juice group plus an if/elif/else keypress chain re-skin the board: [b]ui_accept[/b] starts the party - an impact moment at your own intensity, one more effect on the post stack, then the live look written to user:// and worn straight back off disk - and [b]ui_cancel[/b] calms it and starts over behind a fade. One tile is drawn blended as screen - Blend Modes ships as an autoload, and this row is that autoload's verb called on a child node of the same name, so the showcase runs with no project setting added. Watch beat/intensity/moments_played stream in Live Values.
+## [b]Carousel of Juice[/b] - 8 tiles sine-sway and spring-pop on the beat (one reused juice_tile function), and every beat pulses a vignette over the screen and pulls the colour channels apart along a fresh angle. A runtime-toggleable Juice group plus an if/elif/else keypress chain re-skin the board: [b]ui_accept[/b] starts the party - one row plays the Juice Player on the root, a list of juice cards that shakes and zooms the camera, freezes a few frames, splits the colours, pulses the vignette, glows the scene, muffles the sound, says a word the sheet counts and plays the players of the hero and of the 3D corner (where Juice 3D shakes, zooms, punches and flashes a cube); one tile keeps a looping player of its own - then one more effect on the post stack, then the live look written to user:// and worn straight back off disk - and [b]ui_cancel[/b] stops every Juice Player and puts back what they moved, slows time for a moment, calms it and starts over behind a fade. One tile is drawn blended as screen - Blend Modes ships as an autoload, and this row is that autoload's verb called on a child node of the same name, so the showcase runs with no project setting added. Watch beat/intensity/moments_played stream in Live Values.
 # @ace_group(uid="juice", name="Juice", color="#8C66D9", toggleable=true)
 
 ## Beats elapsed.
@@ -13,6 +13,8 @@ extends Node2D
 @export var party_on: bool = true
 ## Impact moments played.
 @export_range(0, 9999, 1) var moments_played: int = 0
+## Times the party's Emit Signal card was heard.
+@export_range(0, 9999, 1) var party_heard: int = 0
 var __group_juice_active: bool = true
 var __every_beat_caro: float = 0.0
 var __every_spin_caro: float = 0.0
@@ -37,7 +39,7 @@ func _process(delta: float) -> void:
 		set("__group_" + "juice" + "_active", true)
 		$Hero/SpringBehavior.add_impulse("__scale", intensity * 6.0)
 		$Hero/FlashBehavior.flash(0.4)
-		$JuiceBehavior.moment("impact", intensity * 0.6)
+		$JuicePlayer.play(intensity * 0.6)
 		moments_played += 1
 		$ScreenFx.add_post_effect("scanlines", "party", 0.3)
 		$ScreenFx.save_look("user://looks/carousel.tres", "Carousel")
@@ -46,12 +48,18 @@ func _process(delta: float) -> void:
 		party_on = false
 		set("__group_" + "juice" + "_active", false)
 		$Hero/TweenBehavior.tween_rotation(0.0, 0.4)
+		$JuicePlayer.stop_all_juice_players(true)
+		$CalmPlayer.play(1.0)
 		$JuiceBehavior.moment("calm", 1.0)
 		$SceneFlowBehavior.reload_scene_with("fade", 0.6, "smooth")
 	else:
 		$Hero/SpringBehavior.spring_host_scale(1.0 + sin(Time.get_ticks_msec() / 1000.0) * 0.04)
 
+func _on_juiceplayer_on_feedback_signal(_word: String) -> void:
+	party_heard += 1
+
 func _ready() -> void:
+	get_node("JuicePlayer").on_feedback_signal.connect(_on_juiceplayer_on_feedback_signal)
 	for c: Node in $Tiles.get_children():
 		c.get_node("SineBehavior").active = true
 	$BlendModes.blend_as($Tiles/Tile3, "screen", 1.0)
