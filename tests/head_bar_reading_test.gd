@@ -7,7 +7,7 @@ extends RefCounted
 # A file used to open with a head card over the sheet, a folded group row under it, the file's prose
 # hoisted to the top as a comment row and a Behaviors band among the rows. It opens on one bar now:
 #
-#     ◆ CarouselOfJuice  Custom node · extends Node2D            4 variables · 3 events · 34 behaviours
+#     ◆ CarouselOfJuice  Custom node · extends Node2D            5 variables · 5 events · 40 behaviours
 #
 # and everything else lives one hover away, on the card behind the name or a count. Five things are
 # pinned here, each by VALUE:
@@ -108,9 +108,9 @@ static func _behaviours_are_a_count_with_a_card() -> bool:
 	var first: Array = (card.get("links", [[""]]) as Array)[0] as Array
 	return SUPPORT.pins(P, [
 		["carousel head bar", _words_of(head[0]),
-			"◆ CarouselOfJuice Custom node · extends Node2D 4 variables · 3 events · 34 behaviours"],
+			"◆ CarouselOfJuice Custom node · extends Node2D 5 variables · 5 events · 40 behaviours"],
 		["carousel behaviour kinds on the card", " · ".join(kinds),
-			"Spring 10 · Tween 10 · Flash 2 · Juice · Scenes · Blend Modes · Screen FX · Sine 8"],
+			"Spring 10 · Tween 10 · Flash 2 · Juice 6 · Scenes · Blend Modes · Screen FX · Juice 3D · Sine 8"],
 		["a kind opens its pack", str(first[1]).get_file(), "spring_behavior.gd"],
 		["the card says why they are not rows", str((card.get("lines", [""]) as Array)[0]),
 			"They are child nodes in the scene, not lines of this file, so they are listed here rather than as rows."],
@@ -125,7 +125,7 @@ static func _variables_leave_the_bookkeeping_out() -> bool:
 	var card: Dictionary = _card_of(_head_rows(CAROUSEL)[0], "variables")
 	return SUPPORT.pins(P, [
 		["the variables card", str((card.get("lines", [""]) as Array)[0]),
-			"beat, intensity, party_on and moments_played, all 4 shown in the Inspector. The 3 other variables in the file are bookkeeping the compiler writes (__group_juice_active, __every_beat_caro, …)."],
+			"beat, intensity, party_on, moments_played and party_heard, all 5 shown in the Inspector. The 3 other variables in the file are bookkeeping the compiler writes (__group_juice_active, __every_beat_caro, …)."],
 	])
 
 

@@ -402,7 +402,7 @@ static func run() -> bool:
 		"@export_range(0, 9999, 1) var moments_played: int = 0",
 		"$ScreenFx.pulse_post_effect(\"vignette\", 0.45, 0.35)",
 		"$JuiceBehavior.chromatic_shake(4.0, 0.3, \"reducing\", randf_range(0.0, 360.0))",
-		"$JuiceBehavior.moment(\"impact\", intensity * 0.6)",
+		"$JuicePlayer.play(intensity * 0.6)",
 		"moments_played += 1",
 		"$ScreenFx.add_post_effect(\"scanlines\", \"party\", 0.3)",
 		"$ScreenFx.save_look(\"user://looks/carousel.tres\", \"Carousel\")",

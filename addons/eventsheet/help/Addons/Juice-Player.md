@@ -56,7 +56,7 @@ Juice Player is a Godot EventSheets node you add under any object so that object
 
 **1. Add the node.** Add a plain `Node` as a child of the object that should carry the beat, and attach `JuicePlayer` to it (Create Node lists it as **JuicePlayer**; the `FeedbackPlayer` entry nested under it is the old name, kept so projects made before version 0.21.0 keep working). A node you add is called `JuicePlayer`, and you can name it after what it is for (`HitJuice`, `HoverJuice`): a row you place starts on the one Juice Player in the open scene, whatever it is called, and on `$JuicePlayer` when there are none or several. The player acts on its parent, so the parent is the object the beat is about.
 
-**2. Put a Juice node beside it.** The ten felt words are played by the Juice behaviour, found beside the player (a sibling under the same parent, or a child of the player). Without one, the shake, flash and hitstop cards do nothing and the player says so once.
+**2. Put a Juice node beside it.** The ten felt words are played by the Juice behaviour, found beside the player (a sibling under the same parent, or a child of the player). Without one, the shake, flash and hitstop cards do nothing and the player says so once. Over a 3D view put a Juice 3D node beside it instead: it plays the shake, zoom, punch, flash, hitstop, slowmo and screen cards, and when both sit beside the player the one for 2D is used.
 
 **3. Fill the list.** Select the player node and use **Add card** under the list. Each card gets a small tile in its family's colour, a drag handle, a fold arrow, a tick box, its label and a badge saying how long it takes. The head of the list counts the cards and adds up the longest path through them.
 

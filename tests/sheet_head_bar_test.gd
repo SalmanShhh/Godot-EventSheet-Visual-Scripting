@@ -88,8 +88,8 @@ static func _the_card() -> bool:
 	card_view.free()
 	return SUPPORT.pins(P, [
 		["the behaviours card says the kinds, why they are not rows, each kind's settings and nodes, and offers Add behaviour…", shown,
-			"Behaviours on this object\nSpring 10 · Tween 10 · Flash 2 · Juice · Scenes · Blend Modes · Screen FX · Sine 8. They are child nodes in the scene, not lines of this file, so they are listed here rather than as rows.\n"
-			+ "Spring ×10 · on Carousel … Tile7\nTween ×10 · on Carousel … Tile7\nFlash ×2 · on Carousel · Hero\nJuice · on Carousel\nScenes · on Carousel\nBlend Modes · on Carousel\nScreen FX · layer = 100 · on Carousel\nSine ×8 · movement = \"vertical\" · period = 1.6 · magnitude = 18.0 · on Tile0 … Tile7\n"
+			"Behaviours on this object\nSpring 10 · Tween 10 · Flash 2 · Juice 6 · Scenes · Blend Modes · Screen FX · Juice 3D · Sine 8. They are child nodes in the scene, not lines of this file, so they are listed here rather than as rows.\n"
+			+ "Spring ×10 · on Carousel … Tile7\nTween ×10 · on Carousel … Tile7\nFlash ×2 · on Carousel · Hero\nJuice · on Carousel\nJuice · steps = 5 cards · on Hero\nJuice · steps = 6 cards · on Cube\nJuice · steps = 12 cards · on Carousel\nJuice · steps = 1 card · on Carousel\nJuice · steps = 2 cards · autoplay = true · loop = true · loop wait = 0.5 · on Tile5\nScenes · on Carousel\nBlend Modes · on Carousel\nScreen FX · layer = 100 · on Carousel\nJuice 3D · on Cube\nSine ×8 · movement = \"vertical\" · period = 1.6 · magnitude = 18.0 · on Tile0 … Tile7\n"
 			+ "[Add behaviour…]"],
 		["its door answers as a head action, and the card closes", [door_found, pressed, closed],
 			[true, ["add_behaviour"], true]],

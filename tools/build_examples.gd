@@ -503,7 +503,7 @@ func _build_carousel() -> bool:
 	start_row.actions.append(_action("FlashBehavior", "method:flash", "{target}.flash({seconds})", {"target": "$Hero/FlashBehavior", "seconds": "0.4"}))
 	# A whole beat of feedback as ONE row: the impact starter's shake, freeze, split and vignette,
 	# every amount in it scaled by the board's own intensity dial.
-	start_row.actions.append(_action("JuicePlayer", "method:play", "$JuicePlayer.play({at_strength})", {"at_strength": "intensity * 0.6"}))
+	start_row.actions.append(_action("FeedbackPlayer", "method:play", "$JuicePlayer.play({at_strength})", {"at_strength": "intensity * 0.6"}))
 	start_row.actions.append(_action("Core", "AddVar", "{var_name} += {amount}", {"var_name": "moments_played", "amount": "1"}))
 	# And the look the party runs at is a file the PLAYER owns rather than a name this plugin chose:
 	# one more effect on the live stack, the stack written out to user://, and that file worn back.
@@ -524,8 +524,8 @@ func _build_carousel() -> bool:
 	calm_row.actions.append(_action("Core", "SetGroupActive", "set(\"__group_\" + {group} + \"_active\", {active})", {"group": "\"juice\"", "active": "false"}))
 	calm_row.actions.append(_action("TweenBehavior", "method:tween_rotation", "{target}.tween_rotation({degrees}, {duration})", {"target": "$Hero/TweenBehavior", "degrees": "0.0", "duration": "0.4"}))
 	# Every Juice Player stops and puts back what it moved, then the calm player slows time for a moment.
-	calm_row.actions.append(_action("JuicePlayer", "method:stop_all_juice_players", "$JuicePlayer.stop_all_juice_players({and_restore})", {"and_restore": "true"}))
-	calm_row.actions.append(_action("JuicePlayer", "method:play", "$CalmPlayer.play({at_strength})", {"at_strength": "1.0"}))
+	calm_row.actions.append(_action("FeedbackPlayer", "method:stop_all_juice_players", "$JuicePlayer.stop_all_juice_players({and_restore})", {"and_restore": "true"}))
+	calm_row.actions.append(_action("FeedbackPlayer", "method:play", "$CalmPlayer.play({at_strength})", {"at_strength": "1.0"}))
 	# Calm is a moment as much as impact is, and the board starts over behind a fade rather than a cut.
 	calm_row.actions.append(_action("JuiceBehavior", "method:moment", "$JuiceBehavior.moment(\"{moment_name}\", {strength})", {"moment_name": "calm", "strength": "1.0"}))
 	calm_row.actions.append(_action("SceneFlowBehavior", "method:reload_scene_with", "$SceneFlowBehavior.reload_scene_with(\"{transition}\", {seconds}, \"{ease}\")", {"transition": "fade", "seconds": "0.6", "ease": "smooth"}))

@@ -93,6 +93,20 @@ behavior already had, and the tick parks itself again the frame the shake has fa
 
 ---
 
+## Played by a Juice Player
+
+A Juice Player beside a Juice 3D node plays its shake, zoom, punch, flash, hitstop, slowmo and screen cards over a 3D view. Put the Juice Player under the same node as Juice 3D, the way it sits beside the Juice node for 2D, and the cards play through Juice 3D:
+
+- **Shake** adds trauma to the camera, at the strength of the play. A Shake card's Fade in and Fade out ticks are not read here: the shake lasts as long as the node's Shake Decay says.
+- **Zoom** is the field of view: 110 shows the view a tenth closer (a 75 degree view becomes 69.797), and it stays there until the play is put back with Restore.
+- **Punch** kicks the scale of the 3D node and springs it back. **Flash** tints a 3D sprite or label, and any other node flashes the whole screen.
+- **Hitstop** and **Slowmo** change the game's time scale and put it back, and **Chromatic** and **Pulse** (vignette) use this node's own screen overlay. **Shockwave** and **Hold** need the Screen FX layer.
+- Stop ends everything the cards started and Restore puts back the first value each one found.
+
+A scene that has a Juice node for 2D and a Juice 3D node beside the same player keeps playing through the 2D one, as it always did. The no-flashing setting holds these cards to the same ceiling and floor as the 2D node.
+
+---
+
 ## ACE reference
 
 On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
