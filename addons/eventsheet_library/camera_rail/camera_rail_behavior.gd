@@ -18,7 +18,7 @@ var host: Camera2D = null
 func _enter_tree() -> void:
 	host = acts_on if acts_on != null else get_parent() as Camera2D
 	if host == null:
-		push_warning("Camera Rail Behavior needs a Camera2D: put it under one, or set Acts on.")
+		push_warning("Camera Rail Behavior needs a Camera2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 ## @ace_trigger
 ## @ace_name("On Shot Finished")

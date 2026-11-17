@@ -48,7 +48,7 @@ static func run() -> bool:
 		"func _enter_tree() -> void:",
 		"\thost = acts_on if acts_on != null else get_parent() as CharacterBody2D",
 		"\tif host == null:",
-		"\t\tpush_warning(\"Patrol needs a CharacterBody2D: put it under one, or set Acts on.\")",
+		"\t\tpush_warning(\"Patrol needs a CharacterBody2D: put it under one, or set Acts on. This one is at \" + str(get_path()) + \".\")",
 		"",
 	]))) and ok
 	ok = _check("it parses", _parses(behaviour), OK) and ok

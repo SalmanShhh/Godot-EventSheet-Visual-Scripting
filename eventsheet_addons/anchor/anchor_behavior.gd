@@ -18,7 +18,7 @@ var host: Control = null
 func _enter_tree() -> void:
 	host = acts_on if acts_on != null else get_parent() as Control
 	if host == null:
-		push_warning("Anchor Behavior needs a Control: put it under one, or set Acts on.")
+		push_warning("Anchor Behavior needs a Control: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 ## @ace_trigger
 ## @ace_name("On Anchored")

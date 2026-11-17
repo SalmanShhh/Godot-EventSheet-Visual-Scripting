@@ -521,7 +521,8 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		lines.append("func _enter_tree() -> void:")
 		lines.append("\thost = acts_on if acts_on != null else get_parent() as %s" % host_type)
 		lines.append("\tif host == null:")
-		lines.append("\t\tpush_warning(\"%s\")" % host_warning_sentence(behavior_label, host_type))
+		# Names the node, so a scene with forty of one behaviour says which one has no host. The tree path is safe to ask here: the node is in the tree in _enter_tree.
+		lines.append("\t\tpush_warning(\"%s This one is at \" + str(get_path()) + \".\")" % host_warning_sentence(behavior_label, host_type))
 		# Lane B.2: declared sibling dependencies surface as the editor's ⚠ badge.
 		var required_behaviors: PackedStringArray = PackedStringArray()
 		for required_entry: String in sheet.requires_behaviors:

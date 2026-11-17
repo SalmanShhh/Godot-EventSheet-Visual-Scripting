@@ -18,7 +18,7 @@ var host: Node = null
 func _enter_tree() -> void:
 	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Light Flicker Behavior needs a parent node: put it under one, or set Acts on.")
+		push_warning("Light Flicker Behavior needs a parent node: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
 ## @ace_hidden

@@ -16,7 +16,7 @@ var host: Node = null
 func _enter_tree() -> void:
 	host = acts_on if acts_on != null else get_parent() as Node
 	if host == null:
-		push_warning("Skin Catalog Loader needs a parent node: put it under one, or set Acts on.")
+		push_warning("Skin Catalog Loader needs a parent node: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 # @inspector_required
 ## Skin Catalog resource. The .tres holding this game's rarities and skins (create one from the SkinCatalogResource class, fill its grids, and drop it here).

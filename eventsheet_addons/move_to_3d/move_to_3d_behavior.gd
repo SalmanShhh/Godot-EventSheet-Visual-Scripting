@@ -19,7 +19,7 @@ var host: Node3D = null
 func _enter_tree() -> void:
 	host = acts_on if acts_on != null else get_parent() as Node3D
 	if host == null:
-		push_warning("Move To3D Behavior needs a Node3D: put it under one, or set Acts on.")
+		push_warning("Move To3D Behavior needs a Node3D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
 ## @ace_hidden
