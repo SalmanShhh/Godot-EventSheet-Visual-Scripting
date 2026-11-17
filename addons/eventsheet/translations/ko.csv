@@ -11230,3 +11230,17 @@ Find and replace in the project,프로젝트에서 찾아 바꾸기
 A .gd file with none of the plugin's markers is listed here even if it is a sheet. Tick a file to change it.,플러그인의 표시가 없는 .gd 파일은 시트여도 여기에 나열됩니다. 바꿀 파일을 체크하세요.
 today,오늘
 "Put them all back restores %d file(s) the last Replace in Project wrote, %s.",'모두 되돌리기'는 마지막 프로젝트 바꾸기가 쓴 파일 %d개를 복원합니다 (%s).
+"There is already a global named %s that loads %s, and it is not replaced.",%s 이름의 글로벌이 이미 있고 %s 을(를) 불러옵니다. 대체하지 않습니다.
+That global name is taken,그 글로벌 이름은 이미 사용 중입니다
+Use this name,이 이름 사용
+"Choose another name for the new global, or cancel and nothing changes.",새 글로벌에 다른 이름을 고르거나 취소하면 아무것도 바뀔지 않습니다.
+Its row in Project Settings > Globals > Autoload keeps the name %s: there is already a global named %s that loads %s.,프로젝트 설정 > 글로벌 > 오토로드의 행은 %s 이름을 그대로 유지합니다. %s 글로벌이 이미 있고 %s 을(를) 불러옵니다.
+Stopped - %d finding(s) so far; run it again for the whole project.,중지됨 - 지금까지 %d개. 프로젝트 전체를 보려면 다시 실행하세요.
+Checking the project - step %d of %d,프로젝트 확인 중 - %d / %d 단계
+Checking the project...,프로젝트 확인 중...
+Add global %s,글로벌 %s 추가
+The %s global now runs save_system.tscn; its settings change here and in its Inspector. Edit > Undo in Godot takes the global off again.,글로벌 %s 이(가) 이제 save_system.tscn 을 실행합니다. 설정은 여기와 인스펙터에서 바꿉니다. Godot의 편집 > 실행 취소로 글로벌을 다시 빼요.
+Every sheet with no theme of its own now wears %s instead of %s. Edit > Undo in Godot puts %s back.,자체 테마가 없는 시트는 이제 %s 대신 %s 을(를) 사용합니다. Godot의 편집 > 실행 취소로 %s 을(를) 되돌립니다.
+Use %s for every sheet,%s 을(를) 모든 시트에 사용
+Match the editor again,다시 에디터를 따르기
+"%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.",일반 스크립트 %d개가 내보낸 릴리스 빌드에서도 실행되는 콘솔 출력을 합니다(첫 번째는 %s). 하나씩 나열하지 않습니다. 릴리스를 조용하게 하려면 그 줄을 OS.is_debug_build() 검사로 감싸세요.

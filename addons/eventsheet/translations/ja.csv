@@ -11230,3 +11230,17 @@ Find and replace in the project,プロジェクト内を検索して置換
 A .gd file with none of the plugin's markers is listed here even if it is a sheet. Tick a file to change it.,プラグインの印がない .gd ファイルは、シートであってもここに並びます。変更するファイルにチェックを入れてください。
 today,今日
 "Put them all back restores %d file(s) the last Replace in Project wrote, %s.",「すべて元に戻す」は、直前のプロジェクト内置換が書き込んだ %d 個のファイルを復元します（%s）。
+"There is already a global named %s that loads %s, and it is not replaced.",%s というグローバルはすでにあり、%s を読み込んでいます。置き換えません。
+That global name is taken,そのグローバル名は使われています
+Use this name,この名前を使う
+"Choose another name for the new global, or cancel and nothing changes.",新しいグローバルに別の名前を選ぶか、キャンセルして何も変えないでください。
+Its row in Project Settings > Globals > Autoload keeps the name %s: there is already a global named %s that loads %s.,プロジェクト設定 > グローバル > オートロードの行は %s という名前のままです。%s というグローバルがすでにあり、%s を読み込んでいます。
+Stopped - %d finding(s) so far; run it again for the whole project.,停止しました - ここまでで %d 件。プロジェクト全体を見るにはもう一度実行してください。
+Checking the project - step %d of %d,プロジェクトをチェック中 - ステップ %d / %d
+Checking the project...,プロジェクトをチェック中...
+Add global %s,グローバル %s を追加
+The %s global now runs save_system.tscn; its settings change here and in its Inspector. Edit > Undo in Godot takes the global off again.,グローバル %s は save_system.tscn を実行するようになりました。設定はこことインスペクターで変えられます。Godot の 編集 > 元に戻す でグローバルを外せます。
+Every sheet with no theme of its own now wears %s instead of %s. Edit > Undo in Godot puts %s back.,自分のテーマを持たないシートは、%s の代わりに %s を使うようになりました。Godot の 編集 > 元に戻す で %s に戻ります。
+Use %s for every sheet,%s をすべてのシートに使う
+Match the editor again,再びエディターに合わせる
+"%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.",%d 個の普通のスクリプトがコンソールに出力しており、書き出したリリース版でも実行されます（最初は %s）。一つずつは一覧しません。リリースを静かにしたいなら、その行を OS.is_debug_build() のテストで囲んでください。

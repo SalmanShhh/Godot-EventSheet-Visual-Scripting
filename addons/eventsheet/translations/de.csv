@@ -11230,3 +11230,17 @@ Find and replace in the project,Im Projekt suchen und ersetzen
 A .gd file with none of the plugin's markers is listed here even if it is a sheet. Tick a file to change it.,"Eine .gd-Datei ohne die Markierungen des Plugins steht hier, auch wenn sie ein Blatt ist. Hake eine Datei an, um sie zu ändern."
 today,heute
 "Put them all back restores %d file(s) the last Replace in Project wrote, %s.","Alle zurücksetzen stellt %d Datei(en) wieder her, die das letzte Ersetzen im Projekt geschrieben hat, %s."
+"There is already a global named %s that loads %s, and it is not replaced.","Es gibt schon ein Global namens %s, das %s lädt; es wird nicht ersetzt."
+That global name is taken,Dieser Global-Name ist vergeben
+Use this name,Diesen Namen verwenden
+"Choose another name for the new global, or cancel and nothing changes.","Wähle einen anderen Namen für das neue Global oder brich ab, dann ändert sich nichts."
+Its row in Project Settings > Globals > Autoload keeps the name %s: there is already a global named %s that loads %s.,"Seine Zeile in Projekteinstellungen > Globals > Autoload behält den Namen %s: Es gibt schon ein Global namens %s, das %s lädt."
+Stopped - %d finding(s) so far; run it again for the whole project.,Angehalten - bisher %d Befund(e); starte es erneut für das ganze Projekt.
+Checking the project - step %d of %d,Das Projekt wird geprüft - Schritt %d von %d
+Checking the project...,Das Projekt wird geprüft...
+Add global %s,Global %s hinzufügen
+The %s global now runs save_system.tscn; its settings change here and in its Inspector. Edit > Undo in Godot takes the global off again.,Das Global %s lädt jetzt save_system.tscn; seine Einstellungen ändern sich hier und im Inspektor. Bearbeiten > Rückgängig in Godot nimmt das Global wieder heraus.
+Every sheet with no theme of its own now wears %s instead of %s. Edit > Undo in Godot puts %s back.,Jedes Blatt ohne eigenes Theme trägt jetzt %s statt %s. Bearbeiten > Rückgängig in Godot bringt %s zurück.
+Use %s for every sheet,%s für jedes Blatt verwenden
+Match the editor again,Wieder dem Editor folgen
+"%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.","%d einfache Skripte schreiben in die Konsole, wo ein exportiertes Release es noch ausführt, zuerst %s. Sie werden nicht einzeln aufgelistet: Setze die Zeilen in einen OS.is_debug_build()-Test, wenn ein Release still sein soll."

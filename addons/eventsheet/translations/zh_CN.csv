@@ -11230,3 +11230,17 @@ Find and replace in the project,在项目中查找和替换
 A .gd file with none of the plugin's markers is listed here even if it is a sheet. Tick a file to change it.,没有插件标记的 .gd 文件即使是工作表也会列在这里。勾选文件即可更改它。
 today,今天
 "Put them all back restores %d file(s) the last Replace in Project wrote, %s.",“全部恢复”会还原上次项目内替换写入的 %d 个文件（%s）。
+"There is already a global named %s that loads %s, and it is not replaced.",已经有一个名为 %s 的全局脚本加载 %s，不会被替换。
+That global name is taken,这个全局名称已被占用
+Use this name,使用这个名称
+"Choose another name for the new global, or cancel and nothing changes.",为新的全局项选择另一个名称，或取消，不会有任何改动。
+Its row in Project Settings > Globals > Autoload keeps the name %s: there is already a global named %s that loads %s.,项目设置 > 全局 > 自动加载中它的这一行保持名称 %s：已经有一个名为 %s 的全局项加载 %s。
+Stopped - %d finding(s) so far; run it again for the whole project.,已停止 - 目前有 %d 项结果；再运行一次以检查整个项目。
+Checking the project - step %d of %d,正在检查项目 - 第 %d 步，共 %d 步
+Checking the project...,正在检查项目...
+Add global %s,添加全局项 %s
+The %s global now runs save_system.tscn; its settings change here and in its Inspector. Edit > Undo in Godot takes the global off again.,全局项 %s 现在运行 save_system.tscn；它的设置可在这里和检查器中更改。Godot 的 编辑 > 撤销 可再次移除该全局项。
+Every sheet with no theme of its own now wears %s instead of %s. Edit > Undo in Godot puts %s back.,所有没有自己主题的表现在使用 %s，而不是 %s。Godot 的 编辑 > 撤销 可以恢复 %s。
+Use %s for every sheet,将 %s 用于所有表
+Match the editor again,再次跟随编辑器
+"%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.",%d 个普通脚本在导出的发布版中仍会向控制台输出，第一个是 %s。它们不会逐个列出：如果发布版应保持安静，请把这些行包在 OS.is_debug_build() 判断里。

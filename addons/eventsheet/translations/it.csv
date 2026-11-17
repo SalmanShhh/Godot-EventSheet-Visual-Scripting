@@ -11230,3 +11230,17 @@ Find and replace in the project,Trova e sostituisci nel progetto
 A .gd file with none of the plugin's markers is listed here even if it is a sheet. Tick a file to change it.,Un file .gd senza i segni del plugin è elencato qui anche se è un foglio. Spunta un file per modificarlo.
 today,oggi
 "Put them all back restores %d file(s) the last Replace in Project wrote, %s.","Rimetti tutto ripristina %d file scritti dall'ultimo Sostituisci nel progetto, %s."
+"There is already a global named %s that loads %s, and it is not replaced.","Esiste già un global chiamato %s che carica %s, e non viene sostituito."
+That global name is taken,Quel nome di global è occupato
+Use this name,Usa questo nome
+"Choose another name for the new global, or cancel and nothing changes.",Scegli un altro nome per il nuovo global oppure annulla e non cambia nulla.
+Its row in Project Settings > Globals > Autoload keeps the name %s: there is already a global named %s that loads %s.,La sua riga in Impostazioni progetto > Globals > Autoload mantiene il nome %s: esiste già un global chiamato %s che carica %s.
+Stopped - %d finding(s) so far; run it again for the whole project.,Interrotto - %d risultato/i finora; eseguilo di nuovo per tutto il progetto.
+Checking the project - step %d of %d,Controllo del progetto - passo %d di %d
+Checking the project...,Controllo del progetto...
+Add global %s,Aggiungi global %s
+The %s global now runs save_system.tscn; its settings change here and in its Inspector. Edit > Undo in Godot takes the global off again.,Il global %s ora esegue save_system.tscn; le sue impostazioni cambiano qui e nel suo Inspector. Modifica > Annulla in Godot rimuove di nuovo il global.
+Every sheet with no theme of its own now wears %s instead of %s. Edit > Undo in Godot puts %s back.,Ogni foglio senza tema proprio ora usa %s al posto di %s. Modifica > Annulla in Godot rimette %s.
+Use %s for every sheet,Usa %s per ogni foglio
+Match the editor again,Torna a seguire l'editor
+"%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.","%d script semplici scrivono sulla console dove una build esportata li esegue ancora, il primo è %s. Non sono elencati uno per uno: racchiudi le righe in un test OS.is_debug_build() se una release deve restare silenziosa."

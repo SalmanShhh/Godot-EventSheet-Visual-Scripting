@@ -11230,3 +11230,17 @@ Find and replace in the project,Rechercher et remplacer dans le projet
 A .gd file with none of the plugin's markers is listed here even if it is a sheet. Tick a file to change it.,Un fichier .gd sans les marques du plugin est listé ici même si c'est une feuille. Cochez un fichier pour le modifier.
 today,aujourd'hui
 "Put them all back restores %d file(s) the last Replace in Project wrote, %s.","Tout remettre restaure %d fichier(s) écrits par le dernier Remplacer dans le projet, %s."
+"There is already a global named %s that loads %s, and it is not replaced.",Un global nommé %s qui charge %s existe déjà ; il n'est pas remplacé.
+That global name is taken,Ce nom de global est déjà pris
+Use this name,Utiliser ce nom
+"Choose another name for the new global, or cancel and nothing changes.","Choisissez un autre nom pour le nouveau global, ou annulez et rien ne change."
+Its row in Project Settings > Globals > Autoload keeps the name %s: there is already a global named %s that loads %s.,Sa ligne dans Paramètres du projet > Globals > Autoload garde le nom %s : un global nommé %s qui charge %s existe déjà.
+Stopped - %d finding(s) so far; run it again for the whole project.,Arrêté - %d constat(s) pour l'instant ; relancez pour tout le projet.
+Checking the project - step %d of %d,Vérification du projet - étape %d sur %d
+Checking the project...,Vérification du projet...
+Add global %s,Ajouter le global %s
+The %s global now runs save_system.tscn; its settings change here and in its Inspector. Edit > Undo in Godot takes the global off again.,Le global %s exécute maintenant save_system.tscn ; ses réglages changent ici et dans son Inspecteur. Édition > Annuler dans Godot retire de nouveau le global.
+Every sheet with no theme of its own now wears %s instead of %s. Edit > Undo in Godot puts %s back.,Chaque feuille sans thème propre porte maintenant %s au lieu de %s. Édition > Annuler dans Godot remet %s.
+Use %s for every sheet,Utiliser %s pour chaque feuille
+Match the editor again,Suivre de nouveau l'éditeur
+"%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.","%d script(s) simples écrivent dans la console là où une version exportée les exécute encore, le premier étant %s. Ils ne sont pas listés un par un : entourez les lignes d'un test OS.is_debug_build() si une version finale doit rester silencieuse."

@@ -11230,3 +11230,17 @@ Find and replace in the project,Найти и заменить в проекте
 A .gd file with none of the plugin's markers is listed here even if it is a sheet. Tick a file to change it.,"Файл .gd без меток плагина указан здесь, даже если это лист. Отметьте файл, чтобы изменить его."
 today,сегодня
 "Put them all back restores %d file(s) the last Replace in Project wrote, %s.","«Вернуть всё» восстановит файлов: %d, записанных последней заменой в проекте, %s."
+"There is already a global named %s that loads %s, and it is not replaced.","Глобальный объект %s, загружающий %s, уже есть, и он не заменяется."
+That global name is taken,Это имя глобального объекта занято
+Use this name,Использовать это имя
+"Choose another name for the new global, or cancel and nothing changes.","Выберите другое имя для нового глобального объекта или отмените, и ничего не изменится."
+Its row in Project Settings > Globals > Autoload keeps the name %s: there is already a global named %s that loads %s.,"Его строка в Настройках проекта > Глобалы > Автозагрузка сохраняет имя %s: глобальный объект %s, загружающий %s, уже есть."
+Stopped - %d finding(s) so far; run it again for the whole project.,"Остановлено - пока найдено: %d. Запустите снова, чтобы проверить весь проект."
+Checking the project - step %d of %d,Проверка проекта - шаг %d из %d
+Checking the project...,Проверка проекта...
+Add global %s,Добавить глобальный объект %s
+The %s global now runs save_system.tscn; its settings change here and in its Inspector. Edit > Undo in Godot takes the global off again.,Глобальный объект %s теперь запускает save_system.tscn; его настройки меняются здесь и в инспекторе. Правка > Отменить в Godot снова убирает его.
+Every sheet with no theme of its own now wears %s instead of %s. Edit > Undo in Godot puts %s back.,Каждый лист без своей темы теперь носит %s вместо %s. Правка > Отменить в Godot возвращает %s.
+Use %s for every sheet,Использовать %s для каждого листа
+Match the editor again,Снова следовать редактору
+"%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.","Обычных скриптов, пишущих в консоль там, где выпускная сборка всё ещё их выполняет: %d, первый - %s. Они не перечислены по одному: оберните строки в проверку OS.is_debug_build(), если выпуск должен молчать."

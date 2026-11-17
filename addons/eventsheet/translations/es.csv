@@ -11230,3 +11230,17 @@ Find and replace in the project,Buscar y reemplazar en el proyecto
 A .gd file with none of the plugin's markers is listed here even if it is a sheet. Tick a file to change it.,Un archivo .gd sin las marcas del plugin aparece aquí aunque sea una hoja. Marca un archivo para cambiarlo.
 today,hoy
 "Put them all back restores %d file(s) the last Replace in Project wrote, %s.","Devolver todo restaura %d archivo(s) que escribió el último Reemplazar en el proyecto, %s."
+"There is already a global named %s that loads %s, and it is not replaced.","Ya existe un global llamado %s que carga %s, y no se reemplaza."
+That global name is taken,Ese nombre de global está en uso
+Use this name,Usar este nombre
+"Choose another name for the new global, or cancel and nothing changes.",Elige otro nombre para el nuevo global o cancela y no cambia nada.
+Its row in Project Settings > Globals > Autoload keeps the name %s: there is already a global named %s that loads %s.,Su fila en Ajustes del proyecto > Globals > Autoload conserva el nombre %s: ya existe un global llamado %s que carga %s.
+Stopped - %d finding(s) so far; run it again for the whole project.,Detenido - %d hallazgo(s) hasta ahora; vuelve a ejecutarlo para todo el proyecto.
+Checking the project - step %d of %d,Revisando el proyecto - paso %d de %d
+Checking the project...,Revisando el proyecto...
+Add global %s,Añadir global %s
+The %s global now runs save_system.tscn; its settings change here and in its Inspector. Edit > Undo in Godot takes the global off again.,El global %s ahora ejecuta save_system.tscn; sus ajustes cambian aquí y en su Inspector. Editar > Deshacer en Godot quita el global de nuevo.
+Every sheet with no theme of its own now wears %s instead of %s. Edit > Undo in Godot puts %s back.,Cada hoja sin tema propio ahora usa %s en lugar de %s. Editar > Deshacer en Godot devuelve %s.
+Use %s for every sheet,Usar %s para todas las hojas
+Match the editor again,Volver a seguir el editor
+"%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.",%d script(s) simples escriben en la consola donde una versión exportada aún los ejecuta; el primero es %s. No se listan uno por uno: envuelve las líneas en una prueba OS.is_debug_build() si una versión final debe estar en silencio.

@@ -12,6 +12,44 @@ Ability Set, State Machine, Skill Tree, Eight Direction, Physics Car, Prestige, 
 
 The behaviour library now carries the small import file that sits beside each pack icon, and adding a pack copies it in with the icon. Before, a pack added from the library was first imported with the icon's colours as drawn, and the editor turned the recolouring on a moment later and imported the icon a second time while the add was still running, which could print "reimport" errors and leave the add waiting. Now the first import is the right one on a light and on a dark editor and nothing is imported twice. The add also waits until the icon is really imported, not only until its import file exists. A project with no behaviours yet no longer prints a "Couldn't open directory" error when the editor starts (the icon check and the importer's cache stamp both stay silent when `eventsheet_addons/` is missing), and the icon check looks only at the packs the plugin ships, never at a pack you wrote yourself.
 
+### Fixed: the Project Doctor no longer freezes the editor on a big project
+
+On a project of two thousand scripts the check took five minutes with the editor frozen and printed two thousand warnings into Godot's Output. It now runs a few milliseconds at a time with a frame between, shows how far it is, has a Cancel that works, and fills its window as findings come in; the whole check takes a few seconds, and nothing is printed into Output. Only a file that starts with the compiler's banner is checked as a sheet: the plain scripts you wrote are read by the checks that make sense for any script, and counted in one line instead of reported one by one. The window opens wide enough to read, remembers the size you leave it at, and shows the selected finding whole under the list. The command-line tool prints the same lines and the same verdict.
+
+### Fixed: Save Studio no longer re-points a SaveSystem global you already had
+
+If the project already has a global named SaveSystem that loads something else, "Keep them in a scene" says so and offers another name or Cancel; it never replaces it. Adding the global, and the theme chosen with "Use For Every Sheet", are now one Ctrl+Z step in Godot, and renaming a global onto a name that is taken is refused with the reason.
+
+### Fixed: text saved as csv, ini or xml keeps its line breaks
+
+A text with a line break in it came back without the break from csv, ini and xml saves. Line breaks, tabs, quotes, backslashes, the format's own delimiters, unicode and control characters now come back as they went in, as do keys with an equals sign or a leading bracket. Files written by the earlier code still read.
+
+### Fixed: closing one scene asks only about that scene's sheets
+
+Godot names the scene when one scene tab is closed, and the plugin used to list every unsaved sheet whichever scene it was. It now names the sheets attached to that scene, and still lists all of them when the editor quits.
+
+### Fixed: no red errors at start in a project with no packs
+
+A project with no eventsheet_addons folder no longer prints "Couldn't open directory" when the editor starts.
+
+### Fixed: the restored session opens each file once, and keeps the tab you are on
+
+A file open in several tabs came back as that many tabs. Each file is now saved and restored once, a session with a very long list of tabs brings back the first twenty (and the one you were on), and a sheet you open yourself while the tabs are coming back is not switched away from.
+
+### Fixed: pooled nodes no longer collide while they wait, and keep their idle tick when woken
+
+A node parked by the Object Pool is now disabled, so it takes no part in physics, and a node whose own behaviour had parked its tick wakes as it was left.
+
+### Fixed: Wait For Event gives up on game time and keeps a second waiter's state
+
+The give-up time stops while the game is paused and follows the time scale, and a second Wait For Event on a channel no longer clears the first one's state.
+
+### Fixed: a trauma Shake card of 0 seconds writes a Show as GDScript snippet that does something, and puts the camera back where it was
+
+### Fixed: the platformer route finder takes its next node from a heap
+
+A large map cost the square of its size; the routes are the same.
+
 ### Changed: thirty-two weak behaviour and section icons are redrawn so each reads at 16 pixels
 
 A survey of every behaviour and section icon found thirty-two that were a smudge at the size the Scene dock, the Add box and the picker draw them, said nothing about what the behaviour does, or looked like another icon (some like one of Godot's own with a different meaning). They are redrawn on the pixel grid in Godot's style, worst first: Ability Set (a list of sparkles), Skateboard (a deck with wheels), World-space UI (a panel standing on a floor), Encounter (a timeline of staggered spawns), State Machine (round states joined by arrows), Rotate (a square inside a turning arrow), Big Number (1K), Quality Preset (a dial), Second View (a picture inside a picture), Prestige (a star in a restart arrow), Systems (blocks feeding one block), Skin Vault (a shirt with a keyhole), and twenty more including Spring, Light Pulse, Combo Box, Physics Car, Hit Flash, Event Bus, Eight Direction and the Variables, Behavior, Helpers, Input Event, Sequencer and Object State sections. Prestige no longer matches Godot's Favorites star, Systems its Filter funnel, or Skin Vault its Lock. Icon paths and file names are unchanged, so no sheet, scene or emitted script changes.
