@@ -1,4 +1,4 @@
-## @ace_version(1.0.0)
+# @ace_version(1.0.0)
 class_name HapticPatternResource
 extends Resource
 ## One shape a controller or a phone can be felt in: how hard, how long, and how many times - the file the Haptic row plays.

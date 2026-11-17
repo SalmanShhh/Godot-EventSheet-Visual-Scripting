@@ -1,4 +1,4 @@
-## @ace_version(1.0.0)
+# @ace_version(1.0.0)
 class_name EventForgeBusMix
 extends RefCounted
 ## A bus swept rather than switched - the muffle, the dive, the wash and the mix snapshot the Muffle Bus, Dive Bus Volume, Wash Bus, Restore Bus, Snapshot Buses As and Recall Bus Snapshot rows call.

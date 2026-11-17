@@ -2,8 +2,8 @@
 # meta-description: Public members become event-sheet actions, conditions, expressions, and triggers
 # meta-default: false
 @tool
+# @ace_category("My Pack")
 ## Describe the pack here (this prose becomes the provider description).
-## @ace_category("My Pack")
 class_name _CLASS_
 extends _BASE_
 

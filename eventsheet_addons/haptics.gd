@@ -1,4 +1,4 @@
-## @ace_version(1.0.0)
+# @ace_version(1.0.0)
 class_name EventForgeHaptics
 extends RefCounted
 ## What a hit feels like in the hand - the pattern, the emphasis and the continuous rumble the Haptic, Haptic Emphasis and Haptic Continuous rows call.

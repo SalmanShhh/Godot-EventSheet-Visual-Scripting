@@ -1,4 +1,4 @@
-## @ace_version(1.0.0)
+# @ace_version(1.0.0)
 extends Control
 
 
@@ -8,12 +8,12 @@ func _ready() -> void:
 	$SceneFlow.loading_finished.connect(_on_loading_finished)
 
 
-## @ace_hidden
+# @ace_hidden
 func _on_loading_progress_changed() -> void:
 	$LoadBar.value = $SceneFlow.loading_progress()
 
 
-## @ace_hidden
+# @ace_hidden
 func _on_loading_finished() -> void:
 	$PressAnyKey.visible = true
 

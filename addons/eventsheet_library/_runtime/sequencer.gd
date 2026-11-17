@@ -1,4 +1,4 @@
-## @ace_version(1.0.0)
+# @ace_version(1.0.0)
 class_name EventForgeSequencer
 extends Node
 ## The thing that steps a grid: it counts beats - the song's when there is one, its own when there is not - and says every cell it crosses out loud. The runtime the Play Sequence, Stop Sequence, Set Sequence Tempo and Jump To Sequence Step rows call.

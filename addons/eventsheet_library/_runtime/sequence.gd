@@ -1,4 +1,4 @@
-## @ace_version(1.0.0)
+# @ace_version(1.0.0)
 class_name SequenceResource
 extends Resource
 ## A grid of moments on a beat: tracks down the side, steps across the top, and a name in a cell - the file the Play Sequence row steps through.

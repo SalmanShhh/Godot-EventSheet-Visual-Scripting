@@ -1,15 +1,15 @@
+# @ace_version(1.0.0)
 ## Vignette: the frame darkens towards its corners, so the middle is where the eye goes. The oldest
 ## trick a lens plays, and the one a game reaches for when it wants a player to look at one thing.
-## @ace_version(1.0.0)
 @tool
 extends "post_effect.gd"
 
+# @ace_hidden
 ## The colour the corners shade towards. Black is a lens; a deep red is a warning.
-## @ace_hidden
 @export var shade: Color = Color.BLACK
 
+# @ace_hidden
 ## Where shading starts, from the frame middle outwards: small shades most of the frame, large only the corners.
-## @ace_hidden
 @export_range(0.0, 1.0, 0.01) var inner_edge: float = 0.35
 
 
