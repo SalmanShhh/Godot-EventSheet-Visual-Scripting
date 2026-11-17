@@ -28,6 +28,8 @@ signal selection_changed(cards: Array)
 ## so a saved shortcut or a test that names one still means the same entry.
 ## How many whole lines the Add box shows before it scrolls.
 const ADD_BOX_LINES: int = 14
+## The most cards one move may draw again before the whole list is drawn instead.
+const PARTIAL_LIMIT: int = 24
 
 const MENU_DUPLICATE: int = 0
 const MENU_COPY: int = 1
@@ -121,6 +123,9 @@ var _announced: Array = []
 ## Each card's line and title as drawn right now, by index, so a selection can be painted in place
 ## instead of rebuilding the list under the cursor (which would also lose the keyboard focus).
 var _lines: Dictionary = {}
+## How many card controls this list has built, ever. A move or an add builds only the cards it touched; a test reads
+## the difference to hold the list to that.
+var cards_built: int = 0
 var _titles: Dictionary = {}
 ## The picture on each card line and the summary beside it, by index, for a schema whose card line
 ## follows its numbers (`live_head`): a write repaints them where they stand.
@@ -366,11 +371,34 @@ func remove_selected() -> bool:
 	var kept: Array = []
 	for old_index: Variant in order:
 		kept.append(_cards[int(old_index)])
+	var removed_last_only: bool = _selected.size() == 1 and _selected.has(_cards.size() - 1)
 	_cards = kept
 	_refold(order)
 	_selected.clear()
 	_anchor = -1
-	_commit()
+	if removed_last_only and _drop_last_drawn():
+		_announce_selection()
+		value_changed.emit(get_value())
+	else:
+		_commit()
+	return true
+
+
+## Takes away the control of the card that was last in the list and nothing else, when the list has no bands and
+## still has cards. The cards that remain keep their places, so none of them is drawn again. False (nothing done)
+## when the whole list has to be drawn.
+func _drop_last_drawn() -> bool:
+	if _list == null or _cards.is_empty() or _has_bands():
+		return false
+	var gone: int = _cards.size()
+	var surface: Control = _lines.get(gone) as Control
+	var holder: Node = surface.get_parent() if surface != null and is_instance_valid(surface) else null
+	if holder == null or holder.get_parent() != _list:
+		return false
+	_forget_card_controls(gone)
+	_list.remove_child(holder)
+	holder.queue_free()
+	_show_fold()
 	return true
 
 
@@ -519,9 +547,30 @@ func add_card(kind: String) -> void:
 	var opens_new: bool = bool(_schema.get("open_new", false))
 	if opens_new:
 		_unfolded[_cards.size() - 1] = true
-	_commit()
+	if _append_drawn():
+		_announce_selection()
+		value_changed.emit(get_value())
+	else:
+		_commit()
 	if opens_new:
 		_ready_card.call_deferred(_cards.size() - 1)
+
+
+## Draws just the card added at the end of the list, under the ones already there, when the list has cards and
+## no bands. False (nothing done) when the whole list has to be drawn.
+func _append_drawn() -> bool:
+	if _list == null or _cards.size() < 2 or _has_bands() or _list.get_child_count() == 0:
+		return false
+	var index: int = _cards.size() - 1
+	if _lines.has(index) or not _lines.has(index - 1):
+		return false
+	var fresh: Control = _build_card(index)
+	_list.add_child(fresh)
+	# The caption that closes the list stays last.
+	if not _order_captions().is_empty():
+		_list.move_child(fresh, _list.get_child_count() - 2)
+	_show_fold()
+	return true
 
 
 ## Gives a card's first field the keyboard and scrolls the card into view, once it is on screen.
@@ -679,13 +728,70 @@ func _apply_order(order: Array) -> bool:
 			identity = false
 	if identity:
 		return false
+	var was_banded: bool = _has_bands()
 	var moved: Array = []
 	for slot: int in range(order.size()):
 		moved.append(_cards[int(order[slot])])
 	_cards = moved
 	_refold(order)
-	_commit()
+	# Only the cards whose place changed are drawn again; the rest keep the controls they have. A list with
+	# bands (cards grouped together) or a move that shifts many cards redraws the whole list as it always did.
+	if not was_banded and _redraw_moved(order):
+		_announce_selection()
+		value_changed.emit(get_value())
+	else:
+		_commit()
 	return true
+
+
+## Whether the list draws any of its cards on a band.
+func _has_bands() -> bool:
+	for group: Variant in EventSheetCardSchemas.together_groups(_schema, _cards):
+		if int(group) >= 0:
+			return true
+	return false
+
+
+## Draws again just the cards at the positions `order` changed, each in the place its old control holds. False
+## (nothing done) when that cannot be done safely and the caller must draw the whole list.
+func _redraw_moved(order: Array) -> bool:
+	if _list == null or _has_bands():
+		return false
+	var changed: Array = []
+	for slot: int in range(order.size()):
+		if int(order[slot]) != slot:
+			changed.append(slot)
+	if changed.size() > PARTIAL_LIMIT:
+		return false
+	var holders: Dictionary = {}
+	for slot: Variant in changed:
+		var surface: Control = _lines.get(int(slot)) as Control
+		var holder: Node = surface.get_parent() if surface != null and is_instance_valid(surface) else null
+		if holder == null or holder.get_parent() != _list or not holder.has_method("card_index") or int(holder.call("card_index")) != int(slot):
+			return false
+		holders[int(slot)] = holder
+	for slot: Variant in changed:
+		var index: int = int(slot)
+		_forget_card_controls(index)
+		var old: Node = holders[index]
+		var place: int = old.get_index()
+		_list.remove_child(old)
+		old.queue_free()
+		var fresh: Control = _build_card(index)
+		_list.add_child(fresh)
+		_list.move_child(fresh, place)
+	return true
+
+
+## Lets go of what the list remembers about the controls of the card at `index`, before they are drawn again.
+func _forget_card_controls(index: int) -> void:
+	for kept: Dictionary in [_marks, _timing_marks, _lines, _titles, _head_tiles, _badges, _pictures, _picture_tints]:
+		kept.erase(index)
+	var remaining: Array = []
+	for note: Variant in _notes:
+		if int((note as Dictionary).get("index", -1)) != index:
+			remaining.append(note)
+	_notes = remaining
 
 
 ## Where every card ends up after a move, as the list of old positions in new order (new index -> old index).
@@ -1257,6 +1363,7 @@ func _band_of(first: int, last: int) -> Control:
 
 
 func _build_card(index: int) -> Control:
+	cards_built += 1
 	var card: Dictionary = _cards[index]
 	var entry: Dictionary = _entry_for(card)
 	var enabled: bool = EventSheetCardSchemas.card_enabled(_schema, card)
@@ -2498,6 +2605,10 @@ class _CardRow:
 		_mark_layer.z_index = 1
 		_mark_layer.draw.connect(_draw_mark)
 		add_child(_mark_layer)
+
+	## The position of the card this row was built for.
+	func card_index() -> int:
+		return _index
 
 	func _gui_input(event: InputEvent) -> void:
 		var click: InputEventMouseButton = event as InputEventMouseButton
