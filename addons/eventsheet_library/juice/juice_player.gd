@@ -579,6 +579,9 @@ static var _next_hold: int = 0
 ## The ways back of a bus effect, each a Callable, kept until its time is up or the play ends.
 var _ways_back: Array[Callable] = []
 
+## The lights this player has flaring and will let go back by themselves, with what each rested at, until the flare is over.
+var _flares: Array[Dictionary] = []
+
 ## The effects a Bus Effect card added because its bus lacked them, by bus and kind: the effect, and how many cards still hold it.
 static var _added_effects: Dictionary = {}
 
@@ -1941,6 +1944,7 @@ func _stop_tweens() -> void:
 		if is_instance_valid(walked):
 			walked.kill()
 	_tweens.clear()
+	_flares.clear()
 
 ## A property on the host walked to a value, with what it was written down first so Restore can put
 ## it back. The walk is the engine's own tween, so nothing ticks while nothing is playing. A property the
@@ -3380,6 +3384,29 @@ func _light(card: Dictionary, at: float, seconds: float) -> void:
 	if goes_back:
 		made.chain().tween_property(light, NodePath(energy), rest_energy, back_seconds)
 		made.tween_property(light, NodePath(colour), rest_colour, back_seconds)
+		made.finished.connect(_forget_flare.bind(_note_flare(light, energy, colour, rest_energy, rest_colour)))
+
+# @ace_hidden
+## Writes down a light that is flaring and will go back by itself, so a player that goes away before the flare is
+## over can put it back. Gives the note, which is what ends it.
+func _note_flare(light: Node, energy: String, colour: String, rest_energy: float, rest_colour: Color) -> Dictionary:
+	var flare: Dictionary = {"light": light, "energy": energy, "colour": colour, "rest_energy": rest_energy, "rest_colour": rest_colour}
+	_flares.append(flare)
+	return flare
+
+## A flare ran its whole way: there is nothing to put back.
+func _forget_flare(flare: Dictionary) -> void:
+	_flares.erase(flare)
+
+## Puts every light that is still flaring back to what it rested at, the way the other cards put their own back when
+## the player goes away. A Stop does not come here: it leaves a light where it got to.
+func _put_flares_back() -> void:
+	for flare: Dictionary in _flares:
+		var light: Object = flare.get("light") as Object
+		if light != null and is_instance_valid(light):
+			light.set(str(flare["energy"]), flare["rest_energy"])
+			light.set(str(flare["colour"]), flare["rest_colour"])
+	_flares.clear()
 
 ## The curve of a tween: the words a card keeps, as Godot's transition and ease.
 func _eased(made: Tween, word: String) -> void:
@@ -3765,6 +3792,7 @@ func _end_effects() -> void:
 ## taken out of the tree (put away in a pool) says it and one that was freed does not.
 func _exit_tree() -> void:
 	_loop_run += 1
+	_put_flares_back()
 	_end_effects()
 	_told_nested("stop")
 	if not playing:
