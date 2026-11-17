@@ -89,7 +89,7 @@ static func _sections(ok_so_far: bool) -> bool:
 static func _cards(ok_so_far: bool) -> bool:
 	var ok: bool = ok_so_far
 	var kinds: PackedStringArray = card_kinds()
-	ok = SUPPORT.check(NAME, "the Juice Player offers fifty-four kinds of card", kinds.size(), 54) and ok
+	ok = SUPPORT.check(NAME, "the Juice Player offers fifty-seven kinds of card", kinds.size(), 57) and ok
 	var seen: Dictionary = {}
 	var wanted: PackedStringArray = kinds.duplicate()
 	wanted.append("own")

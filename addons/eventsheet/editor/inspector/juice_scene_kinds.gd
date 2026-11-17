@@ -39,6 +39,9 @@ const LIGHTS: Array = ["Light2D", "Light3D"]
 ## The value of the scene's look a new Scene Look card moves: how strongly bright things glow.
 const GLOW_STRENGTH: String = "glow_intensity"
 
+## What a new Spring card kicks, by the name of the property, in the property's own units: a speed in units a second.
+const SPRING_KICKS: Dictionary = {"scale": Vector2(3.0, 3.0), "position": Vector2(0.0, -200.0), "rotation": 8.0}
+
 ## The ways a Bus Effect card changes a bus.
 const BUS_WAYS: String = "options:muffle=Muffle,dive=Dive,wash=Wash,switch=Switch an effect on"
 
@@ -53,6 +56,7 @@ static func kinds(family_of: Dictionary) -> Array:
 	all.append_array(_scene_kinds(family_of))
 	all.append_array(_turning_kinds(family_of))
 	all.append_array(_light_look_sound_kinds(family_of))
+	all.append_array(_time_kinds(family_of))
 	return all
 
 
@@ -109,8 +113,7 @@ static func _scene_kinds(family_of: Dictionary) -> Array:
 			family_of, [
 				_node("node", "Body", BODIES),
 				{"key": "part", "label": "Change", "drawer": "options:mask=What it sees (mask),layer=What it is on (layer)", "default": "mask"},
-				{"key": "layer", "label": "Layer number", "drawer": "int", "whole": true, "default": 1, "range": "1,32"},
-				{"key": "layer_name", "label": "", "drawer": "note", "text": layer_note, "hide_empty": true},
+				{"key": "layer", "label": "Layer number", "drawer": "layer_pick", "default": 1},
 				{"key": "on", "label": "Switch it on", "drawer": "bool", "default": false},
 				_over("For", 0.5),
 				_node_line("collision_layer_for")
@@ -191,8 +194,10 @@ static func _light_look_sound_kinds(family_of: Dictionary) -> Array:
 			"Flares a light to a brightness and a colour and lets it go back by itself: a muzzle flash. It works on the 2D and 3D lights, and a light that was off is switched on for the flare.",
 			family_of, [
 				_node("node", "Light", LIGHTS, "This object"),
-				{"key": "energy_to", "label": "Energy to", "drawer": "num", "default": 3.0},
-				{"key": "colour_to", "label": "Colour to", "drawer": "color_button", "default": Color(1.0, 0.6, 0.2)},
+				{"key": "energy_from", "label": "Energy", "drawer": "optional", "empty": "From where it is"},
+				{"key": "energy_to", "label": "", "drawer": "num", "default": 3.0, "beside": true, "to_word": "to"},
+				{"key": "colour_from", "label": "Colour", "drawer": "optional_color", "empty": "From where it is", "sample": light_colour},
+				{"key": "colour_to", "label": "", "drawer": "color_button", "default": Color(1.0, 0.6, 0.2), "beside": true, "to_word": "to"},
 				_over("Over", 0.08),
 				{"key": "back", "label": "Go back", "drawer": "bool", "default": true, "redraw": true},
 				{"key": "back_seconds", "label": "Back over", "drawer": "unit:time", "default": 0.2, "show_if": "back"},
@@ -212,7 +217,7 @@ static func _light_look_sound_kinds(family_of: Dictionary) -> Array:
 			], {"property": GLOW_STRENGTH, "to": 2.0, "seconds": 0.1, "back_seconds": 0.3}, ["WorldEnvironment", "Camera3D"],
 			["glow", "bloom", "fog", "saturation", "exposure", "environment", "post processing", "colour grade"]),
 		_kind("bus_effect", "Bus Effect For A Time",
-			"Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end and stays. Never shown in the editor.",
+			"Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end for the card and taken off again when the card is done, so the bus is left as it was. Never shown in the editor.",
 			family_of, [
 				{"key": "bus", "label": "Bus", "drawer": "bus", "default": "Master"},
 				{"key": "how", "label": "Way", "drawer": BUS_WAYS, "default": "muffle", "redraw": true},
@@ -223,6 +228,40 @@ static func _light_look_sound_kinds(family_of: Dictionary) -> Array:
 				{"key": "back_seconds", "label": "Back over", "drawer": "unit:time", "default": 0.2, "visible_when": bus_has_a_value}
 			], {"bus": "Master", "how": "muffle", "to": 400.0, "seconds": 0.5, "back_seconds": 0.2}, [],
 			["muffle", "low pass", "underwater", "reverb", "duck", "audio effect"])
+	]
+
+
+static func _time_kinds(family_of: Dictionary) -> Array:
+	return [
+		_kind("spring", "Spring",
+			"Kicks a value of a 2D node and lets its Spring node bounce it back to rest: a button that squashes when pressed, a sign that swings. It needs a Spring node under the node. The kick is in the value's own units, a second each: for a scale 3 stretches it a fifth of the way.",
+			family_of, [
+				_node("node", "Node", ["Node2D"], "This object"),
+				{"key": "property", "label": "Property", "drawer": "property", "node_key": "node", "default": "scale", "on_change": spring_reseed},
+				{"key": "kick", "label": "Kick", "drawer": "typed", "node_key": "node", "property_key": "property"},
+				{"key": "damping", "label": "Damping", "drawer": "num", "unset": 0.85},
+				{"key": "frequency", "label": "Swings a second", "drawer": "num", "unset": 2.075},
+				_node_line("spring")
+			], {"property": "scale", "kick": Vector2(3.0, 3.0)}, ["Node2D"], ["bounce", "wobble", "overshoot", "bump", "kick"]),
+		_kind("slow_object", "Slow One Object",
+			"Slows the animations and particles under a node for a time, then puts their speed back. Scripts of your own keep their speed, because Godot has nothing to slow them with. It multiplies with Slowmo: half speed here under a Slowmo of 0.5 is a quarter.",
+			family_of, [
+				_node("node", "Node", ["Node"], "This object"),
+				{"key": "speed", "label": "Speed", "drawer": "num", "default": 0.3},
+				_over("For", 0.5),
+				{"key": "slow_says", "label": "", "drawer": "note", "text": slow_says, "hide_empty": true, "warn_when": slow_finds_nothing}
+			], {"speed": 0.3, "seconds": 0.5}, ["Node"], ["slow motion", "speed scale", "freeze", "animation speed"]),
+		_kind("animation_parameter", "Animation Parameter",
+			"Moves one parameter of an AnimationTree to a value and brings it back: a blend amount, a speed, a condition. It lists only the parameters the tree really has and lets you set.",
+			family_of, [
+				_node("node", "Animation tree", ["AnimationTree"]),
+				{"key": "parameter", "label": "Parameter", "drawer": "choices", "choices": animation_parameters, "also": animation_parameter_chosen, "empty": "Pick a parameter"},
+				{"key": "to", "label": "To", "drawer": "typed", "sample": animation_parameter_sample},
+				_over("Over", 0.2),
+				{"key": "back", "label": "Go back", "drawer": "bool", "default": true, "redraw": true},
+				{"key": "back_seconds", "label": "Back over", "drawer": "unit:time", "default": 0.2, "show_if": "back"},
+				_node_line("animation_parameter")
+			], {"to": 1.0, "seconds": 0.2, "back": true, "back_seconds": 0.2}, ["AnimationTree"], ["blend", "state machine", "condition", "animation speed", "parameters"])
 	]
 
 
@@ -251,11 +290,13 @@ const NEEDS: Dictionary = {
 	"rotate_to": ["a node that can be turned", TURNABLE],
 	"rotation_shake": ["a node that can be turned", TURNABLE],
 	"light": ["a light", LIGHTS],
+	"spring": ["a 2D node (a Spring node does not move a UI or a 3D node)", ["Node2D"]],
+	"animation_parameter": ["an animation tree", ["AnimationTree"]],
 	"scene_look": ["a WorldEnvironment or a 3D camera", ["WorldEnvironment", "Camera3D"]]
 }
 
 ## The cards whose empty node means the object the player is under.
-const HOST_WHEN_EMPTY: Array = ["remove_node", "draw_order", "switch_node", "look_at", "rotate_by", "rotate_to", "rotation_shake", "light"]
+const HOST_WHEN_EMPTY: Array = ["remove_node", "draw_order", "switch_node", "look_at", "rotate_by", "rotate_to", "rotation_shake", "light", "spring"]
 
 
 ## What is wrong with the node a card points at, in one or two short sentences, or an empty text when nothing is.
@@ -273,6 +314,12 @@ static func node_note(word: String, card: Dictionary, edited: Object, key: Strin
 		"look_at":
 			if str(card.get("target", "")).is_empty():
 				return EventSheetL10n.translate("Pick the node to look at. Until then this card does nothing.")
+		"spring":
+			if pack().call("spring_of", picked) == null:
+				return EventSheetL10n.translate("There is no Spring node under %s. Add one, or this card does nothing.") % picked.name
+		"animation_parameter":
+			if str(card.get("parameter", "")).is_empty():
+				return EventSheetL10n.translate("Pick the parameter to move. Until then this card does nothing.")
 		"remove_node":
 			if edited is Node and (picked == edited or picked.is_ancestor_of(edited as Node)):
 				return EventSheetL10n.translate("This node holds the player, so it is removed when the list ends, whatever the tick says.")
@@ -298,15 +345,111 @@ static func _scene_has_a_look(card: Dictionary, edited: Object) -> bool:
 	return root == null or root is WorldEnvironment or not root.find_children("*", "WorldEnvironment", true, false).is_empty()
 
 
-## What the layer a card names is called in Project Settings, said under its number. A layer nobody named says nothing.
-static func layer_note(card: Dictionary, _cards: Array, _index: int, edited: Object) -> String:
-	var number: int = clampi(int(card.get("layer", 1)), 1, 32)
-	var picked: Node = _picked(card, edited, "node", false)
-	var space: String = "3d_physics" if picked is CollisionObject3D else "2d_physics"
+## The physics space a body's layers are named in: the 3D one for a 3D body, else the 2D one.
+static func layer_space(card: Dictionary, edited: Object) -> String:
+	return "3d_physics" if _picked(card, edited, "node", false) is CollisionObject3D else "2d_physics"
+
+
+## One layer as the list reads it: its number, and the name the project gave it in Project Settings when it gave one.
+static func layer_words(space: String, number: int) -> String:
 	var named: String = str(ProjectSettings.get_setting("layer_names/%s/layer_%d" % [space, number], "")).strip_edges()
-	if named.is_empty():
-		return ""
-	return EventSheetL10n.translate("Layer %d is called %s in Project Settings.") % [number, named]
+	return "%d - %s" % [number, named] if not named.is_empty() else str(number)
+
+
+## The thirty-two layers of a physics space, the way the list reads them.
+static func layer_choices(space: String) -> PackedStringArray:
+	var made: PackedStringArray = PackedStringArray()
+	for number: int in range(1, 33):
+		made.append(layer_words(space, number))
+	return made
+
+
+## The colour a Light card's start takes when it is first set: the colour of the light the card points at.
+static func light_colour(card: Dictionary, edited: Object) -> Variant:
+	var picked: Node = _picked(card, edited, "node", true)
+	if picked is Light2D:
+		return (picked as Light2D).color
+	if picked is Light3D:
+		return (picked as Light3D).light_color
+	return Color.WHITE
+
+
+## The Juice Player's own code, which knows what a Spring node is and which parameters of a tree can be set.
+static func pack() -> Script:
+	return load("res://addons/eventsheet/editor/inspector/juice_preview.gd").call("pack_script") as Script
+
+
+## The nodes a Slow One Object card would slow, from the node it points at (or the object the player is under).
+static func slow_nodes(card: Dictionary, edited: Object) -> Array:
+	var picked: Node = _picked(card, edited, "node", true)
+	return Array(pack().call("speed_nodes_under", picked)) if picked != null else []
+
+
+## What a Slow One Object card found to slow, in plain words: how many nodes and what they are called.
+static func slow_says(card: Dictionary, _cards: Array, _index: int, edited: Object) -> String:
+	var found: Array = slow_nodes(card, edited)
+	if found.is_empty():
+		var picked: Node = _picked(card, edited, "node", true)
+		if picked == null:
+			return ""
+		return EventSheetL10n.translate("Nothing under %s has a speed to slow. Scripts of your own keep their speed.") % picked.name
+	var names: PackedStringArray = PackedStringArray()
+	for node: Variant in found:
+		names.append(str((node as Node).name))
+	return EventSheetL10n.translate("Slows %d: %s. Scripts of your own keep their speed.") % [found.size(), ", ".join(names)]
+
+
+## Whether a Slow One Object card finds nothing to slow, so its line is the quiet amber one.
+static func slow_finds_nothing(card: Dictionary, _cards: Array, _index: int, edited: Object) -> bool:
+	return _picked(card, edited, "node", true) != null and slow_nodes(card, edited).is_empty()
+
+
+## The parameters of the animation tree a card points at that a card may set.
+static func animation_parameters(card: Dictionary, edited: Object) -> Array:
+	var tree: Node = _picked(card, edited, "node", false)
+	return Array(pack().call("writable_parameters", tree)) if tree is AnimationTree else []
+
+
+## What the chosen parameter holds now: the shape of the value the card moves it to.
+static func animation_parameter_sample(card: Dictionary, edited: Object) -> Variant:
+	var tree: Node = _picked(card, edited, "node", false)
+	var parameter: String = str(card.get("parameter", ""))
+	if not (tree is AnimationTree) or parameter.is_empty():
+		return null
+	return tree.get(parameter)
+
+
+## Choosing a parameter gives the card a value of the parameter's own kind to move it to.
+static func animation_parameter_chosen(card: Dictionary, edited: Object, chosen: String) -> Dictionary:
+	var tree: Node = _picked(card, edited, "node", false)
+	if not (tree is AnimationTree):
+		return {}
+	var now: Variant = tree.get(chosen)
+	match typeof(now):
+		TYPE_BOOL:
+			return {"to": not bool(now)}
+		TYPE_INT:
+			return {"to": 1}
+		TYPE_VECTOR2:
+			return {"to": Vector2.ONE}
+	return {"to": 1.0 if float(now) < 0.5 else 0.0}
+
+
+## Choosing another property gives a Spring card a kick in the new property's own kind.
+static func spring_reseed(card: Dictionary, edited: Object, chosen: Variant) -> Dictionary:
+	var picked: Node = _picked(card, edited, "node", true)
+	var property: String = str(chosen)
+	var now: Variant = picked.get_indexed(NodePath(property)) if picked != null else null
+	if SPRING_KICKS.has(property):
+		return {"kick": SPRING_KICKS[property]}
+	match typeof(now):
+		TYPE_VECTOR2:
+			return {"kick": Vector2(3.0, 3.0)}
+		TYPE_VECTOR3:
+			return {"kick": Vector3(3.0, 3.0, 3.0)}
+		TYPE_COLOR:
+			return {"kick": Color(4.0, 4.0, 4.0, 0.0)}
+	return {"kick": 3.0}
 
 
 ## What a Rotation Shake does, in one grey sentence.
@@ -355,12 +498,12 @@ static func bus_has_a_value(card: Dictionary) -> bool:
 static func bus_says(card: Dictionary) -> String:
 	match str(card.get("how", "muffle")):
 		"dive":
-			return EventSheetL10n.translate("A level in decibels, between -80 and 24. A bus with no amplify effect gets one added at its end, which stays on the bus.")
+			return EventSheetL10n.translate("A level in decibels, between -80 and 24. A bus with no amplify effect gets one while the card holds, and loses it again.")
 		"wash":
-			return EventSheetL10n.translate("How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one added at its end, which stays on the bus.")
+			return EventSheetL10n.translate("How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one while the card holds, and loses it again.")
 		"switch":
 			return EventSheetL10n.translate("Effect 0 is the first effect on the bus. It is switched on, then put back to how it was.")
-	return EventSheetL10n.translate("The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one added at its end, which stays on the bus.")
+	return EventSheetL10n.translate("The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one while the card holds, and loses it again.")
 
 
 ## Whether the number a card gives is outside what its way of changing the bus can take.

@@ -355,7 +355,10 @@ const CATEGORY_OF: Dictionary = {
 	"rotation_shake": "transform",
 	"light": "scene",
 	"scene_look": "screen",
-	"bus_effect": "audio"
+	"bus_effect": "audio",
+	"spring": "transform",
+	"slow_object": "pause",
+	"animation_parameter": "transform"
 }
 
 ## Keys that Set Juice Card Field and Juice Card Field accept.
@@ -454,6 +457,12 @@ const LIGHT: String = "light"
 const SCENE_LOOK: String = "scene_look"
 ## Step word: hold an effect of an audio bus for a time.
 const BUS_EFFECT: String = "bus_effect"
+## Step word: kick a value of a 2D node and let its Spring node settle it.
+const SPRING: String = "spring"
+## Step word: slow the animations and particles under a node for a time.
+const SLOW_OBJECT: String = "slow_object"
+## Step word: move one parameter of an AnimationTree and bring it back.
+const ANIMATION_PARAMETER: String = "animation_parameter"
 
 ## Every word this node plays itself that points at another node or at the world.
 const WORLD_WORDS: PackedStringArray = [
@@ -461,7 +470,7 @@ const WORLD_WORDS: PackedStringArray = [
 	"force_for_a_time", "gravity_for_a_time", "freeze_body", "squash_stretch", "punch_position",
 	"punch_rotation", "pop", "fade", "grab_focus", "count_to", "reveal_text", "fill_bar", "shader_value", "pause_player",
 	"collision_for", "collision_layer_for", "remove_node", "draw_order", "switch_node", "look_at", "rotate_by",
-	"rotate_to", "rotation_shake", "light", "scene_look", "bus_effect"
+	"rotate_to", "rotation_shake", "light", "scene_look", "bus_effect", "spring", "slow_object", "animation_parameter"
 ]
 
 ## Particles word: play the burst again from the start.
@@ -570,6 +579,9 @@ static var _next_hold: int = 0
 ## The ways back of a bus effect, each a Callable, kept until its time is up or the play ends.
 var _ways_back: Array[Callable] = []
 
+## The effects a Bus Effect card added because its bus lacked them, by bus and kind: the effect, and how many cards still hold it.
+static var _added_effects: Dictionary = {}
+
 ## The nodes a Remove Node card is holding back until this list has finished.
 var _removals: Array[Node] = []
 
@@ -584,7 +596,8 @@ const SHAKE_HERTZ: float = 12.0
 
 ## The words whose effect a skip to the end leaves out, because they last only a time and the skip is already past it.
 const LASTS_ONLY_A_TIME: PackedStringArray = [
-	"collision_for", "collision_layer_for", "draw_order", "switch_node", "rotation_shake", "light", "scene_look", "bus_effect"
+	"collision_for", "collision_layer_for", "draw_order", "switch_node", "rotation_shake", "light", "scene_look", "bus_effect",
+	"spring", "slow_object", "animation_parameter"
 ]
 
 ## The switch a value of the look does nothing without, by the start of its name. The longest start comes first.
@@ -609,9 +622,56 @@ func _look_holder(card: Dictionary) -> Node:
 	var found: Array[Node] = get_tree().current_scene.find_children("*", "WorldEnvironment", true, false)
 	return found[0] if not found.is_empty() else null
 ## The file that sweeps a bus, or null when the project does not carry it.
-func _bus_mix() -> Script:
+static func _bus_mix() -> Script:
 	var path: String = "res://eventsheet_addons/bus_mix.gd"
 	return load(path) as Script if ResourceLoader.exists(path) else null
+## The last effect of a bus that is the kind a way of changing it uses, or null.
+static func _last_bus_effect_of(index: int, how: String) -> AudioEffect:
+	for slot: int in range(AudioServer.get_bus_effect_count(index) - 1, -1, -1):
+		var effect: AudioEffect = AudioServer.get_bus_effect(index, slot)
+		var wanted: bool = effect is AudioEffectLowPassFilter
+		if how == "dive":
+			wanted = effect is AudioEffectAmplify
+		elif how == "wash":
+			wanted = effect is AudioEffectReverb
+		if wanted:
+			return effect
+	return null
+## The engine nodes that have a speed of their own: what Slow One Object slows. An AnimationTree has none.
+const SPEED_CLASSES: PackedStringArray = ["AnimationPlayer", "AnimatedSprite2D", "AnimatedSprite3D", "GPUParticles2D", "CPUParticles2D",
+		"GPUParticles3D", "CPUParticles3D"]
+
+## The parts of an AnimationTree parameter list that are the tree's own bookkeeping, written by the tree while it plays.
+const TREE_BOOKKEEPING: PackedStringArray = ["fade_in_remaining", "fade_out_remaining", "time_to_restart"]
+
+## The springs a Spring card has kicked and not yet seen land, by spring and property: the way back that settles each.
+var _springs_moving: Dictionary = {}
+# @ace_hidden
+## Every node at or under a node that has a speed of its own.
+static func speed_nodes_under(root: Node) -> Array[Node]:
+	var found: Array[Node] = []
+	if root == null:
+		return found
+	for named: String in SPEED_CLASSES:
+		if root.is_class(named):
+			found.append(root)
+			break
+	for named: String in SPEED_CLASSES:
+		for node: Node in root.find_children("*", named, true, false):
+			if not found.has(node):
+				found.append(node)
+	return found
+# @ace_hidden
+## The Spring node that moves a node's values: the node itself, or the child that can kick a property.
+static func spring_of(node: Node) -> Node:
+	if node == null:
+		return null
+	if node.has_method("bump_property"):
+		return node
+	for child: Node in node.get_children():
+		if child.has_method("bump_property"):
+			return child
+	return null
 
 # --- Looping a list, and stopping everything ---
 # A list that loops is walked again and again by one coroutine that waits at least a frame between
@@ -1931,7 +1991,7 @@ static func sound_settings(card: Dictionary, at_strength: float, pitch_roll: flo
 static func card_length(card: Dictionary) -> float:
 	if word_of(card) == YOURS:
 		return _own_length(card)
-	if word_of(card) == LIGHT and bool(card.get("back", true)):
+	if (word_of(card) == LIGHT or word_of(card) == ANIMATION_PARAMETER) and bool(card.get("back", true)):
 		return maxf(float(card.get("seconds", 0.0)), 0.0) + maxf(float(card.get("back_seconds", 0.2)), 0.0)
 	if word_of(card) == SCENE_LOOK or word_of(card) == BUS_EFFECT:
 		return maxf(float(card.get("seconds", 0.0)), 0.0) + maxf(float(card.get("back_seconds", 0.3)), 0.0)
@@ -2251,6 +2311,12 @@ static func editor_kind(word: String) -> String:
 			return "skipped:it would change the look the editor saves"
 		BUS_EFFECT:
 			return "skipped:the editor's buses are the project's own"
+		SPRING:
+			return "skipped:a spring needs the running game's Spring node"
+		SLOW_OBJECT:
+			return "skipped:it would slow the animations of your scene in the editor"
+		ANIMATION_PARAMETER:
+			return "skipped:an animation tree runs in the game"
 		SPAWN_SCENE:
 			return "skipped:not shown in the editor, it adds a scene to the running game"
 		CALL_METHOD:
@@ -2522,6 +2588,12 @@ func _play_world_card(word: String, card: Dictionary, at: float, seconds: float,
 			_scene_look(card, seconds)
 		BUS_EFFECT:
 			_bus_effect(card, seconds)
+		SPRING:
+			_spring(card, at)
+		SLOW_OBJECT:
+			_slow_object(card, seconds)
+		ANIMATION_PARAMETER:
+			_animation_parameter(card, seconds)
 
 ## Restarts, starts or stops a particles node.
 func _particles(card: Dictionary) -> void:
@@ -3289,6 +3361,11 @@ func _light(card: Dictionary, at: float, seconds: float) -> void:
 	_keep_first(light, colour, rest_colour)
 	var peak: float = rest_energy + (float(card.get("energy_to", 3.0)) - rest_energy) * at
 	var tint: Color = rest_colour.lerp(_colour_of(card.get("colour_to", Color(1.0, 0.6, 0.2))), clampf(at, 0.0, 1.0))
+	# A card that names no start begins where the light is now, as every card did before it could.
+	if card.has("energy_from"):
+		light.set(energy, float(card["energy_from"]))
+	if card.has("colour_from"):
+		light.set(colour, _colour_of(card["colour_from"]))
 	var goes_back: bool = bool(card.get("back", true))
 	var back_seconds: float = maxf(float(card.get("back_seconds", 0.2)), 0.0)
 	if not bool(light.get(str(names["on"]))):
@@ -3373,7 +3450,7 @@ func _scene_look(card: Dictionary, seconds: float) -> void:
 
 ## Holds an effect of an audio bus for a time: switches one that is already on the bus on, or muffles, dives or
 ## washes the bus through the effect that does it, and puts it back by itself. An effect the bus lacks is added at
-## its END, which moves none of the others.
+## its END, which moves none of the others, and is taken off again when the way back is done.
 func _bus_effect(card: Dictionary, seconds: float) -> void:
 	var bus: String = str(card.get("bus", "Master"))
 	var index: int = AudioServer.get_bus_index(bus)
@@ -3397,14 +3474,214 @@ func _bus_effect(card: Dictionary, seconds: float) -> void:
 		return
 	var wanted: float = bus_value_for(how, float(card.get("to", 400.0)))
 	var resting: float = float(mix.call("read", bus, how))
+	_bus_hold(bus, how)
 	mix.call("sweep", get_tree().root, bus, how, wanted, 0.0)
 	_way_back_in(seconds, _sweep_back.bind(bus, how, resting, back_seconds))
 
 ## Walks a bus back to where one kind of effect rested, on the root of the tree, which no scene change can free.
+## When this card added the effect, the last card to give it back takes it off the bus once the walk is done.
 func _sweep_back(bus: String, how: String, resting: float, over: float) -> void:
 	var mix: Script = _bus_mix()
 	if mix != null and is_inside_tree():
 		mix.call("sweep", get_tree().root, bus, how, resting, over)
+	if not _added_effects.has(bus + "|" + how):
+		return
+	if over <= 0.0 or not is_inside_tree():
+		_bus_let_go(bus, how)
+	else:
+		get_tree().create_timer(over).timeout.connect(Callable(get_script(), "_bus_let_go").bind(bus, how))
+
+## Takes one card's hold of the effect a way of changing a bus runs through. An effect the bus lacks is added at its
+## end for the card, and taken off again by the last card to let go.
+static func _bus_hold(bus: String, how: String) -> void:
+	var index: int = AudioServer.get_bus_index(bus)
+	if index < 0:
+		return
+	var key: String = bus + "|" + how
+	if not _added_effects.has(key) and not _bus_has_kind(index, how):
+		_added_effects[key] = {"effect": null, "holds": 0}
+	var mix: Script = _bus_mix()
+	if mix != null:
+		mix.call("arm", bus, how)
+	if _added_effects.has(key):
+		var added: Dictionary = _added_effects[key]
+		if added["effect"] == null:
+			added["effect"] = _last_bus_effect_of(index, how)
+		added["holds"] = int(added["holds"]) + 1
+
+## Whether a bus carries an effect of the kind a way of changing it uses.
+static func _bus_has_kind(index: int, how: String) -> bool:
+	return _last_bus_effect_of(index, how) != null
+
+## Gives back one card's hold of an effect it added. The last card to let go takes the effect off the bus and forgets
+## where the bus rested, so the layout ends as it began.
+static func _bus_let_go(bus: String, how: String) -> void:
+	var key: String = bus + "|" + how
+	var added: Dictionary = _added_effects.get(key, {})
+	if added.is_empty():
+		return
+	added["holds"] = int(added["holds"]) - 1
+	if int(added["holds"]) > 0:
+		return
+	_added_effects.erase(key)
+	var index: int = AudioServer.get_bus_index(bus)
+	if index >= 0 and added["effect"] != null:
+		for slot: int in range(AudioServer.get_bus_effect_count(index)):
+			if AudioServer.get_bus_effect(index, slot) == added["effect"]:
+				AudioServer.remove_bus_effect(index, slot)
+				break
+	var mix: Script = _bus_mix()
+	var book: StringName = mix.get_script_constant_map().get("RESTING_META", &"") if mix != null else &""
+	if book != &"" and Engine.has_meta(book):
+		var resting: Dictionary = Engine.get_meta(book)
+		var per_bus: Dictionary = resting.get(bus, {})
+		per_bus.erase(how)
+		if per_bus.is_empty():
+			resting.erase(bus)
+
+## Slows the animations and particles under a node for a time, and puts their speed back. A node of your own code has
+## no speed to slow, and Godot has nothing to slow it with. The speed is the node's own, which multiplies with the
+## game's time scale.
+func _slow_object(card: Dictionary, seconds: float) -> void:
+	var root: Node = _target(card, "node", true)
+	var found: Array[Node] = speed_nodes_under(root)
+	if found.is_empty():
+		_card_missing(card, "finds nothing under %s that has a speed to slow" % (str(root.name) if root != null else "it"))
+		return
+	for node: Node in found:
+		_hold_for(node, "speed_scale", maxf(float(card.get("speed", 0.3)), 0.0), seconds)
+
+# @ace_hidden
+## A kick in the kind of value the property holds: what a card keeps, made a number, two or three numbers or a colour,
+## and scaled by the strength of the play.
+static func spring_kick(amount: Variant, current: Variant, at: float) -> Variant:
+	var number: float = 1.0
+	if amount is float or amount is int:
+		number = float(amount)
+	elif amount is Vector2:
+		number = (amount as Vector2).x
+	elif amount is Vector3:
+		number = (amount as Vector3).x
+	elif amount is Color:
+		number = (amount as Color).r
+	match typeof(current):
+		TYPE_VECTOR2:
+			return (amount as Vector2 if amount is Vector2 else Vector2(number, number)) * at
+		TYPE_VECTOR3:
+			return (amount as Vector3 if amount is Vector3 else Vector3(number, number, number)) * at
+		TYPE_COLOR:
+			return (amount as Color if amount is Color else Color(number, number, number, number)) * at
+	return number * at
+
+## Kicks a value of a 2D node and lets its Spring node settle it. The Spring node moves it back to where it rested, so
+## nothing is left changed; a Stop settles it at once, and Restore puts back the value from before the card.
+func _spring(card: Dictionary, at: float) -> void:
+	var target: Node = _target(card, "node", true)
+	if not (target is Node2D):
+		_card_missing(card, "points at a node a Spring node cannot move, which has to be a 2D node")
+		return
+	var spring: Node = spring_of(target)
+	if spring == null:
+		_card_missing(card, "finds no Spring node under %s" % target.name)
+		return
+	var property: String = str(card.get("property", "scale"))
+	var current: Variant = target.get_indexed(NodePath(property))
+	if not [TYPE_FLOAT, TYPE_INT, TYPE_VECTOR2, TYPE_VECTOR3, TYPE_COLOR].has(typeof(current)):
+		_card_missing(card, "springs %s, which is not a number, a Vector2, a Vector3 or a colour" % property)
+		return
+	if card.has("damping") or card.has("frequency"):
+		var damping: float = float(card.get("damping", spring.get("default_damping")))
+		var frequency: float = float(card.get("frequency", sqrt(float(spring.get("default_stiffness"))) / TAU))
+		spring.call("set_property_spring", property, damping, frequency)
+	_keep_first(target, property, current)
+	spring.call("bump_property", property, spring_kick(card.get("kick"), current, at))
+	var key: String = "%d|%s" % [spring.get_instance_id(), property]
+	if _springs_moving.has(key):
+		_ways_back.erase(_springs_moving[key])
+	var settle: Callable = _spring_rest.bind(spring, target, property)
+	_springs_moving[key] = settle
+	_ways_back.append(settle)
+	var landed: Callable = _spring_landed.bind(spring)
+	if not spring.is_connected("spring_reached", landed):
+		spring.connect("spring_reached", landed)
+
+## Settles a spring at the value it rests on, at once: what a Stop does to a spring that is still bouncing.
+func _spring_rest(spring: Node, target: Node, property: String) -> void:
+	if spring == null or not is_instance_valid(spring):
+		return
+	var entry: Variant = (spring.get("property_springs") as Dictionary).get(property)
+	if entry == null:
+		return
+	entry.set("active", false)
+	entry.set("velocity", Vector4.ZERO)
+	entry.set("value", entry.get("target"))
+	if target != null and is_instance_valid(target):
+		target.set_indexed(NodePath(property), entry.call("unpack"))
+
+## A spring landed by itself: there is nothing left for a Stop to settle.
+func _spring_landed(landed: String, spring: Node) -> void:
+	var key: String = "%d|%s" % [spring.get_instance_id(), landed]
+	if _springs_moving.has(key):
+		_ways_back.erase(_springs_moving[key])
+		_springs_moving.erase(key)
+
+# @ace_hidden
+## The parameters of an AnimationTree a card may move: numbers, whole numbers, ticks and a Vector2 that are not read-only,
+## and not the playback object of a state machine or the timers a one-shot keeps for itself.
+static func writable_parameters(tree: AnimationTree) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	if tree == null:
+		return found
+	for entry: Dictionary in tree.get_property_list():
+		var named: String = str(entry.get("name", ""))
+		if not named.begins_with("parameters/") or (int(entry.get("usage", 0)) & PROPERTY_USAGE_READ_ONLY) != 0:
+			continue
+		if not [TYPE_FLOAT, TYPE_INT, TYPE_BOOL, TYPE_VECTOR2].has(int(entry.get("type", TYPE_NIL))):
+			continue
+		if not TREE_BOOKKEEPING.has(named.get_file()):
+			found.append(named)
+	return found
+
+## Moves one parameter of an AnimationTree to a value over a time and brings it back. A number or a vector is walked; a
+## tick or a whole number is set and put back when the time is up. Stop leaves it where it got to, Restore puts it back.
+func _animation_parameter(card: Dictionary, seconds: float) -> void:
+	var tree: AnimationTree = _target(card, "node", false) as AnimationTree
+	var parameter: String = str(card.get("parameter", ""))
+	if tree == null:
+		_card_missing(card, "points at no animation tree")
+		return
+	if not writable_parameters(tree).has(parameter):
+		_card_missing(card, "names the parameter \"%s\", which this tree has no writable parameter of" % parameter)
+		return
+	var rest: Variant = tree.get(parameter)
+	_keep_first(tree, parameter, rest)
+	var goes_back: bool = bool(card.get("back", true))
+	var back_seconds: float = maxf(float(card.get("back_seconds", 0.2)), 0.0)
+	var wanted: Variant = card.get("to", rest)
+	match typeof(rest):
+		TYPE_BOOL:
+			wanted = bool(wanted)
+		TYPE_INT:
+			wanted = int(wanted)
+		TYPE_VECTOR2:
+			wanted = wanted as Vector2 if wanted is Vector2 else Vector2(float(wanted), float(wanted))
+		_:
+			wanted = float(wanted)
+	if typeof(rest) == TYPE_BOOL or typeof(rest) == TYPE_INT:
+		if goes_back:
+			_hold_for(tree, parameter, wanted, seconds)
+		else:
+			tree.set(parameter, wanted)
+		return
+	var made: Tween = _new_tween()
+	made.tween_method(_set_parameter.bind(tree, parameter), rest, wanted, seconds)
+	if goes_back:
+		made.tween_method(_set_parameter.bind(tree, parameter), wanted, rest, back_seconds)
+
+## Writes one parameter of an AnimationTree, unless the tree is gone.
+func _set_parameter(value: Variant, tree: AnimationTree, parameter: String) -> void:
+	if is_instance_valid(tree):
+		tree.set(parameter, value)
 
 # @ace_hidden
 ## The number a way of changing a bus can take: a cutoff in hertz for a muffle, a level in decibels for a dive (an

@@ -390,3 +390,76 @@ static func arguments_field(drawer: Control, card: Dictionary, field: Dictionary
 				row.add_child(skipped)
 		box.add_child(row)
 	return box
+
+
+## A number a card may leave alone: an empty box that says what leaving it alone means ("From where it is"), and
+## a number once one is typed. Clearing the box takes the key off the card again, so a card nobody touched stores
+## nothing and plays as it always did.
+static func optional_field(drawer: Control, card: Dictionary, field: Dictionary, write: Callable, index: int) -> Control:
+	var key: String = str(field.get("key", ""))
+	var edit: LineEdit = LineEdit.new()
+	edit.placeholder_text = EventSheetL10n.translate(str(field.get("empty", "")))
+	edit.editable = bool(drawer.get("editable"))
+	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if card.has(key):
+		edit.text = str(snappedf(float(card[key]), 0.001)).trim_suffix(".0")
+	edit.text_changed.connect(func(text: String) -> void:
+		if text.strip_edges().is_empty():
+			drawer.call("erase_card_key", index, key)
+		elif text.is_valid_float():
+			write.call(text.to_float()))
+	return edit
+
+
+## A colour a card may leave alone: a flat button that says what leaving it alone means until it is pressed, then a
+## colour box (starting from the colour the thing has now) and a button that puts it back to leaving it alone.
+static func optional_color_field(drawer: Control, card: Dictionary, field: Dictionary, write: Callable, index: int) -> Control:
+	var key: String = str(field.get("key", ""))
+	var editable: bool = bool(drawer.get("editable"))
+	var line: HBoxContainer = HBoxContainer.new()
+	line.add_theme_constant_override("separation", 4)
+	if not card.has(key):
+		var start: Button = Button.new()
+		start.text = EventSheetL10n.translate(str(field.get("empty", "")))
+		start.flat = true
+		start.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		start.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		start.disabled = not editable
+		start.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+		start.pressed.connect(func() -> void:
+			var finder: Variant = field.get("sample")
+			var sample: Variant = (finder as Callable).call(card, drawer.call("edited_object")) if finder is Callable else Color.WHITE
+			write.call(sample if sample is Color else Color.WHITE)
+			drawer.call("rebuild_soon"))
+		line.add_child(start)
+		return line
+	var picker: ColorPickerButton = ColorPickerButton.new()
+	picker.edit_alpha = true
+	picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var stored: Variant = card[key]
+	picker.color = stored if stored is Color else Color(str(stored))
+	picker.disabled = not editable
+	picker.color_changed.connect(func(picked: Color) -> void: write.call(picked))
+	line.add_child(picker)
+	var clear: Button = EventSheetLookStyle.icon_button(&"Remove", "✕", EventSheetL10n.translate(str(field.get("empty", ""))))
+	clear.disabled = not editable
+	clear.pressed.connect(func() -> void:
+		drawer.call("erase_card_key", index, key)
+		drawer.call("rebuild_soon"))
+	line.add_child(clear)
+	return line
+
+
+## A collision layer picked from the project's thirty-two, each read as its number and the name Project Settings gives it.
+## A layer nobody named is its number. The card keeps the number.
+static func layer_pick_field(drawer: Control, card: Dictionary, field: Dictionary, write: Callable, _index: int) -> Control:
+	var key: String = str(field.get("key", ""))
+	var kinds: Script = load("res://addons/eventsheet/editor/inspector/juice_scene_kinds.gd") as Script
+	var words: PackedStringArray = kinds.call("layer_choices", str(kinds.call("layer_space", card, drawer.call("edited_object"))))
+	var choice: OptionButton = OptionButton.new()
+	for word: String in words:
+		choice.add_item(word)
+	choice.select(clampi(int(card.get(key, 1)), 1, 32) - 1)
+	choice.disabled = not bool(drawer.get("editable"))
+	choice.item_selected.connect(func(chosen: int) -> void: write.call(chosen + 1))
+	return choice

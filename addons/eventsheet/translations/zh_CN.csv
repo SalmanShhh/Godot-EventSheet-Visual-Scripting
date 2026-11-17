@@ -11055,10 +11055,7 @@ Swings up to %s degrees half way and is at rest at %s s.,中途最多摆动 %s �
 Starts at rest and swings %s degrees by %s s.,从静止开始，摆动 %s 度，到 %s 秒为止。
 Swings %s degrees at first and is at rest at %s s.,起初摆动 %s 度，在 %s 秒时静止。
 "Swings %s degrees for %s s, then stops.",摆动 %s 度，持续 %s 秒，然后停止。
-"A level in decibels, between -80 and 24. A bus with no amplify effect gets one added at its end, which stays on the bus.",以分贝为单位的音量，范围 -80 到 24。没有放大效果的总线会在末尾添加一个，并保留在总线上。
-"How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one added at its end, which stays on the bus.",能听到多少混响，范围 0 到 1。没有混响的总线会在末尾添加一个，并保留在总线上。
 "Effect 0 is the first effect on the bus. It is switched on, then put back to how it was.",效果 0 是总线上的第一个效果。它会被打开，然后恢复原状。
-"The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one added at its end, which stays on the bus.",以赫兹为单位的截止频率，范围 20 到 20500。没有低通的总线会在末尾添加一个，并保留在总线上。
 Collision For A Time,限时碰撞
 Collision Layer For A Time,限时碰撞层
 Remove Node,移除节点
@@ -11130,3 +11127,31 @@ Nothing was tidied.,没有整理任何内容。
 %d lines tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,已整理并保存 %d 行。撤销会还原事件表；旧文件在事件表备份中。
 1 line uses an older spelling. Sheet > Tidy This Script lists it first.,1 行使用了旧写法。事件表 > 整理此脚本 会先列出它。
 %d lines use an older spelling. Sheet > Tidy This Script lists them first.,%d 行使用了旧写法。事件表 > 整理此脚本 会先列出它们。
+From where it is,从当前值开始
+"Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end for the card and taken off again when the card is done, so the bus is left as it was. Never shown in the editor.",让音频总线的一个效果保持一段时间，然后还原：受伤时让世界变闷的低通滤波。如果总线没有这个效果，会为这张卡片添加到末尾，卡片结束时再移除，总线便保持原样。永远不会在编辑器里显示。
+"Kicks a value of a 2D node and lets its Spring node bounce it back to rest: a button that squashes when pressed, a sign that swings. It needs a Spring node under the node. The kick is in the value's own units, a second each: for a scale 3 stretches it a fifth of the way.",弹一下 2D 节点的某个值，让它的 Spring 节点把它弹回静止：按下时会压扁的按钮，会摆动的招牌。节点下面需要一个 Spring 节点。弹的力度使用该值自己的单位，每秒计：对缩放来说，3 会把它拉长约五分之一。
+Kick,弹力
+Damping,阻尼
+Swings a second,每秒摆动次数
+Slow One Object,减慢一个对象
+"Slows the animations and particles under a node for a time, then puts their speed back. Scripts of your own keep their speed, because Godot has nothing to slow them with. It multiplies with Slowmo: half speed here under a Slowmo of 0.5 is a quarter.",让节点下的动画和粒子在一段时间内变慢，然后恢复它们的速度。你自己的脚本保持原速，因为 Godot 没有办法减慢它们。它会与慢动作相乘：在 0.5 的慢动作下，这里的一半速度就是四分之一。
+Animation Parameter,动画参数
+"Moves one parameter of an AnimationTree to a value and brings it back: a blend amount, a speed, a condition. It lists only the parameters the tree really has and lets you set.",把 AnimationTree 的一个参数移动到某个值，再带回来：混合量、速度、条件。只列出树里真正有、并且可以设置的参数。
+Animation tree,动画树
+Pick a parameter,选择一个参数
+Show as rows,显示为行
+Show as GDScript,显示为 GDScript
+Open in Godot help,在 Godot 帮助中打开
+Godot's name for this. The ? opens its page in Godot's help.,这在 Godot 中的名称。点 ? 会在 Godot 帮助中打开它的页面。
+Open this in Godot's help.,在 Godot 帮助中打开它。
+"There is no Spring node under %s. Add one, or this card does nothing.",%s 下面没有 Spring 节点。请添加一个，否则这张卡片什么也不做。
+Pick the parameter to move. Until then this card does nothing.,请选择要移动的参数。在此之前，这张卡片什么也不做。
+Nothing under %s has a speed to slow. Scripts of your own keep their speed.,%s 下面没有任何带速度、可以减慢的东西。你自己的脚本保持原速。
+Slows %d: %s. Scripts of your own keep their speed.,减慢 %d 个：%s。你自己的脚本保持原速。
+"A level in decibels, between -80 and 24. A bus with no amplify effect gets one while the card holds, and loses it again.",以分贝为单位的电平，介于 -80 和 24 之间。没有放大效果的总线会在卡片持有期间得到一个，之后又会失去它。
+"How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one while the card holds, and loses it again.",能听到多少混响，从 0 到 1。没有混响的总线会在卡片持有期间得到一个，之后又会失去它。
+"The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one while the card holds, and loses it again.",以赫兹为单位的截止频率，介于 20 和 20500 之间。没有低通的总线会在卡片持有期间得到一个，之后又会失去它。
+"This is the same effect written by hand, in plain GDScript, with no plugin in it. The card also handles its strength, the accessibility setting, its timing and the way back that Stop and Restore use; this version does not.",这是同一个效果的手写版本，用的是不含任何插件的普通 GDScript。卡片还会处理它的强度、无障碍设置、它的时间安排，以及 Stop 和 Restore 使用的还原方式；这个版本不会。
+This is the line that adds this card from an event sheet or from code. Run it on a Juice Player.,这是从事件表或代码里添加这张卡片的那一行。请在 Juice Player 上运行它。
+a 2D node (a Spring node does not move a UI or a 3D node),2D 节点（Spring 节点不会移动界面或 3D 节点）
+an animation tree,动画树

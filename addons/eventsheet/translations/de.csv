@@ -11055,10 +11055,7 @@ Swings up to %s degrees half way and is at rest at %s s.,Schwingt auf halber Str
 Starts at rest and swings %s degrees by %s s.,Beginnt in Ruhe und schwingt um %s Grad bis %s s.
 Swings %s degrees at first and is at rest at %s s.,Schwingt zuerst %s Grad und ist bei %s s in Ruhe.
 "Swings %s degrees for %s s, then stops.",Schwingt %s Grad für %s s und hört dann auf.
-"A level in decibels, between -80 and 24. A bus with no amplify effect gets one added at its end, which stays on the bus.","Ein Pegel in Dezibel, zwischen -80 und 24. Hat der Bus keinen Verstärker-Effekt, wird am Ende einer hinzugefügt, der auf dem Bus bleibt."
-"How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one added at its end, which stays on the bus.","Wie viel vom Hall zu hören ist, von 0 bis 1. Hat der Bus keinen Hall, wird am Ende einer hinzugefügt, der auf dem Bus bleibt."
 "Effect 0 is the first effect on the bus. It is switched on, then put back to how it was.",Effekt 0 ist der erste Effekt auf dem Bus. Er wird eingeschaltet und danach wieder in den alten Zustand gebracht.
-"The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one added at its end, which stays on the bus.","Die Grenzfrequenz in Hertz, zwischen 20 und 20500. Hat der Bus keinen Tiefpass, wird am Ende einer hinzugefügt, der auf dem Bus bleibt."
 Collision For A Time,Kollision für eine Zeit
 Collision Layer For A Time,Kollisionsebene für eine Zeit
 Remove Node,Node entfernen
@@ -11130,3 +11127,31 @@ Nothing was tidied.,Nichts wurde aufgeräumt.
 %d lines tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,%d Zeilen aufgeräumt und gespeichert. Rückgängig stellt das Blatt wieder her; die alte Datei liegt in den Blatt-Sicherungen.
 1 line uses an older spelling. Sheet > Tidy This Script lists it first.,1 Zeile verwendet eine ältere Schreibweise. Blatt > Dieses Skript aufräumen listet sie zuerst auf.
 %d lines use an older spelling. Sheet > Tidy This Script lists them first.,%d Zeilen verwenden eine ältere Schreibweise. Blatt > Dieses Skript aufräumen listet sie zuerst auf.
+From where it is,Vom aktuellen Wert
+"Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end for the card and taken off again when the card is done, so the bus is left as it was. Never shown in the editor.","Hält einen Effekt eines Audiobusses für eine Zeit und stellt ihn zurück: ein Tiefpass, der die Welt dämpft, wenn du getroffen wirst. Fehlt dem Bus ein Effekt, wird er für die Karte am Ende hinzugefügt und wieder entfernt, wenn die Karte fertig ist, sodass der Bus so bleibt, wie er war. Wird nie im Editor gezeigt."
+"Kicks a value of a 2D node and lets its Spring node bounce it back to rest: a button that squashes when pressed, a sign that swings. It needs a Spring node under the node. The kick is in the value's own units, a second each: for a scale 3 stretches it a fifth of the way.","Stößt einen Wert eines 2D-Nodes an und lässt seinen Spring-Node ihn zurück in die Ruhe federn: ein Knopf, der beim Drücken gestaucht wird, ein Schild, das schwingt. Sie braucht einen Spring-Node unter dem Node. Der Stoß ist in den eigenen Einheiten des Werts pro Sekunde angegeben: bei einer Skalierung dehnt 3 sie um ein Fünftel."
+Kick,Stoß
+Damping,Dämpfung
+Swings a second,Schwingungen pro Sekunde
+Slow One Object,Ein Objekt verlangsamen
+"Slows the animations and particles under a node for a time, then puts their speed back. Scripts of your own keep their speed, because Godot has nothing to slow them with. It multiplies with Slowmo: half speed here under a Slowmo of 0.5 is a quarter.","Verlangsamt die Animationen und Partikel unter einem Node für eine Zeit und stellt ihre Geschwindigkeit dann zurück. Eigene Skripte behalten ihre Geschwindigkeit, weil Godot nichts hat, womit man sie verlangsamen könnte. Sie multipliziert sich mit Zeitlupe: halbe Geschwindigkeit hier bei einer Zeitlupe von 0,5 ist ein Viertel."
+Animation Parameter,Animationsparameter
+"Moves one parameter of an AnimationTree to a value and brings it back: a blend amount, a speed, a condition. It lists only the parameters the tree really has and lets you set.","Bewegt einen Parameter eines AnimationTree auf einen Wert und bringt ihn zurück: einen Mischwert, eine Geschwindigkeit, eine Bedingung. Sie listet nur die Parameter auf, die der Baum wirklich hat und die man setzen kann."
+Animation tree,Animationsbaum
+Pick a parameter,Parameter wählen
+Show as rows,Als Zeilen anzeigen
+Show as GDScript,Als GDScript anzeigen
+Open in Godot help,In der Godot-Hilfe öffnen
+Godot's name for this. The ? opens its page in Godot's help.,Godots Name dafür. Das ? öffnet die Seite in der Godot-Hilfe.
+Open this in Godot's help.,Dies in der Godot-Hilfe öffnen.
+"There is no Spring node under %s. Add one, or this card does nothing.","Unter %s gibt es keinen Spring-Node. Füge einen hinzu, sonst tut diese Karte nichts."
+Pick the parameter to move. Until then this card does nothing.,"Wähle den Parameter, der bewegt werden soll. Bis dahin tut diese Karte nichts."
+Nothing under %s has a speed to slow. Scripts of your own keep their speed.,"Unter %s hat nichts eine Geschwindigkeit, die sich verlangsamen ließe. Eigene Skripte behalten ihre Geschwindigkeit."
+Slows %d: %s. Scripts of your own keep their speed.,Verlangsamt %d: %s. Eigene Skripte behalten ihre Geschwindigkeit.
+"A level in decibels, between -80 and 24. A bus with no amplify effect gets one while the card holds, and loses it again.","Ein Pegel in Dezibel, zwischen -80 und 24. Ein Bus ohne Verstärker-Effekt bekommt einen, solange die Karte hält, und verliert ihn wieder."
+"How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one while the card holds, and loses it again.","Wie viel vom Hall zu hören ist, von 0 bis 1. Ein Bus ohne Hall bekommt einen, solange die Karte hält, und verliert ihn wieder."
+"The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one while the card holds, and loses it again.","Die Grenzfrequenz in Hertz, zwischen 20 und 20500. Ein Bus ohne Tiefpass bekommt einen, solange die Karte hält, und verliert ihn wieder."
+"This is the same effect written by hand, in plain GDScript, with no plugin in it. The card also handles its strength, the accessibility setting, its timing and the way back that Stop and Restore use; this version does not.","Das ist derselbe Effekt von Hand geschrieben, in einfachem GDScript, ganz ohne Plugin. Die Karte kümmert sich zusätzlich um ihre Stärke, die Barrierefreiheits-Einstellung, ihr Timing und den Rückweg, den Stop und Restore nutzen; diese Fassung tut das nicht."
+This is the line that adds this card from an event sheet or from code. Run it on a Juice Player.,"Das ist die Zeile, die diese Karte aus einem Event-Sheet oder aus Code hinzufügt. Führe sie an einem Juice Player aus."
+a 2D node (a Spring node does not move a UI or a 3D node),ein 2D-Node (ein Spring-Node bewegt weder eine Oberfläche noch einen 3D-Node)
+an animation tree,ein Animationsbaum

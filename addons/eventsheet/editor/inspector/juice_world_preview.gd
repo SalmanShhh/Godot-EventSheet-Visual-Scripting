@@ -362,6 +362,10 @@ static func _light(card: Dictionary, node: Node, through: float, at: float, stat
 		return
 	var rest_energy: float = float(_rest(state, node, str(names["energy"])))
 	var rest_colour: Color = _rest(state, node, str(names["colour"])) as Color
+	# A card that names no start begins where the light is.
+	var start_energy: float = float(card["energy_from"]) if card.has("energy_from") else rest_energy
+	var from_value: Variant = card.get("colour_from", rest_colour)
+	var start_colour: Color = from_value as Color if from_value is Color else Color(str(from_value))
 	var switched: String = str(names["on"])
 	var peak: float = rest_energy + (float(card.get("energy_to", 3.0)) - rest_energy) * at
 	var raw: Variant = card.get("colour_to", Color(1.0, 0.6, 0.2))
@@ -380,8 +384,8 @@ static func _light(card: Dictionary, node: Node, through: float, at: float, stat
 	if not bool(_rest(state, node, switched)):
 		node.set(switched, through < 1.0)
 	if elapsed <= seconds and seconds > 0.0:
-		node.set(str(names["energy"]), Tween.interpolate_value(rest_energy, peak - rest_energy, elapsed, seconds, curve, easing))
-		node.set(str(names["colour"]), Tween.interpolate_value(rest_colour, tint - rest_colour, elapsed, seconds, curve, easing))
+		node.set(str(names["energy"]), Tween.interpolate_value(start_energy, peak - start_energy, elapsed, seconds, curve, easing))
+		node.set(str(names["colour"]), Tween.interpolate_value(start_colour, tint - start_colour, elapsed, seconds, curve, easing))
 	elif back and back_seconds > 0.0 and elapsed < seconds + back_seconds:
 		node.set(str(names["energy"]), Tween.interpolate_value(peak, rest_energy - peak, elapsed - seconds, back_seconds, curve, easing))
 		node.set(str(names["colour"]), Tween.interpolate_value(tint, rest_colour - tint, elapsed - seconds, back_seconds, curve, easing))

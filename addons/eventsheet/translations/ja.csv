@@ -11055,10 +11055,7 @@ Swings up to %s degrees half way and is at rest at %s s.,途中で最大 %s 度�
 Starts at rest and swings %s degrees by %s s.,静止から始まり、%s 度揺れて %s 秒に至ります。
 Swings %s degrees at first and is at rest at %s s.,最初は %s 度揺れ、%s 秒で静止します。
 "Swings %s degrees for %s s, then stops.",%s 度の揺れを %s 秒間続け、その後止まります。
-"A level in decibels, between -80 and 24. A bus with no amplify effect gets one added at its end, which stays on the bus.",デシベルでのレベル（-80 から 24）。増幅エフェクトのないバスには末尾に 1 つ追加され、そのままバスに残ります。
-"How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one added at its end, which stays on the bus.",リバーブがどれだけ聞こえるか（0 から 1）。リバーブのないバスには末尾に 1 つ追加され、そのままバスに残ります。
 "Effect 0 is the first effect on the bus. It is switched on, then put back to how it was.",エフェクト 0 はバスの最初のエフェクトです。オンにしたあと、元の状態に戻します。
-"The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one added at its end, which stays on the bus.",ヘルツ単位のカットオフ（20 から 20500）。ローパスのないバスには末尾に 1 つ追加され、そのままバスに残ります。
 Collision For A Time,一定時間の衝突
 Collision Layer For A Time,一定時間の衝突レイヤー
 Remove Node,ノードを取り除く
@@ -11130,3 +11127,31 @@ Nothing was tidied.,何も整えられませんでした。
 %d lines tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,%d 行を整えて保存しました。元に戻すとシートが戻ります。古いファイルはシートのバックアップにあります。
 1 line uses an older spelling. Sheet > Tidy This Script lists it first.,1 行が古い書き方です。シート > このスクリプトを整える が先に一覧表示します。
 %d lines use an older spelling. Sheet > Tidy This Script lists them first.,%d 行が古い書き方です。シート > このスクリプトを整える が先に一覧表示します。
+From where it is,今ある値から
+"Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end for the card and taken off again when the card is done, so the bus is left as it was. Never shown in the editor.",オーディオバスのエフェクトを一定時間保ち、元に戻します。ダメージを受けたときに世界をこもらせるローパスなど。バスにそのエフェクトがなければ、カードのために末尾へ追加し、カードが終わると取り除くので、バスは元のままです。エディターでは表示されません。
+"Kicks a value of a 2D node and lets its Spring node bounce it back to rest: a button that squashes when pressed, a sign that swings. It needs a Spring node under the node. The kick is in the value's own units, a second each: for a scale 3 stretches it a fifth of the way.",2D ノードの値を弾き、その Spring ノードに静止位置まで弾ませて戻します。押すとつぶれるボタン、揺れる看板など。ノードの下に Spring ノードが必要です。弾く量は値自身の単位の毎秒で、スケールなら 3 で 5 分の 1 ほど伸びます。
+Kick,キック
+Damping,減衰
+Swings a second,毎秒の振動数
+Slow One Object,1 つのオブジェクトを遅くする
+"Slows the animations and particles under a node for a time, then puts their speed back. Scripts of your own keep their speed, because Godot has nothing to slow them with. It multiplies with Slowmo: half speed here under a Slowmo of 0.5 is a quarter.",ノードの下のアニメーションとパーティクルを一定時間遅くし、その後速度を戻します。自作のスクリプトは速度が変わりません。Godot にはそれを遅くする手段がないためです。スローモーションと掛け合わされ、スローモーション 0.5 の下で半分の速度なら 4 分の 1 になります。
+Animation Parameter,アニメーションパラメーター
+"Moves one parameter of an AnimationTree to a value and brings it back: a blend amount, a speed, a condition. It lists only the parameters the tree really has and lets you set.",AnimationTree のパラメーターを 1 つ値まで動かして戻します。ブレンド量、速度、条件など。ツリーが実際に持ち、設定できるパラメーターだけを一覧に出します。
+Animation tree,アニメーションツリー
+Pick a parameter,パラメーターを選ぶ
+Show as rows,行として表示
+Show as GDScript,GDScript として表示
+Open in Godot help,Godot ヘルプで開く
+Godot's name for this. The ? opens its page in Godot's help.,これの Godot での名前です。? を押すと Godot ヘルプのそのページが開きます。
+Open this in Godot's help.,これを Godot ヘルプで開きます。
+"There is no Spring node under %s. Add one, or this card does nothing.",%s の下に Spring ノードがありません。追加しないと、このカードは何もしません。
+Pick the parameter to move. Until then this card does nothing.,動かすパラメーターを選んでください。選ぶまで、このカードは何もしません。
+Nothing under %s has a speed to slow. Scripts of your own keep their speed.,%s の下には遅くできる速度を持つものがありません。自作のスクリプトは速度が変わりません。
+Slows %d: %s. Scripts of your own keep their speed.,%d 個を遅くします: %s。自作のスクリプトは速度が変わりません。
+"A level in decibels, between -80 and 24. A bus with no amplify effect gets one while the card holds, and loses it again.",デシベル単位のレベルで、-80 から 24 の間です。増幅エフェクトのないバスには、カードが保持している間だけ 1 つ追加され、その後取り除かれます。
+"How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one while the card holds, and loses it again.",聞こえるリバーブの量で、0 から 1 です。リバーブのないバスには、カードが保持している間だけ 1 つ追加され、その後取り除かれます。
+"The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one while the card holds, and loses it again.",カットオフ周波数（ヘルツ）で、20 から 20500 の間です。ローパスのないバスには、カードが保持している間だけ 1 つ追加され、その後取り除かれます。
+"This is the same effect written by hand, in plain GDScript, with no plugin in it. The card also handles its strength, the accessibility setting, its timing and the way back that Stop and Restore use; this version does not.",これは同じ効果をプラグインなしの素の GDScript で手書きしたものです。カードはこのほかに、強さ、アクセシビリティ設定、タイミング、そして Stop と Restore が使う戻し方も扱いますが、この版は扱いません。
+This is the line that adds this card from an event sheet or from code. Run it on a Juice Player.,これは、イベントシートまたはコードからこのカードを追加する行です。Juice Player で実行してください。
+a 2D node (a Spring node does not move a UI or a 3D node),2D ノード（Spring ノードは UI や 3D ノードは動かしません）
+an animation tree,アニメーションツリー

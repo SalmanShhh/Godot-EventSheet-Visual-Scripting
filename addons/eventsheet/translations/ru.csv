@@ -11055,10 +11055,7 @@ Swings up to %s degrees half way and is at rest at %s s.,"К середине к
 Starts at rest and swings %s degrees by %s s.,"Начинает с покоя и качается на %s градусов, достигая этого к %s с."
 Swings %s degrees at first and is at rest at %s s.,"Сначала качается на %s градусов, а на %s с приходит в покой."
 "Swings %s degrees for %s s, then stops.","Качается на %s градусов в течение %s с, затем останавливается."
-"A level in decibels, between -80 and 24. A bus with no amplify effect gets one added at its end, which stays on the bus.","Уровень в децибелах, от -80 до 24. Если на шине нет эффекта усиления, в конец добавляется один, и он остаётся на шине."
-"How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one added at its end, which stays on the bus.","Какая доля реверберации слышна, от 0 до 1. Если на шине нет реверберации, в конец добавляется одна, и она остаётся на шине."
 "Effect 0 is the first effect on the bus. It is switched on, then put back to how it was.","Эффект 0 - первый эффект на шине. Он включается, а затем возвращается в прежнее состояние."
-"The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one added at its end, which stays on the bus.","Частота среза в герцах, от 20 до 20500. Если на шине нет фильтра низких частот, в конец добавляется один, и он остаётся на шине."
 Collision For A Time,Столкновение на время
 Collision Layer For A Time,Слой столкновений на время
 Remove Node,Удалить узел
@@ -11130,3 +11127,31 @@ Nothing was tidied.,Ничего не приведено в порядок.
 %d lines tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,%d строк приведены в порядок и сохранены. Отмена вернёт лист; старый файл лежит в резервных копиях листа.
 1 line uses an older spelling. Sheet > Tidy This Script lists it first.,1 строка записана по-старому. Лист > Привести скрипт в порядок показывает её первой.
 %d lines use an older spelling. Sheet > Tidy This Script lists them first.,%d строк записаны по-старому. Лист > Привести скрипт в порядок показывает их первыми.
+From where it is,С текущего значения
+"Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end for the card and taken off again when the card is done, so the bus is left as it was. Never shown in the editor.","Удерживает эффект аудиошины на время и возвращает его: фильтр нижних частот, который глушит мир, когда вас ранят. Если на шине нет такого эффекта, он добавляется в конец для карточки и снова убирается, когда карточка закончит, так что шина остаётся такой, какой была. В редакторе не показывается."
+"Kicks a value of a 2D node and lets its Spring node bounce it back to rest: a button that squashes when pressed, a sign that swings. It needs a Spring node under the node. The kick is in the value's own units, a second each: for a scale 3 stretches it a fifth of the way.","Толкает значение 2D-узла и даёт его узлу Spring вернуть его в покой с отскоком: кнопка, которая сплющивается при нажатии, вывеска, которая качается. Ей нужен узел Spring под узлом. Толчок задаётся в собственных единицах значения в секунду: для масштаба 3 растягивает его на пятую часть."
+Kick,Толчок
+Damping,Затухание
+Swings a second,Колебаний в секунду
+Slow One Object,Замедлить один объект
+"Slows the animations and particles under a node for a time, then puts their speed back. Scripts of your own keep their speed, because Godot has nothing to slow them with. It multiplies with Slowmo: half speed here under a Slowmo of 0.5 is a quarter.","Замедляет анимации и частицы под узлом на время, затем возвращает их скорость. Ваши собственные скрипты сохраняют скорость, потому что в Godot нечем их замедлить. Умножается на Замедление: половинная скорость здесь при Замедлении 0,5 даёт четверть."
+Animation Parameter,Параметр анимации
+"Moves one parameter of an AnimationTree to a value and brings it back: a blend amount, a speed, a condition. It lists only the parameters the tree really has and lets you set.","Двигает один параметр AnimationTree к значению и возвращает его: степень смешивания, скорость, условие. Показывает только те параметры, которые в дереве действительно есть и которые можно задать."
+Animation tree,Дерево анимации
+Pick a parameter,Выберите параметр
+Show as rows,Показать как строки
+Show as GDScript,Показать как GDScript
+Open in Godot help,Открыть в справке Godot
+Godot's name for this. The ? opens its page in Godot's help.,Имя этого в Godot. Кнопка ? открывает его страницу в справке Godot.
+Open this in Godot's help.,Открыть это в справке Godot.
+"There is no Spring node under %s. Add one, or this card does nothing.","Под %s нет узла Spring. Добавьте его, иначе эта карточка ничего не делает."
+Pick the parameter to move. Until then this card does nothing.,"Выберите параметр, который нужно двигать. Пока его нет, эта карточка ничего не делает."
+Nothing under %s has a speed to slow. Scripts of your own keep their speed.,"Под %s нет ничего, у чего есть скорость, которую можно замедлить. Ваши собственные скрипты сохраняют скорость."
+Slows %d: %s. Scripts of your own keep their speed.,Замедляет %d: %s. Ваши собственные скрипты сохраняют скорость.
+"A level in decibels, between -80 and 24. A bus with no amplify effect gets one while the card holds, and loses it again.","Уровень в децибелах, от -80 до 24. Шина без эффекта усиления получает его, пока карточка держит, и снова теряет."
+"How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one while the card holds, and loses it again.","Насколько слышна реверберация, от 0 до 1. Шина без реверберации получает её, пока карточка держит, и снова теряет."
+"The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one while the card holds, and loses it again.","Частота среза в герцах, от 20 до 20500. Шина без фильтра нижних частот получает его, пока карточка держит, и снова теряет."
+"This is the same effect written by hand, in plain GDScript, with no plugin in it. The card also handles its strength, the accessibility setting, its timing and the way back that Stop and Restore use; this version does not.","Это тот же эффект, записанный вручную простым GDScript без какого-либо плагина. Карточка дополнительно учитывает свою силу, настройку доступности, свой тайминг и обратный путь, которым пользуются Stop и Restore; эта версия этого не делает."
+This is the line that adds this card from an event sheet or from code. Run it on a Juice Player.,"Это строка, которая добавляет эту карточку из таблицы событий или из кода. Выполните её на Juice Player."
+a 2D node (a Spring node does not move a UI or a 3D node),2D-узел (узел Spring не двигает интерфейс или 3D-узел)
+an animation tree,дерево анимации

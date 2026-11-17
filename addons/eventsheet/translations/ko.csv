@@ -11055,10 +11055,7 @@ Swings up to %s degrees half way and is at rest at %s s.,중간에 최대 %s도�
 Starts at rest and swings %s degrees by %s s.,정지 상태에서 시작해 %s도를 흔들며 %s초에 이릅니다.
 Swings %s degrees at first and is at rest at %s s.,처음에는 %s도 흔들리고 %s초에 정지합니다.
 "Swings %s degrees for %s s, then stops.",%s도 흔들림을 %s초 동안 유지하다가 멈춥니다.
-"A level in decibels, between -80 and 24. A bus with no amplify effect gets one added at its end, which stays on the bus.",데시벨 단위의 레벨(-80에서 24 사이). 증폭 이펙트가 없는 버스에는 끝에 하나가 추가되며 버스에 그대로 남습니다.
-"How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one added at its end, which stays on the bus.",리버브가 얼마나 들리는지(0에서 1 사이). 리버브가 없는 버스에는 끝에 하나가 추가되며 버스에 그대로 남습니다.
 "Effect 0 is the first effect on the bus. It is switched on, then put back to how it was.",이펙트 0은 버스의 첫 번째 이펙트입니다. 켠 뒤 원래 상태로 되돌립니다.
-"The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one added at its end, which stays on the bus.",헤르츠 단위의 컷오프(20에서 20500 사이). 로우패스가 없는 버스에는 끝에 하나가 추가되며 버스에 그대로 남습니다.
 Collision For A Time,일정 시간 충돌
 Collision Layer For A Time,일정 시간 충돌 레이어
 Remove Node,노드 제거
@@ -11130,3 +11127,31 @@ Nothing was tidied.,정리된 것이 없습니다.
 %d lines tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,"%d개 줄을 정리하고 저장했습니다. 실행 취소하면 시트가 되돌아가며, 이전 파일은 시트 백업에 있습니다."
 1 line uses an older spelling. Sheet > Tidy This Script lists it first.,1개 줄이 예전 표기를 씁니다. 시트 > 이 스크립트 정리가 먼저 목록으로 보여 줍니다.
 %d lines use an older spelling. Sheet > Tidy This Script lists them first.,%d개 줄이 예전 표기를 씁니다. 시트 > 이 스크립트 정리가 먼저 목록으로 보여 줍니다.
+From where it is,현재 값에서
+"Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end for the card and taken off again when the card is done, so the bus is left as it was. Never shown in the editor.","오디오 버스의 효과를 일정 시간 유지했다가 되돌립니다. 맞았을 때 세상을 먹먹하게 만드는 로우패스 같은 것입니다. 버스에 해당 효과가 없으면 카드를 위해 끝에 추가하고 카드가 끝나면 다시 제거하므로, 버스는 원래대로 남습니다. 에디터에서는 표시되지 않습니다."
+"Kicks a value of a 2D node and lets its Spring node bounce it back to rest: a button that squashes when pressed, a sign that swings. It needs a Spring node under the node. The kick is in the value's own units, a second each: for a scale 3 stretches it a fifth of the way.","2D 노드의 값을 튕기고, 그 Spring 노드가 정지 상태로 되돌려 튀게 합니다. 누르면 찌그러지는 버튼, 흔들리는 간판 같은 것입니다. 노드 아래에 Spring 노드가 필요합니다. 튕기는 양은 값 자체의 단위로 초당이며, 스케일에서는 3이 5분의 1쯤 늘립니다."
+Kick,킥
+Damping,감쇠
+Swings a second,초당 진동 수
+Slow One Object,오브젝트 하나 느리게 하기
+"Slows the animations and particles under a node for a time, then puts their speed back. Scripts of your own keep their speed, because Godot has nothing to slow them with. It multiplies with Slowmo: half speed here under a Slowmo of 0.5 is a quarter.","노드 아래의 애니메이션과 파티클을 일정 시간 느리게 한 뒤 속도를 되돌립니다. 직접 만든 스크립트는 속도를 유지합니다. Godot에는 그것을 느리게 할 방법이 없기 때문입니다. 슬로모션과 곱해지므로, 슬로모션 0.5 아래에서 여기서 절반 속도면 4분의 1이 됩니다."
+Animation Parameter,애니메이션 파라미터
+"Moves one parameter of an AnimationTree to a value and brings it back: a blend amount, a speed, a condition. It lists only the parameters the tree really has and lets you set.","AnimationTree의 파라미터 하나를 값까지 움직였다가 되돌립니다. 블렌드 양, 속도, 조건 같은 것입니다. 트리가 실제로 가지고 있고 설정할 수 있는 파라미터만 나열합니다."
+Animation tree,애니메이션 트리
+Pick a parameter,파라미터 고르기
+Show as rows,행으로 보기
+Show as GDScript,GDScript로 보기
+Open in Godot help,Godot 도움말에서 열기
+Godot's name for this. The ? opens its page in Godot's help.,이것의 Godot 이름입니다. ?를 누르면 Godot 도움말의 해당 페이지가 열립니다.
+Open this in Godot's help.,이것을 Godot 도움말에서 엽니다.
+"There is no Spring node under %s. Add one, or this card does nothing.",%s 아래에 Spring 노드가 없습니다. 하나 추가하지 않으면 이 카드는 아무것도 하지 않습니다.
+Pick the parameter to move. Until then this card does nothing.,움직일 파라미터를 고르세요. 그때까지 이 카드는 아무것도 하지 않습니다.
+Nothing under %s has a speed to slow. Scripts of your own keep their speed.,%s 아래에는 느리게 할 속도를 가진 것이 없습니다. 직접 만든 스크립트는 속도를 유지합니다.
+Slows %d: %s. Scripts of your own keep their speed.,%d개를 느리게 합니다: %s. 직접 만든 스크립트는 속도를 유지합니다.
+"A level in decibels, between -80 and 24. A bus with no amplify effect gets one while the card holds, and loses it again.","데시벨 단위의 레벨이며 -80에서 24 사이입니다. 증폭 효과가 없는 버스는 카드가 유지하는 동안만 하나를 받고, 이후 제거됩니다."
+"How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one while the card holds, and loses it again.","들리는 리버브의 양이며 0에서 1입니다. 리버브가 없는 버스는 카드가 유지하는 동안만 하나를 받고, 이후 제거됩니다."
+"The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one while the card holds, and loses it again.","헤르츠 단위의 차단 주파수이며 20에서 20500 사이입니다. 로우패스가 없는 버스는 카드가 유지하는 동안만 하나를 받고, 이후 제거됩니다."
+"This is the same effect written by hand, in plain GDScript, with no plugin in it. The card also handles its strength, the accessibility setting, its timing and the way back that Stop and Restore use; this version does not.","이것은 같은 효과를 플러그인 없이 평범한 GDScript로 직접 쓴 것입니다. 카드는 이 밖에 강도, 접근성 설정, 타이밍, 그리고 Stop과 Restore가 쓰는 되돌림도 처리하지만 이 버전은 처리하지 않습니다."
+This is the line that adds this card from an event sheet or from code. Run it on a Juice Player.,이것은 이벤트 시트나 코드에서 이 카드를 추가하는 줄입니다. Juice Player에서 실행하세요.
+a 2D node (a Spring node does not move a UI or a 3D node),2D 노드 (Spring 노드는 UI나 3D 노드를 움직이지 않습니다)
+an animation tree,애니메이션 트리

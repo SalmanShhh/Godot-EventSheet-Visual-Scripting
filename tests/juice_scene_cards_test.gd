@@ -109,7 +109,7 @@ static func _kind_pins() -> bool:
 	var layer: Dictionary = _kind("collision_layer_for")
 	var layer_start: Dictionary = layer.get("defaults", {})
 	rows.append(["Collision Layer starts by taking a mask layer off", [layer_start.get("part"), layer_start.get("on")], ["mask", false]])
-	rows.append(["and its layer number is held to 1 to 32", str(_field(layer, "layer").get("range", "")), "1,32"])
+	rows.append(["and its layer is picked from the thirty-two there are", str(_field(layer, "layer").get("drawer", "")), "layer_pick"])
 	rows.append(["Look At names the node it faces", _keys_of(_kind("look_at")).has("target"), true])
 	return SUPPORT.pins(TEST_NAME, rows)
 
@@ -205,7 +205,7 @@ static func _length_pins() -> bool:
 		felt.append(script.call("editor_kind", word))
 	var kinds: Script = load("res://addons/eventsheet/editor/inspector/juice_scene_kinds.gd") as Script
 	return SUPPORT.pins(TEST_NAME, [
-		["a layer nobody named in Project Settings says nothing under its number", kinds.call("layer_note", {"layer": 31}, [], 0, null), ""],
+		["a layer nobody named in Project Settings is read as its number", kinds.call("layer_words", "2d_physics", 31), "31"],
 		["a Collision card is as long as its seconds", script.call("card_length", {"verb": "collision_for", "seconds": 0.5}), 0.5],
 		["a Draw Order card too", script.call("card_length", {"verb": "draw_order", "seconds": 0.7}), 0.7],
 		["a Rotate By card too", script.call("card_length", {"verb": "rotate_by", "seconds": 0.2}), 0.2],
