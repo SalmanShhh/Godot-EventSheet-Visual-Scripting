@@ -57,6 +57,7 @@ func _parse_begin(object: Object) -> void:
 		_picking = load(PICKING_PATH).new(object)
 		var panel: Control = load(PREVIEW_PANEL_PATH).new(object, Callable(_picking, "render"))
 		_picking.call("attach_panel", panel)
+		panel.call("set_image_maker", Callable(_picking, "render_job"))
 		add_custom_control(panel)
 
 

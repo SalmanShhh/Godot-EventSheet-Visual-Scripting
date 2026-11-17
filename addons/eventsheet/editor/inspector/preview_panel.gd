@@ -40,6 +40,16 @@ var _renderer: Callable = Callable()
 var _rect: TextureRect = null
 var _poll_accumulator: float = 0.0
 var _last_state: int = 0
+## Optional: draws the picture on a worker thread. `maker(object, size)` returns a Callable that makes the Image when
+## it is called on the worker (taking its own copy of what it draws), or an invalid Callable for a picture that has to
+## be made on the main thread. The prefab hands one over; without one every picture is made on the main thread.
+var _image_maker: Callable = Callable()
+## An edit asked for a new picture and none has been started for it yet.
+var _wanted: bool = false
+## The worker task making a picture (-1 when none), what it made, and the state of the object it started from.
+var _task: int = -1
+var _made: Image = null
+var _started_state: int = 0
 
 
 ## The card for one object. `renderer` is optional and takes priority over everything else:
@@ -69,8 +79,8 @@ func _init(object: Object = null, renderer: Callable = Callable()) -> void:
 	var chips: PackedStringArray = EventSheetInspectorObjectDecor.chips(EventSheetInspectorObjectDecor.handles_for(_object))
 	if not chips.is_empty():
 		column.add_child(_build_chips(chips))
-	if _object is Resource and not (_object as Resource).changed.is_connected(refresh):
-		(_object as Resource).changed.connect(refresh)
+	if _object is Resource and not (_object as Resource).changed.is_connected(request_refresh):
+		(_object as Resource).changed.connect(request_refresh)
 
 
 func _ready() -> void:
@@ -84,15 +94,16 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if _rect == null:
 		return
+	pump()
 	_poll_accumulator += delta
 	if _poll_accumulator < POLL_SECONDS:
 		return
 	_poll_accumulator = 0.0
 	var state: int = state_hash(_object)
-	if state == _last_state:
+	if state == _last_state or (_task >= 0 and state == _started_state):
 		return
 	_last_state = state
-	refresh()
+	request_refresh()
 
 
 ## A number that changes when any stored value of the object changes - the seam the poll compares.
@@ -113,8 +124,9 @@ static func state_hash(object: Object) -> int:
 
 
 func _exit_tree() -> void:
-	if _object is Resource and (_object as Resource).changed.is_connected(refresh):
-		(_object as Resource).changed.disconnect(refresh)
+	if _object is Resource and (_object as Resource).changed.is_connected(request_refresh):
+		(_object as Resource).changed.disconnect(request_refresh)
+	finish_pending()
 
 
 func _on_picture_input(event: InputEvent) -> void:
@@ -137,7 +149,49 @@ static func raster_point(control: Vector2, picture: Vector2, at: Vector2) -> Vec
 	return (at - (control - shown) * 0.5) / fit
 
 
-## Re-renders the picture. Called on the resource's `changed` signal, and by hand after an edit a
+## Asks for a new picture. Any number of asks in one frame make ONE picture, drawn on a worker thread when the
+## caller gave a maker for it, so a held key that edits the object many times a second never waits for the drawing.
+func request_refresh() -> void:
+	_wanted = true
+
+
+func set_image_maker(maker: Callable) -> void:
+	_image_maker = maker
+
+
+## One step of the picture's own clock, run every frame: puts the finished picture on the card, and starts the
+## next one when an edit asked for it. Public so a test with no running tree can step it by hand.
+func pump() -> void:
+	if _task >= 0 and WorkerThreadPool.is_task_completed(_task):
+		finish_pending()
+	if not _wanted or _task >= 0:
+		return
+	_wanted = false
+	if _rect == null or not is_instance_valid(_object):
+		return
+	var job: Callable = _image_maker.call(_object, RASTER_SIZE) if _image_maker.is_valid() else Callable()
+	if not job.is_valid():
+		refresh()
+		return
+	_started_state = state_hash(_object)
+	_made = null
+	_task = WorkerThreadPool.add_task(func() -> void: _made = job.call() as Image)
+
+
+## Waits for a picture still being drawn and puts it on the card.
+func finish_pending() -> void:
+	if _task < 0:
+		return
+	WorkerThreadPool.wait_for_task_completion(_task)
+	_task = -1
+	var image: Image = _made
+	_made = null
+	if image != null and _rect != null:
+		_rect.texture = ImageTexture.create_from_image(image)
+		_last_state = _started_state
+
+
+## Re-renders the picture now, on the main thread. Called when the card is built, and by hand after an edit a
 ## signal does not announce.
 func refresh() -> void:
 	if _rect == null or not is_instance_valid(_object):

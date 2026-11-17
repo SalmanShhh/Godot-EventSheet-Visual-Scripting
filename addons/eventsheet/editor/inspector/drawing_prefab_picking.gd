@@ -31,6 +31,18 @@ func render(object: Object, size: Vector2i) -> Texture2D:
 	return load(PREVIEW_PATH).call("rasterize_texture", _steps_of(object), size, load(PANEL_PATH).BACKGROUND, _chosen)
 
 
+## The same picture as `render`, as a job for a worker thread: a Callable that makes the Image from its own copy of
+## the steps and the chosen ones, so what is drawn is exactly what `render` would draw now, however the prefab changes
+## meanwhile. A prefab holding a stamp (whose texture is loaded while it is drawn) is drawn on the main thread
+## instead, so an invalid Callable comes back for it.
+func render_job(object: Object, size: Vector2i) -> Callable:
+	var steps: Array = _steps_of(object).duplicate(true)
+	for step: Variant in steps:
+		if step is Dictionary and str((step as Dictionary).get("kind", "")) == "stamp":
+			return Callable()
+	return Callable(load(PREVIEW_PATH), "rasterize").bind(steps, size, load(PANEL_PATH).BACKGROUND, _chosen.duplicate())
+
+
 func attach_panel(panel: Control) -> void:
 	_panel = panel
 	panel.connect("picture_pressed", _on_picture_pressed)
@@ -68,7 +80,7 @@ func _on_selection_changed(cards: Array) -> void:
 		if int(card) >= 0 and int(card) < positions.size():
 			_chosen.append(positions[int(card)])
 	if is_instance_valid(_panel):
-		_panel.call("refresh")
+		_panel.call("request_refresh")
 
 
 func _on_picture_pressed(point: Vector2, shift: bool, command: bool) -> void:
