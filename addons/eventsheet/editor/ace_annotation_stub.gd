@@ -80,7 +80,9 @@ static func comment_stub(definition: ACEDefinition) -> String:
 		lines.append("## @ace_codegen_template(\"%s\")" % _comment_value(codegen_template))
 	lines.append_array(parameter_lines)
 	lines.append(_member_line(definition))
-	return "\n".join(lines)
+	# The words go in one-hash comments, which Godot keeps out of its Help pages; the plain `##` prose
+	# above them is the description and stays a doc comment.
+	return EventSheetAnnotationLine.hashed_text("\n".join(lines))
 
 
 static func registrar_stub(definition: ACEDefinition) -> String:
@@ -90,7 +92,7 @@ static func registrar_stub(definition: ACEDefinition) -> String:
 	_append_state_note(definition, notes)
 	_append_node_scope_note(definition, notes)
 	if bool(definition.metadata.get("looping", false)):
-		notes.append("# LOOPING: the registrar has no looping action. Keep \"## @ace_looping(%s)\" as a comment" % str(definition.metadata.get("looping_iterator", "item")))
+		notes.append("# LOOPING: the registrar has no looping action. Keep \"# @ace_looping(%s)\" as a comment" % str(definition.metadata.get("looping_iterator", "item")))
 		notes.append("# annotation above the method; it also forces the CONDITION kind.")
 	var chain: Array[String] = ["\treg.%s(\"%s\")" % [_type_keyword(definition.ace_type), _member_name(definition)]]
 	if not definition.display_name.is_empty():
@@ -114,7 +116,7 @@ static func registrar_stub(definition: ACEDefinition) -> String:
 	if has_default:
 		notes.append("# STARTING VALUES: reg.param() carries hint/options/autocomplete/desc only. The value a row")
 		notes.append("# shows on drop comes from the method's own GDScript default (func fire(power: float = 25.0))")
-		notes.append("# or from a \"## @ace_param(power, default: 25.0)\" comment annotation.")
+		notes.append("# or from a \"# @ace_param(power, default: 25.0)\" comment annotation.")
 
 	var lines: Array[String] = []
 	lines.append_array(notes)
@@ -146,7 +148,7 @@ static func _append_state_note(definition: ACEDefinition, notes: Array[String]) 
 	var chain: String = ".stateful(%s)" % ", ".join(chain_args)
 	if bool(definition.metadata.get("evaluate_last", false)):
 		chain += ".evaluated_last()"
-	notes.append("# STATEFUL: this ACE owns per-row memory, which is a DESCRIPTOR feature - neither the ## @ace_*")
+	notes.append("# STATEFUL: this ACE owns per-row memory, which is a DESCRIPTOR feature - neither the # @ace_*")
 	notes.append("# dialect nor the registrar can declare it. Author this one as a descriptor (a module under")
 	notes.append("# addons/eventforge/registration/modules/, or an EventForgeBridge dictionary) and chain:")
 	notes.append("#   F.make_descriptor(...)%s" % chain)

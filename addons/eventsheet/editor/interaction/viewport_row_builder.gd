@@ -8807,7 +8807,11 @@ func _group_declaration_line(group: EventGroup) -> String:
 	if group == null or _viewport == null or _viewport._sheet == null:
 		return ""
 	if not _group_declaration_lines.has("lines"):
-		_group_declaration_lines["lines"] = ReadingDoors.compiler().group_declaration_lines(_viewport._sheet.events)
+		var declared: Dictionary = ReadingDoors.compiler().group_declaration_lines(_viewport._sheet.events)
+		if EventSheetAnnotationLine.writes_hash(_viewport._sheet):
+			for declared_group: Variant in declared:
+				declared[declared_group] = EventSheetAnnotationLine.hashed(str(declared[declared_group]))
+		_group_declaration_lines["lines"] = declared
 	return str((_group_declaration_lines["lines"] as Dictionary).get(group, ""))
 
 

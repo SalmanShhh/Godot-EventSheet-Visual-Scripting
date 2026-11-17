@@ -109,13 +109,13 @@ static func run() -> bool:
 		all_passed = _check("Juice 3D has %s" % tint_3d_method, juice_3d.has_method(tint_3d_method), true) and all_passed
 	juice_3d.free()
 
-	# ── The annotation-survival regression: a doc comment above `## @ace_action` used to
+	# ── The annotation-survival regression: a doc comment above `# @ace_action` used to
 	# eat the WHOLE annotation block during save_pack's lift (silently unpublishing the
 	# function), and @ace_param_options never survived emission. Pin the emitted pack text.
 	var emitted: String = FileAccess.get_file_as_string("res://eventsheet_addons/stat_forge/stat_forge_behavior.gd")
 	all_passed = _check("doc-comment-first functions keep @ace_action",
-		emitted.contains("## @ace_name(\"Add Buff\")"), true) and all_passed
-	# The prose ABOVE `## @ace_action` is the description: plain `##` lines over a member are read
+		emitted.contains("# @ace_name(\"Add Buff\")"), true) and all_passed
+	# The prose ABOVE `# @ace_action` is the description: plain `##` lines over a member are read
 	# as one, which is how the builder writes Add Buff and how the pack ships it. The fact under
 	# test is that the doc block SURVIVES the lift, not which of the two spellings carries it - a
 	# pin on `@ace_description(` alone went red the day the pack was rebuilt from its own builder,
@@ -125,9 +125,9 @@ static func run() -> bool:
 	# The dropdowns are labeled now: the token still drives the math, but the author reads English
 	# instead of guessing what "override" does to a stat before picking it.
 	all_passed = _check("param options survive emission (mode dropdown)",
-		emitted.contains("## @ace_param_options(mode add=Add to the stat, multiply=Multiply the stat, override=Override the stat)"), true) and all_passed
+		emitted.contains("# @ace_param_options(mode add=Add to the stat, multiply=Multiply the stat, override=Override the stat)"), true) and all_passed
 	all_passed = _check("param options survive emission (direction dropdown)",
-		emitted.contains("## @ace_param_options(direction rising=Rising past the value, falling=Falling past the value, both=Either direction)"), true) and all_passed
+		emitted.contains("# @ace_param_options(direction rising=Rising past the value, falling=Falling past the value, both=Either direction)"), true) and all_passed
 
 	# ── Rounded corners: the theme tokens exist with the shipped defaults ──
 	var style: EventSheetEventStyle = EventSheetEventStyle.new()

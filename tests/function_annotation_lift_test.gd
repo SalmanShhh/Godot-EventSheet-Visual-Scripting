@@ -1,6 +1,6 @@
 # EventForge - a leading GDScript annotation (`@rpc`, `@warning_ignore`, `@abstract`, stacked) above
 # a function no longer blocks it from lifting. The annotation lines are kept VERBATIM on the EventFunction
-# (annotation_lines) and re-emitted between the `## @ace_*` block and the `func` header, so a `@rpc`
+# (annotation_lines) and re-emitted between the `# @ace_*` block and the `func` header, so a `@rpc`
 # multiplayer method opens as an editable function instead of a raw block. It is the repo's established
 # verbatim-plus-byte-gate pattern (like export_hint / return_type_name): any shape that cannot reproduce its
 # source degrades to a raw block, never corrupt.
@@ -56,7 +56,7 @@ static func run() -> bool:
 	var comp: String = str(EventSheetCompiler.compile(authored, "user://fa_authored.gd").get("output", ""))
 	# The `@rpc` line emits AFTER the `## @ace` block and BEFORE the `func` header (the GDScript convention).
 	ok = _check("the emitted order is `## @ace` then `@rpc` then `func`",
-		comp.contains("## @ace") and comp.find("@rpc(\"any_peer\")") < comp.find("func fire(") and comp.find("## @ace") < comp.find("@rpc(\"any_peer\")"), true) and ok
+		comp.contains("# @ace") and comp.find("@rpc(\"any_peer\")") < comp.find("func fire(") and comp.find("# @ace") < comp.find("@rpc(\"any_peer\")"), true) and ok
 	# Re-opening that canonical output and re-emitting reproduces it byte-for-byte (the covenant on the
 	# combined `## @ace` + `@rpc` shape).
 	var reimported: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(comp)

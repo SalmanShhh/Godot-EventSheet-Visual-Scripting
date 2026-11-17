@@ -23,9 +23,9 @@ static func run() -> bool:
 	sheet.addon_author = "Jam Author"
 	sheet.addon_help_url = "https://example.com/help"
 	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_version_probe.gd").get("output", ""))
-	all_passed = _check("version emits unquoted", output.contains("## @ace_version(2.3.1)"), true) and all_passed
-	all_passed = _check("author emits quoted", output.contains("## @ace_author(\"Jam Author\")"), true) and all_passed
-	all_passed = _check("help emits quoted", output.contains("## @ace_help(\"https://example.com/help\")"), true) and all_passed
+	all_passed = _check("version emits unquoted", output.contains("# @ace_version(2.3.1)"), true) and all_passed
+	all_passed = _check("author emits quoted", output.contains("# @ace_author(\"Jam Author\")"), true) and all_passed
+	all_passed = _check("help emits quoted", output.contains("# @ace_help(\"https://example.com/help\")"), true) and all_passed
 	all_passed = _check("identity sits after requires", output.find("@ace_requires") < output.find("@ace_version"), true) and all_passed
 	all_passed = _check("identity sits above @icon", output.find("@ace_help") < output.find("@icon("), true) and all_passed
 	var generated: GDScript = GDScript.new()
@@ -47,7 +47,7 @@ static func run() -> bool:
 	all_passed = _check("empty identity emits nothing", bare_output.contains("@ace_version") or bare_output.contains("@ace_author") or bare_output.contains("@ace_help"), false) and all_passed
 
 	# ---- typo-gate: the three tokens are whitelisted ----
-	var probe_source: String = "## A versioned pack.\n## @ace_version(1.2.0)\n## @ace_author(\"Someone\")\n## @ace_help(\"https://x.y\")\nclass_name VersionProbe\nextends Node\n"
+	var probe_source: String = "## A versioned pack.\n# @ace_version(1.2.0)\n# @ace_author(\"Someone\")\n# @ace_help(\"https://x.y\")\nclass_name VersionProbe\nextends Node\n"
 	var probe_path: String = "user://eventsheets_version_annotation_probe.gd"
 	var probe_file: FileAccess = FileAccess.open(probe_path, FileAccess.WRITE)
 	probe_file.store_string(probe_source)
@@ -66,7 +66,7 @@ static func run() -> bool:
 	var unstamped: Array[String] = []
 	for pack_script: String in EventSheetAddonScanner.list_addon_scripts():
 		var source: String = FileAccess.get_file_as_string(pack_script)
-		if not source.contains("## @ace_version(") and not _is_shell(source):
+		if not source.contains("# @ace_version(") and not _is_shell(source):
 			unstamped.append(pack_script)
 	all_passed = _check("all shipped packs are versioned (got unstamped: %s)" % str(unstamped), unstamped.is_empty(), true) and all_passed
 

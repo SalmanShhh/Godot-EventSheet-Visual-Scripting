@@ -241,10 +241,10 @@ static func _pin_the_rows() -> bool:
 	for raw_line: String in FileAccess.get_file_as_string(PACK_DIR + "vector_shape_3d.gd").split("
 "):
 		var line: String = raw_line.strip_edges()
-		if not line.begins_with("## @ace_codegen_template("):
+		if not line.begins_with("# @ace_codegen_template("):
 			continue
 		templates += 1
-		if not line.begins_with('## @ace_codegen_template("$VectorShape3D.'):
+		if not line.begins_with('# @ace_codegen_template("$VectorShape3D.'):
 			untargeted.append(line)
 	return SUPPORT.pins(PREFIX, [
 		["the rows the 3D half ships", ",".join(names),
@@ -322,7 +322,7 @@ static func _published_fields_of(path: String) -> String:
 	var hidden: bool = false
 	for raw_line: String in FileAccess.get_file_as_string(path).split("\n"):
 		var line: String = raw_line.strip_edges()
-		if line == "## @ace_hidden":
+		if line == "# @ace_hidden":
 			hidden = true
 			continue
 		if line.begins_with("@export_group(") or line.begins_with("@export_category("):
@@ -338,6 +338,10 @@ static func _published_fields_of(path: String) -> String:
 						stop = at
 				names.append(declared.substr(0, stop))
 			hidden = false
+			continue
+		# The words come first and the description sits between them and the field, so a `##` line does not
+		# end what the words said.
+		if line.begins_with("##"):
 			continue
 		hidden = false
 	names.sort()

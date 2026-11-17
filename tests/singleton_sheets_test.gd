@@ -55,7 +55,7 @@ static func run() -> bool:
 	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_singleton.gd").get("output", ""))
 	all_passed = _check("autoload sheets extend Node", output.contains("extends Node"), true) and all_passed
 	all_passed = _check("exposed ACEs call through the singleton name",
-		output.contains("## @ace_codegen_template(\"GameState.add_score({amount})\")"), true) and all_passed
+		output.contains("# @ace_codegen_template(\"GameState.add_score({amount})\")"), true) and all_passed
 	var generated: GDScript = GDScript.new()
 	generated.source_code = output
 	all_passed = _check("singleton output parses", generated.reload(true) == OK, true) and all_passed
@@ -157,8 +157,8 @@ static func run() -> bool:
 	kick.events.append(kick_body)
 	pack.functions.append(kick)
 	var kit_signal: RawCodeRow = RawCodeRow.new()
-	kit_signal.code = "## @ace_trigger
-## @ace_name(\"On Kicked\")
+	kit_signal.code = "# @ace_trigger
+# @ace_name(\"On Kicked\")
 signal kicked"
 	pack.events.append(kit_signal)
 	author_editor.setup(pack)

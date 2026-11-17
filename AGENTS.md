@@ -38,7 +38,7 @@ from `tools/build_help_bundle.gd`).
   `helper_aces.gd` is the structured escape hatch, registered LAST and kept out of the reverse
   index except its statement catch-alls, admitted at the lowest specificity.
 - Successor data (how a retired verb forwards): fields on `ACEDescriptor`
-  (`.succeeded_by(...)` / `## @ace_succeeded_by(...)`), set at DESCRIPTOR CONSTRUCTION only,
+  (`.succeeded_by(...)` / `# @ace_succeeded_by(...)`), set at DESCRIPTOR CONSTRUCTION only,
   read through the one seam `registration/ace_successors.gd` (chains resolve to the end; cycles
   and unsound maps fail the pack gate in `tools/audit_addons.gd`). The project-level vocabulary
   version record is `eventforge/vocabulary_record.gd` - one committed line, never anything in a

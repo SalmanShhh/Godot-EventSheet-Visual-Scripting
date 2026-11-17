@@ -278,7 +278,7 @@ static func read_pack(script_path: String) -> Dictionary:
 	# way the rest of the plugin reads it: skip the annotation lines, join the rest with a space.
 	var prose: PackedStringArray = PackedStringArray()
 	var params: Dictionary = {}
-	for line: String in FileAccess.get_file_as_string(script_path).split("\n"):
+	for line: String in EventSheetAnnotationLine.canonical_text(FileAccess.get_file_as_string(script_path)).split("\n"):
 		var trimmed: String = line.strip_edges()
 		if trimmed.begins_with("## @ace_name("):
 			title = _quoted_value(trimmed)

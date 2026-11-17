@@ -42,6 +42,11 @@ extends Resource
 ## whose builder derives the call when it assembles the pack. Emission leaves the line off, so the file
 ## comes back byte for byte. Default false: every verb authored on a sheet keeps the line it always had.
 @export var no_codegen_annotation: bool = false
+
+## The opened file did not repeat the class's own icon and category above this verb, and the reader gives a
+## verb those two when it has none of its own. Emission then leaves them off as the file did, so it comes back
+## byte for byte; a verb whose file did repeat them keeps writing them. Default false.
+@export var lean_annotations: bool = false
 ## The iterator a LOOPING published verb names (`## @ace_looping(entry)`): applying it runs the
 ## event's actions once per item the function returns. Written in place of the action / condition /
 ## expression line the return type would pick. Empty = not a looping verb.

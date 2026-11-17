@@ -32,13 +32,13 @@ static func run() -> bool:
 	var behaviour: String = Scaffold.source_of(Scaffold.behaviour_sheet("Patrol", "CharacterBody2D", "Movement",
 		"Walks between points,\nwaits at each, and says \"arrived\"."))
 	ok = _check("a new behaviour is the pack shape, typed as what it works on", behaviour, "\n".join(PackedStringArray([
-		"## @ace_tags(custom)",
-		"## @ace_category(\"Movement\")",
+		"# @ace_tags(custom)",
+		"# @ace_category(\"Movement\")",
 		"class_name Patrol",
 		"extends Node",
 		"## Walks between points, waits at each, and says 'arrived'.",
 		"",
-		"## @ace_hidden",
+		"# @ace_hidden",
 		"## The node this behavior acts on. Empty: its parent.",
 		"@export var acts_on: CharacterBody2D = null",
 		"",
@@ -75,9 +75,9 @@ static func run() -> bool:
 	# A copy rewrites the header only: renamed, marked as yours (beside its own tags), reshelved, its
 	# version dropped, and the description you wrote in place of its own.
 	var pack: String = "\n".join(PackedStringArray([
-		"## @ace_tags(events, messaging)",
-		"## @ace_category(\"Events\")",
-		"## @ace_version(1.0.0)",
+		"# @ace_tags(events, messaging)",
+		"# @ace_category(\"Events\")",
+		"# @ace_version(1.0.0)",
 		"@icon(\"res://eventsheet_addons/event_bus/icon.svg\")",
 		"class_name EventBusPackAddon",
 		"extends Node",
@@ -88,8 +88,8 @@ static func run() -> bool:
 	]))
 	ok = _check("a copied behaviour keeps everything below its header", Scaffold.copied_source(pack, "Messages", "AI", "Mine now.", true),
 		"\n".join(PackedStringArray([
-			"## @ace_tags(events, messaging, custom)",
-			"## @ace_category(\"AI\")",
+			"# @ace_tags(events, messaging, custom)",
+			"# @ace_category(\"AI\")",
 			"@icon(\"res://eventsheet_addons/event_bus/icon.svg\")",
 			"class_name Messages",
 			"extends Node",

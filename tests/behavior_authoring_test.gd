@@ -51,14 +51,14 @@ static func run() -> bool:
 
 	var output_path: String = "user://eventforge_behavior_authoring.gd"
 	var output: String = str(EventSheetCompiler.compile(sheet, output_path).get("output", ""))
-	all_passed = _check("exposed function carries @ace_action", output.contains("## @ace_action"), true) and all_passed
-	all_passed = _check("display name annotation emitted", output.contains("## @ace_name(\"Dash\")"), true) and all_passed
-	all_passed = _check("category annotation emitted", output.contains("## @ace_category(\"Movement\")"), true) and all_passed
-	all_passed = _check("sheet icon flows to the published ACE", output.contains("## @ace_icon(\"res://addons/eventsheet/icons/eventsheet.svg\")"), true) and all_passed
+	all_passed = _check("exposed function carries @ace_action", output.contains("# @ace_action"), true) and all_passed
+	all_passed = _check("display name annotation emitted", output.contains("# @ace_name(\"Dash\")"), true) and all_passed
+	all_passed = _check("category annotation emitted", output.contains("# @ace_category(\"Movement\")"), true) and all_passed
+	all_passed = _check("sheet icon is written once, on the class", output.contains("@icon(\"res://addons/eventsheet/icons/eventsheet.svg\")") and not output.contains("# @ace_icon("), true) and all_passed
 	all_passed = _check("behavior codegen template targets the child node",
-		output.contains("## @ace_codegen_template(\"$PatrolBehavior.dash({strength})\")"), true) and all_passed
+		output.contains("# @ace_codegen_template(\"$PatrolBehavior.dash({strength})\")"), true) and all_passed
 	all_passed = _check("unexposed functions stay annotation-free",
-		output.contains("## @ace_action\nfunc internal_tick"), false) and all_passed
+		output.contains("# @ace_action\nfunc internal_tick"), false) and all_passed
 
 	# The addon loop: the generated script parses back into ACE overrides.
 	var generated_script: Script = load(output_path)
@@ -67,6 +67,7 @@ static func run() -> bool:
 	all_passed = _check("generated annotations parse back (name)", str(dash_overrides.get("name", "")), "Dash") and all_passed
 	all_passed = _check("generated annotations parse back (codegen template)",
 		str(dash_overrides.get("codegen_template", "")), "$PatrolBehavior.dash({strength})") and all_passed
+	all_passed = _check("sheet icon flows to the published ACE", str(dash_overrides.get("icon", "")), "res://addons/eventsheet/icons/eventsheet.svg") and all_passed
 	var internal_overrides: Dictionary = source_metadata.get("methods", {}).get("internal_tick", {})
 	all_passed = _check("unexposed function is published as hidden (skipped by the generator)",
 		bool(internal_overrides.get("hidden", false)), true) and all_passed
@@ -80,7 +81,7 @@ static func run() -> bool:
 	node_sheet.functions.append(heal)
 	var node_output: String = str(EventSheetCompiler.compile(node_sheet, "user://eventforge_node_authoring.gd").get("output", ""))
 	all_passed = _check("custom-node templates call self methods",
-		node_output.contains("## @ace_codegen_template(\"heal()\")"), true) and all_passed
+		node_output.contains("# @ace_codegen_template(\"heal()\")"), true) and all_passed
 
 	# Identity UX: the identity band is never shown (the head bar says what the sheet is), its words,
 	# the tab badge and the host-aware header label.

@@ -195,7 +195,7 @@ static func _feel_knobs() -> bool:
 	ok = _check("the bob is one droppable row",
 		source.contains("func bob_with_movement(weapon: Node3D) -> void:"), true) and ok
 	ok = _check("whose template is the row a sheet writes",
-		source.contains("## @ace_codegen_template(\"$FPSController.bob_with_movement({weapon})\")"), true) and ok
+		source.contains("# @ace_codegen_template(\"$FPSController.bob_with_movement({weapon})\")"), true) and ok
 	ok = _check("and it scales with how fast the host is going",
 		source.contains("var pace := clampf(current_speed() / maxf(move_speed, 0.001), 0.0, 1.0)"), true) and ok
 	ok = _check("the sway is the other row",
@@ -208,7 +208,7 @@ static func _feel_knobs() -> bool:
 		source.contains("func is_bunny_hopping() -> bool:"), true) and ok
 	# The frozen neighbours: adding knobs must not have retemplated the rows that shipped.
 	ok = _check("Set Move Speed is untouched",
-		source.contains("## @ace_codegen_template(\"$FPSController.set_move_speed({value})\")"), true) and ok
+		source.contains("# @ace_codegen_template(\"$FPSController.set_move_speed({value})\")"), true) and ok
 	ok = _check("and so is the firing slowdown",
 		source.contains("var base_speed := firing_move_speed if _firing_timer > 0.0 else move_speed"), true) and ok
 	return ok

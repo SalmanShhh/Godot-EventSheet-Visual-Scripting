@@ -41,15 +41,15 @@ static func _test_annotations() -> bool:
 	all_passed = _check("the trigger's signal carries the scene name",
 		source.contains("signal scene_ready(scene_name: String)"), true) and all_passed
 	all_passed = _check("and is published as On Scene Ready",
-		source.contains("## @ace_trigger\n## @ace_name(\"On Scene Ready\")"), true) and all_passed
+		source.contains("# @ace_trigger\n# @ace_name(\"On Scene Ready\")"), true) and all_passed
 	all_passed = _check("Go To Named Scene emits an autoload call",
-		source.contains("## @ace_codegen_template(\"NamedScenes.go_to_named_scene({scene_name})\")"), true) and all_passed
+		source.contains("# @ace_codegen_template(\"NamedScenes.go_to_named_scene({scene_name})\")"), true) and all_passed
 	all_passed = _check("and really changes the scene by the registered path",
 		source.contains("get_tree().change_scene_to_file(path)"), true) and all_passed
 	all_passed = _check("Current Scene Is is published as a condition",
-		source.contains("## @ace_condition\n## @ace_name(\"Current Scene Is\")"), true) and all_passed
+		source.contains("# @ace_condition\n# @ace_name(\"Current Scene Is\")"), true) and all_passed
 	all_passed = _check("the scene path field opens the scene picker",
-		source.contains("## @ace_param_hint(scene_path scene_path)"), true) and all_passed
+		source.contains("# @ace_param_hint(scene_path scene_path)"), true) and all_passed
 	return all_passed
 
 

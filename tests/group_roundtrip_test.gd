@@ -28,7 +28,7 @@ static func run() -> bool:
 	sheet.events.append(outer)
 
 	var output: String = str(EventSheetCompiler.compile(sheet).get("output", ""))
-	all_passed = _check("emits the @ace_group declaration", output.contains("## @ace_group(uid=\"juice\""), true) and all_passed
+	all_passed = _check("emits the @ace_group declaration", output.contains("# @ace_group(uid=\"juice\""), true) and all_passed
 	all_passed = _check("emits the nested child declaration",
 		output.contains("parent=\"juice\"") and output.contains("collapsed=true"), true) and all_passed
 	all_passed = _check("emits the per-row # @group marker", output.contains("# @group:juice"), true) and all_passed

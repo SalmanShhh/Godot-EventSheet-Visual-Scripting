@@ -68,16 +68,16 @@ static func _run_node_scoped(registry: EventSheetACERegistry) -> bool:
 		_line_starting_with(stub, "# dialect annotates. The template below"),
 		"# dialect annotates. The template below is the SHIPPED one: registration added the \"{target.}\"") and all_passed
 	all_passed = _check("the shipped template ships as-is, quotes unescaped",
-		_line_starting_with(stub, "## @ace_codegen_template("),
-		"## @ace_codegen_template(\"{target.}queue({animation})\")") and all_passed
+		_line_starting_with(stub, "# @ace_codegen_template("),
+		"# @ace_codegen_template(\"{target.}queue({animation})\")") and all_passed
 	all_passed = _check("a quoted-literal default is spelled as the code it is",
-		_line_starting_with(stub, "## @ace_param(animation"),
-		"## @ace_param(animation, hint: animation_reference, default_code: \"idle\", desc: \"The clip to play once the current one finishes.\")") and all_passed
+		_line_starting_with(stub, "# @ace_param(animation"),
+		"# @ace_param(animation, hint: animation_reference, default_code: \"idle\", desc: \"The clip to play once the current one finishes.\")") and all_passed
 	all_passed = _check("the injected On node param is plumbing, not vocabulary",
-		_line_starting_with(stub, "## @ace_param(target"), "") and all_passed
+		_line_starting_with(stub, "# @ace_param(target"), "") and all_passed
 	all_passed = _check("the authored row caption survives",
-		_line_starting_with(stub, "## @ace_display_template("),
-		"## @ace_display_template(\"queue animation {animation}\")") and all_passed
+		_line_starting_with(stub, "# @ace_display_template("),
+		"# @ace_display_template(\"queue animation {animation}\")") and all_passed
 	all_passed = _check("the member skeleton drops the injected param too",
 		_tail_lines(stub, 2), "func queue_animation(animation: String) -> void:\n\tpass") and all_passed
 
@@ -101,14 +101,14 @@ static func _run_labeled_options(registry: EventSheetACERegistry) -> bool:
 		return _check("Core::IsWithinDistanceMetric is registered", false, true)
 	var stub: String = EventSheetACEAnnotationStub.comment_stub(definition)
 	all_passed = _check("labels survive the comment dialect, keys still insert",
-		_line_starting_with(stub, "## @ace_param(metric"),
-		"## @ace_param(metric, options: 0=Straight line|1=Horizontal only|2=Vertical only|3=Grid steps|4=King moves, default: 0, desc: \"How the distance is counted - the platformer leash wants Horizontal only, the roguelike wants Grid steps.\")") and all_passed
+		_line_starting_with(stub, "# @ace_param(metric"),
+		"# @ace_param(metric, options: 0=Straight line|1=Horizontal only|2=Vertical only|3=Grid steps|4=King moves, default: 0, desc: \"How the distance is counted - the platformer leash wants Horizontal only, the roguelike wants Grid steps.\")") and all_passed
 	all_passed = _check("a template that is not a member operation gets no target",
 		_line_starting_with(stub, "# dialect annotates. This template"),
 		"# dialect annotates. This template got NO \"{target.}\" prefix and no \"On node\" param:") and all_passed
 	all_passed = _check("a bare expression default ships unquoted",
-		_line_starting_with(stub, "## @ace_param(other"),
-		"## @ace_param(other, hint: expression, default: get_parent(), desc: \"The other node.\")") and all_passed
+		_line_starting_with(stub, "# @ace_param(other"),
+		"# @ace_param(other, hint: expression, default: get_parent(), desc: \"The other node.\")") and all_passed
 	all_passed = _check("the condition skeleton returns a value instead of falling through",
 		_tail_lines(stub, 2),
 		"func is_within_distance_metric(other: String, distance: String, metric: String) -> bool:\n\treturn false") and all_passed
@@ -130,7 +130,7 @@ static func _run_stateful(registry: EventSheetACERegistry) -> bool:
 	var stub: String = EventSheetACEAnnotationStub.comment_stub(definition)
 	all_passed = _check("the stateful note names the dialect gap",
 		_line_starting_with(stub, "# STATEFUL:"),
-		"# STATEFUL: this ACE owns per-row memory, which is a DESCRIPTOR feature - neither the ## @ace_*") and all_passed
+		"# STATEFUL: this ACE owns per-row memory, which is a DESCRIPTOR feature - neither the # @ace_*") and all_passed
 	all_passed = _check("the note hands over this ACE's own stateful chain",
 		_line_starting_with(stub, "#   F.make_descriptor"),
 		"#   F.make_descriptor(...).stateful(\"var __every_{uid}: float = 0.0\", \"__every_{uid} += get_process_delta_time()\", \"__every_{uid} = fmod(__every_{uid}, maxf({seconds}, 0.001))\")") and all_passed
@@ -141,11 +141,11 @@ static func _run_stateful(registry: EventSheetACERegistry) -> bool:
 		_line_starting_with(stub, "# the ace_id belongs"),
 		"# the ace_id belongs in NOT_STANDALONE in tests/builtin_ace_compile_test.gd or that gate fails.") and all_passed
 	all_passed = _check("a plain numeric default ships unquoted",
-		_line_starting_with(stub, "## @ace_param(seconds"),
-		"## @ace_param(seconds, hint: expression, default: 1.0, desc: \"Interval between runs (needs a per-frame trigger).\")") and all_passed
+		_line_starting_with(stub, "# @ace_param(seconds"),
+		"# @ace_param(seconds, hint: expression, default: 1.0, desc: \"Interval between runs (needs a per-frame trigger).\")") and all_passed
 	all_passed = _check("the registrar carries the same stateful note",
 		_line_starting_with(EventSheetACEAnnotationStub.registrar_stub(definition), "# STATEFUL:"),
-		"# STATEFUL: this ACE owns per-row memory, which is a DESCRIPTOR feature - neither the ## @ace_*") and all_passed
+		"# STATEFUL: this ACE owns per-row memory, which is a DESCRIPTOR feature - neither the # @ace_*") and all_passed
 
 	# Trigger Once is the hoisted edge gate: its chain has to carry .evaluated_last() too.
 	var gate: ACEDefinition = registry.find_definition("Core", "TriggerOnce")
@@ -171,8 +171,8 @@ static func _run_multiline(registry: EventSheetACERegistry) -> bool:
 		_line_starting_with(stub, "# MULTI-LINE TEMPLATE"),
 		"# MULTI-LINE TEMPLATE: one annotation is one line, and a \"\\n\" written into it stays two") and all_passed
 	all_passed = _check("the escaped one-line form is still shown, quotes untouched",
-		_line_starting_with(stub, "## @ace_codegen_template("),
-		"## @ace_codegen_template(\"var __fovcam_{uid} := get_viewport().get_camera_3d()\\nif __fovcam_{uid} != null:\\n\\tcreate_tween().tween_property(__fovcam_{uid}, \"fov\", clampf({degrees}, 1.0, 179.0), {duration}).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)\")") and all_passed
+		_line_starting_with(stub, "# @ace_codegen_template("),
+		"# @ace_codegen_template(\"var __fovcam_{uid} := get_viewport().get_camera_3d()\\nif __fovcam_{uid} != null:\\n\\tcreate_tween().tween_property(__fovcam_{uid}, \"fov\", clampf({degrees}, 1.0, 179.0), {duration}).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)\")") and all_passed
 	var registrar: String = EventSheetACEAnnotationStub.registrar_stub(definition)
 	all_passed = _check("the registrar carries the same template as escaped GDScript",
 		_line_starting_with(registrar, "\t\t.template("),
@@ -196,12 +196,12 @@ static func _run_looping() -> bool:
 		return _check("StatForge::method:each_buff is registered", false, true)
 	var stub: String = EventSheetACEAnnotationStub.comment_stub(definition)
 	all_passed = _check("the looping annotation keeps its iterator",
-		_line_starting_with(stub, "## @ace_looping"), "## @ace_looping(buff_id)") and all_passed
+		_line_starting_with(stub, "# @ace_looping"), "# @ace_looping(buff_id)") and all_passed
 	all_passed = _check("a looping condition returns its collection, not a bool",
 		_tail_lines(stub, 2), "func each_buff() -> Array:\n\treturn Array()") and all_passed
 	all_passed = _check("the registrar admits it has no looping action",
 		_line_starting_with(EventSheetACEAnnotationStub.registrar_stub(definition), "# LOOPING:"),
-		"# LOOPING: the registrar has no looping action. Keep \"## @ace_looping(buff_id)\" as a comment") and all_passed
+		"# LOOPING: the registrar has no looping action. Keep \"# @ace_looping(buff_id)\" as a comment") and all_passed
 	pack.free()
 	return all_passed
 
@@ -218,8 +218,8 @@ static func _run_quoted_description(registry: EventSheetACERegistry) -> bool:
 		return _check("Core::KeycodeFromName is registered", false, true)
 	var stub: String = EventSheetACEAnnotationStub.comment_stub(definition)
 	all_passed = _check("a quoted description rides the comment dialect",
-		_line_starting_with(stub, "## @ace_param(name"),
-		"## @ace_param(name, hint: expression, default_code: \"Space\", desc: \"A key name like \"Space\" or \"A\".\")") and all_passed
+		_line_starting_with(stub, "# @ace_param(name"),
+		"# @ace_param(name, hint: expression, default_code: \"Space\", desc: \"A key name like \"Space\" or \"A\".\")") and all_passed
 	all_passed = _check("and nothing had to be noted about it",
 		_line_starting_with(stub, "# PARAM HELP"), "") and all_passed
 	all_passed = _check("the registrar escapes the same text as real GDScript",

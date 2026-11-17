@@ -538,10 +538,9 @@ static func _run_watcher_shape() -> bool:
 	# signals were gathered into their own section, so the three comments shipped as an orphan block
 	# pages below the signals they describe. Doc comments ride along.
 	ok = _check("each trigger's words sit above the trigger itself",
-		pack.contains("## Raised on the first look that finds a file the look before did not.
-"
-			+ "## @ace_trigger
-## @ace_name(\"On A File Appeared\")
+		pack.contains("# @ace_trigger
+# @ace_name(\"On A File Appeared\")
+## Raised on the first look that finds a file the look before did not.
 signal file_appeared"),
 		true) and ok
 	# AND CHANGED MEANS THE TIME MOVED, not that it moved forward: a file restored from a backup
@@ -566,7 +565,7 @@ signal file_appeared"),
 		pack.count("DirAccess.get_files_at(watched_folder)"), 1) and ok
 	ok = _check("and the walk is sorted, so two machines raise the same events in the same order",
 		pack.contains("names.sort()"), true) and ok
-	ok = _check("the three events are triggers", pack.count("## @ace_trigger"), 3) and ok
+	ok = _check("the three events are triggers", pack.count("# @ace_trigger"), 3) and ok
 	# THE FLOOR IS SAID WHERE THE ROW IS PICKED. The variable and the band both know it; the action
 	# that takes the number said nothing, so the one place a reader types a 0 was the one place the
 	# rule was missing.
@@ -577,9 +576,9 @@ signal file_appeared"),
 	# AND EVERY PARAMETER SAYS WHAT IT IS FOR, which every builtin verb is gated on and no pack
 	# function could carry at all until the builder helper grew a channel for it.
 	ok = _check("the folder slot says what it is for",
-		pack.contains("## @ace_param(folder, desc: \"The folder to watch."), true) and ok
+		pack.contains("# @ace_param(folder, desc: \"The folder to watch."), true) and ok
 	ok = _check("and the interval slot says its cost and its floor",
-		pack.contains("## @ace_param(every_seconds, desc: \"Seconds between looks."), true) and ok
+		pack.contains("# @ace_param(every_seconds, desc: \"Seconds between looks."), true) and ok
 	ok = _check("the interval's help names the floor as the number it is honoured as",
 		pack.contains("A TENTH OF A SECOND IS THE FLOOR: a zero or a negative number is honoured"
 			+ " as 0.1"), true) and ok

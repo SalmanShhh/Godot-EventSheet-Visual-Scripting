@@ -925,7 +925,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 						# Per-function gate: the lifted function must re-emit header + body exactly, or it
 						# stays raw and the run re-anchors after it (a bad body used to revert the file).
 						if bool(function_lift.get("ok", false)):
-							var emitted_block: String = EventSheetCompiler.emit_function_block_text(function_lift.get("function"), sheet, true)
+							var emitted_block: String = _emit_for_gate(function_lift.get("function"), sheet, expected_block)
 							if emitted_block != expected_block:
 								# A verb that fails this gate opens as a verbatim block, and the reader
 								# is owed the reason when the reason is one line of its own annotations.
@@ -1140,7 +1140,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 					if bool(annotated_lift.get("ok", false)):
 						var candidate: EventFunction = annotated_lift.get("function")
 						if candidate != null and EventSheetCompiler._find_function_by_name(sheet, candidate.function_name) == null:
-							var emitted_annotated: String = EventSheetCompiler.emit_function_block_text(candidate, sheet, true)
+							var emitted_annotated: String = _emit_for_gate(candidate, sheet, tail_text + "\n" + mid_row.code)
 							if emitted_annotated == tail_text + "\n" + mid_row.code:
 								mid_function = candidate
 								strip_tail = true
@@ -1164,7 +1164,7 @@ static func _attempt_lift_body(sheet: EventSheetResource, source: String, lift_f
 				if mid_function == null or EventSheetCompiler._find_function_by_name(sheet, mid_function.function_name) != null:
 					mid_index += 1
 					continue
-				if EventSheetCompiler.emit_function_block_text(mid_function, sheet, true) != mid_row.code:
+				if _emit_for_gate(mid_function, sheet, mid_row.code) != mid_row.code:
 					mid_index += 1
 					continue
 			var anchor: FunctionAnchorRow = FunctionAnchorRow.new()
@@ -1797,6 +1797,22 @@ static func _take_trailing_doc_prose(remainder: PackedStringArray) -> String:
 		doc_lines.insert(0, tail.trim_prefix("##").trim_prefix(" "))
 		remainder.remove_at(remainder.size() - 1)
 	return "\n".join(doc_lines)
+
+
+## What a lifted function writes back, for the gate that compares it with the source. A file may or may not
+## repeat the class's icon and category above each verb: the function is first asked in the form that writes
+## them, and when only the form that leaves them off matches the source, the function remembers that, so the
+## file comes back as it was written.
+static func _emit_for_gate(event_function: EventFunction, sheet: EventSheetResource, expected: String) -> String:
+	var text: String = EventSheetCompiler.emit_function_block_text(event_function, sheet, true)
+	if text == expected or event_function == null:
+		return text
+	event_function.lean_annotations = true
+	var lean: String = EventSheetCompiler.emit_function_block_text(event_function, sheet, true)
+	if lean == expected:
+		return lean
+	event_function.lean_annotations = false
+	return text
 
 
 ## Pulls the quoted argument out of an annotation line, e.g. `## @ace_name("On Jumped")` → `On Jumped`.

@@ -11,7 +11,8 @@ func _init() -> void:
 		var lines: PackedStringArray = source.split("\n")
 		for index: int in lines.size():
 			var line: String = lines[index]
-			if line == "## @ace_action" or line == "## @ace_condition" or line == "## @ace_expression":
+			var spelled: String = EventSheetAnnotationLine.canonical(line)
+			if spelled == "## @ace_action" or spelled == "## @ace_condition" or spelled == "## @ace_expression":
 				for ahead: int in range(index, mini(index + 20, lines.size())):
 					if lines[ahead].begins_with("func ") or lines[ahead].begins_with("static func "):
 						declared.append(lines[ahead].split("(")[0].split(" ")[-1])

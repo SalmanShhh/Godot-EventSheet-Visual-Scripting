@@ -175,7 +175,7 @@ static func _scan_script(path: String, rows: Array, exports: PackedStringArray) 
 	var member_re: RegEx = RegEx.create_from_string("(?:func|signal)\\s+(\\w+)")
 	var export_re: RegEx = RegEx.create_from_string("^@export\\w*(?:\\(.*\\))?\\s+var\\s+(\\w+)")
 	var block: PackedStringArray = PackedStringArray()
-	for raw: String in FileAccess.get_file_as_string(path).split("\n"):
+	for raw: String in EventSheetAnnotationLine.canonical_text(FileAccess.get_file_as_string(path)).split("\n"):
 		var line: String = raw.strip_edges()
 		if line.begins_with("##"):
 			block.append(line)

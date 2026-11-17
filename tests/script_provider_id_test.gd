@@ -1,7 +1,7 @@
 # Godot EventSheets - a script can keep the provider id its rows were saved under when its class is renamed.
 #
 # A ROW'S IDENTITY is `provider::ace_id`, and the provider is the script's class_name. One class-level
-# line, `## @ace_provider_id(OldName)`, keeps the old provider when the class is renamed, so `.tres`
+# line, `# @ace_provider_id(OldName)`, keeps the old provider when the class is renamed, so `.tres`
 # rows saved under it keep resolving with no alias table. The analyzer reads annotations off DISK, so
 # the probe scripts are real files under user://; one built from a string in memory would pass for the
 # wrong reason.
@@ -14,11 +14,11 @@ const TEST_NAME: String = "script_provider_id"
 const KEPT_PATH: String = "user://script_provider_id_kept.gd"
 const PLAIN_PATH: String = "user://script_provider_id_plain.gd"
 
-const BODY: String = "extends Node\n\n## @ace_name(\"Speed\")\n@export var speed: float = 1.0\n\n## @ace_name(\"Ping\")\nfunc ping() -> void:\n\tpass\n"
+const BODY: String = "extends Node\n\n# @ace_name(\"Speed\")\n@export var speed: float = 1.0\n\n# @ace_name(\"Ping\")\nfunc ping() -> void:\n\tpass\n"
 
 
 static func run() -> bool:
-	_write(KEPT_PATH, "## @ace_provider_id(ProbeOldName)\nclass_name ScriptProviderIdProbe\n" + BODY)
+	_write(KEPT_PATH, "# @ace_provider_id(ProbeOldName)\nclass_name ScriptProviderIdProbe\n" + BODY)
 	_write(PLAIN_PATH, "class_name ScriptProviderIdPlainProbe\n" + BODY)
 	var kept: Array[ACEDefinition] = EventSheetACEGenerator.new().generate_from_script(_fresh(KEPT_PATH))
 	var plain: Array[ACEDefinition] = EventSheetACEGenerator.new().generate_from_script(_fresh(PLAIN_PATH))
@@ -44,7 +44,7 @@ static func _round_trip_pins() -> bool:
 	var source: String = SUPPORT.compile_output(sheet, "user://script_provider_id_sheet.gd")
 	var reopened: EventSheetResource = SUPPORT.reopen(source)
 	return SUPPORT.pins(TEST_NAME, [
-		["the compiler writes the line", source.contains("\n## @ace_provider_id(ProbeOldName)\n") or source.begins_with("## @ace_provider_id(ProbeOldName)\n"), true],
+		["the compiler writes the line", source.contains("\n# @ace_provider_id(ProbeOldName)\n") or source.begins_with("# @ace_provider_id(ProbeOldName)\n"), true],
 		["the importer reads it back", str(reopened.get("addon_provider_id")), "ProbeOldName"],
 		["and the file re-saves byte for byte", SUPPORT.reemit(source, "user://script_provider_id_sheet.gd"), source],
 	])

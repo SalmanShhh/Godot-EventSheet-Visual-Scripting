@@ -77,9 +77,9 @@ static func _the_pack_ships_as_the_autoload(script: GDScript) -> bool:
 	var published: PackedStringArray = PackedStringArray()
 	var moments: PackedStringArray = PackedStringArray()
 	for line: String in source.split("\n"):
-		if not line.begins_with("## @ace_codegen_template("):
+		if not line.begins_with("# @ace_codegen_template("):
 			continue
-		if not line.begins_with("## @ace_codegen_template(\"Prompts."):
+		if not line.begins_with("# @ace_codegen_template(\"Prompts."):
 			not_the_autoload += 1
 			continue
 		published.append(line.substr(line.find("Prompts.") + 8).split("(")[0])

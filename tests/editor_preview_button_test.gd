@@ -67,7 +67,7 @@ static func _emitted_lines() -> bool:
 		["@tool sits below the ace header lines", previewing.begins_with("@tool"), false],
 		["the Preview button line", previewing.contains("@export_tool_button(\"Preview\", \"Play\") var _preview_start_button: Callable = _preview_start\n"), true],
 		["the Stop preview button line", previewing.contains("@export_tool_button(\"Stop preview\", \"Stop\") var _preview_stop_button: Callable = _preview_stop\n"), true],
-		["the buttons are hidden from the picker", previewing.count("## @ace_hidden\n## Plays in the editor. Your scene is not changed.\n@export_tool_button("), 2],
+		["the buttons are hidden from the picker", previewing.count("# @ace_hidden\n## Plays in the editor. Your scene is not changed.\n@export_tool_button("), 2],
 		["no Nudge button without nudge code", previewing.contains("_preview_nudge"), false],
 		["the frame callback is guarded first", previewing.contains("func _process(_delta: float) -> void:\n" + guard_line), true],
 		["the physics callback is guarded first", previewing.contains("func _physics_process(_delta: float) -> void:\n" + guard_line), true],
@@ -115,7 +115,7 @@ static func _shipped_sine() -> bool:
 	var juice: String = FileAccess.get_file_as_string("res://eventsheet_addons/juice/juice_behavior.gd")
 	var rotate: String = FileAccess.get_file_as_string("res://eventsheet_addons/rotate/rotate_behavior.gd")
 	return SUPPORT.pins(NAME, [
-		["Sine keeps its header lines first and carries @tool under them", source.begins_with("## @ace_category(\"Sine\")\n## @ace_expose_all(node)\n## @ace_version(1.0.0)\n@tool\n@icon("), true],
+		["Sine keeps its header lines first and carries @tool under them", source.begins_with("# @ace_category(\"Sine\")\n# @ace_expose_all(node)\n# @ace_version(1.0.0)\n@tool\n@icon("), true],
 		["Sine's per-frame callback is guarded", source.contains("func _process(delta: float) -> void:\n\tif Engine.is_editor_hint() and not _previewing:\n\t\treturn\n\tif not active or host == null:"), true],
 		["Sine has no Nudge", source.contains("_preview_nudge"), false],
 		["Spring has a Nudge that sets the host scale spring going", spring.contains("func _preview_nudge() -> void:\n\t_preview_start()\n\tif not _previewing:\n\t\treturn\n\tspring_host_scale(host.scale.x)\n\tadd_impulse(\"__scale\", 6.0)\n"), true],

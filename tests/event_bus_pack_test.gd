@@ -97,11 +97,11 @@ static func _test_annotations() -> bool:
 	all_passed = _check("the bus declares ONE signal, with channel and payload",
 		source.contains("signal event_raised(channel: String, payload: Dictionary)"), true) and all_passed
 	all_passed = _check("that signal is published as a trigger",
-		source.contains("## @ace_trigger\n## @ace_name(\"On Event\")"), true) and all_passed
+		source.contains("# @ace_trigger\n# @ace_name(\"On Event\")"), true) and all_passed
 	all_passed = _check("Wait For Event emits an AWAITED call, so the row really suspends",
-		source.contains("## @ace_codegen_template(\"await EventBus.wait_for({channel}, {seconds})\")"), true) and all_passed
+		source.contains("# @ace_codegen_template(\"await EventBus.wait_for({channel}, {seconds})\")"), true) and all_passed
 	all_passed = _check("Broadcast Event emits a plain autoload call",
-		source.contains("## @ace_codegen_template(\"EventBus.broadcast({channel}, {payload})\")"), true) and all_passed
+		source.contains("# @ace_codegen_template(\"EventBus.broadcast({channel}, {payload})\")"), true) and all_passed
 	all_passed = _check("Broadcast To Group asks the tree for its members",
 		source.contains("deliver_to(get_tree().get_nodes_in_group(group), method_name, payload)"), true) and all_passed
 	all_passed = _check("Wait For Event waits a frame at a time so a deadline can interrupt it",

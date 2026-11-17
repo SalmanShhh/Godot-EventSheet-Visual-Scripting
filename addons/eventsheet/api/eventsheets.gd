@@ -683,7 +683,14 @@ static func row_code_line(row: Resource, sheet: EventSheetResource = null) -> St
 ## colour and the two flags, exactly as they are emitted and read back. Derived in one walk, so a
 ## caller with many heads to draw asks once.
 static func group_declaration_lines(sheet: EventSheetResource) -> Dictionary:
-	return EventSheetCompiler.group_declaration_lines(sheet.events) if sheet != null else {}
+	if sheet == null:
+		return {}
+	var lines: Dictionary = EventSheetCompiler.group_declaration_lines(sheet.events)
+	# The line is the one the file holds: spelled as the sheet spells its annotations.
+	if EventSheetAnnotationLine.writes_hash(sheet):
+		for group: Variant in lines:
+			lines[group] = EventSheetAnnotationLine.hashed(str(lines[group]))
+	return lines
 
 
 ## Every variable a sheet can name, and who owns each - the ONE list the rows, the picker, the

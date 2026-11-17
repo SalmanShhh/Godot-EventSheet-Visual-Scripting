@@ -152,8 +152,8 @@ static func _teach_and_save_are_one_flow() -> bool:
 	ok = _check("and so does saving a library that has no file to be written to",
 		source.contains("push_warning(\"[Touch Gestures] The attached shape library has never been saved as a file"), true) and ok
 	ok = _check("both rows keep the ids they shipped with",
-		source.contains("## @ace_name(\"Teach Shape From Stroke\")") \
-			and source.contains("## @ace_name(\"Save Shapes To Library\")"), true) and ok
+		source.contains("# @ace_name(\"Teach Shape From Stroke\")") \
+			and source.contains("# @ace_name(\"Save Shapes To Library\")"), true) and ok
 	var guide: String = FileAccess.get_file_as_string("res://docs/Addons/Touch-Gestures.md")
 	ok = _check("the guide no longer documents the trap as a trap",
 		guide.contains("Teaching writes to the library, but only saving makes it permanent."), false) and ok

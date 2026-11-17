@@ -154,7 +154,7 @@ static func _test_a_take_writes_a_test_sheet_that_compiles() -> bool:
 		(sheet.events[0] as EventRow).trigger_id, "OnTestStart") and ok
 	ok = _check("with a row per entry", (sheet.events[0] as EventRow).actions.size(), 3) and ok
 	var source: String = _compile(sheet)
-	ok = _check("the marker a runner finds it by", source.contains("## @ace_test_sheet"), true) and ok
+	ok = _check("the marker a runner finds it by", source.contains("# @ace_test_sheet"), true) and ok
 	ok = _check("the press waits for its frame first",
 		source.contains("while Engine.get_frames_drawn() - int(get_meta(&\"__ef_replay_frame0\", 0)) < int(12):"), true) and ok
 	ok = _check("then presses the control", source.contains("Input.action_press(\"jump\")"), true) and ok

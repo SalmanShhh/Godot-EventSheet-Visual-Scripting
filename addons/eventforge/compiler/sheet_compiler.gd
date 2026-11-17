@@ -572,7 +572,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 			# Trigger signals carry a `## @ace_*` annotation block above the declaration; plain
 			# signals emit none (byte-identical). The source-map span covers the whole block.
 			var signal_start: int = lines.size() + 1
-			for annotation_line: String in _emit_signal_annotations(signal_row):
+			for annotation_line: String in _emit_signal_annotations(signal_row, EventSheetAnnotationLine.intends_hash(sheet)):
 				lines.append(annotation_line)
 			lines.append(signal_line)
 			source_map.append({"uid": str(signal_row.get_instance_id()), "start": signal_start, "end": lines.size(), "kind": "signal"})
@@ -1012,9 +1012,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 			continue
 		lines.append("")
 		var function_start: int = lines.size() + 1
-		_emit_function_doc_comment(event_function, lines)
-		_emit_expose_annotations(event_function, sheet, lines)
-		_emit_function_annotation_prefix(event_function, lines)
+		_emit_function_head(event_function, sheet, lines, true)
 		lines.append(_function_header_line(event_function))
 		var function_events: Array = _function_body_rows(event_function)
 		var function_body_start: int = lines.size()
@@ -1060,7 +1058,7 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		BehaviorPreviewEmit.guard_callbacks(lines, result.get("source_map", []))
 	if sheet.behavior_mode:
 		_add_host_contract_line(lines, result.get("source_map", []))
-	var output: String = "\n".join(lines) + "\n"
+	var output: String = _spelled(sheet, "\n".join(lines) + "\n")
 	result["output"] = output
 
 	# A sheet with no file and no path given has nowhere to be written: say so, and keep the text.
@@ -1282,7 +1280,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 				# signal round-trips as a first-class row instead of stranding those annotations in a separate
 				# GDScript block. Plain signals emit none (byte-identical → existing .gd sheets never change).
 				var external_signal_start: int = lines.size() + 1
-				for external_annotation_line: String in _emit_signal_annotations(entry as SignalRow):
+				for external_annotation_line: String in _emit_signal_annotations(entry as SignalRow, EventSheetAnnotationLine.intends_hash(sheet)):
 					lines.append(external_annotation_line)
 				lines.append(external_signal_line)
 				source_map.append({"uid": str((entry as SignalRow).get_instance_id()), "start": external_signal_start, "end": lines.size(), "kind": "signal"})
@@ -1385,7 +1383,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	_append_pause_requests_helper(lines, verbatim_lines)
 	_append_saved_variables(lines, sheet, result)
 	UnusedParams.finish(lines)
-	var output: String = "\n".join(lines) + "\n"
+	var output: String = _spelled(sheet, "\n".join(lines) + "\n")
 	result["output"] = output
 	var final_output_path: String = output_path if not output_path.is_empty() else sheet.external_source_path
 	if _writes_output and result["success"] and not _write_output_if_changed(final_output_path, output):
@@ -1393,6 +1391,16 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 		(result["errors"] as Array[String]).append(load("res://addons/eventforge/failure_words.gd").write_blocked(final_output_path))
 		return result
 	return result
+
+
+## The text with its annotation comments in the spelling the sheet keeps: one hash for a sheet built from rows
+## and for a file that was read that way, two for a file that was read with two. Every line is written with
+## two internally; only a line that reads as an annotation either way is changed, so an ordinary comment or
+## a mistyped word is never touched.
+static func _spelled(sheet: EventSheetResource, text: String) -> String:
+	if EventSheetAnnotationLine.writes_hash(sheet):
+		return EventSheetAnnotationLine.hashed_text(text, sheet.external_source_path.is_empty())
+	return text
 
 
 ## The variables' Save choices (compiler/save_choices.gd says what each one writes): one block at the
@@ -1419,9 +1427,7 @@ static func _find_function_by_name(sheet: EventSheetResource, function_name: Str
 ## the raw block above it).
 static func _emit_function_block(event_function: EventFunction, sheet: EventSheetResource, lines: PackedStringArray, source_map: Array, result: Dictionary) -> void:
 	var function_start: int = lines.size() + 1
-	_emit_function_doc_comment(event_function, lines)
-	_emit_expose_annotations(event_function, sheet, lines)
-	_emit_function_annotation_prefix(event_function, lines)
+	_emit_function_head(event_function, sheet, lines, event_function.lean_annotations)
 	lines.append(_function_header_line(event_function))
 	var function_events: Array = _function_body_rows(event_function)
 	var function_body_start: int = lines.size()
@@ -3742,6 +3748,20 @@ static func _indent_raw_lines(code: String, depth: int) -> PackedStringArray:
 	return output
 
 
+## The lines above a function: its description, its `@ace_*` words and its code annotations. In a file whose
+## annotations are one-hash comments the words come first and the `##` description sits directly above the
+## function, which is where Godot reads documentation from (one ordinary comment between the two would drop
+## it); in a two-hash file the description leads, as it always has.
+static func _emit_function_head(event_function: EventFunction, sheet: EventSheetResource, lines: PackedStringArray, leave_out_repeats: bool) -> void:
+	if EventSheetAnnotationLine.intends_hash(sheet):
+		_emit_expose_annotations(event_function, sheet, lines, leave_out_repeats)
+		_emit_function_doc_comment(event_function, lines)
+	else:
+		_emit_function_doc_comment(event_function, lines)
+		_emit_expose_annotations(event_function, sheet, lines, leave_out_repeats)
+	_emit_function_annotation_prefix(event_function, lines)
+
+
 ## Emits the `@ace_*` annotation block above an exposed sheet function. The annotations are
 ## parsed back by EventSheetSemanticAnalyzer when the compiled script is registered as a
 ## provider (drop it into res://eventsheet_addons/), publishing the function as an ACE in
@@ -3764,7 +3784,12 @@ static func _emit_function_annotation_prefix(event_function: EventFunction, line
 		lines.append(annotation_line)
 
 
-static func _emit_expose_annotations(event_function: EventFunction, sheet: EventSheetResource, lines: PackedStringArray) -> void:
+## `leave_out_repeats` (a sheet built from rows, never one opened from a file) leaves out a member's icon and
+## category line when the class above it already says the same, because the reader gives a member the class's
+## own when it has none. An opened file keeps every line it has, so saving it untouched moves nothing.
+static func _emit_expose_annotations(event_function: EventFunction, sheet: EventSheetResource, lines: PackedStringArray, leave_out_repeats: bool = false) -> void:
+	var class_category: String = sheet.addon_category.strip_edges() if not sheet.custom_class_name.strip_edges().is_empty() else ""
+	var class_has_icon: bool = not sheet.custom_class_name.strip_edges().is_empty() and not sheet.custom_class_icon.strip_edges().is_empty()
 	if event_function.lifted_unannotated:
 		# Reverse-lifted from a hand-written helper with no annotation block - the source had no
 		# `## @ace_hidden`, so emit none (keeps the opened .gd byte-identical on save).
@@ -3796,7 +3821,7 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 	if not display_name.is_empty():
 		lines.append("## @ace_name(\"%s\")" % display_name)
 	var category: String = event_function.ace_category.strip_edges()
-	if not category.is_empty():
+	if not category.is_empty() and not (leave_out_repeats and category == class_category):
 		lines.append("## @ace_category(\"%s\")" % category)
 	if not event_function.description.strip_edges().is_empty():
 		lines.append("## @ace_description(\"%s\")" % event_function.description.strip_edges())
@@ -3822,7 +3847,8 @@ static func _emit_expose_annotations(event_function: EventFunction, sheet: Event
 			lines.append_array(_param_annotation_lines(annotated_param as ACEParam))
 	# The sheet's icon flows to the published ACE (one icon, set once, shown everywhere).
 	if not sheet.custom_class_icon.strip_edges().is_empty():
-		lines.append("## @ace_icon(\"%s\")" % sheet.custom_class_icon.strip_edges())
+		if not (leave_out_repeats and class_has_icon):
+			lines.append("## @ace_icon(\"%s\")" % sheet.custom_class_icon.strip_edges())
 	elif not event_function.ace_icon.is_empty():
 		lines.append("## @ace_icon(\"%s\")" % event_function.ace_icon)
 	# The opened file wrote no call line (its pack builder derives one), so none is written back.
@@ -4894,7 +4920,7 @@ static func _emit_signal_line(signal_row: SignalRow) -> String:
 ## Trigger-ACE annotation lines emitted ABOVE a trigger SignalRow's `signal` declaration, so the
 ## signal publishes as a trigger ACE (a code-free alternative to a hand-written @ace_trigger block).
 ## Empty for a plain signal - byte-identical to before, so existing signals never change.
-static func _emit_signal_annotations(signal_row: SignalRow) -> PackedStringArray:
+static func _emit_signal_annotations(signal_row: SignalRow, description_last: bool = false) -> PackedStringArray:
 	var annotations: PackedStringArray = PackedStringArray()
 	if signal_row == null or not signal_row.enabled:
 		return annotations
@@ -4905,7 +4931,8 @@ static func _emit_signal_annotations(signal_row: SignalRow) -> PackedStringArray
 	# The prose leads, because a `##` doc comment above a member IS its description to the
 	# analyzer - so the picker shows a sentence under the trigger's name instead of nothing.
 	# Emitted one `##` line per stored line, which is exactly what the importer absorbed.
-	if not signal_row.description.is_empty():
+	# In a one-hash file the description goes last, directly above the declaration, where Godot reads it.
+	if not signal_row.description.is_empty() and not description_last:
 		for doc_line: String in signal_row.description.split("\n"):
 			annotations.append("##" if doc_line.is_empty() else "## %s" % doc_line)
 	annotations.append("## @ace_trigger")
@@ -4913,6 +4940,9 @@ static func _emit_signal_annotations(signal_row: SignalRow) -> PackedStringArray
 		annotations.append("## @ace_name(\"%s\")" % signal_row.ace_name.strip_edges())
 	if not signal_row.ace_category.strip_edges().is_empty():
 		annotations.append("## @ace_category(\"%s\")" % signal_row.ace_category.strip_edges())
+	if not signal_row.description.is_empty() and description_last:
+		for doc_line: String in signal_row.description.split("\n"):
+			annotations.append("##" if doc_line.is_empty() else "## %s" % doc_line)
 	return annotations
 
 

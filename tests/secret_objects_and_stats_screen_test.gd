@@ -41,7 +41,7 @@ static func _firing_slowdown() -> bool:
 	ok = _check("the new row is one droppable action",
 		source.contains("func set_move_speed_while_firing(speed: float, seconds: float) -> void:"), true) and ok
 	ok = _check("its template is the row a sheet writes",
-		source.contains("## @ace_codegen_template(\"$FPSController.set_move_speed_while_firing({speed}, {seconds})\")"), true) and ok
+		source.contains("# @ace_codegen_template(\"$FPSController.set_move_speed_while_firing({speed}, {seconds})\")"), true) and ok
 	ok = _check("the firing state reads back as a condition",
 		source.contains("func is_firing() -> bool:"), true) and ok
 	return ok

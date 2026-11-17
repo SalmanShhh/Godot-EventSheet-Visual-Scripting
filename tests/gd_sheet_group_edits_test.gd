@@ -1,6 +1,6 @@
 # Godot EventSheets - editing a group in a script that is its own sheet reaches the file.
 #
-# A `.gd` opened in the editor compiles on the opened-file path, where the groups' `## @ace_group(...)`
+# A `.gd` opened in the editor compiles on the opened-file path, where the groups' `# @ace_group(...)`
 # header lines ride verbatim in the rows the file opened with. Before the header pass, every change to
 # a lifted group (colour, description, folded, who runs it, which mode, rename, Active On Start, Can
 # Be Switched At Runtime) was silently left out of the save, and switching a group on wrote
@@ -25,9 +25,9 @@ static func run() -> bool:
 		["the file a grouped sheet writes parses", _parse_error(base), ""],
 		["opened and saved untouched it is byte for byte the same", str(_cycle(base, []).get("saved", "")), base],
 	])
-	var wave_header: String = "## @ace_group(uid=\"wave_one\", name=\"Wave One\""
-	var calm_header: String = "## @ace_group(uid=\"calm\", name=\"Calm\", toggleable=true)"
-	var inner_header: String = "## @ace_group(uid=\"inner\", name=\"Inner\", parent=\"wave_one\")"
+	var wave_header: String = "# @ace_group(uid=\"wave_one\", name=\"Wave One\""
+	var calm_header: String = "# @ace_group(uid=\"calm\", name=\"Calm\", toggleable=true)"
+	var inner_header: String = "# @ace_group(uid=\"inner\", name=\"Inner\", parent=\"wave_one\")"
 	# Each case: label, the edits ([group, field, value] - "rename", "delete" and "add" are the menu's
 	# own doors), the header lines and flag lines the save writes, and the group the reopened file holds.
 	var cases: Array = [
@@ -40,7 +40,7 @@ static func run() -> bool:
 			["var __group_calm_active: bool = true"],
 			"Wave One", {"description": "Spawns the first wave"}],
 		["folded", [["Inner", "collapsed", true]],
-			[wave_header + ")", "## @ace_group(uid=\"inner\", name=\"Inner\", parent=\"wave_one\", collapsed=true)", calm_header],
+			[wave_header + ")", "# @ace_group(uid=\"inner\", name=\"Inner\", parent=\"wave_one\", collapsed=true)", calm_header],
 			["var __group_calm_active: bool = true"],
 			"Inner", {"collapsed": true}],
 		["runs on the host", [["Wave One", "runs_on", EventGroup.RUNS_ON_HOST]],
@@ -60,19 +60,19 @@ static func run() -> bool:
 			["var __group_calm_active: bool = true", "var __group_wave_one_active: bool = false"],
 			"Wave One", {"runtime_toggleable": true, "enabled": false}],
 		["a switchable group turned off at start", [["Calm", "enabled", false]],
-			[wave_header + ")", inner_header, "## @ace_group(uid=\"calm\", name=\"Calm\", toggleable=true, enabled=false)"],
+			[wave_header + ")", inner_header, "# @ace_group(uid=\"calm\", name=\"Calm\", toggleable=true, enabled=false)"],
 			["var __group_calm_active: bool = false"],
 			"Calm", {"runtime_toggleable": true, "enabled": false}],
 		["a switchable group that can no longer be switched", [["Calm", "runtime_toggleable", false]],
-			[wave_header + ")", inner_header, "## @ace_group(uid=\"calm\", name=\"Calm\")"],
+			[wave_header + ")", inner_header, "# @ace_group(uid=\"calm\", name=\"Calm\")"],
 			[],
 			"Calm", {"runtime_toggleable": false}],
 		["a renamed group", [["Wave One", "rename", "Boss Wave"]],
-			["## @ace_group(uid=\"boss_wave\", name=\"Boss Wave\")", "## @ace_group(uid=\"inner\", name=\"Inner\", parent=\"boss_wave\")", calm_header],
+			["# @ace_group(uid=\"boss_wave\", name=\"Boss Wave\")", "# @ace_group(uid=\"inner\", name=\"Inner\", parent=\"boss_wave\")", calm_header],
 			["var __group_calm_active: bool = true"],
 			"Boss Wave", {"rows": 3}],
 		["a renamed switchable group takes its flag along", [["Calm", "rename", "Quiet Time"]],
-			[wave_header + ")", inner_header, "## @ace_group(uid=\"quiet_time\", name=\"Quiet Time\", toggleable=true)"],
+			[wave_header + ")", inner_header, "# @ace_group(uid=\"quiet_time\", name=\"Quiet Time\", toggleable=true)"],
 			["var __group_quiet_time_active: bool = true"],
 			"Quiet Time", {"runtime_toggleable": true, "rows": 1}],
 		["a deleted group", [["Calm", "delete", null]],
@@ -80,7 +80,7 @@ static func run() -> bool:
 			[],
 			"Wave One", {"rows": 3}],
 		["a switchable group added", [["Late Game", "add", null]],
-			[wave_header + ")", inner_header, calm_header, "## @ace_group(uid=\"late_game\", name=\"Late Game\", toggleable=true)"],
+			[wave_header + ")", inner_header, calm_header, "# @ace_group(uid=\"late_game\", name=\"Late Game\", toggleable=true)"],
 			["var __group_calm_active: bool = true", "var __group_late_game_active: bool = true"],
 			"Late Game", {"runtime_toggleable": true, "rows": 1}],
 	]
@@ -99,7 +99,7 @@ static func _check_case(base: String, case: Array) -> bool:
 	var expected_state: Dictionary = case[5]
 	var reopened_group: EventGroup = _group(reopened, str(case[4]))
 	return SUPPORT.pins(TEST_NAME, [
-		["%s: the header lines" % label, _lines_starting(saved, "## @ace_group("), case[2]],
+		["%s: the header lines" % label, _lines_starting(saved, "# @ace_group("), case[2]],
 		["%s: the switch flags" % label, _lines_starting(saved, "var __group_"), case[3]],
 		["%s: the saved script parses" % label, _parse_error(saved), ""],
 		["%s: reopens as the edited group" % label, _state(reopened_group, expected_state.keys()), expected_state],

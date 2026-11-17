@@ -35,7 +35,7 @@ static func run() -> bool:
 		["the editor view's zoom is part of it", source.contains("get_global_canvas_transform()"), true],
 		["not the node's own scale alone", source.contains("value / maxf(absf(global_scale.x), 0.0001)"), false],
 		["a fixed shape keeps the scale it was drawn at", source.contains("_canvas_scale_seen"), true],
-		["the rule's function is hidden from the picker", source.contains("## @ace_hidden\nstatic func on_screen_thickness("), true],
+		["the rule's function is hidden from the picker", RegEx.create_from_string("# @ace_hidden\n(##[^\n]*\n)*static func on_screen_thickness\\(").search(source) != null, true],
 	]) and ok
 	return ok
 

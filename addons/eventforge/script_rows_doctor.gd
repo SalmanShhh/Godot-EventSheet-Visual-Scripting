@@ -37,7 +37,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 ## True when a script's text puts any `##` word of this kind in the file - the pre-read, looser than
 ## the rules behind it, that decides which files are worth reading in full.
 static func reads_words(source: String) -> bool:
-	return source.contains("@ace_") or RegEx.create_from_string(r"(?m)^\s*##\s*@a").search(source) != null
+	return source.contains("@ace_") or RegEx.create_from_string(r"(?m)^\s*#{1,2}\s*@a").search(source) != null
 
 
 ## The findings for one script, in the shape every runner reads. Pure over its two arguments, so a test

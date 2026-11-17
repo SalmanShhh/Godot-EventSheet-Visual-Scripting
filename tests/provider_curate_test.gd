@@ -1,6 +1,6 @@
 # EventForge - the window that lists what a script of yours gives sheets.
 #
-# Each member of the script is a sentence with a tick: unticking writes `## @ace_hidden` above it, and
+# Each member of the script is a sentence with a tick: unticking writes `# @ace_hidden` above it, and
 # a member the script already leaves out is listed too, so ticking it again brings it back with every
 # other word the script had written. Only the ticks that differ from the file are written.
 #
@@ -38,7 +38,7 @@ static func run() -> bool:
 		FileAccess.get_file_as_string(UNTYPED).contains("@ace_"), false) and ok
 
 	# Done writes a script of yours, and ticking a left-out member again brings back what it carried.
-	var source: String = "extends Node\n\n\n## @ace_name(\"Go Now\")\nfunc go() -> void:\n\tpass\n"
+	var source: String = "extends Node\n\n\n# @ace_name(\"Go Now\")\nfunc go() -> void:\n\tpass\n"
 	var handle: FileAccess = FileAccess.open(TEMP_SCRIPT, FileAccess.WRITE)
 	handle.store_string(source)
 	handle.close()
@@ -66,7 +66,7 @@ static func run() -> bool:
 		["Keep them working is greyed for an empty old name, with no code to show", [blank_disabled, blank_code], [true, false]],
 		["and live once one is typed", add_shim.disabled, false],
 		["the code it adds is shown first", code,
-			"## @ace_deprecated(\"Renamed to start_wave.\", \"method:start_wave\")\nfunc old_start_wave(index: int) -> void:\n\tstart_wave(index)"],
+			"# @ace_deprecated(\"Renamed to start_wave.\", \"method:start_wave\")\nfunc old_start_wave(index: int) -> void:\n\tstart_wave(index)"],
 	]) and ok
 	window.window().free()
 	dock.free()

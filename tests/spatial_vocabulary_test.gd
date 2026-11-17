@@ -712,7 +712,7 @@ static func _test_follow_path_trigger() -> bool:
 	all_passed = _check("it carries no payload, because arrival has nothing to report",
 		argument_count, 0) and all_passed
 	all_passed = _check("the shipped source marks it a trigger",
-		FileAccess.get_file_as_string(PACK_PATH).contains("## @ace_trigger\n## @ace_name(\"On Path Finished\")\nsignal path_finished"), true) and all_passed
+		FileAccess.get_file_as_string(PACK_PATH).contains("# @ace_trigger\n# @ace_name(\"On Path Finished\")\nsignal path_finished"), true) and all_passed
 
 	# 2. PUBLISHED as a TRIGGER row, not as a condition. This is the re-kinding the audit asked for:
 	#    arrival is the signal, and Is At Path End stays beside it for the other question.

@@ -67,10 +67,10 @@ static func _the_pack_ships_as_the_autoload(script: GDScript) -> bool:
 	var templates: int = 0
 	var not_the_autoload: int = 0
 	for line: String in source.split("\n"):
-		if not line.begins_with("## @ace_codegen_template("):
+		if not line.begins_with("# @ace_codegen_template("):
 			continue
 		templates += 1
-		if not line.begins_with("## @ace_codegen_template(\"Codex."):
+		if not line.begins_with("# @ace_codegen_template(\"Codex."):
 			not_the_autoload += 1
 	# The instance is held rather than dropped: the pack is a Node, so an inline `script.new()` is a
 	# node nobody frees, and it takes the script's own reference count out with it at exit.

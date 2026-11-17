@@ -393,7 +393,7 @@ func choices(key: String) -> Array:
 				triples.append(flag_choices(key)[index] + [codes[index]])
 		"category":
 			for word: String in category_choices(_dock._current_sheet, event_function.ace_category):
-				triples.append([word, category_sentence(word), "## @ace_category(\"%s\")" % word])
+				triples.append([word, category_sentence(word), "%s@ace_category(\"%s\")" % [_mark(_dock._current_sheet), word]])
 		_:
 			var index: int = int(key.get_slice(":", 1))
 			if key.get_slice(":", 2) == "type" and index >= 0 and index < event_function.params.size():
@@ -401,6 +401,11 @@ func choices(key: String) -> Array:
 					triples.append([word, type_description(word),
 						"%s: %s = %s" % [event_function.params[index].id, word, starting_value(word)]])
 	return triples
+
+
+## The comment marker the sheet writes its annotation lines with, as the code a choice stands for shows it.
+static func _mark(sheet: EventSheetResource) -> String:
+	return "# " if EventSheetAnnotationLine.writes_hash(sheet) else "## "
 
 
 ## The code each of a yes/no setting's two choices stands for: the annotation listing writes, the
@@ -412,14 +417,15 @@ static func flag_codes(flag: String, event_function: EventFunction, sheet: Event
 	var call: String = "%s(%s)" % [event_function.function_name, ", ".join(names)]
 	match flag:
 		"in_add_action":
-			var directive: String = "## @ace_expression"
+			var mark: String = _mark(sheet)
+			var directive: String = mark + "@ace_expression"
 			if not event_function.looping_iterator.is_empty():
-				directive = "## @ace_looping(%s)" % event_function.looping_iterator
+				directive = mark + "@ace_looping(%s)" % event_function.looping_iterator
 			elif event_function.return_type == TYPE_NIL:
-				directive = "## @ace_action"
+				directive = mark + "@ace_action"
 			elif event_function.return_type == TYPE_BOOL:
-				directive = "## @ace_condition"
-			return PackedStringArray(["## @ace_hidden", directive])
+				directive = mark + "@ace_condition"
+			return PackedStringArray([mark + "@ace_hidden", directive])
 		"waits":
 			return PackedStringArray([call, "await " + call])
 		"shared":

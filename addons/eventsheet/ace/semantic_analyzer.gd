@@ -65,7 +65,7 @@ func parse_source_metadata(script: Script) -> Dictionary:
 	}
 	if script == null or script.resource_path.is_empty() or not FileAccess.file_exists(script.resource_path):
 		return metadata
-	var source: String = FileAccess.get_file_as_string(script.resource_path)
+	var source: String = EventSheetAnnotationLine.canonical_text(FileAccess.get_file_as_string(script.resource_path))
 	# A `static func` is a row only in a script the reader wrote: the plugin's own packs carry statics
 	# that were never published, and reading them now would move every pack's vocabulary.
 	var reads_statics: bool = not ShippedScripts.is_shipped(script.resource_path)

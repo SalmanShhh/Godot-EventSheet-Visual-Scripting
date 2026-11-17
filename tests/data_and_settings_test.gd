@@ -56,15 +56,15 @@ static func _test_settings_pack_shape() -> bool:
 	var source: String = FileAccess.get_file_as_string(PACK_PATH)
 	ok = _pin(ok, source.contains("signal setting_changed(setting_name: String, value: Variant)"),
 		true, "the trigger is a declared signal carrying the name AND the new value")
-	ok = _pin(ok, source.contains("## @ace_trigger\n## @ace_name(\"On Setting Changed\")"),
+	ok = _pin(ok, source.contains("# @ace_trigger\n# @ace_name(\"On Setting Changed\")"),
 		true, "the signal is published as the On Setting Changed trigger")
-	ok = _pin(ok, source.contains("## @ace_expression\n## @ace_name(\"Setting Value\")"),
+	ok = _pin(ok, source.contains("# @ace_expression\n# @ace_name(\"Setting Value\")"),
 		true, "Setting Value publishes as an expression, not an action")
-	ok = _pin(ok, source.contains("## @ace_condition\n## @ace_name(\"Changed Setting Is\")"),
+	ok = _pin(ok, source.contains("# @ace_condition\n# @ace_name(\"Changed Setting Is\")"),
 		true, "Changed Setting Is publishes as a condition")
-	ok = _pin(ok, source.contains("## @ace_condition\n## @ace_name(\"Setting Is\")"),
+	ok = _pin(ok, source.contains("# @ace_condition\n# @ace_name(\"Setting Is\")"),
 		true, "Setting Is publishes as a condition")
-	ok = _pin(ok, source.contains("## @ace_action\n## @ace_featured\n## @ace_name(\"Declare Setting\")"),
+	ok = _pin(ok, source.contains("# @ace_action\n# @ace_featured\n# @ace_name(\"Declare Setting\")"),
 		true, "Declare Setting publishes as a featured action")
 	ok = _pin(ok, source.contains("const SETTINGS_FILE: String = \"user://settings.cfg\""),
 		true, "settings persist in the same file the built-in Save Setting writes")

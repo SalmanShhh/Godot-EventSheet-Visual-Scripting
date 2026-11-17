@@ -70,6 +70,26 @@ const KIND_ANNOTATIONS: Dictionary = {
 ##
 ## Returns {"ok", "source", "changed", "skipped", "reason"}. `source` is unchanged when ok is false.
 static func apply(source: String, edits: Array) -> Dictionary:
+	return _in_file_spelling(source, func(text: String) -> Dictionary: return _apply_edits(text, edits))
+
+
+## Runs `edit_text` on the script and gives the result back spelled the way the script spells its annotations:
+## one hash for a script that has them that way and for one that has none yet, two for a script that has them
+## with two (a script that mixes both is edited as it stands and gets two). The edit itself only ever sees
+## two-hash lines.
+static func _in_file_spelling(source: String, edit_text: Callable) -> Dictionary:
+	var spelling: String = EventSheetAnnotationLine.spelling_of(source)
+	if spelling != EventSheetAnnotationLine.ONE and spelling != "none":
+		return edit_text.call(source)
+	var result: Dictionary = edit_text.call(EventSheetAnnotationLine.canonical_text(source))
+	if bool(result.get("ok", true)):
+		result["source"] = EventSheetAnnotationLine.hashed_text(str(result["source"]))
+	else:
+		result["source"] = source
+	return result
+
+
+static func _apply_edits(source: String, edits: Array) -> Dictionary:
 	var result: Dictionary = {"ok": false, "source": source, "changed": 0, "skipped": [], "reason": ""}
 	if edits.is_empty():
 		result["ok"] = true
@@ -351,9 +371,17 @@ static func _split_top_level(text: String) -> PackedStringArray:
 	return pieces
 
 
-## The managed annotation lines an edit produces, in canonical order. Exposed on its own so a diff
-## preview can show exactly what will be written without applying anything.
+## The managed annotation lines an edit produces, in canonical order, written the way new lines are written
+## (one hash). Exposed on its own so a diff preview can show exactly what will be written without applying
+## anything.
 static func annotation_lines(edit: Dictionary) -> PackedStringArray:
+	var output: PackedStringArray = PackedStringArray()
+	for line: String in _two_hash_annotation_lines(edit):
+		output.append(EventSheetAnnotationLine.hashed(line))
+	return output
+
+
+static func _two_hash_annotation_lines(edit: Dictionary) -> PackedStringArray:
 	var output: PackedStringArray = PackedStringArray()
 	# Opting a member out is the whole statement - a hidden verb has no label to argue about.
 	if bool(edit.get("hidden", false)):
@@ -404,6 +432,10 @@ static func annotation_lines(edit: Dictionary) -> PackedStringArray:
 ## is deliberate: rewriting a user's declarations and every reference to them is a different and far
 ## riskier operation than adding comments, and it is not what this module promises.
 static func forwarding_shim(source: String, old_member: String, new_member: String, message: String = "") -> Dictionary:
+	return _in_file_spelling(source, func(text: String) -> Dictionary: return _shim(text, old_member, new_member, message))
+
+
+static func _shim(source: String, old_member: String, new_member: String, message: String) -> Dictionary:
 	var result: Dictionary = {"ok": false, "source": source, "reason": ""}
 	var old_name: String = old_member.strip_edges()
 	var new_name: String = new_member.strip_edges()
@@ -462,6 +494,10 @@ static func forwarding_shim(source: String, old_member: String, new_member: Stri
 ## needs no new annotation vocabulary. Returns {source, old_version, new_version}. Pure - the
 ## caller owns backups and writing.
 static func bump_version(source: String, bump: String, note: String) -> Dictionary:
+	return _in_file_spelling(source, func(text: String) -> Dictionary: return _bump(text, bump, note))
+
+
+static func _bump(source: String, bump: String, note: String) -> Dictionary:
 	var lines: PackedStringArray = source.split("
 ")
 	var old_version: String = "1.0.0"

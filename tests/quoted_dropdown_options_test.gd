@@ -362,7 +362,7 @@ static func _test_the_shipped_annotations() -> bool:
 	for pinned: Array in ACTIONS + CONDITIONS:
 		var shipped: String = FileAccess.get_file_as_string(str(pinned[0]))
 		all_passed = _check("the pack ships %s" % str(pinned[1]),
-			shipped.contains("## @ace_codegen_template(\"%s\")" % str(pinned[1])), true) and all_passed
+			shipped.contains("# @ace_codegen_template(\"%s\")" % str(pinned[1])), true) and all_passed
 	return all_passed
 
 
@@ -438,12 +438,12 @@ static func _bare_word_params(pack: String) -> PackedStringArray:
 	var pending: Array[String] = []
 	for line: String in FileAccess.get_file_as_string(pack).split("\n"):
 		var text: String = line.strip_edges()
-		if text.begins_with("## @ace_param_options("):
-			var inside: String = text.trim_prefix("## @ace_param_options(").trim_suffix(")")
+		if text.begins_with("# @ace_param_options("):
+			var inside: String = text.trim_prefix("# @ace_param_options(").trim_suffix(")")
 			var param_id: String = inside.get_slice(" ", 0)
 			if not _keys_are_all_numbers(inside.substr(param_id.length())):
 				pending.append(param_id)
-		elif text.begins_with("## @ace_codegen_template("):
+		elif text.begins_with("# @ace_codegen_template("):
 			for param_id: String in pending:
 				var quoted: bool = text.contains("\\\"{%s}\\\"" % param_id) \
 					or text.contains("\"{%s}\"" % param_id)

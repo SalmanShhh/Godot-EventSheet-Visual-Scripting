@@ -308,7 +308,7 @@ static func run() -> bool:
 	ok = _check("the stub of the reported verb writes the empty word its template asks for",
 		_stub_param_line("res://eventsheet_addons/screen_fx/screen_fx.gd",
 			"method:add_post_effect", "called"),
-		"## @ace_param(called, default_word: \"\", desc: \"What later rows address it by. Empty names it after its effect, which is what one of each wants.\")") and ok
+		"# @ace_param(called, default_word: \"\", desc: \"What later rows address it by. Empty names it after its effect, which is what one of each wants.\")") and ok
 
 	# And the receipt that the spelling reached a PERSON: the row the whole defect was reported
 	# against opens on a cleared box again, which is what its own description offers.
@@ -364,7 +364,7 @@ static func _stub_param_line(script_path: String, ace_id: String, param_id: Stri
 		if definition.id != ace_id:
 			continue
 		for line: String in EventSheetACEAnnotationStub.comment_stub(definition).split("\n"):
-			if line.begins_with("## @ace_param(%s," % param_id):
+			if line.begins_with("# @ace_param(%s," % param_id):
 				answer = line
 	if instance is Node:
 		(instance as Node).free()

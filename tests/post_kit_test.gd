@@ -68,14 +68,14 @@ static func _the_rows_are_the_ones_the_pack_promises() -> bool:
 	var missing_names: PackedStringArray = PackedStringArray()
 	var missing_templates: PackedStringArray = PackedStringArray()
 	for row_name: String in rows:
-		if not pack.contains("## @ace_name(\"%s\")" % row_name):
+		if not pack.contains("# @ace_name(\"%s\")" % row_name):
 			missing_names.append(row_name)
-		if not pack.contains("## @ace_codegen_template(\"%s\")" % str(rows[row_name])):
+		if not pack.contains("# @ace_codegen_template(\"%s\")" % str(rows[row_name])):
 			missing_templates.append(row_name)
 	return SUPPORT.pins(P, [
 		["every row is named in the shipped pack", ",".join(missing_names), ""],
 		["every row emits the line it promises", ",".join(missing_templates), ""],
-		["the pack is a Post Kit behavior", pack.contains("## @ace_category(\"Post Kit\")"), true],
+		["the pack is a Post Kit behavior", pack.contains("# @ace_category(\"Post Kit\")"), true],
 		["the pack says which renderer draws it", pack.contains("FORWARD+ ONLY"), true],
 	])
 

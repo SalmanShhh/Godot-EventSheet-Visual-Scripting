@@ -49,14 +49,14 @@ static func run() -> bool:
 ## a runner can find the file by, a real signal, and a handler connected to it.
 static func _test_the_kind_compiles_to_a_startable_script() -> bool:
 	var source: String = _compile(_passing_sheet())
-	var ok: bool = _check("a test sheet emits the discovery marker", source.contains("## @ace_test_sheet"), true)
+	var ok: bool = _check("a test sheet emits the discovery marker", source.contains("# @ace_test_sheet"), true)
 	ok = _check("a test sheet declares the signal the runner emits",
 		source.contains("signal test_started(test_name: String)"), true) and ok
 	ok = _check("On Test Start connects to it in _ready",
 		source.contains("\ttest_started.connect(_on_test_started)"), true) and ok
 	ok = _check("On Test Start's handler takes the test name",
 		source.contains("func _on_test_started(_test_name: String) -> void:"), true) and ok
-	ok = _check("a plain sheet emits no marker", _compile(_plain_sheet()).contains("## @ace_test_sheet"), false) and ok
+	ok = _check("a plain sheet emits no marker", _compile(_plain_sheet()).contains("# @ace_test_sheet"), false) and ok
 	ok = _check("a plain sheet declares no test signal",
 		_compile(_plain_sheet()).contains("signal test_started"), false) and ok
 	return ok
@@ -249,7 +249,7 @@ static func _test_the_emitted_test_sheet_reopens_byte_identically() -> bool:
 	var reopened: EventSheetResource = importer.import_external(path)
 	var ok: bool = _check("the reopened sheet is still a test", reopened.test_mode, true)
 	ok = _check("re-emitting it is byte-identical", _compile(reopened), first) and ok
-	ok = _check("…with the marker still declared exactly once", first.count("## @ace_test_sheet"), 1) and ok
+	ok = _check("…with the marker still declared exactly once", first.count("# @ace_test_sheet"), 1) and ok
 	DirAccess.remove_absolute(path)
 	DirAccess.remove_absolute(fixture_dir)
 	return ok

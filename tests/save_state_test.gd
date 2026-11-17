@@ -439,7 +439,7 @@ static func _emission_survival() -> bool:
 		var emitted: String = FileAccess.get_file_as_string(str(STATEFUL_PACKS[pack]))
 		all_passed = _check("%s emits save_state" % pack, emitted.contains("func save_state() -> Dictionary:"), true) and all_passed
 		all_passed = _check("%s emits load_state" % pack, emitted.contains("func load_state("), true) and all_passed
-		all_passed = _check("%s keeps the seam out of the picker" % pack, emitted.count("## @ace_hidden") >= 2, true) and all_passed
+		all_passed = _check("%s keeps the seam out of the picker" % pack, emitted.count("# @ace_hidden") >= 2, true) and all_passed
 	var save_system: String = FileAccess.get_file_as_string("res://eventsheet_addons/save_system/save_system_addon.gd")
 	for marker: String in ["func save_node_state", "func load_group_state", "func save_singleton_state", "__persist", "persist_group"]:
 		all_passed = _check("save_system emits %s" % marker, save_system.contains(marker), true) and all_passed

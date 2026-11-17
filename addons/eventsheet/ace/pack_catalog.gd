@@ -52,7 +52,7 @@ static func describe(pack_dir: String, root: String = PACKS_ROOT) -> Dictionary:
 	var script_path: String = main_script_for(pack_dir, root)
 	if script_path.is_empty():
 		return {}
-	var source: String = FileAccess.get_file_as_string(script_path)
+	var source: String = EventSheetAnnotationLine.canonical_text(FileAccess.get_file_as_string(script_path))
 	# Only the CLASS-LEVEL annotations describe the pack. A member's own `## @ace_name(...)` a
 	# hundred lines down describes one action, and reading the first match in the whole file made
 	# every pack introduce itself as whichever action happened to be declared first.

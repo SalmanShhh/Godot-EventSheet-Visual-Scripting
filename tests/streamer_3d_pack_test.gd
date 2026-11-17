@@ -106,12 +106,12 @@ static func _every_verb_addresses_the_behavior() -> bool:
 	var not_the_behavior: int = 0
 	var triggers: int = 0
 	for line: String in source.split("\n"):
-		if line.begins_with("## @ace_trigger"):
+		if line.begins_with("# @ace_trigger"):
 			triggers += 1
-		if not line.begins_with("## @ace_codegen_template("):
+		if not line.begins_with("# @ace_codegen_template("):
 			continue
 		templates += 1
-		if not line.begins_with("## @ace_codegen_template(\"$Streamer3DBehavior."):
+		if not line.begins_with("# @ace_codegen_template(\"$Streamer3DBehavior."):
 			not_the_behavior += 1
 	return SUPPORT.pins(TEST, [
 		["every published verb addresses the behavior by name", not_the_behavior, 0],

@@ -371,6 +371,7 @@ func _respace_functions(path: String) -> bool:
 	var emitted: String = FileAccess.get_file_as_string(path)
 	emitted = emitted.replace("\n\nfunc ", "\n\n\nfunc ")
 	emitted = emitted.replace("\n\n## @ace_hidden\nfunc ", "\n\n\n## @ace_hidden\nfunc ")
+	emitted = emitted.replace("\n\n# @ace_hidden\nfunc ", "\n\n\n# @ace_hidden\nfunc ")
 	return _write_text(path, emitted)
 
 

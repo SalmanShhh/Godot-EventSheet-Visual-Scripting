@@ -27,7 +27,7 @@ static func run() -> bool:
 	var all_passed: bool = true
 
 	# Analyzer: class-level @ace_tags parses (and stays out of the description).
-	var tagged_source: String = "## A movement helper.\n## @ace_tags(movement, retro, jam)\nclass_name TagProbe\nextends Node\n"
+	var tagged_source: String = "## A movement helper.\n# @ace_tags(movement, retro, jam)\nclass_name TagProbe\nextends Node\n"
 	var probe_path: String = "user://eventsheets_tag_probe.gd"
 	var file: FileAccess = FileAccess.open(probe_path, FileAccess.WRITE)
 	file.store_string(tagged_source)
@@ -53,7 +53,7 @@ static func run() -> bool:
 	sheet.addon_tags = PackedStringArray(["movement", "jam"])
 	var output: String = str(EventSheetCompiler.compile(sheet, "user://eventsheets_tagged.gd").get("output", ""))
 	all_passed = _check("sheet tags emit as the annotation",
-		output.contains("## @ace_tags(movement, jam)") and output.find("@ace_tags") < output.find("class_name TaggedBehavior"), true) and all_passed
+		output.contains("# @ace_tags(movement, jam)") and output.find("@ace_tags") < output.find("class_name TaggedBehavior"), true) and all_passed
 	var generated: GDScript = GDScript.new()
 	generated.source_code = output
 	all_passed = _check("tagged output parses", generated.reload(true) == OK, true) and all_passed
@@ -74,7 +74,7 @@ static func run() -> bool:
 	# generated-pack layout: header comments, tags, icon, class_name).
 	var icon_source: String = "# AUTO-GENERATED
 
-## @ace_tags(fx, audio)
+# @ace_tags(fx, audio)
 @icon(\"res://icon.svg\")
 class_name IconProbe
 extends Node

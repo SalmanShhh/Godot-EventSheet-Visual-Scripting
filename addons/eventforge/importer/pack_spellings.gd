@@ -282,7 +282,8 @@ static func override_tables_for_tests(pack_tables: Dictionary) -> void:
 ## The entries one pack SOURCE teaches, without touching the disk - the parser itself, so a test (or a
 ## pack author's tool) can ask what a file would publish before it ships. `path` only names the file in
 ## entry ids; nothing is read from it.
-static func entries_in_source(source: String, path: String) -> Array:
+static func entries_in_source(written: String, path: String) -> Array:
+	var source: String = EventSheetAnnotationLine.canonical_text(written)
 	var found: Array = []
 	var provider: String = _provider_of(source, path)
 	var pending: PackedStringArray = PackedStringArray()

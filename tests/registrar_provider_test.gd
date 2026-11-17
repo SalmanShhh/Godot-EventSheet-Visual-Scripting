@@ -1,7 +1,7 @@
 # Godot EventSheets - the typed registrar (v0.11 chapter 4).
 #
 # A provider may register through `static func _eventforge_register(reg)` instead of
-# ## @ace_* comments: real GDScript, so the editor autocompletes the vocabulary and a
+# # @ace_* comments: real GDScript, so the editor autocompletes the vocabulary and a
 # typo is a compile error. The contract pinned here: the registrar and the comment
 # dialect flow through ONE pipeline and produce IDENTICAL definitions - every shared
 # member of the two twin fixtures must match field for field.
@@ -42,7 +42,7 @@ static func run() -> bool:
 	var fire_definition: ACEDefinition = comment_registry.find_definition("TerseProviderSample", "method:fire")
 	var comment_stub: String = EventSheetACEAnnotationStub.comment_stub(fire_definition)
 	ok = _check("comment stub carries the prose description", comment_stub.contains("## Fires the weapon once."), true) and ok
-	ok = _check("comment stub declares the type", comment_stub.contains("## @ace_action"), true) and ok
+	ok = _check("comment stub declares the type", comment_stub.contains("# @ace_action"), true) and ok
 	ok = _check("comment stub ends in a func skeleton", comment_stub.contains("func fire() -> void:"), true) and ok
 	var registrar_stub: String = EventSheetACEAnnotationStub.registrar_stub(fire_definition)
 	ok = _check("registrar stub opens the hook", registrar_stub.contains("static func _eventforge_register(reg: EventForgeRegistrar) -> void:"), true) and ok
@@ -52,12 +52,12 @@ static func run() -> bool:
 	var aim_stub: String = EventSheetACEAnnotationStub.comment_stub(aim_definition)
 	# The per-param description rides the same one-line spec (quoted, so a comma in the prose
 	# cannot split it) - dropping it used to lose the only help text the params dialog shows.
-	ok = _check("comment stub emits one-line params", aim_stub.contains("## @ace_param(mode, hint: expression, desc: \"How to aim, roughly.\")"), true) and ok
+	ok = _check("comment stub emits one-line params", aim_stub.contains("# @ace_param(mode, hint: expression, desc: \"How to aim, roughly.\")"), true) and ok
 	# The starting value rides the same line, because a dropdown that names no default of its own
 	# still OPENS on its first word - the stub writes down the word the picker was showing when the
 	# author copied it, rather than leaving the one fact a paste cannot recover to be re-derived.
 	ok = _check("comment stub emits pipe options",
-		aim_stub.contains("## @ace_param(stance, options: crouch|stand|prone, default: crouch)"),
+		aim_stub.contains("# @ace_param(stance, options: crouch|stand|prone, default: crouch)"),
 		true) and ok
 
 	comment_sample.free()

@@ -99,10 +99,10 @@ static func run() -> bool:
 	var declaration_lines: Dictionary = EventSheets.group_declaration_lines(group_sheet)
 	ok = _check("group_declaration_lines answers per group",
 		str(declaration_lines.get(outer_group, "")),
-		"## @ace_group(uid=\"gameplay\", name=\"Gameplay\")") and ok
+		"# @ace_group(uid=\"gameplay\", name=\"Gameplay\")") and ok
 	ok = _check("…and a nested group names its parent",
 		str(declaration_lines.get(inner_group, "")),
-		"## @ace_group(uid=\"combat\", name=\"Combat\", parent=\"gameplay\", color=\"#ff0000\")") and ok
+		"# @ace_group(uid=\"combat\", name=\"Combat\", parent=\"gameplay\", color=\"#ff0000\")") and ok
 	ok = _check("…and it is the very line the compile writes",
 		str(EventSheets.compile(group_sheet).get("output", "")).contains(
 			str(declaration_lines.get(inner_group, ""))), true) and ok
@@ -110,7 +110,7 @@ static func run() -> bool:
 	# names its parent, and only the whole sheet knows what that is.
 	ok = _check("row_code_line answers for a group when it is given the sheet",
 		EventSheets.row_code_line(inner_group, group_sheet),
-		"## @ace_group(uid=\"combat\", name=\"Combat\", parent=\"gameplay\", color=\"#ff0000\")") and ok
+		"# @ace_group(uid=\"combat\", name=\"Combat\", parent=\"gameplay\", color=\"#ff0000\")") and ok
 	ok = _check("…and says nothing about a group with no sheet to place it in",
 		EventSheets.row_code_line(inner_group), "") and ok
 

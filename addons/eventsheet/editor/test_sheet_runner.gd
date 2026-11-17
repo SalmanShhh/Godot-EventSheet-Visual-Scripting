@@ -120,7 +120,7 @@ static func _scan_dir(dir_path: String, found: PackedStringArray) -> void:
 ## text anywhere would claim every file that merely mentions it, this runner and its own test first
 ## of all, and each of those would then be "run" and fail for not being a test.
 static func has_marker(source: String) -> bool:
-	for line: String in source.split("\n"):
+	for line: String in EventSheetAnnotationLine.canonical_text(source).split("\n"):
 		if line.strip_edges() == MARKER:
 			return true
 	return false

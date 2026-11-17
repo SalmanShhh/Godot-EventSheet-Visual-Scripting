@@ -29,8 +29,8 @@ static func run() -> bool:
 	var reopened: EventSheetResource = turned_off.get("reopened") as EventSheetResource
 	all_passed = SUPPORT.pins(TEST_NAME, [
 		["off: the header says the group is off",
-			_lines_starting(saved, "## @ace_group(uid=\"wave_one\""),
-			["## @ace_group(uid=\"wave_one\", name=\"Wave One\", enabled=false)"]],
+			_lines_starting(saved, "# @ace_group(uid=\"wave_one\""),
+			["# @ace_group(uid=\"wave_one\", name=\"Wave One\", enabled=false)"]],
 		["off: its rows are still in the file, behind a guard that never opens",
 			[saved.contains("\tif false:\n\t\tscore += 1"), saved.contains("\tif false:\n\t\tprint(score)"),
 				saved.contains("\tif false:\n\t\tscore -= 1")], [true, true, true]],
@@ -82,7 +82,7 @@ static func run() -> bool:
 		["a .tres companion still leaves the off group out",
 			[companion.contains("score += 1"), companion.contains("(disabled group \"Wave One\"")], [false, true]],
 		["and writes the header it always wrote, with no enabled=false",
-			_lines_starting(companion, "## @ace_group(uid=\"wave_one\""), ["## @ace_group(uid=\"wave_one\", name=\"Wave One\")"]],
+			_lines_starting(companion, "# @ace_group(uid=\"wave_one\""), ["# @ace_group(uid=\"wave_one\", name=\"Wave One\")"]],
 	]) and all_passed
 	# A stateful condition (Every X Seconds) on a row of the off group: its bookkeeping line sits behind
 	# the same guard as the row, so the timer does not count while the group is off.

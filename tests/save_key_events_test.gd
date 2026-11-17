@@ -65,10 +65,10 @@ static func _pins() -> PackedStringArray:
 		"signal key_loaded(key: String, slot_index: int)",
 		"signal key_removed(key: String, slot_index: int)",
 		"signal save_key_missing(key: String, slot_index: int)",
-		"## @ace_trigger\n## @ace_name(\"On Key Saved\")",
-		"## @ace_trigger\n## @ace_name(\"On Key Loaded\")",
-		"## @ace_trigger\n## @ace_name(\"On Key Removed\")",
-		"## @ace_trigger\n## @ace_name(\"On Save Key Missing\")",
+		"# @ace_trigger\n# @ace_name(\"On Key Saved\")",
+		"# @ace_trigger\n# @ace_name(\"On Key Loaded\")",
+		"# @ace_trigger\n# @ace_name(\"On Key Removed\")",
+		"# @ace_trigger\n# @ace_name(\"On Save Key Missing\")",
 		# The save seam: one write, both outcomes, and the never-saved key that must not claim it
 		# landed.
 		"\tif not _never_save.has(key):\n\t\tkey_saved.emit(key, slot)",
@@ -76,7 +76,7 @@ static func _pins() -> PackedStringArray:
 		"func remove_save_key(key: String) -> void:",
 		"\tif not data.has(key):\n\t\tsave_key_missing.emit(key, slot)\n\t\treturn",
 		"\tif _write_all(data):\n\t\tkey_removed.emit(key, slot)",
-		"## @ace_display_template(\"forget [b]{key}[/b] from this slot\")",
+		"# @ace_display_template(\"forget [b]{key}[/b] from this slot\")",
 		# Clearing keeps the pack's reserved keys and reports one outcome per emptied key.
 		"func clear_slot_keys() -> void:",
 		"\t\tif str(stored) == CARD_KEY or str(stored) == VERSION_KEY or str(stored) == RUN_KEY:",

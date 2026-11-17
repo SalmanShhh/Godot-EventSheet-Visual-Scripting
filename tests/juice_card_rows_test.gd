@@ -20,7 +20,7 @@ const STEP_FIELD: String = "res://addons/eventsheet/editor/inspector/feedback_st
 const SCENE_NAME: String = "juice_card_rows.tscn"
 
 ## The line Set Juice Card Field has written since it shipped. Frozen: it never changes.
-const FIELD_TEMPLATE: String = "## @ace_codegen_template(\"$JuicePlayer.set_feedback_field(\"{label}\", \"{field}\", {value})\")"
+const FIELD_TEMPLATE: String = "# @ace_codegen_template(\"$JuicePlayer.set_feedback_field(\"{label}\", \"{field}\", {value})\")"
 
 ## The keys the field box must offer beyond the shipped eight: the clock and the strength window the
 ## Timing foldout draws.
@@ -245,15 +245,15 @@ static func _kind_words() -> PackedStringArray:
 	return words
 
 
-## The `## @ace_param(<param>, ...)` line written above `func <verb_name>(` in the emitted pack.
+## The `# @ace_param(<param>, ...)` line written above `func <verb_name>(` in the emitted pack.
 static func _param_line(text: String, verb_name: String, param: String) -> String:
 	var lines: PackedStringArray = text.split("\n")
 	for index: int in range(lines.size()):
 		if not lines[index].begins_with("func %s(" % verb_name):
 			continue
 		var walk: int = index - 1
-		while walk >= 0 and lines[walk].begins_with("##"):
-			if lines[walk].begins_with("## @ace_param(%s," % param):
+		while walk >= 0 and lines[walk].begins_with("#"):
+			if lines[walk].begins_with("# @ace_param(%s," % param):
 				return lines[walk]
 			walk -= 1
 		return ""

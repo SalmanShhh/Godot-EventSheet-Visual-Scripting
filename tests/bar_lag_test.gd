@@ -52,11 +52,11 @@ static func _test_the_rows_ship() -> bool:
 	return SUPPORT.pins("bar_lag_test", [
 		["the pack loads and parses", script != null, true],
 		["arming a lag is an action", source.contains(
-			"## @ace_codegen_template(\"$HudKitBehavior.set_bar_lag({bar_name}, {seconds}, {lag_colour})\")"), true],
+			"# @ace_codegen_template(\"$HudKitBehavior.set_bar_lag({bar_name}, {seconds}, {lag_colour})\")"), true],
 		["reading the underlay back is an expression", source.contains(
-			"## @ace_codegen_template(\"$HudKitBehavior.bar_lag_value({bar_name})\")"), true],
+			"# @ace_codegen_template(\"$HudKitBehavior.bar_lag_value({bar_name})\")"), true],
 		["and asking whether it is still moving is a condition", source.contains(
-			"## @ace_codegen_template(\"$HudKitBehavior.is_bar_lagging({bar_name})\")"), true],
+			"# @ace_codegen_template(\"$HudKitBehavior.is_bar_lagging({bar_name})\")"), true],
 		["Set Bar keeps the three arguments it shipped with", source.contains(
 			"func set_bar(bar_name: String, value: float, max_value: float) -> void:"), true]
 	])

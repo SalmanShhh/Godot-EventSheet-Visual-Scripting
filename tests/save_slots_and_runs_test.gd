@@ -109,7 +109,7 @@ static func _pins() -> PackedStringArray:
 		"\tvar file: FileAccess = _open_read(path)",
 		"func copy_slot(from_slot: int, to_slot: int) -> void:",
 		"func slot_path(slot_index: int) -> String:\n\treturn _slot_path(slot_index)",
-		"## @ace_looping(slot_index)\n## @ace_name(\"For Each Saved Slot\")",
+		"# @ace_looping(slot_index)\n# @ace_name(\"For Each Saved Slot\")",
 		# The autosave moment (#27). The delay is RELATIVE - it defers the beat by what was asked.
 		"\tautosave_accumulator -= absf(seconds)",
 		"func pause_autosave() -> void:\n\t_autosave_paused = true",
@@ -128,14 +128,14 @@ static func _pins() -> PackedStringArray:
 		"func _fail_load(slot_index: int, reason: String) -> void:",
 		"func _fail_save(slot_index: int, reason: String) -> void:",
 		# The addon walk (#30).
-		"## @ace_featured\n## @ace_name(\"Save All Addons\")",
+		"# @ace_featured\n# @ace_name(\"Save All Addons\")",
 		"func save_all_addons() -> void:\n\tsave_value(ADDONS_KEY, _collect_addon_states())",
 		"func load_all_addons() -> void:",
 		"func addon_saves_itself(addon_name: String) -> bool:\n\treturn _collect_addon_states().has(addon_name)",
 		# The walk is handed the CURRENT SCENE so it can skip it: the game is a /root child too.
 		"func _collect_addon_states() -> Dictionary:\n\treturn _collect_children_states(get_tree().root, get_tree().current_scene) if is_inside_tree() else {}",
 		"\t\tif child == self or (playing != null and child == playing):",
-		"## @ace_looping(addon_name)\n## @ace_name(\"For Each Saveable Addon\")",
+		"# @ace_looping(addon_name)\n# @ace_name(\"For Each Saveable Addon\")",
 		# Never save this, and what the save costs (#31).
 		"func never_save_key(key: String) -> void:",
 		"func save_size() -> int:",
@@ -154,13 +154,13 @@ static func _pins() -> PackedStringArray:
 		"\treturn int(path.get_file().get_slice(\".\", 0))",
 		"\tfound.sort_custom(func(first: String, second: String) -> bool: return _backup_index_of(first) > _backup_index_of(second))",
 		"func slot_backup_count(slot_index: int) -> int:\n\treturn _backups_for(slot_index).size()",
-		"## @ace_looping(backup_path)\n## @ace_name(\"For Each Backup Of Slot\")",
+		"# @ace_looping(backup_path)\n# @ace_name(\"For Each Backup Of Slot\")",
 		# New Game Plus (#33).
 		"func carry_value_into_next_run(key: String) -> void:",
 		"func start_new_run(slot_index: int) -> void:",
 		"\tkept[RUN_KEY] = int(previous.get(RUN_KEY, 1)) + 1",
 		"func run_number() -> int:\n\treturn int(_read_all().get(RUN_KEY, 1))",
-		"## @ace_display_template(\"start a new run in slot [b]{slot_index}[/b]\")"
+		"# @ace_display_template(\"start a new run in slot [b]{slot_index}[/b]\")"
 	])
 
 

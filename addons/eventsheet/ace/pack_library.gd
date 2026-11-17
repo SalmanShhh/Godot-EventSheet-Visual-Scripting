@@ -590,7 +590,7 @@ static func _search_index(root: String) -> Array:
 	if _search_index_cache.has(root):
 		return _search_index_cache[root]
 	var index: Array = []
-	var name_pattern: RegEx = RegEx.create_from_string("(?m)^\\s*##\\s*@ace_name\\(\"([^\"]+)\"\\)")
+	var name_pattern: RegEx = RegEx.create_from_string("(?m)^\\s*#{1,2}\\s*@ace_name\\(\"([^\"]+)\"\\)")
 	for pack: Dictionary in packs(root, "res://"):
 		var verbs: PackedStringArray = PackedStringArray()
 		for script_path: String in _scripts_in(root.path_join(str(pack.get("dir", "")))):

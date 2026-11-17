@@ -110,7 +110,7 @@ static func copied_source(source: String, addon_name: String, category: String, 
 		keep_class: bool) -> String:
 	var tags: PackedStringArray = PackedStringArray()
 	var header: PackedStringArray = PackedStringArray()
-	var lines: PackedStringArray = source.split("\n")
+	var lines: PackedStringArray = EventSheetAnnotationLine.canonical_text(source).split("\n")
 	var index: int = 0
 	while index < lines.size() and not lines[index].begins_with("extends "):
 		var text: String = lines[index].strip_edges()
@@ -138,7 +138,7 @@ static func copied_source(source: String, addon_name: String, category: String, 
 			index += 1
 	for rest: int in range(index, lines.size()):
 		out.append(lines[rest])
-	return "\n".join(out)
+	return EventSheetAnnotationLine.hashed_text("\n".join(out))
 
 
 ## The kind of object a behaviour's source works on - the type of its `host` - or "" when it says none.
@@ -150,7 +150,7 @@ static func host_class_of(source: String) -> String:
 
 ## True when the source is marked as one the project made itself (its header tags include `custom`).
 static func is_yours(source: String) -> bool:
-	var found: RegExMatch = RegEx.create_from_string("(?m)^##\\s*@ace_tags\\(([^)]*)\\)").search(source)
+	var found: RegExMatch = RegEx.create_from_string("(?m)^#{1,2}\\s*@ace_tags\\(([^)]*)\\)").search(source)
 	if found == null:
 		return false
 	for tag: String in found.get_string(1).split(",", false):

@@ -228,7 +228,7 @@ static func _triggers(path: String) -> String:
 
 ## Every `## @ace_name("X")` that follows one of the given markers, sorted and joined.
 static func _names_after(path: String, markers: Array) -> String:
-	var text: String = FileAccess.get_file_as_string(path)
+	var text: String = EventSheetAnnotationLine.canonical_text(FileAccess.get_file_as_string(path))
 	if text.is_empty():
 		return "MISSING %s" % path
 	var names: Array[String] = []

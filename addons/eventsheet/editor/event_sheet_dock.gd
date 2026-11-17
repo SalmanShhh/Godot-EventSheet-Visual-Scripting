@@ -8198,7 +8198,7 @@ func _build_addon_ace_definitions() -> Array[ACEDefinition]:
 		# public method of e.g. the plugin's own bridge into every picker - silent
 		# vocabulary pollution). The regex anchors on the annotation form so a passing
 		# doc-comment mention of "@ace_*" doesn't count.
-		var autoload_source: String = FileAccess.get_file_as_string(autoload_path)
+		var autoload_source: String = EventSheetAnnotationLine.canonical_text(FileAccess.get_file_as_string(autoload_path))
 		if _autoload_annotation_regex == null:
 			_autoload_annotation_regex = RegEx.new()
 			_autoload_annotation_regex.compile("(?m)^\\s*## @ace_")

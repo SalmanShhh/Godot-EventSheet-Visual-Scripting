@@ -64,7 +64,7 @@ static func run() -> bool:
 		all_passed = _check("Go to state stamps the arrival time", pack_output.contains("_state_entered_ticks = Time.get_ticks_msec()"), true) and all_passed
 		all_passed = _check("Time in state returns seconds since that stamp",
 			pack_output.contains("return (float(Time.get_ticks_msec() - _state_entered_ticks) / 1000.0)"), true) and all_passed
-		all_passed = _check("Time in state publishes as an expression", pack_output.contains("## @ace_expression\n## @ace_name(\"Time in state\")"), true) and all_passed
+		all_passed = _check("Time in state publishes as an expression", pack_output.contains("# @ace_expression\n# @ace_name(\"Time in state\")"), true) and all_passed
 
 	# The shipped class really answers time_in_state at runtime (a fresh machine starts near zero).
 	var script: GDScript = load(STATE_MACHINE_PACK + ".gd")

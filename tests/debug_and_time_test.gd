@@ -414,11 +414,11 @@ static func _test_overlay_pack_source() -> bool:
 	all_passed = _check("the trigger is a real signal carrying whether it is now shown",
 		source.contains("signal overlay_toggled(shown: bool)"), true) and all_passed
 	all_passed = _check("Watch Value ships as the autoload call",
-		source.contains("## @ace_codegen_template(\"DebugOverlay.watch_value({watch_name}, {value})\")"), true) and all_passed
+		source.contains("# @ace_codegen_template(\"DebugOverlay.watch_value({watch_name}, {value})\")"), true) and all_passed
 	all_passed = _check("Mark Point ships as the autoload call",
-		source.contains("## @ace_codegen_template(\"DebugOverlay.mark_point({at}, {mark_label}, {seconds})\")"), true) and all_passed
+		source.contains("# @ace_codegen_template(\"DebugOverlay.mark_point({at}, {mark_label}, {seconds})\")"), true) and all_passed
 	all_passed = _check("Overlay Is Visible is published as a condition",
-		source.contains("## @ace_condition\n## @ace_name(\"Overlay Is Visible\")"), true) and all_passed
+		source.contains("# @ace_condition\n# @ace_name(\"Overlay Is Visible\")"), true) and all_passed
 	all_passed = _check("nothing in the pack touches the editor",
 		source.contains("EditorInterface") or source.contains("EditorPlugin"), false) and all_passed
 	all_passed = _check("the pack carries its own icon",

@@ -40,7 +40,7 @@ static func run() -> bool:
 ## What the pack publishes, off the shipped bytes.
 static func _test_published_contract() -> bool:
 	var all_passed: bool = true
-	var source: String = FileAccess.get_file_as_string(PACK)
+	var source: String = EventSheetAnnotationLine.canonical_text(FileAccess.get_file_as_string(PACK))
 	all_passed = _check("it ships as the SecondView autoload",
 		source.contains("## @ace_codegen_template(\"SecondView.make_a_view({view_name}, {followed}, {zoom})\")"), true) and all_passed
 	all_passed = _check("Show View In emits its autoload call",
@@ -69,7 +69,7 @@ static func _test_published_contract() -> bool:
 ## The refusals: what this pack deliberately does not publish, because a neighbour already owns it.
 static func _test_refusals() -> bool:
 	var all_passed: bool = true
-	var source: String = FileAccess.get_file_as_string(PACK)
+	var source: String = EventSheetAnnotationLine.canonical_text(FileAccess.get_file_as_string(PACK))
 	var published: PackedStringArray = PackedStringArray()
 	for line: String in source.split("\n"):
 		if line.begins_with("## @ace_name("):
@@ -237,7 +237,7 @@ static func _test_views() -> bool:
 static func _test_lift() -> bool:
 	var all_passed: bool = true
 	for path: String in [ROWS, HANDBUILT]:
-		var source: String = FileAccess.get_file_as_string(path)
+		var source: String = EventSheetAnnotationLine.canonical_text(FileAccess.get_file_as_string(path))
 		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		var reopened: String = str(EventSheetCompiler.compile(sheet, path).get("output", ""))
 		all_passed = _check("%s comes back byte for byte" % path.get_file(), reopened, source) and all_passed
@@ -259,7 +259,7 @@ static func _test_lift() -> bool:
 	# Every published template really does open with the autoload name, or the sentence above is not
 	# a proof of anything.
 	var openers: int = 0
-	for line: String in FileAccess.get_file_as_string(PACK).split("\n"):
+	for line: String in EventSheetAnnotationLine.canonical_text(FileAccess.get_file_as_string(PACK)).split("\n"):
 		if line.begins_with("## @ace_codegen_template(\"SecondView."):
 			openers += 1
 	all_passed = _check("all five published verbs are claimed by a SecondView. template and nothing else",
@@ -271,7 +271,7 @@ static func _test_lift() -> bool:
 ## ever claim.
 static func _lines_naming_the_autoload(path: String) -> int:
 	var naming: int = 0
-	for line: String in FileAccess.get_file_as_string(path).split("\n"):
+	for line: String in EventSheetAnnotationLine.canonical_text(FileAccess.get_file_as_string(path)).split("\n"):
 		if line.contains("SecondView."):
 			naming += 1
 	return naming
@@ -313,7 +313,7 @@ static func _collect_actions(entry: Variant, actions: Array[ACEAction]) -> void:
 ## at stand-ins the test supplies.
 static func _harness_script() -> GDScript:
 	var kept: PackedStringArray = PackedStringArray()
-	for line: String in FileAccess.get_file_as_string(PACK).split("\n"):
+	for line: String in EventSheetAnnotationLine.canonical_text(FileAccess.get_file_as_string(PACK)).split("\n"):
 		if line.begins_with("class_name ") or line.begins_with("@icon("):
 			continue
 		kept.append(line)

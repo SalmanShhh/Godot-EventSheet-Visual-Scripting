@@ -61,7 +61,7 @@ static func is_shared_sheet(source: String) -> bool:
 ## An unknown wiring reads as "not a shared sheet" rather than as a third kind - a file from a newer
 ## version must degrade to an ordinary script, never to a half-understood one.
 static func wiring_of(source: String) -> String:
-	for line: String in source.split("\n"):
+	for line: String in EventSheetAnnotationLine.canonical_text(source).split("\n"):
 		var text: String = line.strip_edges()
 		if not text.begins_with(MARKER):
 			continue

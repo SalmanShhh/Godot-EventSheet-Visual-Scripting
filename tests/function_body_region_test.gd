@@ -39,7 +39,7 @@ static func run() -> bool:
 		["it reopens as fence rows of the body", _shape(plain.get("reopened")), ["#region Setup", "event", "#endregion", "event"]],
 		["and saves again byte for byte", str(plain.get("resaved", "")), str(plain.get("saved", ""))],
 		["a styled region keeps its style line", _body_of(str(styled.get("saved", ""))),
-			["\tif is_on_floor():", "\t\tscore = 0", "\t## @ace_region(#D9534F, \"Says the score\")", "\t#region Report", "\tprint(score)", "\t#endregion"]],
+			["\tif is_on_floor():", "\t\tscore = 0", "\t# @ace_region(#D9534F, \"Says the score\")", "\t#region Report", "\tprint(score)", "\t#endregion"]],
 		["and reopens styled", _styled_fields(styled.get("reopened")), {"color": "#D9534F", "description": "Says the score", "label": "Report"}],
 		["and saves again byte for byte too", str(styled.get("resaved", "")), str(styled.get("saved", ""))],
 		["a sheet-native compile writes it in the body as well", _body_of(sheet_native),

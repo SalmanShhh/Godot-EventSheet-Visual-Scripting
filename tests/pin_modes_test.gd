@@ -410,7 +410,7 @@ static func _missing_verbs(pack_path: String, wanted: PackedStringArray) -> Stri
 	var source: String = FileAccess.get_file_as_string(pack_path)
 	var missing: PackedStringArray = PackedStringArray()
 	for verb: String in wanted:
-		if not source.contains("## @ace_name(\"%s\")" % verb):
+		if not source.contains("# @ace_name(\"%s\")" % verb):
 			missing.append(verb)
 	return ",".join(missing)
 

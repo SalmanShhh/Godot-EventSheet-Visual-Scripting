@@ -289,7 +289,7 @@ func length() -> float:
 		["and saves back byte for byte", SUPPORT.reemit(shipped, EXAMPLE_PATH) == shipped, true],
 		["the same card written by hand opens as one too", [hand_opened.host_class, EventSheetScriptIntent.of_sheet(hand_opened) == EventSheetScriptIntent.Intent.CUSTOM_RESOURCE], ["JuiceCard", true]],
 		["and also saves back byte for byte", SUPPORT.reemit(by_hand, SUPPORT.own_path("by_hand_card.gd")) == by_hand, true],
-		["the example carries nothing of the plugin but its version line", shipped.replace("## @ace_version(1.0.0)", "").contains("@ace_"), false]
+		["the example carries nothing of the plugin but its version line", shipped.replace("# @ace_version(1.0.0)", "").contains("@ace_"), false]
 	])
 
 

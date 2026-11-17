@@ -1,7 +1,7 @@
 # Godot EventSheets - the spellings a PACK teaches the reader, and the gate they ship through.
 #
 # A pack ships verbs, and somebody who used it before the sheet existed wrote those verbs by hand. A
-# `## @ace_lift_example` beside the verb says which lines those are, so an opened file reads as the
+# `# @ace_lift_example` beside the verb says which lines those are, so an opened file reads as the
 # pack's own sentence instead of as the generic "call a method" row it lands on otherwise. The
 # promise attached to that is the same one every built-in spelling makes: the words change and the
 # BYTES do not.
@@ -172,14 +172,14 @@ static func _test_the_spellings_people_really_write() -> bool:
 	var pack: String = "
 ".join(PackedStringArray([
 		"class_name Probe", "extends Node", "",
-		"## @ace_action",
-		"## @ace_lift_example(\"[[target|node: $Probe]].rename([[old|name: \"one\"]], [[new|name: \"two\"]])\")",
+		"# @ace_action",
+		"# @ace_lift_example(\"[[target|node: $Probe]].rename([[old|name: \"one\"]], [[new|name: \"two\"]])\")",
 		"func rename(old: String, new: String) -> void:", "	pass", "",
-		"## @ace_action",
-		"## @ace_lift_example(\"[[target|node: $Probe]].load_file([[path|text: \"res://a.tres\"]])\")",
+		"# @ace_action",
+		"# @ace_lift_example(\"[[target|node: $Probe]].load_file([[path|text: \"res://a.tres\"]])\")",
 		"func load_file(path: String) -> void:", "	pass", "",
-		"## @ace_action",
-		"## @ace_lift_example(\"[[target|node: $Probe]].scale([[by|argument: 2.0]], [[then|argument: 0.5]])\")",
+		"# @ace_action",
+		"# @ace_lift_example(\"[[target|node: $Probe]].scale([[by|argument: 2.0]], [[then|argument: 0.5]])\")",
 		"func scale(by: Variant, then: Variant) -> void:", "	pass", ""]))
 	EventForgePackSpellings.override_tables_for_tests({IMAGINED_PACK: EventForgePackSpellings.entries_in_source(pack, IMAGINED_PACK)})
 	var ok: bool = _check("the widened table is still sound", EventForgePackSpellings.problems_for(IMAGINED_PACK,
@@ -229,22 +229,22 @@ static func _test_the_refusals() -> bool:
 		"class_name ImaginedBehavior",
 		"extends Node",
 		"",
-		"## @ace_expression",
-		"## @ace_lift_example(\"[[target|node: $ImaginedBehavior]].is_lit()\")",
+		"# @ace_expression",
+		"# @ace_lift_example(\"[[target|node: $ImaginedBehavior]].is_lit()\")",
 		"func is_lit() -> bool:",
 		"\treturn true",
 		"",
-		"## @ace_action",
-		"## @ace_lift_example(\"[[target|node: $ImaginedBehavior]] blink\")",
+		"# @ace_action",
+		"# @ace_lift_example(\"[[target|node: $ImaginedBehavior]] blink\")",
 		"func light() -> void:",
 		"\tpass",
 		"",
-		"## @ace_action",
-		"## @ace_lift_example(\"[[target|receiver: $ImaginedBehavior]].dim()\")",
+		"# @ace_action",
+		"# @ace_lift_example(\"[[target|receiver: $ImaginedBehavior]].dim()\")",
 		"func dim() -> void:",
 		"\tpass",
 		"",
-		"## @ace_lift_example(\"[[target|node: $ImaginedBehavior]].nothing()\")",
+		"# @ace_lift_example(\"[[target|node: $ImaginedBehavior]].nothing()\")",
 		"var not_a_verb: int = 0"
 	]))
 	var refusals: PackedStringArray = PackedStringArray()

@@ -301,7 +301,7 @@ static func _read(script_path: String) -> Dictionary:
 	# file states one, because the type is what a reader of the row wants after the name.
 	var property_head: RegEx = RegEx.create_from_string(
 		"^(?:@[A-Za-z_][A-Za-z0-9_]*(?:\\([^)]*\\))?\\s+)*(?:static\\s+)?var ([A-Za-z_][A-Za-z0-9_]*)\\s*(?::\\s*([A-Za-z_][A-Za-z0-9_.]*(?:\\[[^\\]]*\\])?))?")
-	for line: String in FileAccess.get_file_as_string(script_path).split("\n"):
+	for line: String in EventSheetAnnotationLine.canonical_text(FileAccess.get_file_as_string(script_path)).split("\n"):
 		if line.begins_with("##"):
 			doc_lines.append(line.trim_prefix("##").strip_edges())
 			continue

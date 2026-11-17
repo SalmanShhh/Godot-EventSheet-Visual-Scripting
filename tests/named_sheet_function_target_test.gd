@@ -39,7 +39,7 @@ static func run() -> bool:
 	# The sheet's own script keeps the bare call: it is the call on itself, and every file already
 	# written this way must stay byte for byte as it is.
 	ok = SUPPORT.check(T, "the script's own call line is still the bare call",
-		compiled.contains("## @ace_codegen_template(\"open_gate({speed})\")"), true) and ok
+		compiled.contains("# @ace_codegen_template(\"open_gate({speed})\")"), true) and ok
 
 	var file: FileAccess = FileAccess.open(PATH, FileAccess.WRITE)
 	file.store_string(compiled)
@@ -63,8 +63,8 @@ static func run() -> bool:
 		ok = SUPPORT.check(T, "the node it aims at defaults to the sheet's class", target_default, "$GateProbe") and ok
 
 	# A call the author qualified by hand is theirs: nothing is added to it.
-	var qualified: String = compiled.replace("## @ace_codegen_template(\"open_gate({speed})\")",
-		"## @ace_codegen_template(\"$Elsewhere.open_gate({speed})\")")
+	var qualified: String = compiled.replace("# @ace_codegen_template(\"open_gate({speed})\")",
+		"# @ace_codegen_template(\"$Elsewhere.open_gate({speed})\")")
 	var qualified_file: FileAccess = FileAccess.open(PATH, FileAccess.WRITE)
 	qualified_file.store_string(qualified)
 	qualified_file.close()

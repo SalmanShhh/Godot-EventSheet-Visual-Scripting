@@ -47,7 +47,7 @@ static func families() -> Dictionary:
 		if path.begins_with("res://addons/") or not FileAccess.file_exists(path):
 			continue
 		var source: String = FileAccess.get_file_as_string(path)
-		if not source.contains("## @ace_family("):
+		if not EventSheetAnnotationLine.canonical_text(source).contains("## @ace_family("):
 			continue
 		var family_class: String = str(entry.get("class", ""))
 		_families[family_class] = "family_%s" % family_class.to_snake_case()

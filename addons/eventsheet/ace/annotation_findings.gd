@@ -40,6 +40,7 @@ const SpecText := preload("res://addons/eventforge/registration/annotation_spec_
 ## public function of the script will be published.
 static func read(source: String, all_untyped: bool = false) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
+	source = EventSheetAnnotationLine.canonical_text(source)
 	var untyped_head: RegEx = RegEx.create_from_string(r"^func\s+([a-zA-Z][A-Za-z0-9_]*)\s*\([^)]*\)\s*:")
 	var has_words: bool = false
 	var cut_line: int = 0

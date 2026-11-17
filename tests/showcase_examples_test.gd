@@ -509,7 +509,7 @@ static func run() -> bool:
 	# Family Arena - the Families trio: an Enemy Family (instances + a family ACE) driven by family-scoped
 	# rules. The byte-identity check inside _check_sheet doubles as the @ace_family round-trip proof.
 	passed = _check_sheet("enemy", "res://demo/showcase/family_arena/enemy.gd", [
-		"## @ace_family(Enemy)",
+		"# @ace_family(Enemy)",
 		"class_name Enemy",
 		"extends Sprite2D",
 		"self.add_to_group(\"family_enemy\")",

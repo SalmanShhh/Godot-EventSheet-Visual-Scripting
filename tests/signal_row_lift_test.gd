@@ -47,7 +47,7 @@ static func run() -> bool:
 	var compiled: String = str(EventSheetCompiler.compile(sheet, "user://sr_decl.gd").get("output", ""))
 	ok = _check("output keeps signal jumped", compiled.contains("signal jumped"), true) and ok
 	ok = _check("output keeps signal hit(damage: int)", compiled.contains("signal hit(damage: int)"), true) and ok
-	ok = _check("output keeps the @ace_trigger annotation", compiled.contains("## @ace_trigger"), true) and ok
+	ok = _check("output keeps the @ace_trigger annotation", compiled.contains("# @ace_trigger"), true) and ok
 
 	# 2) A zero-arg `signal.emit()` in an event body lifts to an Emit Signal action row.
 	var sheet2: EventSheetResource = EventSheetResource.new()
@@ -132,8 +132,8 @@ static func _test_trigger_prose_travels_with_the_signal() -> bool:
 		"Fires when the autosave clock comes round, INSTEAD of saving.\nThe conditions on this event decide whether now is a good moment.", true) and ok
 	ok = _check("and leaves no orphaned block behind it", _has_raw_code(pack_sheet), false) and ok
 	var emitted: String = str(EventSheetCompiler.compile(pack_sheet, "user://sr_prose_pack.gd").get("output", ""))
-	ok = _check("the emitted signal keeps its prose directly above the annotations",
-		emitted.contains("## Fires when the autosave clock comes round, INSTEAD of saving.\n## The conditions on this event decide whether now is a good moment.\n## @ace_trigger"), true) and ok
+	ok = _check("the emitted signal keeps its prose directly above the signal, under the words",
+		emitted.contains("# @ace_category(\"Save System\")\n## Fires when the autosave clock comes round, INSTEAD of saving.\n## The conditions on this event decide whether now is a good moment.\nsignal autosave_due"), true) and ok
 
 	# 2. The ANALYZER really reads it as the trigger's description - the reason any of this matters.
 	# Written to a real file first: the analyzer reads annotations off DISK, so a script built from

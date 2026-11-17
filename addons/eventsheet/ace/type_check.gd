@@ -269,8 +269,7 @@ static func _probe(body_lines: PackedStringArray, sheet: EventSheetResource, typ
 static func _helper_lines(member_template: String) -> PackedStringArray:
 	if member_template.strip_edges().is_empty():
 		return PackedStringArray()
-	return PackedStringArray(member_template.replace("{uid}", "0").split("
-"))
+	return PackedStringArray(member_template.replace("{uid}", "0").split("\n"))
 
 
 ## The finding for one field, or {} when there is nothing to say. `template` is the verb's template (empty

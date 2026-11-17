@@ -3457,7 +3457,7 @@ func _open_tree_context_menu(definition: ACEDefinition) -> void:
 ## are the part a reader most needs and the part most easily pasted past, so the status line
 ## says they are there.
 static func _stub_note_hint(stub_text: String) -> String:
-	if not stub_text.begins_with("#") or stub_text.begins_with("##"):
+	if not stub_text.begins_with("#") or stub_text.begins_with("##") or EventSheetAnnotationLine.is_annotation(stub_text.get_slice("\n", 0)):
 		return ""
 	return " Read the # notes on top first - this one needs more than the dialect can declare."
 

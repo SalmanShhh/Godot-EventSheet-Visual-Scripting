@@ -80,9 +80,9 @@ static func _the_pack_ships_as_the_autoload(script: GDScript) -> bool:
 	var not_the_autoload: int = 0
 	var published: PackedStringArray = PackedStringArray()
 	for line: String in source.split("\n"):
-		if not line.begins_with("## @ace_codegen_template("):
+		if not line.begins_with("# @ace_codegen_template("):
 			continue
-		if not line.begins_with("## @ace_codegen_template(\"Music."):
+		if not line.begins_with("# @ace_codegen_template(\"Music."):
 			not_the_autoload += 1
 			continue
 		published.append(line.substr(line.find("Music.") + 6).split("(")[0])

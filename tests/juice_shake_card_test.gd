@@ -28,7 +28,7 @@ const RUNNER: String = "res://eventsheet_addons/juice/moment_runner.gd"
 const FRAME: float = 1.0 / 60.0
 
 ## The row that has shipped, and the line it writes. Frozen.
-const SHAKE_TEMPLATE: String = "## @ace_codegen_template(\"$JuiceBehavior.shake({strength})\")"
+const SHAKE_TEMPLATE: String = "# @ace_codegen_template(\"$JuiceBehavior.shake({strength})\")"
 
 
 static func run() -> bool:
@@ -79,8 +79,8 @@ static func _row_pins() -> bool:
 			"amount: float, seconds: float, fade_in: bool, fade_out: bool"],
 		["Shake With Curve takes an amount, a length and a Curve", _signature(script, "shake_with_curve"),
 			"amount: float, seconds: float, curve: Curve"],
-		["Shake For is a row", text.contains("## @ace_codegen_template(\"$JuiceBehavior.shake_for({amount}, {seconds}, {fade_in}, {fade_out})\")"), true],
-		["Shake With Curve is a row", text.contains("## @ace_codegen_template(\"$JuiceBehavior.shake_with_curve({amount}, {seconds}, {curve})\")"), true],
+		["Shake For is a row", text.contains("# @ace_codegen_template(\"$JuiceBehavior.shake_for({amount}, {seconds}, {fade_in}, {fade_out})\")"), true],
+		["Shake With Curve is a row", text.contains("# @ace_codegen_template(\"$JuiceBehavior.shake_with_curve({amount}, {seconds}, {curve})\")"), true],
 	])
 
 

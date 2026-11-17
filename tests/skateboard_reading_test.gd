@@ -268,25 +268,25 @@ static func _pack_rows() -> bool:
 			"On Landed Clean", "On Bailed", "On Trick Done", "Is Near Rail", "Start Grinding",
 			"Grind Along Rail", "Has Reached The End", "Hop Off", "Ride Zipline", "Is Grinding"]:
 		ok = _check("the board publishes %s" % row,
-			source.contains("## @ace_name(\"%s\")" % row), true) and ok
+			source.contains("# @ace_name(\"%s\")" % row), true) and ok
 	ok = _check("the rail rows sit in their own section, so a traversal pack can adopt them",
-		source.contains("## @ace_category(\"Grind\")"), true) and ok
+		source.contains("# @ace_category(\"Grind\")"), true) and ok
 	var source_3d: String = FileAccess.get_file_as_string(SKATEBOARD_3D_PACK)
 	for row: String in ["Align The Board To The Surface", "On Launched Off The Lip",
 			"Surface Normal", "Roll With The Slope", "Is Near Rail", "Ride Zipline"]:
 		ok = _check("the 3D board publishes %s" % row,
-			source_3d.contains("## @ace_name(\"%s\")" % row), true) and ok
+			source_3d.contains("# @ace_name(\"%s\")" % row), true) and ok
 	ok = _check("the 3D twin is a body that moves in three dimensions",
 		source_3d.contains("var host: CharacterBody3D = null"), true) and ok
 	# The chain rows are offered to fighters too, in the same words.
 	var combo: String = FileAccess.get_file_as_string("res://eventsheet_addons/combo_box/combo_box_addon.gd")
 	for row: String in ["Add To Chain", "Bank Chain", "Drop Chain", "Chain Score", "Multiplier"]:
 		ok = _check("the combo pack offers %s as well" % row,
-			combo.contains("## @ace_name(\"%s\")" % row), true) and ok
+			combo.contains("# @ace_name(\"%s\")" % row), true) and ok
 	# A meter with a CENTRE, which a bar cannot show.
 	var hud: String = FileAccess.get_file_as_string("res://eventsheet_addons/hud_kit/hud_kit_behavior.gd")
 	ok = _check("the HUD pack gained the balance needle",
-		hud.contains("## @ace_name(\"Set Needle\")"), true) and ok
+		hud.contains("# @ace_name(\"Set Needle\")"), true) and ok
 	return ok
 
 

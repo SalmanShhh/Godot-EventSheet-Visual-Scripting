@@ -70,10 +70,10 @@ static func _the_pack_ships_as_the_autoload(script: GDScript) -> bool:
 	var templates: int = 0
 	var not_the_autoload: int = 0
 	for line: String in source.split("\n"):
-		if not line.begins_with("## @ace_codegen_template("):
+		if not line.begins_with("# @ace_codegen_template("):
 			continue
 		templates += 1
-		if not line.begins_with("## @ace_codegen_template(\"DrunkenWalkers."):
+		if not line.begins_with("# @ace_codegen_template(\"DrunkenWalkers."):
 			not_the_autoload += 1
 	var pack: Node = script.new()
 	var answers_the_save_seam: bool = pack.has_method("save_state") and pack.has_method("load_state")

@@ -261,9 +261,9 @@ static func _method_row(member_name: String, parameters: String) -> String:
 ## skipped - the viewport already bolds their values automatically, so the guide has nothing
 ## extra to show). Static + pure over the source text, so the block can never disagree with
 ## the annotations the picker reads.
-static func styled_sentences(source: String) -> Array:
+static func styled_sentences(written: String) -> Array:
 	var sentences: Array = []
-	for line: String in source.split("\n"):
+	for line: String in EventSheetAnnotationLine.canonical_text(written).split("\n"):
 		var stripped: String = line.strip_edges()
 		if not stripped.begins_with("## @ace_display_template("):
 			continue

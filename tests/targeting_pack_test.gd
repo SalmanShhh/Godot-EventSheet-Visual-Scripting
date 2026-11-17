@@ -334,8 +334,8 @@ static func _test_what_the_pack_ships() -> bool:
 	var shipped: String = FileAccess.get_file_as_string(PACK)
 	all_passed = _check("the pack reads off disk", shipped.is_empty(), false) and all_passed
 	for line: String in [
-		"## @ace_name(\"On Target Locked\")",
-		"## @ace_name(\"On Target Lost\")",
+		"# @ace_name(\"On Target Locked\")",
+		"# @ace_name(\"On Target Lost\")",
 		"signal target_locked(target: Node2D)",
 		"signal target_lost(why: StringName)",
 		"host.get_viewport().get_canvas_transform() * world_point",
@@ -348,7 +348,7 @@ static func _test_what_the_pack_ships() -> bool:
 		"release the lock",
 	]:
 		all_passed = _check("the pack ships the row sentence %s" % sentence,
-			shipped.contains("## @ace_display_template(\"%s\")" % sentence), true) and all_passed
+			shipped.contains("# @ace_display_template(\"%s\")" % sentence), true) and all_passed
 	return all_passed
 
 

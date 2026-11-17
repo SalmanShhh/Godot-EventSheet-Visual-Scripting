@@ -6,8 +6,8 @@
 class_name PublishVersionTest
 extends RefCounted
 
-const SOURCE: String = """## @ace_category(\"Waves\")
-## @ace_version(1.2.3)
+const SOURCE: String = """# @ace_category(\"Waves\")
+# @ace_version(1.2.3)
 class_name TempWaves
 extends Node
 
@@ -23,7 +23,7 @@ static func run() -> bool:
 	all_passed = _check("patch bumps the last digit", str(patch.get("new_version")), "1.2.4") and all_passed
 	all_passed = _check("old version is reported", str(patch.get("old_version")), "1.2.3") and all_passed
 	all_passed = _check("the annotation is rewritten in place",
-		str(patch.get("source")).contains("## @ace_version(1.2.4)"), true) and all_passed
+		str(patch.get("source")).contains("# @ace_version(1.2.4)"), true) and all_passed
 	all_passed = _check("only ONE version annotation remains",
 		str(patch.get("source")).count("@ace_version"), 1) and all_passed
 	# The note sits DIRECTLY under the version line, as a plain doc comment.
@@ -45,7 +45,7 @@ static func run() -> bool:
 	var fresh: Dictionary = EventSheetACEAnnotationWriter.bump_version("extends Node\n", "patch", "first cut")
 	all_passed = _check("missing version reads as 1.0.0 then bumps", str(fresh.get("new_version")), "1.0.1") and all_passed
 	all_passed = _check("the new identity block opens the file",
-		str(fresh.get("source")).begins_with("## @ace_version(1.0.1)\n## 1.0.1: first cut"), true) and all_passed
+		str(fresh.get("source")).begins_with("# @ace_version(1.0.1)\n## 1.0.1: first cut"), true) and all_passed
 	# A short version pads instead of erroring; a multiline note flattens to one line.
 	var short_version: Dictionary = EventSheetACEAnnotationWriter.bump_version(
 		SOURCE.replace("1.2.3", "2.1"), "patch", "a\nb")
@@ -60,7 +60,7 @@ static func run() -> bool:
 	var published: Dictionary = EventSheets.publish_pack_version(temp_path, "minor", "new wave shapes")
 	all_passed = _check("the API publishes", bool(published.get("ok")), true) and all_passed
 	var rewritten: String = FileAccess.get_file_as_string(temp_path)
-	all_passed = _check("the file now declares the new version", rewritten.contains("## @ace_version(1.3.0)"), true) and all_passed
+	all_passed = _check("the file now declares the new version", rewritten.contains("# @ace_version(1.3.0)"), true) and all_passed
 	all_passed = _check("the note is in the file", rewritten.contains("## 1.3.0: new wave shapes"), true) and all_passed
 	all_passed = _check("a missing file fails closed",
 		bool(EventSheets.publish_pack_version("user://nope.gd", "patch", "x").get("ok")), false) and all_passed

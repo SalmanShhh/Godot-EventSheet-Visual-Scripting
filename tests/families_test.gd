@@ -1,7 +1,7 @@
 # Godot EventSheets - Families (the event-sheet "one rule for every instance of a type").
 #
 # Pins the Families v1 contract:
-#   - A sheet flagged `is_family` emits a `## @ace_family(<Class>)` marker (metadata only, like @ace_tags
+#   - A sheet flagged `is_family` emits a `# @ace_family(<Class>)` marker (metadata only, like @ace_tags
 #     - NO code, so it round-trips byte-exact and can never double-emit).
 #   - Re-importing that .gd recovers `is_family` (the family survives the .gd ↔ sheet round-trip).
 #   - `family_group()` derives the runtime group from the class name (Enemy → "family_enemy").
@@ -25,8 +25,8 @@ static func run() -> bool:
 	family.is_family = true
 	family.variables = {"health": {"type": "int", "default": 100, "exported": true}}
 	var family_out: String = str(EventSheetCompiler.compile(family, "user://__family_enemy.gd").get("output", ""))
-	all_passed = _check("family sheet emits `## @ace_family(Enemy)`",
-		family_out.contains("## @ace_family(Enemy)"), true) and all_passed
+	all_passed = _check("family sheet emits `# @ace_family(Enemy)`",
+		family_out.contains("# @ace_family(Enemy)"), true) and all_passed
 	all_passed = _check("family group derives from the class name",
 		family.family_group() == "family_enemy", true) and all_passed
 	all_passed = _check("the family flag emits NO add_to_group code (membership is an explicit action)",

@@ -469,7 +469,7 @@ static func answers_of(source: String, path: String) -> Dictionary:
 		"category": "", "icon": "", "description": ""}
 	var past_extends: bool = false
 	var read_below_extends: bool = false
-	for raw_line: String in source.split("\n"):
+	for raw_line: String in EventSheetAnnotationLine.canonical_text(source).split("\n"):
 		var line: String = raw_line.strip_edges()
 		if line.begins_with("## ") and not line.begins_with("## @") and str(answers["description"]).is_empty():
 			answers["description"] = line.trim_prefix("## ").strip_edges()

@@ -1,9 +1,9 @@
 # Godot EventSheets - the first group added to a .gd sheet writes its header where it reads as one.
 #
 # A `.gd` with no groups yet has no header line to sit beside, so the first group's
-# `## @ace_group(...)` line needs a home. It used to be written straight under `extends`, where both
+# `# @ace_group(...)` line needs a home. It used to be written straight under `extends`, where both
 # Godot and the lift read it as the class's own doc comment: the sheet reopened with the header as its
-# class description. In a file that opens with annotations (`@icon(...)` under the pack's `## @ace_`
+# class description. In a file that opens with annotations (`@icon(...)` under the pack's `# @ace_`
 # lines) it went to the very top, and a switchable group's flag `var` landed above `@icon`, which
 # Godot refuses: the saved script did not parse.
 #
@@ -18,7 +18,7 @@ const TEST_NAME := "first_group_header_place_test"
 const FILE_PATH := "user://first_group_header_place_test.gd"
 
 const PLAIN_SOURCE := "class_name HeaderPlaceProbe\nextends Node2D\n\nenum State { PLAYING, OVER }\n\nvar score: int = 0\n\n\nfunc _ready() -> void:\n\tscore = 1\n"
-const PACK_SOURCE := "## @ace_category(\"Probe\")\n@icon(\"res://icon.svg\")\nclass_name HeaderPlacePack\nextends Node\n## Moves its host.\n\n## The node this behavior acts on.\nvar host: Node2D = null\n\n\nfunc _ready() -> void:\n\thost = get_parent() as Node2D\n"
+const PACK_SOURCE := "# @ace_category(\"Probe\")\n@icon(\"res://icon.svg\")\nclass_name HeaderPlacePack\nextends Node\n## Moves its host.\n\n## The node this behavior acts on.\nvar host: Node2D = null\n\n\nfunc _ready() -> void:\n\thost = get_parent() as Node2D\n"
 
 
 static func run() -> bool:
@@ -36,19 +36,19 @@ static func run() -> bool:
 	return SUPPORT.pins(TEST_NAME, [
 		["a plain file: the header sits on its own line under the opening",
 			_head(str(plain.get("saved", "")), 6),
-			["class_name HeaderPlaceProbe", "extends Node2D", "", "## @ace_group(uid=\"sweep\", name=\"Sweep\")", "", "enum State { PLAYING, OVER }"]],
+			["class_name HeaderPlaceProbe", "extends Node2D", "", "# @ace_group(uid=\"sweep\", name=\"Sweep\")", "", "enum State { PLAYING, OVER }"]],
 		["a plain file: it reopens with no class description and the group",
 			[str(plain.get("description", "?")), plain.get("group", [])], ["", ["Sweep", 1]]],
 		["a plain file: the saved script parses", plain.get("parse", "?"), ""],
 		["a pack file: the header and the flag go under the class doc, not above @icon",
 			_head(str(pack.get("saved", "")), 9),
-			["## @ace_category(\"Probe\")", "@icon(\"res://icon.svg\")", "class_name HeaderPlacePack", "extends Node",
-				"## Moves its host.", "", "## @ace_group(uid=\"sweep\", name=\"Sweep\", toggleable=true)", "", "var __group_sweep_active: bool = true"]],
+			["# @ace_category(\"Probe\")", "@icon(\"res://icon.svg\")", "class_name HeaderPlacePack", "extends Node",
+				"## Moves its host.", "", "# @ace_group(uid=\"sweep\", name=\"Sweep\", toggleable=true)", "", "var __group_sweep_active: bool = true"]],
 		["a pack file: the saved script parses", pack.get("parse", "?"), ""],
 		["a pack file: it reopens with its own class description and the switchable group",
 			[str(pack.get("description", "?")), pack.get("group", [])], ["Moves its host.", ["Sweep", 1]]],
 		["a header under extends is not read as the class description",
-			[native_out.contains("extends Node2D\n## @ace_group("), native_back.class_description if native_back != null else "?"],
+			[native_out.contains("extends Node2D\n# @ace_group("), native_back.class_description if native_back != null else "?"],
 			[true, ""]],
 	])
 

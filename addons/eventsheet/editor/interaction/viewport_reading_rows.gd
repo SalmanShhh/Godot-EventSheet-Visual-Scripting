@@ -3135,7 +3135,7 @@ static func _pack_head(path: String) -> Dictionary:
 		return {}
 	var head: Dictionary = {}
 	while not file.eof_reached():
-		var line: String = file.get_line().strip_edges()
+		var line: String = EventSheetAnnotationLine.canonical(file.get_line()).strip_edges()
 		if line.begins_with("class_name "):
 			head["class"] = line.substr("class_name ".length()).strip_edges()
 		elif line.begins_with("## @ace_category("):

@@ -7,7 +7,7 @@
 #   1. A .gd sheet: the fences are written inside the function at the events' indent, reopen as the
 #      same fence rows in the same group at the same places, and a second save is byte-identical.
 #   2. A .tres sheet: the fences are written beside the events, never at the top of the class.
-#   3. A styled region (colour and description) keeps its `## @ace_region(...)` line through all that.
+#   3. A styled region (colour and description) keeps its `# @ace_region(...)` line through all that.
 #   4. A region whose events have two triggers opens in one function and closes in the other, and the
 #      saved script still parses.
 # Every file is saved and read back from disk, the way the editor saves and opens it.
@@ -83,7 +83,7 @@ static func _test_styled_region() -> bool:
 	if reopened_group != null and not reopened_group.events.is_empty() and reopened_group.events[0] is CustomBlockRow:
 		reopened_opener = reopened_group.events[0] as CustomBlockRow
 	return SUPPORT.pins(NAME, [
-		["the style line is written above the opener, inside the function", saved.contains("\t## @ace_region("), true],
+		["the style line is written above the opener, inside the function", saved.contains("\t# @ace_region("), true],
 		["the styled region reopens with its description",
 			str(reopened_opener.fields.get("description", "")) if reopened_opener != null else "", "Every way a hit lands."],
 		["a second save of the styled region writes the same bytes", _save(_open(saved)), saved],

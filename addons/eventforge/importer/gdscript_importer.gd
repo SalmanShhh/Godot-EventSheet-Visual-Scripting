@@ -103,8 +103,38 @@ static func _autoload_target_matches(target: String, script_path: String) -> boo
 	return false
 
 
+## Reads a script into a sheet. A file whose annotation comments are written with one hash (or that has none)
+## is read as if they had two - every reader below was written for that spelling - and the sheet remembers
+## the spelling, so saving it writes the one hash back. A file that mixes the two spellings is read as it
+## stands: its two-hash lines are annotations and its one-hash lines stay comments, which cannot move a byte.
 func import_external_source(source: String, lift: bool = true, script_path: String = "") -> EventSheetResource:
+	var spelling: String = EventSheetAnnotationLine.spelling_of(source)
+	if spelling != EventSheetAnnotationLine.ONE and spelling != "none":
+		return _import_canonical(source, lift, script_path)
+	var canonical: String = EventSheetAnnotationLine.canonical_text(source)
+	var one_hash: EventSheetResource = _import_canonical(canonical, lift, script_path, true)
+	one_hash.annotation_gate_canonical = false
+	if spelling == "none" or _writes_back(one_hash, source):
+		return one_hash
+	return _import_canonical(source, lift, script_path)
+
+
+## Whether a sheet read from `source` writes it back exactly. Asked only of a file with one-hash annotations,
+## and only to be safe: a reading that cannot is thrown away and the file is read as it stands.
+static func _writes_back(sheet: EventSheetResource, source: String) -> bool:
+	var held_path: String = sheet.external_source_path
+	sheet.external_source_path = "user://__annotation_spelling_check.gd"
+	var written: String = str(EventSheetCompiler.echo(sheet, true).get("output", ""))
+	sheet.external_source_path = held_path
+	return written == source
+
+
+func _import_canonical(source: String, lift: bool = true, script_path: String = "", one_hash: bool = false) -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
+	# A file read from disk always knows its spelling before the first byte gate runs, so a sheet that has no
+	# file path yet is never taken for one built from rows.
+	sheet.annotation_spelling = EventSheetAnnotationLine.ONE if one_hash else EventSheetAnnotationLine.TWO
+	sheet.annotation_gate_canonical = one_hash
 	sheet.host_class = _parse_host_class(source)
 	_source_writes_validate_property = source.contains("func _validate_property(")
 	# The Save choice block is cut off the tail first and read back onto the variables below.
@@ -232,12 +262,12 @@ func import_external_source(source: String, lift: bool = true, script_path: Stri
 			continue
 		var lifted_signal: SignalRow = _try_lift_signal(line)
 		if lifted_signal != null:
-			_absorb_signal_trigger_annotations(lifted_signal, pending, line)
+			_absorb_signal_trigger_annotations(lifted_signal, pending, line, EventSheetAnnotationLine.intends_hash(sheet))
 			if not lifted_signal.trigger:
 				var attached_signal: PackedStringArray = _take_attached_annotations(pending)
 				if not attached_signal.is_empty():
 					lifted_signal.leading_lines = attached_signal
-					if "\n".join(EventSheetCompiler._emit_signal_annotations(lifted_signal)) != "\n".join(attached_signal):
+					if "\n".join(EventSheetCompiler._emit_signal_annotations(lifted_signal, EventSheetAnnotationLine.intends_hash(sheet))) != "\n".join(attached_signal):
 						lifted_signal.leading_lines = PackedStringArray()
 						pending.append_array(attached_signal)
 			_flush_pending(pending, sheet)
@@ -1749,7 +1779,7 @@ func _try_lift_signal(line: String) -> SignalRow:
 ## (annotation block + declaration) must reproduce those exact source lines, or the guess is reverted
 ## (byte-safety always wins). Only a `## @ace_trigger`-anchored block is absorbed; a plain signal keeps
 ## its bare row, and a stray `## @ace_name` with no `## @ace_trigger` above the signal is left untouched.
-func _absorb_signal_trigger_annotations(lifted: SignalRow, pending: PackedStringArray, signal_line: String) -> void:
+func _absorb_signal_trigger_annotations(lifted: SignalRow, pending: PackedStringArray, signal_line: String, description_last: bool = false) -> void:
 	# _emit_signal_annotations lays the block down as `## @ace_trigger`, then optional `## @ace_name`,
 	# then optional `## @ace_category`. Walk up pending's tail collecting that contiguous run; it must be
 	# headed by `## @ace_trigger` (anything else means this isn't a trigger-annotation block).
@@ -1757,6 +1787,16 @@ func _absorb_signal_trigger_annotations(lifted: SignalRow, pending: PackedString
 	var ace_name: String = ""
 	var ace_category: String = ""
 	var cursor: int = pending.size() - 1
+	# A one-hash file keeps the description last, directly above the signal: it is read first, walking up.
+	var late_doc: PackedStringArray = PackedStringArray()
+	if description_last:
+		while cursor >= 0:
+			var late_text: String = pending[cursor].strip_edges()
+			if not late_text.begins_with("##") or late_text.begins_with("## @ace_"):
+				break
+			late_doc.insert(0, late_text.trim_prefix("##").trim_prefix(" "))
+			cursor -= 1
+		run_start = cursor + 1
 	while cursor >= 0:
 		var text: String = pending[cursor].strip_edges()
 		if text == "## @ace_trigger":
@@ -1778,9 +1818,9 @@ func _absorb_signal_trigger_annotations(lifted: SignalRow, pending: PackedString
 	# description to the analyzer, so leaving it behind here strands the sentence in the block above
 	# and ships the trigger with an EMPTY picker description. Absorbed with the annotations, it
 	# travels on the row and re-emits in the same place (the byte-verify below is the proof).
-	var doc_lines: PackedStringArray = PackedStringArray()
+	var doc_lines: PackedStringArray = late_doc
 	var doc_cursor: int = run_start - 1
-	while doc_cursor >= 0:
+	while doc_cursor >= 0 and not description_last:
 		var doc_text: String = pending[doc_cursor].strip_edges()
 		if not doc_text.begins_with("##") or doc_text.begins_with("## @ace_"):
 			break
@@ -1795,7 +1835,7 @@ func _absorb_signal_trigger_annotations(lifted: SignalRow, pending: PackedString
 	for index: int in range(run_start, pending.size()):
 		absorbed.append(pending[index])
 	absorbed.append(signal_line)
-	var expected: PackedStringArray = EventSheetCompiler._emit_signal_annotations(lifted)
+	var expected: PackedStringArray = EventSheetCompiler._emit_signal_annotations(lifted, description_last)
 	expected.append(EventSheetCompiler._emit_signal_line(lifted))
 	if "\n".join(expected) != "\n".join(absorbed):
 		# The block wasn't in canonical form (reordered / extra directives) - revert to a plain signal so

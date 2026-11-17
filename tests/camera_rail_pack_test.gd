@@ -65,7 +65,7 @@ static func _test_the_row_sentences() -> bool:
 		var sentence: String = str(pinned[1])
 		all_passed = _check("the pack ships the row sentence %s" % sentence,
 			FileAccess.get_file_as_string(str(pinned[0])).contains(
-				"## @ace_display_template(\"%s\")" % sentence), true) and all_passed
+				"# @ace_display_template(\"%s\")" % sentence), true) and all_passed
 		all_passed = _check("and it carries three slots, not four",
 			sentence.count("{"), 3) and all_passed
 	return all_passed
@@ -91,7 +91,7 @@ static func _test_the_emitted_calls() -> bool:
 		var template: String = str(pinned[1])
 		var shipped: String = FileAccess.get_file_as_string(str(pinned[0]))
 		all_passed = _check("the pack ships %s" % template,
-			shipped.contains("## @ace_codegen_template(\"%s\")" % template), true) and all_passed
+			shipped.contains("# @ace_codegen_template(\"%s\")" % template), true) and all_passed
 		var action: ACEAction = ACEAction.new()
 		action.provider_id = "CameraRail"
 		action.ace_id = "method:pinned"

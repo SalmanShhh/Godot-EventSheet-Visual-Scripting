@@ -44,7 +44,7 @@ static func run() -> bool:
 			# block picks up leading indentation on emission (its content, and thus the row it points
 			# at, is unchanged; only the leading whitespace differs). A genuine offset - the pre-fix
 			# bug - showed an entirely DIFFERENT line here, not just different indentation.
-			if code_first.strip_edges() != mapped_first.strip_edges():
+			if code_first.strip_edges() != EventSheetAnnotationLine.canonical(mapped_first).strip_edges():
 				mismatches += 1
 		ok = _check("%s: every raw row's map points at its code (%d rows)" % [pack_path.get_file(), total_raw], mismatches, 0) and ok
 		checked_packs += 1

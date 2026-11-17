@@ -1017,7 +1017,7 @@ static func sheet_for_script(script_path: String) -> String:
 		return sibling
 	# A behaviour/addon pack .gd IS its own sheet (no .tres companion) - it pairs to itself. EventForge
 	# sheets carry `## @ace_*` annotations (exposed ACEs / tags / triggers); hand-written scripts do not.
-	if script_path.get_extension().to_lower() == "gd" and RegEx.create_from_string("(?m)^## @ace_").search(source_of(script_path)) != null:
+	if script_path.get_extension().to_lower() == "gd" and RegEx.create_from_string("(?m)^## @ace_").search(EventSheetAnnotationLine.canonical_text(source_of(script_path))) != null:
 		return script_path
 	return ""
 
@@ -1512,7 +1512,7 @@ static func check_pack_dependencies(sheet_paths: PackedStringArray, findings: Ar
 	var class_regex: RegEx = RegEx.create_from_string("(?m)^class_name\\s+([A-Za-z_][A-Za-z0-9_]*)")
 	var requires_regex: RegEx = RegEx.create_from_string("(?m)^## @ace_requires\\(([^)]*)\\)")
 	for script_path: String in pack_scripts:
-		var pack_source: String = source_of(script_path)
+		var pack_source: String = EventSheetAnnotationLine.canonical_text(source_of(script_path))
 		var requires_match: RegExMatch = requires_regex.search(pack_source)
 		if requires_match == null:
 			continue

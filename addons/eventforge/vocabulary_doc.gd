@@ -113,7 +113,7 @@ static func sheet_section(sheet: EventSheetResource, sheet_path: String) -> Pack
 ## One hand-written script pack's entry. Empty when the script is compiler-generated
 ## (a "# Source:" header - its sheet section covers it) or publishes nothing.
 static func script_pack_section(script_path: String) -> PackedStringArray:
-	var source: String = FileAccess.get_file_as_string(script_path)
+	var source: String = EventSheetAnnotationLine.canonical_text(FileAccess.get_file_as_string(script_path))
 	if source.left(400).contains("# Source: "):
 		return PackedStringArray()
 	var surface: Dictionary = script_pack_surface(source)
@@ -248,7 +248,8 @@ static func _declares_get_descriptors(script: GDScript) -> bool:
 
 ## Parses a script's @ace_* annotated members into the same surface shape
 ## collect_publish_surface returns, so one renderer serves both.
-static func script_pack_surface(source: String) -> Dictionary:
+static func script_pack_surface(written: String) -> Dictionary:
+	var source: String = EventSheetAnnotationLine.canonical_text(written)
 	var surface: Dictionary = {"actions": [], "triggers": [], "conditions": [], "expressions": [], "properties": []}
 	# A LOOPING condition carries `@ace_looping(item)` instead of `@ace_condition` - the annotation
 	# is what names the loop variable, so it replaces the plain one rather than joining it. Scanning

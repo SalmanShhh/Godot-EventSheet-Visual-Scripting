@@ -33,7 +33,7 @@ static func run() -> bool:
 		["a value the drawer does not name takes the kind of the value the card holds", str((finder.call("kind_in", tween, "to") as Dictionary).get("kind")), "colour"],
 		["a key no card has is not known", str((finder.call("kind_in", shake, "nothing_here") as Dictionary).get("kind")), ""],
 		["the row's value box carries the hint that draws it", _param_line(text, "set_feedback_field", "value").contains("hint: %s" % VALUE_HINT), true],
-		["and the row writes the line it has always written", text.contains("## @ace_codegen_template(\"$JuicePlayer.set_feedback_field({label}, {field}, {value})\")") \
+		["and the row writes the line it has always written", text.contains("# @ace_codegen_template(\"$JuicePlayer.set_feedback_field({label}, {field}, {value})\")") \
 			or text.contains("set_feedback_field(\"{label}\", \"{field}\", {value})"), true],
 		["a sheet that finds no scene knows no kind", str((finder.call("value_kind", "", "$HitJuice", "shake", "amount") as Dictionary).get("kind")), ""],
 	])
@@ -51,8 +51,8 @@ static func _param_line(text: String, verb_name: String, param: String) -> Strin
 		return ""
 	for back: int in range(at - 1, maxi(at - 40, 0), -1):
 		var line: String = lines[back].strip_edges()
-		if line.begins_with("## @ace_param(%s" % param):
+		if line.begins_with("# @ace_param(%s" % param):
 			return line
-		if not line.begins_with("##"):
+		if not line.begins_with("#"):
 			break
 	return ""

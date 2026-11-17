@@ -35,7 +35,7 @@ static func _emitted_source() -> bool:
 	all_passed = _check("health pack emits Grant Invincibility", health_source.contains("func grant_invincibility(seconds: float) -> void:"), true) and all_passed
 	all_passed = _check("health pack stamps the clock", health_source.contains("_invincible_until = Time.get_ticks_msec() + int(maxf(seconds, 0.0) * 1000.0)"), true) and all_passed
 	all_passed = _check("health pack emits Is Invincible", health_source.contains("func is_invincible() -> bool:"), true) and all_passed
-	all_passed = _check("Is Invincible publishes as a condition", health_source.contains("## @ace_condition\n## @ace_name(\"Is Invincible\")"), true) and all_passed
+	all_passed = _check("Is Invincible publishes as a condition", health_source.contains("# @ace_condition\n# @ace_name(\"Is Invincible\")"), true) and all_passed
 	# THE gate: invincible damage never reaches the pools, the HP maths or on_damaged.emit().
 	all_passed = _check("Take Damage gates on invincibility", health_source.contains("if amount <= 0.0 or invulnerable or is_dead_flag or is_invincible():"), true) and all_passed
 

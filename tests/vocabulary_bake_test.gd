@@ -68,9 +68,9 @@ static func run() -> bool:
 	ok = _check("the bake reports success", bool(result.get("ok")), true) and ok
 	ok = _check("both overrides were baked", int(result.get("baked", 0)), 2) and ok
 	var baked: String = FileAccess.get_file_as_string(TEMP_SCRIPT)
-	ok = _check("the rename is now in the script", baked.contains("## @ace_name(\"Wound\")"), true) and ok
-	ok = _check("the category is now in the script", baked.contains("## @ace_category(\"Combat\")"), true) and ok
-	ok = _check("the hidden verb is marked in the script", baked.contains("## @ace_hidden"), true) and ok
+	ok = _check("the rename is now in the script", baked.contains("# @ace_name(\"Wound\")"), true) and ok
+	ok = _check("the category is now in the script", baked.contains("# @ace_category(\"Combat\")"), true) and ok
+	ok = _check("the hidden verb is marked in the script", baked.contains("# @ace_hidden"), true) and ok
 	# The covenant of every annotation write: comments only.
 	for code_line: String in ["func take_damage(amount: float) -> void:", "func heal(amount: float) -> void:",
 			"class_name TempBakeProvider", "extends Node"]:
@@ -148,7 +148,7 @@ static func _code_lines(source: String) -> Array:
 	var code: Array = []
 	for line: String in source.split("\n"):
 		var stripped: String = line.strip_edges()
-		if not stripped.is_empty() and not stripped.begins_with("##"):
+		if not stripped.is_empty() and not stripped.begins_with("##") and not EventSheetAnnotationLine.is_annotation(stripped):
 			code.append(stripped)
 	return code
 

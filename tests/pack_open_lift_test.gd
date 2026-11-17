@@ -58,7 +58,7 @@ static func run() -> bool:
 			var source: String = FileAccess.get_file_as_string(path)
 			var declared: int = 0
 			var has_functions: bool = false
-			for line: String in source.split("\n"):
+			for line: String in EventSheetAnnotationLine.canonical_text(source).split("\n"):
 				if line == "## @ace_action" or line == "## @ace_condition" or line == "## @ace_expression":
 					declared += 1
 				elif line.begins_with("func ") or line.begins_with("static func "):

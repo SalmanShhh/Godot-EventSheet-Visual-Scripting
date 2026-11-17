@@ -51,18 +51,18 @@ static func run() -> bool:
 	var written: String = str(first.get("source", ""))
 
 	ok = _check("a label lands above its function",
-		written.contains("## @ace_name(\"Start Wave\")\n## @ace_category(\"Waves\")\n## @ace_param(count, default: 3)\nfunc start_wave"), true) and ok
+		written.contains("# @ace_name(\"Start Wave\")\n# @ace_category(\"Waves\")\n# @ace_param(count, default: 3)\nfunc start_wave"), true) and ok
 	ok = _check("the kind is fixed by annotation, not by the signature",
-		written.contains("## @ace_condition\n## @ace_name(\"Wave Active\")\nfunc is_wave_active():"), true) and ok
+		written.contains("# @ace_condition\n# @ace_name(\"Wave Active\")\nfunc is_wave_active():"), true) and ok
 	ok = _check("the untyped signature is untouched", written.contains("func is_wave_active():"), true) and ok
-	ok = _check("a signal annotates too", written.contains("## @ace_name(\"On Wave Started\")\nsignal wave_started"), true) and ok
+	ok = _check("a signal annotates too", written.contains("# @ace_name(\"On Wave Started\")\nsignal wave_started"), true) and ok
 
 	# The author's own prose stays, and stays ABOVE the annotations - the order a compiled pack uses.
 	ok = _check("the human's doc comment survives",
-		written.contains("## Kicks off the next wave.\n## @ace_name(\"Start Wave\")"), true) and ok
+		written.contains("## Kicks off the next wave.\n# @ace_name(\"Start Wave\")"), true) and ok
 	# An @export decorator has to stay welded to its var, with the annotation above the whole thing.
 	ok = _check("a decorator stays welded to its declaration",
-		written.contains("## How hard the waves get.\n## @ace_hidden\n@export var difficulty: float = 1.0"), true) and ok
+		written.contains("## How hard the waves get.\n# @ace_hidden\n@export var difficulty: float = 1.0"), true) and ok
 	# Opting out is the whole statement: a hidden member has no label to argue about.
 	ok = _check("hidden wins outright", written.contains("@ace_name(\"Difficulty\")"), false) and ok
 
@@ -84,10 +84,10 @@ static func run() -> bool:
 			"params": {"count": {"default": "3"}}},
 	])
 	var renamed_source: String = str(renamed.get("source", ""))
-	ok = _check("the new label is there", renamed_source.contains("## @ace_name(\"Begin Wave\")"), true) and ok
+	ok = _check("the new label is there", renamed_source.contains("# @ace_name(\"Begin Wave\")"), true) and ok
 	ok = _check("and the old one is gone", renamed_source.contains("Start Wave"), false) and ok
 	ok = _check("the rest of the file is undisturbed",
-		renamed_source.contains("## @ace_condition\n## @ace_name(\"Wave Active\")"), true) and ok
+		renamed_source.contains("# @ace_condition\n# @ace_name(\"Wave Active\")"), true) and ok
 
 	# ---- 4. A member that is not there ----
 	# A rename between scanning and applying must not look like a success.
@@ -108,16 +108,16 @@ static func run() -> bool:
 		"name": "Say \"hi\"", "description": "First line\nsecond line"})
 	# The reader trims a surrounding quote pair and has no escape, so an inner quote would end the
 	# value early and a newline would end the comment entirely.
-	ok = _check("an inner quote is folded", awkward[0], "## @ace_name(\"Say 'hi'\")") and ok
-	ok = _check("and a newline is flattened", awkward[1], "## @ace_description(\"First line second line\")") and ok
+	ok = _check("an inner quote is folded", awkward[0], "# @ace_name(\"Say 'hi'\")") and ok
+	ok = _check("and a newline is flattened", awkward[1], "# @ace_description(\"First line second line\")") and ok
 
 	# ---- 7. Untouched annotations the wizard does not own ----
 	# Clearing everything would silently drop an @ace_icon or @ace_deprecated the author hand-wrote.
-	var hand_written: String = "## @ace_icon(\"res://icon.svg\")\n## @ace_name(\"Old\")\nfunc ping() -> void:\n\tpass\n"
+	var hand_written: String = "# @ace_icon(\"res://icon.svg\")\n# @ace_name(\"Old\")\nfunc ping() -> void:\n\tpass\n"
 	var kept: String = str(EventSheetACEAnnotationWriter.apply(hand_written, [
 		{"source_kind": "method", "member": "ping", "name": "Ping"}]).get("source", ""))
-	ok = _check("an unmanaged annotation survives", kept.contains("## @ace_icon(\"res://icon.svg\")"), true) and ok
-	ok = _check("while the managed one is replaced", kept.contains("## @ace_name(\"Ping\")"), true) and ok
+	ok = _check("an unmanaged annotation survives", kept.contains("# @ace_icon(\"res://icon.svg\")"), true) and ok
+	ok = _check("while the managed one is replaced", kept.contains("# @ace_name(\"Ping\")"), true) and ok
 	ok = _check("with no duplicate left behind", kept.contains("\"Old\""), false) and ok
 
 	# ---- 7b. Two edits, one declaration ----
@@ -184,7 +184,7 @@ static func run() -> bool:
 	ok = _check("and backs the file up first",
 		FileAccess.file_exists(str(curated.get("backup", ""))), true) and ok
 	ok = _check("the file on disk carries the annotation",
-		FileAccess.get_file_as_string(curate_path).contains("## @ace_name(\"Start Wave\")"), true) and ok
+		FileAccess.get_file_as_string(curate_path).contains("# @ace_name(\"Start Wave\")"), true) and ok
 	# Re-running must not churn a second backup of an identical file.
 	var again: Dictionary = EventSheets.curate_provider(curate_path, [
 		{"source_kind": "method", "member": "start_wave", "name": "Start Wave"}])
@@ -206,7 +206,7 @@ static func run() -> bool:
 	ok = _check("it forwards to the new name",
 		shim_source.contains("func start_wave(count: int) -> void:\n\tbegin_wave(count)"), true) and ok
 	ok = _check("and marks itself deprecated, naming the successor",
-		shim_source.contains("## @ace_deprecated(\"Renamed to begin_wave.\", \"method:begin_wave\")"), true) and ok
+		shim_source.contains("# @ace_deprecated(\"Renamed to begin_wave.\", \"method:begin_wave\")"), true) and ok
 	# Additive ONLY: rewriting a user's declarations and every reference to them is a different and
 	# far riskier operation than adding one function, and is deliberately not offered.
 	ok = _check("the renamed function is untouched",
@@ -261,20 +261,20 @@ static func run() -> bool:
 	authored.functions = [fire]
 	var compiled: String = str(EventSheetCompiler.compile(authored, "user://aw_authored.gd").get("output", ""))
 	ok = _check("the authored function compiled with a category and a description",
-		compiled.contains("## @ace_category(\"Weapons\")") and compiled.contains("## @ace_description(\"Shoots a round.\")"), true) and ok
+		compiled.contains("# @ace_category(\"Weapons\")") and compiled.contains("# @ace_description(\"Shoots a round.\")"), true) and ok
 	var renamed_only: String = str(EventSheetACEAnnotationWriter.apply(compiled, [
 		{"source_kind": "method", "member": "fire", "name": "Blast"}]).get("source", ""))
-	ok = _check("a one-field edit keeps the kind", renamed_only.contains("## @ace_action
+	ok = _check("a one-field edit keeps the kind", renamed_only.contains("# @ace_action
 "), true) and ok
-	ok = _check("a one-field edit keeps the category", renamed_only.contains("## @ace_category(\"Weapons\")"), true) and ok
-	ok = _check("a one-field edit keeps the description", renamed_only.contains("## @ace_description(\"Shoots a round.\")"), true) and ok
-	ok = _check("a one-field edit keeps the parameter line", renamed_only.contains("## @ace_param(count,"), true) and ok
-	ok = _check("a one-field edit keeps the call line", renamed_only.contains("## @ace_codegen_template("), true) and ok
+	ok = _check("a one-field edit keeps the category", renamed_only.contains("# @ace_category(\"Weapons\")"), true) and ok
+	ok = _check("a one-field edit keeps the description", renamed_only.contains("# @ace_description(\"Shoots a round.\")"), true) and ok
+	ok = _check("a one-field edit keeps the parameter line", renamed_only.contains("# @ace_param(count,"), true) and ok
+	ok = _check("a one-field edit keeps the call line", renamed_only.contains("# @ace_codegen_template("), true) and ok
 	ok = _check("and changes only the name", renamed_only.replace("Blast", "Fire"), compiled) and ok
 	var sentence: String = str(EventSheetACEAnnotationWriter.apply(compiled, [
 		{"source_kind": "method", "member": "fire", "display_template": "Fire {count} rounds"}]).get("source", ""))
 	ok = _check("the sentence is written",
-		sentence.contains("## @ace_display_template(\"Fire {count} rounds\")"), true) and ok
+		sentence.contains("# @ace_display_template(\"Fire {count} rounds\")"), true) and ok
 	ok = _check("and written where the compiler writes it, after the description",
 		sentence.find("@ace_description") < sentence.find("@ace_display_template") and sentence.find("@ace_display_template") < sentence.find("@ace_param(count"), true) and ok
 	ok = _check("writing the sentence twice changes nothing",
@@ -327,7 +327,7 @@ static func _param_default(by_id: Dictionary, ace_id: String, param_id: String) 
 static func _code_lines(source: String) -> Array:
 	var output: Array = []
 	for line: String in source.split("\n"):
-		if not line.strip_edges().begins_with("##"):
+		if not line.strip_edges().begins_with("##") and not EventSheetAnnotationLine.is_annotation(line):
 			output.append(line)
 	return output
 

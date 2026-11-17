@@ -316,20 +316,20 @@ static func _test_what_the_packs_ship() -> bool:
 		var owner: String = str(pair[1])
 		all_passed = _check("%s reads off disk" % owner, shipped.is_empty(), false) and all_passed
 		for line: String in [
-			"## @ace_codegen_template(\"$%s.set_flock_weights({separation}, {alignment}, {cohesion})\")" % owner,
-			"## @ace_codegen_template(\"$%s.set_flock_speeds({minimum}, {maximum})\")" % owner,
-			"## @ace_codegen_template(\"$%s.set_max_force({force})\")" % owner,
-			"## @ace_codegen_template(\"$%s.set_flock_radii({neighbours}, {too_close})\")" % owner,
-			"## @ace_codegen_template(\"$%s.set_avoid_group({group}, {radius}, {weight})\")" % owner,
-			"## @ace_codegen_template(\"$%s.set_flock_group({group})\")" % owner,
-			"## @ace_codegen_template(\"$%s.set_flocking_enabled({enabled})\")" % owner,
-			"## @ace_display_template(\"flock with separation [b]{separation}[/b], alignment [b]{alignment}[/b], cohesion [b]{cohesion}[/b]\")",
-			"## @ace_display_template(\"fly between [b]{minimum}[/b] and [b]{maximum}[/b] %s\")" % str(pair[2]),
-			"## @ace_display_template(\"steer with at most [b]{force}[/b] force\")",
-			"## @ace_display_template(\"see neighbours within [b]{neighbours}[/b], keep [b]{too_close}[/b] apart\")",
-			"## @ace_display_template(\"flee [b]{group}[/b] within [b]{radius}[/b], weight [b]{weight}[/b]\")",
-			"## @ace_display_template(\"fly with the [b]{group}[/b] flock\")",
-			"## @ace_display_template(\"Set flocking to [b]{enabled}[/b]\")",
+			"# @ace_codegen_template(\"$%s.set_flock_weights({separation}, {alignment}, {cohesion})\")" % owner,
+			"# @ace_codegen_template(\"$%s.set_flock_speeds({minimum}, {maximum})\")" % owner,
+			"# @ace_codegen_template(\"$%s.set_max_force({force})\")" % owner,
+			"# @ace_codegen_template(\"$%s.set_flock_radii({neighbours}, {too_close})\")" % owner,
+			"# @ace_codegen_template(\"$%s.set_avoid_group({group}, {radius}, {weight})\")" % owner,
+			"# @ace_codegen_template(\"$%s.set_flock_group({group})\")" % owner,
+			"# @ace_codegen_template(\"$%s.set_flocking_enabled({enabled})\")" % owner,
+			"# @ace_display_template(\"flock with separation [b]{separation}[/b], alignment [b]{alignment}[/b], cohesion [b]{cohesion}[/b]\")",
+			"# @ace_display_template(\"fly between [b]{minimum}[/b] and [b]{maximum}[/b] %s\")" % str(pair[2]),
+			"# @ace_display_template(\"steer with at most [b]{force}[/b] force\")",
+			"# @ace_display_template(\"see neighbours within [b]{neighbours}[/b], keep [b]{too_close}[/b] apart\")",
+			"# @ace_display_template(\"flee [b]{group}[/b] within [b]{radius}[/b], weight [b]{weight}[/b]\")",
+			"# @ace_display_template(\"fly with the [b]{group}[/b] flock\")",
+			"# @ace_display_template(\"Set flocking to [b]{enabled}[/b]\")",
 		]:
 			all_passed = _check("%s ships %s" % [owner, line], shipped.contains(line), true) and all_passed
 	return all_passed

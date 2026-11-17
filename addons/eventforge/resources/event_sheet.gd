@@ -48,6 +48,14 @@ extends Resource
 ## by the marker line `## @ace_test_sheet` in the emitted script, which is what
 ## tools/run_test_sheets.gd scans for; the report itself lives in the node's own metadata.
 @export var test_mode: bool = false
+## How the file spells the plugin's annotation comments: "#" for `# @ace_category(...)`, "##" for
+## `## @ace_category(...)`, "" when nothing was said (a sheet built from rows writes one hash; a file read
+## from disk always says which it keeps). One hash keeps the words out of Godot's Help pages and Inspector
+## tooltips, which show every two-hash line as documentation.
+@export var annotation_spelling: String = ""
+## True only while the importer reads a one-hash file: the sheet is then asked what it writes in the two-hash
+## form every reader is written for, so the byte gates compare like with like. Never saved.
+var annotation_gate_canonical: bool = false
 ## Debug compile: emit `breakpoint` statements for rows flagged via the gutter (F9).
 @export var emit_breakpoints: bool = false
 ## Debug compile: stream this sheet's variables to the editor's Live Values window

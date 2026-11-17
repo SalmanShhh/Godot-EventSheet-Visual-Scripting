@@ -156,7 +156,7 @@ static func _published_fields_of(path: String) -> String:
 	var hidden: bool = false
 	for raw_line: String in FileAccess.get_file_as_string(path).split("\n"):
 		var line: String = raw_line.strip_edges()
-		if line == "## @ace_hidden":
+		if line == "# @ace_hidden":
 			hidden = true
 			continue
 		if line.begins_with("@export_group(") or line.begins_with("@export_category("):
@@ -172,6 +172,10 @@ static func _published_fields_of(path: String) -> String:
 						stop = at
 				names.append(declared.substr(0, stop))
 			hidden = false
+			continue
+		# The words come first and the description sits between them and the field, so a `##` line does not
+		# end what the words said.
+		if line.begins_with("##"):
 			continue
 		hidden = false
 	names.sort()
