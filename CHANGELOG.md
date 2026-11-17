@@ -20,6 +20,10 @@ The stamp node, Draw Prefab and the Inspector picture draw the four from the sam
 
 An older copy of the Drawing Canvas, Drawing Prefab Stamp and Drawing Prefab Resource packs in a project does not know the new kinds and draws nothing for them, without an error. Add the three packs again from the behaviour library to draw the new shapes in a game.
 
+### Fixed: confirming the parameters of an Every X To Y Seconds row no longer prints a parse error in the Output
+
+Looking at a field of a row that keeps a clock or a flag (Every X To Y Seconds and the 28 other stateful conditions) made Godot print `Parse Error: Function "__everyr_0()" not found in base self.` into the Output panel, sometimes a dozen times, because the stand-in script the kind-of-value check compiles had the verb's call but not the helper function the row declares beside it. The stand-in now carries the verb's own members, so the line is quiet; a wrong value in such a field is still refused in the same words.
+
 ### Fixed: a shape set to "fixed on screen" keeps its weight when the camera zooms
 
 A 4 px line set to "fixed on screen" was drawn 8 px wide under a Camera2D at zoom 2, and 2 px wide at zoom 0.5, because the width followed the shape's own scale and ignored the camera. It now follows the scale the shape is actually shown at, so the line is 4 px at every zoom, in a running game and in the editor's 2D view when you zoom it. A fixed shape checks that scale once a frame to redraw when it changes; a shape set to "with the node" stays parked as before. Shapes in a project made before this fix pick it up when the Vector Shapes pack is added again from the library.

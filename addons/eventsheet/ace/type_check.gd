@@ -247,18 +247,30 @@ static func type_node_references(code: String, scene_root: Node, classes: Dictio
 ## Compiles `body_lines` (statements of one function body) in the typed or untyped stand-in script.
 ## {ok, messages, first_line}: `first_line` is the probe line of the first body line, so a message's line
 ## maps back to the body.
-static func _probe(body_lines: PackedStringArray, sheet: EventSheetResource, typed: bool, scene_root: Node) -> Dictionary:
+static func _probe(body_lines: PackedStringArray, sheet: EventSheetResource, typed: bool, scene_root: Node,
+		helper_lines: PackedStringArray = PackedStringArray()) -> Dictionary:
 	var extra: PackedStringArray = PackedStringArray()
 	var code: String = "\n".join(body_lines)
 	if typed:
 		var rewritten: Dictionary = type_node_references(code, scene_root, EventSheetGDScriptLint._global_class_names())
 		code = str(rewritten["code"])
 		extra = rewritten["lines"]
+	extra.append_array(helper_lines)
 	var source: String = EventSheetGDScriptLint.build_probe_source(code, true, sheet, typed, extra)
 	var probe_lines: PackedStringArray = source.split("\n")
 	var result: Dictionary = run_probe(source)
 	result["first_line"] = probe_lines.find("func __eventsheet_lint() -> void:") + 2
 	return result
+
+
+## The members a stateful verb declares beside its row (a clock, a flag, the helper function its template
+## calls), written for the stand-in script with the row's id as 0. Without them the template's call to its
+## own helper would be an unknown function, and Godot would print a parse error for a row that is fine.
+static func _helper_lines(member_template: String) -> PackedStringArray:
+	if member_template.strip_edges().is_empty():
+		return PackedStringArray()
+	return PackedStringArray(member_template.replace("{uid}", "0").split("
+"))
 
 
 ## The finding for one field, or {} when there is nothing to say. `template` is the verb's template (empty
@@ -272,7 +284,7 @@ static func _probe(body_lines: PackedStringArray, sheet: EventSheetResource, typ
 ##   messages  everything the analyzer said
 static func check_field(template: String, param_id: String, value: String, values: Dictionary,
 		sheet: EventSheetResource, scope: PackedStringArray = PackedStringArray(),
-		scene_root: Node = null) -> Dictionary:
+		scene_root: Node = null, member_template: String = "") -> Dictionary:
 	var text: String = value.strip_edges()
 	if text.is_empty():
 		return {}
@@ -297,12 +309,13 @@ static func check_field(template: String, param_id: String, value: String, value
 		if code_lines.size() == 1:
 			forms.append(scope_lines + PackedStringArray(["var __slot_value__ = %s" % code_lines[0]]))
 	var finding: Dictionary = {}
+	var helpers: PackedStringArray = _helper_lines(member_template)
 	for body: PackedStringArray in forms:
-		var typed_run: Dictionary = _probe(body, sheet, true, scene_root)
+		var typed_run: Dictionary = _probe(body, sheet, true, scene_root, helpers)
 		if bool(typed_run["ok"]):
 			finding = _variant_note(text, scope_lines, sheet, scene_root)
 			break
-		finding = _finding_from(typed_run, body, value_line, text, column, sheet, bool(assembled.get("in_call", true)))
+		finding = _finding_from(typed_run, body, value_line, text, column, sheet, bool(assembled.get("in_call", true)), helpers)
 		if not finding.is_empty():
 			break
 	if finding.is_empty() or (str(finding.get("level", "")) == LEVEL_PAUSED and not member_finding.is_empty()):
@@ -343,7 +356,7 @@ static func _stand_in_class(sheet: EventSheetResource) -> String:
 ## {} when the failure is not the value's kind - a line the value is not on, or a message with no plain form
 ## that the untyped stand-in raises too (that is the plain compile check's to report).
 static func _finding_from(run: Dictionary, body: PackedStringArray, value_line: int, value: String, column: int,
-		sheet: EventSheetResource, in_call: bool) -> Dictionary:
+		sheet: EventSheetResource, in_call: bool, helpers: PackedStringArray = PackedStringArray()) -> Dictionary:
 	var first_line: int = int(run["first_line"])
 	var heard: Array = []
 	var own_class: String = _stand_in_class(sheet)
@@ -369,7 +382,7 @@ static func _finding_from(run: Dictionary, body: PackedStringArray, value_line: 
 	for heard_text: Variant in heard:
 		if EventSheetTypeWords.recognise(str(heard_text)).is_empty():
 			all_plain = false
-	if not all_plain and not bool(_probe(body, sheet, false, null)["ok"]):
+	if not all_plain and not bool(_probe(body, sheet, false, null, helpers)["ok"]):
 		return {}
 	var lead: String = EventSheetTypeWords.lead_message(heard)
 	var code_line: String = body[value_line] if value_line < body.size() else ""
