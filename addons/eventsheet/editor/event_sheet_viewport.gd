@@ -166,6 +166,7 @@ signal rows_rebuilt
 ## The dialogs, the Manual's reference and the public API, loaded by path the first hover or drop
 ## that asks them anything - naming any of those classes here would compile it, and all it names,
 ## with the canvas on the first sheet open.
+const SceneSheetMarks := preload("res://addons/eventforge/importer/scene_sheet_marks.gd")
 const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
 const FunctionLocks := preload("res://addons/eventsheet/editor/interaction/function_locks.gd")
 ## What only an edit or a copy asks for, read by path at that moment.
@@ -3905,7 +3906,7 @@ func _build_rows_from_sheet(sheet: EventSheetResource) -> Array[EventRowData]:
 	# object bar, each read by this very function. A composite has no events of its own, so the
 	# registry it holds is cleared and stated here, once; a script of the scene clears and states
 	# its own when it is read.
-	if EventSheetSceneSheet.is_scene_sheet(sheet):
+	if SceneSheetMarks.is_scene_sheet(sheet):
 		EventSheetPatternFacts.clear(sheet)
 		EventSheetViewportReadingRows.claim_patterns(sheet)
 		EventSheetViewportReadingRows.claim_behavior_shape_patterns(sheet)
@@ -4099,7 +4100,7 @@ func _build_scene_sheet_rows(sheet: EventSheetResource) -> Array[EventRowData]:
 	rows.append(_row_builder.build_scene_bar_row(sheet))
 	var outer_sheet: EventSheetResource = _sheet
 	var member_index: int = 0
-	for entry: Variant in EventSheetSceneSheet.members_of(sheet):
+	for entry: Variant in SceneSheetMarks.members_of(sheet):
 		var member: Dictionary = entry
 		var member_sheet: EventSheetResource = member.get("sheet") as EventSheetResource
 		if member_sheet == null:

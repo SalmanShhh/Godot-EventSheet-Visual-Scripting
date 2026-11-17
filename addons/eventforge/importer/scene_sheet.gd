@@ -17,11 +17,12 @@ class_name EventSheetSceneSheet
 extends RefCounted
 
 ## The scene a composite sheet was built from, and the per-script members under it.
-const SCENE_PATH_META: String = "__scene_sheet_path"
-const MEMBERS_META: String = "__scene_members"
+const Marks := preload("res://addons/eventforge/importer/scene_sheet_marks.gd")
+const SCENE_PATH_META: String = Marks.SCENE_PATH_META
+const MEMBERS_META: String = Marks.MEMBERS_META
 ## Stamped on each MEMBER sheet, so its Include bar reads as the object bar of the node that carries
 ## it ("HUD a CanvasLayer") rather than as the script's own identity.
-const OBJECT_BAR_META: String = "__scene_object_bar"
+const OBJECT_BAR_META: String = Marks.OBJECT_BAR_META
 
 
 ## The composite sheet for one .tscn, with every script already read. Null when the file cannot be
@@ -68,7 +69,7 @@ static func build_shell(scene_path: String) -> EventSheetResource:
 			"sheet": null
 		})
 	sheet.set_meta(MEMBERS_META, members)
-	sheet.set_meta("__scene_root_type", _root_type(path))
+	sheet.set_meta(Marks.ROOT_TYPE_META, _root_type(path))
 	return sheet
 
 
@@ -109,27 +110,27 @@ static func _is_unread(member: Dictionary) -> bool:
 ## True for a sheet built by this module. The dock asks before every write path: a composite sheet
 ## has no file of its own, so Save, Save As and the preview unlock are all refused on it.
 static func is_scene_sheet(sheet: EventSheetResource) -> bool:
-	return sheet != null and sheet.has_meta(SCENE_PATH_META)
+	return Marks.is_scene_sheet(sheet)
 
 
 static func scene_path_of(sheet: EventSheetResource) -> String:
-	return str(sheet.get_meta(SCENE_PATH_META, "")) if sheet != null else ""
+	return Marks.scene_path_of(sheet)
 
 
 ## The per-script members, in tree order: {node, node_path, type, script_path, instances, sheet}.
 static func members_of(sheet: EventSheetResource) -> Array:
-	return (sheet.get_meta(MEMBERS_META, []) as Array) if sheet != null else []
+	return Marks.members_of(sheet)
 
 
 ## The class of the scene's root node, for the scene bar.
 static func root_type_of(sheet: EventSheetResource) -> String:
-	return str(sheet.get_meta("__scene_root_type", "")) if sheet != null else ""
+	return Marks.root_type_of(sheet)
 
 
 ## The node the object bar of ONE member names, as {node, type, script_path, instances}, or {} for a
 ## sheet opened on its own.
 static func object_bar_of(sheet: EventSheetResource) -> Dictionary:
-	return (sheet.get_meta(OBJECT_BAR_META, {}) as Dictionary) if sheet != null else {}
+	return Marks.object_bar_of(sheet)
 
 
 ## One script of the scene, read exactly as opening that file would read it.

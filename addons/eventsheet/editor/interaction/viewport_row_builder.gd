@@ -31,6 +31,7 @@ extends RefCounted
 
 ## The compiler and the lifter, loaded by path the first time a row asks them anything - naming
 ## either class here would compile it, and all it names, the moment this file loads.
+const SceneSheetMarks := preload("res://addons/eventforge/importer/scene_sheet_marks.gd")
 const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/reading_doors.gd")
 
 ## The compiler's own spellings, read from the one file the compiler itself reads them from.
@@ -1512,7 +1513,7 @@ func build_sheet_head_bar_row(sheet: EventSheetResource, head_facts: Dictionary 
 	}, true)
 	# Inside a scene view the bar is the NODE the script sits on: its name as the scene tree writes it
 	# (the file it runs, after the kind, opens the script as its own sheet).
-	var object_bar: Dictionary = EventSheetSceneSheet.object_bar_of(sheet)
+	var object_bar: Dictionary = SceneSheetMarks.object_bar_of(sheet)
 	if not object_bar.is_empty():
 		name_text = str(object_bar.get("node", name_text))
 		name_meta["bbcode_segments"] = [{"text": name_text, "color": reading_style.primary_text_color,
@@ -1622,7 +1623,7 @@ func _runs_in_editor_chip_span(meta: Dictionary, editable: bool) -> EventSheetSe
 static func opens_on_head_bar(sheet: EventSheetResource) -> bool:
 	if sheet == null:
 		return false
-	if not EventSheetSceneSheet.object_bar_of(sheet).is_empty():
+	if not SceneSheetMarks.object_bar_of(sheet).is_empty():
 		return true
 	if not str(sheet.external_source_path).strip_edges().is_empty():
 		return true
@@ -2536,7 +2537,7 @@ func build_scene_bar_row(sheet: EventSheetResource) -> EventRowData:
 	row_data.outline_radius = HEAD_BAR_RADIUS
 	row_data.outline_width = 1.0
 	var meta: Dictionary = {"editable": false, "kind": "sheet_head", "line_index": 0}
-	var root_type: String = EventSheetSceneSheet.root_type_of(sheet)
+	var root_type: String = SceneSheetMarks.root_type_of(sheet)
 	var icon_meta: Dictionary = meta.merged({
 		"badge": true,
 		"badge_style": "glyph",
@@ -2548,7 +2549,7 @@ func build_scene_bar_row(sheet: EventSheetResource) -> EventRowData:
 	if root_icon != null:
 		icon_meta["badge_icon"] = root_icon
 	var spans: Array[EventSheetSemanticSpan] = [_make_span("◆", EventSheetSemanticSpan.SpanType.KEYWORD, icon_meta)]
-	var scene_name: String = EventSheetSceneSheet.scene_path_of(sheet).get_file()
+	var scene_name: String = SceneSheetMarks.scene_path_of(sheet).get_file()
 	spans.append(_make_span(scene_name, EventSheetSemanticSpan.SpanType.OBJECT, meta.merged({
 		"text_color": reading_style.primary_text_color,
 		"bbcode_segments": [{"text": scene_name, "color": reading_style.primary_text_color, "bold": true, "italic": false}],
@@ -2561,12 +2562,12 @@ func build_scene_bar_row(sheet: EventSheetResource) -> EventRowData:
 		spans.append(_make_span(root_type, EventSheetSemanticSpan.SpanType.VALUE,
 			meta.merged({"text_color": reading_style.primary_text_color}, true)))
 	var nodes: PackedStringArray = PackedStringArray()
-	for entry: Variant in EventSheetSceneSheet.members_of(sheet):
+	for entry: Variant in SceneSheetMarks.members_of(sheet):
 		var member_sheet: EventSheetResource = (entry as Dictionary).get("sheet") as EventSheetResource
-		var bar: Dictionary = EventSheetSceneSheet.object_bar_of(member_sheet)
+		var bar: Dictionary = SceneSheetMarks.object_bar_of(member_sheet)
 		nodes.append("%s (%s)" % [str(bar.get("node", "")), str(bar.get("script_path", "")).get_file()] if not bar.is_empty()
 			else str((entry as Dictionary).get("script_path", "")).get_file())
-	var scripts: int = EventSheetSceneSheet.members_of(sheet).size()
+	var scripts: int = SceneSheetMarks.members_of(sheet).size()
 	spans.append(_make_span(EventSheetL10n.translate("1 script") if scripts == 1
 		else EventSheetL10n.translate("{n} scripts").replace("{n}", str(scripts)),
 		EventSheetSemanticSpan.SpanType.COMMENT, meta.merged({
@@ -2606,7 +2607,7 @@ func _script_include_spans(sheet: EventSheetResource) -> Array[EventSheetSemanti
 	# that one scene already. A node's NAME is a fact of the SCENE rather than a line of the script, so
 	# this is the one shape that still leads with an identity. Double-click opens the script as its
 	# own sheet.
-	var object_bar: Dictionary = EventSheetSceneSheet.object_bar_of(sheet)
+	var object_bar: Dictionary = SceneSheetMarks.object_bar_of(sheet)
 	if not object_bar.is_empty():
 		return _scene_object_bar_spans(object_bar, _viewport._get_event_style())
 	var base_class: String = sheet.host_class.strip_edges()

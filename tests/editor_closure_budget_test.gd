@@ -23,11 +23,13 @@ const TEST_NAME := "editor_closure_budget_test"
 const Closure := preload("res://tools/measure_editor_closure.gd")
 
 ## The closure measured when this budget was set (files, lines), from the default root.
-const MEASURED_FILES: int = 316
-const MEASURED_LINES: int = 166110
-## How far past the measured figure the closure may grow before the test fails, in percent. Room for
-## ordinary growth of the files already in the set; not room for a new subtree.
-const HEADROOM_PERCENT: int = 3
+const MEASURED_FILES: int = 284
+const MEASURED_LINES: int = 156597
+## How far past the measured figure the closure may grow before the test fails. Room for
+## ordinary growth of the files already in the set; not room for a new subtree. A flat margin, not a
+## percentage, so the next overrun is caught while it is still small.
+const LINE_MARGIN: int = 1500
+const FILE_MARGIN: int = 10
 
 
 static func run() -> bool:
@@ -38,8 +40,8 @@ static func run() -> bool:
 	var total_lines: int = 0
 	for path: String in closure:
 		total_lines += int(lines[path])
-	var line_budget: int = MEASURED_LINES * (100 + HEADROOM_PERCENT) / 100
-	var file_budget: int = MEASURED_FILES * (100 + HEADROOM_PERCENT) / 100
+	var line_budget: int = MEASURED_LINES + LINE_MARGIN
+	var file_budget: int = MEASURED_FILES + FILE_MARGIN
 	print("  [closure] first open compiles %d files, %d lines (budget %d files, %d lines)" % [
 		closure.size(), total_lines, file_budget, line_budget])
 	var within: bool = total_lines <= line_budget and closure.size() <= file_budget
@@ -60,6 +62,8 @@ static func run() -> bool:
 			closure.has("res://addons/eventsheet/editor/ace_params_dialog.gd"), false],
 		["the variable dialog is not compiled by the first open",
 			closure.has("res://addons/eventsheet/editor/variable_dialog.gd"), false],
+		["the scene reader is not compiled by the first open (the editor reads a sheet's scene marks from a small file)",
+			closure.has("res://addons/eventforge/importer/scene_sheet.gd"), false],
 		["the public API is not compiled by the first open",
 			closure.has("res://addons/eventsheet/api/eventsheets.gd"), false],
 		["no file of the Manual is compiled by the first open",

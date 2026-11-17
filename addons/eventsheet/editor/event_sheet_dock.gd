@@ -93,7 +93,7 @@ const RUNTIME_ERROR_WORDS_PATH := "res://addons/eventsheet/editor/dock/runtime_e
 const RUNTIME_ERROR_LOCATOR_PATH := "res://addons/eventsheet/editor/dock/runtime_error_locator.gd"
 const RUNTIME_ERROR_OPEN_PATH := "res://addons/eventsheet/editor/dock/runtime_error_open.gd"
 const SAVED_VIEWS_PATH := "res://addons/eventsheet/editor/dock/saved_views.gd"
-const SCENE_SHEET_PATH := "res://addons/eventforge/importer/scene_sheet.gd"
+const SCENE_SHEET_MARKS_PATH := "res://addons/eventforge/importer/scene_sheet_marks.gd"
 const SCRIPT_MEMBERS_PATH: String = "res://addons/eventsheet/ace/script_members.gd"
 const SHADER_UNIFORMS_PATH: String = "res://addons/eventforge/importer/shader_uniforms.gd"
 const SHEET_EXPORT_PATH := "res://addons/eventsheet/editor/dock/sheet_export.gd"
@@ -8123,8 +8123,8 @@ static func _format_sheet_title(sheet: EventSheetResource, explicit_path: String
 		return "No Sheet Loaded"
 	# A scene opened as one sheet is named after the SCENE, extension and all: it is not one
 	# script's tab, and the file name is the thing the reader picked in the FileSystem.
-	if load(SCENE_SHEET_PATH).is_scene_sheet(sheet):
-		return load(SCENE_SHEET_PATH).scene_path_of(sheet).get_file()
+	if load(SCENE_SHEET_MARKS_PATH).is_scene_sheet(sheet):
+		return load(SCENE_SHEET_MARKS_PATH).scene_path_of(sheet).get_file()
 	var resolved_path: String = _resolve_sheet_path(sheet, explicit_path)
 	if resolved_path.is_empty():
 		return "Untitled EventSheet"

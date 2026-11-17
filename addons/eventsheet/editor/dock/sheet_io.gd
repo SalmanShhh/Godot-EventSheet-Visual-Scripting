@@ -22,6 +22,7 @@ const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/readin
 const DOC_CHORES_PATH := "res://addons/eventsheet/editor/docs/doc_chores.gd"
 const OPEN_JOB_PATH := "res://addons/eventforge/importer/open_job.gd"
 const SCENE_SHEET_PATH := "res://addons/eventforge/importer/scene_sheet.gd"
+const SCENE_SHEET_MARKS_PATH := "res://addons/eventforge/importer/scene_sheet_marks.gd"
 const TEXT_LISTING_PATH := "res://addons/eventsheet/editor/dock/text_listing.gd"
 const GDSCRIPT_IMPORTER_PATH := "res://addons/eventforge/importer/gdscript_importer.gd"
 const SHEET_COMPILER_PATH := "res://addons/eventforge/compiler/sheet_compiler.gd"
@@ -233,14 +234,14 @@ func _poll_scene_open() -> void:
 		_dock._viewport.set_sheet(_scene_sheet)
 	var pending: int = load(SCENE_SHEET_PATH).pending_members(_scene_sheet)
 	if _dock._open_progress != null:
-		var total: int = load(SCENE_SHEET_PATH).members_of(_scene_sheet).size()
+		var total: int = load(SCENE_SHEET_MARKS_PATH).members_of(_scene_sheet).size()
 		_dock._open_progress.update(EventSheetL10n.translate("reading script %d of %d") % [total - pending, total],
 			float(total - pending) / float(maxi(total, 1)))
 	if more or pending > 0:
 		return
 	_stop_scene_polling()
 	_dock._set_status("Opened %s - reading only. Double-click an object bar to edit that script." %
-		load(SCENE_SHEET_PATH).scene_path_of(_scene_sheet).get_file())
+		load(SCENE_SHEET_MARKS_PATH).scene_path_of(_scene_sheet).get_file())
 
 
 func _stop_scene_polling() -> void:
@@ -504,9 +505,9 @@ func _on_save_requested(after_save_as: Callable = Callable()) -> void:
 	# "Edit Events" (then this becomes a normal GDScript-backed save), or forks via Save As.
 	# A scene read as one sheet is many files at once, and the .tscn is not one of them: there is
 	# nothing here to save, so say where the editing happens instead.
-	if load(SCENE_SHEET_PATH).is_scene_sheet(_dock._current_sheet):
+	if load(SCENE_SHEET_MARKS_PATH).is_scene_sheet(_dock._current_sheet):
 		_dock._set_status("%s is a reading of the whole scene - double-click an object bar to open that script and save there." %
-			load(SCENE_SHEET_PATH).scene_path_of(_dock._current_sheet).get_file(), true)
+			load(SCENE_SHEET_MARKS_PATH).scene_path_of(_dock._current_sheet).get_file(), true)
 		return
 	# A file still holding merge markers refuses in its OWN words, and refuses first: the read-only
 	# message below points at an "Edit Events" button that a blocked sheet does not have, and telling
