@@ -1,1 +1,1 @@
-<rect x="1" y="0" width="11" height="2" rx="1" fill="#e0e0e0"/><path fill="none" stroke="#e0e0e0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3.5 3.5L9.5 5.25L3.5 7L9.5 8.75L3.5 10.5"/><rect x="1" y="12" width="8" height="2" rx="1" fill="#e0e0e0"/>
+<rect x="0" y="0" width="10" height="2" fill="#e0e0e0"/><path fill="none" stroke="#e0e0e0" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" d="M5 2 V3 L9 5 L1 8 L9 11 L5 13 V14"/><rect x="0" y="14" width="10" height="2" fill="#e0e0e0"/>
