@@ -121,7 +121,7 @@ func _build_dialog() -> void:
 		return
 	_dialog = AcceptDialog.new()
 	_dialog.add_cancel_button("Cancel")
-	_dialog.confirmed.connect(func() -> void: run())
+	_dialog.confirmed.connect(_run_asking)
 	var content: VBoxContainer = EventSheetPopupUI.form_box()
 	content.add_child(EventSheetPopupUI.hint_label("A grid is rows of data, so a spreadsheet can edit it: the first CSV line is the column names, one line per row. Point at a .tres data asset to move ITS rows, or leave that blank to move the rows this sheet declares."))
 	var form: VBoxContainer = EventSheetPopupUI.form_box()
@@ -209,6 +209,29 @@ func sheet_rows() -> Array:
 	var declaration: Dictionary = EventSheetVariableRetype.find_declaration(_dock._current_sheet, _variable_name)
 	var default_value: Variant = declaration.get("default", null)
 	return default_value as Array if default_value is Array else []
+
+
+## The file a run would write over, when there is one: the .csv an export writes, or the data asset an
+## import fills. Empty when the run only reads, or the file is new.
+func file_replaced() -> String:
+	var csv_path: String = _csv_edit.text.strip_edges() if _csv_edit != null else ""
+	var asset_path: String = _asset_edit.text.strip_edges() if _asset_edit != null else ""
+	var target: String = csv_path if _mode.ends_with("export") else asset_path
+	return target if not target.is_empty() and FileAccess.file_exists(target) else ""
+
+
+## The button: asks first when the run would replace a file, and keeps the old one in Sheet Backups.
+func _run_asking() -> void:
+	var target: String = file_replaced()
+	if target.is_empty():
+		run()
+		return
+	load("res://addons/eventsheet/editor/dock/ask_first.gd").ask(_dock,
+		EventSheetL10n.translate("Replace the file?"),
+		EventSheetL10n.translate("%s already exists, and this replaces it. The old file is kept in Sheet Backups.") % target,
+		EventSheetL10n.translate("Replace"), func() -> void:
+			EventSheetBackups.backup_sheet(target)
+			run())
 
 
 ## Runs the button: export or import, against the data asset when one is named and against the

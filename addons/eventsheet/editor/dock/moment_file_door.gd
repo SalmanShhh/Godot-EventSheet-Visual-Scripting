@@ -281,9 +281,17 @@ func _build_dialog() -> void:
 
 
 ## The button: whichever door is open, run it and say what happened.
-func _apply() -> void:
+func _apply(replace_confirmed: bool = false) -> void:
 	var path: String = _path_edit.text
 	if _saving:
+		if not replace_confirmed and FileAccess.file_exists(path.strip_edges()):
+			load("res://addons/eventsheet/editor/dock/ask_first.gd").ask(_dock,
+				EventSheetL10n.translate("Replace the file?"),
+				EventSheetL10n.translate("%s already exists, and saving replaces it. The old file is kept in Sheet Backups.") % path.strip_edges(),
+				EventSheetL10n.translate("Replace"), func() -> void:
+					EventSheetBackups.backup_sheet(path.strip_edges())
+					_apply(true))
+			return
 		var wrote: Dictionary = save_run(_block, path)
 		_dock._set_status(str(wrote.get("said", "")), not bool(wrote.get("ok", false)))
 		return

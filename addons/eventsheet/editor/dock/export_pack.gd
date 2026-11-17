@@ -30,10 +30,21 @@ func init(dock: Control) -> void:
 	_dock = dock
 
 
+## The files an export into `base_dir` would overwrite: the script, the sheet and the README, those
+## that are already there. Empty for a first export.
+static func files_replaced(base_dir: String, folder_name: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for file_name: String in [folder_name + ".gd", folder_name + ".tres", "README.md"]:
+		var path: String = "%s/%s" % [base_dir, file_name]
+		if FileAccess.file_exists(path):
+			found.append(path)
+	return found
+
+
 ## One-click addon publishing: writes the current behavior sheet (+ compiled script) into
 ## eventsheet_addons/<class_snake>/ where the zero-config scanner publishes its ACEs
 ## project-wide - the same layout the bundled packs use. base_dir_override is for tests.
-func _export_addon_pack(base_dir_override: String = "") -> void:
+func _export_addon_pack(base_dir_override: String = "", replace_confirmed: bool = false) -> void:
 	if _dock._current_sheet == null:
 		return
 	if not _dock._current_sheet.behavior_mode or _dock._current_sheet.custom_class_name.strip_edges().is_empty():
@@ -46,6 +57,17 @@ func _export_addon_pack(base_dir_override: String = "") -> void:
 	var folder_name: String = class_name_text.to_snake_case()
 	var base_dir: String = base_dir_override if not base_dir_override.is_empty() else "res://eventsheet_addons/%s" % folder_name
 	var base_path: String = "%s/%s" % [base_dir, folder_name]
+	var replaced: PackedStringArray = files_replaced(base_dir, folder_name)
+	if not replaced.is_empty() and base_dir_override.is_empty() and not replace_confirmed:
+		# A pack folder that is already there holds a script, a sheet and notes that may have been
+		# written by hand: ask before they are replaced.
+		load("res://addons/eventsheet/editor/dock/ask_first.gd").ask(_dock,
+			EventSheetL10n.translate("Replace the pack?"),
+			EventSheetL10n.translate("%s already holds this pack, and exporting replaces its script, sheet and README. The old files are kept in Sheet Backups.") % base_dir,
+			EventSheetL10n.translate("Replace"), _export_addon_pack.bind("", true))
+		return
+	for old_file: String in replaced:
+		EventSheetBackups.backup_sheet(old_file)
 	DirAccess.make_dir_recursive_absolute(base_dir)
 	var pack_sheet: EventSheetResource = _dock._current_sheet.duplicate(true)
 	# The SAME pipeline the bundled packs are built with (EventSheets.publish_pack): pack-local

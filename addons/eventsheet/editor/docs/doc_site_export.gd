@@ -733,11 +733,15 @@ static func _copy(from: String, to: String, written: PackedStringArray, relative
 		written.append(relative)
 
 
-## Everything a previous export of THIS site left behind, removed. Only the shapes this exporter
-## writes are touched, so a reader who dropped their own file in the folder keeps it.
+## Everything a previous export of THIS site left behind, removed. At the folder's top level that is
+## the four files this exporter writes there, by name - not every `.html`, `.css` and `.js` - so a
+## reader who dropped their own page, stylesheet or script into the folder keeps it. The `pages` and
+## `figures` folders are this exporter's own, so the pages and pictures in them are cleared as before.
 static func _clear_site(root: String) -> void:
-	for entry: Array in [[root, ["html", "css", "js"]], ["%s/%s" % [root, PAGES_DIR], ["html"]],
-			["%s/%s" % [root, FIGURES_DIR], ["png"]]]:
+	for file_name: String in [STYLE_FILE, SEARCH_SCRIPT_FILE, SEARCH_DATA_FILE, INDEX_FILE]:
+		if FileAccess.file_exists("%s/%s" % [root, file_name]):
+			DirAccess.remove_absolute("%s/%s" % [root, file_name])
+	for entry: Array in [["%s/%s" % [root, PAGES_DIR], ["html"]], ["%s/%s" % [root, FIGURES_DIR], ["png"]]]:
 		var directory: String = str(entry[0])
 		if not DirAccess.dir_exists_absolute(directory):
 			continue

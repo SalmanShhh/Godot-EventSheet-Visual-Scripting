@@ -118,6 +118,7 @@ func include_shared_sheet(path: String) -> Dictionary:
 	if not bool(result["ok"]):
 		_dock._set_status(str(result["error"]), true)
 		return result
+	EventSheetBackups.backup_sheet(target)
 	var file: FileAccess = FileAccess.open(target, FileAccess.WRITE)
 	if file == null:
 		_dock._set_status(EventSheetL10n.translate("Could not write %s.") % target.get_file(), true)
@@ -125,6 +126,7 @@ func include_shared_sheet(path: String) -> Dictionary:
 	file.store_string(str(result["text"]))
 	file.close()
 	_dock._set_status(EventSheetL10n.translate("Included %s %s.") % [path.get_file(),
-		EventSheetL10n.translate(EventSheetSharedSheets.wiring_words(str(result["wiring"])))])
+		EventSheetL10n.translate(EventSheetSharedSheets.wiring_words(str(result["wiring"])))]
+		+ " " + EventSheetL10n.translate("Ctrl+Z does not take an include out, and the version before it is in Sheet Backups."))
 	_dock._load_sheet_from_path(target)
 	return result

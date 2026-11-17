@@ -5308,8 +5308,18 @@ func _on_restore_backup_pressed() -> void:
 	var selected: PackedInt32Array = _backups_list.get_selected_items()
 	if selected.is_empty() or _backups_list.get_item_metadata(selected[0]) == null:
 		return
-	_restore_backup_path(str(_backups_list.get_item_metadata(selected[0])))
+	var chosen_backup: String = str(_backups_list.get_item_metadata(selected[0]))
 	_backups_window.hide()
+	if not _dirty:
+		_restore_backup_path(chosen_backup)
+		return
+	# Unsaved edits are about to be replaced and the undo history cleared: ask, and keep them first.
+	load("res://addons/eventsheet/editor/dock/ask_first.gd").ask(self,
+		EventSheetL10n.translate("Replace your unsaved changes?"),
+		EventSheetL10n.translate("Your unsaved changes to this sheet are replaced, and Ctrl+Z cannot bring them back. They are kept in Sheet Backups first."),
+		EventSheetL10n.translate("Restore"), func() -> void:
+			load("res://addons/eventsheet/editor/dock/restore_guard.gd").keep_unsaved_state(_current_sheet, _current_sheet_path)
+			_restore_backup_path(chosen_backup))
 
 
 ## Restores a backup INTO the editor as an unsaved change: every storage property of

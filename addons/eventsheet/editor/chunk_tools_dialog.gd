@@ -133,8 +133,35 @@ func _help_body() -> String:
 	return EventSheetL10n.translate("Every scene in the folder named like a cell is opened, its children moved back to where the cell puts them, and the result saved as one scene. The chunk scenes are not changed, so a merge is always reversible by splitting again.")
 
 
-func _on_confirmed() -> void:
+## The files this run would write over: a merge's target scene when it exists, a split's chunk scenes
+## already in the folder under the same prefix.
+static func files_replaced(splitting: bool, folder: String, prefix: String, scene_path: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	if not splitting:
+		if FileAccess.file_exists(scene_path):
+			found.append(scene_path)
+		return found
+	var into: String = folder.rstrip("/") + "/"
+	var used_prefix: String = prefix.strip_edges() if not prefix.strip_edges().is_empty() else EventSheetChunkTools.DEFAULT_PREFIX
+	for file_name: String in DirAccess.get_files_at(into):
+		if file_name.begins_with(used_prefix + "_") and file_name.ends_with(".tscn"):
+			found.append(into + file_name)
+	return found
+
+
+func _on_confirmed(replace_confirmed: bool = false) -> void:
 	var values: Dictionary = _form.values()
+	var replaced: PackedStringArray = files_replaced(_splitting, str(values.get("folder", "")),
+		str(values.get("prefix", EventSheetChunkTools.DEFAULT_PREFIX)), str(values.get("scene", "")))
+	if not replaced.is_empty() and not replace_confirmed:
+		load("res://addons/eventsheet/editor/dock/ask_first.gd").ask(null,
+			EventSheetL10n.translate("Replace scenes?"),
+			(EventSheetL10n.translate("This writes over %d scene(s), starting with %s, and Ctrl+Z cannot take it back.") % [replaced.size(), replaced[0]])
+				+ " " + EventSheetL10n.translate("Each is kept in Sheet Backups first."),
+			EventSheetL10n.translate("Replace"), _on_confirmed.bind(true))
+		return
+	for old_file: String in replaced:
+		EventSheetBackups.backup_sheet(old_file)
 	var cell_size: Vector3 = Vector3(float(values.get("width", 1024.0)),
 		float(values.get("height", 1024.0)), float(values.get("depth", 1024.0)))
 	var flat: bool = not bool(values.get("stacked", false))
