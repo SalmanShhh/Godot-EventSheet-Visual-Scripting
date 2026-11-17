@@ -407,14 +407,18 @@ func use_for_every_sheet() -> void:
 		_dock._set_status(EventSheetL10n.translate("This sheet's look has no theme file. Save it from the Theme Editor first."), true)
 		return
 	var clearing: bool = files.project_default_path() == path
-	files.set_project_default("" if clearing else path)
+	var replaced: String = files.set_project_default("" if clearing else path)
 	_publish_active_style()
 	_dock._refresh_after_edit()
 	_populate_theme_menu()
 	if clearing:
 		_dock._set_status(EventSheetL10n.translate("Sheets with no theme of their own match the editor again."))
 	else:
-		_dock._set_status(EventSheetL10n.translate("Every sheet with no theme of its own now wears %s.") % path.get_file())
+		if not replaced.is_empty() and replaced != path:
+			_dock._set_status(EventSheetL10n.translate("Every sheet with no theme of its own now wears %s instead of %s. Edit > Undo in Godot puts %s back.") % [
+				path.get_file(), replaced.get_file(), replaced.get_file()])
+		else:
+			_dock._set_status(EventSheetL10n.translate("Every sheet with no theme of its own now wears %s.") % path.get_file())
 
 
 ## Called by the theme editor's "Apply To Current Sheet": assigns the working style to the

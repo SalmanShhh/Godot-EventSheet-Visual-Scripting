@@ -112,8 +112,11 @@ static func write_in_place(path: String, working: EventSheetEditorStyle) -> Erro
 
 
 ## Names the theme every sheet wears by default ("" goes back to matching the editor). In the editor the
-## setting is written to project.godot, the way Project Settings writes it.
-static func set_project_default(path: String) -> void:
-	ProjectSettings.set_setting(DEFAULT_SETTING, path)
-	if Engine.is_editor_hint():
-		ProjectSettings.save()
+## setting is written to project.godot as one step of Godot's own undo, so Edit > Undo puts the earlier
+## choice back. Returns the theme it replaced ("" when there was none).
+static func set_project_default(path: String) -> String:
+	var replaced: String = str(ProjectSettings.get_setting(DEFAULT_SETTING, "")) if ProjectSettings.has_setting(DEFAULT_SETTING) else ""
+	var label: String = EventSheetL10n.translate("Use %s for every sheet") % path.get_file() if not path.is_empty() \
+		else EventSheetL10n.translate("Match the editor again")
+	load("res://addons/eventforge/editor/undo_steps.gd").call("project_setting_step", DEFAULT_SETTING, path, label)
+	return replaced

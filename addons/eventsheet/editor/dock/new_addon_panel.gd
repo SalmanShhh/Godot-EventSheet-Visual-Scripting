@@ -571,6 +571,13 @@ func _write_global_row_for(before: Dictionary, after: Dictionary) -> String:
 	var scene: bool = bool(after["scene"])
 	if str(after["name"]) == current and scene == bool(before["scene"]):
 		return ""
+	# A name the project already uses for another global is never taken over.
+	if str(after["name"]) != current:
+		var taken: String = load("res://addons/eventsheet/editor/dock/autoload_guard.gd").held_elsewhere(
+			str(after["name"]), str(ProjectSettings.get_setting("autoload/" + current, "")))
+		if not taken.is_empty():
+			return " " + EventSheetL10n.translate("Its row in Project Settings > Globals > Autoload keeps the name %s: there is already a global named %s that loads %s.") % [
+				current, str(after["name"]), taken]
 	var target: String = str(ProjectSettings.get_setting("autoload/" + current, "")).trim_prefix("*")
 	if scene != bool(before["scene"]):
 		# A scene made here sits beside the script, the way a global's scene does.

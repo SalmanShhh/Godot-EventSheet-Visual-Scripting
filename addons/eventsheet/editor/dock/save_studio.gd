@@ -22,6 +22,7 @@ const BINDINGS_MODULE: String = "res://addons/eventforge/registration/modules/co
 const SAVE_AUTOLOAD: String = "SaveSystem"
 ## Where "Keep them in a scene" puts the Save System node when the autoload is a bare script.
 const SETTINGS_SCENE: String = "res://save_system.tscn"
+const AUTOLOAD_GUARD_PATH: String = "res://addons/eventsheet/editor/dock/autoload_guard.gd"
 const FORMATS: PackedStringArray = ["config", "json", "binary", "csv", "ini", "xml"]
 const FORMAT_EXTENSIONS: Dictionary = {"config": ".cfg", "json": ".json", "binary": ".sav", "csv": ".csv", "ini": ".ini", "xml": ".xml"}
 ## The Save System properties this window reads: its node's own, so the Inspector shows the same.
@@ -289,15 +290,20 @@ static func write_setting(scene_path: String, property: String, value: Variant) 
 
 ## Saves the Save System node as a scene and points the SaveSystem global at it - the way Godot keeps
 ## a node's settings, so they change here and in its Inspector alike. Returns "" or the problem.
-static func make_settings_scene(scene_path: String) -> String:
+static func make_settings_scene(scene_path: String, global_name: String = SAVE_AUTOLOAD) -> String:
 	# A file of that name may be the reader's own: it is never written over. One this button made
 	# earlier, and already running as the global, needs nothing.
 	if FileAccess.file_exists(scene_path):
 		if str(ProjectSettings.get_setting("autoload/%s" % SAVE_AUTOLOAD, "")) == "*%s" % scene_path:
 			return ""
 		return EventSheetL10n.translate("%s already exists, so nothing was changed. Rename or delete that file, or point the SaveSystem global at it yourself in Project Settings > Globals.") % scene_path
+	# A global of that name that loads something else is the reader's: it is never re-pointed.
+	var guard: GDScript = load(AUTOLOAD_GUARD_PATH)
+	var held: String = guard.held_elsewhere(global_name, scene_path)
+	if not held.is_empty():
+		return guard.clash_words(global_name, held)
 	var node: Node = Node.new()
-	node.name = SAVE_AUTOLOAD
+	node.name = global_name
 	node.set_script(load(SAVE_SYSTEM_SCRIPT))
 	var scene: PackedScene = PackedScene.new()
 	scene.pack(node)
@@ -305,9 +311,9 @@ static func make_settings_scene(scene_path: String) -> String:
 	var saved: Error = ResourceSaver.save(scene, scene_path)
 	if saved != OK:
 		return load("res://addons/eventforge/failure_words.gd").save_failed(scene_path, saved)
-	ProjectSettings.set_setting("autoload/%s" % SAVE_AUTOLOAD, "*%s" % scene_path)
-	if Engine.is_editor_hint():
-		ProjectSettings.save()
+	# One step of Godot's own undo, so Edit > Undo takes the global back off.
+	load("res://addons/eventforge/editor/undo_steps.gd").call("project_setting_step", "autoload/%s" % global_name,
+		"*%s" % scene_path, EventSheetL10n.translate("Add global %s") % global_name)
 	return ""
 
 
@@ -394,8 +400,18 @@ func _write(property: String, value: Variant) -> void:
 
 
 func _keep_settings_in_scene() -> void:
-	var problem: String = make_settings_scene(SETTINGS_SCENE)
-	_dock._set_status(problem if not problem.is_empty() else EventSheetL10n.translate("The SaveSystem global now runs save_system.tscn; its settings change here and in its Inspector. Undo does not cover this - to go back, point the SaveSystem global at the script again in Project Settings > Globals."), not problem.is_empty())
+	# A global already named SaveSystem that loads something else is the reader's: ask before going on.
+	var guard: GDScript = load(AUTOLOAD_GUARD_PATH)
+	var held: String = guard.held_elsewhere(SAVE_AUTOLOAD, SETTINGS_SCENE)
+	if not held.is_empty() and not FileAccess.file_exists(SETTINGS_SCENE):
+		guard.ask(_dock, SAVE_AUTOLOAD, held, func(chosen: String) -> void: _keep_settings_in_scene_as(chosen))
+		return
+	_keep_settings_in_scene_as(SAVE_AUTOLOAD)
+
+
+func _keep_settings_in_scene_as(global_name: String) -> void:
+	var problem: String = make_settings_scene(SETTINGS_SCENE, global_name)
+	_dock._set_status(problem if not problem.is_empty() else EventSheetL10n.translate("The %s global now runs save_system.tscn; its settings change here and in its Inspector. Edit > Undo in Godot takes the global off again.") % global_name, not problem.is_empty())
 	_load_settings()
 
 
