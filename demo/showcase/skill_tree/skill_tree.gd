@@ -1,5 +1,6 @@
 class_name SkillTreeShowcase
 extends Control
+## [b]Skill Tree[/b] - a data asset, laid out. Six skills in two branches live in adventurer_tree.tres with their costs, their prerequisites and what they grant. The screen spawns one button per skill and draws a line to each one it requires; grey means a prerequisite is missing, gold means it can be taken now, green means it is taken. Clicking one is a single Unlock row, which spends a point, records the level and hands the grant to StatForge - so Swift makes the runner faster with no formula written anywhere, and Double Jump grants nothing at all because the runner asks about it directly. Arrow keys move the runner, Space jumps.
 
 ## The Skill Tree data asset this screen draws.
 @export var tree: Resource = null
@@ -77,5 +78,3 @@ func _draw() -> void:
 			var from: Vector2 = Vector2(earlier_box.end.x, earlier_box.get_center().y) - global_position
 			var to: Vector2 = Vector2(box.position.x, box.get_center().y) - global_position
 			draw_line(from, to, Color(0.5, 0.62, 0.78), 2.0)
-
-# [b]Skill Tree[/b] - a data asset, laid out. Six skills in two branches live in adventurer_tree.tres with their costs, their prerequisites and what they grant. The screen spawns one button per skill and draws a line to each one it requires; grey means a prerequisite is missing, gold means it can be taken now, green means it is taken. Clicking one is a single Unlock row, which spends a point, records the level and hands the grant to StatForge - so Swift makes the runner faster with no formula written anywhere, and Double Jump grants nothing at all because the runner asks about it directly. Arrow keys move the runner, Space jumps.

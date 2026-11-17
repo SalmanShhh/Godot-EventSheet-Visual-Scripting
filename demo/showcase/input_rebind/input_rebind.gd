@@ -1,5 +1,6 @@
 class_name InputRebindDemo
 extends Control
+## [b]Input Rebind[/b] - a working rebind screen built from the Input/InputMap/Gamepad vocabulary: click Rebind, then press ANY key, mouse button, or gamepad button (the captured event binds verbatim). Binding labels read InputMap.action_get_events(...).as_text() - the Action Binding As Text pattern. Actions are created at runtime, so the demo leaves your project's Input Map alone.
 
 var rebinding_action: String = ""
 
@@ -78,5 +79,3 @@ func refresh_binding_labels() -> void:
 func binding_text(action_name: String) -> String:
 	var events: Array = InputMap.action_get_events(action_name)
 	return events[0].as_text() if not events.is_empty() else "unbound"
-
-# [b]Input Rebind[/b] - a working rebind screen built from the Input/InputMap/Gamepad vocabulary: click Rebind, then press ANY key, mouse button, or gamepad button (the captured event binds verbatim). Binding labels read InputMap.action_get_events(...).as_text() - the Action Binding As Text pattern. Actions are created at runtime, so the demo leaves your project's Input Map alone.

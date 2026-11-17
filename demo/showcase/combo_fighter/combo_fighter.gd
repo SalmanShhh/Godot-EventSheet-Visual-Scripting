@@ -1,5 +1,6 @@
 class_name ComboFighter
 extends Node2D
+## [b]Combo Fighter[/b] - the four pieces a fighting game is made of, each one a row. Press J (punch) and K (kick): the inputs collect into a rolling list with a 0.5 s window, and the move the list spells plays its animation. The uppercut's method track calls the hit frame, which freezes the whole game for 0.05 s - that is hit-stop. Between 0.3 s and 0.6 s of a move the next one may cancel it. A press made a few frames too early is buffered rather than dropped. Open this file as a sheet: every shape reads back as the row that writes it.
 
 var combo: Array = []
 var combo_timer: float = 0.0
@@ -52,5 +53,3 @@ func _on_hit_frame() -> void:
 	Engine.time_scale = 0.1
 	await get_tree().create_timer(0.05, true, false, true).timeout
 	Engine.time_scale = 1.0
-
-# [b]Combo Fighter[/b] - the four pieces a fighting game is made of, each one a row. Press J (punch) and K (kick): the inputs collect into a rolling list with a 0.5 s window, and the move the list spells plays its animation. The uppercut's method track calls the hit frame, which freezes the whole game for 0.05 s - that is hit-stop. Between 0.3 s and 0.6 s of a move the next one may cancel it. A press made a few frames too early is buffered rather than dropped. Open this file as a sheet: every shape reads back as the row that writes it.

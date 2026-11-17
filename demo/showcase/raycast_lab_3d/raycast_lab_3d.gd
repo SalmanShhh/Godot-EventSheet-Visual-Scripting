@@ -1,5 +1,6 @@
 class_name RaycastLab3DDemo
 extends Node3D
+## [b]Raycast Lab 3D[/b] - the same six questions as the 2D room, in the dimension where two of them only exist. [b]Cyan[/b] is [b]Cast Ray From Mouse Into[/b]: the camera projects a ray through your cursor and stores what it finds, which is the whole of click-to-select in 3D - the readout even names the mesh TRIANGLE it struck (Ray Result Face Index, a 3D-only fact). [b]Yellow[/b] is a RayCast3D NODE on the turning turret. [b]Blue[/b] is a ShapeCast3D sweeping with THICKNESS, parked at its safe fraction. [b]Pink[/b] is Cast Sphere Motion Into - how far a ball could roll before it jams. [b]Green[/b] rings mark what Query Bodies In Sphere caught. The camera orbits rather than being mouse-driven on purpose: a captured pointer has no screen position to project a picking ray through.
 
 var turret_deg: float = 0.0
 var orbit_deg: float = 0.0
@@ -127,5 +128,3 @@ func aim_beam(beam: Node3D, from: Vector3, to: Vector3) -> void:
 	beam.look_at(to, up)
 	# The mesh is a unit box on -Z, so scaling z by the span turns it into a beam of that length.
 	beam.scale = Vector3(1.0, 1.0, span)
-
-# [b]Raycast Lab 3D[/b] - the same six questions as the 2D room, in the dimension where two of them only exist. [b]Cyan[/b] is [b]Cast Ray From Mouse Into[/b]: the camera projects a ray through your cursor and stores what it finds, which is the whole of click-to-select in 3D - the readout even names the mesh TRIANGLE it struck (Ray Result Face Index, a 3D-only fact). [b]Yellow[/b] is a RayCast3D NODE on the turning turret. [b]Blue[/b] is a ShapeCast3D sweeping with THICKNESS, parked at its safe fraction. [b]Pink[/b] is Cast Sphere Motion Into - how far a ball could roll before it jams. [b]Green[/b] rings mark what Query Bodies In Sphere caught. The camera orbits rather than being mouse-driven on purpose: a captured pointer has no screen position to project a picking ray through.

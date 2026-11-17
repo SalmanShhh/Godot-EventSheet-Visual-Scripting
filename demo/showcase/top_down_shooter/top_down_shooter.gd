@@ -1,5 +1,6 @@
 class_name TopDownShooter
 extends Node2D
+## [b]Top-Down Shooter[/b] - the first game most event-sheet users make, built here in four small sheets: the player faces the mouse and fires where it points, monsters walk in from the edges, and one picking row - For each Monster where health <= 0 - blows up every monster that has run out of health.
 
 ## Monsters blown up.
 @export var score: int = 0
@@ -28,5 +29,3 @@ func _input(event: InputEvent) -> void:
 		var __spawn_bullet = load("res://demo/showcase/top_down_shooter/bullet.tscn").instantiate()
 		__spawn_bullet.position = $Player.position
 		add_child(__spawn_bullet)
-
-# [b]Top-Down Shooter[/b] - the first game most event-sheet users make, built here in four small sheets: the player faces the mouse and fires where it points, monsters walk in from the edges, and one picking row - For each Monster where health <= 0 - blows up every monster that has run out of health.

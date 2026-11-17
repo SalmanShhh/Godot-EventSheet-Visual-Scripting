@@ -1,5 +1,6 @@
 class_name SkatePark
 extends Node2D
+## [b]Skate Park[/b] - the Skateboard pack, playable. The slope hands you speed (Roll With The Slope projects gravity along the floor), the rail across the middle is an ordinary Path2D you snap to, and the quarterpipe at the end gives back what the drop gave you. Left/Right steer the balance, Space pushes, Up ollies, and holding Right in the air spins. Nothing here does skating math - every row is a Skateboard row.
 
 ## Everything banked so far this run.
 @export var score: int = 0
@@ -44,5 +45,3 @@ func _on_bailed() -> void:
 	$Skater/Checkpoint.respawn()
 	$Skater.velocity = Vector2.ZERO
 	$Skater.rotation = 0.0
-
-# [b]Skate Park[/b] - the Skateboard pack, playable. The slope hands you speed (Roll With The Slope projects gravity along the floor), the rail across the middle is an ordinary Path2D you snap to, and the quarterpipe at the end gives back what the drop gave you. Left/Right steer the balance, Space pushes, Up ollies, and holding Right in the air spins. Nothing here does skating math - every row is a Skateboard row.

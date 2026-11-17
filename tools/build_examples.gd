@@ -442,9 +442,8 @@ func _build_carousel() -> bool:
 			"attributes": {"tooltip": "Impact moments played.", "range": {"min": "0", "max": "9999", "step": "1"}}}
 	}
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Carousel of Juice[/b] - 8 tiles sine-sway and spring-pop on the beat (one reused juice_tile function), and every beat pulses a vignette over the screen and pulls the colour channels apart along a fresh angle. A runtime-toggleable Juice group plus an if/elif/else keypress chain re-skin the board: [b]ui_accept[/b] starts the party - an impact moment at your own intensity, one more effect on the post stack, then the live look written to user:// and worn straight back off disk - and [b]ui_cancel[/b] calms it and starts over behind a fade. One tile is drawn blended as screen - Blend Modes ships as an autoload, and this row is that autoload's verb called on a child node of the same name, so the showcase runs with no project setting added. Watch beat/intensity/moments_played stream in Live Values."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Carousel of Juice[/b] - 8 tiles sine-sway and spring-pop on the beat (one reused juice_tile function), and every beat pulses a vignette over the screen and pulls the colour channels apart along a fresh angle. A runtime-toggleable Juice group plus an if/elif/else keypress chain re-skin the board: [b]ui_accept[/b] starts the party - an impact moment at your own intensity, one more effect on the post stack, then the live look written to user:// and worn straight back off disk - and [b]ui_cancel[/b] calms it and starts over behind a fade. One tile is drawn blended as screen - Blend Modes ships as an autoload, and this row is that autoload's verb called on a child node of the same name, so the showcase runs with no project setting added. Watch beat/intensity/moments_played stream in Live Values."
 
 	# Reused function: juice one tile by index.
 	var fn: EventFunction = EventFunction.new()
@@ -539,7 +538,7 @@ func _build_carousel() -> bool:
 	# reaches every other blend word. The pack's own spelling is the BlendModes AUTOLOAD; the demo
 	# reaches it through a child node of that name instead, because this builder writes showcases
 	# and never project settings, and a showcase that only runs after a human edits project.godot
-	# is not a showcase. The about row says so, so the reader is not left inferring it.
+	# is not a showcase. The class description says so, so the reader is not left inferring it.
 	seed_row.actions.append(_action("BlendModesAddon", "method:blend_as", "$BlendModes.blend_as({item}, \"{mode}\", {strength})", {"item": "$Tiles/Tile3", "mode": "screen", "strength": "1.0"}))
 	sheet.events.append(seed_row)
 
@@ -631,9 +630,8 @@ func _build_starfall() -> bool:
 	sheet.custom_class_name = "Starfall"
 	sheet.emit_live_values = false
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Starfall[/b] - a complete restartable arcade game authored as events: move the ship (ui_left/ui_right) to catch falling stars. Shows an enum+match state machine (PLAYING/GAME_OVER), a group pick-filter that scores & culls stars, an Every-2s spawner, and if/elif input branches. Miss 3 and it's GAME OVER - press ui_accept to restart."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Starfall[/b] - a complete restartable arcade game authored as events: move the ship (ui_left/ui_right) to catch falling stars. Shows an enum+match state machine (PLAYING/GAME_OVER), a group pick-filter that scores & culls stars, an Every-2s spawner, and if/elif input branches. Miss 3 and it's GAME OVER - press ui_accept to restart."
 
 	var state_enum: EnumRow = EnumRow.new()
 	state_enum.enum_name = "State"
@@ -769,9 +767,8 @@ func _build_quest_fsm() -> bool:
 	sheet.custom_class_name = "QuestFsm"
 	sheet.emit_live_values = false
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Quest & Inventory FSM[/b] - a self-driving quest engine (no input): an enum+match state machine walks OFFERED -> ACTIVE -> COMPLETE, a reused grant_item() function fills a Dictionary inventory + Array quest log and emits signals, and signal: triggers spring/tween the icon on every beat. Proves the sheet compiles real software logic - collections, signals, functions, match - not just movement."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Quest & Inventory FSM[/b] - a self-driving quest engine (no input): an enum+match state machine walks OFFERED -> ACTIVE -> COMPLETE, a reused grant_item() function fills a Dictionary inventory + Array quest log and emits signals, and signal: triggers spring/tween the icon on every beat. Proves the sheet compiles real software logic - collections, signals, functions, match - not just movement."
 
 	var qstate: EnumRow = EnumRow.new()
 	qstate.enum_name = "QuestState"
@@ -879,9 +876,8 @@ func _build_utility_ai() -> bool:
 	sheet.custom_class_name = "GuardBrainDemo"
 	sheet.emit_live_values = false
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Guard Brain (Utility AI)[/b] - a self-driving guard with no input. The UtilityBrain scores three actions (patrol / chase / flee) from a threat signal that rises and falls plus a stamina wave; a response curve shapes each score, and the highest wins. Set Input -> Evaluate -> read Current Action is the whole loop - the addon drives a real decision maker, not a fixed state machine. Attach a UtilityBrain to any node and score your own actions the same way."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Guard Brain (Utility AI)[/b] - a self-driving guard with no input. The UtilityBrain scores three actions (patrol / chase / flee) from a threat signal that rises and falls plus a stamina wave; a response curve shapes each score, and the highest wins. Set Input -> Evaluate -> read Current Action is the whole loop - the addon drives a real decision maker, not a fixed state machine. Attach a UtilityBrain to any node and score your own actions the same way."
 
 	sheet.events.append(_local_var("t", TYPE_FLOAT, "float", 0.0))
 	sheet.events.append(_local_var("threat", TYPE_FLOAT, "float", 0.0))
@@ -948,9 +944,8 @@ func _build_htn_agent() -> bool:
 	sheet.custom_class_name = "ChefPlannerDemo"
 	sheet.emit_live_values = false
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Chef Planner (HTN Agent)[/b] - a self-driving planner, no input. The compound task make_meal decomposes (via a method whose world-state condition holds) into an ordered plan gather -> cook -> serve; a tick marks each primitive task complete and walks the plan to the end. Add tasks + methods, Request Plan, Mark Task Complete - the whole hierarchical-planning loop. Attach an HTN Agent to any node and give it your own task network."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Chef Planner (HTN Agent)[/b] - a self-driving planner, no input. The compound task make_meal decomposes (via a method whose world-state condition holds) into an ordered plan gather -> cook -> serve; a tick marks each primitive task complete and walks the plan to the end. Add tasks + methods, Request Plan, Mark Task Complete - the whole hierarchical-planning loop. Attach an HTN Agent to any node and give it your own task network."
 
 	# One-time setup: declare the task network, seed the world, and plan.
 	var setup: EventRow = EventRow.new()
@@ -1047,9 +1042,8 @@ func _build_uhtn_planning() -> bool:
 	sheet.custom_class_name = "GuardPostDemo"
 	sheet.emit_live_values = false
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Guard Post (UHTN Planning)[/b] - Utility AI steering an HTN, fully data-driven. The whole plan lives in guard_plan.tres (Inspector grids: tasks, methods, preconditions, scorer curves) dropped on the planner's Plan Resource slot. The prowler sweeps in and out; a closeness fact through a linear curve ranks the chase method LIVE, so far = watch (fixed utility 0.25) and near = chase, with no re-authoring. Oscillating health feeds a fear scorer (inverse curve) whose flee method only competes while the hurt precondition holds. Every 9s Force Task pushes a scripted salute beat. The HUD shows both scorer values ticking - tune the curves in the .tres and watch behavior change."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Guard Post (UHTN Planning)[/b] - Utility AI steering an HTN, fully data-driven. The whole plan lives in guard_plan.tres (Inspector grids: tasks, methods, preconditions, scorer curves) dropped on the planner's Plan Resource slot. The prowler sweeps in and out; a closeness fact through a linear curve ranks the chase method LIVE, so far = watch (fixed utility 0.25) and near = chase, with no re-authoring. Oscillating health feeds a fear scorer (inverse curve) whose flee method only competes while the hurt precondition holds. Every 9s Force Task pushes a scripted salute beat. The HUD shows both scorer values ticking - tune the curves in the .tres and watch behavior change."
 
 	# Facts every tick: closeness from the real prowler distance, health on a slow sine, hurt from health.
 	var facts: EventRow = EventRow.new()
@@ -1157,9 +1151,8 @@ func _build_platformer_shooter() -> bool:
 	sheet.custom_class_name = "PlatformerShooter"
 	sheet.emit_live_values = false
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Platformer-Shooter[/b] - the new Platformer + Weapon Kit packs working together. Run with A/D, jump with Up (double jump + coyote time + variable height from the Platformer pack), and hold Space to shoot (fire-rate, ammo and auto-reload from the Weapon Kit). Shots destroy the red targets drifting in from the right."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Platformer-Shooter[/b] - the new Platformer + Weapon Kit packs working together. Run with A/D, jump with Up (double jump + coyote time + variable height from the Platformer pack), and hold Space to shoot (fire-rate, ammo and auto-reload from the Weapon Kit). Shots destroy the red targets drifting in from the right."
 
 	sheet.variables = {
 		"score": {"type": "int", "default": 0, "exported": true,
@@ -1299,9 +1292,8 @@ func _build_swarm() -> bool:
 	sheet.custom_class_name = "Swarm"
 	sheet.emit_live_values = false
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Swarm[/b] - frame-spreading made visible. On Ready spawns 800 sprites into the \"swarm\" group; ONE For Each with a frame-spread budget of 90/frame wobbles them, so only a slice updates each frame and the colour refresh SWEEPS through the crowd - that visible wave IS the spreading. The FPS stays pinned even though the loop never touches the whole crowd in a single frame. Tick frame_spread_count on any For Each to get this - no behavior, no await."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Swarm[/b] - frame-spreading made visible. On Ready spawns 800 sprites into the \"swarm\" group; ONE For Each with a frame-spread budget of 90/frame wobbles them, so only a slice updates each frame and the colour refresh SWEEPS through the crowd - that visible wave IS the spreading. The FPS stays pinned even though the loop never touches the whole crowd in a single frame. Tick frame_spread_count on any For Each to get this - no behavior, no await."
 
 	sheet.variables = {
 		"count": {"type": "int", "default": 800, "exported": true,
@@ -1415,9 +1407,8 @@ if position.y > 560.0:
 	var arena: EventSheetResource = EventSheetResource.new()
 	arena.host_class = "Node2D"
 	arena.custom_class_name = "FamilyArena"
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Family Arena[/b] - each [b]Enemy[/b] owns its own behaviour: its sheet moves it by its own fall_speed, so nothing outside has to. This arena sheet does only what is shared: it spawns the Enemies, and it runs the one rule that is about the whole family - a strike that walks every Enemy (a typed For each over the family) and damages every one through the Enemy: Take Damage ACE. Add a new enemy type and not one rule changes - that's horizontal reuse."
-	arena.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	arena.class_description = "[b]Family Arena[/b] - each [b]Enemy[/b] owns its own behaviour: its sheet moves it by its own fall_speed, so nothing outside has to. This arena sheet does only what is shared: it spawns the Enemies, and it runs the one rule that is about the whole family - a strike that walks every Enemy (a typed For each over the family) and damages every one through the Enemy: Take Damage ACE. Add a new enemy type and not one rule changes - that's horizontal reuse."
 	arena.variables = {
 		"spawn_count": {"type": "int", "default": 18, "exported": true,
 			"attributes": {"tooltip": "How many Enemies to spawn.", "range": {"min": "4", "max": "60", "step": "1"}}}
@@ -1494,9 +1485,8 @@ func _build_inspector_playground() -> bool:
 			"attributes": {"tooltip": "Drift amplitude - drag the bar.", "group": "Stats", "subgroup": "Tuning", "drawer": "progress_bar", "look_line": true, "range": {"min": "0", "max": "200", "step": "1"}}}
 	}
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Inspector Playground[/b] - select this node and open the Inspector: every exported variable uses a [b]custom drawer[/b] (a direction dial, a colour swatch row, a texture preview, a curve, progress bars) sorted into [b]@export_group[/b] sections. Tweak them and press Play - the ship drifts along the dial, scales with health, and wears your colour. All from designer-tweakable variables, zero code."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Inspector Playground[/b] - select this node and open the Inspector: every exported variable uses a [b]custom drawer[/b] (a direction dial, a colour swatch row, a texture preview, a curve, progress bars) sorted into [b]@export_group[/b] sections. Tweak them and press Play - the ship drifts along the dial, scales with health, and wears your colour. All from designer-tweakable variables, zero code."
 
 	# OnReady: adopt the emblem texture if the designer assigned one.
 	var ready_row: EventRow = EventRow.new()
@@ -1586,9 +1576,8 @@ func _build_enemy_stats() -> bool:
 				"drawer": "min_max", "range": {"min": "0", "max": "30", "step": "1"}}}
 	}
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]EnemyStats[/b] - a Custom Resource whose Inspector was [b]designed from this sheet[/b]: accent section headers, an info note, a [b]required[/b] portrait slot (red warning until assigned), a min-max damage range, a [b]loot table edited as a grid[/b], a clamped health bar, swatches, and an inline curve. Click [i]enemy_stats_example.tres[/i] in the FileSystem to see it; every marker is a plain comment or annotation, so the resource works without the plugin."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]EnemyStats[/b] - a Custom Resource whose Inspector was [b]designed from this sheet[/b]: accent section headers, an info note, a [b]required[/b] portrait slot (red warning until assigned), a min-max damage range, a [b]loot table edited as a grid[/b], a clamped health bar, swatches, and an inline curve. Click [i]enemy_stats_example.tres[/i] in the FileSystem to see it; every marker is a plain comment or annotation, so the resource works without the plugin."
 	sheet.events.append(_raw("func roll_damage() -> float:\n\treturn randf_range(combat_damage_range.x, combat_damage_range.y)"))
 
 	if not _compile(sheet, "res://demo/showcase/enemy_stats/enemy_stats.tres", "res://demo/showcase/enemy_stats/enemy_stats.gd"):
@@ -1635,9 +1624,8 @@ func _build_menu_starter() -> bool:
 	sheet.variables = {
 		"time_alive": {"type": "float", "default": 0.0, "exported": false}
 	}
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Menu Starter[/b] - a complete menu flow (title / settings / game / pause overlay) driven by [b]one HUD Kit behavior[/b]: screens switch by NAME, bars and labels update by NAME, and every Button reports through the pack's single [b]On Button Pressed[/b] trigger - the scene contains [b]zero connected signals[/b]. Copy this scene as your project's UI starting point."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Menu Starter[/b] - a complete menu flow (title / settings / game / pause overlay) driven by [b]one HUD Kit behavior[/b]: screens switch by NAME, bars and labels update by NAME, and every Button reports through the pack's single [b]On Button Pressed[/b] trigger - the scene contains [b]zero connected signals[/b]. Copy this scene as your project's UI starting point."
 
 	var on_ready: EventRow = EventRow.new()
 	on_ready.trigger_provider_id = "Core"
@@ -1773,9 +1761,8 @@ const NAV_AGENT_3D := "res://eventsheet_addons/nav_agent_3d/nav_agent_3d_behavio
 func _build_fps_arena() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Node3D"
-	var about: CommentRow = CommentRow.new()
-	about.text = "FPS Arena: the FPSController behavior does all the work - this sheet only prints the controls and flips the camera mode on Tab."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "FPS Arena: the FPSController behavior does all the work - this sheet only prints the controls and flips the camera mode on Tab."
 	var ready_event: EventRow = EventRow.new()
 	ready_event.trigger_provider_id = "Core"
 	ready_event.trigger_id = "OnReady"
@@ -1950,9 +1937,8 @@ func _build_input_rebind() -> bool:
 	sheet.variables = {
 		"rebinding_action": {"type": "String", "default": "", "exported": false}
 	}
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Input Rebind[/b] - a working rebind screen built from the Input/InputMap/Gamepad vocabulary: click Rebind, then press ANY key, mouse button, or gamepad button (the captured event binds verbatim). Binding labels read InputMap.action_get_events(...).as_text() - the Action Binding As Text pattern. Actions are created at runtime, so the demo leaves your project's Input Map alone."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Input Rebind[/b] - a working rebind screen built from the Input/InputMap/Gamepad vocabulary: click Rebind, then press ANY key, mouse button, or gamepad button (the captured event binds verbatim). Binding labels read InputMap.action_get_events(...).as_text() - the Action Binding As Text pattern. Actions are created at runtime, so the demo leaves your project's Input Map alone."
 
 	var on_ready: EventRow = EventRow.new()
 	on_ready.trigger_provider_id = "Core"
@@ -2150,9 +2136,8 @@ func _build_path_chase() -> bool:
 		"bridge_on": {"type": "bool", "default": false, "exported": false},
 		"platform_time": {"type": "float", "default": 0.0, "exported": false}
 	}
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Path Chase[/b] - Platformer Pathfinding + Platformer Movement on one Chaser: the graph is built from the TileMapLayer once, then Find Path To Node re-routes to the Player every second. The pathfinder derives jump reach from the movement pack and steers it through the ai_move_axis seam - the same movement rules you play with, variable jump included. The purple PORTAL pair links the ground to the floating platform, the tile BRIDGE over the gap toggles every 3 seconds + Regenerate Nav Graph, the red zone is a DEADLY HAZARD routes refuse (forcing the high-platform detour), the orange ELEVATOR is a registered moving platform - the Chaser waits for it, rides it, and walks off onto the tower - and the yellow Guard PATROLS the high platform (Start Patrol: walk to an end, wait, turn), reusing the Chaser's graph because both carry the same Map Tag. Green line = the Chaser's path."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Path Chase[/b] - Platformer Pathfinding + Platformer Movement on one Chaser: the graph is built from the TileMapLayer once, then Find Path To Node re-routes to the Player every second. The pathfinder derives jump reach from the movement pack and steers it through the ai_move_axis seam - the same movement rules you play with, variable jump included. The purple PORTAL pair links the ground to the floating platform, the tile BRIDGE over the gap toggles every 3 seconds + Regenerate Nav Graph, the red zone is a DEADLY HAZARD routes refuse (forcing the high-platform detour), the orange ELEVATOR is a registered moving platform - the Chaser waits for it, rides it, and walks off onto the tower - and the yellow Guard PATROLS the high platform (Start Patrol: walk to an end, wait, turn), reusing the Chaser's graph because both carry the same Map Tag. Green line = the Chaser's path."
 
 	var on_ready: EventRow = EventRow.new()
 	on_ready.trigger_provider_id = "Core"
@@ -2441,9 +2426,8 @@ func _build_platformer_pathfinding() -> bool:
 	sheet.custom_class_name = "PlatformerPathfindingDemo"
 	sheet.emit_live_values = false
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Platformer Pathfinding[/b] - the smallest chaser the pack can make. On ready the graph is built from the TileMapLayer and Find Path To Node is called ONCE: the follow re-routes itself from then on, so there is no repath timer to write. The Chaser carries no movement code of its own - Platformer Pathfinding steers the sibling Platformer Movement through its ai_move_axis seam, which is why it accelerates, jumps the 3-tile gap and climbs both ledges under exactly the rules you play by. Green line = the route it is walking."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Platformer Pathfinding[/b] - the smallest chaser the pack can make. On ready the graph is built from the TileMapLayer and Find Path To Node is called ONCE: the follow re-routes itself from then on, so there is no repath timer to write. The Chaser carries no movement code of its own - Platformer Pathfinding steers the sibling Platformer Movement through its ai_move_axis seam, which is why it accelerates, jumps the 3-tile gap and climbs both ledges under exactly the rules you play by. Green line = the route it is walking."
 
 	# The whole pack, in one event: the graph, the debug line, and the follow that never stops.
 	var setup: EventRow = EventRow.new()
@@ -2672,9 +2656,8 @@ func _build_top_down_shooter() -> bool:
 		"score": {"type": "int", "default": 0, "exported": true,
 			"attributes": {"tooltip": "Monsters blown up."}}
 	}
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Top-Down Shooter[/b] - the first game most event-sheet users make, built here in four small sheets: the player faces the mouse and fires where it points, monsters walk in from the edges, and one picking row - For each Monster where health <= 0 - blows up every monster that has run out of health."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Top-Down Shooter[/b] - the first game most event-sheet users make, built here in four small sheets: the player faces the mouse and fires where it points, monsters walk in from the edges, and one picking row - For each Monster where health <= 0 - blows up every monster that has run out of health."
 
 	var aim: EventRow = EventRow.new()
 	aim.trigger_provider_id = "Core"; aim.trigger_id = "OnProcess"
@@ -2799,9 +2782,8 @@ func _build_draw_lab() -> bool:
 		"paste_timer": {"type": "float", "default": 0.0, "exported": false},
 		"baked": {"type": "bool", "default": false, "exported": false}
 	}
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Draw Lab[/b] - four Drawing Canvases with different jobs. The Player carries an AUTO-CLEAR canvas redrawing a raycast Line Of Sight fan every tick (the walls carve it); the Enemy carries one redrawing a rotating attack-telegraph cone; the whole-screen PERSISTENT canvas keeps everything drawn on it - the paint trail dripping under the Player and the target-marker DRAWING PREFABS (an ordered shape formation authored as a .tres, replayed by Draw Prefab at any position/scale/rotation - press Space to stamp one where you stand); and the center canvas ribbons the orbiting comet."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Draw Lab[/b] - four Drawing Canvases with different jobs. The Player carries an AUTO-CLEAR canvas redrawing a raycast Line Of Sight fan every tick (the walls carve it); the Enemy carries one redrawing a rotating attack-telegraph cone; the whole-screen PERSISTENT canvas keeps everything drawn on it - the paint trail dripping under the Player and the target-marker DRAWING PREFABS (an ordered shape formation authored as a .tres, replayed by Draw Prefab at any position/scale/rotation - press Space to stamp one where you stand); and the center canvas ribbons the orbiting comet."
 
 	var on_ready: EventRow = EventRow.new()
 	on_ready.trigger_provider_id = "Core"
@@ -3021,9 +3003,8 @@ func _build_raycast_lab() -> bool:
 		"gate_travel": {"type": "float", "default": 1.0, "exported": false}
 	}
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Raycast Lab[/b] - six ways to ask the physics world a question, all drawn live. [b]Yellow[/b] is a RayCast2D NODE sweeping for whatever it can see. [b]Cyan[/b] is Cast Ray Into, firing ONE ray at your cursor and storing the result, which the Ray Result verbs then read for the hit point, the surface normal, and whether it was a target - three facts, one cast. [b]Green[/b] is Query Bodies In Circle collecting everything within 130px; [b]white[/b] is Query Bodies Under Mouse. [b]Pink[/b] is Cast Circle Motion Into - how far a disc could slide before it jams, which is how you move something fast without it tunnelling through a wall. [b]Blue[/b] is a ShapeCast2D sweeping the corridor: a ray with THICKNESS, parked at its safe fraction."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Raycast Lab[/b] - six ways to ask the physics world a question, all drawn live. [b]Yellow[/b] is a RayCast2D NODE sweeping for whatever it can see. [b]Cyan[/b] is Cast Ray Into, firing ONE ray at your cursor and storing the result, which the Ray Result verbs then read for the hit point, the surface normal, and whether it was a target - three facts, one cast. [b]Green[/b] is Query Bodies In Circle collecting everything within 130px; [b]white[/b] is Query Bodies Under Mouse. [b]Pink[/b] is Cast Circle Motion Into - how far a disc could slide before it jams, which is how you move something fast without it tunnelling through a wall. [b]Blue[/b] is a ShapeCast2D sweeping the corridor: a ray with THICKNESS, parked at its safe fraction."
 
 	# ── The casting tick. Every cast below is a real raycast ACE row. ──
 	var tick: EventRow = EventRow.new()
@@ -3326,9 +3307,8 @@ func _build_raycast_lab_3d() -> bool:
 		"sweep_travel": {"type": "float", "default": 1.0, "exported": false}
 	}
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Raycast Lab 3D[/b] - the same six questions as the 2D room, in the dimension where two of them only exist. [b]Cyan[/b] is [b]Cast Ray From Mouse Into[/b]: the camera projects a ray through your cursor and stores what it finds, which is the whole of click-to-select in 3D - the readout even names the mesh TRIANGLE it struck (Ray Result Face Index, a 3D-only fact). [b]Yellow[/b] is a RayCast3D NODE on the turning turret. [b]Blue[/b] is a ShapeCast3D sweeping with THICKNESS, parked at its safe fraction. [b]Pink[/b] is Cast Sphere Motion Into - how far a ball could roll before it jams. [b]Green[/b] rings mark what Query Bodies In Sphere caught. The camera orbits rather than being mouse-driven on purpose: a captured pointer has no screen position to project a picking ray through."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Raycast Lab 3D[/b] - the same six questions as the 2D room, in the dimension where two of them only exist. [b]Cyan[/b] is [b]Cast Ray From Mouse Into[/b]: the camera projects a ray through your cursor and stores what it finds, which is the whole of click-to-select in 3D - the readout even names the mesh TRIANGLE it struck (Ray Result Face Index, a 3D-only fact). [b]Yellow[/b] is a RayCast3D NODE on the turning turret. [b]Blue[/b] is a ShapeCast3D sweeping with THICKNESS, parked at its safe fraction. [b]Pink[/b] is Cast Sphere Motion Into - how far a ball could roll before it jams. [b]Green[/b] rings mark what Query Bodies In Sphere caught. The camera orbits rather than being mouse-driven on purpose: a captured pointer has no screen position to project a picking ray through."
 
 	# ── The casting tick. Every cast below is a real raycast ACE row. ──
 	var tick: EventRow = EventRow.new()
@@ -3797,9 +3777,8 @@ func _build_hierarchy_playground() -> bool:
 		"squad_hp": {"type": "int", "default": 0, "exported": false}
 	}
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Hierarchy Playground[/b] - everything a game does to the scene tree while it runs, in one room. [b]Space[/b] mounts the rider onto the horse's [b]Saddle[/b] and dismounts again: mounting SNAPS the rider to its new parent, dismounting hands it back to the layout keeping the place it stands in. The [b]hat[/b] is a child of the rider's head that follows position and angle but NOT size - the flag that Godot has no single property for, so a RemoteTransform3D drives it instead. The [b]health bar[/b] is still a child and still dies with the rider, but ignores its movement, which is why it never tilts. The [b]squad[/b] is healed by ONE walk over the leader's children. The [b]camera[/b] orbits because its parent pivot turns - it does nothing itself. The [b]crates[/b] each cast a ray down and park on whatever the ray found."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Hierarchy Playground[/b] - everything a game does to the scene tree while it runs, in one room. [b]Space[/b] mounts the rider onto the horse's [b]Saddle[/b] and dismounts again: mounting SNAPS the rider to its new parent, dismounting hands it back to the layout keeping the place it stands in. The [b]hat[/b] is a child of the rider's head that follows position and angle but NOT size - the flag that Godot has no single property for, so a RemoteTransform3D drives it instead. The [b]health bar[/b] is still a child and still dies with the rider, but ignores its movement, which is why it never tilts. The [b]squad[/b] is healed by ONE walk over the leader's children. The [b]camera[/b] orbits because its parent pivot turns - it does nothing itself. The [b]crates[/b] each cast a ray down and park on whatever the ray found."
 
 	# ── Start of layout: build the tree the demo starts from. ──
 	var setup: EventRow = EventRow.new()
@@ -4136,9 +4115,8 @@ func _build_boomer_door_sheet() -> bool:
 		"locked_hint": {"type": "String", "default": "", "exported": false,
 			"attributes": {"tooltip": "What to tell the player when the door refuses. The level's HUD reads it."}}
 	}
-	var about: CommentRow = CommentRow.new()
-	about.text = "Keycard door: it opens when the key fits and says so when it does not."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description += "\n\n" + "Keycard door: it opens when the key fits and says so when it does not."
 	var open_door: EventFunction = EventFunction.new()
 	open_door.function_name = "open_door"
 	open_door.description = "Opens the door and leaves it open. Try Door calls this when the key fits."
@@ -4169,9 +4147,8 @@ func _build_boomer_grunt_sheet() -> bool:
 		"shout_radius": {"type": "float", "default": 9.0, "exported": true,
 			"attributes": {"tooltip": "How far its shout carries when something hurts it."}}
 	}
-	var about: CommentRow = CommentRow.new()
-	about.text = "A grunt: told who to go for by Alert Enemies Within, and shouting to the room when it is hurt."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description += "\n\n" + "A grunt: told who to go for by Alert Enemies Within, and shouting to the room when it is hurt."
 	# `target` is a NODE, which the variables table has no spelling for, so it is declared here -
 	# the same reason the FPS Controller pack declares its gravity direction as a class-level line.
 	var member: RawCodeRow = RawCodeRow.new()
@@ -4227,9 +4204,8 @@ func _build_boomer_pickup_sheet() -> bool:
 		"respawn_seconds": {"type": "float", "default": 3.0, "exported": true,
 			"attributes": {"tooltip": "How long the pickup stays gone before it comes back."}}
 	}
-	var about: CommentRow = CommentRow.new()
-	about.text = "A health pickup: taken, then back after its own timer."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description += "\n\n" + "A health pickup: taken, then back after its own timer."
 	var taken: EventRow = EventRow.new()
 	taken.trigger_provider_id = "Core"
 	taken.trigger_id = "OnBodyEntered"
@@ -4263,9 +4239,8 @@ func _build_boomer_level_sheet() -> bool:
 		"level_over": {"type": "bool", "default": false, "exported": false,
 			"attributes": {"tooltip": "True once the exit is reached - the clock stops and the tally is written."}}
 	}
-	var about: CommentRow = CommentRow.new()
-	about.text = "Boomer Level: WASD moves, the mouse looks, Tab throws a rocket at the grunts. Find the red keycard, open the door, take the exit."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description += "\n\n" + "Boomer Level: WASD moves, the mouse looks, Tab throws a rocket at the grunts. Find the red keycard, open the door, take the exit."
 
 	var ready_event: EventRow = EventRow.new()
 	ready_event.trigger_provider_id = "Core"
@@ -4278,8 +4253,10 @@ func _build_boomer_level_sheet() -> bool:
 	var clock: EventRow = EventRow.new()
 	clock.trigger_provider_id = "Core"
 	clock.trigger_id = "OnPhysicsProcess"
-	clock.conditions.append(_condition("Core", "CompareVar", _ace_template("CompareVar"),
-		{"var_name": "level_over", "op": "==", "value": "false"}))
+	# Not over yet: the boolean row, negated, reads `if not level_over:` where a comparison read `level_over == false`.
+	var not_over: ACECondition = _condition("Core", "IsBoolSet", _ace_template("IsBoolSet"), {"var_name": "level_over"})
+	not_over.negated = true
+	clock.conditions.append(not_over)
 	clock.actions.append(_action("Core", "AddVar", _ace_template("AddVar"),
 		{"var_name": "level_seconds", "amount": "delta"}))
 	sheet.events.append(clock)
@@ -4627,9 +4604,8 @@ func _build_mirror_and_flip() -> bool:
 			"attributes": {"tooltip": "How fast the hero is moving right now. Its sign is the whole of which way it faces."}}
 	}
 
-	var hero_about: CommentRow = CommentRow.new()
-	hero_about.text = "[b]Mirror Hero[/b] - one row faces the way it moves, and because it mirrors the WHOLE object every child comes along: the sword's ray reaches the way the hero looks, the muzzle point moves to the other hand, the dust blows the right way. The [b]name plate[/b] is the exception - Keep Upright re-negates it, so the text reads forwards whichever way the hero faces."
-	hero.events.append(hero_about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	hero.class_description += "\n\n" + "[b]Mirror Hero[/b] - one row faces the way it moves, and because it mirrors the WHOLE object every child comes along: the sword's ray reaches the way the hero looks, the muzzle point moves to the other hand, the dust blows the right way. The [b]name plate[/b] is the exception - Keep Upright re-negates it, so the text reads forwards whichever way the hero faces."
 
 	var pace: EventRow = EventRow.new()
 	pace.trigger_provider_id = "Core"
@@ -4666,9 +4642,8 @@ func _build_mirror_and_flip() -> bool:
 			"attributes": {"tooltip": "Flip the third tile, so one wall drawing covers both sides of the corridor."}}
 	}
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Mirror and Flip[/b] - one verb, every host. The [b]hero[/b] mirrors as a whole object and drags its ray, its muzzle and its dust along. The [b]panel[/b] mirrors in place because its pivot moves to the middle first. The [b]sub-viewport[/b] mirrors its view. The third [b]tile[/b] carries the flip bit, so one drawing covers both sides. The [b]3D twin[/b] does NOT scale itself negative - it turns around, which is the honest 3D answer and leaves nothing inside out."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Mirror and Flip[/b] - one verb, every host. The [b]hero[/b] mirrors as a whole object and drags its ray, its muzzle and its dust along. The [b]panel[/b] mirrors in place because its pivot moves to the middle first. The [b]sub-viewport[/b] mirrors its view. The third [b]tile[/b] carries the flip bit, so one drawing covers both sides. The [b]3D twin[/b] does NOT scale itself negative - it turns around, which is the honest 3D answer and leaves nothing inside out."
 
 	var setup: EventRow = EventRow.new()
 	setup.trigger_provider_id = "Core"
@@ -4917,9 +4892,8 @@ func _build_pin_modes_2d() -> bool:
 	sheet.emit_live_values = false
 	sheet.variables = {"t": {"type": "float", "default": 0.0, "exported": false}}
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Pin Modes[/b] - six ways one object can ride another, running at once. The sheet moves only the ANCHORS (the post, the engine, the walker); everything else is a Pin behavior in a different mode. Watch the rope go slack and then snap taut, the bar hold its length through every turn, the camera target trail behind, the hat overshoot and settle, the shadow keep its own ground line, and the sword stay in the hand rather than beside the body."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Pin Modes[/b] - six ways one object can ride another, running at once. The sheet moves only the ANCHORS (the post, the engine, the walker); everything else is a Pin behavior in a different mode. Watch the rope go slack and then snap taut, the bar hold its length through every turn, the camera target trail behind, the hat overshoot and settle, the shadow keep its own ground line, and the sword stay in the hand rather than beside the body."
 
 	# One-time setup: each pin is started in the mode that names it, in one row.
 	var setup: EventRow = EventRow.new()
@@ -5066,9 +5040,8 @@ func _build_pin_modes_3d() -> bool:
 	sheet.emit_live_values = false
 	sheet.variables = {"t": {"type": "float", "default": 0.0, "exported": false}}
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Pin Modes 3D[/b] - the same six relationships, on the Pin 3D pack. Nothing here is a child of anything it follows: every one of them is a pin, which is why each can let go and none of them is destroyed when its anchor is. The point pin rides a Marker3D on the walker, which is where a BoneAttachment3D would sit on a real rig."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Pin Modes 3D[/b] - the same six relationships, on the Pin 3D pack. Nothing here is a child of anything it follows: every one of them is a pin, which is why each can let go and none of them is destroyed when its anchor is. The point pin rides a Marker3D on the walker, which is where a BoneAttachment3D would sit on a real rig."
 
 	var setup: EventRow = EventRow.new()
 	setup.trigger_provider_id = "Core"
@@ -5243,9 +5216,8 @@ func _build_skill_tree() -> bool:
 	player_sheet.host_class = "CharacterBody2D"
 	player_sheet.custom_class_name = "SkillTreeRunner"
 	player_sheet.emit_live_values = false
-	var player_note: CommentRow = CommentRow.new()
-	player_note.text = "[b]Runner[/b] - the body the tree changes. Its speed is StatForge's Stat Total for \"speed\", so unlocking Swift moves it faster without a formula anywhere; its second jump exists only while the Double Jump perk is unlocked, which is one Is Unlocked question."
-	player_sheet.events.append(player_note)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	player_sheet.class_description = "[b]Runner[/b] - the body the tree changes. Its speed is StatForge's Stat Total for \"speed\", so unlocking Swift moves it faster without a formula anywhere; its second jump exists only while the Double Jump perk is unlocked, which is one Is Unlocked question."
 	player_sheet.variables = {
 		"base_speed": {"type": "float", "default": 120.0, "exported": true,
 			"attributes": {"tooltip": "The speed before any skill touches it."}},
@@ -5291,9 +5263,8 @@ func _build_skill_tree() -> bool:
 	sheet.host_class = "Control"
 	sheet.custom_class_name = "SkillTreeShowcase"
 	sheet.emit_live_values = false
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Skill Tree[/b] - a data asset, laid out. Six skills in two branches live in adventurer_tree.tres with their costs, their prerequisites and what they grant. The screen spawns one button per skill and draws a line to each one it requires; grey means a prerequisite is missing, gold means it can be taken now, green means it is taken. Clicking one is a single Unlock row, which spends a point, records the level and hands the grant to StatForge - so Swift makes the runner faster with no formula written anywhere, and Double Jump grants nothing at all because the runner asks about it directly. Arrow keys move the runner, Space jumps."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Skill Tree[/b] - a data asset, laid out. Six skills in two branches live in adventurer_tree.tres with their costs, their prerequisites and what they grant. The screen spawns one button per skill and draws a line to each one it requires; grey means a prerequisite is missing, gold means it can be taken now, green means it is taken. Clicking one is a single Unlock row, which spends a point, records the level and hands the grant to StatForge - so Swift makes the runner faster with no formula written anywhere, and Double Jump grants nothing at all because the runner asks about it directly. Arrow keys move the runner, Space jumps."
 	sheet.variables = {
 		"tree": {"type": "Resource", "default": null, "exported": true,
 			"attributes": {"tooltip": "The Skill Tree data asset this screen draws."}},
@@ -5470,9 +5441,8 @@ func _build_skate_park() -> bool:
 	sheet.custom_class_name = "SkatePark"
 	sheet.emit_live_values = false
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Skate Park[/b] - the Skateboard pack, playable. The slope hands you speed (Roll With The Slope projects gravity along the floor), the rail across the middle is an ordinary Path2D you snap to, and the quarterpipe at the end gives back what the drop gave you. Left/Right steer the balance, Space pushes, Up ollies, and holding Right in the air spins. Nothing here does skating math - every row is a Skateboard row."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Skate Park[/b] - the Skateboard pack, playable. The slope hands you speed (Roll With The Slope projects gravity along the floor), the rail across the middle is an ordinary Path2D you snap to, and the quarterpipe at the end gives back what the drop gave you. Left/Right steer the balance, Space pushes, Up ollies, and holding Right in the air spins. Nothing here does skating math - every row is a Skateboard row."
 
 	sheet.variables = {
 		"score": {"type": "int", "default": 0, "exported": true,
@@ -5743,9 +5713,8 @@ func _build_skate_park_3d() -> bool:
 	sheet.custom_class_name = "SkatePark3D"
 	sheet.emit_live_values = false
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Skate Park 3D[/b] - the Skateboard 3D pack, playable. Roll With The Slope projects gravity onto the surface normal so the bank at the end carves, Align The Board To The Surface keeps the board flat on it, and leaving the bank fires On Launched Off The Lip. The rail is an ordinary Path3D. Space pushes, Up ollies, Right spins in the air."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Skate Park 3D[/b] - the Skateboard 3D pack, playable. Roll With The Slope projects gravity onto the surface normal so the bank at the end carves, Align The Board To The Surface keeps the board flat on it, and leaving the bank fires On Launched Off The Lip. The rail is an ordinary Path3D. Space pushes, Up ollies, Right spins in the air."
 
 	sheet.variables = {
 		"score": {"type": "int", "default": 0, "exported": true,
@@ -5964,9 +5933,8 @@ func _build_traversal_course() -> bool:
 		"wall_time": {"type": "float", "default": 0.0, "exported": false},
 		"race_time": {"type": "float", "default": 0.0, "exported": false}
 	}
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Traversal Course[/b] - the Traversal Kit on a CharacterBody2D, one move per station. Arrow keys run and jump (Platformer movement), and the kit does the rest: walk off the tower to hang from the lip and press Space to mantle, or Down to drop; press into the shaft walls to slide down them; stand on the ladder and hold Up; walk into the low block and press Space to vault it; swim in the pool. The kit writes velocity and Platformer movement does the moving, so both packs stack on the same body. Four actors run the same rows on a loop with no input at all: the Climber grabs and mantles, the Jumper wall-jumps up the shaft, and the Diver and the Stone fall together - one into the water, one beside it."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Traversal Course[/b] - the Traversal Kit on a CharacterBody2D, one move per station. Arrow keys run and jump (Platformer movement), and the kit does the rest: walk off the tower to hang from the lip and press Space to mantle, or Down to drop; press into the shaft walls to slide down them; stand on the ladder and hold Up; walk into the low block and press Space to vault it; swim in the pool. The kit writes velocity and Platformer movement does the moving, so both packs stack on the same body. Four actors run the same rows on a loop with no input at all: the Climber grabs and mantles, the Jumper wall-jumps up the shaft, and the Diver and the Stone fall together - one into the water, one beside it."
 
 	var aim: EventRow = EventRow.new()
 	aim.trigger_provider_id = "Core"
@@ -6228,9 +6196,8 @@ func _build_traversal_course_3d() -> bool:
 		"wall_time": {"type": "float", "default": 0.0, "exported": false},
 		"race_time": {"type": "float", "default": 0.0, "exported": false}
 	}
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Traversal Course 3D[/b] - the same five moves as the 2D course, in metres on a CharacterBody3D, with no controller pack anywhere. The sheet writes the two lines a mover writes - gravity and move_and_slide - and Traversal Kit 3D writes everything between them: the Climber grabs the tower's lip and mantles onto it, the Jumper wall jumps across the shaft (the push follows the wall's own normal), the Ladder Bot climbs a marked Area3D, the Vaulter throws itself over the low block, and the Diver and the Stone fall together - the Diver into a marked pool where Swim and Float hold it near the surface."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Traversal Course 3D[/b] - the same five moves as the 2D course, in metres on a CharacterBody3D, with no controller pack anywhere. The sheet writes the two lines a mover writes - gravity and move_and_slide - and Traversal Kit 3D writes everything between them: the Climber grabs the tower's lip and mantles onto it, the Jumper wall jumps across the shaft (the push follows the wall's own normal), the Ladder Bot climbs a marked Area3D, the Vaulter throws itself over the low block, and the Diver and the Stone fall together - the Diver into a marked pool where Swim and Float hold it near the surface."
 
 	var climber_rows: EventRow = EventRow.new()
 	climber_rows.trigger_provider_id = "Core"
@@ -6535,9 +6502,8 @@ func _build_combo_fighter() -> bool:
 	sheet.custom_class_name = "ComboFighter"
 	sheet.emit_live_values = false
 
-	var about: CommentRow = CommentRow.new()
-	about.text = "[b]Combo Fighter[/b] - the four pieces a fighting game is made of, each one a row. Press J (punch) and K (kick): the inputs collect into a rolling list with a 0.5 s window, and the move the list spells plays its animation. The uppercut's method track calls the hit frame, which freezes the whole game for 0.05 s - that is hit-stop. Between 0.3 s and 0.6 s of a move the next one may cancel it. A press made a few frames too early is buffered rather than dropped. Open this file as a sheet: every shape reads back as the row that writes it."
-	sheet.events.append(about)
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Combo Fighter[/b] - the four pieces a fighting game is made of, each one a row. Press J (punch) and K (kick): the inputs collect into a rolling list with a 0.5 s window, and the move the list spells plays its animation. The uppercut's method track calls the hit frame, which freezes the whole game for 0.05 s - that is hit-stop. Between 0.3 s and 0.6 s of a move the next one may cancel it. A press made a few frames too early is buffered rather than dropped. Open this file as a sheet: every shape reads back as the row that writes it."
 
 	sheet.variables = {
 		"combo": {"type": "Array", "default": [], "exported": false,

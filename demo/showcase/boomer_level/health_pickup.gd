@@ -1,6 +1,8 @@
 class_name BoomerLevelPickup
 extends Area3D
 ## A health pickup that comes back. Walking into it takes it away and the Respawn After row puts it back.
+##
+## A health pickup: taken, then back after its own timer.
 
 ## How long the pickup stays gone before it comes back.
 @export var respawn_seconds: float = 3.0
@@ -14,5 +16,3 @@ func _on_body_entered(_body: Node) -> void:
 	await get_tree().create_timer(respawn_seconds).timeout
 	show()
 	set_deferred("monitoring", true)
-
-# A health pickup: taken, then back after its own timer.

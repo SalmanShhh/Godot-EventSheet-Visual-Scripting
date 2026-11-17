@@ -1,5 +1,6 @@
 class_name InspectorPlayground
 extends Node2D
+## [b]Inspector Playground[/b] - select this node and open the Inspector: every exported variable uses a [b]custom drawer[/b] (a direction dial, a colour swatch row, a texture preview, a curve, progress bars) sorted into [b]@export_group[/b] sections. Tweak them and press Play - the ship drifts along the dial, scales with health, and wears your colour. All from designer-tweakable variables, zero code.
 
 ## Drift direction + speed - drag the dial.
 @export_group("Aim")
@@ -33,5 +34,3 @@ func _process(_delta: float) -> void:
 	$Body.rotation = aim_dir.angle()
 	$Body.color = body_tint
 	$Body.scale = Vector2.ONE * (0.6 + stat_health / 100.0)
-
-# [b]Inspector Playground[/b] - select this node and open the Inspector: every exported variable uses a [b]custom drawer[/b] (a direction dial, a colour swatch row, a texture preview, a curve, progress bars) sorted into [b]@export_group[/b] sections. Tweak them and press Play - the ship drifts along the dial, scales with health, and wears your colour. All from designer-tweakable variables, zero code.

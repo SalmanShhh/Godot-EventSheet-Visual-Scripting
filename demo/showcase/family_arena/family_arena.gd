@@ -1,5 +1,6 @@
 class_name FamilyArena
 extends Node2D
+## [b]Family Arena[/b] - each [b]Enemy[/b] owns its own behaviour: its sheet moves it by its own fall_speed, so nothing outside has to. This arena sheet does only what is shared: it spawns the Enemies, and it runs the one rule that is about the whole family - a strike that walks every Enemy (a typed For each over the family) and damages every one through the Enemy: Take Damage ACE. Add a new enemy type and not one rule changes - that's horizontal reuse.
 
 ## How many Enemies to spawn.
 @export_range(4, 60, 1) var spawn_count: int = 18
@@ -23,5 +24,3 @@ func _process(delta: float) -> void:
 	if __every_hud_fam >= 0.5:
 		__every_hud_fam = fmod(__every_hud_fam, 0.5)
 		$Info.text = "%d Enemies · each one falls on its own" % [get_tree().get_node_count_in_group("family_enemy")]
-
-# [b]Family Arena[/b] - each [b]Enemy[/b] owns its own behaviour: its sheet moves it by its own fall_speed, so nothing outside has to. This arena sheet does only what is shared: it spawns the Enemies, and it runs the one rule that is about the whole family - a strike that walks every Enemy (a typed For each over the family) and damages every one through the Enemy: Take Damage ACE. Add a new enemy type and not one rule changes - that's horizontal reuse.

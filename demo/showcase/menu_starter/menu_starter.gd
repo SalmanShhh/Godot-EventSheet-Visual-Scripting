@@ -1,5 +1,6 @@
 class_name MenuStarter
 extends Control
+## [b]Menu Starter[/b] - a complete menu flow (title / settings / game / pause overlay) driven by [b]one HUD Kit behavior[/b]: screens switch by NAME, bars and labels update by NAME, and every Button reports through the pack's single [b]On Button Pressed[/b] trigger - the scene contains [b]zero connected signals[/b]. Copy this scene as your project's UI starting point.
 
 var time_alive: float = 0.0
 
@@ -36,5 +37,3 @@ func handle_button() -> void:
 			$HudKit.switch_screen("TitleScreen")
 		"QuitButton":
 			$HudKit.show_toast("Quit is disabled in the demo.")
-
-# [b]Menu Starter[/b] - a complete menu flow (title / settings / game / pause overlay) driven by [b]one HUD Kit behavior[/b]: screens switch by NAME, bars and labels update by NAME, and every Button reports through the pack's single [b]On Button Pressed[/b] trigger - the scene contains [b]zero connected signals[/b]. Copy this scene as your project's UI starting point.

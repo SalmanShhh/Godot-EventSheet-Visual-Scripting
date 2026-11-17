@@ -1,5 +1,6 @@
 class_name ChefPlannerDemo
 extends Node2D
+## [b]Chef Planner (HTN Agent)[/b] - a self-driving planner, no input. The compound task make_meal decomposes (via a method whose world-state condition holds) into an ordered plan gather -> cook -> serve; a tick marks each primitive task complete and walks the plan to the end. Add tasks + methods, Request Plan, Mark Task Complete - the whole hierarchical-planning loop. Attach an HTN Agent to any node and give it your own task network.
 
 var __every_chef: float = 0.0
 
@@ -24,5 +25,3 @@ func _process(delta: float) -> void:
 	$Screen.text = "CHEF PLANNER (HTN)
 	task: %s
 	steps left: %d" % [$Chef/Planner.current_task(), $Chef/Planner.plan_length()]
-
-# [b]Chef Planner (HTN Agent)[/b] - a self-driving planner, no input. The compound task make_meal decomposes (via a method whose world-state condition holds) into an ordered plan gather -> cook -> serve; a tick marks each primitive task complete and walks the plan to the end. Add tasks + methods, Request Plan, Mark Task Complete - the whole hierarchical-planning loop. Attach an HTN Agent to any node and give it your own task network.

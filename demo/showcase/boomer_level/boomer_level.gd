@@ -1,6 +1,8 @@
 class_name BoomerLevel
 extends Node3D
 ## A small shooter level: a red keycard, the door that wants it, two grunts that turn on each other, a respawning pickup, a secret and the exit tally.
+##
+## Boomer Level: WASD moves, the mouse looks, Tab throws a rocket at the grunts. Find the red keycard, open the door, take the exit.
 
 var keys: Array = []
 var secrets_found: Array = []
@@ -22,7 +24,7 @@ func _ready() -> void:
 	print("Boomer Level - WASD/arrows move, mouse looks, Space jumps (hold it on landing to bunny hop), Tab throws a rocket, Esc frees the mouse.")
 
 func _physics_process(delta: float) -> void:
-	if level_over == false:
+	if not (level_over):
 		level_seconds += delta
 
 func _process(_delta: float) -> void:
@@ -70,5 +72,3 @@ func _on_exit_body_entered(_body: Node) -> void:
 ## @ace_hidden
 func count_kill() -> void:
 	kills += 1
-
-# Boomer Level: WASD moves, the mouse looks, Tab throws a rocket at the grunts. Find the red keycard, open the door, take the exit.

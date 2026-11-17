@@ -1,5 +1,6 @@
 class_name EnemyStats
 extends Resource
+## [b]EnemyStats[/b] - a Custom Resource whose Inspector was [b]designed from this sheet[/b]: accent section headers, an info note, a [b]required[/b] portrait slot (red warning until assigned), a min-max damage range, a [b]loot table edited as a grid[/b], a clamped health bar, swatches, and an inline curve. Click [i]enemy_stats_example.tres[/i] in the FileSystem to see it; every marker is a plain comment or annotation, so the resource works without the plugin.
 
 # @inspector_header Combat #e06666
 ## Damage rolled per hit - x is the low end, y the high.
@@ -32,5 +33,3 @@ extends Resource
 
 func roll_damage() -> float:
 	return randf_range(combat_damage_range.x, combat_damage_range.y)
-
-# [b]EnemyStats[/b] - a Custom Resource whose Inspector was [b]designed from this sheet[/b]: accent section headers, an info note, a [b]required[/b] portrait slot (red warning until assigned), a min-max damage range, a [b]loot table edited as a grid[/b], a clamped health bar, swatches, and an inline curve. Click [i]enemy_stats_example.tres[/i] in the FileSystem to see it; every marker is a plain comment or annotation, so the resource works without the plugin.

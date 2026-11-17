@@ -1,6 +1,8 @@
 class_name BoomerLevelGrunt
 extends CharacterBody3D
 ## One grunt. Alert Enemies Within tells it who to go for, and being hurt makes it shout - which is what turns a room of them on each other.
+##
+## A grunt: told who to go for by Alert Enemies Within, and shouting to the room when it is hurt.
 
 ## How much damage this grunt takes before it falls.
 @export var hp: float = 40.0
@@ -32,5 +34,3 @@ func take_damage(amount: float) -> void:
 	if hp <= 0.0:
 		get_parent().count_kill()
 		queue_free()
-
-# A grunt: told who to go for by Alert Enemies Within, and shouting to the room when it is hurt.

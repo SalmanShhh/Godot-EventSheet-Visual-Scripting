@@ -1,5 +1,6 @@
 class_name SkillTreeRunner
 extends CharacterBody2D
+## [b]Runner[/b] - the body the tree changes. Its speed is StatForge's Stat Total for "speed", so unlocking Swift moves it faster without a formula anywhere; its second jump exists only while the Double Jump perk is unlocked, which is one Is Unlocked question.
 
 ## The speed before any skill touches it.
 @export var base_speed: float = 120.0
@@ -23,5 +24,3 @@ func _physics_process(delta: float) -> void:
 		jumps_left -= 1
 		velocity.y = -340.0
 	move_and_slide()
-
-# [b]Runner[/b] - the body the tree changes. Its speed is StatForge's Stat Total for "speed", so unlocking Swift moves it faster without a formula anywhere; its second jump exists only while the Double Jump perk is unlocked, which is one Is Unlocked question.

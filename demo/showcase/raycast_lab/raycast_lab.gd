@@ -1,5 +1,6 @@
 class_name RaycastLabDemo
 extends Node2D
+## [b]Raycast Lab[/b] - six ways to ask the physics world a question, all drawn live. [b]Yellow[/b] is a RayCast2D NODE sweeping for whatever it can see. [b]Cyan[/b] is Cast Ray Into, firing ONE ray at your cursor and storing the result, which the Ray Result verbs then read for the hit point, the surface normal, and whether it was a target - three facts, one cast. [b]Green[/b] is Query Bodies In Circle collecting everything within 130px; [b]white[/b] is Query Bodies Under Mouse. [b]Pink[/b] is Cast Circle Motion Into - how far a disc could slide before it jams, which is how you move something fast without it tunnelling through a wall. [b]Blue[/b] is a ShapeCast2D sweeping the corridor: a ray with THICKNESS, parked at its safe fraction.
 
 var sweep_deg: float = 0.0
 var radar_hit: bool = false
@@ -101,5 +102,3 @@ func _process(_delta: float) -> void:
 	ink.draw_canvas_dashed_line(rail.x, rail.y, rail.x + reach.x, rail.y + reach.y, 10.0, 8.0, 1.0, Color(0.5, 0.7, 1.0, 0.45))
 	ink.draw_canvas_ring(rail.x + reach.x * gate_travel, rail.y + reach.y * gate_travel, 16.0, 2.0, Color(0.5, 0.7, 1.0, 0.9))
 	$HudLayer/Readout.text = "under cursor %d - in circle %d - disc travel %.2f - gate sweep %.2f - gate touching %d" % [picked.size(), nearby.size(), travel, gate_travel, gate_count]
-
-# [b]Raycast Lab[/b] - six ways to ask the physics world a question, all drawn live. [b]Yellow[/b] is a RayCast2D NODE sweeping for whatever it can see. [b]Cyan[/b] is Cast Ray Into, firing ONE ray at your cursor and storing the result, which the Ray Result verbs then read for the hit point, the surface normal, and whether it was a target - three facts, one cast. [b]Green[/b] is Query Bodies In Circle collecting everything within 130px; [b]white[/b] is Query Bodies Under Mouse. [b]Pink[/b] is Cast Circle Motion Into - how far a disc could slide before it jams, which is how you move something fast without it tunnelling through a wall. [b]Blue[/b] is a ShapeCast2D sweeping the corridor: a ray with THICKNESS, parked at its safe fraction.

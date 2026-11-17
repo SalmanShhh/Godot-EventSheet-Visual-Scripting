@@ -9,9 +9,16 @@ const P := "closing_description_reads_once_test"
 
 const CAROUSEL := "res://demo/showcase/carousel/showcase_carousel.gd"
 
+## The file a script shows when it closes on a paragraph and has no `##` prose of its own: the showcase's
+## own description moved out of its class description into a `#` note at the end of the file, written to
+## this process's folder. The showcases now keep the description as a class description, and this is
+## the older spelling a file written before that still has.
+const CLOSING_NOTE_FILE := "closing_note_carousel.gd"
+
 
 static func run() -> bool:
-	var sheet: EventSheetResource = _open(CAROUSEL)
+	var path: String = _file_with_closing_note()
+	var sheet: EventSheetResource = _open(path)
 	sheet.read_only = false
 	var view: EventSheetViewport = _view(sheet)
 	var card: Dictionary = _name_card(view)
@@ -27,7 +34,7 @@ static func run() -> bool:
 			EventSheetViewportRowBuilder.HEAD_ACTION_EDIT_DESCRIPTION_NOTE],
 		["the door finds that note on the built rows", EventSheetViewportRowBuilder.claimed_description_note(view._root_rows) == closing, true],
 		["the file still re-emits byte for byte", str(EventSheetCompiler.compile(sheet).get("output", "")),
-			FileAccess.get_file_as_string(CAROUSEL)],
+			FileAccess.get_file_as_string(path)],
 	])
 	view.free()
 	# A marked-up note in the middle of a sheet is not claimed, keeps its row, and wears no echo.
@@ -47,6 +54,19 @@ static func run() -> bool:
 	]) and ok
 	marked_view.free()
 	return ok
+
+
+## Opens the carousel showcase, moves its class description to a closing `#` note and writes the result.
+static func _file_with_closing_note() -> String:
+	var source: EventSheetResource = EventSheetGDScriptImporter.new().import_external(CAROUSEL)
+	var note: CommentRow = CommentRow.new()
+	note.text = source.class_description
+	source.class_description = ""
+	source.events.append(note)
+	var path: String = SUPPORT.own_path(CLOSING_NOTE_FILE)
+	source.external_source_path = path
+	EventSheetCompiler.compile(source, path)
+	return path
 
 
 static func _open(path: String) -> EventSheetResource:

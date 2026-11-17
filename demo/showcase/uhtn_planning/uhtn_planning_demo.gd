@@ -1,5 +1,6 @@
 class_name GuardPostDemo
 extends Node2D
+## [b]Guard Post (UHTN Planning)[/b] - Utility AI steering an HTN, fully data-driven. The whole plan lives in guard_plan.tres (Inspector grids: tasks, methods, preconditions, scorer curves) dropped on the planner's Plan Resource slot. The prowler sweeps in and out; a closeness fact through a linear curve ranks the chase method LIVE, so far = watch (fixed utility 0.25) and near = chase, with no re-authoring. Oscillating health feeds a fear scorer (inverse curve) whose flee method only competes while the hurt precondition holds. Every 9s Force Task pushes a scripted salute beat. The HUD shows both scorer values ticking - tune the curves in the .tres and watch behavior change.
 
 var __every_uhtn_replan: float = 0.0
 var __every_uhtn_walk: float = 0.0
@@ -25,5 +26,3 @@ func _process(delta: float) -> void:
 	$Screen.text = "GUARD POST (UHTN PLANNING)
 	task: %s
 	aggro: %.2f   fear: %.2f" % [$Guard/Planner.current_task(), $Guard/Planner.scorer_value("aggro"), $Guard/Planner.scorer_value("fear")]
-
-# [b]Guard Post (UHTN Planning)[/b] - Utility AI steering an HTN, fully data-driven. The whole plan lives in guard_plan.tres (Inspector grids: tasks, methods, preconditions, scorer curves) dropped on the planner's Plan Resource slot. The prowler sweeps in and out; a closeness fact through a linear curve ranks the chase method LIVE, so far = watch (fixed utility 0.25) and near = chase, with no re-authoring. Oscillating health feeds a fear scorer (inverse curve) whose flee method only competes while the hurt precondition holds. Every 9s Force Task pushes a scripted salute beat. The HUD shows both scorer values ticking - tune the curves in the .tres and watch behavior change.

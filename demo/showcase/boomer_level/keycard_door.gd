@@ -1,6 +1,8 @@
 class_name BoomerLevelDoor
 extends StaticBody3D
 ## The red keycard door. Try Door on the level's sheet opens it when the key fits and tells it here when it does not.
+##
+## Keycard door: it opens when the key fits and says so when it does not.
 
 ## The key this door wants. Try Door reads it off the door itself.
 @export var needs_key: String = "red_key"
@@ -21,5 +23,3 @@ func open_door() -> void:
 		var __door_door = self
 		__door_door.set_deferred("collision_layer", 0)
 		create_tween().tween_property(__door_door, "position", __door_door.position + Vector3(0.0, slide_height, 0.0), slide_seconds)
-
-# Keycard door: it opens when the key fits and says so when it does not.

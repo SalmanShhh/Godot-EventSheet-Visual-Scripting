@@ -1,4 +1,5 @@
 extends Node3D
+## FPS Arena: the FPSController behavior does all the work - this sheet only prints the controls and flips the camera mode on Tab.
 
 var __every_stalk: float = 0.0
 
@@ -13,5 +14,3 @@ func _process(delta: float) -> void:
 	if __every_stalk >= 1.0:
 		__every_stalk = fmod(__every_stalk, 1.0)
 		$Stalker/Navigator.find_path_to_node($Player, "nearest")
-
-# FPS Arena: the FPSController behavior does all the work - this sheet only prints the controls and flips the camera mode on Tab.

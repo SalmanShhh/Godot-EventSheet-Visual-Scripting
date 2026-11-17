@@ -1,5 +1,6 @@
 class_name HierarchyPlayground
 extends Node3D
+## [b]Hierarchy Playground[/b] - everything a game does to the scene tree while it runs, in one room. [b]Space[/b] mounts the rider onto the horse's [b]Saddle[/b] and dismounts again: mounting SNAPS the rider to its new parent, dismounting hands it back to the layout keeping the place it stands in. The [b]hat[/b] is a child of the rider's head that follows position and angle but NOT size - the flag that Godot has no single property for, so a RemoteTransform3D drives it instead. The [b]health bar[/b] is still a child and still dies with the rider, but ignores its movement, which is why it never tilts. The [b]squad[/b] is healed by ONE walk over the leader's children. The [b]camera[/b] orbits because its parent pivot turns - it does nothing itself. The [b]crates[/b] each cast a ray down and park on whatever the ray found.
 
 var orbit_deg: float = 0.0
 var mounted: bool = false
@@ -70,5 +71,3 @@ func heal_squad(leader: Node3D) -> void:
 		if unit.is_in_group("soldier"):
 			unit.hp += 10
 			squad_hp += unit.hp
-
-# [b]Hierarchy Playground[/b] - everything a game does to the scene tree while it runs, in one room. [b]Space[/b] mounts the rider onto the horse's [b]Saddle[/b] and dismounts again: mounting SNAPS the rider to its new parent, dismounting hands it back to the layout keeping the place it stands in. The [b]hat[/b] is a child of the rider's head that follows position and angle but NOT size - the flag that Godot has no single property for, so a RemoteTransform3D drives it instead. The [b]health bar[/b] is still a child and still dies with the rider, but ignores its movement, which is why it never tilts. The [b]squad[/b] is healed by ONE walk over the leader's children. The [b]camera[/b] orbits because its parent pivot turns - it does nothing itself. The [b]crates[/b] each cast a ray down and park on whatever the ray found.

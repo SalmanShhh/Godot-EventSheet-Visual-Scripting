@@ -88,7 +88,7 @@ const SHOWCASE_UNDESCRIBED: String = "A playable example you can open and take a
 ## empty one, so a missing entry reads as missing on the page as well as in the suite.
 const SHOWCASE_UNSHELVED: String = "Showcase"
 
-## How a showcase sheet opens its description: a comment row whose first mark is the bold title.
+## How a showcase written before class descriptions spells its description: a closing comment row whose first mark is the bold title.
 const ABOUT_PREFIX: String = "# [b]"
 
 ## How far into an about comment the "Title - " lead may reach. Past that the dash is punctuation in
@@ -307,9 +307,9 @@ static func showcase_folders() -> PackedStringArray:
 	return found
 
 
-## The about comment a showcase opens with, or "" when it carries none. A showcase sheet's first
-## comment row IS its description, so the page reads that instead of keeping a second copy of it
-## that can disagree. The folder-named script is asked first: a folder with several sheets (an
+## The description a showcase carries, or "" when it carries none. A showcase sheet says what it is in its
+## class description (a script that closes on a `#` paragraph instead is read the same way), so the page reads
+## that instead of keeping a second copy of it that can disagree. The folder-named script is asked first: a folder with several sheets (an
 ## enemy, a door, a pickup) has exactly one that is the showcase, and it is named after the folder.
 static func showcase_about(folder: String) -> String:
 	var folder_path: String = "%s/%s" % [SHOWCASE_DIR, folder]
@@ -325,10 +325,41 @@ static func showcase_about(folder: String) -> String:
 		if not ordered.has(file_name):
 			ordered.append(file_name)
 	for file_name: String in ordered:
-		for line: String in FileAccess.get_file_as_string("%s/%s" % [folder_path, file_name]).split("\n"):
+		var source: String = FileAccess.get_file_as_string("%s/%s" % [folder_path, file_name])
+		for line: String in source.split("\n"):
 			if line.begins_with(ABOUT_PREFIX):
 				return line.substr(2).strip_edges()
+		var described: String = _class_doc_about(source)
+		if not described.is_empty():
+			return described
 	return ""
+
+
+## The last paragraph of the class description a script opens with (the `##` lines right after `extends`),
+## when it starts with the bold title the card reads, else "". A showcase says what it is there; a paragraph
+## above it, when there is one, belongs to the script as a class and is not the page's line.
+static func _class_doc_about(source: String) -> String:
+	var paragraphs: PackedStringArray = PackedStringArray()
+	var current: PackedStringArray = PackedStringArray()
+	var seen_extends: bool = false
+	for line: String in source.split("\n"):
+		if not seen_extends:
+			seen_extends = line.begins_with("extends ")
+			continue
+		if not line.begins_with("##"):
+			break
+		var said: String = line.substr(2).strip_edges()
+		if said.is_empty():
+			if not current.is_empty():
+				paragraphs.append(" ".join(current))
+				current = PackedStringArray()
+		else:
+			current.append(said)
+	if not current.is_empty():
+		paragraphs.append(" ".join(current))
+	if paragraphs.is_empty() or not paragraphs[paragraphs.size() - 1].begins_with("[b]"):
+		return ""
+	return paragraphs[paragraphs.size() - 1]
 
 
 ## Every showcase folder and the about comment it opens with, {folder: about text}, ready for

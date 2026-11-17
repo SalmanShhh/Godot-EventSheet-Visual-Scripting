@@ -1,5 +1,6 @@
 class_name SkatePark3D
 extends Node3D
+## [b]Skate Park 3D[/b] - the Skateboard 3D pack, playable. Roll With The Slope projects gravity onto the surface normal so the bank at the end carves, Align The Board To The Surface keeps the board flat on it, and leaving the bank fires On Launched Off The Lip. The rail is an ordinary Path3D. Space pushes, Up ollies, Right spins in the air.
 
 ## Everything banked so far this run.
 @export var score: int = 0
@@ -48,5 +49,3 @@ func _on_launched() -> void:
 func _on_bailed() -> void:
 	$Skater.global_position = Vector3(-9.0, 1.0, 0.0)
 	$Skater.velocity = Vector3.ZERO
-
-# [b]Skate Park 3D[/b] - the Skateboard 3D pack, playable. Roll With The Slope projects gravity onto the surface normal so the bank at the end carves, Align The Board To The Surface keeps the board flat on it, and leaving the bank fires On Launched Off The Lip. The rail is an ordinary Path3D. Space pushes, Up ollies, Right spins in the air.

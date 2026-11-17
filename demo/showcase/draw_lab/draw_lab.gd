@@ -1,5 +1,6 @@
 class_name DrawLabDemo
 extends Node2D
+## [b]Draw Lab[/b] - four Drawing Canvases with different jobs. The Player carries an AUTO-CLEAR canvas redrawing a raycast Line Of Sight fan every tick (the walls carve it); the Enemy carries one redrawing a rotating attack-telegraph cone; the whole-screen PERSISTENT canvas keeps everything drawn on it - the paint trail dripping under the Player and the target-marker DRAWING PREFABS (an ordered shape formation authored as a .tres, replayed by Draw Prefab at any position/scale/rotation - press Space to stamp one where you stand); and the center canvas ribbons the orbiting comet.
 
 var facing_deg: float = 0.0
 var comet_angle: float = 0.0
@@ -66,5 +67,3 @@ func _process(delta: float) -> void:
 	if __every_paint >= 0.1:
 		__every_paint = fmod(__every_paint, 0.1)
 		$PaintLayer/Paint.draw_canvas_circle($Player.global_position.x, $Player.global_position.y + 12.0, 7.0, Color(0.35, 0.6, 1.0, 0.25))
-
-# [b]Draw Lab[/b] - four Drawing Canvases with different jobs. The Player carries an AUTO-CLEAR canvas redrawing a raycast Line Of Sight fan every tick (the walls carve it); the Enemy carries one redrawing a rotating attack-telegraph cone; the whole-screen PERSISTENT canvas keeps everything drawn on it - the paint trail dripping under the Player and the target-marker DRAWING PREFABS (an ordered shape formation authored as a .tres, replayed by Draw Prefab at any position/scale/rotation - press Space to stamp one where you stand); and the center canvas ribbons the orbiting comet.
