@@ -345,7 +345,7 @@ func set_shape_colour(colour: Color) -> void:
 ## @ace_action
 ## @ace_name("Set Shape Colour From Palette")
 ## @ace_category("Vector Shapes")
-## @ace_description("Sets the shape's main colour to one role of a colour palette - Danger, Safe - taken from the colour set you name, so one row draws the right colour for every kind of colour vision. Leave the set name empty to use the palette's first set. A palette, set or role that is not there leaves the colour as it is and says so once in the Output panel, naming the shape. Like Set Shape Colour, it changes the colour field, so a Shape Style worn by the shape speaks for the colour until it is taken off.")
+## @ace_description("Sets the shape's main colour to one role of a colour palette - Danger, Safe - from the colour set you name, so one row draws the right colour for every kind of colour vision. An empty set name uses the first set. Anything the palette does not have leaves the colour as it is and says so once in the Output panel.")
 ## @ace_display_template("Set shape colour to [b]{role}[/b] from [b]{palette}[/b] ([b]{colour_set}[/b])")
 ## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
 ## @ace_codegen_template("$VectorShape2D.set_shape_colour_from_palette({palette}, {colour_set}, {role})")

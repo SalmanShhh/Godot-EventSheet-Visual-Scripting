@@ -95,7 +95,7 @@ static func _build_base() -> bool:
 		"Sets the shape's main colour - the whole of it in single mode, and the first end of the blend in every other mode.",
 		[["colour", "Color"]])
 	src.verb("set_shape_colour_from_palette", "Set Shape Colour From Palette",
-		"Sets the shape's main colour to one role of a colour palette - Danger, Safe - taken from the colour set you name, so one row draws the right colour for every kind of colour vision. Leave the set name empty to use the palette's first set. A palette, set or role that is not there leaves the colour as it is and says so once in the Output panel, naming the shape. Like Set Shape Colour, it changes the colour field, so a Shape Style worn by the shape speaks for the colour until it is taken off.",
+		"Sets the shape's main colour to one role of a colour palette - Danger, Safe - from the colour set you name, so one row draws the right colour for every kind of colour vision. An empty set name uses the first set. Anything the palette does not have leaves the colour as it is and says so once in the Output panel.",
 		[["palette", "Resource"], ["colour_set", "String"], ["role", "String"]])
 	src.verb("set_colours", "Set Colours",
 		"Sets both ends of a two-colour shape at once, and switches a single-colour one to that mode: a line that goes red to transparent, an arc that goes danger to healthy along its sweep.",
@@ -354,7 +354,7 @@ static func _build_base_3d() -> bool:
 		"Sets the shape's main colour - the whole of it in single mode, and the first end of the blend in every other mode.",
 		[["colour", "Color"]])
 	src.verb("set_shape_colour_from_palette", "Set Shape Colour From Palette",
-		"Sets the shape's main colour to one role of a colour palette - Danger, Safe - taken from the colour set you name, so one row draws the right colour for every kind of colour vision. Leave the set name empty to use the palette's first set. A palette, set or role that is not there leaves the colour as it is and says so once in the Output panel, naming the shape. Like Set Shape Colour, it changes the colour field, so a Shape Style worn by the shape speaks for the colour until it is taken off.",
+		"Sets the shape's main colour to one role of a colour palette - Danger, Safe - from the colour set you name, so one row draws the right colour for every kind of colour vision. An empty set name uses the first set. Anything the palette does not have leaves the colour as it is and says so once in the Output panel.",
 		[["palette", "Resource"], ["colour_set", "String"], ["role", "String"]])
 	src.verb("set_colours", "Set Colours",
 		"Sets both ends of a two-colour shape at once, and switches a single-colour one to that mode: a rope that goes bright at the hand and dark at the anchor, an arc that goes danger to healthy along its sweep.",
