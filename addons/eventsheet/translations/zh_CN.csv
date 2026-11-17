@@ -11030,3 +11030,86 @@ Corners,圆角
 "Radius is 0, so this polygon draws nothing.",半径为 0，所以这个多边形不会绘制任何内容。
 "A polygon needs at least 3 sides, so this one is drawn with 3.",多边形至少需要 3 条边，所以这个按 3 条边绘制。
 "A polygon is drawn with 32 sides at most, so this one is drawn with 32.",多边形最多按 32 条边绘制，所以这个按 32 条边绘制。
+"How long one pass of the list takes. Cards between two Pauses or Holds start together, so their times do not add up. What a Loop Back or the Loop tick repeats comes on top.",列表走完一遍所需的时间。两个暂停或等待之间的卡片同时开始，所以它们的时间不会相加。Loop Back 或循环勾选所重复的部分另外计算。
+%d juice card - %s once through,%d 张 Juice 卡片 - 每遍 %s
+%d juice cards - %s once through,%d 张 Juice 卡片 - 每遍 %s
+Repeat the preview,重复预览
+"Keeps playing the preview in the editor while you tune. Each pass reads the list as it is then, so a number you change is the number the next pass uses. The game's own loop is the Loop tick on the node.",调整时在编辑器中持续播放预览。每一遍都读取当时的列表，所以你改的数字会在下一遍生效。游戏本身的循环是节点上的 Loop 勾选。
+%s is not what this card needs. It needs %s.,%s 不是这张卡片需要的。它需要 %s。
+a collision shape,碰撞形状
+a body or an area,物体或区域
+a 2D node (a 3D node is drawn by its distance from the camera),2D 节点（3D 节点按到相机的距离绘制）
+a 2D or a 3D node,2D 或 3D 节点
+a node that can be turned,可以旋转的节点
+a light,灯光
+a WorldEnvironment or a 3D camera,WorldEnvironment 或 3D 相机
+"%s is a RigidBody, which the physics engine turns. Point this card at the sprite or mesh under it.",%s 是 RigidBody，由物理引擎负责旋转。请让这张卡片指向它下面的精灵或网格。
+Pick the node to look at. Until then this card does nothing.,请选择要注视的节点。在此之前这张卡片不会做任何事。
+"This node holds the player, so it is removed when the list ends, whatever the tick says.",这个节点包含播放器，所以无论勾选与否，它都会在列表结束时被移除。
+"This node holds the player, so the player's own tweens freeze with it while it is off.",这个节点包含播放器，所以它关闭期间，播放器自己的补间也会一起冻结。
+"This camera ignores rotation, so the shake cannot be seen. Turn off Ignore Rotation on it.",这个相机忽略旋转，所以看不到抖动。请关闭它的 Ignore Rotation。
+"This scene has no WorldEnvironment to change. Add one, or pick the camera that holds the look.",这个场景里没有可修改的 WorldEnvironment。请添加一个，或选择持有该效果的相机。
+Layer %d has no name in Project Settings.,第 %d 层在项目设置中没有名称。
+Layer %d is called %s in Project Settings.,第 %d 层在项目设置中名为 %s。
+"Swings up to %s degrees over %s s, following your curve, and ends at rest.",最多摆动 %s 度，用时 %s 秒，按你的曲线变化，最后回到静止。
+Swings up to %s degrees half way and is at rest at %s s.,中途最多摆动 %s 度，在 %s 秒时静止。
+Starts at rest and swings %s degrees by %s s.,从静止开始，摆动 %s 度，到 %s 秒为止。
+Swings %s degrees at first and is at rest at %s s.,起初摆动 %s 度，在 %s 秒时静止。
+"Swings %s degrees for %s s, then stops.",摆动 %s 度，持续 %s 秒，然后停止。
+"A level in decibels, between -80 and 24. A bus with no amplify effect gets one added at its end, which stays on the bus.",以分贝为单位的音量，范围 -80 到 24。没有放大效果的总线会在末尾添加一个，并保留在总线上。
+"How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one added at its end, which stays on the bus.",能听到多少混响，范围 0 到 1。没有混响的总线会在末尾添加一个，并保留在总线上。
+"Effect 0 is the first effect on the bus. It is switched on, then put back to how it was.",效果 0 是总线上的第一个效果。它会被打开，然后恢复原状。
+"The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one added at its end, which stays on the bus.",以赫兹为单位的截止频率，范围 20 到 20500。没有低通的总线会在末尾添加一个，并保留在总线上。
+Collision For A Time,限时碰撞
+Collision Layer For A Time,限时碰撞层
+Remove Node,移除节点
+Draw Order For A Time,限时绘制顺序
+Switch Node On Or Off,开启或关闭节点
+Rotate By,旋转角度
+Rotate To,旋转到角度
+Rotation Shake,旋转抖动
+Scene Look,场景外观
+Bus Effect For A Time,限时总线效果
+After this list ends,在此列表结束后
+Back over,回退用时
+Change,更改
+Colour to,目标颜色
+Disable its collision,禁用它的碰撞
+Effect number,效果编号
+Energy to,目标能量
+Hide it,隐藏它
+Layer number,层编号
+Look at,注视
+Stop its scripts,停止它的脚本
+Switch it on,开启它
+Turn by,旋转量
+Turn to,旋转到
+Way,方式
+Z index,Z 索引
+degrees,度
+Dive,压低
+Muffle,闷住
+Wash,混响
+Switch an effect on,打开一个效果
+What it is on (layer),它所在的层（layer）
+What it sees (mask),它能看到的层（mask）
+Switch off,关闭
+Switch off for a time,限时关闭
+Switch back on,重新开启
+Ease in,缓入
+Ease out,缓出
+Ease in and out,缓入缓出
+Glow strength,辉光强度
+The scene's WorldEnvironment,场景的 WorldEnvironment
+"Switches a collision shape off for a time, then on again: the moment after a hit when nothing can hurt you. Godot refuses a shape's disabled tick in the middle of a physics step, so the card waits for the safe moment.",让碰撞形状关闭一段时间再重新开启：比如受击后一小段谁也伤不到你的时间。Godot 不允许在物理步进中途修改形状的 disabled，所以卡片会等到安全的时刻再改。
+"Takes a body or an area off a collision layer, or stops it seeing one, for a time: a ghost that walks through walls, a platform you drop through. It is changed at the safe moment, so it is fine to play from a collision.",让物体或区域在一段时间内离开某个碰撞层，或看不到某个层：比如穿墙的幽灵、可以从下方穿过的平台。修改会在安全的时刻进行，所以可以放心在碰撞回调中播放。
+"Removes a node: handed back to its pool when it came from one, freed when it did not. After this list ends is ticked to begin with, so the sound and the particles of a death are not cut off.",移除一个节点：来自对象池的会归还给池，否则直接释放。“在此列表结束后”默认勾选，这样死亡时的声音和粒子不会被截断。
+"Brings a 2D node in front of the rest for a time, or sends it behind. 2D only: a 3D node is drawn by its distance from the camera.",让 2D 节点在一段时间内显示在其他节点前面，或放到后面。仅限 2D：3D 节点按到相机的距离绘制。
+"Godot has no active tick, so this does the three things it means, each with its own tick: hide it, stop its scripts, disable its collision. Off for a time, off for good, or back on.",Godot 没有“启用”勾选，所以这张卡片分别用三个勾选来做它的三层含义：隐藏、停止脚本、禁用碰撞。可以限时关闭、一直关闭，或重新开启。
+"Turns a node to face another node over a time: in 2D its right points at it, in 3D it turns the way Godot's own look at does.",让节点在一段时间内转向另一个节点：2D 中让它的右方指向目标，3D 中的转法与 Godot 自带的 look_at 相同。
+"Turns a node by an angle over a time. On the sprite or mesh of a physics body, never on the body.",让节点在一段时间内旋转一个角度。请用在物理物体下面的精灵或网格上，不要用在物体本身上。
+"Turns a node to an angle over a time, the short way round. On the sprite or mesh of a physics body, never on the body.",让节点在一段时间内沿最短方向旋转到指定角度。请用在物理物体下面的精灵或网格上，不要用在物体本身上。
+"Wobbles the angle of a node, not its place, and settles it: a sign that rattles. It has the same fade ticks and curve as Shake.",让节点的角度（而不是位置）抖动并最终稳定下来，像一块咯咯作响的招牌。它有和 Shake 一样的淡入淡出勾选和曲线。
+"Flares a light to a brightness and a colour and lets it go back by itself: a muzzle flash. It works on the 2D and 3D lights, and a light that was off is switched on for the flare.",让灯光闪到指定的亮度和颜色，然后自动恢复：比如枪口火光。它适用于 2D 和 3D 灯光，原本关闭的灯会在闪光期间被打开。
+"Moves one value of the look of the scene to a number and back: glow, brightness, contrast, saturation, exposure, fog. It changes the scene's own copy, so no other scene changes. In a 2D game the glow needs a WorldEnvironment whose background is set to Canvas.",让场景外观的某个值变到指定数字再变回来：辉光、亮度、对比度、饱和度、曝光、雾。它修改的是场景自己的副本，所以其他场景不受影响。在 2D 游戏中使用辉光，需要背景设为 Canvas 的 WorldEnvironment。
+Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end and stays. Never shown in the editor.,让音频总线的某个效果持续一段时间再恢复：比如受伤时让世界声音发闷的低通。总线上没有的效果会添加到末尾并保留。不会在编辑器中显示。

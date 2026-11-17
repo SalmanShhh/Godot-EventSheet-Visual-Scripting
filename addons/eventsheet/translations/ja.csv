@@ -11030,3 +11030,86 @@ Corners,角
 "Radius is 0, so this polygon draws nothing.",半径が 0 なので、この多角形は何も描かれません。
 "A polygon needs at least 3 sides, so this one is drawn with 3.",多角形には少なくとも 3 辺が必要なので、3 辺で描かれます。
 "A polygon is drawn with 32 sides at most, so this one is drawn with 32.",多角形は最大 32 辺で描かれるので、32 辺で描かれます。
+"How long one pass of the list takes. Cards between two Pauses or Holds start together, so their times do not add up. What a Loop Back or the Loop tick repeats comes on top.",リストを 1 回通すのにかかる時間です。2 つの Pause や Hold の間にあるカードは同時に始まるため、時間は足し算になりません。Loop Back や Loop のチェックが繰り返す分は別に加わります。
+%d juice card - %s once through,Juice カード %d 枚 - 1 回で %s
+%d juice cards - %s once through,Juice カード %d 枚 - 1 回で %s
+Repeat the preview,プレビューを繰り返す
+"Keeps playing the preview in the editor while you tune. Each pass reads the list as it is then, so a number you change is the number the next pass uses. The game's own loop is the Loop tick on the node.",調整している間、エディターでプレビューを再生し続けます。各回はその時点のリストを読むので、変えた数値は次の回から使われます。ゲーム内のループはノードの Loop チェックです。
+%s is not what this card needs. It needs %s.,%s はこのカードが必要とするものではありません。必要なのは %s です。
+a collision shape,コリジョンシェイプ
+a body or an area,ボディまたはエリア
+a 2D node (a 3D node is drawn by its distance from the camera),2D ノード（3D ノードはカメラからの距離で描かれます）
+a 2D or a 3D node,2D または 3D ノード
+a node that can be turned,回転できるノード
+a light,ライト
+a WorldEnvironment or a 3D camera,WorldEnvironment または 3D カメラ
+"%s is a RigidBody, which the physics engine turns. Point this card at the sprite or mesh under it.",%s は RigidBody で、物理エンジンが回転させます。このカードはその下のスプライトかメッシュに向けてください。
+Pick the node to look at. Until then this card does nothing.,見る対象のノードを選んでください。それまでこのカードは何もしません。
+"This node holds the player, so it is removed when the list ends, whatever the tick says.",このノードはプレイヤーを含んでいるため、チェックに関わらずリストの終了時に取り除かれます。
+"This node holds the player, so the player's own tweens freeze with it while it is off.",このノードはプレイヤーを含んでいるため、オフの間はプレイヤー自身のトゥイーンも一緒に止まります。
+"This camera ignores rotation, so the shake cannot be seen. Turn off Ignore Rotation on it.",このカメラは回転を無視するため、揺れは見えません。Ignore Rotation をオフにしてください。
+"This scene has no WorldEnvironment to change. Add one, or pick the camera that holds the look.",このシーンには変更できる WorldEnvironment がありません。追加するか、見た目を持つカメラを選んでください。
+Layer %d has no name in Project Settings.,レイヤー %d にはプロジェクト設定で名前が付いていません。
+Layer %d is called %s in Project Settings.,レイヤー %d はプロジェクト設定で「%s」という名前です。
+"Swings up to %s degrees over %s s, following your curve, and ends at rest.",最大 %s 度まで揺れ、%s 秒かけてあなたのカーブに従い、静止します。
+Swings up to %s degrees half way and is at rest at %s s.,途中で最大 %s 度まで揺れ、%s 秒で静止します。
+Starts at rest and swings %s degrees by %s s.,静止から始まり、%s 度揺れて %s 秒に至ります。
+Swings %s degrees at first and is at rest at %s s.,最初は %s 度揺れ、%s 秒で静止します。
+"Swings %s degrees for %s s, then stops.",%s 度の揺れを %s 秒間続け、その後止まります。
+"A level in decibels, between -80 and 24. A bus with no amplify effect gets one added at its end, which stays on the bus.",デシベルでのレベル（-80 から 24）。増幅エフェクトのないバスには末尾に 1 つ追加され、そのままバスに残ります。
+"How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one added at its end, which stays on the bus.",リバーブがどれだけ聞こえるか（0 から 1）。リバーブのないバスには末尾に 1 つ追加され、そのままバスに残ります。
+"Effect 0 is the first effect on the bus. It is switched on, then put back to how it was.",エフェクト 0 はバスの最初のエフェクトです。オンにしたあと、元の状態に戻します。
+"The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one added at its end, which stays on the bus.",ヘルツ単位のカットオフ（20 から 20500）。ローパスのないバスには末尾に 1 つ追加され、そのままバスに残ります。
+Collision For A Time,一定時間の衝突
+Collision Layer For A Time,一定時間の衝突レイヤー
+Remove Node,ノードを取り除く
+Draw Order For A Time,一定時間の描画順
+Switch Node On Or Off,ノードのオン・オフ
+Rotate By,回転量で回す
+Rotate To,角度まで回す
+Rotation Shake,回転の揺れ
+Scene Look,シーンのルック
+Bus Effect For A Time,一定時間のバスエフェクト
+After this list ends,このリストの終了後
+Back over,戻る時間
+Change,変更するもの
+Colour to,変える色
+Disable its collision,コリジョンを無効にする
+Effect number,エフェクト番号
+Energy to,エネルギーの目標
+Hide it,非表示にする
+Layer number,レイヤー番号
+Look at,見る対象
+Stop its scripts,スクリプトを止める
+Switch it on,オンにする
+Turn by,回す量
+Turn to,回す先の角度
+Way,方法
+Z index,Z インデックス
+degrees,度
+Dive,ダイブ
+Muffle,こもらせる
+Wash,リバーブ
+Switch an effect on,エフェクトをオンにする
+What it is on (layer),どこにあるか（レイヤー）
+What it sees (mask),何を見るか（マスク）
+Switch off,オフにする
+Switch off for a time,一定時間オフにする
+Switch back on,もう一度オンにする
+Ease in,イーズイン
+Ease out,イーズアウト
+Ease in and out,イーズインアウト
+Glow strength,グローの強さ
+The scene's WorldEnvironment,シーンの WorldEnvironment
+"Switches a collision shape off for a time, then on again: the moment after a hit when nothing can hurt you. Godot refuses a shape's disabled tick in the middle of a physics step, so the card waits for the safe moment.",コリジョンシェイプを一定時間オフにして、また戻します。ヒットの直後に何にも傷つけられない時間などに使えます。Godot は物理ステップの最中にシェイプの disabled を変えられないため、カードは安全なタイミングまで待ちます。
+"Takes a body or an area off a collision layer, or stops it seeing one, for a time: a ghost that walks through walls, a platform you drop through. It is changed at the safe moment, so it is fine to play from a collision.",ボディやエリアを一定時間、あるコリジョンレイヤーから外したり、そのレイヤーが見えないようにしたりします。壁をすり抜ける幽霊や、下に降りられる足場などに使えます。変更は安全なタイミングで行われるので、衝突の中から再生しても問題ありません。
+"Removes a node: handed back to its pool when it came from one, freed when it did not. After this list ends is ticked to begin with, so the sound and the particles of a death are not cut off.",ノードを取り除きます。プールから来たものはプールに戻し、そうでなければ解放します。「このリストの終了後」は最初からオンなので、やられたときの音やパーティクルが途中で切れません。
+"Brings a 2D node in front of the rest for a time, or sends it behind. 2D only: a 3D node is drawn by its distance from the camera.",2D ノードを一定時間、他より手前に出したり奥に送ったりします。2D 専用で、3D ノードはカメラからの距離で描かれます。
+"Godot has no active tick, so this does the three things it means, each with its own tick: hide it, stop its scripts, disable its collision. Off for a time, off for good, or back on.",Godot には「アクティブ」のチェックがないため、このカードはその意味する 3 つを、それぞれ個別のチェックで行います。非表示にする、スクリプトを止める、コリジョンを無効にする。一定時間オフ、ずっとオフ、またはオンに戻す。
+"Turns a node to face another node over a time: in 2D its right points at it, in 3D it turns the way Godot's own look at does.",ノードを、時間をかけて別のノードの方へ向けます。2D では右方向がそれを指し、3D では Godot 自身の look_at と同じように回ります。
+"Turns a node by an angle over a time. On the sprite or mesh of a physics body, never on the body.",ノードを時間をかけて指定の角度だけ回します。物理ボディ自体ではなく、その下のスプライトやメッシュに使ってください。
+"Turns a node to an angle over a time, the short way round. On the sprite or mesh of a physics body, never on the body.",ノードを時間をかけて指定の角度まで、近い方向へ回します。物理ボディ自体ではなく、その下のスプライトやメッシュに使ってください。
+"Wobbles the angle of a node, not its place, and settles it: a sign that rattles. It has the same fade ticks and curve as Shake.",ノードの位置ではなく角度を揺らし、やがて落ち着かせます。ガタガタ鳴る看板のような動きです。Shake と同じフェードのチェックとカーブを持ちます。
+"Flares a light to a brightness and a colour and lets it go back by itself: a muzzle flash. It works on the 2D and 3D lights, and a light that was off is switched on for the flare.",ライトを指定の明るさと色まで光らせ、自動で元に戻します。銃口のフラッシュのような効果です。2D と 3D のライトで使え、オフのライトはフラッシュの間だけオンになります。
+"Moves one value of the look of the scene to a number and back: glow, brightness, contrast, saturation, exposure, fog. It changes the scene's own copy, so no other scene changes. In a 2D game the glow needs a WorldEnvironment whose background is set to Canvas.",シーンのルックの値を 1 つ、指定の数値まで動かして元に戻します。グロー、明るさ、コントラスト、彩度、露出、フォグなど。シーン専用のコピーを変更するので、他のシーンは変わりません。2D のゲームでグローを使うには、背景を Canvas にした WorldEnvironment が必要です。
+Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end and stays. Never shown in the editor.,オーディオバスのエフェクトを一定時間かけて、その後元に戻します。やられたときに世界をこもらせるローパスなどに使えます。バスにないエフェクトは末尾に追加され、そのまま残ります。エディターでは再生されません。

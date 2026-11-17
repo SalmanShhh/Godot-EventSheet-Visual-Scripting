@@ -11030,3 +11030,86 @@ Corners,Углы
 "Radius is 0, so this polygon draws nothing.","Радиус равен 0, поэтому этот многоугольник ничего не рисует."
 "A polygon needs at least 3 sides, so this one is drawn with 3.","Многоугольнику нужно не меньше 3 сторон, поэтому этот рисуется с 3."
 "A polygon is drawn with 32 sides at most, so this one is drawn with 32.","Многоугольник рисуется не более чем с 32 сторонами, поэтому этот рисуется с 32."
+"How long one pass of the list takes. Cards between two Pauses or Holds start together, so their times do not add up. What a Loop Back or the Loop tick repeats comes on top.","Сколько длится один проход списка. Карточки между двумя паузами или удержаниями стартуют вместе, поэтому их время не складывается. То, что повторяют Loop Back или флажок Loop, добавляется сверху."
+%d juice card - %s once through,карточек Juice: %d - %s за проход
+%d juice cards - %s once through,карточек Juice: %d - %s за проход
+Repeat the preview,Повторять предпросмотр
+"Keeps playing the preview in the editor while you tune. Each pass reads the list as it is then, so a number you change is the number the next pass uses. The game's own loop is the Loop tick on the node.","Продолжает воспроизводить предпросмотр в редакторе, пока вы настраиваете. Каждый проход читает список таким, какой он сейчас, поэтому изменённое число используется со следующего прохода. Цикл самой игры - это флажок Loop на узле."
+%s is not what this card needs. It needs %s.,%s не подходит этой карточке. Ей нужен %s.
+a collision shape,форма столкновения
+a body or an area,тело или область
+a 2D node (a 3D node is drawn by its distance from the camera),2D-узел (3D-узел рисуется по расстоянию до камеры)
+a 2D or a 3D node,2D- или 3D-узел
+a node that can be turned,"узел, который можно поворачивать"
+a light,источник света
+a WorldEnvironment or a 3D camera,WorldEnvironment или 3D-камера
+"%s is a RigidBody, which the physics engine turns. Point this card at the sprite or mesh under it.","%s - это RigidBody, его вращает физический движок. Направьте карточку на спрайт или меш под ним."
+Pick the node to look at. Until then this card does nothing.,"Выберите узел, на который смотреть. Пока он не выбран, карточка ничего не делает."
+"This node holds the player, so it is removed when the list ends, whatever the tick says.","Этот узел содержит проигрыватель, поэтому он удаляется по окончании списка, что бы ни говорил флажок."
+"This node holds the player, so the player's own tweens freeze with it while it is off.","Этот узел содержит проигрыватель, поэтому, пока он выключен, собственные твины проигрывателя замирают вместе с ним."
+"This camera ignores rotation, so the shake cannot be seen. Turn off Ignore Rotation on it.","Эта камера игнорирует поворот, поэтому тряска не видна. Отключите на ней Ignore Rotation."
+"This scene has no WorldEnvironment to change. Add one, or pick the camera that holds the look.","В этой сцене нет WorldEnvironment для изменения. Добавьте его или выберите камеру, которая хранит вид."
+Layer %d has no name in Project Settings.,У слоя %d нет имени в настройках проекта.
+Layer %d is called %s in Project Settings.,Слой %d называется %s в настройках проекта.
+"Swings up to %s degrees over %s s, following your curve, and ends at rest.",Качается до %s градусов за %s с по вашей кривой и заканчивает в покое.
+Swings up to %s degrees half way and is at rest at %s s.,"К середине качается до %s градусов, а на %s с приходит в покой."
+Starts at rest and swings %s degrees by %s s.,"Начинает с покоя и качается на %s градусов, достигая этого к %s с."
+Swings %s degrees at first and is at rest at %s s.,"Сначала качается на %s градусов, а на %s с приходит в покой."
+"Swings %s degrees for %s s, then stops.","Качается на %s градусов в течение %s с, затем останавливается."
+"A level in decibels, between -80 and 24. A bus with no amplify effect gets one added at its end, which stays on the bus.","Уровень в децибелах, от -80 до 24. Если на шине нет эффекта усиления, в конец добавляется один, и он остаётся на шине."
+"How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one added at its end, which stays on the bus.","Какая доля реверберации слышна, от 0 до 1. Если на шине нет реверберации, в конец добавляется одна, и она остаётся на шине."
+"Effect 0 is the first effect on the bus. It is switched on, then put back to how it was.","Эффект 0 - первый эффект на шине. Он включается, а затем возвращается в прежнее состояние."
+"The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one added at its end, which stays on the bus.","Частота среза в герцах, от 20 до 20500. Если на шине нет фильтра низких частот, в конец добавляется один, и он остаётся на шине."
+Collision For A Time,Столкновение на время
+Collision Layer For A Time,Слой столкновений на время
+Remove Node,Удалить узел
+Draw Order For A Time,Порядок отрисовки на время
+Switch Node On Or Off,Включить или выключить узел
+Rotate By,Повернуть на
+Rotate To,Повернуть до
+Rotation Shake,Тряска поворота
+Scene Look,Вид сцены
+Bus Effect For A Time,Эффект шины на время
+After this list ends,После окончания этого списка
+Back over,Назад за
+Change,Что менять
+Colour to,Цвет до
+Disable its collision,Отключить столкновения
+Effect number,Номер эффекта
+Energy to,Энергия до
+Hide it,Скрыть
+Layer number,Номер слоя
+Look at,Смотреть на
+Stop its scripts,Остановить скрипты
+Switch it on,Включить
+Turn by,Повернуть на
+Turn to,Повернуть до
+Way,Способ
+Z index,Z-индекс
+degrees,градусов
+Dive,Приглушить
+Muffle,Приглушить высокие
+Wash,Реверберация
+Switch an effect on,Включить эффект
+What it is on (layer),Где находится (слой)
+What it sees (mask),Что видит (маска)
+Switch off,Выключить
+Switch off for a time,Выключить на время
+Switch back on,Включить обратно
+Ease in,Плавный вход
+Ease out,Плавный выход
+Ease in and out,Плавный вход и выход
+Glow strength,Сила свечения
+The scene's WorldEnvironment,WorldEnvironment сцены
+"Switches a collision shape off for a time, then on again: the moment after a hit when nothing can hurt you. Godot refuses a shape's disabled tick in the middle of a physics step, so the card waits for the safe moment.","Выключает форму столкновения на время, а затем включает снова: момент после удара, когда ничто не может навредить. Godot отвергает флажок disabled у формы посреди шага физики, поэтому карточка ждёт безопасного момента."
+"Takes a body or an area off a collision layer, or stops it seeing one, for a time: a ghost that walks through walls, a platform you drop through. It is changed at the safe moment, so it is fine to play from a collision.","Убирает тело или область со слоя столкновений или лишает её возможности видеть слой на время: призрак, проходящий сквозь стены, платформа, через которую можно упасть вниз. Изменение делается в безопасный момент, поэтому карточку можно запускать из столкновения."
+"Removes a node: handed back to its pool when it came from one, freed when it did not. After this list ends is ticked to begin with, so the sound and the particles of a death are not cut off.","Удаляет узел: возвращает в его пул, если он оттуда, иначе освобождает. «После окончания этого списка» включено изначально, чтобы звук и частицы смерти не обрывались."
+"Brings a 2D node in front of the rest for a time, or sends it behind. 2D only: a 3D node is drawn by its distance from the camera.",Выводит 2D-узел перед остальными на время или отправляет назад. Только 2D: 3D-узел рисуется по расстоянию до камеры.
+"Godot has no active tick, so this does the three things it means, each with its own tick: hide it, stop its scripts, disable its collision. Off for a time, off for good, or back on.","В Godot нет флажка «активен», поэтому карточка делает три вещи, которые это значит, каждую со своим флажком: скрыть, остановить скрипты, отключить столкновения. Выключить на время, насовсем или включить обратно."
+"Turns a node to face another node over a time: in 2D its right points at it, in 3D it turns the way Godot's own look at does.","Поворачивает узел лицом к другому узлу за некоторое время: в 2D его правая сторона указывает на цель, в 3D он поворачивается так же, как встроенный look_at Godot."
+"Turns a node by an angle over a time. On the sprite or mesh of a physics body, never on the body.","Поворачивает узел на угол за некоторое время. Применяйте к спрайту или мешу физического тела, но не к самому телу."
+"Turns a node to an angle over a time, the short way round. On the sprite or mesh of a physics body, never on the body.","Поворачивает узел до заданного угла за некоторое время, кратчайшим путём. Применяйте к спрайту или мешу физического тела, но не к самому телу."
+"Wobbles the angle of a node, not its place, and settles it: a sign that rattles. It has the same fade ticks and curve as Shake.","Раскачивает угол узла, а не его положение, и успокаивает его: как дребезжащая вывеска. У неё те же флажки затухания и та же кривая, что у Shake."
+"Flares a light to a brightness and a colour and lets it go back by itself: a muzzle flash. It works on the 2D and 3D lights, and a light that was off is switched on for the flare.","Вспыхивает светом до заданной яркости и цвета и сам возвращает его обратно: вспышка выстрела. Работает с 2D- и 3D-светом, а выключенный свет на время вспышки включается."
+"Moves one value of the look of the scene to a number and back: glow, brightness, contrast, saturation, exposure, fog. It changes the scene's own copy, so no other scene changes. In a 2D game the glow needs a WorldEnvironment whose background is set to Canvas.","Сдвигает одно значение вида сцены к числу и возвращает обратно: свечение, яркость, контраст, насыщенность, экспозиция, туман. Меняется собственная копия сцены, поэтому другие сцены не затрагиваются. В 2D-игре для свечения нужен WorldEnvironment с фоном Canvas."
+Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end and stays. Never shown in the editor.,"Удерживает эффект аудиошины на время и возвращает обратно: фильтр низких частот, приглушающий мир при ранении. Отсутствующий на шине эффект добавляется в конец и остаётся. В редакторе никогда не показывается."

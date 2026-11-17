@@ -11030,3 +11030,86 @@ Corners,모서리
 "Radius is 0, so this polygon draws nothing.",반지름이 0이라 이 다각형은 아무것도 그리지 않습니다.
 "A polygon needs at least 3 sides, so this one is drawn with 3.",다각형에는 변이 3개 이상 필요해서 3개로 그려집니다.
 "A polygon is drawn with 32 sides at most, so this one is drawn with 32.",다각형은 변이 최대 32개까지 그려져서 32개로 그려집니다.
+"How long one pass of the list takes. Cards between two Pauses or Holds start together, so their times do not add up. What a Loop Back or the Loop tick repeats comes on top.",리스트를 한 번 지나가는 데 걸리는 시간입니다. 두 Pause나 Hold 사이의 카드는 동시에 시작하므로 시간이 더해지지 않습니다. Loop Back이나 Loop 체크가 반복하는 시간은 그 위에 더해집니다.
+%d juice card - %s once through,Juice 카드 %d장 - 한 번에 %s
+%d juice cards - %s once through,Juice 카드 %d장 - 한 번에 %s
+Repeat the preview,미리보기 반복
+"Keeps playing the preview in the editor while you tune. Each pass reads the list as it is then, so a number you change is the number the next pass uses. The game's own loop is the Loop tick on the node.",조정하는 동안 에디터에서 미리보기를 계속 재생합니다. 매번 그 시점의 리스트를 읽으므로 바꾼 숫자는 다음 회차부터 쓰입니다. 게임의 반복은 노드의 Loop 체크입니다.
+%s is not what this card needs. It needs %s.,%s은(는) 이 카드에 필요한 것이 아닙니다. 필요한 것은 %s입니다.
+a collision shape,충돌 셰이프
+a body or an area,바디 또는 영역
+a 2D node (a 3D node is drawn by its distance from the camera),2D 노드 (3D 노드는 카메라와의 거리로 그려집니다)
+a 2D or a 3D node,2D 또는 3D 노드
+a node that can be turned,회전할 수 있는 노드
+a light,라이트
+a WorldEnvironment or a 3D camera,WorldEnvironment 또는 3D 카메라
+"%s is a RigidBody, which the physics engine turns. Point this card at the sprite or mesh under it.",%s은(는) 물리 엔진이 회전시키는 RigidBody입니다. 이 카드는 그 아래의 스프라이트나 메시를 가리키세요.
+Pick the node to look at. Until then this card does nothing.,바라볼 노드를 고르세요. 그때까지 이 카드는 아무것도 하지 않습니다.
+"This node holds the player, so it is removed when the list ends, whatever the tick says.",이 노드는 플레이어를 포함하고 있어서 체크와 상관없이 리스트가 끝날 때 제거됩니다.
+"This node holds the player, so the player's own tweens freeze with it while it is off.",이 노드는 플레이어를 포함하고 있어서 꺼져 있는 동안 플레이어 자신의 트윈도 함께 멈춥니다.
+"This camera ignores rotation, so the shake cannot be seen. Turn off Ignore Rotation on it.",이 카메라는 회전을 무시하므로 흔들림이 보이지 않습니다. Ignore Rotation을 끄세요.
+"This scene has no WorldEnvironment to change. Add one, or pick the camera that holds the look.",이 씬에는 바꿀 WorldEnvironment가 없습니다. 하나 추가하거나 룩을 가진 카메라를 고르세요.
+Layer %d has no name in Project Settings.,레이어 %d에는 프로젝트 설정에서 지은 이름이 없습니다.
+Layer %d is called %s in Project Settings.,레이어 %d의 이름은 프로젝트 설정에서 %s입니다.
+"Swings up to %s degrees over %s s, following your curve, and ends at rest.",최대 %s도까지 흔들리며 %s초 동안 내 커브를 따르다가 정지합니다.
+Swings up to %s degrees half way and is at rest at %s s.,중간에 최대 %s도까지 흔들리고 %s초에 정지합니다.
+Starts at rest and swings %s degrees by %s s.,정지 상태에서 시작해 %s도를 흔들며 %s초에 이릅니다.
+Swings %s degrees at first and is at rest at %s s.,처음에는 %s도 흔들리고 %s초에 정지합니다.
+"Swings %s degrees for %s s, then stops.",%s도 흔들림을 %s초 동안 유지하다가 멈춥니다.
+"A level in decibels, between -80 and 24. A bus with no amplify effect gets one added at its end, which stays on the bus.",데시벨 단위의 레벨(-80에서 24 사이). 증폭 이펙트가 없는 버스에는 끝에 하나가 추가되며 버스에 그대로 남습니다.
+"How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one added at its end, which stays on the bus.",리버브가 얼마나 들리는지(0에서 1 사이). 리버브가 없는 버스에는 끝에 하나가 추가되며 버스에 그대로 남습니다.
+"Effect 0 is the first effect on the bus. It is switched on, then put back to how it was.",이펙트 0은 버스의 첫 번째 이펙트입니다. 켠 뒤 원래 상태로 되돌립니다.
+"The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one added at its end, which stays on the bus.",헤르츠 단위의 컷오프(20에서 20500 사이). 로우패스가 없는 버스에는 끝에 하나가 추가되며 버스에 그대로 남습니다.
+Collision For A Time,일정 시간 충돌
+Collision Layer For A Time,일정 시간 충돌 레이어
+Remove Node,노드 제거
+Draw Order For A Time,일정 시간 그리기 순서
+Switch Node On Or Off,노드 켜기 또는 끄기
+Rotate By,각도만큼 회전
+Rotate To,각도로 회전
+Rotation Shake,회전 흔들림
+Scene Look,씬 룩
+Bus Effect For A Time,일정 시간 버스 이펙트
+After this list ends,이 리스트가 끝난 뒤
+Back over,되돌아가는 시간
+Change,바꿀 것
+Colour to,바꿀 색
+Disable its collision,충돌 끄기
+Effect number,이펙트 번호
+Energy to,에너지 목표
+Hide it,숨기기
+Layer number,레이어 번호
+Look at,바라볼 대상
+Stop its scripts,스크립트 멈추기
+Switch it on,켜기
+Turn by,회전량
+Turn to,회전 목표
+Way,방식
+Z index,Z 인덱스
+degrees,도
+Dive,다이브
+Muffle,먹먹하게
+Wash,리버브
+Switch an effect on,이펙트 켜기
+What it is on (layer),속한 곳 (레이어)
+What it sees (mask),보는 것 (마스크)
+Switch off,끄기
+Switch off for a time,일정 시간 끄기
+Switch back on,다시 켜기
+Ease in,이즈 인
+Ease out,이즈 아웃
+Ease in and out,이즈 인 아웃
+Glow strength,글로우 강도
+The scene's WorldEnvironment,씬의 WorldEnvironment
+"Switches a collision shape off for a time, then on again: the moment after a hit when nothing can hurt you. Godot refuses a shape's disabled tick in the middle of a physics step, so the card waits for the safe moment.","충돌 셰이프를 일정 시간 끈 뒤 다시 켭니다. 피격 직후 아무것도 해를 입힐 수 없는 순간 같은 데 씁니다. Godot는 물리 스텝 도중에 셰이프의 disabled를 바꾸는 것을 거부하므로, 카드는 안전한 순간까지 기다립니다."
+"Takes a body or an area off a collision layer, or stops it seeing one, for a time: a ghost that walks through walls, a platform you drop through. It is changed at the safe moment, so it is fine to play from a collision.",바디나 영역을 일정 시간 어떤 충돌 레이어에서 빼거나 그 레이어를 보지 못하게 합니다. 벽을 통과하는 유령이나 아래로 내려갈 수 있는 발판 같은 데 씁니다. 변경은 안전한 순간에 이루어지므로 충돌 안에서 재생해도 괜찮습니다.
+"Removes a node: handed back to its pool when it came from one, freed when it did not. After this list ends is ticked to begin with, so the sound and the particles of a death are not cut off.","노드를 제거합니다. 풀에서 온 것은 풀로 돌려보내고, 아니면 해제합니다. '이 리스트가 끝난 뒤'는 처음부터 켜져 있어서 죽을 때의 소리와 파티클이 잘리지 않습니다."
+"Brings a 2D node in front of the rest for a time, or sends it behind. 2D only: a 3D node is drawn by its distance from the camera.","2D 노드를 일정 시간 다른 것들 앞으로 가져오거나 뒤로 보냅니다. 2D 전용이며, 3D 노드는 카메라와의 거리로 그려집니다."
+"Godot has no active tick, so this does the three things it means, each with its own tick: hide it, stop its scripts, disable its collision. Off for a time, off for good, or back on.","Godot에는 '활성' 체크가 없어서, 이 카드는 그것이 뜻하는 세 가지를 각각의 체크로 합니다. 숨기기, 스크립트 멈추기, 충돌 끄기. 일정 시간 끄기, 계속 끄기, 다시 켜기를 고를 수 있습니다."
+"Turns a node to face another node over a time: in 2D its right points at it, in 3D it turns the way Godot's own look at does.","노드가 시간에 걸쳐 다른 노드를 바라보게 돌립니다. 2D에서는 오른쪽이 그쪽을 향하고, 3D에서는 Godot의 look_at과 같은 방식으로 돕니다."
+"Turns a node by an angle over a time. On the sprite or mesh of a physics body, never on the body.",노드를 시간에 걸쳐 일정 각도만큼 돌립니다. 물리 바디 자체가 아니라 그 아래의 스프라이트나 메시에 쓰세요.
+"Turns a node to an angle over a time, the short way round. On the sprite or mesh of a physics body, never on the body.",노드를 시간에 걸쳐 지정한 각도까지 가까운 쪽으로 돌립니다. 물리 바디 자체가 아니라 그 아래의 스프라이트나 메시에 쓰세요.
+"Wobbles the angle of a node, not its place, and settles it: a sign that rattles. It has the same fade ticks and curve as Shake.",노드의 위치가 아니라 각도를 흔들고 가라앉힙니다. 덜컹거리는 간판 같은 움직임입니다. Shake와 같은 페이드 체크와 커브가 있습니다.
+"Flares a light to a brightness and a colour and lets it go back by itself: a muzzle flash. It works on the 2D and 3D lights, and a light that was off is switched on for the flare.","라이트를 지정한 밝기와 색까지 번쩍이게 한 뒤 저절로 되돌립니다. 총구 섬광 같은 효과입니다. 2D와 3D 라이트에서 쓸 수 있고, 꺼져 있던 라이트는 번쩍이는 동안만 켜집니다."
+"Moves one value of the look of the scene to a number and back: glow, brightness, contrast, saturation, exposure, fog. It changes the scene's own copy, so no other scene changes. In a 2D game the glow needs a WorldEnvironment whose background is set to Canvas.","씬 룩의 값 하나를 지정한 숫자까지 움직였다가 되돌립니다. 글로우, 밝기, 대비, 채도, 노출, 안개 등이 있습니다. 씬 자신의 복사본을 바꾸므로 다른 씬은 바뀌지 않습니다. 2D 게임에서 글로우를 쓰려면 배경이 Canvas인 WorldEnvironment가 필요합니다."
+Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end and stays. Never shown in the editor.,오디오 버스의 이펙트를 일정 시간 유지했다가 되돌립니다. 피격 시 세상을 먹먹하게 만드는 로우패스 같은 데 씁니다. 버스에 없는 이펙트는 끝에 추가되어 그대로 남습니다. 에디터에서는 재생되지 않습니다.

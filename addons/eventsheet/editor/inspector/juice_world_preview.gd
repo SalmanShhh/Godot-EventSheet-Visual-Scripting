@@ -26,14 +26,16 @@ extends RefCounted
 ## The words of the cards this file previews, besides a Tween Property card.
 const WORDS: PackedStringArray = [
 	"particles", "animation", "sprite_animation", "show_hide", "squash_stretch", "punch_position",
-	"punch_rotation", "pop", "fade", "count_to", "reveal_text", "fill_bar", "shader_value"
+	"punch_rotation", "pop", "fade", "count_to", "reveal_text", "fill_bar", "shader_value",
+	"look_at", "rotate_by", "rotate_to", "rotation_shake", "draw_order", "light"
 ]
 
 ## The cards that act on the object the player is under, whatever else they hold.
 const ON_HOST: PackedStringArray = ["squash_stretch", "punch_position", "punch_rotation"]
 
 ## The cards whose node, left empty, is the object the player is under.
-const HOST_WHEN_EMPTY: PackedStringArray = ["show_hide", "pop", "fade", "shader_value", "tween_property"]
+const HOST_WHEN_EMPTY: PackedStringArray = ["show_hide", "pop", "fade", "shader_value", "tween_property", "look_at", "rotate_by",
+	"rotate_to", "rotation_shake", "draw_order", "light"]
 
 ## The keys that make a Tween Property card the whole card, as the running player counts them.
 const TWEEN_KEYS: PackedStringArray = ["node", "to", "from", "trans", "ease", "relative", "back"]
@@ -124,6 +126,17 @@ static func watched(card: Dictionary, node: Node) -> Array:
 			var property: String = str(card.get("effect", "")).strip_edges()
 			if not property.is_empty():
 				made.append([node, property])
+		"look_at", "rotate_by", "rotate_to", "rotation_shake":
+			made.append([node, "rotation"])
+			if node is Control:
+				made.append([node, "pivot_offset"])
+		"draw_order":
+			made.append([node, "z_index"])
+		"light":
+			var names: Dictionary = light_names(node)
+			for key: String in ["energy", "colour", "on"]:
+				if names.has(key):
+					made.append([node, str(names[key])])
 	return made
 
 
@@ -181,6 +194,18 @@ static func step(card: Dictionary, node: Node, through: float, at: float, state:
 			_shader_value(card, node, held, state)
 		"tween_property":
 			_tween(card, node, held, at, state)
+		"rotate_by":
+			_turn(card, node, held, seconds, state, true)
+		"rotate_to":
+			_turn(card, node, held, seconds, state, false)
+		"rotation_shake":
+			_rotation_shake(card, node, held, at, seconds, state)
+		"look_at":
+			_look_at(card, node, held, state)
+		"draw_order":
+			node.set("z_index", clampi(int(card.get("z_index", 10)), -4096, 4096) if through < 1.0 else _rest(state, node, "z_index"))
+		"light":
+			_light(card, node, through, at, state)
 
 
 ## Writes down the value a property has now, as the pass's rest value. The strip calls it for everything
@@ -258,6 +283,111 @@ static func _pop(card: Dictionary, node: Node, held: float, seconds: float, stat
 		node.set("scale", Tween.interpolate_value(rest, rest * peak - rest, elapsed, rise, Tween.TRANS_BACK, Tween.EASE_OUT))
 	else:
 		node.set("scale", Tween.interpolate_value(rest * peak, rest - rest * peak, elapsed - rise, seconds * 0.6, Tween.TRANS_SINE, Tween.EASE_IN_OUT))
+
+
+## The pack that plays the cards, which says what a light is called and how fast a rotation shake swings.
+static func _pack() -> Script:
+	return load("res://addons/eventsheet/editor/inspector/juice_preview.gd").call("pack_script") as Script
+
+
+## The three names a light answers to: brightness, colour, and what switches it on. Asked of the pack, so the
+## picture and the game cannot disagree. Empty for a node that is no light.
+static func light_names(node: Node) -> Dictionary:
+	var pack: Script = _pack()
+	return pack.call("light_properties", node) as Dictionary if pack != null and node != null else {}
+
+
+## Rotate By and Rotate To: the angle walked from where it is to where it is going, by the curve the game uses.
+static func _turn(card: Dictionary, node: Node, held: float, seconds: float, state: Dictionary, by: bool) -> void:
+	if not (node is Node2D or node is Control or node is Node3D):
+		return
+	_centre(node, state)
+	var rest: Variant = _rest(state, node, "rotation")
+	var wanted: float = deg_to_rad(float(card.get("degrees", 45.0 if by else 90.0)))
+	var now: float = (rest as Vector3).y if rest is Vector3 else float(rest)
+	var goal_angle: float = now + wanted if by else now + angle_difference(now, wanted)
+	var goal: Variant = Vector3((rest as Vector3).x, goal_angle, (rest as Vector3).z) if rest is Vector3 else goal_angle
+	node.set("rotation", Tween.interpolate_value(rest, goal - rest, held * seconds, seconds, Tween.TRANS_SINE, Tween.EASE_IN_OUT))
+
+
+## Rotation Shake: the angle at rest plus a swing the shape of the shake makes larger or smaller, ending at rest.
+static func _rotation_shake(card: Dictionary, node: Node, held: float, at: float, seconds: float, state: Dictionary) -> void:
+	if not (node is Node2D or node is Control or node is Node3D):
+		return
+	_centre(node, state)
+	var rest: Variant = _rest(state, node, "rotation")
+	var pack: Script = _pack()
+	var hertz: float = float(pack.get_script_constant_map().get("SHAKE_HERTZ", 12.0)) if pack != null else 12.0
+	var share: float = float(load("res://addons/eventsheet/editor/inspector/juice_shake_fields.gd").call("shape_at", card, held))
+	var swing: float = 0.0
+	if held < 1.0:
+		swing = deg_to_rad(float(card.get("degrees", 10.0))) * at * share * sin(held * seconds * TAU * hertz)
+	if rest is Vector3:
+		node.set("rotation", Vector3((rest as Vector3).x, (rest as Vector3).y + swing, (rest as Vector3).z))
+	else:
+		node.set("rotation", float(rest) + swing)
+
+
+## Look At: the node turns to face the node it names, over the card's length.
+static func _look_at(card: Dictionary, node: Node, held: float, state: Dictionary) -> void:
+	var player: Node = state.get("player") as Node
+	var stored: Variant = card.get("target", NodePath())
+	var aim: Node = player.get_node_or_null(stored if stored is NodePath else NodePath(str(stored))) if player != null else null
+	if aim == null:
+		return
+	if node is Node2D and aim is Node2D:
+		var from_angle: float = float(_rest(state, node, "global_rotation"))
+		var offset: Vector2 = (aim as Node2D).global_position - (node as Node2D).global_position
+		if offset.length() >= 0.001:
+			var goal: float = from_angle + angle_difference(from_angle, offset.angle())
+			(node as Node2D).global_rotation = Tween.interpolate_value(from_angle, goal - from_angle, held, 1.0, Tween.TRANS_SINE, Tween.EASE_IN_OUT)
+	elif node is Node3D and aim is Node3D:
+		var start: Vector3 = (node as Node3D).global_position
+		var end: Vector3 = (aim as Node3D).global_position
+		if start.distance_to(end) < 0.001:
+			return
+		var key: String = "look|%d" % node.get_instance_id()
+		if not state.has(key):
+			state[key] = (node as Node3D).global_transform.basis.get_rotation_quaternion()
+		var up: Vector3 = Vector3.FORWARD if absf((end - start).normalized().dot(Vector3.UP)) > 0.999 else Vector3.UP
+		var goal_turn: Quaternion = Transform3D(Basis(), start).looking_at(end, up).basis.get_rotation_quaternion()
+		var now: Transform3D = (node as Node3D).global_transform
+		(node as Node3D).global_transform = Transform3D(Basis((state[key] as Quaternion).slerp(goal_turn, held)).scaled(now.basis.get_scale()), now.origin)
+
+
+## Light: brightness and colour walked to the flare and back, the way the game walks them.
+static func _light(card: Dictionary, node: Node, through: float, at: float, state: Dictionary) -> void:
+	var names: Dictionary = light_names(node)
+	if names.is_empty():
+		return
+	var rest_energy: float = float(_rest(state, node, str(names["energy"])))
+	var rest_colour: Color = _rest(state, node, str(names["colour"])) as Color
+	var switched: String = str(names["on"])
+	var peak: float = rest_energy + (float(card.get("energy_to", 3.0)) - rest_energy) * at
+	var raw: Variant = card.get("colour_to", Color(1.0, 0.6, 0.2))
+	var tint: Color = rest_colour.lerp(raw as Color if raw is Color else Color(str(raw)), clampf(at, 0.0, 1.0))
+	var seconds: float = maxf(float(card.get("seconds", 0.08)), 0.0)
+	var back: bool = bool(card.get("back", true))
+	var back_seconds: float = maxf(float(card.get("back_seconds", 0.2)), 0.0) if back else 0.0
+	var elapsed: float = clampf(through, 0.0, 1.0) * (seconds + back_seconds)
+	var word: String = str(card.get("ease", "out"))
+	var easing: int = Tween.EASE_OUT
+	if word == "in":
+		easing = Tween.EASE_IN
+	elif word == "in_out":
+		easing = Tween.EASE_IN_OUT
+	var curve: int = Tween.TRANS_LINEAR if word == "linear" else Tween.TRANS_SINE
+	if not bool(_rest(state, node, switched)):
+		node.set(switched, through < 1.0)
+	if elapsed <= seconds and seconds > 0.0:
+		node.set(str(names["energy"]), Tween.interpolate_value(rest_energy, peak - rest_energy, elapsed, seconds, curve, easing))
+		node.set(str(names["colour"]), Tween.interpolate_value(rest_colour, tint - rest_colour, elapsed, seconds, curve, easing))
+	elif back and back_seconds > 0.0 and elapsed < seconds + back_seconds:
+		node.set(str(names["energy"]), Tween.interpolate_value(peak, rest_energy - peak, elapsed - seconds, back_seconds, curve, easing))
+		node.set(str(names["colour"]), Tween.interpolate_value(tint, rest_colour - tint, elapsed - seconds, back_seconds, curve, easing))
+	else:
+		node.set(str(names["energy"]), rest_energy if back else peak)
+		node.set(str(names["colour"]), rest_colour if back else tint)
 
 
 ## A card of your own that is a tool script: played once, when its turn comes, and told to stop and to put

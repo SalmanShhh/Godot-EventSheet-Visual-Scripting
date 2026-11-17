@@ -11030,3 +11030,86 @@ Corners,Ecken
 "Radius is 0, so this polygon draws nothing.","Der Radius ist 0, daher zeichnet dieses Vieleck nichts."
 "A polygon needs at least 3 sides, so this one is drawn with 3.","Ein Vieleck braucht mindestens 3 Seiten, daher wird dieses mit 3 gezeichnet."
 "A polygon is drawn with 32 sides at most, so this one is drawn with 32.","Ein Vieleck wird mit höchstens 32 Seiten gezeichnet, daher wird dieses mit 32 gezeichnet."
+"How long one pass of the list takes. Cards between two Pauses or Holds start together, so their times do not add up. What a Loop Back or the Loop tick repeats comes on top.","Wie lange ein Durchlauf der Liste dauert. Karten zwischen zwei Pausen oder Halten starten gleichzeitig, ihre Zeiten addieren sich also nicht. Was ein Loop Back oder das Häkchen Loop wiederholt, kommt dazu."
+%d juice card - %s once through,%d Juice-Karte - %s pro Durchlauf
+%d juice cards - %s once through,%d Juice-Karten - %s pro Durchlauf
+Repeat the preview,Vorschau wiederholen
+"Keeps playing the preview in the editor while you tune. Each pass reads the list as it is then, so a number you change is the number the next pass uses. The game's own loop is the Loop tick on the node.","Spielt die Vorschau im Editor weiter, während du einstellst. Jeder Durchlauf liest die Liste, wie sie dann ist, eine geänderte Zahl gilt also im nächsten Durchlauf. Die Schleife des Spiels ist das Häkchen Loop am Node."
+%s is not what this card needs. It needs %s.,"%s ist nicht, was diese Karte braucht. Sie braucht %s."
+a collision shape,eine Kollisionsform
+a body or an area,ein Körper oder eine Area
+a 2D node (a 3D node is drawn by its distance from the camera),ein 2D-Node (ein 3D-Node wird nach seinem Abstand zur Kamera gezeichnet)
+a 2D or a 3D node,ein 2D- oder 3D-Node
+a node that can be turned,"ein Node, der gedreht werden kann"
+a light,ein Licht
+a WorldEnvironment or a 3D camera,ein WorldEnvironment oder eine 3D-Kamera
+"%s is a RigidBody, which the physics engine turns. Point this card at the sprite or mesh under it.","%s ist ein RigidBody, den die Physik-Engine dreht. Richte diese Karte auf das Sprite oder Mesh darunter."
+Pick the node to look at. Until then this card does nothing.,"Wähle den Node, auf den geschaut werden soll. Bis dahin tut diese Karte nichts."
+"This node holds the player, so it is removed when the list ends, whatever the tick says.","Dieser Node enthält den Player, daher wird er am Ende der Liste entfernt, egal was das Häkchen sagt."
+"This node holds the player, so the player's own tweens freeze with it while it is off.","Dieser Node enthält den Player, daher frieren dessen eigene Tweens mit ein, solange er aus ist."
+"This camera ignores rotation, so the shake cannot be seen. Turn off Ignore Rotation on it.","Diese Kamera ignoriert Rotation, daher ist das Wackeln nicht zu sehen. Schalte bei ihr Ignore Rotation aus."
+"This scene has no WorldEnvironment to change. Add one, or pick the camera that holds the look.","Diese Szene hat kein WorldEnvironment zum Ändern. Füge eines hinzu oder wähle die Kamera, die den Look hält."
+Layer %d has no name in Project Settings.,Ebene %d hat in den Projekteinstellungen keinen Namen.
+Layer %d is called %s in Project Settings.,Ebene %d heißt in den Projekteinstellungen %s.
+"Swings up to %s degrees over %s s, following your curve, and ends at rest.","Schwingt bis zu %s Grad über %s s, folgt deiner Kurve und endet in Ruhe."
+Swings up to %s degrees half way and is at rest at %s s.,Schwingt auf halber Strecke bis zu %s Grad und ist bei %s s in Ruhe.
+Starts at rest and swings %s degrees by %s s.,Beginnt in Ruhe und schwingt um %s Grad bis %s s.
+Swings %s degrees at first and is at rest at %s s.,Schwingt zuerst %s Grad und ist bei %s s in Ruhe.
+"Swings %s degrees for %s s, then stops.",Schwingt %s Grad für %s s und hört dann auf.
+"A level in decibels, between -80 and 24. A bus with no amplify effect gets one added at its end, which stays on the bus.","Ein Pegel in Dezibel, zwischen -80 und 24. Hat der Bus keinen Verstärker-Effekt, wird am Ende einer hinzugefügt, der auf dem Bus bleibt."
+"How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one added at its end, which stays on the bus.","Wie viel vom Hall zu hören ist, von 0 bis 1. Hat der Bus keinen Hall, wird am Ende einer hinzugefügt, der auf dem Bus bleibt."
+"Effect 0 is the first effect on the bus. It is switched on, then put back to how it was.",Effekt 0 ist der erste Effekt auf dem Bus. Er wird eingeschaltet und danach wieder in den alten Zustand gebracht.
+"The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one added at its end, which stays on the bus.","Die Grenzfrequenz in Hertz, zwischen 20 und 20500. Hat der Bus keinen Tiefpass, wird am Ende einer hinzugefügt, der auf dem Bus bleibt."
+Collision For A Time,Kollision für eine Zeit
+Collision Layer For A Time,Kollisionsebene für eine Zeit
+Remove Node,Node entfernen
+Draw Order For A Time,Zeichenreihenfolge für eine Zeit
+Switch Node On Or Off,Node ein- oder ausschalten
+Rotate By,Drehen um
+Rotate To,Drehen auf
+Rotation Shake,Drehungswackeln
+Scene Look,Szenen-Look
+Bus Effect For A Time,Bus-Effekt für eine Zeit
+After this list ends,Nach dem Ende dieser Liste
+Back over,Zurück über
+Change,Ändern
+Colour to,Farbe nach
+Disable its collision,Kollision deaktivieren
+Effect number,Effektnummer
+Energy to,Energie auf
+Hide it,Ausblenden
+Layer number,Ebenennummer
+Look at,Ansehen
+Stop its scripts,Skripte anhalten
+Switch it on,Einschalten
+Turn by,Drehen um
+Turn to,Drehen auf
+Way,Art
+Z index,Z-Index
+degrees,Grad
+Dive,Absenken
+Muffle,Dämpfen
+Wash,Hall
+Switch an effect on,Einen Effekt einschalten
+What it is on (layer),Worauf es liegt (Ebene)
+What it sees (mask),Was es sieht (Maske)
+Switch off,Ausschalten
+Switch off for a time,Für eine Zeit ausschalten
+Switch back on,Wieder einschalten
+Ease in,Sanft einsetzen
+Ease out,Sanft auslaufen
+Ease in and out,Sanft ein und aus
+Glow strength,Leuchtstärke
+The scene's WorldEnvironment,Das WorldEnvironment der Szene
+"Switches a collision shape off for a time, then on again: the moment after a hit when nothing can hurt you. Godot refuses a shape's disabled tick in the middle of a physics step, so the card waits for the safe moment.","Schaltet eine Kollisionsform für eine Zeit aus und dann wieder ein: der Moment nach einem Treffer, in dem dich nichts verletzen kann. Godot lehnt das Häkchen Disabled einer Form mitten in einem Physikschritt ab, deshalb wartet die Karte auf den sicheren Moment."
+"Takes a body or an area off a collision layer, or stops it seeing one, for a time: a ghost that walks through walls, a platform you drop through. It is changed at the safe moment, so it is fine to play from a collision.","Nimmt einen Körper oder eine Area für eine Zeit aus einer Kollisionsebene oder lässt sie eine Ebene nicht mehr sehen: ein Geist, der durch Wände geht, eine Plattform, durch die man fällt. Es wird im sicheren Moment geändert, daher ist es unbedenklich, die Karte aus einer Kollision abzuspielen."
+"Removes a node: handed back to its pool when it came from one, freed when it did not. After this list ends is ticked to begin with, so the sound and the particles of a death are not cut off.","Entfernt einen Node: an seinen Pool zurückgegeben, wenn er aus einem kam, sonst freigegeben. Nach dem Ende dieser Liste ist anfangs angehakt, damit Ton und Partikel eines Todes nicht abgeschnitten werden."
+"Brings a 2D node in front of the rest for a time, or sends it behind. 2D only: a 3D node is drawn by its distance from the camera.",Holt einen 2D-Node für eine Zeit vor die anderen oder schickt ihn nach hinten. Nur 2D: ein 3D-Node wird nach seinem Abstand zur Kamera gezeichnet.
+"Godot has no active tick, so this does the three things it means, each with its own tick: hide it, stop its scripts, disable its collision. Off for a time, off for good, or back on.","Godot hat kein Häkchen „aktiv“, daher macht diese Karte die drei Dinge, die es bedeutet, jedes mit eigenem Häkchen: ausblenden, Skripte anhalten, Kollision deaktivieren. Für eine Zeit aus, für immer aus oder wieder an."
+"Turns a node to face another node over a time: in 2D its right points at it, in 3D it turns the way Godot's own look at does.","Dreht einen Node über eine Zeit zu einem anderen hin: in 2D zeigt seine rechte Seite darauf, in 3D dreht er sich wie Godots eigenes look_at."
+"Turns a node by an angle over a time. On the sprite or mesh of a physics body, never on the body.","Dreht einen Node über eine Zeit um einen Winkel. Auf das Sprite oder Mesh eines Physikkörpers anwenden, nie auf den Körper selbst."
+"Turns a node to an angle over a time, the short way round. On the sprite or mesh of a physics body, never on the body.","Dreht einen Node über eine Zeit auf einen Winkel, auf dem kürzesten Weg. Auf das Sprite oder Mesh eines Physikkörpers anwenden, nie auf den Körper selbst."
+"Wobbles the angle of a node, not its place, and settles it: a sign that rattles. It has the same fade ticks and curve as Shake.","Lässt den Winkel eines Nodes wackeln, nicht seinen Ort, und beruhigt ihn wieder: ein klapperndes Schild. Sie hat dieselben Ausblend-Häkchen und dieselbe Kurve wie Shake."
+"Flares a light to a brightness and a colour and lets it go back by itself: a muzzle flash. It works on the 2D and 3D lights, and a light that was off is switched on for the flare.","Lässt ein Licht auf eine Helligkeit und eine Farbe aufflammen und von selbst zurückgehen: ein Mündungsfeuer. Sie funktioniert mit 2D- und 3D-Lichtern, und ein ausgeschaltetes Licht wird für das Aufflammen eingeschaltet."
+"Moves one value of the look of the scene to a number and back: glow, brightness, contrast, saturation, exposure, fog. It changes the scene's own copy, so no other scene changes. In a 2D game the glow needs a WorldEnvironment whose background is set to Canvas.","Bewegt einen Wert des Szenen-Looks auf eine Zahl und zurück: Leuchten, Helligkeit, Kontrast, Sättigung, Belichtung, Nebel. Sie ändert die eigene Kopie der Szene, daher ändert sich keine andere Szene. In einem 2D-Spiel braucht das Leuchten ein WorldEnvironment, dessen Hintergrund auf Canvas steht."
+Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end and stays. Never shown in the editor.,"Hält einen Effekt eines Audiobusses für eine Zeit und stellt ihn zurück: ein Tiefpass, der die Welt dämpft, wenn du getroffen wirst. Fehlt dem Bus ein Effekt, wird er am Ende hinzugefügt und bleibt. Wird nie im Editor gezeigt."

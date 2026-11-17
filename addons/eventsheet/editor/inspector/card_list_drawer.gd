@@ -2060,7 +2060,15 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable, i
 		"int":
 			# A field that holds a whole count writes one (a repeat of 3, not 3.0), as the row that writes it does.
 			var whole: bool = bool(field.get("whole", false))
-			return _number_field(card, key, (func(value: float) -> void: write.call(int(value))) if whole else write, INT_STEP)
+			var counted: Control = _number_field(card, key, (func(value: float) -> void: write.call(int(value))) if whole else write, INT_STEP)
+			# A count Godot refuses outside a range (a z index, a layer number) is held inside it by the box.
+			var span: String = str(field.get("range", ""))
+			if counted is SpinBox and span.contains(","):
+				(counted as SpinBox).allow_lesser = false
+				(counted as SpinBox).allow_greater = false
+				(counted as SpinBox).min_value = span.get_slice(",", 0).to_float()
+				(counted as SpinBox).max_value = span.get_slice(",", 1).to_float()
+			return counted
 		"limit":
 			return _limit_field(card, key, write, _said(str(field.get("empty_word", ""))))
 		"spread":

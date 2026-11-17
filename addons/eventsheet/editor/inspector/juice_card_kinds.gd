@@ -18,6 +18,9 @@ extends RefCounted
 
 const FIELDS_PATH: String = "res://addons/eventsheet/editor/inspector/juice_card_fields.gd"
 
+## The kinds that change the scene, the light, the look and the sound, loaded the first time the vocabulary is built.
+const SCENE_KINDS_PATH: String = "res://addons/eventsheet/editor/inspector/juice_scene_kinds.gd"
+
 ## The node types a particles card can point at.
 const PARTICLE_TYPES: Array = ["GPUParticles2D", "GPUParticles3D", "CPUParticles2D", "CPUParticles3D"]
 
@@ -43,6 +46,7 @@ static func kinds(family_of: Dictionary) -> Array:
 	all.append_array(_body_kinds(family_of))
 	all.append_array(_ui_kinds(family_of))
 	all.append_array(_flow_kinds(family_of))
+	all.append_array((load(SCENE_KINDS_PATH) as Script).call("kinds", family_of))
 	return all
 
 

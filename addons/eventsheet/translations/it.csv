@@ -11030,3 +11030,86 @@ Corners,Angoli
 "Radius is 0, so this polygon draws nothing.","Il raggio è 0, quindi questo poligono non disegna nulla."
 "A polygon needs at least 3 sides, so this one is drawn with 3.","Un poligono ha bisogno di almeno 3 lati, quindi questo è disegnato con 3."
 "A polygon is drawn with 32 sides at most, so this one is drawn with 32.","Un poligono è disegnato con al massimo 32 lati, quindi questo è disegnato con 32."
+"How long one pass of the list takes. Cards between two Pauses or Holds start together, so their times do not add up. What a Loop Back or the Loop tick repeats comes on top.","Quanto dura un passaggio della lista. Le carte tra due Pause o Attese partono insieme, quindi i loro tempi non si sommano. Ciò che ripetono un Loop Back o la spunta Loop si aggiunge."
+%d juice card - %s once through,%d carta di juice - %s a passaggio
+%d juice cards - %s once through,%d carte di juice - %s a passaggio
+Repeat the preview,Ripeti l'anteprima
+"Keeps playing the preview in the editor while you tune. Each pass reads the list as it is then, so a number you change is the number the next pass uses. The game's own loop is the Loop tick on the node.","Continua a riprodurre l'anteprima nell'editor mentre regoli. Ogni passaggio legge la lista com'è in quel momento, quindi un numero che cambi è quello usato dal passaggio successivo. Il ciclo del gioco è la spunta Loop del nodo."
+%s is not what this card needs. It needs %s.,%s non è ciò che serve a questa carta. Le serve %s.
+a collision shape,una forma di collisione
+a body or an area,un corpo o un'area
+a 2D node (a 3D node is drawn by its distance from the camera),un nodo 2D (un nodo 3D viene disegnato in base alla distanza dalla camera)
+a 2D or a 3D node,un nodo 2D o 3D
+a node that can be turned,un nodo che può essere ruotato
+a light,una luce
+a WorldEnvironment or a 3D camera,un WorldEnvironment o una camera 3D
+"%s is a RigidBody, which the physics engine turns. Point this card at the sprite or mesh under it.","%s è un RigidBody, che ruota il motore fisico. Punta questa carta allo sprite o alla mesh sotto di esso."
+Pick the node to look at. Until then this card does nothing.,Scegli il nodo da guardare. Fino ad allora questa carta non fa nulla.
+"This node holds the player, so it is removed when the list ends, whatever the tick says.","Questo nodo contiene il player, quindi viene rimosso alla fine della lista, qualunque cosa dica la spunta."
+"This node holds the player, so the player's own tweens freeze with it while it is off.","Questo nodo contiene il player, quindi i suoi tween si bloccano insieme a lui finché è spento."
+"This camera ignores rotation, so the shake cannot be seen. Turn off Ignore Rotation on it.","Questa camera ignora la rotazione, quindi lo scuotimento non si vede. Disattiva Ignore Rotation su di essa."
+"This scene has no WorldEnvironment to change. Add one, or pick the camera that holds the look.",Questa scena non ha nessun WorldEnvironment da cambiare. Aggiungine uno o scegli la camera che contiene l'aspetto.
+Layer %d has no name in Project Settings.,Il livello %d non ha un nome nelle impostazioni del progetto.
+Layer %d is called %s in Project Settings.,Il livello %d si chiama %s nelle impostazioni del progetto.
+"Swings up to %s degrees over %s s, following your curve, and ends at rest.","Oscilla fino a %s gradi per %s s, segue la tua curva e finisce a riposo."
+Swings up to %s degrees half way and is at rest at %s s.,A metà oscilla fino a %s gradi ed è a riposo a %s s.
+Starts at rest and swings %s degrees by %s s.,Parte da ferma e oscilla di %s gradi entro %s s.
+Swings %s degrees at first and is at rest at %s s.,All'inizio oscilla di %s gradi ed è a riposo a %s s.
+"Swings %s degrees for %s s, then stops.","Oscilla di %s gradi per %s s, poi si ferma."
+"A level in decibels, between -80 and 24. A bus with no amplify effect gets one added at its end, which stays on the bus.","Un livello in decibel, tra -80 e 24. Un bus senza effetto di amplificazione ne riceve uno alla fine, che resta sul bus."
+"How much of the reverb is heard, from 0 to 1. A bus with no reverb gets one added at its end, which stays on the bus.","Quanto riverbero si sente, da 0 a 1. Un bus senza riverbero ne riceve uno alla fine, che resta sul bus."
+"Effect 0 is the first effect on the bus. It is switched on, then put back to how it was.","L'effetto 0 è il primo effetto del bus. Viene acceso, poi rimesso com'era."
+"The cutoff in hertz, between 20 and 20500. A bus with no low-pass gets one added at its end, which stays on the bus.","La frequenza di taglio in hertz, tra 20 e 20500. Un bus senza filtro passa-basso ne riceve uno alla fine, che resta sul bus."
+Collision For A Time,Collisione per un tempo
+Collision Layer For A Time,Livello di collisione per un tempo
+Remove Node,Rimuovi nodo
+Draw Order For A Time,Ordine di disegno per un tempo
+Switch Node On Or Off,Accendi o spegni un nodo
+Rotate By,Ruota di
+Rotate To,Ruota a
+Rotation Shake,Scuotimento di rotazione
+Scene Look,Aspetto della scena
+Bus Effect For A Time,Effetto bus per un tempo
+After this list ends,Alla fine di questa lista
+Back over,Ritorno in
+Change,Cambia
+Colour to,Colore verso
+Disable its collision,Disattiva la sua collisione
+Effect number,Numero dell'effetto
+Energy to,Energia verso
+Hide it,Nascondilo
+Layer number,Numero del livello
+Look at,Guarda
+Stop its scripts,Ferma i suoi script
+Switch it on,Accendilo
+Turn by,Ruota di
+Turn to,Ruota a
+Way,Modo
+Z index,Indice Z
+degrees,gradi
+Dive,Abbassa
+Muffle,Attutisci
+Wash,Riverbera
+Switch an effect on,Accendi un effetto
+What it is on (layer),Su cosa si trova (livello)
+What it sees (mask),Cosa vede (maschera)
+Switch off,Spegni
+Switch off for a time,Spegni per un tempo
+Switch back on,Riaccendi
+Ease in,Entrata morbida
+Ease out,Uscita morbida
+Ease in and out,Entrata e uscita morbide
+Glow strength,Intensità del bagliore
+The scene's WorldEnvironment,Il WorldEnvironment della scena
+"Switches a collision shape off for a time, then on again: the moment after a hit when nothing can hurt you. Godot refuses a shape's disabled tick in the middle of a physics step, so the card waits for the safe moment.","Spegne una forma di collisione per un tempo e poi la riaccende: il momento dopo un colpo in cui nulla può farti male. Godot rifiuta la spunta disabled di una forma nel mezzo di un passo di fisica, quindi la carta aspetta il momento sicuro."
+"Takes a body or an area off a collision layer, or stops it seeing one, for a time: a ghost that walks through walls, a platform you drop through. It is changed at the safe moment, so it is fine to play from a collision.","Toglie un corpo o un'area da un livello di collisione, o gli impedisce di vederne uno, per un tempo: un fantasma che attraversa i muri, una piattaforma che si attraversa verso il basso. Il cambio avviene nel momento sicuro, quindi si può riprodurre da una collisione."
+"Removes a node: handed back to its pool when it came from one, freed when it did not. After this list ends is ticked to begin with, so the sound and the particles of a death are not cut off.","Rimuove un nodo: restituito al suo pool se ne veniva uno, liberato altrimenti. Alla fine di questa lista è spuntata all'inizio, così il suono e le particelle di una morte non vengono tagliati."
+"Brings a 2D node in front of the rest for a time, or sends it behind. 2D only: a 3D node is drawn by its distance from the camera.","Porta un nodo 2D davanti agli altri per un tempo, o lo manda dietro. Solo 2D: un nodo 3D viene disegnato in base alla distanza dalla camera."
+"Godot has no active tick, so this does the three things it means, each with its own tick: hide it, stop its scripts, disable its collision. Off for a time, off for good, or back on.","Godot non ha una spunta «attivo», quindi questa carta fa le tre cose che significa, ognuna con la sua spunta: nasconderlo, fermare i suoi script, disattivare la sua collisione. Spento per un tempo, spento per sempre o di nuovo acceso."
+"Turns a node to face another node over a time: in 2D its right points at it, in 3D it turns the way Godot's own look at does.","Ruota un nodo perché guardi un altro nodo in un tempo: in 2D la sua destra punta verso di esso, in 3D ruota come il look_at di Godot."
+"Turns a node by an angle over a time. On the sprite or mesh of a physics body, never on the body.","Ruota un nodo di un angolo in un tempo. Sullo sprite o sulla mesh di un corpo fisico, mai sul corpo."
+"Turns a node to an angle over a time, the short way round. On the sprite or mesh of a physics body, never on the body.","Ruota un nodo fino a un angolo in un tempo, per la via più breve. Sullo sprite o sulla mesh di un corpo fisico, mai sul corpo."
+"Wobbles the angle of a node, not its place, and settles it: a sign that rattles. It has the same fade ticks and curve as Shake.","Fa tremare l'angolo di un nodo, non la sua posizione, e poi lo assesta: un'insegna che sbatte. Ha le stesse spunte di dissolvenza e la stessa curva di Shake."
+"Flares a light to a brightness and a colour and lets it go back by itself: a muzzle flash. It works on the 2D and 3D lights, and a light that was off is switched on for the flare.","Fa lampeggiare una luce fino a una luminosità e a un colore e la lascia tornare da sola: un lampo di bocca. Funziona con le luci 2D e 3D, e una luce spenta viene accesa per il lampo."
+"Moves one value of the look of the scene to a number and back: glow, brightness, contrast, saturation, exposure, fog. It changes the scene's own copy, so no other scene changes. In a 2D game the glow needs a WorldEnvironment whose background is set to Canvas.","Porta un valore dell'aspetto della scena a un numero e lo riporta indietro: bagliore, luminosità, contrasto, saturazione, esposizione, nebbia. Modifica la copia propria della scena, quindi nessun'altra scena cambia. In un gioco 2D il bagliore richiede un WorldEnvironment con lo sfondo impostato su Canvas."
+Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end and stays. Never shown in the editor.,Mantiene un effetto di un bus audio per un tempo e poi lo rimette com'era: un filtro passa-basso che attutisce il mondo quando vieni colpito. Un effetto che manca al bus viene aggiunto alla fine e resta. Mai mostrato nell'editor.
