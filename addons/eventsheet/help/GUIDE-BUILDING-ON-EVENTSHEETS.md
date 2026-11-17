@@ -662,7 +662,7 @@ In a pack builder, set `sheet.previews = true`. The compiled script then carries
 Preview / Stop preview button in the Inspector and one guarded line at the top of every
 per-frame callback, so the behavior's own code is what plays - there is no second copy of the
 motion to keep in step. The host's stored properties are written down when Preview starts and
-put back on Stop, on leaving the scene and before every save, so the scene file never changes.
+put back on Stop, on leaving the scene and before every save, so the scene file never changes. Moving the host by hand while it plays (a drag in the viewport, an Inspector edit, an undo) is the one change that is kept: the preview stops and the host stays where you put it. A preview tells that apart from its own writes by the values it last left on the host, noted just before a frame is drawn.
 A behavior that waits to be told to start sets `sheet.preview_begin_code`; one that only moves
 when something sets it off sets `sheet.preview_nudge_code` for a Nudge button.
 

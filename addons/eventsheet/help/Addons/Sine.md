@@ -76,7 +76,7 @@ The mental model is small. Learn these ideas and the rest of the pack is just kn
 **2b. Preview it without pressing play.** Select the behavior node and press **Preview** in the
 Inspector (or right-click the host in the Scene dock). The node starts
 oscillating right in the editor viewport, and every knob you tweak in the Inspector reshapes the
-motion live - dial in the exact bob, sway, or pulse by eye. Press Stop preview and the node snaps back exactly where it was; nothing about the scene is changed.
+motion live - dial in the exact bob, sway, or pulse by eye. Press Stop preview and the node snaps back exactly where it was; nothing about the scene is changed. Grab the node and move it by hand while it plays and the preview stops by itself and keeps the spot you put it in.
 
 **3. Retune from the sheet if you like.** If you would rather set it up in events (or change it at runtime), here is a complete first mover - a coin that bobs up and down:
 
