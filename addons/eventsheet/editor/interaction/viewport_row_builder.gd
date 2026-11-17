@@ -7157,20 +7157,25 @@ static func comment_display_order(lines: PackedStringArray, one_hash_file: bool)
 	var blank: int = 0
 	while blank < lines.size() and lines[blank].strip_edges().is_empty():
 		blank += 1
-	var words_end: int = blank
+	# The plugin's own Inspector comments that lead the block (`# @inspector_link a b`) stay where they are; a
+	# note of the reader's is not one of them.
+	var lead_end: int = blank
+	while lead_end < lines.size() and lines[lead_end].strip_edges().begins_with("# @inspector_"):
+		lead_end += 1
+	var words_end: int = lead_end
 	while words_end < lines.size() and is_ace_annotation_line(lines[words_end]):
 		words_end += 1
-	if words_end == blank or words_end == lines.size():
+	if words_end == lead_end or words_end == lines.size():
 		return order
 	for index: int in range(words_end, lines.size()):
 		if lines[index].strip_edges().is_empty() or is_ace_annotation_line(lines[index]):
 			return order
 	order.clear()
-	for index: int in blank:
+	for index: int in lead_end:
 		order.append(index)
 	for index: int in range(words_end, lines.size()):
 		order.append(index)
-	for index: int in range(blank, words_end):
+	for index: int in range(lead_end, words_end):
 		order.append(index)
 	return order
 

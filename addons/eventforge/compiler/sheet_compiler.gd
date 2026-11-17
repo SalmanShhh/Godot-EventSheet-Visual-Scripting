@@ -5508,8 +5508,16 @@ static func _emit_tree_variable_declaration(local_var: LocalVariable, refresh_in
 		var spaced_at: int = var_line.find(spaced_head)
 		if spaced_at > 0:
 			var_line = var_line.left(spaced_at) + local_var.name + " : " + var_line.substr(spaced_at + spaced_head.length())
-	var leading_text: String = "" if local_var.leading_lines.is_empty() else "\n".join(local_var.leading_lines) + "\n"
+	var leading_text: String = "" if local_var.leading_lines.is_empty() or _words_lead_the_doc(local_var) else "\n".join(local_var.leading_lines) + "\n"
 	return _tree_variable_group_prefix(local_var) + leading_text + var_line
+
+
+## Whether the variable's own leading lines (its annotation words) are written above its `##` description
+## rather than under it: the spelling a built pack has, where Godot keeps the description because nothing
+## but the description sits directly above the member. The importer sets the attribute `words_first` when it
+## finds the words written that way, so the file writes back as it was.
+static func _words_lead_the_doc(local_var: LocalVariable) -> bool:
+	return local_var.attributes is Dictionary and bool((local_var.attributes as Dictionary).get("words_first", false))
 
 
 ## The member line a Static local compiles to: `var _hits_taken := 0`. Private (the row is a
@@ -6066,8 +6074,9 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 	# it documents. A variable opened from a file that used the second order carries that fact
 	# (doc_after_group), so saving it back reproduces the file it came from byte for byte.
 	var doc_after_group: bool = bool(attributes.get("doc_after_group", false))
+	var words_above_doc: String = "\n".join(local_var.leading_lines) + "\n" if _words_lead_the_doc(local_var) and not local_var.leading_lines.is_empty() else ""
 	if not doc_after_group:
-		prefix += doc_line
+		prefix += words_above_doc + doc_line
 	var category: String = str(attributes.get("category", "")).strip_edges()
 	if not category.is_empty():
 		prefix += "@export_category(\"%s\")\n" % category
@@ -6087,7 +6096,7 @@ static func _tree_variable_group_prefix(local_var: LocalVariable) -> String:
 	elif bool(attributes.get("subgroup_end", false)):
 		prefix += export_section_line("subgroup", "") + "\n"
 	if doc_after_group:
-		prefix += doc_line
+		prefix += words_above_doc + doc_line
 	return prefix
 
 

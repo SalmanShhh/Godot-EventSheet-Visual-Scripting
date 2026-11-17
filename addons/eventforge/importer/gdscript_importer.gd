@@ -1231,6 +1231,27 @@ static func _look_above_annotations(pending: PackedStringArray) -> bool:
 	return false
 
 
+## The pending block with its closing run of `## @ace_*` words and the `##` description under them swapped
+## (words last), when that is the one-hash spelling a built pack writes: the words above the description,
+## which Godot needs so the description stays next to the member. {} for any other block, and when the
+## swapped block would not let the look comment above be found. The look is read through the swapped copy,
+## and the real lines are compared against what the variable writes back.
+static func _words_first_view(pending: PackedStringArray) -> PackedStringArray:
+	var docs: int = 0
+	while docs < pending.size() and _is_variable_doc_line(pending[pending.size() - 1 - docs]) and not pending[pending.size() - 1 - docs].substr(3).strip_edges().is_empty():
+		docs += 1
+	var words: int = 0
+	while docs > 0 and docs + words < pending.size() and pending[pending.size() - 1 - docs - words].begins_with("## @ace_"):
+		words += 1
+	if docs == 0 or words == 0:
+		return PackedStringArray()
+	var cut: int = pending.size() - docs - words
+	var view: PackedStringArray = pending.slice(0, cut)
+	view.append_array(pending.slice(cut + words))
+	view.append_array(pending.slice(cut, cut + words))
+	return view if _look_above_annotations(view) else PackedStringArray()
+
+
 ## `property_text` is the whole property block (header and accessors) when the declaration is one. Only a look
 ## comment (`# @inspector_look`) over a property is verified against it; every other line above a property
 ## keeps being read against the header alone, exactly as before.
@@ -1243,6 +1264,16 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 	# in a pack. They are carried as the declaration's own leading lines, written back after the doc and the
 	# section lines, so the look above them can still be read. Only done when a look comment is there to read.
 	var annotation_tail: PackedStringArray = PackedStringArray()
+	# A built pack writes the words ABOVE the description (words first). The block is read through a copy
+	# with them last, the attribute `words_first` makes the variable write them where they were found, and
+	# `original_pending` keeps the real lines for the byte comparison and for a reading that is refused.
+	var original_pending: PackedStringArray = PackedStringArray()
+	if lifted.leading_lines.is_empty() and not _look_above_annotations(pending):
+		var words_first_view: PackedStringArray = _words_first_view(pending)
+		if not words_first_view.is_empty():
+			original_pending = pending.duplicate()
+			pending.clear()
+			pending.append_array(words_first_view)
 	if lifted.leading_lines.is_empty() and _look_above_annotations(pending):
 		while not pending.is_empty() and pending[pending.size() - 1].begins_with("## @ace_"):
 			annotation_tail.insert(0, pending[pending.size() - 1])
@@ -1458,8 +1489,10 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 		candidate["subgroup_end"] = true
 	if doc_after_group:
 		candidate["doc_after_group"] = true
+	if not original_pending.is_empty():
+		candidate["words_first"] = true
 	if look_found.is_empty() and not annotation_tail.is_empty():
-		pending.append_array(annotation_tail)
+		_restore_pending(pending, annotation_tail, original_pending)
 		lifted.leading_lines = PackedStringArray()
 		return
 	if candidate.is_empty() and look_found.is_empty():
@@ -1479,19 +1512,33 @@ func _absorb_tree_variable_group(lifted: LocalVariable, pending: PackedStringArr
 			lifted.options = PackedStringArray()
 	lifted.attributes = merged
 	var absorbed: PackedStringArray = PackedStringArray()
-	for index: int in range(pending.size() - meta_count, pending.size()):
-		absorbed.append(pending[index])
-	absorbed.append_array(annotation_tail)
+	if original_pending.is_empty():
+		for index: int in range(pending.size() - meta_count, pending.size()):
+			absorbed.append(pending[index])
+		absorbed.append_array(annotation_tail)
+	else:
+		for index: int in range(original_pending.size() - meta_count - annotation_tail.size(), original_pending.size()):
+			absorbed.append(original_pending[index])
 	absorbed.append(property_text if not property_text.is_empty() and not look_found.is_empty() else var_line)
 	if EventSheetCompiler._emit_tree_variable_line(lifted) != "\n".join(absorbed):
 		lifted.attributes = saved_attrs  # reverted - keep whatever was already recovered (e.g. the drawer)
 		lifted.options = saved_options
 		if not annotation_tail.is_empty():
-			pending.append_array(annotation_tail)
+			_restore_pending(pending, annotation_tail, original_pending)
 			lifted.leading_lines = PackedStringArray()
 		return
 	for _removed: int in range(meta_count):
 		pending.remove_at(pending.size() - 1)
+
+
+## Puts the pending block back as it was before a variable's words were taken off its end: the words
+## appended again, or, when the block was read through a words-first copy, the real lines.
+static func _restore_pending(pending: PackedStringArray, annotation_tail: PackedStringArray, original_pending: PackedStringArray) -> void:
+	if original_pending.is_empty():
+		pending.append_array(annotation_tail)
+		return
+	pending.clear()
+	pending.append_array(original_pending)
 
 
 ## A `# @static_local:<row name>` marker directly above a member says the member is the hoisted

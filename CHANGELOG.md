@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a variable's look mark is back when a pack is opened
+
+Since a member's annotation words moved above its description, a variable of a built pack that wears an Inspector look (the unit dropdown on a shape's thickness, the toggle row on its dash style, the progress bar) opened without its look mark, and the line above it opened as a separate comment row: 18 shape scripts opened with one to six more rows than before. The look is read through the words again, so those variables open as one row with their mark, the file still writes back byte for byte, and the description stays directly above the member, which is where Godot reads it. A file with the words below the description reads the same rows, and a block of comments that begins with an Inspector comment line shows its description before its words, as the other packs do.
+
 ### Added: Sheet > Tidy This Script writes an older script the way the editor writes it today, after showing every line
 
 A script keeps the spelling it was written in, and opening and saving it untouched still changes nothing. Tidy This Script is the one door that does, and it only runs when you choose it. It plans the change on a copy of the sheet and opens a window that lists every line as `before => after` with a count, and nothing is written until Apply. Apply is one undo step and then the ordinary save, so the old file goes to the sheet backups first. A second Tidy says `Nothing to tidy.`
