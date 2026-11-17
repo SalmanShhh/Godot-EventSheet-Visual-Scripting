@@ -963,6 +963,8 @@ func _create_condition_from_definition(definition: ACEDefinition, params: Dictio
 	# `>= maxf(2.0, 0.001)`). The compiler decides from the value each time it writes the line. A row read
 	# from a file keeps writing the line the file had until it is edited here and this builds its replacement.
 	condition.folds_literals = true
+	# A denial placed now is written `not level_over` when it can be, not `not (level_over)`.
+	condition.plain_negation = true
 	# Bake the custom/addon codegen template so the ACE compiles standalone.
 	condition.codegen_template = _baked_template_for(definition)
 	# And the reading beside it, for the same reason: a row must still say what it was written as

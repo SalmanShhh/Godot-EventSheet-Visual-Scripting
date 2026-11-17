@@ -5,7 +5,7 @@
 # brings an older script up to today's spelling, and it only ever runs because the reader asked.
 #
 # What it turns on, per row, is the choice the row already has: a guard that wraps a float literal in a
-# floor (`folds_literals`), the short loop-budget, filter and connect lines (`tidy_budget`, `filter_flipped`,
+# floor (`folds_literals`), a denial written `not x` for `not (x)` (`plain_negation`), the short loop-budget, filter and connect lines (`tidy_budget`, `filter_flipped`,
 # `connect_short`), a member that leaves out the icon and category its class already says
 # (`lean_annotations`), and, for the whole file, annotation words written as one-hash comments above the
 # description (`annotation_spelling`). Nothing else about a row changes.
@@ -20,7 +20,7 @@ extends RefCounted
 const LiteralFold := preload("res://addons/eventforge/compiler/literal_fold.gd")
 
 ## The per-row choices Tidy may turn on. Each is a saved field with an old-spelling default of false.
-const FLAGS: Array[String] = ["folds_literals", "tidy_budget", "filter_flipped", "connect_short", "lean_annotations"]
+const FLAGS: Array[String] = ["folds_literals", "tidy_budget", "filter_flipped", "connect_short", "lean_annotations", "plain_negation"]
 
 ## The file-wide spelling Tidy moves to.
 const ONE_HASH: String = "#"
@@ -282,6 +282,8 @@ static func _worth_trying(sheet: EventSheetResource, candidate: Dictionary) -> b
 			var lean_form: String = EventSheetCompiler.emit_function_block_text(event_function, sheet, true)
 			event_function.lean_annotations = false
 			return long_form != lean_form
+		"plain_negation":
+			return bool(holder.get("negated"))
 		"connect_short":
 			return _plain_path().search(str(holder.get("trigger_source_path"))) != null
 		"tidy_budget":

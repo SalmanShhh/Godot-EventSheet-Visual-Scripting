@@ -4392,6 +4392,7 @@ func _build_boomer_level_sheet() -> bool:
 	# Not over yet: the boolean row, negated, reads `if not level_over:` where a comparison read `level_over == false`.
 	var not_over: ACECondition = _condition("Core", "IsBoolSet", _ace_template("IsBoolSet"), {"var_name": "level_over"})
 	not_over.negated = true
+	not_over.plain_negation = true
 	clock.conditions.append(not_over)
 	clock.actions.append(_action("Core", "AddVar", _ace_template("AddVar"),
 		{"var_name": "level_seconds", "amount": "delta"}))

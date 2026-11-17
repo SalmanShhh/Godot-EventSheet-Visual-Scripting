@@ -24,7 +24,7 @@ func _ready() -> void:
 	print("Boomer Level - WASD/arrows move, mouse looks, Space jumps (hold it on landing to bunny hop), Tab throws a rocket, Esc frees the mouse.")
 
 func _physics_process(delta: float) -> void:
-	if not (level_over):
+	if not level_over:
 		level_seconds += delta
 
 func _process(_delta: float) -> void:

@@ -14,6 +14,11 @@ extends Resource
 ## this remembers that the file this row was lifted from wrote the long one, so re-emitting it
 ## reproduces the source byte for byte. False on every authored row, which keeps the flip the default.
 @export var negation_wrapped: bool = false
+## A denial written the short way: `not level_over` where the long way is `not (level_over)`. True on a row
+## placed from the picker and on a row read from a file that wrote the short form; the compiler then drops the
+## brackets whenever the denied text is one plain operand. False on every row read from a file that wrote the
+## brackets and on every row saved before this field existed, which keeps those files byte for byte as they were.
+@export var plain_negation: bool = false
 @export var enabled: bool = true
 ## True when the file this row was read from wrote a plain number where the verb's template guards the value
 ## (`>= 2.0` where the template says `>= maxf({seconds}, 0.001)`), and true on a row placed from the picker. The

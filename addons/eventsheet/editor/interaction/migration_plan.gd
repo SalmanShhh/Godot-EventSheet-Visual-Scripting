@@ -453,6 +453,7 @@ static func _copy_onto(row: Resource, address: PackedStringArray, template: Stri
 		condition.params = params.duplicate(true)
 		condition.negated = (row as ACECondition).negated
 		condition.negation_wrapped = (row as ACECondition).negation_wrapped
+		condition.plain_negation = (row as ACECondition).plain_negation
 		condition.enabled = (row as ACECondition).enabled
 		condition.comment = (row as ACECondition).comment
 		return condition

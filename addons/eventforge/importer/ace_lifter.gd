@@ -122,6 +122,7 @@ const RUN_FAMILIES: Array[GDScript] = [
 const SpawnRunLift := preload("res://addons/eventforge/importer/spawn_run_lift.gd")
 ## A guarded plain number read back as the same verb as the guarded spelling.
 const LiteralFold := preload("res://addons/eventforge/compiler/literal_fold.gd")
+const PlainNegation := preload("res://addons/eventforge/compiler/plain_negation.gd")
 ## How the compiler spells a handler's unread parameters (`_delta`), read back here.
 const UnusedParams := preload("res://addons/eventforge/compiler/unused_params.gd")
 
@@ -4710,13 +4711,19 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 		if candidate.begins_with("not (") and candidate.ends_with(")"):
 			negated = true
 			candidate = candidate.substr(5, candidate.length() - 6)
-		var matched: Dictionary = _matched_condition_spelling(candidate)
-		if matched.is_empty():
-			matched = EventForgePackSpellings.match_condition(candidate)
-		if matched.is_empty():
-			matched = _match_entry(candidate, reverse_entries, "condition", true, scope_trigger)
+		var matched: Dictionary = _match_condition_term(candidate, reverse_entries, scope_trigger)
 		if matched.is_empty():
 			return false
+		# `not level_over` is the same denial as `not (level_over)`: when no verb of its own spells the whole
+		# text and it would only open as the catch-all expression, it opens as the denial of what follows
+		# the `not`, and the row remembers it was written without brackets so it saves back the same way.
+		var plain_denial: bool = false
+		if not negated and str(matched.get("ace_id", "")) == "ExpressionIsTrue" and candidate.begins_with("not ") 				and PlainNegation.is_plain(candidate.substr(4)):
+			var denied: Dictionary = _match_condition_term(candidate.substr(4), reverse_entries, scope_trigger)
+			if not denied.is_empty():
+				matched = denied
+				negated = true
+				plain_denial = true
 		var condition: ACECondition = ACECondition.new()
 		condition.provider_id = str(matched.get("provider", ""))
 		condition.ace_id = str(matched.get("ace_id", ""))
@@ -4728,12 +4735,24 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 		# does, so the Compare dialog, the operator glyphs and the invert toggle all still apply. The
 		# file's own spelling is remembered on the row, because the compiler writes the opposite
 		# operator by default and re-emitting the short form here would lose the byte gate.
-		condition.negation_wrapped = negated and not _flips_when_inverted(matched).is_empty()
+		condition.negation_wrapped = negated and not plain_denial and not _flips_when_inverted(matched).is_empty()
+		condition.plain_negation = plain_denial
 		condition.folds_literals = bool(matched.get("folds_literals", false))
 		if not off_condition.is_empty():
 			condition.enabled = false
 		event.conditions.append(condition)
 	return true
+
+
+## The verb a condition term reads as: a spelling a family claims, then a pack's own words, then the
+## vocabulary's templates, which end in the catch-all expression. {} when nothing claims it.
+static func _match_condition_term(candidate: String, reverse_entries: Array, scope_trigger: String) -> Dictionary:
+	var matched: Dictionary = _matched_condition_spelling(candidate)
+	if matched.is_empty():
+		matched = EventForgePackSpellings.match_condition(candidate)
+	if matched.is_empty():
+		matched = _match_entry(candidate, reverse_entries, "condition", true, scope_trigger)
+	return matched
 
 
 ## The condition inside a term the compiler writes for a condition that is off - `(true or <it>)`,
