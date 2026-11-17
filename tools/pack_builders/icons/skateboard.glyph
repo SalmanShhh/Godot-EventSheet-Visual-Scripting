@@ -1,1 +1,1 @@
-<rect x="0" y="7" width="12" height="2" rx="1" fill="#e0e0e0"/><circle cx="3.5" cy="11.5" r="1.5" fill="#e0e0e0"/><circle cx="8.5" cy="11.5" r="1.5" fill="#e0e0e0"/>
+<path fill="#e0e0e0" d="M0 3L2 3L3 6L9 6L10 3L12 3L12 5L11 8L1 8L0 5z"/><circle cx="3" cy="11" r="2" fill="#e0e0e0"/><circle cx="9" cy="11" r="2" fill="#e0e0e0"/>
