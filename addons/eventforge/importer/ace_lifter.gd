@@ -4710,7 +4710,11 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 		if candidate.begins_with("not (") and candidate.ends_with(")"):
 			negated = true
 			candidate = candidate.substr(5, candidate.length() - 6)
-		var matched: Dictionary = _match_condition_term(candidate, reverse_entries, scope_trigger)
+		var matched: Dictionary = _matched_condition_spelling(candidate)
+		if matched.is_empty():
+			matched = EventForgePackSpellings.match_condition(candidate)
+		if matched.is_empty():
+			matched = _match_entry(candidate, reverse_entries, "condition", true, scope_trigger)
 		if matched.is_empty():
 			return false
 		var condition: ACECondition = ACECondition.new()
@@ -4730,17 +4734,6 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 			condition.enabled = false
 		event.conditions.append(condition)
 	return true
-
-
-## The verb a condition term reads as: a spelling a family claims, then a pack's own words, then the
-## vocabulary's templates, which end in the catch-all expression. {} when nothing claims it.
-static func _match_condition_term(candidate: String, reverse_entries: Array, scope_trigger: String) -> Dictionary:
-	var matched: Dictionary = _matched_condition_spelling(candidate)
-	if matched.is_empty():
-		matched = EventForgePackSpellings.match_condition(candidate)
-	if matched.is_empty():
-		matched = _match_entry(candidate, reverse_entries, "condition", true, scope_trigger)
-	return matched
 
 
 ## The condition inside a term the compiler writes for a condition that is off - `(true or <it>)`,
