@@ -5,7 +5,7 @@ class_name EventSheetConditionCodegen
 extends RefCounted
 
 const LiteralFold := preload("res://addons/eventforge/compiler/literal_fold.gd")
-const PlainNegation := preload("res://addons/eventforge/compiler/plain_negation.gd")
+const PLAIN_NEGATION_PATH: String = "res://addons/eventforge/compiler/plain_negation.gd"
 
 
 ## Generates one condition expression from an ACE condition.
@@ -48,7 +48,7 @@ static func generate_condition(condition: ACECondition, host_default: String = "
 			return EventSheetActionCodegen._apply_template(template, flipped)
 		# A row placed now writes `not level_over` when what it denies is one plain operand; every other denial
 		# (and every row read from a file that wrote the brackets) keeps `not (...)`.
-		if condition.plain_negation and PlainNegation.is_plain(output):
+		if condition.plain_negation and load(PLAIN_NEGATION_PATH).is_plain(output):
 			return "not %s" % output
 		return "not (%s)" % output
 	return output

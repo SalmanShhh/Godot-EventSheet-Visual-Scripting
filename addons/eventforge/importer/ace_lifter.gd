@@ -122,7 +122,7 @@ const RUN_FAMILIES: Array[GDScript] = [
 const SpawnRunLift := preload("res://addons/eventforge/importer/spawn_run_lift.gd")
 ## A guarded plain number read back as the same verb as the guarded spelling.
 const LiteralFold := preload("res://addons/eventforge/compiler/literal_fold.gd")
-const PlainNegation := preload("res://addons/eventforge/compiler/plain_negation.gd")
+const PLAIN_NEGATION_PATH: String = "res://addons/eventforge/compiler/plain_negation.gd"
 ## How the compiler spells a handler's unread parameters (`_delta`), read back here.
 const UnusedParams := preload("res://addons/eventforge/compiler/unused_params.gd")
 
@@ -4718,7 +4718,7 @@ static func _parse_conditions(expression: String, event: EventRow, reverse_entri
 		# text and it would only open as the catch-all expression, it opens as the denial of what follows
 		# the `not`, and the row remembers it was written without brackets so it saves back the same way.
 		var plain_denial: bool = false
-		if not negated and str(matched.get("ace_id", "")) == "ExpressionIsTrue" and candidate.begins_with("not ") 				and PlainNegation.is_plain(candidate.substr(4)):
+		if not negated and str(matched.get("ace_id", "")) == "ExpressionIsTrue" and candidate.begins_with("not ") 				and load(PLAIN_NEGATION_PATH).is_plain(candidate.substr(4)):
 			var denied: Dictionary = _match_condition_term(candidate.substr(4), reverse_entries, scope_trigger)
 			if not denied.is_empty():
 				matched = denied
