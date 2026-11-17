@@ -21,8 +21,12 @@
 # last left them, noted just before a frame is drawn (after input, physics, process, timers and tweens
 # have all run). At the start of the next frame, before the preview writes anything, a value that
 # differs from "seen" was changed by someone else: it becomes the host's new resting value and the
-# preview stops. A note is trusted once - the editor draws nothing when nothing on screen changed, and
-# a value noted before such a frame is stale - so a check only runs on a note taken since the last one.
+# preview stops. The editor normally draws nothing when nothing on screen changed, so a preview that
+# is quiet for a moment would note nothing, and a hand edit made then would be noted as the preview's
+# own. While any preview plays the editor is therefore asked to draw every frame, as a running game
+# does (its low-processor setting is kept in an Engine meta and put back when the last preview stops).
+# A note is also trusted once, so a frame that is not drawn anyway never reads the preview's own
+# writes as a hand edit.
 #
 # DELIBERATELY NO `class_name`: the compiler reaches it with a const preload.
 @tool
@@ -72,6 +76,9 @@ static func block_lines(begin_code: String, nudge_code: String, repeat_expressio
 	lines.append("")
 	lines.append("## The key of a table entry's host values as the preview last left them, to tell a hand edit from the preview's own writes.")
 	lines.append("const _PREVIEW_SEEN: String = \"seen\"")
+	lines.append("")
+	lines.append("## The Engine meta key that holds the editor's own low-processor setting while any preview plays, so it can be put back.")
+	lines.append("const _PREVIEW_IDLE_META: String = \"_eventsheets_previews_low_processor\"")
 	lines.append("")
 	lines.append("## True while Preview is playing in the editor. Always false in a running game.")
 	lines.append("var _previewing: bool = false")
@@ -159,6 +166,9 @@ static func block_lines(begin_code: String, nudge_code: String, repeat_expressio
 	lines.append("## Starts watching for a hand edit: notes the host as it stands now, then again just before each drawn frame, and")
 	lines.append("## checks at the start of each physics and process frame, before anything has written to the host that frame.")
 	lines.append("func _preview_watch_begin() -> void:")
+	lines.append("\tif not Engine.has_meta(_PREVIEW_IDLE_META):")
+	lines.append("\t\tEngine.set_meta(_PREVIEW_IDLE_META, OS.low_processor_usage_mode)")
+	lines.append("\t\tOS.low_processor_usage_mode = false")
 	lines.append("\t_preview_note_seen()")
 	lines.append("\tvar tree: SceneTree = get_tree()")
 	lines.append("\tif not RenderingServer.frame_pre_draw.is_connected(_preview_note_seen):")
@@ -232,6 +242,9 @@ static func block_lines(begin_code: String, nudge_code: String, repeat_expressio
 	lines.append("\t\ttable[key][_PREVIEW_USERS] -= 1")
 	lines.append("\t\tif table[key][_PREVIEW_USERS] <= 0:")
 	lines.append("\t\t\ttable.erase(key)")
+	lines.append("\tif table.is_empty() and Engine.has_meta(_PREVIEW_IDLE_META):")
+	lines.append("\t\tOS.low_processor_usage_mode = Engine.get_meta(_PREVIEW_IDLE_META)")
+	lines.append("\t\tEngine.remove_meta(_PREVIEW_IDLE_META)")
 	lines.append("\tnotify_property_list_changed()")
 	lines.append("")
 	lines.append("func _preview_kill_tweens() -> void:")

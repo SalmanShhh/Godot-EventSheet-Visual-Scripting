@@ -41,6 +41,9 @@ const _PREVIEW_USERS: String = "users"
 ## The key of a table entry's host values as the preview last left them, to tell a hand edit from the preview's own writes.
 const _PREVIEW_SEEN: String = "seen"
 
+## The Engine meta key that holds the editor's own low-processor setting while any preview plays, so it can be put back.
+const _PREVIEW_IDLE_META: String = "_eventsheets_previews_low_processor"
+
 ## True while Preview is playing in the editor. Always false in a running game.
 var _previewing: bool = false
 
@@ -125,6 +128,9 @@ func _preview_start() -> void:
 ## Starts watching for a hand edit: notes the host as it stands now, then again just before each drawn frame, and
 ## checks at the start of each physics and process frame, before anything has written to the host that frame.
 func _preview_watch_begin() -> void:
+	if not Engine.has_meta(_PREVIEW_IDLE_META):
+		Engine.set_meta(_PREVIEW_IDLE_META, OS.low_processor_usage_mode)
+		OS.low_processor_usage_mode = false
 	_preview_note_seen()
 	var tree: SceneTree = get_tree()
 	if not RenderingServer.frame_pre_draw.is_connected(_preview_note_seen):
@@ -198,6 +204,9 @@ func _preview_stop() -> void:
 		table[key][_PREVIEW_USERS] -= 1
 		if table[key][_PREVIEW_USERS] <= 0:
 			table.erase(key)
+	if table.is_empty() and Engine.has_meta(_PREVIEW_IDLE_META):
+		OS.low_processor_usage_mode = Engine.get_meta(_PREVIEW_IDLE_META)
+		Engine.remove_meta(_PREVIEW_IDLE_META)
 	notify_property_list_changed()
 
 func _preview_kill_tweens() -> void:

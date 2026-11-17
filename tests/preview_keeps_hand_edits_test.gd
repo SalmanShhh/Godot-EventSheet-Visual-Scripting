@@ -143,6 +143,8 @@ static func _wiring() -> bool:
 		["a save keeps a hand edit before it puts the rest back",
 			sine.contains("elif what == NOTIFICATION_EDITOR_PRE_SAVE:\n\t\t_preview_keep_hand_edits()\n\t\t_preview_put_back(host, _preview_rest_of(host))\n\t\t_preview_note_seen()\n"), true],
 		["Stop keeps a hand edit first", sine.contains("func _preview_stop() -> void:\n\tif not _previewing:\n\t\treturn\n\t_preview_keep_hand_edits()\n"), true],
+		["a preview asks the editor to draw every frame, so the notes never go stale", sine.contains("\t\tOS.low_processor_usage_mode = false\n"), true],
+		["the editor's own setting is kept and put back by the last Stop", sine.contains("OS.low_processor_usage_mode = Engine.get_meta(_PREVIEW_IDLE_META)"), true],
 		["the guard lines are the ones they were", sine.contains("func _process(delta: float) -> void:\n\tif Engine.is_editor_hint() and not _previewing:\n\t\treturn\n"), true],
 	]) and ok
 	for folder: String in PREVIEWING:
