@@ -15,6 +15,8 @@ static func numbers(sheet: EventSheetResource) -> Dictionary:
 		return model
 	var view := EventSheetViewport.new()
 	view.set_ace_registry(EventSheetACERegistry.new())
+	# Not stretched by anchors: a size set on a control that is would print an engine warning each time.
+	view.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	view.size = Vector2(1200.0, 900.0)
 	view.apply_editor_style(look)
 	view.set_sheet(sheet)

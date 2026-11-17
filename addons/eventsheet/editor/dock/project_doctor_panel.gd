@@ -224,6 +224,10 @@ func _run_project_doctor() -> void:
 	# drawing and the Cancel button works; the page is drawn again as findings come in. Extension-registered
 	# checks (EventSheets.register_doctor_check) report here exactly like built-ins, because the same
 	# steps run.
+	# Two frames first, so the window is drawn saying it is checking before the audit's code is loaded
+	# for the first time in this session (which takes a moment the window should not hide behind).
+	await _dock.get_tree().process_frame
+	await _dock.get_tree().process_frame
 	var session: Dictionary = EventSheetProjectDoctor.begin()
 	var report: Dictionary = await EventSheetProjectDoctor.run_sliced(session, _dock.get_tree(),
 		func() -> bool: return _cancel_requested or _doctor_window == null,
