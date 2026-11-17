@@ -37,6 +37,8 @@ const DURABLE_STATICS: Dictionary = {
 	"_template_re": "a compiled RegEx cached for the session; it has no per-compile state",
 	"_segment_re": "a compiled RegEx cached for the session; it has no per-compile state",
 	"_verbatim_declaration_re": "a compiled RegEx cached for the session; it has no per-compile state",
+	"_plain_comparison_re": "a compiled RegEx cached for the session; it has no per-compile state",
+	"_plain_path_re": "a compiled RegEx cached for the session; it has no per-compile state",
 	"_writes_output": "whether the call writes its file at all: set by the entry point under the lock on every call, and never read by an emitter"
 }
 
