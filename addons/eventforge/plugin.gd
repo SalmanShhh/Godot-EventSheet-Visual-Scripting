@@ -284,13 +284,14 @@ func _make_visible(visible: bool) -> void:
 
 ## Godot asks this when the editor quits, when the project is reloaded or closed, and the sentence it
 ## returns is printed in Godot's own "save changes?" dialog. It names each event sheet with edits that
-## are not saved yet. Godot passes the path of an open scene here, not an empty string, so the answer
-## cannot depend on it. The editor workspace is built only when somebody opens it, so before that there
-## is nothing to name.
-func _get_unsaved_status(_for_scene: String) -> String:
+## are not saved yet. Godot passes the path of the scene when ONE scene tab is closed, and an empty
+## string when the editor quits or the project closes: a scene is answered with the sheets that belong
+## to it, an empty one with all of them. The editor workspace is built only when somebody opens it, so
+## before that there is nothing to name.
+func _get_unsaved_status(for_scene: String) -> String:
 	if _event_sheet_editor == null:
 		return ""
-	return str(load(UNSAVED_SHEETS_PATH).status_text(_event_sheet_editor))
+	return str(load(UNSAVED_SHEETS_PATH).status_text(_event_sheet_editor, for_scene))
 
 
 ## Godot calls this on Save All, before running the project (when it saves first) and on Save & Quit.

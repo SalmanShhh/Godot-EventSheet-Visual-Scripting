@@ -15,10 +15,15 @@ extends RefCounted
 # Loaded by path by the plugin, only when Godot asks, so the editor start does not compile it.
 
 
-## The sentence for Godot's dialog: one line per unsaved sheet, "" when every sheet is saved.
-static func status_text(dock: Control) -> String:
+## The sentence for Godot's dialog: one line per unsaved sheet, "" when every sheet is saved. Godot
+## names a scene when ONE scene tab is closed and passes "" when the editor quits or the project closes:
+## with a scene the answer is about the sheets that belong to it (see `belongs_to_scene`), with "" about
+## all of them.
+static func status_text(dock: Control, for_scene: String = "") -> String:
 	var lines: PackedStringArray = PackedStringArray()
 	for index: int in unsaved_indexes(dock):
+		if not for_scene.is_empty() and not belongs_to_scene(dock._open_tabs[index], for_scene):
+			continue
 		var tab: Dictionary = dock._open_tabs[index]
 		var reason: String = refusal_reason(tab.get("sheet"), str(tab.get("path", "")))
 		if reason.is_empty():
@@ -63,6 +68,36 @@ static func save_dirty_tabs(dock: Control) -> PackedStringArray:
 		push_warning(report)
 		dock._set_status(report, true)
 	return failed
+
+
+## Whether the sheet in a tab belongs to one scene: the sheet is that scene opened as a sheet, or its
+## script (the file it is, or the file it compiles to) is attached to a node of the scene. A sheet with
+## no file yet belongs to no scene.
+static func belongs_to_scene(tab: Dictionary, scene_path: String) -> bool:
+	var resource: EventSheetResource = tab.get("sheet") as EventSheetResource
+	if resource == null:
+		return false
+	var marks: Script = load("res://addons/eventforge/importer/scene_sheet_marks.gd") as Script
+	if marks != null and bool(marks.call("is_scene_sheet", resource)) and str(marks.call("scene_path_of", resource)) == scene_path:
+		return true
+	var paths: PackedStringArray = PackedStringArray()
+	for candidate: String in [resource.external_source_path, str(tab.get("path", "")), resource.resource_path]:
+		if candidate.is_empty() or paths.has(candidate):
+			continue
+		paths.append(candidate)
+		if candidate.get_extension().to_lower() != "gd":
+			var compiled: String = candidate.get_basename() + "_generated.gd"
+			if not paths.has(compiled):
+				paths.append(compiled)
+	if paths.has(scene_path):
+		return true
+	if not FileAccess.file_exists(scene_path):
+		return false
+	var scene_text: String = FileAccess.get_file_as_string(scene_path)
+	for script_path: String in paths:
+		if scene_text.contains(script_path):
+			return true
+	return false
 
 
 ## The indexes of the tabs with edits not saved yet. The tab in front keeps its flag on the dock rather
