@@ -139,6 +139,6 @@ static func _test_the_doctor_note(ok: bool) -> bool:
 	var finding: Dictionary = DOCTOR.report("res://spawner.gd", "star_scene", "res://level.tscn")
 	ok = SUPPORT.check(P, "it is a note, never a warning", str(finding["severity"]), "info") and ok
 	ok = SUPPORT.check(P, "two short sentences naming the slot and the scene, short enough for the inbox column", str(finding["message"]),
-		"star_scene is empty in level.tscn. Pick a scene for it in the Inspector.") and ok
+		"star_scene is empty in level.tscn. Set it in the Inspector.") and ok
 	ok = SUPPORT.check(P, "it files under the script it is about", [str(finding["path"]), str(finding["check"])], ["res://spawner.gd", "scene-slot-empty"]) and ok
 	return ok

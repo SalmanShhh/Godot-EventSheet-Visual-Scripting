@@ -11156,6 +11156,6 @@ This is the line that adds this card from an event sheet or from code. Run it on
 a 2D node (a Spring node does not move a UI or a 3D node),2D 노드 (Spring 노드는 UI나 3D 노드를 움직이지 않습니다)
 an animation tree,애니메이션 트리
 A scene this sheet holds.,이 시트가 가지고 있는 씬.
-%s is empty in %s. Pick a scene for it in the Inspector.,%s이(가) %s에서 비어 있습니다. 인스펙터에서 씬을 골라 주세요.
+%s is empty in %s. Set it in the Inspector.,%s이(가) %s에서 비어 있습니다. 인스펙터에서 설정하세요.
 A scene,씬
 "A scene file kept in a slot, to make copies of: a bullet, an enemy, a pickup. The Inspector shows a slot you drop a .tscn file into, and a spawn row copies it with its own instantiate().","복사본을 만들기 위해 슬롯에 담아 두는 씬 파일: 총알, 적, 아이템 등. 인스펙터에 .tscn 파일을 끌어다 놓는 슬롯이 보이고, 생성 행이 자체 instantiate()로 복사합니다."

@@ -47,7 +47,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 ## The finding for one empty slot: two short sentences. Filed under the script that spawns from it, with the
 ## slot's name as its subject.
 static func report(script_path: String, slot: String, scene_path: String) -> Dictionary:
-	var message: String = EventSheetL10n.translate("%s is empty in %s. Pick a scene for it in the Inspector.") \
+	var message: String = EventSheetL10n.translate("%s is empty in %s. Set it in the Inspector.") \
 		% [slot, scene_path.get_file()]
 	return _finding("info", CHECK_ID, script_path, message, slot)
 

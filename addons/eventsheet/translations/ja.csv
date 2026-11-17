@@ -11156,6 +11156,6 @@ This is the line that adds this card from an event sheet or from code. Run it on
 a 2D node (a Spring node does not move a UI or a 3D node),2D ノード（Spring ノードは UI や 3D ノードは動かしません）
 an animation tree,アニメーションツリー
 A scene this sheet holds.,このシートが持つシーン。
-%s is empty in %s. Pick a scene for it in the Inspector.,%s は %s で空です。インスペクターでシーンを選んでください。
+%s is empty in %s. Set it in the Inspector.,%s は %s で空です。インスペクターで設定してください。
 A scene,シーン
 "A scene file kept in a slot, to make copies of: a bullet, an enemy, a pickup. The Inspector shows a slot you drop a .tscn file into, and a spawn row copies it with its own instantiate().",コピーを作るために枠に入れておくシーンファイル：弾、敵、拾えるアイテムなど。インスペクターには .tscn ファイルをドロップする枠が表示され、生成の行が自身の instantiate() でそれをコピーします。

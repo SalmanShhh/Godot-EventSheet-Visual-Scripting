@@ -11156,6 +11156,6 @@ This is the line that adds this card from an event sheet or from code. Run it on
 a 2D node (a Spring node does not move a UI or a 3D node),un nodo 2D (un nodo Spring non muove un'interfaccia né un nodo 3D)
 an animation tree,un albero di animazione
 A scene this sheet holds.,Una scena che questo foglio tiene.
-%s is empty in %s. Pick a scene for it in the Inspector.,%s è vuoto in %s. Scegli una scena per esso nell'Inspector.
+%s is empty in %s. Set it in the Inspector.,%s è vuoto in %s. Impostalo nell'Inspector.
 A scene,Una scena
 "A scene file kept in a slot, to make copies of: a bullet, an enemy, a pickup. The Inspector shows a slot you drop a .tscn file into, and a spawn row copies it with its own instantiate().","Un file di scena tenuto in uno slot, da cui fare copie: un proiettile, un nemico, un oggetto. L'Inspector mostra uno slot dove trascini un file .tscn, e una riga di generazione lo copia con il suo instantiate()."
