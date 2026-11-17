@@ -41,6 +41,11 @@ const MENU_PASTE_AFTER: int = 8
 const MENU_MOVE_TO_BOTTOM: int = 9
 ## And the one that only a list that can play its cards has.
 const MENU_PLAY_FROM: int = 20
+## The three that teach Godot from a card, for a list whose schema says how: the card as a row, as plain GDScript,
+## and Godot's own help page for what it sets.
+const MENU_SHOW_ROWS: int = 21
+const MENU_SHOW_GDSCRIPT: int = 22
+const MENU_OPEN_HELP: int = 23
 
 ## The drag payload's own key. Cards only accept a drag that came from the SAME drawer instance, so
 ## two card lists open in one Inspector cannot swallow each other's rows.
@@ -1465,12 +1470,12 @@ func _build_menu(index: int) -> Control:
 	menu.tooltip_text = EventSheetL10n.translate("More for this card.")
 	menu.disabled = not editable
 	var popup: PopupMenu = menu.get_popup()
-	_fill_card_menu(popup)
+	_fill_card_menu(popup, index)
 	popup.id_pressed.connect(func(id: int) -> void: _on_menu(index, id))
 	return menu
 
 
-func _fill_card_menu(popup: PopupMenu) -> void:
+func _fill_card_menu(popup: PopupMenu, index: int = -1) -> void:
 	popup.add_item(EventSheetL10n.translate("Duplicate"), MENU_DUPLICATE)
 	popup.add_item(EventSheetL10n.translate("Cut"), MENU_CUT)
 	popup.add_item(EventSheetL10n.translate("Copy"), MENU_COPY)
@@ -1489,6 +1494,15 @@ func _fill_card_menu(popup: PopupMenu) -> void:
 	if _marks_wanted():
 		popup.add_separator()
 		popup.add_item(EventSheetL10n.translate("Play from here"), MENU_PLAY_FROM)
+	if not str(_schema.get("learning", "")).is_empty():
+		popup.add_separator()
+		popup.add_item(EventSheetL10n.translate("Show as rows"), MENU_SHOW_ROWS)
+		popup.add_item(EventSheetL10n.translate("Show as GDScript"), MENU_SHOW_GDSCRIPT)
+		popup.add_item(EventSheetL10n.translate("Open in Godot help"), MENU_OPEN_HELP)
+		if index >= 0 and index < _cards.size():
+			var learning: Script = load(str(_schema.get("learning"))) as Script
+			popup.set_item_disabled(popup.get_item_index(MENU_SHOW_GDSCRIPT), str(learning.call("as_gdscript", _cards[index], _edited as Node)).is_empty())
+			popup.set_item_disabled(popup.get_item_index(MENU_OPEN_HELP), str(learning.call("first_name", _entry_for(_cards[index]))).is_empty())
 
 
 ## Opens the card's menu at a screen point, for a right click on its line.
@@ -1496,7 +1510,7 @@ func open_card_menu(index: int, at: Vector2i) -> void:
 	if not editable or index < 0 or index >= _cards.size():
 		return
 	var popup: PopupMenu = PopupMenu.new()
-	_fill_card_menu(popup)
+	_fill_card_menu(popup, index)
 	popup.id_pressed.connect(func(id: int) -> void: _on_menu(index, id))
 	popup.popup_hide.connect(popup.queue_free)
 	add_child(popup)
@@ -1537,6 +1551,24 @@ func _on_menu(index: int, id: int) -> void:
 				remove_card(index)
 		MENU_PLAY_FROM:
 			_run_mark("play_from", index)
+		MENU_SHOW_ROWS, MENU_SHOW_GDSCRIPT, MENU_OPEN_HELP:
+			_learn(index, id)
+
+
+## The three entries that teach Godot from a card: the card as the row that adds it, the same effect as plain
+## GDScript (both shown in a small window and put on the clipboard), and Godot's own help page for what it sets.
+func _learn(index: int, id: int) -> void:
+	if index < 0 or index >= _cards.size():
+		return
+	var learning: Script = load(str(_schema.get("learning"))) as Script
+	var card: Dictionary = _cards[index]
+	match id:
+		MENU_SHOW_ROWS:
+			learning.call("show_text", self, EventSheetL10n.translate("Show as rows"), learning.get_script_constant_map()["AS_ROW_NOTE"], str(learning.call("as_row", card)))
+		MENU_SHOW_GDSCRIPT:
+			learning.call("show_text", self, EventSheetL10n.translate("Show as GDScript"), learning.get_script_constant_map()["AS_GDSCRIPT_NOTE"], str(learning.call("as_gdscript", card, _edited as Node)))
+		MENU_OPEN_HELP:
+			learning.call("open_help", str(learning.call("first_name", _entry_for(card))))
 
 
 ## Makes the card the menu belongs to the selection when it is not part of it, so an entry that acts on
@@ -1619,7 +1651,17 @@ func _add_field_row(box: VBoxContainer, index: int, card: Dictionary, field: Dic
 		return last_row
 	var row: Control = _build_field(index, card, field)
 	box.add_child(row)
+	# The Godot name of what the field sets, in small print under it, for a schema that teaches Godot.
+	if field.has("godot") and not str(_schema.get("learning", "")).is_empty():
+		var print_line: Control = (load(str(_schema.get("learning"))) as Script).call("small_print", field, EventSheetPalette.scaled(120), _open_godot_help) as Control
+		if print_line != null:
+			box.add_child(print_line)
 	return row as HBoxContainer
+
+
+## Opens Godot's own help page for a member the small print names.
+func _open_godot_help(godot: String) -> void:
+	(load(str(_schema.get("learning"))) as Script).call("open_help", godot)
 
 
 ## A foldout inside an open card: Godot's own foldable container, closed until it is opened, remembered
@@ -2085,7 +2127,7 @@ func _build_field_editor(card: Dictionary, field: Dictionary, write: Callable, i
 			return _custom_field(index, field)
 		"godot":
 			return attribute_fields().call("godot_field", self, card, field, write, index)
-		"node", "property", "typed", "choices", "arguments", "from":
+		"node", "property", "typed", "choices", "arguments", "from", "optional", "optional_color", "layer_pick":
 			return attribute_fields().call(drawer + "_field", self, card, field, write, index)
 	return _number_field(card, key, write, FLOAT_STEP, bool(field.get("plain_number", false)))
 

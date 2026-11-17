@@ -85,9 +85,12 @@ const ICONS_PATH: String = "res://addons/eventsheet/editor/inspector/juice_card_
 ## The strip of buttons that plays the whole list, drawn under it.
 const STRIP_PATH: String = "res://addons/eventsheet/editor/inspector/feedback_player_strip.gd"
 
-## The words whose length is not their Seconds alone: a Sound is as long as its stream, and a Light, a Scene Look and a
+## The words whose length is not their Seconds alone: a Sound is as long as its stream, and a Light, a Scene Look, an Animation Parameter and a
 ## Bus Effect card take a time to go back after the Seconds they hold for. The pack answers for these.
-const WORDS_WITH_A_WAY_BACK: PackedStringArray = ["sound", "light", "scene_look", "bus_effect"]
+const WORDS_WITH_A_WAY_BACK: PackedStringArray = ["sound", "light", "scene_look", "bus_effect", "animation_parameter"]
+
+## The file that teaches Godot from a card: the Godot name under a field, a card as a row and as plain GDScript.
+const LEARNING_PATH: String = "res://addons/eventsheet/editor/inspector/juice_card_learning.gd"
 
 ## The file that says where the Juice Player's code is, which is where a word's FAMILY is written down.
 const NAMES_PATH: String = "res://addons/eventsheet/editor/inspector/juice_player_names.gd"
@@ -219,8 +222,10 @@ static func schema() -> Dictionary:
 	kinds.append_array(timing_kinds())
 	kinds.append_array(other_kinds())
 	kinds.append_array(world().call("kinds", family_of()))
+	load(LEARNING_PATH).call("name_fields", kinds)
 	return {
 		"kinds": kinds,
+		"learning": LEARNING_PATH,
 		"label_key": LABEL_KEY,
 		"enabled_key": ENABLED_KEY,
 		"stripes": STRIPES,
