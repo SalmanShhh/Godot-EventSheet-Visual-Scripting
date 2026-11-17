@@ -341,6 +341,21 @@ reads as code somebody typed rather than as machine output - a rewritten row lan
 carried under their new names and nothing more, so an argument that would only restate what the
 callee already declares as its own default is not written. Reviewing it is reviewing GDScript.
 
+### Writing an older script the way the editor writes it today
+
+A script keeps the spelling it was written in, so one saved a year ago can hold a guard written
+`if t >= maxf(2.0, 0.001):` where a row placed today writes `if t >= 2.0:`, or annotation words written
+as two-hash comments where new code writes one hash. **Sheet > Tidy This Script** turns those on for
+one script, on purpose. It plans the change on a copy, lists every line as `before => after` with a
+count, and writes nothing until you press Apply. Apply is one undo step followed by the ordinary save,
+so the old file is in the sheet backups, and a second Tidy says `Nothing to tidy.` A change is offered
+only when the result opens again as the same sheet, saves back byte for byte and parses; a line that
+cannot be read back is left as it is and counted in the window. The result is an ordinary diff in
+review, the lines the window listed and nothing else. For scripts nobody has open, the same engine runs
+from a command line: `tools/tidy_scripts.gd -- <file or folder> [--write]`.
+
+The Doctor says when a script could use it: a note, never a warning, one per script.
+
 ---
 
 ## 6. Use Cases

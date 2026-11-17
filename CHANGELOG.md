@@ -4,6 +4,24 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: Sheet > Tidy This Script writes an older script the way the editor writes it today, after showing every line
+
+A script keeps the spelling it was written in, and opening and saving it untouched still changes nothing. Tidy This Script is the one door that does, and it only runs when you choose it. It plans the change on a copy of the sheet and opens a window that lists every line as `before => after` with a count, and nothing is written until Apply. Apply is one undo step and then the ordinary save, so the old file goes to the sheet backups first. A second Tidy says `Nothing to tidy.`
+
+What it turns on is only what the rows already offer: a guard that wraps a plain number in a floor (`if t >= maxf(2.0, 0.001):` becomes `if t >= 2.0:`), the short loop-budget, filter and `$Name` connect lines for the rows that can carry them, a member that leaves out the icon and category its class already says, and, for a file with two-hash annotation lines, the words as one-hash comments above the description. A change is offered only when the result opens again as the same sheet, saves back byte for byte and parses; a line that cannot be read back is left as it is and the window says how many. The command line does the same for files nobody has open: `tools/tidy_scripts.gd -- <file or folder> [--write]`.
+
+### Added: the Doctor notes a script that still writes older spellings
+
+A note, never a warning, one per script: it counts the lines that are in an older spelling and points at Sheet > Tidy This Script. It reads text only, so it opens no file as a sheet, and it never names a script the plugin ships.
+
+### Changed: the hand-written provider scripts and the new-script template write annotation words with one hash
+
+The scripts under `eventsheet_addons/` that no pack builder generates (the bus mix, the haptics and sequencer scripts, the post-processing effects, the demo health and note-block add-ons and the loading screen), and the provider template in `script_templates/`, write their `@ace_` words as one-hash comments, so Godot's Help page for them shows the description and nothing else. They were moved by Tidy's own engine, each proven to open and save back byte for byte and to publish the same verbs. A project that already holds a copy of one of them keeps it unchanged and working.
+
+### Changed: a script with one-hash annotation words reads description first in the sheet
+
+In a file whose `@ace_` words are one-hash comments, the words sit above the description so Godot keeps the description. A comment block that is only those words and then the description used to show the words first; it now shows the description and then the words, the way the same block read when the words were two-hash lines. A code block of such a file shows its annotation lines with the file's one hash instead of two. Only the text on screen changes: the file's bytes, the block's stored text and each line's place in it are untouched, and a file that keeps two hashes reads as before.
+
 ### Added: Set Shape Colour From Palette
 
 A new row on every Vector Shape, 2D and 3D, sets the shape's colour to one role of a colour palette: `Set shape colour to "Danger" from palette ("Deuteranopia")` reads the Danger entry of the Deuteranopia colour set, so one row draws the right colour for every kind of colour vision. An empty set name reads the palette's first set, and role and set names match without regard to capitals. A palette, set or role that is not there leaves the colour as it was and says so once in the Output panel, naming the shape. The row reads the palette resource by the names its fields carry (`role_names`, `set_names`, `set_colors`), so the Vector Shapes pack still works without the Color Palette pack. The Game Settings guide had promised a row that asks a palette for its Danger colour; this is it. The row's id is `set_shape_colour_from_palette` and its call is `$VectorShape2D.set_shape_colour_from_palette(palette, colour_set, role)` (`$VectorShape3D` on a 3D shape).
