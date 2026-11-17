@@ -343,7 +343,19 @@ const CATEGORY_OF: Dictionary = {
 	"fill_bar": "transform",
 	"shader_value": "transform",
 	"call_method": "signal",
-	"pause_player": "signal"
+	"pause_player": "signal",
+	"collision_for": "scene",
+	"collision_layer_for": "scene",
+	"remove_node": "scene",
+	"draw_order": "scene",
+	"switch_node": "scene",
+	"look_at": "transform",
+	"rotate_by": "transform",
+	"rotate_to": "transform",
+	"rotation_shake": "transform",
+	"light": "scene",
+	"scene_look": "screen",
+	"bus_effect": "audio"
 }
 
 ## Keys that Set Juice Card Field and Juice Card Field accept.
@@ -418,12 +430,38 @@ const FILL_BAR: String = "fill_bar"
 const SHADER_VALUE: String = "shader_value"
 ## Step word: pause, resume or flip another Juice Player, or this one.
 const PAUSE_PLAYER: String = "pause_player"
+## Step word: switch a collision shape off for a time.
+const COLLISION_FOR: String = "collision_for"
+## Step word: take a body or an area off a collision layer, or stop it seeing one, for a time.
+const COLLISION_LAYER_FOR: String = "collision_layer_for"
+## Step word: free a node, or hand it back to its pool.
+const REMOVE_NODE: String = "remove_node"
+## Step word: draw a 2D node in front of the rest for a time.
+const DRAW_ORDER: String = "draw_order"
+## Step word: hide a node, stop its scripts or disable its collision, for a time or for good.
+const SWITCH_NODE: String = "switch_node"
+## Step word: turn a node to face another.
+const LOOK_AT: String = "look_at"
+## Step word: turn a node by an angle.
+const ROTATE_BY: String = "rotate_by"
+## Step word: turn a node to an angle.
+const ROTATE_TO: String = "rotate_to"
+## Step word: wobble the angle of a node and settle it.
+const ROTATION_SHAKE: String = "rotation_shake"
+## Step word: flare a light and let it go back.
+const LIGHT: String = "light"
+## Step word: move one value of the scene's look for a time.
+const SCENE_LOOK: String = "scene_look"
+## Step word: hold an effect of an audio bus for a time.
+const BUS_EFFECT: String = "bus_effect"
 
 ## Every word this node plays itself that points at another node or at the world.
 const WORLD_WORDS: PackedStringArray = [
 	"particles", "animation", "sprite_animation", "show_hide", "call_method", "spawn_scene", "push",
 	"force_for_a_time", "gravity_for_a_time", "freeze_body", "squash_stretch", "punch_position",
-	"punch_rotation", "pop", "fade", "grab_focus", "count_to", "reveal_text", "fill_bar", "shader_value", "pause_player"
+	"punch_rotation", "pop", "fade", "grab_focus", "count_to", "reveal_text", "fill_bar", "shader_value", "pause_player",
+	"collision_for", "collision_layer_for", "remove_node", "draw_order", "switch_node", "look_at", "rotate_by",
+	"rotate_to", "rotation_shake", "light", "scene_look", "bus_effect"
 ]
 
 ## Particles word: play the burst again from the start.
@@ -516,6 +554,65 @@ func _player_to_play(card: Dictionary, typed: String) -> Node:
 		return null
 	return other
 
+# --- Cards that change the scene, the light, the look and the sound ---
+# A "for a time" card changes a value and puts it back when its time is up. Two cards can change the same value
+# (a collision shape switched off by a hit and again by a dodge): it goes back when the LAST of them is done, to
+# what it was before the FIRST touched it, so an overlap can never leave a shape off for good. Stop, Restore and
+# the player leaving the scene put everything back at once. Where Godot refuses a change in the middle of a
+# physics step (a shape's disabled tick, a layer, a mask) the change is made at the safe moment instead.
+
+## What every player's cards hold changed right now, by object, property and layer: the value from before, and who holds it.
+static var _holds: Dictionary = {}
+
+## The number the next hold takes as its ticket, so a timer that outlives a Stop can never end a later hold.
+static var _next_hold: int = 0
+
+## The ways back of a bus effect, each a Callable, kept until its time is up or the play ends.
+var _ways_back: Array[Callable] = []
+
+## The nodes a Remove Node card is holding back until this list has finished.
+var _removals: Array[Node] = []
+
+## The classes of a collision shape, the nodes a card can switch off.
+const SHAPE_CLASSES: PackedStringArray = ["CollisionShape2D", "CollisionShape3D", "CollisionPolygon2D", "CollisionPolygon3D"]
+
+## The most a 2D node can be drawn in front of or behind the rest: Godot refuses a z index past it.
+const MOST_Z_INDEX: int = 4096
+
+## How many times a second a rotation shake swings from one side to the other and back.
+const SHAKE_HERTZ: float = 12.0
+
+## The words whose effect a skip to the end leaves out, because they last only a time and the skip is already past it.
+const LASTS_ONLY_A_TIME: PackedStringArray = [
+	"collision_for", "collision_layer_for", "draw_order", "switch_node", "rotation_shake", "light", "scene_look", "bus_effect"
+]
+
+## The switch a value of the look does nothing without, by the start of its name. The longest start comes first.
+const LOOK_SWITCHES: Array = [
+	["volumetric_fog_", "volumetric_fog_enabled"], ["adjustment_", "adjustment_enabled"], ["glow_", "glow_enabled"], ["fog_", "fog_enabled"]
+]
+## Every collision shape at or under a node.
+static func _shapes_under(root: Node) -> Array[Node]:
+	var found: Array[Node] = []
+	if _is_shape(root):
+		found.append(root)
+	for named: String in SHAPE_CLASSES:
+		for shape: Node in root.find_children("*", named, true, false):
+			found.append(shape)
+	return found
+## The node whose look a Scene Look card changes: the one it names, else the first WorldEnvironment in the running
+## scene.
+func _look_holder(card: Dictionary) -> Node:
+	var named: Node = _target(card, "node", false)
+	if named != null or not is_inside_tree() or get_tree().current_scene == null:
+		return named
+	var found: Array[Node] = get_tree().current_scene.find_children("*", "WorldEnvironment", true, false)
+	return found[0] if not found.is_empty() else null
+## The file that sweeps a bus, or null when the project does not carry it.
+func _bus_mix() -> Script:
+	var path: String = "res://eventsheet_addons/bus_mix.gd"
+	return load(path) as Script if ResourceLoader.exists(path) else null
+
 # --- Looping a list, and stopping everything ---
 # A list that loops is walked again and again by one coroutine that waits at least a frame between
 # passes, so a list with nothing in it that takes time cannot lock the game. Every way a play can end
@@ -607,7 +704,7 @@ func play_on_channel(channel: String, at_strength: float) -> void:
 # @ace_action
 # @ace_featured
 # @ace_name("Stop Juice")
-# @ace_description("Stops the play where it is and ends what its cards started, even when the list has already been walked: a shake, a slowmo, a hold on the clock, a tween part of the way, a sound, a force. A value a card was moving stays where it had got to; Restore Initial Values puts it back. A loop stops too.")
+# @ace_description("Stops the play where it is and ends what its cards started, even when the list has already been walked: a shake, a slowmo, a hold on the clock, a tween part of the way, a sound, a force, a shape switched off, a light, an effect on a bus. Whatever a card held for a time is given back now; a value it was moving stays where it had got to, and Restore Initial Values puts it back. A loop stops too.")
 # @ace_lift_example("$FeedbackPlayer.stop()")
 # @ace_lift_example("$JuicePlayer.stop()")
 # @ace_codegen_template("$JuicePlayer.stop()")
@@ -653,7 +750,7 @@ func skip_to_end() -> void:
 
 # @ace_action
 # @ace_name("Restore Initial Values")
-# @ace_description("Puts every value this player's cards changed back to what it was before the FIRST card touched it, and ends the shake, the slowmo and the other effects the Juice node was holding for them. The undo of a list that moved the object rather than flashing it.")
+# @ace_description("Puts every value this player's cards changed back to what it was before the FIRST card touched it, and ends the shake, the slowmo and the other effects the Juice node was holding for them. The undo of a list that moved the object rather than flashing it, or turned a light, a layer or a node's order.")
 # @ace_lift_example("$FeedbackPlayer.restore()")
 # @ace_lift_example("$JuicePlayer.restore()")
 # @ace_codegen_template("$JuicePlayer.restore()")
@@ -661,6 +758,8 @@ func restore() -> void:
 	_stop_tweens()
 	_restore_buses()
 	_release_forces()
+	_release_holds()
+	_take_ways_back()
 	_tell_juice_ended(true)
 	_told_own("restore")
 	_told_nested("restore")
@@ -1709,7 +1808,9 @@ func _do_step(card: Dictionary, at_strength: float, skipping: bool = false) -> v
 		_play_own_card(card, at)
 		return
 	if WORLD_WORDS.has(word):
-		_play_world_card(word, card, at, seconds)
+		if skipping and LASTS_ONLY_A_TIME.has(word):
+			return
+		_play_world_card(word, card, at, seconds, skipping)
 		return
 	match word:
 		TWEEN_PROPERTY:
@@ -1830,6 +1931,10 @@ static func sound_settings(card: Dictionary, at_strength: float, pitch_roll: flo
 static func card_length(card: Dictionary) -> float:
 	if word_of(card) == YOURS:
 		return _own_length(card)
+	if word_of(card) == LIGHT and bool(card.get("back", true)):
+		return maxf(float(card.get("seconds", 0.0)), 0.0) + maxf(float(card.get("back_seconds", 0.2)), 0.0)
+	if word_of(card) == SCENE_LOOK or word_of(card) == BUS_EFFECT:
+		return maxf(float(card.get("seconds", 0.0)), 0.0) + maxf(float(card.get("back_seconds", 0.3)), 0.0)
 	if word_of(card) != SOUND:
 		return maxf(float(card.get("seconds", 0.0)), 0.0)
 	var stream: AudioStream = _stream_at(str(card.get("stream", "")))
@@ -1985,6 +2090,7 @@ func _close() -> void:
 	progress = 1.0
 	now_playing = ""
 	on_feedbacks_finished.emit()
+	_remove_waiting()
 
 # @ace_hidden
 ## When each card of a list starts and how long it lasts: [{card, at, seconds}], in list order. A
@@ -2121,7 +2227,7 @@ func _vibrate(card: Dictionary, at: float) -> void:
 ## words. One answer for the Inspector's play buttons, Debug view and the guide.
 static func editor_kind(word: String) -> String:
 	match word:
-		"shake", "punch", TWEEN_PROPERTY, SOUND, PARTICLES, ANIMATION, SPRITE_ANIMATION, SHOW_HIDE, SQUASH_STRETCH, PUNCH_POSITION, PUNCH_ROTATION, POP, FADE, COUNT_TO, REVEAL_TEXT, FILL_BAR, SHADER_VALUE:
+		"shake", "punch", TWEEN_PROPERTY, SOUND, PARTICLES, ANIMATION, SPRITE_ANIMATION, SHOW_HIDE, SQUASH_STRETCH, PUNCH_POSITION, PUNCH_ROTATION, POP, FADE, COUNT_TO, REVEAL_TEXT, FILL_BAR, SHADER_VALUE, LOOK_AT, ROTATE_BY, ROTATE_TO, ROTATION_SHAKE, DRAW_ORDER, LIGHT:
 			return "felt"
 		PAUSE, HOLD_UNTIL, LOOP_START, LOOP_BACK, "hitstop", "slowmo":
 			return "time"
@@ -2135,6 +2241,16 @@ static func editor_kind(word: String) -> String:
 			return "skipped:focus belongs to the running game"
 		PUSH, FORCE_FOR_A_TIME, GRAVITY_FOR_A_TIME, FREEZE_BODY:
 			return "skipped:not shown in the editor, physics needs the running game"
+		COLLISION_FOR, COLLISION_LAYER_FOR:
+			return "skipped:not shown in the editor, physics needs the running game"
+		REMOVE_NODE:
+			return "skipped:it would remove a node from your scene"
+		SWITCH_NODE:
+			return "skipped:it would switch a node of your scene off"
+		SCENE_LOOK:
+			return "skipped:it would change the look the editor saves"
+		BUS_EFFECT:
+			return "skipped:the editor's buses are the project's own"
 		SPAWN_SCENE:
 			return "skipped:not shown in the editor, it adds a scene to the running game"
 		CALL_METHOD:
@@ -2342,7 +2458,7 @@ func _number_from(text: String) -> Variant:
 
 ## One world card, done. The words are the ones in WORLD_WORDS; `at` is the strength already multiplied
 ## by this player's own, and `seconds` the card's length.
-func _play_world_card(word: String, card: Dictionary, at: float, seconds: float) -> void:
+func _play_world_card(word: String, card: Dictionary, at: float, seconds: float, skipping: bool = false) -> void:
 	match word:
 		PARTICLES:
 			_particles(card)
@@ -2382,6 +2498,30 @@ func _play_world_card(word: String, card: Dictionary, at: float, seconds: float)
 			_shader_value(card, seconds)
 		PAUSE_PLAYER:
 			_pause_player(card)
+		COLLISION_FOR:
+			_collision_for(card, seconds)
+		COLLISION_LAYER_FOR:
+			_collision_layer_for(card, seconds)
+		REMOVE_NODE:
+			_remove_node(card, skipping)
+		DRAW_ORDER:
+			_draw_order(card, seconds)
+		SWITCH_NODE:
+			_switch_node(card, seconds)
+		LOOK_AT:
+			_look_at(card, 0.0 if skipping else seconds)
+		ROTATE_BY:
+			_turn(card, 0.0 if skipping else seconds, true)
+		ROTATE_TO:
+			_turn(card, 0.0 if skipping else seconds, false)
+		ROTATION_SHAKE:
+			_rotation_shake(card, at, seconds)
+		LIGHT:
+			_light(card, at, seconds)
+		SCENE_LOOK:
+			_scene_look(card, seconds)
+		BUS_EFFECT:
+			_bus_effect(card, seconds)
 
 ## Restarts, starts or stops a particles node.
 func _particles(card: Dictionary) -> void:
@@ -2799,6 +2939,484 @@ static func _plays_through(from: Node, wanted: Node, depth: int) -> bool:
 			return true
 	return false
 
+## Changes one property of an object, and says which hold it is. The first hold on a property writes down what it was
+## (the way back goes there, and so does Restore); later holds on the same property only add themselves. `layer` is 0
+## for a whole property, or a layer number from 1 to 32 when the thing held is one layer or one mask bit. `deferred`
+## writes at the safe moment, which Godot asks for on a shape, a layer and a mask.
+func _hold(target: Object, property: String, value: Variant, deferred: bool = false, layer: int = 0) -> Dictionary:
+	if target == null or not is_instance_valid(target):
+		return {}
+	var key: String = "%d|%s|%d" % [target.get_instance_id(), property, layer]
+	var hold: Dictionary = _holds.get(key, {})
+	var first_value: Variant = target.get(property)
+	if hold.is_empty():
+		var before: Variant = first_value
+		if layer > 0:
+			before = bool(target.call("get_%s_value" % property, layer))
+		hold = {"object": target, "property": property, "layer": layer, "deferred": deferred, "before": before, "tickets": []}
+		_holds[key] = hold
+	elif layer == 0:
+		first_value = hold["before"]
+	_keep_first(target, property, first_value)
+	_next_hold += 1
+	(hold["tickets"] as Array).append({"id": _next_hold, "owner": get_instance_id()})
+	_put(hold, value)
+	return {"key": key, "ticket": _next_hold}
+
+## Writes a value to the object a hold is on: the whole property, or one layer of it.
+static func _put(hold: Dictionary, value: Variant) -> void:
+	var object: Object = hold["object"] as Object
+	var property: String = str(hold["property"])
+	if int(hold["layer"]) > 0:
+		object.call_deferred("set_%s_value" % property, int(hold["layer"]), bool(value))
+	elif bool(hold["deferred"]):
+		object.set_deferred(property, value)
+	else:
+		object.set(property, value)
+
+## Holds a property for `seconds` and then lets it go. With no scene tree to count the time in, the hold is let go at
+## once.
+func _hold_for(target: Object, property: String, value: Variant, seconds: float, deferred: bool = false, layer: int = 0) -> void:
+	var ticket: Dictionary = _hold(target, property, value, deferred, layer)
+	if ticket.is_empty():
+		return
+	if not is_inside_tree():
+		_end_hold(ticket)
+		return
+	get_tree().create_timer(maxf(seconds, 0.0)).timeout.connect(_end_hold.bind(ticket))
+
+## Lets one hold go. When it was the last on its property, the property goes back to what it was before the first.
+static func _end_hold(ticket: Dictionary) -> void:
+	var key: String = str(ticket.get("key", ""))
+	var held: Dictionary = _holds.get(key, {})
+	if held.is_empty():
+		return
+	var tickets: Array = held["tickets"]
+	for index: int in range(tickets.size()):
+		if int((tickets[index] as Dictionary)["id"]) == int(ticket.get("ticket", 0)):
+			tickets.remove_at(index)
+			break
+	if not tickets.is_empty():
+		return
+	_holds.erase(key)
+	_give_back(held)
+
+## Puts a held property back to what it was before the first card, unless the object is gone.
+static func _give_back(held: Dictionary) -> void:
+	var object: Object = held.get("object") as Object
+	if object != null and is_instance_valid(object):
+		_put(held, held["before"])
+
+## Lets every hold of THIS player go at once, which is what Stop, Restore and leaving the scene do. A thing another
+## player is still holding stays held until that one lets go.
+func _release_holds() -> void:
+	var mine: int = get_instance_id()
+	for key: String in _holds.keys():
+		var held: Dictionary = _holds[key]
+		var tickets: Array = held["tickets"]
+		var before: int = tickets.size()
+		for index: int in range(tickets.size() - 1, -1, -1):
+			if int((tickets[index] as Dictionary)["owner"]) == mine:
+				tickets.remove_at(index)
+		if before > 0 and tickets.is_empty():
+			_holds.erase(key)
+			_give_back(held)
+
+## Keeps a way back for a change no node holds, and takes it when the time is up. With no scene tree to count in, it
+## is taken at once.
+func _way_back_in(seconds: float, back: Callable) -> void:
+	_ways_back.append(back)
+	if not is_inside_tree():
+		_take_way_back(back)
+		return
+	get_tree().create_timer(maxf(seconds, 0.0)).timeout.connect(_take_way_back.bind(back))
+
+## Takes one way back, once.
+func _take_way_back(back: Callable) -> void:
+	if not _ways_back.has(back):
+		return
+	_ways_back.erase(back)
+	if back.is_valid():
+		back.call()
+
+## Takes every way back at once.
+func _take_ways_back() -> void:
+	for back: Callable in _ways_back.duplicate():
+		_take_way_back(back)
+
+## Whether a node is a collision shape or a collision polygon, in 2D or in 3D.
+static func _is_shape(node: Node) -> bool:
+	for named: String in SHAPE_CLASSES:
+		if node.is_class(named):
+			return true
+	return false
+
+## Switches a collision shape off for a time. Godot refuses a shape's disabled tick in the middle of a physics step,
+## so it is changed at the safe moment, both ways.
+func _collision_for(card: Dictionary, seconds: float) -> void:
+	var target: Node = _target(card, "node", false)
+	if target == null or not _is_shape(target):
+		_card_missing(card, "points at no collision shape")
+		return
+	_hold_for(target, "disabled", true, seconds, true)
+
+## Changes one layer of what a body is on, or of what it sees, for a time. Both are changed at the safe moment, so a
+## card played from a collision is safe.
+func _collision_layer_for(card: Dictionary, seconds: float) -> void:
+	var target: Node = _target(card, "node", false)
+	if target == null or not (target is CollisionObject2D or target is CollisionObject3D):
+		_card_missing(card, "points at no body or area")
+		return
+	var part: String = "collision_layer" if str(card.get("part", "mask")) == "layer" else "collision_mask"
+	_hold_for(target, part, bool(card.get("on", false)), seconds, true, clampi(int(card.get("layer", 1)), 1, 32))
+
+## Removes a node: handed back to its object pool when it came from one, freed when it did not. With "after this list
+## ends" it waits for the list, so the sound and the particles of a death are not cut off with it; a node that holds
+## this player waits whatever the tick says, because freeing it would end the list.
+func _remove_node(card: Dictionary, skipping: bool) -> void:
+	var target: Node = _target(card, "node", true)
+	if target == null:
+		_card_missing(card, "points at a node that is not there")
+		return
+	var holds_this_player: bool = target == self or target.is_ancestor_of(self)
+	if skipping or not playing or not (bool(card.get("after_list", true)) or holds_this_player):
+		_retire(target)
+	elif not _removals.has(target):
+		_removals.append(target)
+
+## Hands a node back to its pool, or frees it, through the file that decides which.
+func _retire(target: Node) -> void:
+	if not is_instance_valid(target) or target.is_queued_for_deletion():
+		return
+	var pool: String = "res://eventsheet_addons/pooled_nodes.gd"
+	if ResourceLoader.exists(pool):
+		(load(pool) as Script).call("retire", target)
+	else:
+		target.queue_free()
+
+## Removes the nodes that waited for the end of the list.
+func _remove_waiting() -> void:
+	var waiting: Array[Node] = _removals.duplicate()
+	_removals.clear()
+	for target: Node in waiting:
+		_retire(target)
+
+## Draws a 2D node in front of the rest, or behind it, for a time. Godot refuses a z index past 4096, so the number
+## is held inside it.
+func _draw_order(card: Dictionary, seconds: float) -> void:
+	var target: Node = _target(card, "node", true)
+	if not (target is CanvasItem):
+		_card_missing(card, "points at no 2D node, and a 3D node is drawn by its distance from the camera")
+		return
+	_hold_for(target, "z_index", clampi(int(card.get("z_index", 10)), -MOST_Z_INDEX, MOST_Z_INDEX), seconds)
+
+## Switches a node off in the three ways Godot has, each its own tick: hidden, not processing, and its collision
+## shapes disabled. For a time, or until a card switches it on again.
+func _switch_node(card: Dictionary, seconds: float) -> void:
+	var target: Node = _target(card, "node", true)
+	if target == null:
+		_card_missing(card, "points at a node that is not there")
+		return
+	var word: String = str(card.get("do", "for_a_time"))
+	var off: bool = word != "on"
+	var timed: bool = word == "for_a_time"
+	var done: bool = false
+	if bool(card.get("visible", true)) and "visible" in target:
+		_switch_property(target, "visible", not off, timed, seconds, false)
+		done = true
+	if bool(card.get("process", true)):
+		_switch_property(target, "process_mode", Node.PROCESS_MODE_DISABLED if off else Node.PROCESS_MODE_INHERIT, timed, seconds, false)
+		done = true
+	if bool(card.get("collision", false)):
+		for shape: Node in _shapes_under(target):
+			_switch_property(shape, "disabled", off, timed, seconds, true)
+			done = true
+	if not done:
+		_card_missing(card, "has nothing ticked to switch")
+
+## One property of a switched node: held for a time, or written for good with Restore able to undo it.
+func _switch_property(target: Object, property: String, value: Variant, timed: bool, seconds: float, deferred: bool) -> void:
+	if timed:
+		_hold_for(target, property, value, seconds, deferred)
+		return
+	_keep_first(target, property, target.get(property))
+	if deferred:
+		target.set_deferred(property, value)
+	else:
+		target.set(property, value)
+
+## Whether a card turns a node that the physics engine owns. Turning one fights the engine, so the card says where to
+## point it instead.
+func _refuses_turning(card: Dictionary, node: Node) -> bool:
+	if node is RigidBody2D or node is RigidBody3D:
+		_card_missing(card, "points at a RigidBody, which the physics engine turns (point it at the sprite or mesh under the body instead)")
+		return true
+	return false
+
+## The property a turn writes: a 2D node and a Control turn by `rotation`, a 3D node about its up axis.
+static func _turn_path(node: Node) -> String:
+	return "rotation:y" if node is Node3D else "rotation"
+
+## Whether a node can be turned by this card at all.
+static func _can_turn(node: Node) -> bool:
+	return node is Node2D or node is Node3D or node is Control
+
+## Turns a node by an angle or to one, over a time. A Control turns about its middle. What the angle was is written
+## down, so Restore turns it back.
+func _turn(card: Dictionary, seconds: float, by: bool) -> void:
+	var node: Node = _target(card, "node", true)
+	if node == null or not _can_turn(node):
+		_card_missing(card, "points at no node that can be turned")
+		return
+	if _refuses_turning(card, node):
+		return
+	var path: NodePath = NodePath(_turn_path(node))
+	var now: float = float(node.get_indexed(path))
+	var wanted: float = deg_to_rad(float(card.get("degrees", 45.0 if by else 90.0)))
+	var goal: float = now + wanted if by else now + angle_difference(now, wanted)
+	_keep_first(node, "rotation", node.get("rotation"))
+	if node is Control:
+		_keep_first(node, "pivot_offset", (node as Control).pivot_offset)
+		(node as Control).pivot_offset = (node as Control).size / 2.0
+	if seconds <= 0.0:
+		node.set_indexed(path, goal)
+		return
+	_new_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT).tween_property(node, path, goal, seconds)
+
+## Turns a node to face another node, over a time: in 2D the angle that points its right at it, in 3D the way the
+## engine's own look at turns it, with the head up. A node at the same place has nothing to face, and a target
+## straight above looks along the forward axis instead of flipping.
+func _look_at(card: Dictionary, seconds: float) -> void:
+	var node: Node = _target(card, "node", true)
+	var goal: Node = _target(card, "target", false)
+	if node == null or goal == null:
+		_card_missing(card, "points at a node or a target that is not there")
+		return
+	if _refuses_turning(card, node):
+		return
+	if node is Node2D and goal is Node2D:
+		var from: Node2D = node as Node2D
+		var offset: Vector2 = (goal as Node2D).global_position - from.global_position
+		if offset.length() < 0.001:
+			_card_missing(card, "is at the same place as its target (there is nothing to face)")
+			return
+		var wanted: float = from.global_rotation + angle_difference(from.global_rotation, offset.angle())
+		_keep_first(from, "rotation", from.rotation)
+		if seconds <= 0.0:
+			from.global_rotation = wanted
+			return
+		_new_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT).tween_property(from, NodePath("global_rotation"), wanted, seconds)
+	elif node is Node3D and goal is Node3D:
+		var here: Node3D = node as Node3D
+		var start: Vector3 = here.global_position
+		var end: Vector3 = (goal as Node3D).global_position
+		if start.distance_to(end) < 0.001:
+			_card_missing(card, "is at the same place as its target (there is nothing to face)")
+			return
+		var up: Vector3 = Vector3.UP
+		if absf((end - start).normalized().dot(Vector3.UP)) > 0.999:
+			up = Vector3.FORWARD
+		var goal_turn: Quaternion = Transform3D(Basis(), start).looking_at(end, up).basis.get_rotation_quaternion()
+		_keep_first(here, "rotation", here.rotation)
+		if seconds <= 0.0:
+			_turn_towards(1.0, here, here.global_transform.basis.get_rotation_quaternion(), goal_turn)
+			return
+		_new_tween().tween_method(_turn_towards.bind(here, here.global_transform.basis.get_rotation_quaternion(), goal_turn), 0.0, 1.0, seconds)
+	else:
+		_card_missing(card, "and its target are not both 2D nodes or both 3D nodes")
+
+## One step of a 3D turn: the node's angle `through` of the way from where it was to where it faces, keeping its size
+## and its place.
+func _turn_towards(through: float, node: Node3D, from_turn: Quaternion, goal_turn: Quaternion) -> void:
+	if not is_instance_valid(node):
+		return
+	var now: Transform3D = node.global_transform
+	node.global_transform = Transform3D(Basis(from_turn.slerp(goal_turn, through)).scaled(now.basis.get_scale()), now.origin)
+
+## Wobbles the angle of a node and settles it, with the same fade ticks and curve a Shake card has. The angle it had
+## is written back at the end, whatever the last step was.
+func _rotation_shake(card: Dictionary, at: float, seconds: float) -> void:
+	var node: Node = _target(card, "node", true)
+	if node == null or not _can_turn(node):
+		_card_missing(card, "points at no node that can be turned")
+		return
+	if _refuses_turning(card, node):
+		return
+	var path: NodePath = NodePath(_turn_path(node))
+	var rest: float = float(node.get_indexed(path))
+	_hold_for(node, "rotation", node.get("rotation"), seconds)
+	var curve: Curve = null
+	var kept: String = str(card.get("curve", "")).strip_edges()
+	if not kept.is_empty() and ResourceLoader.exists(kept):
+		curve = load(kept) as Curve
+	var radians: float = deg_to_rad(float(card.get("degrees", 10.0))) * at
+	_new_tween().tween_method(_shake_turn.bind(node, path, rest, radians, maxf(seconds, 0.001), bool(card.get("fade_in", false)), bool(card.get("fade_out", true)), curve), 0.0, 1.0, maxf(seconds, 0.001))
+
+## One step of a rotation shake: the angle at rest plus a swing the shape of the shake makes smaller or larger. The
+## last step is the rest itself.
+func _shake_turn(through: float, node: Node, path: NodePath, rest: float, radians: float, span: float, fade_in: bool, fade_out: bool, curve: Curve) -> void:
+	if not is_instance_valid(node):
+		return
+	if through >= 1.0:
+		node.set_indexed(path, rest)
+		return
+	node.set_indexed(path, rest + radians * MomentRunner.shake_shape(through, fade_in, fade_out, curve) * sin(through * span * TAU * SHAKE_HERTZ))
+
+# @ace_hidden
+## The three names a light answers to: how bright it is, what colour it is, and what switches it on and off. A 2D
+## light says energy, color and enabled; a 3D light says light_energy, light_color and visible. Empty for a node that
+## is no light.
+static func light_properties(light: Node) -> Dictionary:
+	if light is Light2D:
+		return {"energy": "energy", "colour": "color", "on": "enabled"}
+	if light is Light3D:
+		return {"energy": "light_energy", "colour": "light_color", "on": "visible"}
+	return {}
+
+## Flares a light to a brightness and a colour over a time, and lets it go back by itself. A light that was off is
+## switched on for the flare and off again after. Stop leaves it where it got to; Restore puts it back.
+func _light(card: Dictionary, at: float, seconds: float) -> void:
+	var light: Node = _target(card, "node", true)
+	var names: Dictionary = light_properties(light) if light != null else {}
+	if names.is_empty():
+		_card_missing(card, "points at no light")
+		return
+	var energy: String = str(names["energy"])
+	var colour: String = str(names["colour"])
+	var rest_energy: float = float(light.get(energy))
+	var rest_colour: Color = light.get(colour)
+	_keep_first(light, energy, rest_energy)
+	_keep_first(light, colour, rest_colour)
+	var peak: float = rest_energy + (float(card.get("energy_to", 3.0)) - rest_energy) * at
+	var tint: Color = rest_colour.lerp(_colour_of(card.get("colour_to", Color(1.0, 0.6, 0.2))), clampf(at, 0.0, 1.0))
+	var goes_back: bool = bool(card.get("back", true))
+	var back_seconds: float = maxf(float(card.get("back_seconds", 0.2)), 0.0)
+	if not bool(light.get(str(names["on"]))):
+		if goes_back:
+			_hold_for(light, str(names["on"]), true, seconds + back_seconds)
+		else:
+			light.set(str(names["on"]), true)
+	var made: Tween = _new_tween().set_parallel(true)
+	_eased(made, str(card.get("ease", "out")))
+	made.tween_property(light, NodePath(energy), peak, seconds)
+	made.tween_property(light, NodePath(colour), tint, seconds)
+	if goes_back:
+		made.chain().tween_property(light, NodePath(energy), rest_energy, back_seconds)
+		made.tween_property(light, NodePath(colour), rest_colour, back_seconds)
+
+## The curve of a tween: the words a card keeps, as Godot's transition and ease.
+func _eased(made: Tween, word: String) -> void:
+	match word:
+		"linear":
+			made.set_trans(Tween.TRANS_LINEAR)
+		"in":
+			made.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+		"in_out":
+			made.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_:
+			made.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+## A colour from what a card keeps: a colour, or the text of one.
+static func _colour_of(value: Variant) -> Color:
+	return value as Color if value is Color else Color(str(value))
+
+# @ace_hidden
+## The switch a value of the look does nothing without, or an empty word when it needs none.
+static func look_switch_of(property: String) -> String:
+	for entry: Array in LOOK_SWITCHES:
+		if property.begins_with(str(entry[0])):
+			return str(entry[1])
+	return ""
+
+## The resources a node holds a look in, as the members that hold them.
+static func _look_members(holder: Node) -> PackedStringArray:
+	if holder is WorldEnvironment:
+		return PackedStringArray(["environment", "camera_attributes"])
+	if holder is Camera3D:
+		return PackedStringArray(["environment", "attributes"])
+	return PackedStringArray()
+
+## Moves one value of the scene's look to a number and back, on the scene's OWN copy of it. An Environment is a file
+## many scenes share, so the first change gives this scene a copy; the file is never written and the original is put
+## back when the time is up, on Stop and on Restore.
+func _scene_look(card: Dictionary, seconds: float) -> void:
+	var holder: Node = _look_holder(card)
+	var property: String = str(card.get("property", "glow_intensity"))
+	var resource: Resource = null
+	var members: PackedStringArray = _look_members(holder) if holder != null else PackedStringArray()
+	for named: String in members:
+		var held: Resource = holder.get(named) as Resource
+		var probe: Resource = held
+		if probe == null:
+			if named == "environment":
+				probe = Environment.new()
+			else:
+				probe = CameraAttributesPractical.new()
+		if property in probe:
+			resource = probe
+			if held == null or not held.resource_path.is_empty():
+				resource = probe.duplicate() if held != null else probe
+				_hold_for(holder, named, resource, seconds + maxf(float(card.get("back_seconds", 0.3)), 0.0))
+			break
+	if resource == null:
+		_card_missing(card, "finds no look in this scene with a value called \"%s\"" % property)
+		return
+	var back_seconds: float = maxf(float(card.get("back_seconds", 0.3)), 0.0)
+	var before: Variant = resource.get(property)
+	var switch: String = look_switch_of(property)
+	_hold_for(resource, property, before, seconds + back_seconds)
+	if not switch.is_empty() and switch in resource and not bool(resource.get(switch)):
+		_hold_for(resource, switch, true, seconds + back_seconds)
+	var made: Tween = _new_tween()
+	made.tween_property(resource, NodePath(property), card.get("to", before), seconds)
+	made.tween_property(resource, NodePath(property), before, back_seconds)
+
+## Holds an effect of an audio bus for a time: switches one that is already on the bus on, or muffles, dives or
+## washes the bus through the effect that does it, and puts it back by itself. An effect the bus lacks is added at
+## its END, which moves none of the others.
+func _bus_effect(card: Dictionary, seconds: float) -> void:
+	var bus: String = str(card.get("bus", "Master"))
+	var index: int = AudioServer.get_bus_index(bus)
+	if index < 0:
+		_card_missing(card, "names the bus \"%s\", which this project does not have" % bus)
+		return
+	var how: String = str(card.get("how", "muffle"))
+	var back_seconds: float = maxf(float(card.get("back_seconds", 0.2)), 0.0)
+	if how == "switch":
+		var slot: int = int(card.get("slot", 0))
+		if slot < 0 or slot >= AudioServer.get_bus_effect_count(index):
+			_card_missing(card, "names effect %d on the bus %s, which has %d" % [slot, bus, AudioServer.get_bus_effect_count(index)])
+			return
+		var was_on: bool = AudioServer.is_bus_effect_enabled(index, slot)
+		AudioServer.set_bus_effect_enabled(index, slot, true)
+		_way_back_in(seconds, AudioServer.set_bus_effect_enabled.bind(index, slot, was_on))
+		return
+	var mix: Script = _bus_mix()
+	if mix == null or not is_inside_tree():
+		_card_missing(card, "needs the bus mix file of the project")
+		return
+	var wanted: float = bus_value_for(how, float(card.get("to", 400.0)))
+	var resting: float = float(mix.call("read", bus, how))
+	mix.call("sweep", get_tree().root, bus, how, wanted, 0.0)
+	_way_back_in(seconds, _sweep_back.bind(bus, how, resting, back_seconds))
+
+## Walks a bus back to where one kind of effect rested, on the root of the tree, which no scene change can free.
+func _sweep_back(bus: String, how: String, resting: float, over: float) -> void:
+	var mix: Script = _bus_mix()
+	if mix != null and is_inside_tree():
+		mix.call("sweep", get_tree().root, bus, how, resting, over)
+
+# @ace_hidden
+## The number a way of changing a bus can take: a cutoff in hertz for a muffle, a level in decibels for a dive (an
+## amplify of +400 dB would be the end of the speakers), a share of wet for a wash.
+static func bus_value_for(how: String, value: float) -> float:
+	match how:
+		"dive":
+			return clampf(value, -80.0, 24.0)
+		"wash":
+			return clampf(value, 0.0, 1.0)
+	return clampf(value, 20.0, 20500.0)
+
 ## Plays the list once, or over and over while Loop is ticked: the pass is walked, then the loop
 ## waits Wait Between seconds (one frame at least) and walks it again, until Times passes have been
 ## made (0 is until stopped), Loop is turned off or the play is stopped.
@@ -2859,6 +3477,9 @@ func _end_effects() -> void:
 	_bus_tweens.clear()
 	_stop_sound("", 0.0)
 	_release_forces()
+	_release_holds()
+	_take_ways_back()
+	_removals.clear()
 	_told_own("stop")
 	_tell_juice_ended(false)
 
