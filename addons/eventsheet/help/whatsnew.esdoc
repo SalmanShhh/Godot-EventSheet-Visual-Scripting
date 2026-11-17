@@ -40,7 +40,11 @@ Some rows guarded a value with a floor so a typed name could never be zero: an E
 
 Existing files do not move. Opening a `.gd` or a `.tres` and saving it untouched writes the same bytes as before, and editing one row changes that row's lines only (an Every X Seconds row's own rebase line follows it) and never the rows beside it. The thirty showcases are regenerated and read this way now (34 lines in 12 files).
 
-Also fixed: editing the seconds of an Every X Seconds row that came from an existing script used to add a second clock to the script (a second member, a second accumulating line and a rebase that still named the old seconds) and leave the first one running for nothing. The edited row now keeps the clock the script already had and its rebase line follows the new seconds. Other timers that keep a clock, such as Every X To Y Seconds, still build their own when a reopened row is edited.
+Also fixed: editing the seconds of an Every X Seconds row that came from an existing script used to add a second clock to the script (a second member, a second accumulating line and a rebase that still named the old seconds) and leave the first one running for nothing. The edited row now keeps the clock the script already had and its rebase line follows the new seconds.
+
+### Fixed: editing any row that keeps state, from an existing script, no longer adds a second copy of that state
+
+Every X Seconds already kept its one clock when its row was edited from an existing script. Every other verb that owns a member did not: editing Every X To Y Seconds, Trigger Once, Has Changed, Has Been True For, Only Once Ever, At Most Every, Just Landed and the other twenty or so of them added a second member and a second helper function beside the first (and a second accumulating line where there is one), and the row then called the new, empty copy while the old one stayed in the file unused. The edited row now keeps the member the script already had, so the script holds one of each and the new values are written into the call. Rows placed from the picker are unchanged, and no existing file moves when it is opened and saved untouched.
 
 ### Added: the Shake card fades in and out, follows a curve of your own, and lasts the seconds it says
 
@@ -57,6 +61,20 @@ The row's value box now follows the field named in the box above it, as the card
 ### Fixed: an open Timing foldout stays with its card, a dragged card stays inside the list, and Chance reads 100
 
 The open state of a card's Timing foldout was remembered by position, so after a card above it was moved or removed a different card showed open. It now moves with its card. A card dragged in a card list hung to the lower right of the pointer and was cut off by the Inspector's edge; it now stays inside the width of the list. Chance in a card's Timing foldout showed 100.0 where it holds a whole number and now shows 100. Save Moment File's two warnings are one function and their sentences are pinned by a test.
+
+### Changed: a loop, a filter and a handler you place now read the way you would type them
+
+Four lines a placed row used to write the long way now read plainly. A Budgeted For Each with a count writes `if __done_x >= 90:` and no deadline local (a time alone writes only the time test, both write both; they used to write one long guard that tested both whichever was set). A For Each filter that is one comparison writes `if star.position.y <= 560.0:` where it wrote `if not (star.position.y > 560.0):`, and a single filter condition is no longer bracketed twice (`not ((a > b))`); anything that is not one plain comparison keeps its `not (...)`. A handler on a plain node path connects with `$RedCard.body_entered.connect(...)` where it wrote `get_node(\"RedCard\").body_entered.connect(...)` (a path with a space, `..` or `%` keeps `get_node`). The flip reads a NaN the way an inverted comparison row already does.
+
+Existing files do not move. Opening a `.gd` or a `.tres` and saving it untouched writes the same bytes, a loop, filter or handler saved before keeps what it wrote, and a script you wrote by hand keeps its own lines. The swarm, starfall, top_down_shooter and boomer_level showcases are regenerated this way.
+
+### Changed: each showcase says what it is as its class description
+
+The thirty showcases used to end on a bold-titled `#` note that only the sheet could read. The description now sits under `extends` as the class description, where Godot shows it as the class's own documentation (the Create Node tooltip and the script's Help page). Five scripts that already had a one-line description keep it as the first paragraph. The start page reads either spelling, so a script of your own that closes on a note still gets its card. The boomer_level clock reads `if not (level_over):` where it read `if level_over == false:`.
+
+### Changed: a behaviour with no host says which node it is
+
+The warning a behaviour writes when it has no node to act on ends `This one is at <path>.` now, so a scene with forty of one behaviour says which one is wrong. A behaviour you create writes it; a behaviour file written before opens and saves back byte for byte with the sentence it has. The 84 shipped packs that carry the warning are rebuilt with it, one line each.
 
 ### Added: every kind of Juice card has an icon, drawn in Godot's style
 
