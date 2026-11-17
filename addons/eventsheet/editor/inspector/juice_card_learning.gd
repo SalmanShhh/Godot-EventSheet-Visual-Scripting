@@ -306,7 +306,11 @@ static func as_gdscript(card: Dictionary, player: Node = null) -> String:
 	var target: String = _node(card, "node", player)
 	match word:
 		"shake":
-			return "var camera := get_viewport().get_camera_2d()\nvar elapsed := 0.0\nwhile elapsed < %s:\n\tvar left := 1.0 - elapsed / %s\n\tcamera.offset = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * %s * 40.0 * left\n\tawait get_tree().process_frame\n\telapsed += get_process_delta_time()\ncamera.offset = Vector2.ZERO" % [seconds, seconds, amount]
+			# The camera goes back to the offset it had. A card of 0 seconds (a trauma shake the camera
+			# fades out itself) writes the one kick instead of a loop that never runs.
+			if float(card.get("seconds", 0.2)) <= 0.0:
+				return "var camera := get_viewport().get_camera_2d()\nvar rest := camera.offset\ncamera.offset = rest + Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * %s * 40.0\nawait get_tree().process_frame\ncamera.offset = rest" % amount
+			return "var camera := get_viewport().get_camera_2d()\nvar rest := camera.offset\nvar elapsed := 0.0\nwhile elapsed < %s:\n\tvar left := 1.0 - elapsed / %s\n\tcamera.offset = rest + Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * %s * 40.0 * left\n\tawait get_tree().process_frame\n\telapsed += get_process_delta_time()\ncamera.offset = rest" % [seconds, seconds, amount]
 		"hitstop":
 			return "var before := Engine.time_scale\nEngine.time_scale = %s\nawait get_tree().create_timer(%s, true, false, true).timeout\nEngine.time_scale = before" % [_n(card.get("amount", 0.0)), seconds]
 		"slowmo":

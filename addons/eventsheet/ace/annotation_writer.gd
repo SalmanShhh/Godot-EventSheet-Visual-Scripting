@@ -1,4 +1,5 @@
-# Godot EventSheets - writes `## @ace_*` annotations into a user's own script.
+# Godot EventSheets - writes `@ace_*` annotation comments into a user's own script, spelled the way the
+# script already spells them (one hash or two; a script with none yet gets two).
 #
 # This is the half of the ACE wizard that touches the user's file, so it is deliberately the
 # smallest, dumbest thing that can work: pure text in, pure text out, no file IO, no Script
@@ -15,7 +16,7 @@
 # 1. IDEMPOTENT. Applying the same edits twice produces identical text. Achieved by rewriting
 #    rather than appending: every managed annotation in the block is removed first, then the whole
 #    set is re-emitted in a canonical order. A second pass removes exactly what the first wrote.
-# 2. NOTHING BUT COMMENTS MOVES. Only `##` lines above a declaration are added or removed. No
+# 2. NOTHING BUT COMMENTS MOVES. Only annotation comment lines above a declaration are added or removed. No
 #    signature, no body, no decorator, no blank line between members is ever touched. That is why
 #    an untyped method's KIND is fixed by writing `@ace_condition` rather than by adding `-> bool`:
 #    editing someone's signature to change how a picker groups it is not a trade worth offering.
@@ -527,7 +528,8 @@ static func _bump(source: String, bump: String, note: String) -> Dictionary:
 			parts[2] += 1
 	var new_version: String = "%d.%d.%d" % [parts[0], parts[1], parts[2]]
 	var clean_note: String = note.replace("
-", " ").replace("", " ").strip_edges()
+", " ").replace("
+", " ").strip_edges()
 	if clean_note.is_empty():
 		clean_note = "maintenance"
 	var note_line: String = "## %s: %s" % [new_version, clean_note]
