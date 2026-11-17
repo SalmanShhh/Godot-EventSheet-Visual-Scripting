@@ -16,6 +16,7 @@ const SCANNER_PATH: String = "res://addons/eventsheet/ace/project_scanner.gd"
 const SHIPPED_SCRIPTS_PATH: String = "res://addons/eventsheet/ace/shipped_scripts.gd"
 const L10N_PATH: String = "res://addons/eventsheet/editor/l10n.gd"
 const THEME_FILES_PATH: String = "res://addons/eventsheet/theme/theme_files.gd"
+const PREVIEW_BEHAVIOURS_PATH: String = "res://addons/eventforge/editor/preview_behaviours.gd"
 
 var slot: int = -1
 var open_sheet: Callable = Callable()    # Callable(path: String)
@@ -226,16 +227,14 @@ func _previewing_behaviours_of_selection() -> Array[Node]:
 	return previewing_behaviours_under(selected[0])
 
 
-## The direct children of `node` that carry a Preview button (a pack's own `_preview_start` and
-## `_preview_stop`). Static so a test asks it of plain nodes, without the editor-only plugin.
+## The behaviours below `node`, at any depth, that carry a Preview button (a pack's own `_preview_start` and
+## `_preview_stop`) and act on `node` or on a node under it. Bounded, and leaves out the inside of instanced
+## scenes that are not opened up. Static so a test asks it of plain nodes, without the editor-only plugin.
 static func previewing_behaviours_under(node: Node) -> Array[Node]:
-	var found: Array[Node] = []
-	if node == null:
-		return found
-	for child: Node in node.get_children():
-		if child.has_method("_preview_start") and child.has_method("_preview_stop"):
-			found.append(child)
-	return found
+	var edited_root: Node = null
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		edited_root = EditorInterface.get_edited_scene_root()
+	return load(PREVIEW_BEHAVIOURS_PATH).find(node, edited_root)
 
 
 ## "Preview its behaviours": presses Preview on each one, so a platform that bobs and spins shows both.
