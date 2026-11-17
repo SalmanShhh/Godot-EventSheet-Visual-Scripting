@@ -1399,7 +1399,7 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 ## a mistyped word is never touched.
 static func _spelled(sheet: EventSheetResource, text: String) -> String:
 	if EventSheetAnnotationLine.writes_hash(sheet):
-		return EventSheetAnnotationLine.hashed_text(text, sheet.external_source_path.is_empty())
+		return EventSheetAnnotationLine.hashed_text(text, sheet.external_source_path.is_empty() or sheet.annotation_words_first)
 	return text
 
 

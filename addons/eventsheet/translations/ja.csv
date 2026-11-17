@@ -11112,3 +11112,21 @@ The scene's WorldEnvironment,シーンの WorldEnvironment
 "Flares a light to a brightness and a colour and lets it go back by itself: a muzzle flash. It works on the 2D and 3D lights, and a light that was off is switched on for the flare.",ライトを指定の明るさと色まで光らせ、自動で元に戻します。銃口のフラッシュのような効果です。2D と 3D のライトで使え、オフのライトはフラッシュの間だけオンになります。
 "Moves one value of the look of the scene to a number and back: glow, brightness, contrast, saturation, exposure, fog. It changes the scene's own copy, so no other scene changes. In a 2D game the glow needs a WorldEnvironment whose background is set to Canvas.",シーンのルックの値を 1 つ、指定の数値まで動かして元に戻します。グロー、明るさ、コントラスト、彩度、露出、フォグなど。シーン専用のコピーを変更するので、他のシーンは変わりません。2D のゲームでグローを使うには、背景を Canvas にした WorldEnvironment が必要です。
 Holds an effect of an audio bus for a time and puts it back: a low-pass that muffles the world when you are hurt. An effect the bus lacks is added at its end and stays. Never shown in the editor.,オーディオバスのエフェクトを一定時間かけて、その後元に戻します。やられたときに世界をこもらせるローパスなどに使えます。バスにないエフェクトは末尾に追加され、そのまま残ります。エディターでは再生されません。
+Tidy This Script…,
+"Write this script the way the editor writes it today: a guard around a plain number as the number, the annotation words as one-hash comments. Every line that would change is listed first, and nothing is written until you press Apply.",
+"This script cannot be tidied: it does not write back the same text from a copy, so nothing was planned.",
+Nothing to tidy.,
+Tidy this script,
+"This sheet changed while the window was open, so nothing was written. Nothing to tidy.",
+"This sheet changed while the window was open, so nothing was written - here is what it says now.",
+Nothing was tidied.,
+(no line),
+(line removed),
+1 line would be rewritten in one step you can undo.,
+%d lines would be rewritten in one step you can undo.,
+1 line is left as it is.,
+%d lines are left as they are.,
+1 line tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,
+%d lines tidied and saved. Undo puts the sheet back; the old file is in the sheet backups.,
+1 line is written in an older spelling. Sheet > Tidy This Script lists it before changing anything.,
+%d lines are written in an older spelling. Sheet > Tidy This Script lists them before changing anything.,

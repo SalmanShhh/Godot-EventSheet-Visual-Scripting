@@ -4172,6 +4172,18 @@ func open_optimiser() -> void:
 	_optimiser_dialog().open_batch()
 
 
+## The Tidy This Script window, built the first time it is asked for and kept.
+var _tidy_dialog: RefCounted = null
+
+
+## Sheet > Tidy This Script...: the lines older spellings would change, shown before anything is written.
+func open_tidy_dialog() -> void:
+	if _tidy_dialog == null:
+		_tidy_dialog = load("res://addons/eventsheet/editor/dock/tidy_dialog.gd").new()
+		_tidy_dialog.init(self)
+	_tidy_dialog.open()
+
+
 ## The Edit modes dialog, built the first time the modes band is clicked and kept afterwards.
 var _modes_dialog: RefCounted = null
 

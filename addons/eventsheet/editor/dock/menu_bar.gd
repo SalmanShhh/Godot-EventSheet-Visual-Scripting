@@ -361,6 +361,9 @@ func build(root: Node) -> void:
 	sheet_popup.add_separator()
 	sheet_popup.add_item("Name Raw Calls…", 15)
 	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(15), "Sweep this sheet for raw one-call code rows and name each one that matches an action you already have - engine classes, your own scripts, installed packs. Each conversion is kept only when it compiles to the exact same line; anything ambiguous is left alone.")
+	sheet_popup.add_item(EventSheetL10n.translate("Tidy This Script…"), 28)
+	sheet_popup.set_item_tooltip(sheet_popup.get_item_index(28), EventSheetL10n.translate(
+		"Write this script the way the editor writes it today: a guard around a plain number as the number, the annotation words as one-hash comments. Every line that would change is listed first, and nothing is written until you press Apply."))
 	sheet_popup.add_separator()
 	# The Start page. It opens by itself when the workspace has nothing in it; this is how a
 	# reader gets back to it afterwards.
@@ -381,6 +384,7 @@ func build(root: Node) -> void:
 			6: _dock._export_pack._export_addon_pack()
 			14: _dock._providers_glue.open_publish_version_dialog()
 			15: _dock._raw_call_namer.run()
+			28: _dock.open_tidy_dialog()
 			7: _dock._sheet_io._export_gdscript_requested()
 			8: _dock._open_include_manager()
 			9: _dock._new_addon_panel.open()

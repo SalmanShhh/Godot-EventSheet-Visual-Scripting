@@ -53,6 +53,11 @@ extends Resource
 ## from disk always says which it keeps). One hash keeps the words out of Godot's Help pages and Inspector
 ## tooltips, which show every two-hash line as documentation.
 @export var annotation_spelling: String = ""
+## True once Tidy has moved a file's annotation words to one hash: its verbatim lines (the class head, a code
+## block) are then written with the words above the `##` description, the order Godot needs to keep the
+## description. A file read from disk never sets it, because its lines already stand in the order it was
+## written in.
+@export var annotation_words_first: bool = false
 ## True only while the importer reads a one-hash file: the sheet is then asked what it writes in the two-hash
 ## form every reader is written for, so the byte gates compare like with like. Never saved.
 var annotation_gate_canonical: bool = false
