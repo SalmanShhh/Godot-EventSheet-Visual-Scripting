@@ -114,6 +114,10 @@ func _init(player: Node = null, drawer: Control = null) -> void:
 	# Through the palette, not a literal: a literal font size ignores the editor's own display
 	# scale, so the head reads at half height on a HiDPI screen while everything around it grows.
 	_head.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
+	# One pass is the time the list takes to reach its end: the cards between two Pauses or Holds start
+	# together, so their times do not add up, and what a Loop Back or the node's Loop repeats comes on top.
+	_head.mouse_filter = Control.MOUSE_FILTER_PASS
+	_head.tooltip_text = EventSheetL10n.translate("How long one pass of the list takes. Cards between two Pauses or Holds start together, so their times do not add up. What a Loop Back or the Loop tick repeats comes on top.")
 	add_child(_head)
 	add_child(_build_buttons())
 	_find_note = Label.new()
@@ -173,10 +177,12 @@ static func loop_note_text(looping: bool, total_seconds: float) -> String:
 	return ""
 
 
-## The head line over the list: how many juice cards it holds and how long the beat lasts. One card
-## reads "1 juice card", every other count "N juice cards". PURE + STATIC.
+## The head line over the list: how many juice cards it holds and how long one pass of the beat lasts. One
+## card reads "1 juice card", every other count "N juice cards". PURE + STATIC.
 static func head_text(count: int, total: String) -> String:
-	return "%d juice card%s - %s total" % [count, "" if count == 1 else "s", total]
+	if count == 1:
+		return EventSheetL10n.translate("%d juice card - %s once through") % [count, total]
+	return EventSheetL10n.translate("%d juice cards - %s once through") % [count, total]
 
 
 ## The steps a player is holding: the moment file's when one is on the slot, else its own list. The
@@ -256,12 +262,12 @@ func _build_try_rows() -> Control:
 	rows.add_theme_constant_override("separation", 2)
 	var repeat_row: HBoxContainer = HBoxContainer.new()
 	var repeat_label: Label = Label.new()
-	repeat_label.text = EventSheetL10n.translate("Repeat")
+	repeat_label.text = EventSheetL10n.translate("Preview")
 	repeat_label.custom_minimum_size = Vector2(EventSheetPalette.scaled(108), 0.0)
 	repeat_row.add_child(repeat_label)
 	_repeat_box = CheckBox.new()
-	_repeat_box.text = EventSheetL10n.translate("plays again each time it ends")
-	_repeat_box.tooltip_text = EventSheetL10n.translate("Keeps playing while you tune. Each pass reads the list as it is then, so a number you change is the number the next pass uses.")
+	_repeat_box.text = EventSheetL10n.translate("Repeat the preview")
+	_repeat_box.tooltip_text = EventSheetL10n.translate("Keeps playing the preview in the editor while you tune. Each pass reads the list as it is then, so a number you change is the number the next pass uses. The game's own loop is the Loop tick on the node.")
 	_repeat_box.toggled.connect(func(pressed: bool) -> void: _repeat = pressed)
 	repeat_row.add_child(_repeat_box)
 	rows.add_child(repeat_row)

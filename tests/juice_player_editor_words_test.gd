@@ -21,9 +21,9 @@ const SHEET_TEXT: String = "extends Node2D\n\n\nfunc _ready() -> void:\n\t$Juice
 static func run() -> bool:
 	var door: Array = SEGMENT.BUTTONS[SEGMENT.BUTTONS.size() - 1] as Array
 	var ok: bool = SUPPORT.pins(TEST_NAME, [
-		["the strip head with no cards", STRIP.head_text(0, "0.00 s"), "0 juice cards - 0.00 s total"],
-		["with one card", STRIP.head_text(1, "0.30 s"), "1 juice card - 0.30 s total"],
-		["with three", STRIP.head_text(3, "1.20 s"), "3 juice cards - 1.20 s total"],
+		["the strip head with no cards", STRIP.head_text(0, "0.00 s"), "0 juice cards - 0.00 s once through"],
+		["with one card", STRIP.head_text(1, "0.30 s"), "1 juice card - 0.30 s once through"],
+		["with three", STRIP.head_text(3, "1.20 s"), "3 juice cards - 1.20 s once through"],
 		["the toolbar segment is called Juice", SEGMENT.title_for({"kind": SEGMENT.SUBJECT_PLAYER}), "Juice"],
 		["its door says which node it opens", door[3], "Select the Juice Player this row is about, so its list opens in the Inspector."],
 		["a beat that cannot be previewed says why", SEGMENT.NO_PREVIEW_REASON,
@@ -34,6 +34,7 @@ static func run() -> bool:
 			[FINDINGS.KIND_UNKNOWN_LABEL, DOCTOR.CHECK_ID], ["feedback-label-nobody-has", "feedbacks"]],
 		["the Doctor looks for both node names", DOCTOR.PLAYER_WORDS, PackedStringArray(["$FeedbackPlayer", "$JuicePlayer"])],
 	])
+	ok = strip_words_pins() and ok
 	var file: FileAccess = FileAccess.open(SHEET_PATH, FileAccess.WRITE)
 	file.store_string(SHEET_TEXT)
 	file.close()
@@ -68,3 +69,27 @@ static func label_pins() -> bool:
 	])
 	viewport.free()
 	return ok
+
+
+## The two lines of the strip that read alike on the node: the preview's tick says it repeats the PREVIEW, and
+## the head says its time is one pass. The node's own loop is a different thing and the tooltip says which.
+static func strip_words_pins() -> bool:
+	var strip: VBoxContainer = STRIP.new()
+	var ticks: Array = strip.find_children("*", "CheckBox", true, false)
+	var words: PackedStringArray = PackedStringArray()
+	for tick: Node in ticks:
+		words.append((tick as CheckBox).text)
+	var labels: PackedStringArray = PackedStringArray()
+	for label: Node in strip.find_children("*", "Label", true, false):
+		labels.append((label as Label).text)
+	var head: Label = strip._head
+	var tip: String = ((ticks[0] as CheckBox).tooltip_text) if not ticks.is_empty() else ""
+	var rows: Array = [
+		["the preview's tick says it repeats the preview", words, PackedStringArray(["Repeat the preview"])],
+		["under the label Preview, not the node's Loop", labels.has("Preview") and not labels.has("Repeat"), true],
+		["its tooltip names the Loop tick as the game's own loop", tip.contains("Loop tick on the node"), true],
+		["the head line explains its number in a tooltip", head.tooltip_text.begins_with("How long one pass of the list takes"), true],
+		["and the number is one pass, not a sum of the cards", head.tooltip_text.contains("start together, so their times do not add up"), true],
+	]
+	strip.free()
+	return SUPPORT.pins(TEST_NAME, rows)
