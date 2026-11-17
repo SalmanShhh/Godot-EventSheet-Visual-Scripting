@@ -130,6 +130,15 @@ static func hashed(line: String) -> String:
 	return line.substr(0, at) + line.substr(at + 1)
 
 
+## The lines with every two-hash annotation written as one, in place (see `hashed`): the lines of a code block
+## as a one-hash file spells them.
+static func hashed_lines(lines: PackedStringArray) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	for line: String in lines:
+		out.append(hashed(line))
+	return out
+
+
 ## The source with every one-hash annotation written as two. Text without one comes back untouched.
 static func canonical_text(source: String) -> String:
 	if not source.contains("# " + PREFIX):

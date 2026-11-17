@@ -7063,7 +7063,7 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	if is_comment_only_block(code_lines) or is_blank_block(code_lines):
 		var comment_style: EventSheetEventStyle = _viewport._get_event_style()
 		var note_spans: Array[EventSheetSemanticSpan] = []
-		for note_index in range(code_lines.size()):
+		for note_index: int in comment_display_order(code_lines, EventSheetAnnotationLine.writes_hash(_viewport._sheet)):
 			var shown: String = strip_comment_prefix(code_lines[note_index])
 			note_spans.append(_make_span(
 				shown if not shown.is_empty() else " ",
@@ -7073,6 +7073,10 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 			))
 		row_data.spans = note_spans
 		return row_data
+	# A file that keeps its annotation words as one-hash comments shows them that way in a code block too; the
+	# block holds them in the two-hash form every reader is written for, and only the text on show changes.
+	if EventSheetAnnotationLine.writes_hash(_viewport._sheet):
+		code_lines = EventSheetAnnotationLine.hashed_lines(code_lines)
 	# Type-aware styling: boilerplate reads dimmer (no label) while real logic keeps the brighter
 	# "GDScript" badge + primary text. Same row, no codegen change.
 	var is_scaffold: bool = _viewport.is_scaffolding_code(raw_row.code)
@@ -7134,6 +7138,39 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	spans.append_array(_raw_code_line_spans(code_lines, line_fg))
 	row_data.spans = spans
 	return row_data
+
+
+## The order a comment block's lines are shown in: the line numbers, usually 0, 1, 2... A file that keeps its
+## annotation words as one-hash comments puts them above the description, where Godot needs them, but a
+## reader of the sheet wants the description first and the words after it - the way the same block read when
+## the words were two-hash lines below the description. Only a block that is exactly its words and then its
+## description is turned round, and only on screen: every line keeps its own place in the file and in its
+## span's `line_index`.
+static func comment_display_order(lines: PackedStringArray, one_hash_file: bool) -> Array[int]:
+	var order: Array[int] = []
+	for index: int in lines.size():
+		order.append(index)
+	if not one_hash_file:
+		return order
+	var blank: int = 0
+	while blank < lines.size() and lines[blank].strip_edges().is_empty():
+		blank += 1
+	var words_end: int = blank
+	while words_end < lines.size() and is_ace_annotation_line(lines[words_end]):
+		words_end += 1
+	if words_end == blank or words_end == lines.size():
+		return order
+	for index: int in range(words_end, lines.size()):
+		if lines[index].strip_edges().is_empty() or is_ace_annotation_line(lines[index]):
+			return order
+	order.clear()
+	for index: int in blank:
+		order.append(index)
+	for index: int in range(words_end, lines.size()):
+		order.append(index)
+	for index: int in range(blank, words_end):
+		order.append(index)
+	return order
 
 
 ## The exact GDScript of a raw block, one span per source line. Shared by the ordinary authoring
