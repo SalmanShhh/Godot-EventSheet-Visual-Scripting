@@ -4,7 +4,6 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
-<<<<<<< HEAD
 ### Added: a spawn row's Scene field offers the scenes the sheet already holds, the Variable window has a Scene door, and the Doctor notes an empty scene slot
 
 The Instantiate rows take their scene as a value, so a sheet that declares `@export var enemy_scene: PackedScene` (or a typed constant that preloads one) can spawn it by name and the row writes `enemy_scene.instantiate()`, the line a Godot user would write. The Scene field now lists the sheet's own scene variables and constants first, above everything else it offers, so the name is one pick away. Nothing else changed in how a spawn is written: no new row, `load()` stays what a new row starts with, and the sheet never writes a `preload` on its own.
@@ -16,7 +15,6 @@ The Doctor gets a quiet note for an exported scene slot that is still empty wher
 ### Fixed: a variable's look mark is back when a pack is opened
 
 Since a member's annotation words moved above its description, a variable of a built pack that wears an Inspector look (the unit dropdown on a shape's thickness, the toggle row on its dash style, the progress bar) opened without its look mark, and the line above it opened as a separate comment row: 18 shape scripts opened with one to six more rows than before. The look is read through the words again, so those variables open as one row with their mark, the file still writes back byte for byte, and the description stays directly above the member, which is where Godot reads it. A file with the words below the description reads the same rows, and a block of comments that begins with an Inspector comment line shows its description before its words, as the other packs do.
-=======
 ### Added: a Juice Player beside a Juice 3D node plays its cards over a 3D view
 
 Shake, Zoom (the field of view), Punch (the scale of the 3D node), Flash, Hitstop, Slowmo, Chromatic and Pulse now play through Juice 3D, and Stop and Restore end what they started and put back the first value. A scene that has a Juice node for 2D and a Juice 3D node beside the same player plays through the 2D one, exactly as before. The no-flashing numbers Juice 3D holds its cards to are the 2D node's own. Juice 3D still works when only its own folder is added to a project.
@@ -40,7 +38,6 @@ The window no longer repeats its title as a heading. A snippet that names a node
 ### Fixed: a Light card whose player is freed mid-flare puts the light back
 
 Like the other cards, the brightness and colour the light rested at are restored when the player leaves the scene. A play that is only stopped still leaves the light where it got to.
->>>>>>> 935ebf7a4 (docs(juice): Juice 3D plays a Juice Player's cards, the carousel's new beat, and the spring picture's sentences in all nine languages)
 
 ### Added: Sheet > Tidy This Script writes an older script the way the editor writes it today, after showing every line
 

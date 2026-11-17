@@ -11155,13 +11155,10 @@ Slows %d: %s. Scripts of your own keep their speed.,Замедляет %d: %s. �
 This is the line that adds this card from an event sheet or from code. Run it on a Juice Player.,"Это строка, которая добавляет эту карточку из таблицы событий или из кода. Выполните её на Juice Player."
 a 2D node (a Spring node does not move a UI or a 3D node),2D-узел (узел Spring не двигает интерфейс или 3D-узел)
 an animation tree,дерево анимации
-<<<<<<< HEAD
 A scene this sheet holds.,"Сцена, которую хранит этот лист."
 %s is empty in %s. Set it in the Inspector.,%s пуст в %s. Задайте его в Инспекторе.
 A scene,Сцена
 "A scene file kept in a slot, to make copies of: a bullet, an enemy, a pickup. The Inspector shows a slot you drop a .tscn file into, and a spawn row copies it with its own instantiate().","Файл сцены в слоте, с которого делают копии: пуля, враг, предмет. Инспектор показывает слот, в который перетаскивают файл .tscn, а строка создания копирует его своим instantiate()."
-=======
 "Comes back to rest without swinging past it, in about %s s.","Возвращается в покой без перелёта, примерно за %s с."
 Swings past rest once and settles in about %s s.,"Один раз проходит мимо покоя и успокаивается примерно за %s с."
 Swings past rest %d times and settles in about %s s.,"Проходит мимо покоя %d раз и успокаивается примерно за %s с."
->>>>>>> 935ebf7a4 (docs(juice): Juice 3D plays a Juice Player's cards, the carousel's new beat, and the spring picture's sentences in all nine languages)
