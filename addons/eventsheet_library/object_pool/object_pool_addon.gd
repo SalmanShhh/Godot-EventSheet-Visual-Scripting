@@ -263,8 +263,15 @@ func _stow(pool_name: String, node: Node) -> void:
 	add_child(node)
 	if node is CanvasItem:
 		(node as CanvasItem).visible = false
+	# What the node was doing is remembered once, the first time it is parked, so waking it hands
+	# back exactly that: a node whose own pack had parked its tick while idle wakes still parked.
+	if not node.has_meta(&"__pool_state__"):
+		node.set_meta(&"__pool_state__", [node.is_processing(), node.is_physics_processing(), node.process_mode])
 	node.set_process(false)
 	node.set_physics_process(false)
+	# Disabled, not just quiet: a parked node takes no part in physics either (a body leaves the space,
+	# an area stops reporting), so a bullet waiting in the pool cannot be hit or collide with anything.
+	node.process_mode = Node.PROCESS_MODE_DISABLED
 	# A recycled node carries no credit from its last life: the ownership key a spawn row
 	# claimed it with comes off here, so the next Claim is the only one that counts and a
 	# reused bullet can never be credited to whoever fired the one before it.
@@ -273,14 +280,24 @@ func _stow(pool_name: String, node: Node) -> void:
 	(_pools[pool_name].free as Array).append(node)
 
 func _ready_for_use(node: Node) -> void:
-	# The half of waking that is NOT a reparent: shown, processing on, and the pooled scene's own
+	# The half of waking that is NOT a reparent: shown, processing as it was, and the pooled scene's own
 	# reset(). Split out because Spawn Safely does exactly this half on the line and books the other,
 	# and because reset() has to run before the row hands the node back to the sheet - a reset after
 	# the following rows configured the copy would wipe what they just wrote.
 	if node is CanvasItem:
 		(node as CanvasItem).visible = true
-	node.set_process(true)
-	node.set_physics_process(true)
+	# A node that was parked wakes as it was parked: its processing, its physics processing and its
+	# process mode come back as they were, so a tick its own behaviour had put to sleep stays asleep.
+	# A copy that was never parked has nothing to give back, and runs as a new node does.
+	if node.has_meta(&"__pool_state__"):
+		var was: Array = node.get_meta(&"__pool_state__")
+		node.remove_meta(&"__pool_state__")
+		node.process_mode = int(was[2]) as Node.ProcessMode
+		node.set_process(bool(was[0]))
+		node.set_physics_process(bool(was[1]))
+	else:
+		node.set_process(true)
+		node.set_physics_process(true)
 	# The reset seam: a pooled scene that defines reset() gets it called on every
 	# spawn, so velocity/hp/timers clear without the pool knowing any of them.
 	if node.has_method(&"reset"):
