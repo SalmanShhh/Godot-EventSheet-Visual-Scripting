@@ -17,6 +17,12 @@
 !eventsheet_addons/*/icon.svg.import
 !eventsheet_addons/*/icon_3d.svg.import
 !addons/eventsheet/icons/sections/*.svg.import
+# AND the behaviour library's copies of the pack icons' imports: a pack copied into a project from the
+# library arrives with the same import its icon has here, so the icon is drawn in the editor's own colours
+# the first time the editor opens it (without one it is imported as drawn, and the neutral ink is nearly
+# invisible on a light editor).
+!addons/eventsheet_library/*/icon.svg.import
+!addons/eventsheet_library/*/icon_3d.svg.import
 *.translation
 
 # Godot export presets

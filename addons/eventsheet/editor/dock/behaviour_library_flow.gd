@@ -192,13 +192,26 @@ static func unimported_files(folder: String) -> PackedStringArray:
 		return out
 	for file_name: String in DirAccess.get_files_at(folder):
 		var extension: String = file_name.get_extension()
-		if READ_AS_IS.has(extension) or EventSheetPackLibrary.GENERATED_EXTENSIONS.has(extension):
+		if READ_AS_IS.has(extension) or extension == "import" or EventSheetPackLibrary.is_generated(file_name):
 			continue
-		if not FileAccess.file_exists(folder.path_join(file_name) + ".import"):
+		if not _is_imported(folder.path_join(file_name)):
 			out.append(folder.path_join(file_name))
 	for child: String in DirAccess.get_directories_at(folder):
 		out.append_array(unimported_files(folder.path_join(child)))
 	return out
+
+
+## True when `path` has its import and Godot has written the imported copy that import names. A shipped
+## icon sidecar is there from the start, so the sidecar alone does not say the icon was imported.
+static func _is_imported(path: String) -> bool:
+	var import_path: String = path + ".import"
+	if not FileAccess.file_exists(import_path):
+		return false
+	var config: ConfigFile = ConfigFile.new()
+	if config.load(import_path) != OK:
+		return true
+	var imported: String = str(config.get_value("remap", "path", ""))
+	return imported.is_empty() or FileAccess.file_exists(imported)
 
 
 func _after_change() -> void:

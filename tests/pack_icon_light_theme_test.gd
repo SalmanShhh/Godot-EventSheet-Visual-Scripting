@@ -1,9 +1,13 @@
 # EventForge - pack icons and section icons follow the editor's light or dark theme.
 #
 # Godot recolours an icon of ours for a light theme only when the icon's import asks for it. The
-# imports the repo ships do; a pack added to a project from the behaviour library arrives without
-# one, so the plugin turns the flag on in the import the editor wrote, and the library window (which
-# draws files Godot never imports) swaps the same ink pairs itself.
+# imports the repo ships do, and so do the library's copies of the pack icons (a pack added from the
+# library arrives with the import its icon has in the repo, so the first import is already in the
+# editor's colours). A project that holds an icon imported without the flag gets it turned on by the
+# plugin, and the library window (which draws files Godot never imports) swaps the same ink pairs itself.
+#
+# What a fresh install has ON DISK is the point of the shipped-sidecar rows: a rendered contrast figure
+# passes whether or not the import asks for the recolour, because it simulates the recolour.
 @tool
 extends RefCounted
 
@@ -11,6 +15,9 @@ const SUPPORT := preload("res://tests/support.gd")
 const NAME: String = "pack_icon_light_theme_test"
 const IMPORTS := preload("res://addons/eventforge/editor/pack_icon_imports.gd")
 const STYLE := preload("res://tools/icon_style.gd")
+const SHIPPED := preload("res://addons/eventforge/shipped_pack_folders.gd")
+const LIBRARY := preload("res://addons/eventsheet/ace/pack_library.gd")
+const FLOW := preload("res://addons/eventsheet/editor/dock/behaviour_library_flow.gd")
 
 
 static func run() -> bool:
@@ -51,7 +58,72 @@ static func run() -> bool:
 		["and the neutral grey, as a stroke too", EventSheetBehaviourLibraryWindow.inked_for_theme("<path stroke=\"#e0e0e0\"/>", true), "<path stroke=\"#5a5a5a\"/>"],
 		["a headless run is never light", EventSheetBehaviourLibraryWindow.editor_is_light(), false],
 	]) and ok
-	return ok
+	return _shipped_sidecars() and _library_copy() and ok
+
+
+## Every icon a fresh install opens has its import on disk, asking for the editor's colours: the packs'
+## own, the picker sections', and the behaviour library's copies (byte for byte what the pack's own
+## import is, because the same path gives the same id). Their un-ignore rules are in .gitignore, or a
+## clone would not have them.
+static func _shipped_sidecars() -> bool:
+	var missing: PackedStringArray = PackedStringArray()
+	var unflagged: PackedStringArray = PackedStringArray()
+	var library_missing: PackedStringArray = PackedStringArray()
+	var library_differs: PackedStringArray = PackedStringArray()
+	for path: String in IMPORTS.all_icon_paths():
+		var sidecar: String = path + ".import"
+		if not FileAccess.file_exists(sidecar):
+			missing.append(path)
+		elif not FileAccess.get_file_as_string(sidecar).contains(STYLE.IMPORT_FLAG):
+			unflagged.append(path)
+	for folder: String in SHIPPED.FOLDERS:
+		for icon: String in ["icon.svg", "icon_3d.svg"]:
+			var pack_icon: String = "res://eventsheet_addons/%s/%s" % [folder, icon]
+			if not FileAccess.file_exists(pack_icon):
+				continue
+			var copy: String = "%s/%s/%s.import" % [LIBRARY.LIBRARY_ROOT, folder, icon]
+			if not FileAccess.file_exists(copy):
+				library_missing.append(folder + "/" + icon)
+			elif FileAccess.get_file_as_string(copy) != STYLE.import_text(pack_icon):
+				library_differs.append(folder + "/" + icon)
+	var ignore_text: String = FileAccess.get_file_as_string("res://.gitignore")
+	return SUPPORT.pins(NAME, [
+		["every pack and section icon has its import beside it", missing, PackedStringArray()],
+		["and each import asks for the editor's colours", unflagged, PackedStringArray()],
+		["every library copy of a pack icon has the import too", library_missing, PackedStringArray()],
+		["and it is the one the pack's own icon has", library_differs, PackedStringArray()],
+		[".gitignore lets the library's icon imports through", ignore_text.contains("!addons/eventsheet_library/*/icon.svg.import") and ignore_text.contains("!addons/eventsheet_library/*/icon_3d.svg.import"), true],
+		[".gitignore lets the packs' icon imports through", ignore_text.contains("!eventsheet_addons/*/icon.svg.import") and ignore_text.contains("!eventsheet_addons/*/icon_3d.svg.import"), true],
+		["an icon sidecar is not a file Godot writes", LIBRARY.is_generated("icon.svg.import"), false],
+		["any other import is", LIBRARY.is_generated("hit.wav.import"), true],
+	])
+
+
+## A folder copy carries the icon's import along, and an icon whose import names an imported copy that is
+## not there yet is still waiting for its import.
+static func _library_copy() -> bool:
+	var root: String = SUPPORT.own_path("lib")
+	var project: String = SUPPORT.own_path("proj")
+	DirAccess.make_dir_recursive_absolute(root + "/demo_pack")
+	_write(root + "/demo_pack/icon.svg", "<svg/>")
+	_write(root + "/demo_pack/icon.svg.import", "[remap]
+path=\"%s\"
+" % SUPPORT.own_path("missing.ctex"))
+	_write(root + "/demo_pack/other.png.import", "x")
+	var copied: Dictionary = LIBRARY.copy_into_project(PackedStringArray(["demo_pack"]), root, project)
+	var waiting: PackedStringArray = FLOW.unimported_files(project + "/demo_pack")
+	var made: String = SUPPORT.own_path("made.ctex")
+	_write(made, "x")
+	_write(project + "/demo_pack/icon.svg.import", "[remap]
+path=\"%s\"
+" % made)
+	return SUPPORT.pins(NAME, [
+		["the copy worked", bool(copied.get("ok", false)), true],
+		["the icon came with its import", FileAccess.file_exists(project + "/demo_pack/icon.svg.import"), true],
+		["another import is left behind", FileAccess.file_exists(project + "/demo_pack/other.png.import"), false],
+		["an icon whose imported copy is not there yet is waiting", waiting, PackedStringArray([project + "/demo_pack/icon.svg"])],
+		["and not once it is", FLOW.unimported_files(project + "/demo_pack"), PackedStringArray()],
+	])
 
 
 static func _write(path: String, text: String) -> void:

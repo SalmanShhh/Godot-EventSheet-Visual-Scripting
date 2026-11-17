@@ -23,6 +23,9 @@ const SCALE_ON: String = "editor/scale_with_editor_scale=true"
 ## The icons of the packs this project holds: each pack folder's icon.svg and icon_3d.svg.
 static func pack_icon_paths() -> PackedStringArray:
 	var out: PackedStringArray = PackedStringArray()
+	# A project with no behaviours yet has no such folder: nothing to look after, and nothing to print.
+	if not DirAccess.dir_exists_absolute(PACK_ROOT):
+		return out
 	for folder: String in DirAccess.get_directories_at(PACK_ROOT):
 		for file_name: String in ["icon.svg", "icon_3d.svg"]:
 			var path: String = "%s/%s/%s" % [PACK_ROOT, folder, file_name]

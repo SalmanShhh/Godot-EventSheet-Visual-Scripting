@@ -30,6 +30,19 @@ const IGNORE_FILE := ".gdignore"
 const HELPERS_FOLDER := "_runtime"
 ## Files a folder copy leaves behind: Godot writes them itself on import, for this machine only.
 const GENERATED_EXTENSIONS: PackedStringArray = ["import", "translation"]
+## The one import a pack ships: the sidecar beside its icon. It asks Godot to draw the icon in the editor's
+## own icon colours, so it reads on a light editor as well as a dark one. A pack copied into a project
+## without it is imported with the colours as drawn, which leaves the neutral ink nearly invisible on a
+## light editor until a later start of the editor puts it right.
+const ICON_SIDECARS: PackedStringArray = ["icon.svg.import", "icon_3d.svg.import"]
+
+
+## True for a file Godot writes itself on import and a folder copy leaves behind (the icon sidecars are
+## shipped, so they are not generated).
+static func is_generated(file_name: String) -> bool:
+	if ICON_SIDECARS.has(file_name):
+		return false
+	return GENERATED_EXTENSIONS.has(file_name.get_extension())
 ## The fewest behaviours a kit lists. A tag fewer packs share is a detail of one pack, not a kind of
 ## game somebody is making.
 const KIT_SMALLEST := 4
@@ -353,7 +366,7 @@ static func _copy_tree(source: String, destination: String, part: int = 0) -> Er
 	if made != OK:
 		return made
 	for file_name: String in DirAccess.get_files_at(source):
-		if GENERATED_EXTENSIONS.has(file_name.get_extension()):
+		if is_generated(file_name):
 			continue
 		if (part == 1 and is_script_file(file_name)) or (part == 2 and not is_script_file(file_name)):
 			continue

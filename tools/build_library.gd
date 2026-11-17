@@ -12,7 +12,8 @@
 #
 # WHAT IS COPIED. The folders `addons/eventforge/shipped_pack_folders.gd` names - the folders the
 # pack builders publish - with every file in them except what Godot writes itself on import
-# (`.import`, `.translation`). The `.uid` sidecars travel with them, so a pack copied into a project
+# (`.import`, `.translation`) - but the sidecar beside a pack's icon, which is shipped so the icon is
+# imported in the editor's own colours the first time it is opened. The `.uid` sidecars travel with them, so a pack copied into a project
 # keeps the id a scene already names it by. The single runtime scripts at the root of
 # eventsheet_addons/ are not packs and are not in the library.
 #
@@ -104,7 +105,7 @@ static func _compare_tree(source: String, mirror: String, label: String, write: 
 		DirAccess.make_dir_recursive_absolute(mirror)
 	var wanted: Dictionary = {}
 	for file_name: String in DirAccess.get_files_at(source):
-		if LIBRARY.GENERATED_EXTENSIONS.has(file_name.get_extension()):
+		if LIBRARY.is_generated(file_name):
 			continue
 		wanted[file_name] = true
 		var from_path: String = source.path_join(file_name)
@@ -121,7 +122,7 @@ static func _compare_tree(source: String, mirror: String, label: String, write: 
 	if not DirAccess.dir_exists_absolute(mirror):
 		return
 	for extra: String in DirAccess.get_files_at(mirror):
-		if not wanted.has(extra) and not LIBRARY.GENERATED_EXTENSIONS.has(extra.get_extension()):
+		if not wanted.has(extra) and not LIBRARY.is_generated(extra):
 			out.append(label.path_join(extra))
 			if write:
 				DirAccess.remove_absolute(mirror.path_join(extra))
