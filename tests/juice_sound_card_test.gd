@@ -289,7 +289,7 @@ static func _tile_pins() -> bool:
 		["the Add box headings, in order, with the project's own cards last when it has any", Array(headings).filter(func(heading: String) -> bool: return heading != "Yours"),
 			["Sound", "Scene", "Object", "Device", "Camera", "Screen", "Time", "Flow"]],
 		["Loop and signal cards share the Flow heading", contents.get("Flow"),
-			PackedStringArray(["Loop Start", "Loop Back", "Emit Signal", "Play Player", "Call Method"])],
+			PackedStringArray(["Loop Start", "Loop Back", "Emit Signal", "Play Player", "Call Method", "Pause Or Resume A Juice Player"])],
 		["Tween Property sits with the Object cards", (contents.get("Object") as PackedStringArray).has("Tween Property"), true],
 		["a card is still saved and muted by the family word it always was", str(_kind("shake").get("category", "")), "camera"]
 	])

@@ -1291,4 +1291,18 @@ func is_chromatic_shaking() -> bool:
 func chromatic_shake_magnitude() -> float:
 	return _chroma_shake_magnitude
 
+## A Juice Player is opening a play. This node keeps no book of values, so there is nothing to write down.
+## @ace_hidden
+func juice_player_began(_key: String, _steps: Array) -> void:
+	pass
+
+## A Juice Player stopped or restored: every effect its cards set going on this node ends now, whether or
+## not the list has finished walking.
+## @ace_hidden
+func juice_player_ended(_key: String, _put_back: bool) -> void:
+	if trauma > 0.0 or _shaking:
+		stop_shake()
+	if _chroma_shake_active:
+		stop_chromatic_shake()
+
 # 3D camera game feel: shake, recoil, head bob, jitter, lean, and FOV punch/zoom on the active Camera3D - auto-found, applied as additive offsets so they never fight the controller that owns the camera. Verbs mirror the 2D Juice pack.

@@ -11003,3 +11003,11 @@ Starts at %s and is gone at %s s.,%s から始まり、%s 秒で消えます。
 Save the new file where the card can find it,カードが見つけられる場所に新しいファイルを保存
 Preview its behaviours,"ビヘイビアをプレビュー"
 Stop previews,"プレビューを停止"
+"Loop is on and nothing in this list takes time, so the player plays it again every frame. Add a Pause or a card with a length.","Loop がオンですが、このリストには時間のかかるものがないため、プレイヤーは毎フレーム再生し直します。ポーズか、長さのあるカードを追加してください。"
+"Nothing in this loop takes time, so the play gives up after %d steps. Give a card in it a length, or the Loop Back a Pause.","このループには時間のかかるものがないため、再生は %d ステップで打ち切られます。ループ内のカードに長さを付けるか、Loop Back にポーズを付けてください。"
+1 card,カード 1 枚
+%d cards,カード %d 枚
+This curve has changes that are not saved to its file yet. The game plays the saved file.,"このカーブには、まだファイルに保存されていない変更があります。ゲームは保存済みのファイルを使います。"
+Flip,切り替え
+Pause Or Resume A Juice Player,Juice Player を一時停止または再開
+"Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on until it is resumed.",ほかの Juice Player、またはこの Juice Player を一時停止・再開・切り替えします。たとえば、ドアが開いている間だけ止まるループするアラームに使えます。一時停止したリストは、再開するまで今のカードで止まります。

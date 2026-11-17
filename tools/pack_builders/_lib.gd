@@ -601,6 +601,22 @@ static func juice_fx_overlay_lines() -> PackedStringArray:
 ## camera shake wobbles with (so the two read as one hit), and advanced by delta - which the engine
 ## has already scaled by time, so slow motion glides the split and a hitstop freezes it mid-frame.
 ## The radial Chromatic Kick's own dial is untouched: the two draw on top of each other.
+static func juice_player_ended_lines(ends_what: PackedStringArray) -> PackedStringArray:
+	var lines: PackedStringArray = PackedStringArray([
+		"## A Juice Player is opening a play. This node keeps no book of values, so there is nothing to write down.",
+		"## @ace_hidden",
+		"func juice_player_began(_key: String, _steps: Array) -> void:",
+		"\tpass",
+		"",
+		"## A Juice Player stopped or restored: every effect its cards set going on this node ends now, whether or",
+		"## not the list has finished walking.",
+		"## @ace_hidden",
+		"func juice_player_ended(_key: String, _put_back: bool) -> void:"
+	])
+	lines.append_array(ends_what)
+	return lines
+
+
 static func juice_chroma_shake_lines() -> PackedStringArray:
 	return PackedStringArray([
 		"# --- Chromatic shake: a directional channel split that moves while it lasts ---",

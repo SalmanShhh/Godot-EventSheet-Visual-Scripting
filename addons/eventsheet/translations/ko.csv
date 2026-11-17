@@ -11003,3 +11003,11 @@ Starts at %s and is gone at %s s.,%s에서 시작해 %s초에 사라집니다.
 Save the new file where the card can find it,카드가 찾을 수 있는 곳에 새 파일 저장
 Preview its behaviours,"동작 미리보기"
 Stop previews,"미리보기 중지"
+"Loop is on and nothing in this list takes time, so the player plays it again every frame. Add a Pause or a card with a length.","Loop가 켜져 있는데 이 목록에는 시간이 걸리는 것이 없어서 플레이어가 매 프레임 다시 재생합니다. 일시정지나 길이가 있는 카드를 추가하세요."
+"Nothing in this loop takes time, so the play gives up after %d steps. Give a card in it a length, or the Loop Back a Pause.","이 루프에는 시간이 걸리는 것이 없어서 재생이 %d단계 뒤에 중단됩니다. 루프 안의 카드에 길이를 주거나 Loop Back에 일시정지를 넣으세요."
+1 card,카드 1장
+%d cards,카드 %d장
+This curve has changes that are not saved to its file yet. The game plays the saved file.,"이 곡선에는 아직 파일에 저장되지 않은 변경 사항이 있습니다. 게임은 저장된 파일을 사용합니다."
+Flip,전환
+Pause Or Resume A Juice Player,Juice Player 일시정지 또는 재개
+"Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on until it is resumed.",다른 Juice Player 또는 이 Juice Player를 일시정지하거나 재개하거나 전환합니다. 문이 열려 있는 동안 멈춰 있는 반복 경보처럼 쓸 수 있습니다. 일시정지된 목록은 재개할 때까지 현재 카드에서 멈춰 있습니다.

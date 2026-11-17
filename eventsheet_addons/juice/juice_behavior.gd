@@ -769,6 +769,9 @@ var _moment_ledger: Dictionary = {}
 ## Whether the last play of each name finished or was ended early.
 var _moment_cut: Dictionary = {}
 
+## What each Juice Player's cards will land on when they end, kept under the player's own key.
+var _player_ends: Dictionary = {}
+
 # This list is kept between frames and cleared
 # rather than made again, so a tick allocates nothing, and filled during the walk rather than
 # acted on, because closing a play erases it from the book the walk is reading.
@@ -2572,6 +2575,45 @@ func _moment_let_go(touched_keys: Array) -> void:
 		if walking != null and walking.is_valid():
 			walking.kill()
 		_moment_tweens.erase(str(touched))
+
+## A Juice Player is opening a play: write down, ONCE for that player, what every value its cards will
+## touch is worth now (the first-touch rule the moments use), and what each will be worth once the
+## cards have run their course. Stop lands there; Restore goes back to the first.
+## @ace_hidden
+func juice_player_began(key: String, steps: Array) -> void:
+	var kept: Dictionary = _moment_ledger.get(key, {})
+	var ends: Dictionary = {}
+	for touched: String in MomentRunner.touched_by_steps(steps):
+		var was: Variant = _moment_value_of(touched)
+		if was == null:
+			continue
+		ends[touched] = _moment_settled(touched, was, steps)
+		if not kept.has(touched):
+			kept[touched] = was
+	_moment_ledger[key] = kept
+	_player_ends[key] = ends
+
+## A Juice Player stopped (put_back false) or restored (put_back true): every effect its cards set going
+## ends now, whether or not the list has finished walking. A value lands where the cards would have
+## left it, or goes back to the first value the player saw. The shake, the slowmo and the hold on
+## the clock end either way.
+## @ace_hidden
+func juice_player_ended(key: String, put_back: bool) -> void:
+	if not _player_ends.has(key) and not _moment_ledger.has(key):
+		return
+	var values: Dictionary = _moment_ledger.get(key, {}) if put_back else _player_ends.get(key, {})
+	_moment_let_go(values.keys())
+	if _shaking or _timed_shakes.size() > 0 or trauma > 0.0:
+		stop_shake()
+	if _slowmo_tween != null and is_instance_valid(_slowmo_tween):
+		_slowmo_tween.kill()
+		_slowmo_tween = null
+	_hitstop_active = false
+	for touched: String in values.keys():
+		_moment_write_value(touched, values[touched])
+	if put_back:
+		_moment_ledger.erase(key)
+	_player_ends.erase(key)
 
 ## One frame of every beat in the air. A forward play only has to count down; a reverting one
 ## walks each value it recorded from where the beat left it back to where the game had it, over

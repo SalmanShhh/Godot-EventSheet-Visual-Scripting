@@ -11003,3 +11003,11 @@ Starts at %s and is gone at %s s.,Empieza en %s y termina a los %s s.
 Save the new file where the card can find it,Guarda el archivo nuevo donde la tarjeta pueda encontrarlo
 Preview its behaviours,"Previsualizar sus comportamientos"
 Stop previews,"Detener previsualizaciones"
+"Loop is on and nothing in this list takes time, so the player plays it again every frame. Add a Pause or a card with a length.","Loop está activado y nada de esta lista tarda tiempo, así que el reproductor la repite en cada fotograma. Añade una Pausa o una tarjeta con duración."
+"Nothing in this loop takes time, so the play gives up after %d steps. Give a card in it a length, or the Loop Back a Pause.","Nada de este bucle tarda tiempo, así que la reproducción se rinde tras %d pasos. Dale duración a una tarjeta del bucle o una Pausa al Loop Back."
+1 card,1 tarjeta
+%d cards,%d tarjetas
+This curve has changes that are not saved to its file yet. The game plays the saved file.,"Esta curva tiene cambios que aún no se han guardado en su archivo. El juego usa el archivo guardado."
+Flip,Alternar
+Pause Or Resume A Juice Player,Pausar o reanudar un Juice Player
+"Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on until it is resumed.","Pausa, reanuda o alterna otro Juice Player, o este: una alarma en bucle que se detiene mientras una puerta está abierta. Una lista en pausa se queda en la tarjeta actual hasta que se reanuda."

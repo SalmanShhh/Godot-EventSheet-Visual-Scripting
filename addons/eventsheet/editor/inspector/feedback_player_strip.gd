@@ -93,6 +93,8 @@ var _lit: PackedInt32Array = PackedInt32Array()
 var _find_note: Label = null
 var _find_menu: PopupMenu = null
 var _find_button: Button = null
+## The quiet line that says Loop is ticked on a list with nothing in it that takes time.
+var _loop_note: Label = null
 ## What the cards that reach other nodes may move, written down before the first frame: each entry is
 ## [object, property, value]. The same list is what Stop, Restore, the end of a pass and the editor's save
 ## put back, so a preview of a card on another node can never be the thing the scene saves.
@@ -120,6 +122,12 @@ func _init(player: Node = null, drawer: Control = null) -> void:
 	_find_note.add_theme_color_override("font_color", EventSheetLookStyle.warning())
 	_find_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_find_note)
+	_loop_note = Label.new()
+	_loop_note.hide()
+	_loop_note.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	_loop_note.add_theme_color_override("font_color", EventSheetLookStyle.warning())
+	_loop_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	add_child(_loop_note)
 	add_child(_build_try_rows())
 	_timeline = _build_timeline()
 	add_child(_timeline)
@@ -129,6 +137,14 @@ func _init(player: Node = null, drawer: Control = null) -> void:
 	refresh()
 	if _player != null:
 		load(PREVIEW_PATH).call("register", _player, self)
+	if Engine.is_editor_hint() and EditorInterface.get_inspector() != null:
+		EditorInterface.get_inspector().property_edited.connect(_on_property_edited)
+
+
+## A tick or a number edited in the Inspector: the Loop line may have to appear or go.
+func _on_property_edited(_property: String) -> void:
+	if _player != null and is_instance_valid(_player):
+		refresh()
 
 
 func _exit_tree() -> void:
@@ -141,10 +157,20 @@ func _exit_tree() -> void:
 func refresh() -> void:
 	var list: Array = steps_of(_player)
 	_head.text = head_text(list.size(), seconds_text(duration_of(list)))
+	_loop_note.text = loop_note_text(bool(_player.get("loop")) if _player != null else false, duration_of(list))
+	_loop_note.visible = not _loop_note.text.is_empty()
 	if _timeline != null:
 		_timeline.queue_redraw()
 	if _lines != null and _lines.visible:
 		_show_lines()
+
+
+## The line under the head when Loop is ticked and the list takes no time: the player waits a frame between
+## passes, so the loop runs once a frame rather than locking the game. Empty otherwise. PURE + STATIC.
+static func loop_note_text(looping: bool, total_seconds: float) -> String:
+	if looping and total_seconds <= 0.0:
+		return EventSheetL10n.translate("Loop is on and nothing in this list takes time, so the player plays it again every frame. Add a Pause or a card with a length.")
+	return ""
 
 
 ## The head line over the list: how many juice cards it holds and how long the beat lasts. One card

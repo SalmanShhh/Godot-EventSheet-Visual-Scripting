@@ -3590,7 +3590,7 @@ func _behavior_settings_text(behavior: Dictionary) -> String:
 	var parts: PackedStringArray = PackedStringArray()
 	for entry: Variant in behavior.get("properties", []):
 		var property: Dictionary = entry
-		parts.append("%s = %s" % [str(property.get("name", "")), str(property.get("value", ""))])
+		parts.append("%s = %s" % [str(property.get("name", "")), load("res://addons/eventsheet/editor/dock/juice_card_field_names.gd").call("list_summary", str(property.get("value", "")))])
 	return " · ".join(parts)
 
 

@@ -694,7 +694,8 @@ static func timing_kinds() -> Array:
 				{"key": SECONDS_KEY, "label": "Pause", "drawer": "unit:time", "default": 0.25},
 				{"key": "to_hold", "label": "Loop to last Hold", "drawer": "bool", "default": true},
 				{"key": "to_loop_start", "label": "Loop to last Loop Start", "drawer": "bool", "default": true},
-				{"key": "loops", "label": "Loops", "drawer": "int", "default": 2}
+				{"key": "loops", "label": "Loops", "drawer": "int", "default": 2},
+				{"key": "loop_note", "label": "", "drawer": "note", "text": Callable(world(), &"loop_note"), "hide_empty": true, "warn_when": Callable(world(), &"loop_has_no_time")}
 			],
 			"live": [{"key": "loops_left", "label": "Loops left"}],
 			"defaults": {SECONDS_KEY: 0.25, "loops": 2},

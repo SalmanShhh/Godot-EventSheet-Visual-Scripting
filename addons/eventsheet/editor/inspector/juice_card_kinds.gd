@@ -203,8 +203,53 @@ static func _flow_kinds(family_of: Dictionary) -> Array:
 			_node("node", "On", ["Node"]),
 			{"key": "method", "label": "Method", "drawer": "choices", "choices": script_methods, "empty": "Pick a method"},
 			{"key": "args", "label": "", "drawer": "arguments", "arguments": method_arguments}
-		], {}, ["function", "call"])
+		], {}, ["function", "call"]),
+		_kind("pause_player", "Pause Or Resume A Juice Player", "Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on until it is resumed.", family_of, [
+			_node("player", "Player", ["JuicePlayer"], "This player"),
+			{"key": "mode", "label": "Do", "drawer": "options:pause=Pause,resume=Resume,toggle=Flip", "default": "pause"}
+		], {"mode": "pause"}, ["pause", "resume", "toggle", "hold", "alarm"])
 	]
+
+
+## The most steps one play may take before it gives up on a loop, as the Juice Player counts them.
+const MOST_PLAY_STEPS: int = 4096
+
+
+## Where a Loop Back card sends the head: the position of the card under the Hold or Loop Start it lands on,
+## or -1 when there is none above it (so the card loops nowhere).
+static func loop_lands_at(card: Dictionary, cards: Array, index: int) -> int:
+	var to_hold: bool = bool(card.get("to_hold", true))
+	var to_start: bool = bool(card.get("to_loop_start", true))
+	var walk: int = index - 1
+	while walk >= 0:
+		var word: String = str((cards[walk] as Dictionary).get("verb", "")).strip_edges().to_lower()
+		if (to_hold and word == "hold_until") or (to_start and word == "loop_start"):
+			return walk + 1
+		walk -= 1
+	return -1
+
+
+## Whether a Loop Back card loops over cards that take no time at all and asks for so many passes that
+## the play would run into its step limit and be given up.
+static func loop_has_no_time(card: Dictionary, cards: Array, index: int, _edited: Object = null) -> bool:
+	var loops: int = int(card.get("loops", 1))
+	var lands: int = loop_lands_at(card, cards, index)
+	if loops < 1 or lands < 0 or float(card.get("seconds", 0.0)) > 0.0:
+		return false
+	var steps: int = 1
+	for walk: int in range(lands, index):
+		var inside: Dictionary = cards[walk] as Dictionary
+		if bool(inside.get("active", true)) and EventSheetFeedbackCardSchema.card_seconds(inside) > 0.0:
+			return false
+		steps += 1
+	return loops * steps >= MOST_PLAY_STEPS
+
+
+## The amber line under such a Loop Back card, empty when the loop has room to breathe.
+static func loop_note(card: Dictionary, cards: Array, index: int, edited: Object) -> String:
+	if not loop_has_no_time(card, cards, index, edited):
+		return ""
+	return EventSheetL10n.translate("Nothing in this loop takes time, so the play gives up after %d steps. Give a card in it a length, or the Loop Back a Pause.") % MOST_PLAY_STEPS
 
 
 # ── What a card reads off the node it picked ───────────────────────────────────────────────────

@@ -202,8 +202,8 @@ static func _add_box_pins() -> bool:
 				pictured += 1
 			leaf = leaf.get_next()
 		group = group.get_next()
-	ok = SUPPORT.check(NAME, "the Add box lists the forty-one kinds and the pack's own example card", leaves, 42) and ok
-	ok = SUPPORT.check(NAME, "each kind wears its picture in its family's colour", pictured, 41) and ok
+	ok = SUPPORT.check(NAME, "the Add box lists the forty-two kinds and the pack's own example card", leaves, 43) and ok
+	ok = SUPPORT.check(NAME, "each kind wears its picture in its family's colour", pictured, 42) and ok
 	ok = SUPPORT.check(NAME, "a card of your own wears its own icon in its own colours", yours_keep_colours, true) and ok
 	ok = SUPPORT.check(NAME, "the family headings keep their square tile", headings_are_tiles, true) and ok
 	drawer._add_popup.hide()

@@ -426,6 +426,9 @@ a moment file's step.
 | **While playing** | What a second play does while the first runs: restart, ignore, or overlap |
 | **Cooldown** | The shortest gap between two plays, so a rapid hit stops stacking its own juice |
 | **Autoplay** | Plays the list once, at full strength, when the node enters the scene (`autoplay` in a script) |
+| **Loop** | Plays the whole list again and again until Stop Juice or Set Looping turns it off. Each pass waits at least a frame, so a list with nothing in it that takes time cannot lock the game |
+| **Loop times** | How many passes a loop makes before it stops by itself; 0 is until stopped |
+| **Loop wait** | Seconds between one pass and the next; 0 waits one frame |
 | **Moment file** | Optional: a moment file to play INSTEAD of the list |
 
 **Save as file** writes the list out as a moment file, naming any card whose timing a file cannot
@@ -524,6 +527,10 @@ The rows a designed list cannot have, because they are about a game that is runn
 | Jump To Juice Card | action | Moves the head of a running play to a card |
 | Skip Juice Card Once | action | Steps over one card next time, then forgets about it |
 | Set Loop Count | action | How many times a Loop Back card goes round |
+| Set Looping | action | Turns the node's Loop tick on or off from a row. Off, the pass that is running finishes and the list stops |
+| Stop All Juice Players | action | Stops every Juice Player in the scene and ends what they started; with `and_restore` every object goes back to how it was |
+| Set All Juice Players Enabled | action | The one switch for the whole game: while it is off a Play does nothing, whichever player it is asked of |
+| Toggle Juice Paused | action | Pauses the play if it runs and resumes it if it is paused |
 | Hold Here / Release Hold | actions | Stops the head where it is, and carries on from the same card. Nothing ticks while it waits |
 
 ### Asking, and hearing

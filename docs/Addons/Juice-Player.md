@@ -125,7 +125,7 @@ Enemy: On damaged
 
 Play Player now picks the other player instead of asking for its name; an older card that typed a name still plays. A player will not play itself or one that is playing it.
 
-**Four that the player plays itself, because they are neither a moment word nor a wait (a sound, a value walked, a word said, another player played):**
+**Five that the player plays itself, because they are neither a moment word nor a wait (a sound, a value walked, a word said, another player played):**
 
 | Card | Fields | What it does |
 | --- | --- | --- |
@@ -133,6 +133,7 @@ Play Player now picks the other player instead of asking for its name; an older 
 | **Tween Property** | Property (`rotation`), To (`1.0`), Over (`0.2` s) | Walks one property of the object this player is under to a value, over a time. Restore Initial Values puts it back. |
 | **Emit Signal** | Word | Says one word out of the player's **On Juice Signal** trigger, so a sheet can hang anything at all off a point in the list. |
 | **Play Player** | Player, Strength (`1.0`) | Plays another Juice Player from inside this one, at a share of this play's strength. |
+| **Pause Or Resume A Juice Player** | Player (empty is this player), Do (`pause`, `resume` or `toggle`) | Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on. It belongs to the `signal` family. |
 
 **Selecting cards.** Click a card to select it, Shift+click for the run from the last click, Ctrl+click to add or take one out. **Alt+Up and Alt+Down** move the selected cards one place and keep them selected, so holding the key walks them (a card at the edge waits while the others move). Dragging a card carries its own line under the pointer, leaves its old place faint and draws a line where it will land; dragging a selected card moves the whole selection. A selected card is filled the way a selected row is in the Scene dock. Ctrl+C copies the selected cards, Ctrl+X cuts them, Ctrl+V pastes them under the last selected card (or at the end when none is selected, and nothing is replaced), Ctrl+D duplicates them in place and Delete removes them; each is one change, so one Ctrl+Z takes it back. A right click on a card opens its menu, which acts on everything selected when the card is part of the selection: Duplicate, Cut, Copy, Paste, Paste over, Move to top, Move up (Alt+Up), Move down (Alt+Down), Move to bottom, Remove, and Play from here. The four moves act on everything selected when the card is part of the selection, and each is one change. Cards are copied as text, so select the other object, click in its list and paste: a card that pointed at a node by name may find no such node under the new object. Cards that start together sit on one faint band.
 
@@ -191,9 +192,13 @@ All rows live in the **Juice Player** category and are read on the player node.
 | Play Juice And Wait | `at_strength` (float, `1.0`) | Plays the list and WAITS for the last card to finish - the rows under this one are what happens afterwards. Use it when the hit has to land before the death animation starts. |
 | Play Juice Backwards | `at_strength` (float, `1.0`) | Plays the list from the far end, so the last juice card is felt first. The other half of a beat that has to undo itself - a door that opened, closing. |
 | Play Juice On Channel | `channel` (String, `juice_players`), `at_strength` (float, `1.0`) | Plays every juice card player in a group at once, at one strength - the whole squad flinching, every button in a menu bouncing. Put the players in the group and name it here. |
-| Stop Juice | (none) | Stops the play where it is. Whatever a card already started keeps running on its own - this stops the LIST, not the shake it set going. |
+| Stop Juice | (none) | Stops the play where it is and ends what its cards started, even when the list has already been walked: a shake, a slowmo, a hold on the clock, a tween part of the way, a sound, a force. A value a card was moving stays where it had got to; Restore Initial Values puts it back. A loop stops too. |
 | Skip To End | (none) | Stops waiting and does everything that is left at once - the cutscene skip of a juice card list. Every card from the head down is felt, without the pauses between them. |
-| Restore Initial Values | (none) | Puts every value this player's Tween Property cards changed back the way they found it. The undo of a list that moved the object rather than flashing it. |
+| Restore Initial Values | (none) | Puts every value this player's cards changed back to what it was before the FIRST card touched it, and ends the shake, the slowmo and the other effects the Juice node was holding for them. The undo of a list that moved the object rather than flashing it. |
+| Stop All Juice Players | `and_restore` (bool, `false`) | Stops every Juice Player in the scene and ends what they started: sounds, shakes, a slowmo, a fade on a bus, a force. With `and_restore` every object goes back to how it was before its player first touched it. It acts on every player whichever object the row is on, by one call to the players' own group. |
+| Set All Juice Players Enabled | `enabled` (bool, `true`) | The one switch for the whole game, for a cutscene or an options menu: while it is off a Play does nothing, whichever player it is asked of. It does not stop a play already running; Stop All Juice Players does that. |
+| Toggle Juice Paused | (none) | Pauses the play if it is running and resumes it if it is paused. |
+| Set Looping | `on` (bool, `true`) | Turns the Loop tick on or off from a row. Turned off, the pass that is running finishes and the list stops there; Stop Juice ends it at once. Turning it on does not start a play. |
 | Revert | (none) | Stops the play and puts back what it changed, the LAST change first - so a stack of tweens unwinds in the order it was built rather than all at once. |
 | Pause Juice | (none) | Holds the play where it is without losing its place. Resume Juice carries on from the same card. |
 | Resume Juice | (none) | Carries on from where Pause Juice left off. |
@@ -276,6 +281,9 @@ All rows live in the **Juice Player** category and are read on the player node.
 | `while_playing` | `restart` / `ignore` / `overlap` | `restart` | What a second play does while the first is still running. |
 | `cooldown` | float | `0.0` | The shortest gap between two plays, in seconds. A play asked for sooner than this is refused. |
 | `autoplay` | bool | `false` | Plays the list once, at full strength, when the node enters the scene: a spawn pop, a pickup shimmer. Off, nothing is written into the scene for it. |
+| `loop` | bool | `false` | Plays the whole list again and again while the node is in the scene, until Stop Juice or Set Looping turns it off. Each pass waits at least a frame, so a list with nothing that takes time cannot lock the game; the Inspector says so when that is the case. Off, nothing is written into the scene for it. |
+| `loop_times` | int | `0` | How many passes a loop makes before it stops by itself. 0 is until stopped. |
+| `loop_wait` | float | `0.0` | Seconds between one pass and the next. 0 waits one frame. |
 | `moment_file` | Resource | none | Optional: a moment file to play INSTEAD of the list. Drop one here to share a beat between objects. |
 
 ### Inspector properties are ACEs too
@@ -672,8 +680,9 @@ The label box of every one of these rows lists the labels of the cards the playe
 
 - **The player needs a Juice behaviour beside it for the felt words.** The ten moment words are played by the Juice node under the same object. Without one, those cards do nothing and the player warns once, by name. The timing cards, Tween Property, Emit Signal and Play Player all work regardless.
 - **Rename a card and every row that named it stops finding it.** Rows address cards by label. A renamed card leaves those rows compiling, running and doing nothing. The editor says so before the game runs, in the row's quiet amber state and in the Doctor's Juice Players section, but Rename Juice Card is still a rename of what the rest of the sheet has to say.
-- **Stop Juice stops the LIST, not what it started.** A shake a card set going keeps running on its own. Use Revert when the point is to put back what the beat changed.
-- **Only Tween Property cards are restorable.** Restore Initial Values and Revert put back values this player's tweens moved. A flash, a hitstop or a shockwave is something the screen did, and there is nothing to restore.
+- **Stop Juice ends what the cards started, and leaves a moved value where it had got to.** A shake, a slowmo and a sound end; a property a Tween Property card was walking stops part of the way. Use Revert, or Restore Initial Values, when the point is to put back what the beat changed. A player that leaves the scene does the same, so a slowmo cannot outlive the enemy that began it; a bus fade is left alone then, so music that was fading out is not brought back by a scene change.
+- **Restore puts back the first value.** Two cards that moved one property are put back to what it was before the first, not to what the first left. The values the Juice node holds for the player (the host's colour and scale, the time scale, the camera zoom, a screen effect) are put back the same way; a hitstop or a shockwave is something the screen did, and there is nothing to restore.
+- **A loop with nothing that takes time is caught at edit time.** A Loop Back whose cards take no time and whose count would run into the step limit says so under the card, and a node whose Loop is ticked on a list with no time says so under the list.
 - **A cooldown of 0 lets every play through.** If a held trigger is stacking its own feedback, the fix is a cooldown, a `while_playing` of `ignore`, or both. Restarting is the default because a fresh hit usually should restart the beat.
 - **Hold and Pause are not the same wait.** A Hold waits for the slowest card above it to finish and then waits its own time; a Pause waits a flat time whatever is still running. Getting these the wrong way round is the commonest reason a beat feels late.
 - **A Loop Back with nothing to end it is caught, not hung.** A play gives up after its step limit and says so rather than looping forever, but a Loop Back always wants either a Loop Start or a Hold above it and a loop count that ends.

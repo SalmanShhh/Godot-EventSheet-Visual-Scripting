@@ -11003,3 +11003,11 @@ Starts at %s and is gone at %s s.,"从 %s 开始,在 %s 秒时消失。"
 Save the new file where the card can find it,将新文件保存在卡片能找到的位置
 Preview its behaviours,"预览其行为"
 Stop previews,"停止预览"
+"Loop is on and nothing in this list takes time, so the player plays it again every frame. Add a Pause or a card with a length.","Loop 已开启，但此列表中没有任何需要时间的内容，因此播放器每一帧都会重新播放。请添加暂停，或添加有时长的卡片。"
+"Nothing in this loop takes time, so the play gives up after %d steps. Give a card in it a length, or the Loop Back a Pause.","此循环中没有任何需要时间的内容，因此播放会在 %d 步后放弃。请给循环中的卡片设置时长，或给 Loop Back 添加暂停。"
+1 card,1 张卡片
+%d cards,%d 张卡片
+This curve has changes that are not saved to its file yet. The game plays the saved file.,"此曲线有尚未保存到其文件的更改。游戏使用已保存的文件。"
+Flip,切换
+Pause Or Resume A Juice Player,暂停或继续 Juice Player
+"Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on until it is resumed.",暂停、继续或切换另一个 Juice Player，或者当前这个：比如门开着时暂停的循环警报。暂停的列表会停在当前卡片上，直到继续。

@@ -31,5 +31,23 @@ static func run() -> bool:
 			"Sine ×8 · movement = \"vertical\" · period = 1.6 · magnitude = 18.0 · on Tile0 … Tile7"])],
 		["one node is named on its own line", built.behaviour_detail_lines([{"name": "Juice", "host": "Carousel", "script": ""}]),
 			PackedStringArray(["Juice · on Carousel"])],
+		["a list of juice cards is a count, never the array's text", built.behaviour_detail_lines([_with_steps(2)]),
+			PackedStringArray(["Juice Player · steps = 2 cards · on Hero"])],
+		["one card is one card", built.behaviour_detail_lines([_with_steps(1)]),
+			PackedStringArray(["Juice Player · steps = 1 card · on Hero"])],
+		["an array of anything else keeps its own text", built.behaviour_detail_lines([_with_text("Array[int]([1, 2])")]),
+			PackedStringArray(["Juice Player · steps = Array[int]([1, 2]) · on Hero"])],
 	])
 	return ok
+
+
+## A Juice Player on a node called Hero, holding `count` cards, as the scene writes them.
+static func _with_steps(count: int) -> Dictionary:
+	var cards: PackedStringArray = PackedStringArray()
+	for index: int in range(count):
+		cards.append("{\"verb\": \"shake\", \"amount\": %d.0}" % (index + 1))
+	return _with_text("Array[Dictionary]([%s])" % ", ".join(cards))
+
+
+static func _with_text(written: String) -> Dictionary:
+	return {"name": "Juice Player", "host": "Hero", "script": "", "properties": [{"name": "steps", "value": written}]}

@@ -66,6 +66,12 @@ signal on_loop(loops_left: int)
 @export_enum("restart", "ignore", "overlap") var while_playing: String = "restart"
 ## Plays the list once, at full strength, when this node enters the scene: a spawn pop, a pickup shimmer.
 @export var autoplay: bool = false
+## Plays the whole list again and again while this node is in the scene, until Stop Juice or Set Looping turns it off. Each pass waits at least one frame, so a list with nothing that takes time cannot lock the game.
+@export var loop: bool = false
+## How many passes a loop makes before it stops by itself. 0 is until stopped.
+@export var loop_times: int = 0
+## Seconds between one pass and the next. 0 waits one frame.
+@export var loop_wait: float = 0.0
 ## Seconds that must pass between plays; sooner requests are refused.
 @export var cooldown: float = 0.0
 ## Optional: a moment file to play INSTEAD of the list. Drop one here to share a beat between objects; Save As File writes this list out as one.
@@ -219,17 +225,9 @@ var _told_no_juice: bool = false
 ## so this pack names no other pack. Said once when there is none, because a list of ten shakes with
 ## no behaviour under it would otherwise be ten warnings a frame.
 func _juice() -> Node:
-	if _juice_node != null and is_instance_valid(_juice_node):
-		return _juice_node
-	var looked: Array = []
-	if host != null:
-		looked.append_array(host.get_children())
-	looked.append_array(get_children())
-	for child: Variant in looked:
-		var node: Node = child as Node
-		if node != null and node.has_method("moment_step"):
-			_juice_node = node
-			return _juice_node
+	var found: Node = _juice_quiet()
+	if found != null:
+		return found
 	if not _told_no_juice:
 		_told_no_juice = true
 		push_warning("Juice Player: %s has no Juice behaviour beside it, so its shake, flash and hitstop steps did nothing. Add a Juice node under the same object." % name)
@@ -344,7 +342,8 @@ const CATEGORY_OF: Dictionary = {
 	"reveal_text": "transform",
 	"fill_bar": "transform",
 	"shader_value": "transform",
-	"call_method": "signal"
+	"call_method": "signal",
+	"pause_player": "signal"
 }
 
 ## Keys that Set Juice Card Field and Juice Card Field accept.
@@ -417,12 +416,14 @@ const REVEAL_TEXT: String = "reveal_text"
 const FILL_BAR: String = "fill_bar"
 ## Step word: move one value of the shader on a node.
 const SHADER_VALUE: String = "shader_value"
+## Step word: pause, resume or flip another Juice Player, or this one.
+const PAUSE_PLAYER: String = "pause_player"
 
 ## Every word this node plays itself that points at another node or at the world.
 const WORLD_WORDS: PackedStringArray = [
 	"particles", "animation", "sprite_animation", "show_hide", "call_method", "spawn_scene", "push",
 	"force_for_a_time", "gravity_for_a_time", "freeze_body", "squash_stretch", "punch_position",
-	"punch_rotation", "pop", "fade", "grab_focus", "count_to", "reveal_text", "fill_bar", "shader_value"
+	"punch_rotation", "pop", "fade", "grab_focus", "count_to", "reveal_text", "fill_bar", "shader_value", "pause_player"
 ]
 
 ## Particles word: play the burst again from the start.
@@ -515,6 +516,42 @@ func _player_to_play(card: Dictionary, typed: String) -> Node:
 		return null
 	return other
 
+# --- Looping a list, and stopping everything ---
+# A list that loops is walked again and again by one coroutine that waits at least a frame between
+# passes, so a list with nothing in it that takes time cannot lock the game. Every way a play can end
+# (Stop, Revert, the node leaving the scene, every player stopped at once) ends what the cards
+# STARTED as well as the walk: a list of instant cards has finished walking long before the shake it
+# began does, so ending the walk alone would end nothing.
+
+## The group every Juice Player joins by itself, so one call on the scene tree reaches all of them.
+## It is not the default channel of Play Juice On Channel: a channel is a group a person picks.
+const PLAYERS_GROUP: String = "every_juice_player"
+
+## Whether juice plays at all, for the whole game. Set by Set All Juice Players Enabled. It lives on the
+## script, so it is the same for every player and holds across a change of scene.
+static var _all_enabled: bool = true
+
+## True once this player has said it was asked to play while every player was switched off, so the quiet
+## row is said once rather than on every hit.
+var _told_switched_off: bool = false
+
+## Counts the plays, so a loop that was stopped or replaced can tell and end after its pass.
+var _loop_run: int = 0
+## The Juice behaviour beside this node, without a word of complaint when there is none.
+func _juice_quiet() -> Node:
+	if _juice_node != null and is_instance_valid(_juice_node):
+		return _juice_node
+	var looked: Array = []
+	if host != null:
+		looked.append_array(host.get_children())
+	looked.append_array(get_children())
+	for child: Variant in looked:
+		var node: Node = child as Node
+		if node != null and node.has_method("moment_step"):
+			_juice_node = node
+			return _juice_node
+	return null
+
 ## @ace_action
 ## @ace_featured
 ## @ace_name("Play Juice")
@@ -528,7 +565,7 @@ func _player_to_play(card: Dictionary, typed: String) -> Node:
 ## @ace_codegen_template("$JuicePlayer.play({at_strength})")
 func play(at_strength: float) -> void:
 	if _may_start():
-		_walk(_steps_now(), at_strength, direction == BOTTOM_TO_TOP)
+		_play_list(at_strength, direction == BOTTOM_TO_TOP)
 
 ## @ace_action
 ## @ace_featured
@@ -543,7 +580,7 @@ func play(at_strength: float) -> void:
 ## @ace_codegen_template("await $JuicePlayer.play_and_wait({at_strength})")
 func play_and_wait(at_strength: float) -> void:
 	if _may_start():
-		await _walk(_steps_now(), at_strength, direction == BOTTOM_TO_TOP)
+		await _play_list(at_strength, direction == BOTTOM_TO_TOP)
 		var still: float = _ends_at - float(Time.get_ticks_msec()) / 1000.0
 		if still > 0.0:
 			await MomentRunner.then(self, still, MomentRunner.CLOCK_REAL)
@@ -560,7 +597,7 @@ func play_and_wait(at_strength: float) -> void:
 ## @ace_codegen_template("$JuicePlayer.play_backwards({at_strength})")
 func play_backwards(at_strength: float) -> void:
 	if _may_start():
-		_walk(_steps_now(), at_strength, direction != BOTTOM_TO_TOP)
+		_play_list(at_strength, direction != BOTTOM_TO_TOP)
 
 ## @ace_action
 ## @ace_name("Play Juice On Channel")
@@ -582,19 +619,20 @@ func play_on_channel(channel: String, at_strength: float) -> void:
 ## @ace_featured
 ## @ace_name("Stop Juice")
 ## @ace_category("Juice Player")
-## @ace_description("Stops the play where it is. Whatever a card already started keeps running on its own - this stops the LIST, not the shake it set going.")
+## @ace_description("Stops the play where it is and ends what its cards started, even when the list has already been walked: a shake, a slowmo, a hold on the clock, a tween part of the way, a sound, a force. A value a card was moving stays where it had got to; Restore Initial Values puts it back. A loop stops too.")
 ## @ace_lift_example("$FeedbackPlayer.stop()")
 ## @ace_lift_example("$JuicePlayer.stop()")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
 ## @ace_codegen_template("$JuicePlayer.stop()")
 func stop() -> void:
-	_told_own("stop")
+	_loop_run += 1
+	_end_effects()
+	_told_nested("stop")
 	if not playing:
 		return
 	_live.clear()
 	_waiting.clear()
 	_resumed.emit()
-	_told_nested("stop")
 	_close()
 
 ## @ace_action
@@ -631,7 +669,7 @@ func skip_to_end() -> void:
 ## @ace_action
 ## @ace_name("Restore Initial Values")
 ## @ace_category("Juice Player")
-## @ace_description("Puts every value this player's Tween Property cards changed back the way they found it. The undo of a list that moved the object rather than flashing it.")
+## @ace_description("Puts every value this player's cards changed back to what it was before the FIRST card touched it, and ends the shake, the slowmo and the other effects the Juice node was holding for them. The undo of a list that moved the object rather than flashing it.")
 ## @ace_lift_example("$FeedbackPlayer.restore()")
 ## @ace_lift_example("$JuicePlayer.restore()")
 ## @ace_icon("res://eventsheet_addons/juice/icon.svg")
@@ -640,6 +678,7 @@ func restore() -> void:
 	_stop_tweens()
 	_restore_buses()
 	_release_forces()
+	_tell_juice_ended(true)
 	_told_own("restore")
 	_told_nested("restore")
 	for entry: Variant in _restore_to:
@@ -661,6 +700,62 @@ func revert() -> void:
 	stop()
 	_restore_to.reverse()
 	restore()
+
+## @ace_action
+## @ace_name("Stop All Juice Players")
+## @ace_category("Juice Player")
+## @ace_description("Stops every Juice Player in the scene and ends what they started: sounds, shakes, a slowmo, a fade on a bus, a force. With 'and restore' every object goes back to how it was before its player first touched it. It acts on every player whichever object the row is on.")
+## @ace_display_template("Stop all juice players, restore [b]{and_restore}[/b]")
+## @ace_lift_example("$FeedbackPlayer.stop_all_juice_players([[and_restore|argument: false]])")
+## @ace_lift_example("$JuicePlayer.stop_all_juice_players([[and_restore|argument: false]])")
+## @ace_param(and_restore, default: false, desc: "Put every object back the way it was, as well as stopping.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuicePlayer.stop_all_juice_players({and_restore})")
+func stop_all_juice_players(and_restore: bool) -> void:
+	if not is_inside_tree():
+		return
+	get_tree().call_group(PLAYERS_GROUP, "stop_juice_from_group", and_restore)
+
+## @ace_action
+## @ace_name("Set All Juice Players Enabled")
+## @ace_category("Juice Player")
+## @ace_description("The one switch for the whole game, for a cutscene or an options menu: while it is off a Play does nothing, whichever player it is asked of. It does not stop a play that is already running; Stop All Juice Players does that.")
+## @ace_display_template("Set all juice players enabled [b]{enabled}[/b]")
+## @ace_lift_example("$FeedbackPlayer.set_all_juice_players_enabled([[enabled|argument: true]])")
+## @ace_lift_example("$JuicePlayer.set_all_juice_players_enabled([[enabled|argument: true]])")
+## @ace_param(enabled, default: true, desc: "False switches all juice off, true switches it back on.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuicePlayer.set_all_juice_players_enabled({enabled})")
+func set_all_juice_players_enabled(enabled: bool) -> void:
+	_all_enabled = enabled
+
+## @ace_action
+## @ace_name("Toggle Juice Paused")
+## @ace_category("Juice Player")
+## @ace_description("Pauses the play if it is running and resumes it if it is paused: one row for a button, or an alarm that holds while a door is open.")
+## @ace_display_template("Toggle juice paused")
+## @ace_lift_example("$FeedbackPlayer.toggle_juice_paused()")
+## @ace_lift_example("$JuicePlayer.toggle_juice_paused()")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuicePlayer.toggle_juice_paused()")
+func toggle_juice_paused() -> void:
+	if _paused:
+		resume_feedbacks()
+	else:
+		pause_feedbacks()
+
+## @ace_action
+## @ace_name("Set Looping")
+## @ace_category("Juice Player")
+## @ace_description("Turns the Loop tick on or off from a row. Turned off, the pass that is running finishes and the list stops there; use Stop Juice to end it at once. Turning it on does not start a play: play the list as usual.")
+## @ace_display_template("Set looping [b]{on}[/b]")
+## @ace_lift_example("$FeedbackPlayer.set_looping([[on|argument: true]])")
+## @ace_lift_example("$JuicePlayer.set_looping([[on|argument: true]])")
+## @ace_param(on, default: true, desc: "True loops the list when it plays, false plays it once.")
+## @ace_icon("res://eventsheet_addons/juice/icon.svg")
+## @ace_codegen_template("$JuicePlayer.set_looping({on})")
+func set_looping(on: bool) -> void:
+	loop = on
 
 ## @ace_action
 ## @ace_name("Pause Juice")
@@ -1418,6 +1513,8 @@ func loops_left(label: String) -> int:
 
 ## Autoplay: when the node enters the scene with the box ticked, the list plays once at full strength.
 func _ready() -> void:
+	if not is_in_group(PLAYERS_GROUP):
+		add_to_group(PLAYERS_GROUP)
 	if autoplay:
 		play(1.0)
 
@@ -1437,6 +1534,11 @@ func _alive(token: int) -> bool:
 ## Whether a new play may start now - the cooldown and the "can play while playing" answer in one
 ## place, so every door into the runner refuses for the same reasons.
 func _may_start() -> bool:
+	if not _all_enabled:
+		if not _told_switched_off:
+			_told_switched_off = true
+			push_warning("Juice Player: %s did not play because every Juice Player is switched off (Set All Juice Players Enabled)." % name)
+		return false
 	var now: float = float(Time.get_ticks_msec()) / 1000.0
 	if cooldown > 0.0 and now - _last_played_at < cooldown:
 		return false
@@ -1808,7 +1910,7 @@ func _tween_property(card: Dictionary, property: String, value: float, seconds: 
 	if before == null:
 		_card_missing(card, "points at %s, which has no property called \"%s\"" % [host.name, property])
 		return
-	_restore_to.append({"object": host, "property": property, "value": before})
+	_keep_first(host, property, before)
 	if seconds <= 0.0:
 		host.set(property, value)
 		return
@@ -1988,6 +2090,7 @@ func _begin(order: Array, at_strength: float) -> int:
 		if order[index] is Dictionary:
 			_loops_left[index] = int((order[index] as Dictionary).get("loops", 1))
 			_rolls[index] = randf() * 100.0
+	_tell_juice_began(order)
 	on_feedbacks_started.emit(at_strength)
 	return _next_token
 
@@ -2334,7 +2437,7 @@ func _card_missing(card: Dictionary, reason: String) -> void:
 ## Writes down what a property was, so Restore Initial Values can put it back.
 func _remember(object: Object, property: String) -> Variant:
 	var before: Variant = object.get_indexed(NodePath(property))
-	_restore_to.append({"object": object, "property": property, "value": before})
+	_keep_first(object, property, before)
 	return before
 
 ## The number a card's text means: a plain number, or a name read from the game - an autoload and then
@@ -2398,6 +2501,8 @@ func _play_world_card(word: String, card: Dictionary, at: float, seconds: float)
 			_fill_bar(card, seconds)
 		SHADER_VALUE:
 			_shader_value(card, seconds)
+		PAUSE_PLAYER:
+			_pause_player(card)
 
 ## Restarts, starts or stops a particles node.
 func _particles(card: Dictionary) -> void:
@@ -2737,7 +2842,7 @@ func _shader_value(card: Dictionary, seconds: float) -> void:
 	if before == null:
 		_card_missing(card, "names the shader value \"%s\", which that shader does not declare" % value_name)
 		return
-	_restore_to.append({"object": material, "property": property, "value": before})
+	_keep_first(material, property, before)
 	var goal: Variant = card.get("to", before)
 	var made: Tween = _new_tween()
 	var way: Tween = made.set_trans(TRANSITIONS.get(str(card.get("trans", "sine")), Tween.TRANS_SINE) as Tween.TransitionType)
@@ -2762,7 +2867,7 @@ func _tween_card(card: Dictionary, at: float, seconds: float) -> void:
 	if before == null:
 		_card_missing(card, "points at %s, which has no property called \"%s\"" % [target.name, property])
 		return
-	_restore_to.append({"object": target, "property": property, "value": before})
+	_keep_first(target, property, before)
 	var goal: Variant = card.get("to", float(card.get("amount", 1.0)))
 	var relative: bool = bool(card.get("relative", false))
 	# A number is scaled by the strength of the play, as the one-number tween always was; a colour or a
@@ -2805,7 +2910,7 @@ func _emit_on_node(card: Dictionary) -> void:
 ## Whether `from` is playing, through the players it started, the one named `wanted`. The depth is a
 ## guard against a ring of players that has no end.
 static func _plays_through(from: Node, wanted: Node, depth: int) -> bool:
-	if depth > 8 or not bool(from.get("playing")):
+	if depth > 8 or from.get("playing") != true:
 		return false
 	var started: Variant = from.get("_nested")
 	if not (started is Array):
@@ -2814,5 +2919,112 @@ static func _plays_through(from: Node, wanted: Node, depth: int) -> bool:
 		if other == wanted or (other is Node and _plays_through(other as Node, wanted, depth + 1)):
 			return true
 	return false
+
+## Plays the list once, or over and over while Loop is ticked: the pass is walked, then the loop
+## waits Wait Between seconds (one frame at least) and walks it again, until Times passes have been
+## made (0 is until stopped), Loop is turned off or the play is stopped.
+func _play_list(at_strength: float, backwards: bool) -> void:
+	_loop_run += 1
+	var mine: int = _loop_run
+	var passes: int = 0
+	while true:
+		await _walk(_steps_now(), at_strength, backwards)
+		passes += 1
+		if not loop or mine != _loop_run or not is_inside_tree():
+			return
+		if loop_times > 0 and passes >= loop_times:
+			return
+		if loop_wait > 0.0:
+			await get_tree().create_timer(loop_wait).timeout
+		else:
+			await get_tree().process_frame
+		if mine != _loop_run or not is_inside_tree():
+			return
+
+## The name this player's values are kept under in the Juice node's book.
+func _key() -> String:
+	return "juice player %d" % get_instance_id()
+
+## Writes down what a property was, ONCE for each object and property: the first value is the one
+## Restore puts back, whatever the cards after it did to the property.
+func _keep_first(object: Object, property: String, before: Variant) -> void:
+	for entry: Variant in _restore_to:
+		var held: Dictionary = entry as Dictionary
+		if held.get("object") == object and str(held.get("property", "")) == property:
+			return
+	_restore_to.append({"object": object, "property": property, "value": before})
+
+## Tells the Juice node a play is beginning, so it writes down what every value its cards will touch is
+## worth now (once) and what each will be worth when the cards have run their course.
+func _tell_juice_began(list: Array) -> void:
+	var juice: Node = _juice_quiet()
+	if juice != null and juice.has_method("juice_player_began"):
+		juice.call("juice_player_began", _key(), list)
+
+## Tells the Juice node this player's cards are over: with `put_back` false every value lands where the
+## cards would have left it, with true it goes back to what it was before the first card. The shake, the
+## slowmo and the hold on the clock end either way.
+func _tell_juice_ended(put_back: bool) -> void:
+	var juice: Node = _juice_quiet()
+	if juice != null and juice.has_method("juice_player_ended"):
+		juice.call("juice_player_ended", _key(), put_back)
+
+## Ends everything the cards of this player set going, whether or not the walk is still on: the tweens it
+## started (a value stays where it had got to), a fade on a bus, the sounds, the forces, the cards of your
+## own, and the effects the Juice node is holding.
+func _end_effects() -> void:
+	_stop_tweens()
+	for moved: Tween in _bus_tweens:
+		if moved != null and moved.is_valid():
+			moved.kill()
+	_bus_tweens.clear()
+	_stop_sound("", 0.0)
+	_release_forces()
+	_told_own("stop")
+	_tell_juice_ended(false)
+
+## What leaving the scene does: the play ends and so does what it started, so a slowmo or a shake cannot
+## outlive the thing that began it. On Juice Finished is said a moment later, so a player that was only
+## taken out of the tree (put away in a pool) says it and one that was freed does not.
+func _exit_tree() -> void:
+	_loop_run += 1
+	_end_effects()
+	_told_nested("stop")
+	if not playing:
+		return
+	_live.clear()
+	_waiting.clear()
+	_resumed.emit()
+	playing = false
+	_paused = false
+	_held = false
+	progress = 1.0
+	now_playing = ""
+	call_deferred("emit_signal", "on_feedbacks_finished")
+
+## What the scene tree tells every player in the group. A name of this pack's own, never the bare word
+## stop: an audio player, an animation player or a timer in the same group answers to that one too.
+## @ace_hidden
+func stop_juice_from_group(and_restore: bool) -> void:
+	if and_restore:
+		revert()
+	else:
+		stop()
+
+## Pauses, resumes or flips the player a Pause Or Resume card names, or this one when it names none.
+func _pause_player(card: Dictionary) -> void:
+	var other: Node = self
+	if _names_a_node(card, "player"):
+		other = _target(card, "player", false)
+		if other == null or not other.has_method("toggle_juice_paused"):
+			_card_missing(card, "points at no Juice Player")
+			return
+	match str(card.get("mode", "pause")):
+		"resume":
+			other.call("resume_feedbacks")
+		"toggle":
+			other.call("toggle_juice_paused")
+		_:
+			other.call("pause_feedbacks")
 
 # Juice Player: add this node under an object (the node was called Feedback Player before version 0.21.0), fill its list in the Inspector, and one row plays the whole beat. Cards are dragged into order, ticked off, and tuned in place; Pause and Hold space them out and Loop Back repeats a stretch. The ten shake-and-flash words are played by the Juice behaviour beside this node, so put one there too. The list is the same shape a moment file holds - drop a file on the slot to play it instead, or save the list out as one. This pack is an event sheet - extend it by editing it.

@@ -369,6 +369,16 @@ static func build() -> bool:
 	chroma_shake_block.code = "\n".join(Lib.juice_chroma_shake_lines())
 	sheet.events.append(chroma_shake_block)
 
+	# ── The two calls a Juice Player makes when its play ends: this node ends the effects it holds ──
+	var player_calls_block: RawCodeRow = RawCodeRow.new()
+	player_calls_block.code = "\n".join(Lib.juice_player_ended_lines(PackedStringArray([
+		"\tif trauma > 0.0 or _shaking:",
+		"\t\tstop_shake()",
+		"\tif _chroma_shake_active:",
+		"\t\tstop_chromatic_shake()"
+	])))
+	sheet.events.append(player_calls_block)
+
 	# --- Actions (fire-and-forget, mirroring the 2D Juice verbs) ---
 	Lib.append_function(sheet, "shake", "Shake", "Juice 3D", "Adds screenshake to the active 3D camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit or explosion.",
 		[["strength", "float"]],
