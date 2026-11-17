@@ -199,6 +199,7 @@ static func secrets_variable_entry() -> Dictionary:
 static func secret_counter_event(object_label: String, host_class: String = "Area3D") -> EventRow:
 	var event: EventRow = build_event(entry_for("signal:body_entered", host_class))
 	event.trigger_source_path = object_label
+	event.connect_short = true
 	var count_it: ACEAction = ACEAction.new()
 	count_it.provider_id = "Core"
 	count_it.ace_id = "MarkSecretFound"
@@ -241,6 +242,7 @@ static func keys_variable_entry() -> Dictionary:
 static func locked_door_event(object_label: String, host_class: String = "StaticBody3D") -> EventRow:
 	var event: EventRow = build_event(entry_for("signal:body_entered", host_class))
 	event.trigger_source_path = object_label
+	event.connect_short = true
 	var try_it: ACEAction = ACEAction.new()
 	try_it.provider_id = "Core"
 	try_it.ace_id = "TryDoor"
@@ -291,6 +293,7 @@ static func water_flag_event(object_label: String, host_class: String, signal_na
 		value: String) -> EventRow:
 	var event: EventRow = build_event(entry_for("signal:%s" % signal_name, host_class))
 	event.trigger_source_path = object_label
+	event.connect_short = true
 	var write_flag: ACEAction = ACEAction.new()
 	write_flag.provider_id = "Core"
 	write_flag.ace_id = "SetVar"

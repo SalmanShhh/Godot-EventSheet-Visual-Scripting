@@ -75,7 +75,7 @@ static func _stats_screen_starter() -> bool:
 	ok = _check("the secrets bar is filled by the shipped Set Bar row",
 		built.contains("$HudKitBehavior.set_bar(\"SecretsBar\", float(secrets_found.size()), float(secrets_total))"), true) and ok
 	ok = _check("the button is answered through the pack's one trigger",
-		built.contains("get_node(\"HudKitBehavior\").on_button_pressed.connect(_on_hudkitbehavior_on_button_pressed)"), true) and ok
+		built.contains("$HudKitBehavior.on_button_pressed.connect(_on_hudkitbehavior_on_button_pressed)"), true) and ok
 	ok = _check("and named rather than connected",
 		built.contains("if $HudKitBehavior.button_is(\"ContinueButton\"):"), true) and ok
 	return ok

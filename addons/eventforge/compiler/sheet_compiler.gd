@@ -130,6 +130,7 @@ const LAMBDA_CONNECT_ID_META: String = "__lambda_connect_id"
 const LAMBDA_IN_PLACE_META: String = "__source_lambda_in_place"
 
 static var _plain_comparison_re: RegEx = null
+static var _plain_path_re: RegEx = null
 
 # Set per-compile from sheet.emit_breakpoints (single-threaded compiles).
 static var _emit_breakpoints_flag: bool = false
@@ -2458,6 +2459,9 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 			source_prefix = "%s." % source_path.trim_prefix("autoload:")
 		elif not source_path.is_empty():
 			source_prefix = "get_node(\"%s\")." % source_path
+			# A handler placed now on a plain path (names and slashes only) connects the way a person types it.
+			if _all_connect_short(events) and _is_plain_node_path(source_path):
+				source_prefix = "$%s." % source_path
 		ready_connections.append("\t%s%s.connect(%s)" % [source_prefix, signal_name, function_name])
 
 	var has_ready_group: bool = false
@@ -3519,6 +3523,21 @@ static func _emit_pick_filters(event_row: EventRow, lines: PackedStringArray, bo
 			lines.append("%s\tbreak" % indent)
 		loop_index += 1
 	return body_depth
+
+
+## True when every event that shares one handler asks for the short `$Name` connect line.
+static func _all_connect_short(events: Array) -> bool:
+	for event: Variant in events:
+		if not (event is EventRow) or not (event as EventRow).connect_short:
+			return false
+	return not events.is_empty()
+
+
+## A node path `$` can spell: names made of letters, digits and underscores, joined by slashes.
+static func _is_plain_node_path(path: String) -> bool:
+	if _plain_path_re == null:
+		_plain_path_re = RegEx.create_from_string("^[A-Za-z_][A-Za-z0-9_]*(/[A-Za-z_][A-Za-z0-9_]*)*$")
+	return _plain_path_re.search(path) != null
 
 
 ## The line that skips an item unless `test` holds. A row placed now (`flipped`) whose test is one plain

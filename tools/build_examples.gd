@@ -4308,6 +4308,7 @@ func _build_boomer_level_sheet() -> bool:
 	card.trigger_provider_id = "Core"
 	card.trigger_id = "OnBodyEntered"
 	card.trigger_source_path = "RedCard"
+	card.connect_short = true
 	card.actions.append(_action("Core", "PickUpKey", _ace_template("PickUpKey"),
 		{"key": "\"red_key\"", "keys": "keys"}))
 	card.actions.append(_raw("$RedCard.hide()"))
@@ -4319,6 +4320,7 @@ func _build_boomer_level_sheet() -> bool:
 	door.trigger_provider_id = "Core"
 	door.trigger_id = "OnBodyEntered"
 	door.trigger_source_path = "DoorTrigger"
+	door.connect_short = true
 	door.actions.append(_action("Core", "TryDoor", _ace_template("TryDoor", "level"),
 		{"door": "$RedDoor", "keys": "keys"}))
 	sheet.events.append(door)
@@ -4328,6 +4330,7 @@ func _build_boomer_level_sheet() -> bool:
 	secret.trigger_provider_id = "Core"
 	secret.trigger_id = "OnBodyEntered"
 	secret.trigger_source_path = "SecretRoom"
+	secret.connect_short = true
 	secret.actions.append(_action("Core", "MarkSecretFound", _ace_template("MarkSecretFound"),
 		{"name": "\"SecretRoom\"", "found": "secrets_found"}))
 	sheet.events.append(secret)
@@ -4337,6 +4340,7 @@ func _build_boomer_level_sheet() -> bool:
 	exit_event.trigger_provider_id = "Core"
 	exit_event.trigger_id = "OnBodyEntered"
 	exit_event.trigger_source_path = "Exit"
+	exit_event.connect_short = true
 	exit_event.actions.append(_action("Core", "SetVar", _ace_template("SetVar"),
 		{"var_name": "level_over", "value": "true"}))
 	# Built by concatenation rather than by formatting: the line it writes is ITSELF a `%` format

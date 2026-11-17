@@ -15,10 +15,10 @@ var level_seconds: float = 0.0
 var level_over: bool = false
 
 func _ready() -> void:
-	get_node("RedCard").body_entered.connect(_on_redcard_body_entered)
-	get_node("DoorTrigger").body_entered.connect(_on_doortrigger_body_entered)
-	get_node("SecretRoom").body_entered.connect(_on_secretroom_body_entered)
-	get_node("Exit").body_entered.connect(_on_exit_body_entered)
+	$RedCard.body_entered.connect(_on_redcard_body_entered)
+	$DoorTrigger.body_entered.connect(_on_doortrigger_body_entered)
+	$SecretRoom.body_entered.connect(_on_secretroom_body_entered)
+	$Exit.body_entered.connect(_on_exit_body_entered)
 	print("Boomer Level - WASD/arrows move, mouse looks, Space jumps (hold it on landing to bunny hop), Tab throws a rocket, Esc frees the mouse.")
 
 func _physics_process(delta: float) -> void:

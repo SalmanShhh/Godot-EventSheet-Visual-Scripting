@@ -33,6 +33,10 @@ static var _uid_counter: int = 0
 ## generated script's owner ("" = self). Lets sheets react to OTHER nodes' signals (child
 ## behaviors, timers…) - the compiler emits the `_ready` connection.
 @export var trigger_source_path: String = ""
+## A handler placed now on a plain node path connects with `$Name` (`$Button.pressed.connect(...)`) where it used
+## to write `get_node("Button").pressed.connect(...)`. Off for every handler saved before this existed, and a
+## handler read from a file keeps the connect line it was read with.
+@export var connect_short: bool = false
 ## Baked argument signature for custom signal triggers (e.g. "amount: int"), captured from
 ## the ACE definition at apply time so the compiler can generate a connectable handler
 ## without registry access (mirrors codegen_template baking on conditions/actions).

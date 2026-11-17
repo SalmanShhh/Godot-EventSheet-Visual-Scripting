@@ -999,6 +999,7 @@ static func _build_level_stats_screen_starter() -> EventSheetResource:
 	carry_on.trigger_provider_id = "HudKitBehavior"
 	carry_on.trigger_id = "signal:on_button_pressed"
 	carry_on.trigger_source_path = "HudKitBehavior"
+	carry_on.connect_short = true
 	var which_button: ACECondition = ACECondition.new()
 	which_button.provider_id = "HudKitBehavior"
 	which_button.ace_id = "button_is"
@@ -1151,6 +1152,7 @@ static func _build_skill_tree_screen_starter() -> EventSheetResource:
 	clicked.trigger_provider_id = "HudKitBehavior"
 	clicked.trigger_id = "signal:on_button_pressed"
 	clicked.trigger_source_path = "HudKitBehavior"
+	clicked.connect_short = true
 	clicked.actions.append(_upgrades_action("unlock_skill",
 		{"id": _pack_call(HUD_KIT_PACK, "last_button_name_value", {})}))
 	var redraw_after_click: RawCodeRow = RawCodeRow.new()

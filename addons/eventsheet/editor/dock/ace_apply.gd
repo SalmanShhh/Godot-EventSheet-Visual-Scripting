@@ -725,6 +725,8 @@ func _bake_trigger_signature(event_row: EventRow, definition: ACEDefinition) -> 
 		return
 	event_row.trigger_provider_id = definition.provider_id
 	event_row.trigger_id = definition.id
+	# A handler placed now connects the way a person types it ($Name) when its source is a plain node path.
+	event_row.connect_short = true
 	# Bus triggers: autoload providers connect by singleton name (project-wide signals).
 	if _dock._autoload_provider_names.has(definition.provider_id):
 		event_row.trigger_source_path = "autoload:%s" % str(_dock._autoload_provider_names[definition.provider_id])
