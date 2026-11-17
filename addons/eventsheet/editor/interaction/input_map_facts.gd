@@ -344,11 +344,12 @@ static func add_action(action_name: String, deadzone: float = 0.5) -> bool:
 	var clean: String = action_name.strip_edges()
 	if clean.is_empty() or ProjectSettings.has_setting("input/%s" % clean):
 		return false
-	ProjectSettings.set_setting("input/%s" % clean, {"deadzone": deadzone, "events": []})
+	# One step on Godot's own undo: Ctrl+Z takes the control out of the Input Map again.
+	load("res://addons/eventforge/editor/undo_steps.gd").project_setting_step("input/%s" % clean,
+		{"deadzone": deadzone, "events": []}, EventSheetL10n.translate("Add \"%s\" to the Input Map") % clean)
 	ProjectSettings.set_initial_value("input/%s" % clean, {"deadzone": deadzone, "events": []})
-	var saved: int = ProjectSettings.save()
 	clear_cache()
-	return saved == OK
+	return ProjectSettings.has_setting("input/%s" % clean)
 
 
 # ── Reading project.godot ─────────────────────────────────────────────────────────────────────

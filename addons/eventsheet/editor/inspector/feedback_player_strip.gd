@@ -717,5 +717,7 @@ func _on_file_chosen(path: String) -> void:
 	if loaded == null or not (loaded.get("steps") is Array):
 		push_warning("Juice Player: %s is not a moment file." % path.get_file())
 		return
-	_player.set("moment_file", loaded)
+	# One step on Godot's own undo, like the card list: Ctrl+Z puts the old file back.
+	load("res://addons/eventforge/editor/undo_steps.gd").set_property_step(_player, "moment_file", loaded,
+		EventSheetL10n.translate("Load Juice Player file"))
 	refresh()

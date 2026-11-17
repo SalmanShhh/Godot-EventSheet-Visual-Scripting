@@ -200,6 +200,24 @@ static func _found(scene_path: String, node: Dictionary, sentence: String, neare
 	return found
 
 
+## The same door on the scene that is OPEN in the editor: the node is moved in the live scene as one
+## step of Godot's own undo, so nothing is reloaded from disk, unsaved changes to the scene stay, and
+## Ctrl+Z puts the node back. Refuses, saying why, under the same rules as the file version.
+static func move_under_open(scene_root: Node, node_path: String, new_parent_path: String, undo: Object = null) -> Dictionary:
+	var node: Node = scene_root.get_node_or_null(NodePath(node_path))
+	var new_parent: Node = scene_root if new_parent_path == "." else scene_root.get_node_or_null(NodePath(new_parent_path))
+	if node == null or new_parent == null or node == scene_root:
+		return {"ok": false, "message": "The scene no longer has both nodes - re-run the check."}
+	if new_parent.has_node(NodePath(str(node.name))):
+		return {"ok": false, "message": "%s already has a node named %s." % [new_parent_path, node.name]}
+	if node.get_child_count() > 0:
+		return {"ok": false, "message": "%s has nodes of its own under it - move it in the Scene dock instead." % node.name}
+	var shown: String = node.name
+	load("res://addons/eventforge/editor/undo_steps.gd").reparent_step(node, new_parent, scene_root,
+		EventSheetL10n.translate("Move %s under %s") % [shown, new_parent.name], undo)
+	return {"ok": true, "message": "Moved %s under %s. Ctrl+Z in the scene takes it back; save the scene to keep it." % [shown, new_parent_path]}
+
+
 ## The door "Move it under <node>": rewrites the scene's text so the behaviour at `node_path` hangs
 ## under `new_parent_path`, keeping every other byte. Refuses, saying why, when the behaviour has
 ## children of its own, when the new parent already has a node by that name, or when the scene does

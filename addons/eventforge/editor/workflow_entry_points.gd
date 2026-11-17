@@ -34,8 +34,10 @@ static func create_sheet_for_node(node: Node, directory: String) -> Dictionary:
 	var result: Dictionary = write_sheet_file(sheet, directory, base_name + "_sheet")
 	if not bool(result.get("ok", false)):
 		return result
-	node.set_script(load(str(result.get("sheet_path"))))
-	return {"ok": true, "message": "Event sheet attached to %s - it opens in the EventSheet workspace." % node.name, "sheet_path": str(result.get("sheet_path"))}
+	# The script goes on as one step of Godot's own undo: Ctrl+Z takes it off the node (the new file stays).
+	load("res://addons/eventforge/editor/undo_steps.gd").set_property_step(node, "script",
+		load(str(result.get("sheet_path"))), EventSheetL10n.translate("Attach event sheet to %s") % node.name)
+	return {"ok": true, "message": "Event sheet attached to %s - it opens in the EventSheet workspace. Ctrl+Z takes the script off the node and leaves the new file." % node.name, "sheet_path": str(result.get("sheet_path"))}
 
 
 ## What the "Open as Event Sheet" context entries accept: sheet .tres files, any .gd (GDScript-backed

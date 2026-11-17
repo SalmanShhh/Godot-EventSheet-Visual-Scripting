@@ -199,8 +199,10 @@ static func attach_behavior(sheet: EventSheetResource, host: Node) -> Dictionary
 	var behavior: Node = Node.new()
 	behavior.name = sheet.custom_class_name if not sheet.custom_class_name.is_empty() else script_path.get_file().get_basename().to_pascal_case()
 	behavior.set_script(load(script_path))
-	host.add_child(behavior)
-	behavior.owner = host.owner if host.owner != null else host
+	# One step on Godot's own undo: Ctrl+Z in the scene takes the node out again.
+	load("res://addons/eventforge/editor/undo_steps.gd").add_child_step(host, behavior,
+		host.owner if host.owner != null else host,
+		EventSheetL10n.translate("Attach %s to %s") % [behavior.name, host.name])
 	var message: String = "Attached %s under %s." % [behavior.name, host.name]
 	if ClassDB.class_exists(sheet.host_class) and not host.is_class(sheet.host_class):
 		message += " Note: this behavior expects a %s host - it will warn in the scene." % sheet.host_class

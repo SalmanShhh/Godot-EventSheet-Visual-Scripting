@@ -362,12 +362,7 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 		"keep_upright":
 			return {"ok": true, "message": "Add a Facing ▸ Keep Upright row for %s under the same event that mirrors this object - it re-negates the child's scale so the text reads forwards either way." % subject}
 		"move_behaviour_under":
-			var moved: Dictionary = EventSheetBehaviourHostDoctor.move_under(str(finding.get("path", "")), str(finding.get("node", "")), str(finding.get("to_path", "")))
-			if bool(moved.get("ok", false)) and Engine.has_singleton("EditorInterface"):
-				var moved_editor: Object = Engine.get_singleton("EditorInterface")
-				if (moved_editor.call("get_open_scenes") as PackedStringArray).has(str(finding.get("path", ""))):
-					moved_editor.call("reload_scene_from_path", str(finding.get("path", "")))
-			return moved
+			return _move_behaviour_under(finding, dock)
 		"add_runtime_helper":
 			return load("res://addons/eventforge/runtime_helper_doctor.gd").add_to_project(finding)
 		"show_in_scene":
@@ -696,6 +691,35 @@ static func _never_ask_error_report() -> Dictionary:
 	return {"ok": true, "message": "Noted - this project will not be asked about error reports again."}
 
 
+## "Move it under": on the scene that is open it is a step of Godot's own undo (nothing is reloaded
+## and unsaved changes stay); a scene open behind another is asked to be brought forward; a closed
+## scene is changed only after the reader says yes, with its old file kept in Sheet Backups.
+static func _move_behaviour_under(finding: Dictionary, dock: Variant) -> Dictionary:
+	var scene_path: String = str(finding.get("path", ""))
+	var node_path: String = str(finding.get("node", ""))
+	var to_path: String = str(finding.get("to_path", ""))
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		var editor: Object = Engine.get_singleton("EditorInterface")
+		var edited: Node = editor.call("get_edited_scene_root") as Node
+		if edited != null and edited.scene_file_path == scene_path:
+			return EventSheetBehaviourHostDoctor.move_under_open(edited, node_path, to_path)
+		if (editor.call("get_open_scenes") as PackedStringArray).has(scene_path):
+			return {"ok": false, "message": EventSheetL10n.translate("Bring %s to the front and press this again. The move is made in the open scene, so Ctrl+Z can take it back.") % scene_path.get_file()}
+	var move_it: Callable = func() -> void:
+		EventSheetBackups.backup_sheet(scene_path)
+		var moved: Dictionary = EventSheetBehaviourHostDoctor.move_under(scene_path, node_path, to_path)
+		if dock != null and dock.has_method("_set_status"):
+			dock.call("_set_status", str(moved.get("message", "")) + (" " + EventSheetL10n.translate("The old file is in Sheet Backups.") if bool(moved.get("ok", false)) else ""), not bool(moved.get("ok", false)))
+	var asked: ConfirmationDialog = load("res://addons/eventsheet/editor/dock/ask_first.gd").ask(dock as Node,
+		EventSheetL10n.translate("Change the scene file?"),
+		EventSheetL10n.translate("%s is not open, so this rewrites the file and Ctrl+Z cannot take it back. The old file is kept in Sheet Backups.") % scene_path.get_file(),
+		EventSheetL10n.translate("Move it"), move_it)
+	if asked == null:
+		move_it.call()
+		return {"ok": true, "message": ""}
+	return {"ok": true, "message": EventSheetL10n.translate("Waiting for your answer about %s.") % scene_path.get_file()}
+
+
 static func _add_input_action(action_name: String) -> Dictionary:
 	if action_name.is_empty():
 		return {"ok": false, "message": "That finding names no control to add."}
@@ -711,12 +735,12 @@ static func _add_input_action(action_name: String) -> Dictionary:
 		var key_event: InputEventKey = InputEventKey.new()
 		key_event.physical_keycode = key
 		events.append(key_event)
-	ProjectSettings.set_setting(setting, {"deadzone": 0.5, "events": events})
-	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
-		ProjectSettings.save()
+	# One step on Godot's own undo: Ctrl+Z takes the control out of the Input Map again.
+	load("res://addons/eventforge/editor/undo_steps.gd").project_setting_step(setting,
+		{"deadzone": 0.5, "events": events}, EventSheetL10n.translate("Add \"%s\" to the Input Map") % action_name)
 	if key != KEY_NONE:
-		return {"ok": true, "message": "Added \"%s\" to the Input Map, bound to %s - change the binding in Project ▸ Input Map." % [action_name, OS.get_keycode_string(key)]}
-	return {"ok": true, "message": "Added \"%s\" to the Input Map - bind a key to it in Project ▸ Input Map." % action_name}
+		return {"ok": true, "message": "Added \"%s\" to the Input Map, bound to %s - change the binding in Project ▸ Input Map. Ctrl+Z takes it out again." % [action_name, OS.get_keycode_string(key)]}
+	return {"ok": true, "message": "Added \"%s\" to the Input Map - bind a key to it in Project ▸ Input Map. Ctrl+Z takes it out again." % action_name}
 
 
 ## Writes a stub row into a pack guide for the verb this finding names, and says so plainly: the row
