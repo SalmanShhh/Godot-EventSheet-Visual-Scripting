@@ -61,5 +61,5 @@ static func ask(host: Node, autoload_name: String, held: String, on_name: Callab
 			on_name.call(chosen))
 	window.canceled.connect(window.queue_free)
 	window.confirmed.connect(window.queue_free)
-	window.popup_centered()
+	EventSheetWindowPlacement.popup_centered(window)
 	return window

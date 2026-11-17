@@ -13,18 +13,18 @@ const P := "doctor_slices_test"
 
 
 static func run() -> bool:
-	var Doctor: GDScript = EventSheetProjectDoctor
-	var session: Dictionary = Doctor.begin()
+	var doctor: GDScript = EventSheetProjectDoctor
+	var session: Dictionary = doctor.begin()
 	var names: PackedStringArray = PackedStringArray()
 	for entry: Array in (session["steps"] as Array):
 		names.append(str(entry[0]))
-	var started: Vector2i = Doctor.progress_of(session)
+	var started: Vector2i = doctor.progress_of(session)
 	# Two steps by hand, then the audit is closed early: the whole of it is `run()`'s own work, which the
 	# project doctor test already runs over this repository.
-	var more: bool = Doctor.step(session)
-	var after_one: Vector2i = Doctor.progress_of(session)
-	Doctor.step(session)
-	var report: Dictionary = Doctor.finish(session)
+	var more: bool = doctor.step(session)
+	var after_one: Vector2i = doctor.progress_of(session)
+	doctor.step(session)
+	var report: Dictionary = doctor.finish(session)
 
 	# The margin number is asked only for a row a finding names: a clean sheet never builds it.
 	var sheet: EventSheetResource = EventSheetResource.new()
@@ -36,15 +36,15 @@ static func run() -> bool:
 	var quiet: EventRow = EventRow.new()
 	quiet.trigger_id = "OnProcess"
 	sheet.events = [loud, quiet] as Array[Resource]
-	Doctor.get("_margin_cache").clear()
-	Doctor.set("_run_in_progress", true)
+	doctor.get("_margin_cache").clear()
+	doctor.set("_run_in_progress", true)
 	var findings: Array[Dictionary] = []
-	Doctor._scan_coroutine_misuse(quiet, "res://probe.gd", findings, sheet)
-	var cache_after_quiet: int = Doctor.get("_margin_cache").size()
-	Doctor._scan_coroutine_misuse(loud, "res://probe.gd", findings, sheet)
-	var cache_after_loud: int = Doctor.get("_margin_cache").size()
-	Doctor.set("_run_in_progress", false)
-	Doctor.get("_margin_cache").clear()
+	doctor._scan_coroutine_misuse(quiet, "res://probe.gd", findings, sheet)
+	var cache_after_quiet: int = doctor.get("_margin_cache").size()
+	doctor._scan_coroutine_misuse(loud, "res://probe.gd", findings, sheet)
+	var cache_after_loud: int = doctor.get("_margin_cache").size()
+	doctor.set("_run_in_progress", false)
+	doctor.get("_margin_cache").clear()
 
 	# Slicing a corpus gives the answer of running over the whole of it, finder by finder.
 	var sources: Dictionary = {}
@@ -62,7 +62,7 @@ static func run() -> bool:
 			if path.ends_with("29.gd"):
 				out.append({"check": "b", "path": path})
 		return out
-	var sliced: Array = Doctor.call("sliced_findings", sources, [finder_a, finder_b])
+	var sliced: Array = doctor.call("sliced_findings", sources, [finder_a, finder_b])
 	var shape: PackedStringArray = PackedStringArray()
 	for finding: Dictionary in sliced:
 		shape.append("%s %s" % [finding["check"], str(finding["path"]).get_file()])
@@ -80,7 +80,7 @@ static func run() -> bool:
 		["and says there is more", more, true],
 		["the report has the shape every runner reads", report.has("findings") and report.has("errors") and report.has("warnings") and report.has("infos"), true],
 		["the plain scripts it sorted are counted in one note", (report["findings"] as Array)[0].get("check", ""), "sheet-coverage"],
-		["outside a sliced audit there is nothing to wait for", Doctor.breathe(), null],
+		["outside a sliced audit there is nothing to wait for", doctor.breathe(), null],
 		["a clean row never builds the margin numbers", cache_after_quiet, 0],
 		["a row a finding names builds them once", cache_after_loud, 1],
 		["and the finding carries the row's number", findings.size(), 1],

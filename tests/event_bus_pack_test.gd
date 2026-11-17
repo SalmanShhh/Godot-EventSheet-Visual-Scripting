@@ -77,21 +77,7 @@ static func _test_wait_runs_on_game_time() -> bool:
 	if script == null:
 		return _check("the stand-in harness parses", false, true)
 	var fake_script: GDScript = GDScript.new()
-	fake_script.source_code = "extends Node
-
-signal process_frame
-
-class FakeTimer extends RefCounted:
-	var time_left: float = 100.0
-
-var made: Array = []
-
-func create_timer(seconds: float, always: bool = true) -> Object:
-	var timer: FakeTimer = FakeTimer.new()
-	timer.time_left = seconds
-	made.append([seconds, always, timer])
-	return timer
-"
+	fake_script.source_code = "extends Node\n\nsignal process_frame\n\nclass FakeTimer extends RefCounted:\n\tvar time_left: float = 100.0\n\nvar made: Array = []\n\nfunc create_timer(seconds: float, always: bool = true) -> Object:\n\tvar timer: FakeTimer = FakeTimer.new()\n\ttimer.time_left = seconds\n\tmade.append([seconds, always, timer])\n\treturn timer\n"
 	fake_script.reload()
 	var fake: Node = Node.new()
 	fake.set_script(fake_script)

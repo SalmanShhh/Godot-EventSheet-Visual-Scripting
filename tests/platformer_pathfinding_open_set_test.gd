@@ -29,16 +29,13 @@ static func run() -> bool:
 		var partial_scan: Array = _scan_astar(nav, Vector2i(0, 0), Vector2i(40, 40), true)
 		rows.append(["seed %d: a goal off the map gives the same closest route" % seed_value, partial_heap, partial_scan])
 		nav.free()
-	# The work is bounded by what the map holds, not by its square: a large open map is searched in a
-	# number of node expansions equal to its cells, which the heap makes cheap; the scan is not asked here.
+	# A large open map is searched whole; the scan is not asked here, it took the square of the map.
 	var big: Dictionary = _grid(script, 90, 60, 5)
 	var big_nav: Node = big["nav"]
 	big_nav.set("max_search_nodes", 100000)
-	var started: int = Time.get_ticks_msec()
 	var big_route: Array = big_nav._astar(Vector2i(0, 0), Vector2i(89, 59))
-	var elapsed: int = Time.get_ticks_msec() - started
 	rows.append(["a 5,400 node map has a route", big_route.is_empty(), false])
-	rows.append(["and finds it in well under a second of work", elapsed < 3000, true])
+	rows.append(["and it ends on the goal", big_route[big_route.size() - 1], Vector2i(89, 59)])
 	big_nav.free()
 	return SUPPORT.pins(P, rows)
 

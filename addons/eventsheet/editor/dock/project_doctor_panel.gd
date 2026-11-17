@@ -69,7 +69,8 @@ var _rerun_button: Button = null
 var _running: bool = false
 var _cancel_requested: bool = false
 ## The selected finding's whole sentence, wrapped, under the list: a cell cuts a long one.
-var _whole_finding: EventSheetPopupUI.HelpStrip = null
+var _whole_finding: PanelContainer = null
+var _whole_finding_text: Label = null
 ## Where each check's Learn more goes, found once a session: reading the whole Manual is not free.
 static var _learn_more_cache: Dictionary = {}
 
@@ -158,7 +159,9 @@ func _build() -> void:
 	var findings_card: PanelContainer = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Inbox"), _doctor_tree)
 	findings_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(findings_card)
-	_whole_finding = EventSheetPopupUI.help_strip()
+	_whole_finding_text = EventSheetPopupUI.hint_label("", 0.0)
+	_whole_finding_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_whole_finding = EventSheetPopupUI.panel_section(_whole_finding_text)
 	_whole_finding.visible = false
 	box.add_child(_whole_finding)
 	_this_finding = EventSheetPopupUI.StateNote.new(EventSheetPalette.scaled_f(600.0))
@@ -289,7 +292,7 @@ func _on_finding_selected() -> void:
 	var is_finding: bool = finding is Dictionary
 	_whole_finding.visible = is_finding
 	if is_finding:
-		_whole_finding.describe(EventSheetL10n.translate("Finding"), str((finding as Dictionary).get("message", "")))
+		_whole_finding_text.text = str((finding as Dictionary).get("message", ""))
 	_open_button.disabled = not is_finding
 	_open_button.text = EventSheetL10n.translate("Open %s") % item.get_tooltip_text(2).get_file() \
 		if is_finding else EventSheetL10n.translate("Open")
