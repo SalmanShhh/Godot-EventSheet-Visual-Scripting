@@ -879,9 +879,9 @@ static func palette_colour(palette: Resource, colour_set: String, role: String) 
 	if not (roles is PackedStringArray) or not (sets is Array):
 		return "that resource is not a colour palette"
 	var role_at: int = -1
-	for position: int in (roles as PackedStringArray).size():
-		if (roles as PackedStringArray)[position].nocasecmp_to(role) == 0:
-			role_at = position
+	for slot: int in (roles as PackedStringArray).size():
+		if (roles as PackedStringArray)[slot].nocasecmp_to(role) == 0:
+			role_at = slot
 			break
 	if role_at < 0:
 		return "the palette has no role named \"%s\"" % role
@@ -889,9 +889,9 @@ static func palette_colour(palette: Resource, colour_set: String, role: String) 
 	if not colour_set.is_empty():
 		set_at = -1
 		if names is PackedStringArray:
-			for position: int in (names as PackedStringArray).size():
-				if (names as PackedStringArray)[position].nocasecmp_to(colour_set) == 0:
-					set_at = position
+			for slot: int in (names as PackedStringArray).size():
+				if (names as PackedStringArray)[slot].nocasecmp_to(colour_set) == 0:
+					set_at = slot
 					break
 		if set_at < 0:
 			return "the palette has no colour set named \"%s\"" % colour_set

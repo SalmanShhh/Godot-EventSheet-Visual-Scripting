@@ -527,7 +527,8 @@ const ENGLISH_EQUAL_CEILING: Dictionary = {
 	# The colour reading names - Hex, RGB 0-255, RGB 0-1, HSV - are the same words in every language.
 	# The menu labels Enum…, Signal… and Collection… are the same word in several languages.
 	# "Variable…" is spelled the same in German, Spanish and French, and "%s - variables" in Spanish and French.
-	"de": 156, "es": 117, "fr": 211, "it": 128, "ja": 56, "ko": 60, "ru": 56, "zh_CN": 53,
+	# The shape name Arc (a Drawing Prefab shape) is the same word in French.
+	"de": 156, "es": 117, "fr": 212, "it": 128, "ja": 56, "ko": 60, "ru": 56, "zh_CN": 53,
 }
 
 

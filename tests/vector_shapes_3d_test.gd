@@ -248,7 +248,7 @@ static func _pin_the_rows() -> bool:
 			untargeted.append(line)
 	return SUPPORT.pins(PREFIX, [
 		["the rows the 3D half ships", ",".join(names),
-			"fade_shape_over,point_is_inside_shape,scroll_dashes,set_arc,set_colours,set_dash_offset,set_dashes,set_fill,set_geometry,set_gradient,set_shape_colour,set_shape_points,set_shape_radius,set_shape_sides,set_thickness,shape_area,shape_is_visible,shape_length"],
+			"fade_shape_over,point_is_inside_shape,scroll_dashes,set_arc,set_colours,set_dash_offset,set_dashes,set_fill,set_geometry,set_gradient,set_shape_colour,set_shape_colour_from_palette,set_shape_points,set_shape_radius,set_shape_sides,set_thickness,shape_area,shape_is_visible,shape_length"],
 		["every row carries an emitted call of its own", templates, names.size()],
 		["every row targets the node you picked", ",".join(untargeted), ""],
 		["the shape is the host every 3D row is written for", sheet.host_class, "MeshInstance3D"]
