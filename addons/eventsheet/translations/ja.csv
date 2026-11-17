@@ -11155,7 +11155,13 @@ Slows %d: %s. Scripts of your own keep their speed.,%d 個を遅くします: %s
 This is the line that adds this card from an event sheet or from code. Run it on a Juice Player.,これは、イベントシートまたはコードからこのカードを追加する行です。Juice Player で実行してください。
 a 2D node (a Spring node does not move a UI or a 3D node),2D ノード（Spring ノードは UI や 3D ノードは動かしません）
 an animation tree,アニメーションツリー
+<<<<<<< HEAD
 A scene this sheet holds.,このシートが持つシーン。
 %s is empty in %s. Set it in the Inspector.,%s は %s で空です。インスペクターで設定してください。
 A scene,シーン
 "A scene file kept in a slot, to make copies of: a bullet, an enemy, a pickup. The Inspector shows a slot you drop a .tscn file into, and a spawn row copies it with its own instantiate().",コピーを作るために枠に入れておくシーンファイル：弾、敵、拾えるアイテムなど。インスペクターには .tscn ファイルをドロップする枠が表示され、生成の行が自身の instantiate() でそれをコピーします。
+=======
+"Comes back to rest without swinging past it, in about %s s.","行き過ぎることなく、約%s秒で静止位置に戻ります。"
+Swings past rest once and settles in about %s s.,"静止位置を一度行き過ぎ、約%s秒で落ち着きます。"
+Swings past rest %d times and settles in about %s s.,"静止位置を%d回行き過ぎ、約%s秒で落ち着きます。"
+>>>>>>> 935ebf7a4 (docs(juice): Juice 3D plays a Juice Player's cards, the carousel's new beat, and the spring picture's sentences in all nine languages)

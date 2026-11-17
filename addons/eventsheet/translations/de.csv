@@ -11155,7 +11155,13 @@ Slows %d: %s. Scripts of your own keep their speed.,Verlangsamt %d: %s. Eigene S
 This is the line that adds this card from an event sheet or from code. Run it on a Juice Player.,"Das ist die Zeile, die diese Karte aus einem Event-Sheet oder aus Code hinzufügt. Führe sie an einem Juice Player aus."
 a 2D node (a Spring node does not move a UI or a 3D node),ein 2D-Node (ein Spring-Node bewegt weder eine Oberfläche noch einen 3D-Node)
 an animation tree,ein Animationsbaum
+<<<<<<< HEAD
 A scene this sheet holds.,"Eine Szene, die dieses Blatt hält."
 %s is empty in %s. Set it in the Inspector.,%s ist in %s leer. Im Inspektor setzen.
 A scene,Eine Szene
 "A scene file kept in a slot, to make copies of: a bullet, an enemy, a pickup. The Inspector shows a slot you drop a .tscn file into, and a spawn row copies it with its own instantiate().","Eine Szenendatei in einem Feld, von der Kopien gemacht werden: eine Kugel, ein Gegner, ein Pickup. Der Inspektor zeigt ein Feld, in das du eine .tscn-Datei ziehst, und eine Spawn-Zeile kopiert sie mit ihrem eigenen instantiate()."
+=======
+"Comes back to rest without swinging past it, in about %s s.","Kommt in etwa %s s zur Ruhe, ohne darüber hinauszuschwingen."
+Swings past rest once and settles in about %s s.,"Schwingt einmal über die Ruhelage hinaus und beruhigt sich in etwa %s s."
+Swings past rest %d times and settles in about %s s.,"Schwingt %d-mal über die Ruhelage hinaus und beruhigt sich in etwa %s s."
+>>>>>>> 935ebf7a4 (docs(juice): Juice 3D plays a Juice Player's cards, the carousel's new beat, and the spring picture's sentences in all nine languages)

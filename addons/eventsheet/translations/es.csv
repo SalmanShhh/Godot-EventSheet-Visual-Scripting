@@ -11155,7 +11155,13 @@ Slows %d: %s. Scripts of your own keep their speed.,Ralentiza %d: %s. Tus propio
 This is the line that adds this card from an event sheet or from code. Run it on a Juice Player.,Esta es la línea que añade esta tarjeta desde una hoja de eventos o desde código. Ejecútala en un Juice Player.
 a 2D node (a Spring node does not move a UI or a 3D node),un nodo 2D (un nodo Spring no mueve una interfaz ni un nodo 3D)
 an animation tree,un árbol de animación
+<<<<<<< HEAD
 A scene this sheet holds.,Una escena que esta hoja guarda.
 %s is empty in %s. Set it in the Inspector.,%s está vacío en %s. Defínelo en el Inspector.
 A scene,Una escena
 "A scene file kept in a slot, to make copies of: a bullet, an enemy, a pickup. The Inspector shows a slot you drop a .tscn file into, and a spawn row copies it with its own instantiate().","Un archivo de escena guardado en una ranura, del que se hacen copias: una bala, un enemigo, un objeto. El Inspector muestra una ranura donde sueltas un archivo .tscn, y una fila de aparición lo copia con su propio instantiate()."
+=======
+"Comes back to rest without swinging past it, in about %s s.","Vuelve al reposo sin pasarse de él, en unos %s s."
+Swings past rest once and settles in about %s s.,"Se pasa del reposo una vez y se asienta en unos %s s."
+Swings past rest %d times and settles in about %s s.,"Se pasa del reposo %d veces y se asienta en unos %s s."
+>>>>>>> 935ebf7a4 (docs(juice): Juice 3D plays a Juice Player's cards, the carousel's new beat, and the spring picture's sentences in all nine languages)
