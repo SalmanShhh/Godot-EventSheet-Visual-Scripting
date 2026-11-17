@@ -7063,12 +7063,14 @@ func _build_raw_code_row(raw_row: RawCodeRow, indent: int) -> EventRowData:
 	if is_comment_only_block(code_lines) or is_blank_block(code_lines):
 		var comment_style: EventSheetEventStyle = _viewport._get_event_style()
 		var note_spans: Array[EventSheetSemanticSpan] = []
-		for note_index: int in comment_display_order(code_lines, EventSheetAnnotationLine.writes_hash(_viewport._sheet)):
-			var shown: String = strip_comment_prefix(code_lines[note_index])
+		var shown_order: Array[int] = comment_display_order(code_lines, EventSheetAnnotationLine.writes_hash(_viewport._sheet))
+		for place: int in shown_order.size():
+			var shown: String = strip_comment_prefix(code_lines[shown_order[place]])
 			note_spans.append(_make_span(
 				shown if not shown.is_empty() else " ",
 				EventSheetSemanticSpan.SpanType.COMMENT,
-				_with_comment_markup({"editable": false, "kind": "raw_code", "line_index": note_index,
+				# The line index is the line's place on screen: the layout stacks lines by it.
+				_with_comment_markup({"editable": false, "kind": "raw_code", "line_index": place,
 					"text_color": comment_style.comment_text_color}, shown, comment_style.comment_text_color)
 			))
 		row_data.spans = note_spans

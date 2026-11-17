@@ -57,10 +57,12 @@ static func _raw_rows(sheet: EventSheetResource) -> Array:
 		if row_data == null or not (row_data.source_resource is RawCodeRow):
 			continue
 		var texts: PackedStringArray = PackedStringArray()
+		var places: Array[int] = []
 		for span: EventSheetSemanticSpan in row_data.spans:
 			if span != null and span.metadata is Dictionary and str((span.metadata as Dictionary).get("kind", "")) == "raw_code":
 				texts.append(span.text)
-		rows.append({"code": (row_data.source_resource as RawCodeRow).code, "texts": texts})
+				places.append(int((span.metadata as Dictionary).get("line_index", -1)))
+		rows.append({"code": (row_data.source_resource as RawCodeRow).code, "texts": texts, "places": places})
 	viewport.free()
 	return rows
 
@@ -96,6 +98,8 @@ static func _test_the_sheet_reads_description_first(ok: bool) -> bool:
 		str(comment_block.get("code", "")), "## @ace_hidden\n## The ways the place can be pinned.") and ok
 	ok = SUPPORT.check(P, "it reads the description first, then the words, as one row",
 		Array(comment_block.get("texts", PackedStringArray())), ["The ways the place can be pinned.", "@ace_hidden"]) and ok
+	ok = SUPPORT.check(P, "and each line is stacked in the place it is shown, since the layout stacks by it",
+		comment_block.get("places", []), [0, 1]) and ok
 	var head_texts: Array = Array(_only(_raw_rows(_block_sheet("#", "one_hash_block.gd")), "@ace_category").get("texts", PackedStringArray()))
 	ok = SUPPORT.check(P, "a code block shows its annotation words with the file's one hash",
 		head_texts.has("# @ace_category(\"Pins\")"), true) and ok
