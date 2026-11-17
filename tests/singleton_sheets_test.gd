@@ -157,8 +157,8 @@ static func run() -> bool:
 	kick.events.append(kick_body)
 	pack.functions.append(kick)
 	var kit_signal: RawCodeRow = RawCodeRow.new()
-	kit_signal.code = "# @ace_trigger
-# @ace_name(\"On Kicked\")
+	kit_signal.code = "## @ace_trigger
+## @ace_name(\"On Kicked\")
 signal kicked"
 	pack.events.append(kit_signal)
 	author_editor.setup(pack)
