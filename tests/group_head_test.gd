@@ -100,7 +100,7 @@ static func _test_head_spans() -> bool:
 	passed = _check("the head draws no code echo", code_on_head, []) and passed
 	passed = _check("the counts' hover says what it holds, then the @ace_group line itself",
 		str((_span_with(head, "group_counts", true).metadata as Dictionary).get("hover_note", "")),
-		"What this group holds.\n" + str(EventSheetCompiler.group_declaration_lines(sheet.events).get(group, ""))) and passed
+		"What this group holds.\n" + str(EventSheets.group_declaration_lines(sheet).get(group, ""))) and passed
 	passed = _check("...which is the declaration as written",
 		str(EventSheetCompiler.group_declaration_lines(sheet.events).get(group, "")),
 		"## @ace_group(uid=\"combat\", name=\"Combat\", description=\"Damage, hits and death.\", toggleable=true)") and passed

@@ -99,15 +99,16 @@ static func _the_palette_is_asked_by_name() -> bool:
 static func _annotations() -> bool:
 	var rows: Array = []
 	for pair: Array in [[BASE_2D, "VectorShape2D"], [BASE_3D, "VectorShape3D"]]:
-		var source: String = FileAccess.get_file_as_string(pair[0])
+		var source: String = EventSheetAnnotationLine.canonical_text(FileAccess.get_file_as_string(pair[0]))
 		var which: String = str(pair[0]).get_file()
 		var block: int = source.find("func set_shape_colour_from_palette(")
 		var head: String = source.substr(maxi(block - 1500, 0), mini(1500, block)) if block >= 0 else ""
 		rows.append(["%s has the row" % which, block >= 0, true])
 		rows.append(["%s: it is an action named for what it does" % which, head.contains("## @ace_action\n## @ace_name(\"Set Shape Colour From Palette\")"), true])
-		rows.append(["%s: it sits in the Vector Shapes section" % which, head.contains("## @ace_category(\"Vector Shapes\")"), true])
+		# The row names no category of its own: it takes the class's, which is the Vector Shapes section.
+		rows.append(["%s: it sits in the Vector Shapes section" % which, source.begins_with("@tool\n## @ace_category(\"Vector Shapes\")") or source.contains("## @ace_category(\"Vector Shapes\")\n## @ace_version"), true])
 		rows.append(["%s: its sentence names the role, the palette and the set" % which, head.contains("## @ace_display_template(\"Set shape colour to [b]{role}[/b] from [b]{palette}[/b] ([b]{colour_set}[/b])\")"), true])
 		rows.append(["%s: its call goes to the node picked" % which, head.contains("## @ace_codegen_template(\"$%s.set_shape_colour_from_palette({palette}, {colour_set}, {role})\")" % pair[1]), true])
 		rows.append(["%s: its three parameters" % which, source.contains("func set_shape_colour_from_palette(palette: Resource, colour_set: String, role: String) -> void:"), true])
-		rows.append(["%s: the helper that works the colour out is hidden from the picker" % which, which != "vector_shape_2d.gd" or source.contains("## @ace_hidden\nstatic func palette_colour("), true])
+		rows.append(["%s: the helper that works the colour out is hidden from the picker" % which, which != "vector_shape_2d.gd" or RegEx.create_from_string("## @ace_hidden\n(##[^\n]*\n)*static func palette_colour\\(").search(source) != null, true])
 	return SUPPORT.pins(TEST_NAME, rows)
