@@ -1,7 +1,7 @@
-## @ace_tags(camera, juice)
-## @ace_category("Juice")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_tags(camera, juice)
+# @ace_category("Juice")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @tool
 @icon("res://eventsheet_addons/juice/icon.svg")
 class_name JuiceBehavior
@@ -10,7 +10,7 @@ extends Node
 ##
 ## Changes on its parent: position.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CanvasItem = null
 
@@ -23,17 +23,17 @@ func _enter_tree() -> void:
 		push_warning("Juice Behavior needs a CanvasItem: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Preview", "Play") var _preview_start_button: Callable = _preview_start
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Sets the effect off in the editor. Your scene is not changed.
 @export_tool_button("Nudge", "ToolMove") var _preview_nudge_button: Callable = _preview_nudge
 
@@ -242,44 +242,44 @@ func _preview_nudge() -> void:
 		return
 	punch_scale(0.4, 0.6)
 
-## @ace_trigger
-## @ace_name("On Shake Stopped")
+# @ace_trigger
+# @ace_name("On Shake Stopped")
 signal shake_stopped
-## @ace_trigger
-## @ace_name("On Zoom Finished")
+# @ace_trigger
+# @ace_name("On Zoom Finished")
 signal zoom_finished
-## @ace_trigger
-## @ace_name("On Squash Finished")
+# @ace_trigger
+# @ace_name("On Squash Finished")
 signal squash_finished
-## @ace_trigger
-## @ace_name("On Slowmo Finished")
+# @ace_trigger
+# @ace_name("On Slowmo Finished")
 signal slowmo_finished
-## @ace_trigger
-## @ace_name("On Hitstop Finished")
+# @ace_trigger
+# @ace_name("On Hitstop Finished")
 signal hitstop_finished
-## @ace_trigger
-## @ace_name("On Tilt Finished")
+# @ace_trigger
+# @ace_name("On Tilt Finished")
 signal tilt_finished
-## @ace_trigger
-## @ace_name("On Flash Finished")
+# @ace_trigger
+# @ace_name("On Flash Finished")
 signal flash_finished
-## @ace_trigger
-## @ace_name("On Punch Finished")
+# @ace_trigger
+# @ace_name("On Punch Finished")
 signal punch_finished
-## @ace_trigger
-## @ace_name("On Ticker Finished")
+# @ace_trigger
+# @ace_name("On Ticker Finished")
 signal ticker_finished(ticker_name: String)
-## @ace_trigger
-## @ace_name("On Moment Started")
+# @ace_trigger
+# @ace_name("On Moment Started")
 signal moment_started(moment_name: String)
-## @ace_trigger
-## @ace_name("On Moment Step")
+# @ace_trigger
+# @ace_name("On Moment Step")
 signal moment_stepped(moment_name: String, step_label: String)
-## @ace_trigger
-## @ace_name("On Moment Skipped")
+# @ace_trigger
+# @ace_name("On Moment Skipped")
 signal moment_skipped(moment_name: String)
-## @ace_trigger
-## @ace_name("On Moment Finished")
+# @ace_trigger
+# @ace_name("On Moment Finished")
 signal moment_finished(moment_name: String, cut_short: bool)
 
 # --- Choices (the stored words are the promise: saved scenes keep them) ---
@@ -489,9 +489,9 @@ var _tickers: Dictionary = {}
 var _ticker_targets: Dictionary = {}
 ## The tween driving each ticker.
 var _ticker_tweens: Dictionary = {}
+# @ace_hidden
 ## Resolves the sprite the trail copies (host if it IS a sprite, else its first Sprite2D child),
 ## cached at Start so it is not re-scanned every stamp. Null when the host has no sprite to trail.
-## @ace_hidden
 func _resolve_ghost_sprite() -> Node2D:
 	if host is Sprite2D or host is AnimatedSprite2D:
 		return host as Node2D
@@ -680,9 +680,9 @@ var _moment_told_scene: Node = null
 # its file was written.
 ## The strength every moment this node plays is scaled by, and the one Moment Strength answers.
 var _moment_strength: float = 1.0
+# @ace_hidden
 ## The moment a name stands for: one a row defined, or the starter file of that name beside the pack.
 ## A name that answers to neither plays nothing and says so.
-## @ace_hidden
 func _moment_named(called: String) -> Resource:
 	var word: String = called.strip_edges().to_lower()
 	if word.is_empty():
@@ -697,6 +697,7 @@ func _moment_named(called: String) -> Resource:
 			_moments[word] = found
 			return found
 	return null
+# @ace_hidden
 ## The Screen FX layer this game has, or null. THE POINT OF LOOKING is that a moment must not build a
 ## second full-screen rectangle of its own: a hit that reads the whole screen twice costs twice as
 ## much and looks wrong wherever the two overlap. A game with no Screen FX layer falls back to this
@@ -706,7 +707,6 @@ func _moment_named(called: String) -> Resource:
 ## one group lookup, so re-asking on the next beat is cheaper than the mistake of never asking
 ## again. The layer must be in the group above, which the Screen FX pack's own layer joins as it
 ## enters the tree - a hand-built post layer joins it in one line to be found the same way.
-## @ace_hidden
 func _moment_screen_fx() -> CanvasLayer:
 	if _moment_screen != null and is_instance_valid(_moment_screen) and _moment_screen.is_inside_tree():
 		return _moment_screen
@@ -943,24 +943,20 @@ func _process(delta: float) -> void:
 			or _chroma_shake_active or _moment_busy() or _channel_busy()):
 		set_process(false)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Shake")
-## @ace_category("Juice")
-## @ace_description("Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit.")
-## @ace_display_template("Shake at [b]{strength}[/b]")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.shake({strength})")
+# @ace_action
+# @ace_featured
+# @ace_name("Shake")
+# @ace_description("Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit.")
+# @ace_display_template("Shake at [b]{strength}[/b]")
+# @ace_codegen_template("$JuiceBehavior.shake({strength})")
 func shake(strength: float) -> void:
 	trauma = clampf(trauma + strength, 0.0, 1.0)
 	set_process(true)
 
-## @ace_action
-## @ace_name("Stop Shake")
-## @ace_category("Juice")
-## @ace_description("Cancels any shake immediately (the camera returns to rest unless another effect - recoil, bob, jitter, tilt - is still holding it).")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.stop_shake()")
+# @ace_action
+# @ace_name("Stop Shake")
+# @ace_description("Cancels any shake immediately (the camera returns to rest unless another effect - recoil, bob, jitter, tilt - is still holding it).")
+# @ace_codegen_template("$JuiceBehavior.stop_shake()")
 func stop_shake() -> void:
 	var was_shaking: bool = _shaking or trauma > 0.0 or not _timed_shakes.is_empty()
 	trauma = 0.0
@@ -976,99 +972,81 @@ func stop_shake() -> void:
 	if was_shaking:
 		shake_stopped.emit()
 
-## @ace_action
-## @ace_name("Shake For")
-## @ace_category("Juice")
-## @ace_description("Shakes the active camera for exactly this long. Fade in rises from nothing to the amount, Fade out goes down from the amount to nothing, both swell and die away, and neither holds the full amount and then stops. The amount adds to a Shake already running, up to the same top of 1, and Stop Shake ends it.")
-## @ace_display_template("Shake [b]{amount}[/b] for [b]{seconds}[/b] s, fade in [b]{fade_in}[/b], fade out [b]{fade_out}[/b]")
-## @ace_param(amount, default: 0.4, desc: "How hard the shake is at its strongest, from 0 to 1.")
-## @ace_param(seconds, default: 0.5, desc: "How long the shake lasts. It lasts exactly this long, whatever the Shake Decay says.")
-## @ace_param(fade_in, default: false, desc: "On: the shake rises from nothing to the amount.")
-## @ace_param(fade_out, default: true, desc: "On: the shake goes down from the amount to nothing by the end.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.shake_for({amount}, {seconds}, {fade_in}, {fade_out})")
+# @ace_action
+# @ace_name("Shake For")
+# @ace_description("Shakes the active camera for exactly this long. Fade in rises from nothing to the amount, Fade out goes down from the amount to nothing, both swell and die away, and neither holds the full amount and then stops. The amount adds to a Shake already running, up to the same top of 1, and Stop Shake ends it.")
+# @ace_display_template("Shake [b]{amount}[/b] for [b]{seconds}[/b] s, fade in [b]{fade_in}[/b], fade out [b]{fade_out}[/b]")
+# @ace_param(amount, default: 0.4, desc: "How hard the shake is at its strongest, from 0 to 1.")
+# @ace_param(seconds, default: 0.5, desc: "How long the shake lasts. It lasts exactly this long, whatever the Shake Decay says.")
+# @ace_param(fade_in, default: false, desc: "On: the shake rises from nothing to the amount.")
+# @ace_param(fade_out, default: true, desc: "On: the shake goes down from the amount to nothing by the end.")
+# @ace_codegen_template("$JuiceBehavior.shake_for({amount}, {seconds}, {fade_in}, {fade_out})")
 func shake_for(amount: float, seconds: float, fade_in: bool, fade_out: bool) -> void:
 	_start_timed_shake(amount, seconds, fade_in, fade_out, null)
 
-## @ace_action
-## @ace_name("Shake With Curve")
-## @ace_category("Juice")
-## @ace_description("Shakes the active camera for exactly this long, following a Curve you drew: left to right is the time of the shake, and how high the line is says how much of the amount is felt. The amount adds to a Shake already running, up to the same top of 1, and Stop Shake ends it.")
-## @ace_display_template("Shake [b]{amount}[/b] for [b]{seconds}[/b] s along a curve")
-## @ace_param(amount, default: 0.4, desc: "How hard the shake is where the curve is at its top, from 0 to 1.")
-## @ace_param(seconds, default: 0.5, desc: "How long the shake lasts: the whole curve is played over this time.")
-## @ace_param(curve, default: null, desc: "The Curve that is the shape of the shake. A Curve file you made in the Inspector, loaded with load or preload.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.shake_with_curve({amount}, {seconds}, {curve})")
+# @ace_action
+# @ace_name("Shake With Curve")
+# @ace_description("Shakes the active camera for exactly this long, following a Curve you drew: left to right is the time of the shake, and how high the line is says how much of the amount is felt. The amount adds to a Shake already running, up to the same top of 1, and Stop Shake ends it.")
+# @ace_display_template("Shake [b]{amount}[/b] for [b]{seconds}[/b] s along a curve")
+# @ace_param(amount, default: 0.4, desc: "How hard the shake is where the curve is at its top, from 0 to 1.")
+# @ace_param(seconds, default: 0.5, desc: "How long the shake lasts: the whole curve is played over this time.")
+# @ace_param(curve, default: null, desc: "The Curve that is the shape of the shake. A Curve file you made in the Inspector, loaded with load or preload.")
+# @ace_codegen_template("$JuiceBehavior.shake_with_curve({amount}, {seconds}, {curve})")
 func shake_with_curve(amount: float, seconds: float, curve: Curve) -> void:
 	_start_timed_shake(amount, seconds, false, false, curve)
 
-## @ace_action
-## @ace_name("Use Camera")
-## @ace_category("Juice")
-## @ace_description("Pin the effects to a specific Camera2D (by path). Leave it unused to auto-target whichever camera is active.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.use_camera({camera_path})")
+# @ace_action
+# @ace_name("Use Camera")
+# @ace_description("Pin the effects to a specific Camera2D (by path). Leave it unused to auto-target whichever camera is active.")
+# @ace_codegen_template("$JuiceBehavior.use_camera({camera_path})")
 func use_camera(camera_path: NodePath) -> void:
 	_camera_override = get_node_or_null(camera_path) as Camera2D
 
-## @ace_action
-## @ace_name("Recoil")
-## @ace_category("Juice")
-## @ace_description("Kicks the camera a distance (pixels) in a direction (degrees: -90 = up, 0 = right) and springs it back at the Recoil Recovery rate. Fire on every shot - kicks stack, so rapid fire climbs. Composes with Shake/Bob/Jitter.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.recoil({angle_degrees}, {strength})")
+# @ace_action
+# @ace_name("Recoil")
+# @ace_description("Kicks the camera a distance (pixels) in a direction (degrees: -90 = up, 0 = right) and springs it back at the Recoil Recovery rate. Fire on every shot - kicks stack, so rapid fire climbs. Composes with Shake/Bob/Jitter.")
+# @ace_codegen_template("$JuiceBehavior.recoil({angle_degrees}, {strength})")
 func recoil(angle_degrees: float, strength: float) -> void:
 	_recoil_vec += Vector2.from_angle(deg_to_rad(angle_degrees)) * strength
 	set_process(true)
 
-## @ace_action
-## @ace_name("Start Head Bob")
-## @ace_category("Juice")
-## @ace_description("Starts a walking head-bob on the camera: a figure-8 sway (side at half rate, one vertical dip per step). Amplitude is pixels, frequency is steps per second. Call while your character moves; Stop Head Bob when they halt.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.start_head_bob({amplitude}, {frequency})")
+# @ace_action
+# @ace_name("Start Head Bob")
+# @ace_description("Starts a walking head-bob on the camera: a figure-8 sway (side at half rate, one vertical dip per step). Amplitude is pixels, frequency is steps per second. Call while your character moves; Stop Head Bob when they halt.")
+# @ace_codegen_template("$JuiceBehavior.start_head_bob({amplitude}, {frequency})")
 func start_head_bob(amplitude: float, frequency: float) -> void:
 	_bob_amplitude = amplitude
 	_bob_frequency = maxf(frequency, 0.01)
 	_bob_active = true
 	set_process(true)
 
-## @ace_action
-## @ace_name("Stop Head Bob")
-## @ace_category("Juice")
-## @ace_description("Stops the head bob (the camera returns to rest once every other effect settles too).")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.stop_head_bob()")
+# @ace_action
+# @ace_name("Stop Head Bob")
+# @ace_description("Stops the head bob (the camera returns to rest once every other effect settles too).")
+# @ace_codegen_template("$JuiceBehavior.stop_head_bob()")
 func stop_head_bob() -> void:
 	_bob_active = false
 
-## @ace_action
-## @ace_name("Start Jitter")
-## @ace_category("Juice")
-## @ace_description("Starts a continuous nervous wobble on the camera (pixels) that runs until Stop Jitter - unlike Shake it never decays. Great for engines idling, drunk vision, earthquakes building, low-health unease.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.start_jitter({amount})")
+# @ace_action
+# @ace_name("Start Jitter")
+# @ace_description("Starts a continuous nervous wobble on the camera (pixels) that runs until Stop Jitter - unlike Shake it never decays. Great for engines idling, drunk vision, earthquakes building, low-health unease.")
+# @ace_codegen_template("$JuiceBehavior.start_jitter({amount})")
 func start_jitter(amount: float) -> void:
 	_jitter_amount = amount
 	_jitter_active = true
 	set_process(true)
 
-## @ace_action
-## @ace_name("Stop Jitter")
-## @ace_category("Juice")
-## @ace_description("Stops the jitter wobble.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.stop_jitter()")
+# @ace_action
+# @ace_name("Stop Jitter")
+# @ace_description("Stops the jitter wobble.")
+# @ace_codegen_template("$JuiceBehavior.stop_jitter()")
 func stop_jitter() -> void:
 	_jitter_active = false
 
-## @ace_action
-## @ace_name("Tilt To")
-## @ace_category("Juice")
-## @ace_description("Eases the camera roll to an angle (degrees) and HOLDS it - lean into a drift, a hill, or a dramatic dutch angle. Tilt back to 0 to level out. Emits On Tilt Finished.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.tilt_to({degrees}, {duration})")
+# @ace_action
+# @ace_name("Tilt To")
+# @ace_description("Eases the camera roll to an angle (degrees) and HOLDS it - lean into a drift, a hill, or a dramatic dutch angle. Tilt back to 0 to level out. Emits On Tilt Finished.")
+# @ace_codegen_template("$JuiceBehavior.tilt_to({degrees}, {duration})")
 func tilt_to(degrees: float, duration: float) -> void:
 	if _tilt_tween != null:
 		_tilt_tween.kill()
@@ -1078,12 +1056,10 @@ func tilt_to(degrees: float, duration: float) -> void:
 	_tilt_tween = tw
 	set_process(true)
 
-## @ace_action
-## @ace_name("Zoom By Percent")
-## @ace_category("Juice")
-## @ace_description("Smoothly zooms the camera (100 = no change, 150 = zoom in 1.5x, 50 = zoom out). Clamped to the min/max zoom knobs.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.zoom_by_percent({percent}, {duration})")
+# @ace_action
+# @ace_name("Zoom By Percent")
+# @ace_description("Smoothly zooms the camera (100 = no change, 150 = zoom in 1.5x, 50 = zoom out). Clamped to the min/max zoom knobs.")
+# @ace_codegen_template("$JuiceBehavior.zoom_by_percent({percent}, {duration})")
 func zoom_by_percent(percent: float, duration: float) -> void:
 	var cam: Camera2D = _camera()
 	if cam == null:
@@ -1095,12 +1071,10 @@ func zoom_by_percent(percent: float, duration: float) -> void:
 	tw.finished.connect(func() -> void: zoom_finished.emit())
 	_zoom_tween = tw
 
-## @ace_action
-## @ace_name("Zoom To Position")
-## @ace_category("Juice")
-## @ace_description("Zooms in while gliding the camera so a world position becomes the screen CENTRE - frame a spot in one action.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.zoom_to_position({world_position}, {percent}, {duration})")
+# @ace_action
+# @ace_name("Zoom To Position")
+# @ace_description("Zooms in while gliding the camera so a world position becomes the screen CENTRE - frame a spot in one action.")
+# @ace_codegen_template("$JuiceBehavior.zoom_to_position({world_position}, {percent}, {duration})")
 func zoom_to_position(world_position: Vector2, percent: float, duration: float) -> void:
 	var cam: Camera2D = _camera()
 	if cam == null:
@@ -1113,12 +1087,10 @@ func zoom_to_position(world_position: Vector2, percent: float, duration: float) 
 	tw.tween_property(cam, "global_position", world_position, seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tw.finished.connect(func() -> void: zoom_finished.emit())
 
-## @ace_action
-## @ace_name("Zoom Toward Point")
-## @ace_category("Juice")
-## @ace_description("Zooms while keeping a world position pinned under the same screen spot (mouse-wheel-to-cursor style) - great for strategy/map zoom.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.zoom_toward_point({world_position}, {percent}, {duration})")
+# @ace_action
+# @ace_name("Zoom Toward Point")
+# @ace_description("Zooms while keeping a world position pinned under the same screen spot (mouse-wheel-to-cursor style) - great for strategy/map zoom.")
+# @ace_codegen_template("$JuiceBehavior.zoom_toward_point({world_position}, {percent}, {duration})")
 func zoom_toward_point(world_position: Vector2, percent: float, duration: float) -> void:
 	var cam: Camera2D = _camera()
 	if cam == null:
@@ -1132,12 +1104,10 @@ func zoom_toward_point(world_position: Vector2, percent: float, duration: float)
 	tw.tween_method(_zoom_anchored_step, 0.0, 1.0, maxf(duration, 0.001)).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tw.finished.connect(func() -> void: zoom_finished.emit())
 
-## @ace_action
-## @ace_name("Squash & Stretch")
-## @ace_category("Juice")
-## @ace_description("Pops the host (Node2D or Control) with a volume-preserving stretch that springs back elastically. Positive = stretch tall (a jump), negative = squash wide (a landing).")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.squash_and_stretch({stretch}, {duration})")
+# @ace_action
+# @ace_name("Squash & Stretch")
+# @ace_description("Pops the host (Node2D or Control) with a volume-preserving stretch that springs back elastically. Positive = stretch tall (a jump), negative = squash wide (a landing).")
+# @ace_codegen_template("$JuiceBehavior.squash_and_stretch({stretch}, {duration})")
 func squash_and_stretch(stretch: float, duration: float) -> void:
 	if host == null:
 		return
@@ -1156,12 +1126,10 @@ func squash_and_stretch(stretch: float, duration: float) -> void:
 	tw.tween_property(host, "scale", _base_scale, maxf(duration, 0.001)).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	tw.finished.connect(func() -> void: squash_finished.emit())
 
-## @ace_action
-## @ace_name("Spring Squash")
-## @ace_category("Juice")
-## @ace_description("Pops the host (Node2D or Control) with a volume-preserving stretch that springs back via a real spring (the stiffness/damping knobs) - bouncier + more organic than the tween Squash & Stretch. Positive = stretch tall (a jump), negative = squash wide (a landing).")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.spring_squash({stretch})")
+# @ace_action
+# @ace_name("Spring Squash")
+# @ace_description("Pops the host (Node2D or Control) with a volume-preserving stretch that springs back via a real spring (the stiffness/damping knobs) - bouncier + more organic than the tween Squash & Stretch. Positive = stretch tall (a jump), negative = squash wide (a landing).")
+# @ace_codegen_template("$JuiceBehavior.spring_squash({stretch})")
 func spring_squash(stretch: float) -> void:
 	if host == null:
 		return
@@ -1172,13 +1140,11 @@ func spring_squash(stretch: float) -> void:
 	_apply_host_scale(_squash_value)
 	set_process(true)
 
-## @ace_action
-## @ace_name("Slowmo")
-## @ace_category("Juice")
-## @ace_description("Briefly slows Engine.time_scale to the target, HOLDS for a duration, then eases back to normal. Fade curves are Inspector knobs; pick whether the hold counts in realtime or scaled game time. Emits On Slowmo Finished.")
-## @ace_param_options(duration_clock realtime, gametime)
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.slowmo({target_scale}, {hold_duration}, "{duration_clock}")")
+# @ace_action
+# @ace_name("Slowmo")
+# @ace_description("Briefly slows Engine.time_scale to the target, HOLDS for a duration, then eases back to normal. Fade curves are Inspector knobs; pick whether the hold counts in realtime or scaled game time. Emits On Slowmo Finished.")
+# @ace_param_options(duration_clock realtime, gametime)
+# @ace_codegen_template("$JuiceBehavior.slowmo({target_scale}, {hold_duration}, "{duration_clock}")")
 func slowmo(target_scale: float, hold_duration: float, duration_clock: String) -> void:
 	if _slowmo_tween != null:
 		_slowmo_tween.kill()
@@ -1191,26 +1157,22 @@ func slowmo(target_scale: float, hold_duration: float, duration_clock: String) -
 	tw.finished.connect(func() -> void: slowmo_finished.emit())
 	_slowmo_tween = tw
 
-## @ace_action
-## @ace_name("Clear Slowmo")
-## @ace_category("Juice")
-## @ace_description("Cancels any slowmo and snaps Engine.time_scale back to 1.0 immediately (call on scene exit if a slowmo might still be running).")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.clear_slowmo()")
+# @ace_action
+# @ace_name("Clear Slowmo")
+# @ace_description("Cancels any slowmo and snaps Engine.time_scale back to 1.0 immediately (call on scene exit if a slowmo might still be running).")
+# @ace_codegen_template("$JuiceBehavior.clear_slowmo()")
 func clear_slowmo() -> void:
 	if _slowmo_tween != null:
 		_slowmo_tween.kill()
 		_slowmo_tween = null
 	Engine.time_scale = 1.0
 
-## @ace_action
-## @ace_featured
-## @ace_name("Hitstop")
-## @ace_category("Juice")
-## @ace_description("The punchy hit-pause you feel on a connecting blow: freezes Engine.time_scale (0 = full stop) for a few frames, then snaps back to what it was. Uses a realtime timer so it un-freezes even at a full stop, ignores repeat hits already mid-freeze, pauses any active Slowmo for the duration, and emits On Hitstop Finished. Fire it the instant a hit lands.")
-## @ace_display_template("Hitstop for [b]{freeze_duration}[/b] s at scale [b]{freeze_scale}[/b]")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.hitstop({freeze_duration}, {freeze_scale})")
+# @ace_action
+# @ace_featured
+# @ace_name("Hitstop")
+# @ace_description("The punchy hit-pause you feel on a connecting blow: freezes Engine.time_scale (0 = full stop) for a few frames, then snaps back to what it was. Uses a realtime timer so it un-freezes even at a full stop, ignores repeat hits already mid-freeze, pauses any active Slowmo for the duration, and emits On Hitstop Finished. Fire it the instant a hit lands.")
+# @ace_display_template("Hitstop for [b]{freeze_duration}[/b] s at scale [b]{freeze_scale}[/b]")
+# @ace_codegen_template("$JuiceBehavior.hitstop({freeze_duration}, {freeze_scale})")
 func hitstop(freeze_duration: float, freeze_scale: float) -> void:
 	if _hitstop_active:
 		return
@@ -1228,14 +1190,12 @@ func hitstop(freeze_duration: float, freeze_scale: float) -> void:
 		_slowmo_tween.play()
 	hitstop_finished.emit()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Flash")
-## @ace_category("Juice")
-## @ace_description("Pops the host to a solid color, then fades back to how it looked (tints included) - THE damage-hit read. Fire with Hitstop + Shake for a complete hit-confirm. Emits On Flash Finished.")
-## @ace_display_template("Flash [b]{color}[/b] for [b]{seconds}[/b] s")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.flash({color}, {seconds})")
+# @ace_action
+# @ace_featured
+# @ace_name("Flash")
+# @ace_description("Pops the host to a solid color, then fades back to how it looked (tints included) - THE damage-hit read. Fire with Hitstop + Shake for a complete hit-confirm. Emits On Flash Finished.")
+# @ace_display_template("Flash [b]{color}[/b] for [b]{seconds}[/b] s")
+# @ace_codegen_template("$JuiceBehavior.flash({color}, {seconds})")
 func flash(color: Color, seconds: float) -> void:
 	var flash_item: CanvasItem = host as CanvasItem
 	if flash_item == null:
@@ -1250,12 +1210,10 @@ func flash(color: Color, seconds: float) -> void:
 	tw.finished.connect(func() -> void: flash_finished.emit())
 	_flash_tween = tw
 
-## @ace_action
-## @ace_name("Start Blinking")
-## @ace_category("Juice")
-## @ace_description("Strobes the host's opacity (full / faint) - the invulnerability-frames look, a low-health warning, an interactable highlight. Runs until Stop Blinking.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.start_blinking({times_per_second}, {min_alpha})")
+# @ace_action
+# @ace_name("Start Blinking")
+# @ace_description("Strobes the host's opacity (full / faint) - the invulnerability-frames look, a low-health warning, an interactable highlight. Runs until Stop Blinking.")
+# @ace_codegen_template("$JuiceBehavior.start_blinking({times_per_second}, {min_alpha})")
 func start_blinking(times_per_second: float, min_alpha: float) -> void:
 	if host is CanvasItem and not _blink_active:
 		_blink_base_alpha = (host as CanvasItem).modulate.a
@@ -1265,12 +1223,10 @@ func start_blinking(times_per_second: float, min_alpha: float) -> void:
 	_blink_active = true
 	set_process(true)
 
-## @ace_action
-## @ace_name("Stop Blinking")
-## @ace_category("Juice")
-## @ace_description("Stops the blink and restores the host's opacity.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.stop_blinking()")
+# @ace_action
+# @ace_name("Stop Blinking")
+# @ace_description("Stops the blink and restores the host's opacity.")
+# @ace_codegen_template("$JuiceBehavior.stop_blinking()")
 func stop_blinking() -> void:
 	_blink_active = false
 	if host is CanvasItem:
@@ -1278,12 +1234,10 @@ func stop_blinking() -> void:
 		restored.a = _blink_base_alpha
 		(host as CanvasItem).modulate = restored
 
-## @ace_action
-## @ace_name("Punch Scale")
-## @ace_category("Juice")
-## @ace_description("Kicks the host's scale up (or down, negative) and springs it back elastically - button pops, pickups, flinches, beat pulses. Composes with Flash + Hitstop for melee hits. Emits On Punch Finished.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.punch_scale({strength}, {duration})")
+# @ace_action
+# @ace_name("Punch Scale")
+# @ace_description("Kicks the host's scale up (or down, negative) and springs it back elastically - button pops, pickups, flinches, beat pulses. Composes with Flash + Hitstop for melee hits. Emits On Punch Finished.")
+# @ace_codegen_template("$JuiceBehavior.punch_scale({strength}, {duration})")
 func punch_scale(strength: float, duration: float) -> void:
 	if host == null:
 		return
@@ -1293,12 +1247,10 @@ func punch_scale(strength: float, duration: float) -> void:
 	tw.finished.connect(func() -> void: punch_finished.emit())
 	_punch_scale_tween = tw
 
-## @ace_action
-## @ace_name("Punch Rotation")
-## @ace_category("Juice")
-## @ace_description("Kicks the host's rotation by an angle (degrees) and springs it back elastically - wobbling signs, chest-opening jolts, portrait reactions. Emits On Punch Finished.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.punch_rotation({degrees}, {duration})")
+# @ace_action
+# @ace_name("Punch Rotation")
+# @ace_description("Kicks the host's rotation by an angle (degrees) and springs it back elastically - wobbling signs, chest-opening jolts, portrait reactions. Emits On Punch Finished.")
+# @ace_codegen_template("$JuiceBehavior.punch_rotation({degrees}, {duration})")
 func punch_rotation(degrees: float, duration: float) -> void:
 	if not (host is CanvasItem):
 		return
@@ -1314,12 +1266,10 @@ func punch_rotation(degrees: float, duration: float) -> void:
 	tw.finished.connect(func() -> void: punch_finished.emit())
 	_punch_rot_tween = tw
 
-## @ace_action
-## @ace_name("Punch Position")
-## @ace_category("Juice")
-## @ace_description("Kicks the host's position by an offset (pixels) and springs it back elastically - knockback reads, UI nudges, impact shoves away from an attacker. Emits On Punch Finished.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.punch_position({offset}, {duration})")
+# @ace_action
+# @ace_name("Punch Position")
+# @ace_description("Kicks the host's position by an offset (pixels) and springs it back elastically - knockback reads, UI nudges, impact shoves away from an attacker. Emits On Punch Finished.")
+# @ace_codegen_template("$JuiceBehavior.punch_position({offset}, {duration})")
 func punch_position(offset: Vector2, duration: float) -> void:
 	if not (host is Node2D or host is Control):
 		return
@@ -1333,12 +1283,10 @@ func punch_position(offset: Vector2, duration: float) -> void:
 	tw.finished.connect(func() -> void: punch_finished.emit())
 	_punch_pos_tween = tw
 
-## @ace_action
-## @ace_name("Kick Camera Away From Point")
-## @ace_category("Juice")
-## @ace_description("Kicks the camera AWAY from a world position (an explosion, a hit source) and springs back - Recoil's directional sibling when you know the cause's location, so the kick always reads as pushback. Composes with Shake.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.kick_away_from({world_position}, {strength})")
+# @ace_action
+# @ace_name("Kick Camera Away From Point")
+# @ace_description("Kicks the camera AWAY from a world position (an explosion, a hit source) and springs back - Recoil's directional sibling when you know the cause's location, so the kick always reads as pushback. Composes with Shake.")
+# @ace_codegen_template("$JuiceBehavior.kick_away_from({world_position}, {strength})")
 func kick_away_from(world_position: Vector2, strength: float) -> void:
 	var cam: Camera2D = _camera()
 	if cam == null:
@@ -1348,12 +1296,10 @@ func kick_away_from(world_position: Vector2, strength: float) -> void:
 	_recoil_vec += away * strength
 	set_process(true)
 
-## @ace_action
-## @ace_name("Start Ghost Trail")
-## @ace_category("Juice")
-## @ace_description("Starts stamping fading afterimages of the host's sprite behind it - dashes, teleports, speed power-ups, bullet-time evades. Works on a Sprite2D/AnimatedSprite2D host or the host's first Sprite2D child. Runs until Stop Ghost Trail.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.start_ghost_trail({stamps_per_second}, {fade_seconds}, {tint})")
+# @ace_action
+# @ace_name("Start Ghost Trail")
+# @ace_description("Starts stamping fading afterimages of the host's sprite behind it - dashes, teleports, speed power-ups, bullet-time evades. Works on a Sprite2D/AnimatedSprite2D host or the host's first Sprite2D child. Runs until Stop Ghost Trail.")
+# @ace_codegen_template("$JuiceBehavior.start_ghost_trail({stamps_per_second}, {fade_seconds}, {tint})")
 func start_ghost_trail(stamps_per_second: float, fade_seconds: float, tint: Color) -> void:
 	_ghost_sprite = _resolve_ghost_sprite()
 	_trail_interval = 1.0 / maxf(stamps_per_second, 0.1)
@@ -1363,21 +1309,17 @@ func start_ghost_trail(stamps_per_second: float, fade_seconds: float, tint: Colo
 	_trail_active = true
 	set_process(true)
 
-## @ace_action
-## @ace_name("Stop Ghost Trail")
-## @ace_category("Juice")
-## @ace_description("Stops stamping afterimages (the ones already out finish fading on their own).")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.stop_ghost_trail()")
+# @ace_action
+# @ace_name("Stop Ghost Trail")
+# @ace_description("Stops stamping afterimages (the ones already out finish fading on their own).")
+# @ace_codegen_template("$JuiceBehavior.stop_ghost_trail()")
 func stop_ghost_trail() -> void:
 	_trail_active = false
 
-## @ace_action
-## @ace_name("Pulse Vignette")
-## @ace_category("Juice")
-## @ace_description("Darkens the screen edges to a color at a strength (0..1), then fades back out - taking damage, a near miss, holding your breath. Composes with Slowmo + Fade Screen Tint for last-stand moments.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.pulse_vignette({strength}, {color}, {seconds})")
+# @ace_action
+# @ace_name("Pulse Vignette")
+# @ace_description("Darkens the screen edges to a color at a strength (0..1), then fades back out - taking damage, a near miss, holding your breath. Composes with Slowmo + Fade Screen Tint for last-stand moments.")
+# @ace_codegen_template("$JuiceBehavior.pulse_vignette({strength}, {color}, {seconds})")
 func pulse_vignette(strength: float, color: Color, seconds: float) -> void:
 	_ensure_fx_overlay()
 	if _fx_material == null:
@@ -1392,12 +1334,10 @@ func pulse_vignette(strength: float, color: Color, seconds: float) -> void:
 	tw.finished.connect(_fx_update_visibility)
 	_vignette_tween = tw
 
-## @ace_action
-## @ace_name("Chromatic Kick")
-## @ace_category("Juice")
-## @ace_description("Splits the screen's color channels for an instant and settles back - the AAA impact frame. Fire with Shake + Hitstop on explosions and heavy hits.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.chromatic_kick({strength}, {seconds})")
+# @ace_action
+# @ace_name("Chromatic Kick")
+# @ace_description("Splits the screen's color channels for an instant and settles back - the AAA impact frame. Fire with Shake + Hitstop on explosions and heavy hits.")
+# @ace_codegen_template("$JuiceBehavior.chromatic_kick({strength}, {seconds})")
 func chromatic_kick(strength: float, seconds: float) -> void:
 	_ensure_fx_overlay()
 	if _fx_material == null:
@@ -1411,14 +1351,12 @@ func chromatic_kick(strength: float, seconds: float) -> void:
 	tw.finished.connect(_fx_update_visibility)
 	_chroma_tween = tw
 
-## @ace_action
-## @ace_name("Chromatic Shake")
-## @ace_category("Juice")
-## @ace_description("Shakes the screen's color channels apart along a direction that moves - the Shake you feel, on the screen instead of the camera. Magnitude is how far they split in pixels, and a reducing shake falls to nothing over the duration while a constant one holds and then stops dead. Leave the angle below zero and the split wanders with the same noise the camera shake uses (so the two read as one hit); give it an angle and the split stays on that line and only breathes. Firing again restarts it. Slow motion glides it, a hitstop freezes it.")
-## @ace_display_template("Chromatic shake [b]{magnitude}[/b] px for [b]{duration}[/b] s")
-## @ace_param_options(mode reducing, constant)
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.chromatic_shake({magnitude}, {duration}, "{mode}", {angle_degrees})")
+# @ace_action
+# @ace_name("Chromatic Shake")
+# @ace_description("Shakes the screen's color channels apart along a direction that moves - the Shake you feel, on the screen instead of the camera. Magnitude is how far they split in pixels, and a reducing shake falls to nothing over the duration while a constant one holds and then stops dead. Leave the angle below zero and the split wanders with the same noise the camera shake uses (so the two read as one hit); give it an angle and the split stays on that line and only breathes. Firing again restarts it. Slow motion glides it, a hitstop freezes it.")
+# @ace_display_template("Chromatic shake [b]{magnitude}[/b] px for [b]{duration}[/b] s")
+# @ace_param_options(mode reducing, constant)
+# @ace_codegen_template("$JuiceBehavior.chromatic_shake({magnitude}, {duration}, "{mode}", {angle_degrees})")
 func chromatic_shake(magnitude: float, duration: float, mode: String, angle_degrees: float) -> void:
 	_ensure_fx_overlay()
 	_chroma_shake_from = maxf(magnitude, 0.0)
@@ -1435,12 +1373,10 @@ func chromatic_shake(magnitude: float, duration: float, mode: String, angle_degr
 	_chroma_shake_write()
 	set_process(true)
 
-## @ace_action
-## @ace_name("Stop Chromatic Shake")
-## @ace_category("Juice")
-## @ace_description("Takes the chromatic shake off the screen at once - the way out of a constant one, and the way to end a reducing one early (a hit interrupted by a cutscene). The overlay hides itself unless a vignette, a kick or speed lines are still on it.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.stop_chromatic_shake()")
+# @ace_action
+# @ace_name("Stop Chromatic Shake")
+# @ace_description("Takes the chromatic shake off the screen at once - the way out of a constant one, and the way to end a reducing one early (a hit interrupted by a cutscene). The overlay hides itself unless a vignette, a kick or speed lines are still on it.")
+# @ace_codegen_template("$JuiceBehavior.stop_chromatic_shake()")
 func stop_chromatic_shake() -> void:
 	_chroma_shake_active = false
 	_chroma_shake_elapsed = 0.0
@@ -1452,12 +1388,10 @@ func stop_chromatic_shake() -> void:
 	# Hands the overlay back: it hides itself unless a vignette, a kick or speed lines are still on it.
 	_fx_update_visibility()
 
-## @ace_action
-## @ace_name("Set Speed Lines")
-## @ace_category("Juice")
-## @ace_description("Radial anime-style speed streaks at an intensity (0..1) that HOLD until you set 0 - sprints, dashes, adrenaline modes. Pair with Zoom By Percent or FOV punches for full sprint feel.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.set_speed_lines({intensity})")
+# @ace_action
+# @ace_name("Set Speed Lines")
+# @ace_description("Radial anime-style speed streaks at an intensity (0..1) that HOLD until you set 0 - sprints, dashes, adrenaline modes. Pair with Zoom By Percent or FOV punches for full sprint feel.")
+# @ace_codegen_template("$JuiceBehavior.set_speed_lines({intensity})")
 func set_speed_lines(intensity: float) -> void:
 	_ensure_fx_overlay()
 	if _fx_material == null:
@@ -1465,31 +1399,25 @@ func set_speed_lines(intensity: float) -> void:
 	_fx_material.set_shader_parameter("speed_lines", clampf(intensity, 0.0, 1.0))
 	_fx_update_visibility()
 
-## @ace_action
-## @ace_name("Play Sound Varied")
-## @ace_category("Juice")
-## @ace_description("Plays a sound with a random pitch and volume wobble around the base - the #1 trick against repetitive footsteps, hits, coins, and clicks. Fire-and-forget (the player frees itself).")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.play_sound_varied({path}, {pitch_jitter}, {volume_jitter_db})")
+# @ace_action
+# @ace_name("Play Sound Varied")
+# @ace_description("Plays a sound with a random pitch and volume wobble around the base - the #1 trick against repetitive footsteps, hits, coins, and clicks. Fire-and-forget (the player frees itself).")
+# @ace_codegen_template("$JuiceBehavior.play_sound_varied({path}, {pitch_jitter}, {volume_jitter_db})")
 func play_sound_varied(path: String, pitch_jitter: float, volume_jitter_db: float) -> void:
 	_spawn_one_shot(path, 1.0 + randf_range(-pitch_jitter, pitch_jitter), randf_range(-absf(volume_jitter_db), 0.0))
 
-## @ace_action
-## @ace_name("Play Sound With Intensity")
-## @ace_category("Juice")
-## @ace_description("Plays a sound scaled by an intensity (0..1): quiet + lower-pitched when light, full + brighter when heavy - drive it, Shake, and Punch Scale from ONE hit-power value so light and heavy hits differ by one number.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.play_sound_intensity({path}, {intensity})")
+# @ace_action
+# @ace_name("Play Sound With Intensity")
+# @ace_description("Plays a sound scaled by an intensity (0..1): quiet + lower-pitched when light, full + brighter when heavy - drive it, Shake, and Punch Scale from ONE hit-power value so light and heavy hits differ by one number.")
+# @ace_codegen_template("$JuiceBehavior.play_sound_intensity({path}, {intensity})")
 func play_sound_intensity(path: String, intensity: float) -> void:
 	var power: float = clampf(intensity, 0.0, 1.0)
 	_spawn_one_shot(path, lerpf(0.85, 1.15, power) * (1.0 + randf_range(-0.03, 0.03)), lerpf(-14.0, 0.0, power))
 
-## @ace_action
-## @ace_name("Count To")
-## @ace_category("Juice")
-## @ace_description("Eases a named display value toward a target over a duration - scores and gold ROLL instead of snapping. Read it with the Ticker Value expression; emits On Ticker Finished (with the name) when it lands.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.count_to({ticker_name}, {target}, {duration})")
+# @ace_action
+# @ace_name("Count To")
+# @ace_description("Eases a named display value toward a target over a duration - scores and gold ROLL instead of snapping. Read it with the Ticker Value expression; emits On Ticker Finished (with the name) when it lands.")
+# @ace_codegen_template("$JuiceBehavior.count_to({ticker_name}, {target}, {duration})")
 func count_to(ticker_name: String, target: float, duration: float) -> void:
 	var from: float = float(_tickers.get(ticker_name, 0.0))
 	_ticker_targets[ticker_name] = target
@@ -1501,12 +1429,10 @@ func count_to(ticker_name: String, target: float, duration: float) -> void:
 	tw.finished.connect(_finish_ticker.bind(ticker_name))
 	_ticker_tweens[ticker_name] = tw
 
-## @ace_action
-## @ace_name("Set Ticker")
-## @ace_category("Juice")
-## @ace_description("Sets a named display value INSTANTLY (cancelling any roll) - initialise a score at 0, or snap on a reset.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.set_ticker({ticker_name}, {value})")
+# @ace_action
+# @ace_name("Set Ticker")
+# @ace_description("Sets a named display value INSTANTLY (cancelling any roll) - initialise a score at 0, or snap on a reset.")
+# @ace_codegen_template("$JuiceBehavior.set_ticker({ticker_name}, {value})")
 func set_ticker(ticker_name: String, value: float) -> void:
 	var old_tween: Tween = _ticker_tweens.get(ticker_name, null)
 	if old_tween != null and is_instance_valid(old_tween):
@@ -1514,16 +1440,14 @@ func set_ticker(ticker_name: String, value: float) -> void:
 	_tickers[ticker_name] = value
 	_ticker_targets[ticker_name] = value
 
-## @ace_action
-## @ace_featured
-## @ace_name("Moment")
-## @ace_category("Juice")
-## @ace_description("Plays a moment - a whole beat of feedback written down as a file: a hit's shake and freeze and flash, a win's swell, danger draining the colour out. The strength scales every amount in it, so a light hit and a heavy one are one moment at two numbers. Six starters ship beside the pack (impact, kill, triumph, danger, calm, cut); edit them, or name your own with Define Moment.")
-## @ace_display_template("Moment [b]{moment_name}[/b] at [b]{strength}[/b]")
-## @ace_param(moment_name, default: impact, desc: "Which moment to play. The six that ship are impact, kill, triumph, danger, calm and cut; Define Moment adds your own.")
-## @ace_param(strength, default: 1, desc: "Scales every amount in the moment. 1 is the moment as written, 0.5 a lighter version of the same beat.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment("{moment_name}", {strength})")
+# @ace_action
+# @ace_featured
+# @ace_name("Moment")
+# @ace_description("Plays a moment - a whole beat of feedback written down as a file: a hit's shake and freeze and flash, a win's swell, danger draining the colour out. The strength scales every amount in it, so a light hit and a heavy one are one moment at two numbers. Six starters ship beside the pack (impact, kill, triumph, danger, calm, cut); edit them, or name your own with Define Moment.")
+# @ace_display_template("Moment [b]{moment_name}[/b] at [b]{strength}[/b]")
+# @ace_param(moment_name, default: impact, desc: "Which moment to play. The six that ship are impact, kill, triumph, danger, calm and cut; Define Moment adds your own.")
+# @ace_param(strength, default: 1, desc: "Scales every amount in the moment. 1 is the moment as written, 0.5 a lighter version of the same beat.")
+# @ace_codegen_template("$JuiceBehavior.moment("{moment_name}", {strength})")
 func moment(moment_name: String, strength: float) -> void:
 	if _play_moment_block(moment_name, strength):
 		return
@@ -1533,15 +1457,13 @@ func moment(moment_name: String, strength: float) -> void:
 		return
 	_moment_walk(_moment_key(moment_name), _moment_steps(played), strength, false)
 
-## @ace_action
-## @ace_name("Define Moment")
-## @ace_category("Juice")
-## @ace_description("Points a name at a moment file, for the whole game: every Juice node's Moment row finds it afterwards. Use it to play a moment you keep somewhere else in the project, or to swap which file a name means (a boss fight that hits harder). An empty slot takes the name away again.")
-## @ace_display_template("Define moment [b]{moment_name}[/b] as [b]{moment}[/b]")
-## @ace_param(moment_name, default: impact, desc: "The name every Moment row will use for this file afterwards.")
-## @ace_param(moment, hint: resource_path, default: preload("res://eventsheet_addons/juice/impact.tres"), desc: "The moment file. Pick one with the browse button, or leave it empty to take the name away again.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.define_moment("{moment_name}", {moment})")
+# @ace_action
+# @ace_name("Define Moment")
+# @ace_description("Points a name at a moment file, for the whole game: every Juice node's Moment row finds it afterwards. Use it to play a moment you keep somewhere else in the project, or to swap which file a name means (a boss fight that hits harder). An empty slot takes the name away again.")
+# @ace_display_template("Define moment [b]{moment_name}[/b] as [b]{moment}[/b]")
+# @ace_param(moment_name, default: impact, desc: "The name every Moment row will use for this file afterwards.")
+# @ace_param(moment, hint: resource_path, default: preload("res://eventsheet_addons/juice/impact.tres"), desc: "The moment file. Pick one with the browse button, or leave it empty to take the name away again.")
+# @ace_codegen_template("$JuiceBehavior.define_moment("{moment_name}", {moment})")
 @warning_ignore("shadowed_variable")  # `moment` is this row's frozen parameter name
 func define_moment(moment_name: String, moment: Resource) -> void:
 	var word: String = moment_name.strip_edges().to_lower()
@@ -1552,68 +1474,58 @@ func define_moment(moment_name: String, moment: Resource) -> void:
 		return
 	_moments[word] = moment
 
-## @ace_action
-## @ace_name("Play Moment At")
-## @ace_category("Juice")
-## @ace_description("Plays a moment WHERE it happened, so a far explosion is felt less than a near one. The strength falls off between that place and the edge of the range, and a moment that happened outside the range does not play at all. Leave the range at 0 and it plays everywhere at full strength, exactly as Moment does. Whatever is left is scaled by Set Moment Strength before anything is felt.")
-## @ace_display_template("Moment [b]{moment_name}[/b] at [b]{strength}[/b] from [i]{from}[/i] within [b]{within}[/b]")
-## @ace_param(moment_name, default: impact, desc: "Which moment to play - the same name Moment takes.")
-## @ace_param(strength, default: 1, desc: "The strength before the distance is paid for. 1 is the moment as written.")
-## @ace_param(from, desc: "Where it happened: the node the moment belongs to. Empty means everywhere, at full strength.")
-## @ace_param(within, default: 600, desc: "How far the moment reaches, in the same units the game measures in. 0 = everywhere.")
-## @ace_param(falloff, options: linear|smooth|none, default: linear, desc: "How the strength fades across the range: linear is a straight line, smooth rounds the shoulders, none holds full strength right up to the edge.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.play_moment_at("{moment_name}", {strength}, {from}, {within}, "{falloff}")")
+# @ace_action
+# @ace_name("Play Moment At")
+# @ace_description("Plays a moment WHERE it happened, so a far explosion is felt less than a near one. The strength falls off between that place and the edge of the range, and a moment that happened outside the range does not play at all. Leave the range at 0 and it plays everywhere at full strength, exactly as Moment does. Whatever is left is scaled by Set Moment Strength before anything is felt.")
+# @ace_display_template("Moment [b]{moment_name}[/b] at [b]{strength}[/b] from [i]{from}[/i] within [b]{within}[/b]")
+# @ace_param(moment_name, default: impact, desc: "Which moment to play - the same name Moment takes.")
+# @ace_param(strength, default: 1, desc: "The strength before the distance is paid for. 1 is the moment as written.")
+# @ace_param(from, desc: "Where it happened: the node the moment belongs to. Empty means everywhere, at full strength.")
+# @ace_param(within, default: 600, desc: "How far the moment reaches, in the same units the game measures in. 0 = everywhere.")
+# @ace_param(falloff, options: linear|smooth|none, default: linear, desc: "How the strength fades across the range: linear is a straight line, smooth rounds the shoulders, none holds full strength right up to the edge.")
+# @ace_codegen_template("$JuiceBehavior.play_moment_at("{moment_name}", {strength}, {from}, {within}, "{falloff}")")
 func play_moment_at(moment_name: String, strength: float, from: Node, within: float, falloff: String) -> void:
 	var here: float = MomentRunner.strength_at(host, strength * _moment_strength, from, within, falloff)
 	if here <= 0.0:
 		return
 	moment(moment_name, here)
 
-## @ace_action
-## @ace_name("Set Moment Strength")
-## @ace_category("Juice")
-## @ace_description("Turns down what Play Moment At feels, by one number - a quiet scene at 0.4, a boss fight at 1.5, an accessibility setting at whatever the player chose. It is the strength THAT row hands on, and only that row: a plain Moment row plays a beat at the strength written on it, and the moments themselves are untouched either way.")
-## @ace_display_template("Set moment strength to [b]{value}[/b]")
-## @ace_param(value, default: 1, desc: "1 is Play Moment At as written, 0.5 half as much of everything it feels, 0 nothing felt at all.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.set_moment_strength({value})")
+# @ace_action
+# @ace_name("Set Moment Strength")
+# @ace_description("Turns down what Play Moment At feels, by one number - a quiet scene at 0.4, a boss fight at 1.5, an accessibility setting at whatever the player chose. It is the strength THAT row hands on, and only that row: a plain Moment row plays a beat at the strength written on it, and the moments themselves are untouched either way.")
+# @ace_display_template("Set moment strength to [b]{value}[/b]")
+# @ace_param(value, default: 1, desc: "1 is Play Moment At as written, 0.5 half as much of everything it feels, 0 nothing felt at all.")
+# @ace_codegen_template("$JuiceBehavior.set_moment_strength({value})")
 func set_moment_strength(value: float) -> void:
 	_moment_strength = maxf(value, 0.0)
 
-## @ace_expression
-## @ace_name("Moment Strength")
-## @ace_category("Juice")
-## @ace_description("The number Play Moment At scales a moment by before the distance is paid for - what Set Moment Strength last wrote, and 1 until it has been written. A plain Moment row does not read it: that row plays a beat at the strength written on the row itself.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_strength()")
+# @ace_expression
+# @ace_name("Moment Strength")
+# @ace_description("The number Play Moment At scales a moment by before the distance is paid for - what Set Moment Strength last wrote, and 1 until it has been written. A plain Moment row does not read it: that row plays a beat at the strength written on the row itself.")
+# @ace_codegen_template("$JuiceBehavior.moment_strength()")
 func moment_strength() -> float:
 	return _moment_strength
 
-## @ace_action
-## @ace_name("Moment Step")
-## @ace_category("Juice")
-## @ace_description("Plays ONE step of a moment - a shake, a hitstop, a flash - with no file behind it. It is the same step a moment file holds, played by the same code, so a beat written as rows and a beat kept as a file do exactly the same thing. Use it to write a beat straight into a sheet, or as the step of a Moment block. The strength scales the amounts a player sees, exactly as it does inside a moment.")
-## @ace_display_template("Moment step [b]{verb}[/b] at [b]{amount}[/b] for [b]{seconds}[/b] s")
-## @ace_param(verb, options: shake|hitstop|slowmo|flash|punch|zoom|shockwave|chromatic|pulse|hold, default: shake, desc: "What this step does - the same ten words a moment file's steps are made of.")
-## @ace_param(amount, default: 0.4, desc: "How much of it: a shake's amplitude, a flash's distance towards the colour, a zoom's percentage, for a hitstop the time scale it freezes to (0 is a full stop, 1 changes nothing), and for a slowmo the time scale it slows to.")
-## @ace_param(effect, desc: "The extra word two steps need: the colour a flash goes to, and the name of the post effect a pulse or a hold reaches for. Leave it empty for the rest.")
-## @ace_param(seconds, default: 0, desc: "How long it lasts. 0 lets the step use its own natural length.")
-## @ace_param(strength, default: 1, desc: "Scales what a player sees, exactly as a moment's own strength does. 1 is the step as written.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_step("{verb}", {amount}, "{effect}", {seconds}, {strength})")
+# @ace_action
+# @ace_name("Moment Step")
+# @ace_description("Plays ONE step of a moment - a shake, a hitstop, a flash - with no file behind it. It is the same step a moment file holds, played by the same code, so a beat written as rows and a beat kept as a file do exactly the same thing. Use it to write a beat straight into a sheet, or as the step of a Moment block. The strength scales the amounts a player sees, exactly as it does inside a moment.")
+# @ace_display_template("Moment step [b]{verb}[/b] at [b]{amount}[/b] for [b]{seconds}[/b] s")
+# @ace_param(verb, options: shake|hitstop|slowmo|flash|punch|zoom|shockwave|chromatic|pulse|hold, default: shake, desc: "What this step does - the same ten words a moment file's steps are made of.")
+# @ace_param(amount, default: 0.4, desc: "How much of it: a shake's amplitude, a flash's distance towards the colour, a zoom's percentage, for a hitstop the time scale it freezes to (0 is a full stop, 1 changes nothing), and for a slowmo the time scale it slows to.")
+# @ace_param(effect, desc: "The extra word two steps need: the colour a flash goes to, and the name of the post effect a pulse or a hold reaches for. Leave it empty for the rest.")
+# @ace_param(seconds, default: 0, desc: "How long it lasts. 0 lets the step use its own natural length.")
+# @ace_param(strength, default: 1, desc: "Scales what a player sees, exactly as a moment's own strength does. 1 is the step as written.")
+# @ace_codegen_template("$JuiceBehavior.moment_step("{verb}", {amount}, "{effect}", {seconds}, {strength})")
 func moment_step(verb: String, amount: float, effect: String, seconds: float, strength: float) -> void:
 	_play_moment_step({"verb": verb, "amount": amount, "effect": effect, "seconds": seconds}, strength)
 
-## @ace_action
-## @ace_name("Play Moment Backwards")
-## @ace_category("Juice")
-## @ace_description("Plays a moment from its LAST step to its first. A hover-out is the hover-in read the other way, a door closing is the door opening backwards, and neither needs a second moment kept in step with the first by hand. Every step is played either way - a beat in reverse is still the whole beat - and the amounts are scaled and held to the no-flashing ceiling exactly as they are forwards.")
-## @ace_display_template("Play moment [b]{moment_name}[/b] backwards at [b]{strength}[/b]")
-## @ace_param(moment_name, default: hover, desc: "Which moment to play in reverse - the same name Moment takes.")
-## @ace_param(strength, default: 1, desc: "Scales every amount in the moment, exactly as playing it forwards does.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_backwards("{moment_name}", {strength})")
+# @ace_action
+# @ace_name("Play Moment Backwards")
+# @ace_description("Plays a moment from its LAST step to its first. A hover-out is the hover-in read the other way, a door closing is the door opening backwards, and neither needs a second moment kept in step with the first by hand. Every step is played either way - a beat in reverse is still the whole beat - and the amounts are scaled and held to the no-flashing ceiling exactly as they are forwards.")
+# @ace_display_template("Play moment [b]{moment_name}[/b] backwards at [b]{strength}[/b]")
+# @ace_param(moment_name, default: hover, desc: "Which moment to play in reverse - the same name Moment takes.")
+# @ace_param(strength, default: 1, desc: "Scales every amount in the moment, exactly as playing it forwards does.")
+# @ace_codegen_template("$JuiceBehavior.moment_backwards("{moment_name}", {strength})")
 func moment_backwards(moment_name: String, strength: float) -> void:
 	var written: String = _moment_block_method(moment_name, "_backwards")
 	if not written.is_empty():
@@ -1628,14 +1540,12 @@ func moment_backwards(moment_name: String, strength: float) -> void:
 		return
 	_moment_walk(_moment_key(moment_name), _moment_steps(played), strength, true)
 
-## @ace_action
-## @ace_name("Revert Moment")
-## @ace_category("Juice")
-## @ace_description("Turns a moment that is still playing around from WHERE IT IS: every value its steps wrote walks home to what it was when the beat began, over the beat's own length, and the steps that cannot be undone - a shake already felt, a hitstop already let go - are stepped over rather than fired again. This is the hover-out that does not have to know how far the hover-in got.")
-## @ace_display_template("Revert moment [b]{moment_name}[/b]")
-## @ace_param(moment_name, default: hover, desc: "Which moment to turn around. A moment that is not playing is left alone.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_revert("{moment_name}")")
+# @ace_action
+# @ace_name("Revert Moment")
+# @ace_description("Turns a moment that is still playing around from WHERE IT IS: every value its steps wrote walks home to what it was when the beat began, over the beat's own length, and the steps that cannot be undone - a shake already felt, a hitstop already let go - are stepped over rather than fired again. This is the hover-out that does not have to know how far the hover-in got.")
+# @ace_display_template("Revert moment [b]{moment_name}[/b]")
+# @ace_param(moment_name, default: hover, desc: "Which moment to turn around. A moment that is not playing is left alone.")
+# @ace_codegen_template("$JuiceBehavior.moment_revert("{moment_name}")")
 func moment_revert(moment_name: String) -> void:
 	var key: String = _moment_key(moment_name)
 	if not _moment_plays.has(key):
@@ -1659,14 +1569,12 @@ func moment_revert(moment_name: String) -> void:
 			_moment_stepping(key, MomentRunner.step_label(step as Dictionary, at))
 	set_process(true)
 
-## @ace_action
-## @ace_name("Skip Moment To End")
-## @ace_category("Juice")
-## @ace_description("Ends a moment NOW, on the values it would have finished on: a held effect lands at its full strength, a freeze lets time go, a shake settles. The way out of an intro somebody has seen twenty times, and the way a cutscene skip leaves nothing half-played. It fires On Moment Skipped, then On Moment Finished with Moment Was Cut Short true.")
-## @ace_display_template("Skip moment [b]{moment_name}[/b] to the end")
-## @ace_param(moment_name, default: intro, desc: "Which moment to jump to the end of. A moment that is not playing is left alone.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_skip_to_end("{moment_name}")")
+# @ace_action
+# @ace_name("Skip Moment To End")
+# @ace_description("Ends a moment NOW, on the values it would have finished on: a held effect lands at its full strength, a freeze lets time go, a shake settles. The way out of an intro somebody has seen twenty times, and the way a cutscene skip leaves nothing half-played. It fires On Moment Skipped, then On Moment Finished with Moment Was Cut Short true.")
+# @ace_display_template("Skip moment [b]{moment_name}[/b] to the end")
+# @ace_param(moment_name, default: intro, desc: "Which moment to jump to the end of. A moment that is not playing is left alone.")
+# @ace_codegen_template("$JuiceBehavior.moment_skip_to_end("{moment_name}")")
 func moment_skip_to_end(moment_name: String) -> void:
 	var key: String = _moment_key(moment_name)
 	if not _moment_plays.has(key):
@@ -1682,14 +1590,12 @@ func moment_skip_to_end(moment_name: String) -> void:
 	moment_skipped.emit(key)
 	_moment_end(key, true)
 
-## @ace_action
-## @ace_name("Restore Moment Values")
-## @ace_category("Juice")
-## @ace_description("Puts back every value a moment moved, to what it was the first time that moment touched it - the tint, the scale, the zoom, the time scale, the effects held on the screen. Leave the name empty and every moment this node has played is put back, which is what a scene wants on the way out. It plays nothing and undoes nothing that was not a moment's doing.")
-## @ace_display_template("Restore what moment [b]{moment_name}[/b] changed")
-## @ace_param(moment_name, desc: "Which moment's values to put back. Leave it empty for every moment this node has played.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_restore_values("{moment_name}")")
+# @ace_action
+# @ace_name("Restore Moment Values")
+# @ace_description("Puts back every value a moment moved, to what it was the first time that moment touched it - the tint, the scale, the zoom, the time scale, the effects held on the screen. Leave the name empty and every moment this node has played is put back, which is what a scene wants on the way out. It plays nothing and undoes nothing that was not a moment's doing.")
+# @ace_display_template("Restore what moment [b]{moment_name}[/b] changed")
+# @ace_param(moment_name, desc: "Which moment's values to put back. Leave it empty for every moment this node has played.")
+# @ace_codegen_template("$JuiceBehavior.moment_restore_values("{moment_name}")")
 func moment_restore_values(moment_name: String) -> void:
 	var key: String = _moment_key(moment_name)
 	if key.is_empty():
@@ -1698,26 +1604,22 @@ func moment_restore_values(moment_name: String) -> void:
 		return
 	_moment_put_back(key)
 
-## @ace_condition
-## @ace_name("Moment Is Playing")
-## @ace_category("Juice")
-## @ace_description("True while a moment is still in the air on this node - between its first step and the end of its longest one. Leave the name empty to ask about any moment at all.")
-## @ace_param(moment_name, desc: "Which moment to ask about. Empty asks whether any moment is playing.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_is_playing("{moment_name}")")
+# @ace_condition
+# @ace_name("Moment Is Playing")
+# @ace_description("True while a moment is still in the air on this node - between its first step and the end of its longest one. Leave the name empty to ask about any moment at all.")
+# @ace_param(moment_name, desc: "Which moment to ask about. Empty asks whether any moment is playing.")
+# @ace_codegen_template("$JuiceBehavior.moment_is_playing("{moment_name}")")
 func moment_is_playing(moment_name: String) -> bool:
 	var key: String = _moment_key(moment_name)
 	if key.is_empty():
 		return not _moment_plays.is_empty()
 	return _moment_plays.has(key)
 
-## @ace_condition
-## @ace_name("Moment Is Reverting")
-## @ace_category("Juice")
-## @ace_description("True while a moment is walking back to where it started, rather than playing forwards - so a hover-in row can refuse to fire again while the hover-out is still on its way home.")
-## @ace_param(moment_name, desc: "Which moment to ask about. Empty asks whether any moment is reverting.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_is_reverting("{moment_name}")")
+# @ace_condition
+# @ace_name("Moment Is Reverting")
+# @ace_description("True while a moment is walking back to where it started, rather than playing forwards - so a hover-in row can refuse to fire again while the hover-out is still on its way home.")
+# @ace_param(moment_name, desc: "Which moment to ask about. Empty asks whether any moment is reverting.")
+# @ace_codegen_template("$JuiceBehavior.moment_is_reverting("{moment_name}")")
 func moment_is_reverting(moment_name: String) -> bool:
 	var key: String = _moment_key(moment_name)
 	if key.is_empty():
@@ -1729,23 +1631,19 @@ func moment_is_reverting(moment_name: String) -> bool:
 		return false
 	return (_moment_plays[key] as MomentPlay).reverting
 
-## @ace_condition
-## @ace_name("Moment Was Cut Short")
-## @ace_category("Juice")
-## @ace_description("True when the LAST play of this moment did not run its course - it was skipped to the end, or reverted - and false when it played all the way through. Ask it inside On Moment Finished to tell the beat that landed from the beat somebody walked out of.")
-## @ace_param(moment_name, default: intro, desc: "Which moment's last play to ask about.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_was_cut_short("{moment_name}")")
+# @ace_condition
+# @ace_name("Moment Was Cut Short")
+# @ace_description("True when the LAST play of this moment did not run its course - it was skipped to the end, or reverted - and false when it played all the way through. Ask it inside On Moment Finished to tell the beat that landed from the beat somebody walked out of.")
+# @ace_param(moment_name, default: intro, desc: "Which moment's last play to ask about.")
+# @ace_codegen_template("$JuiceBehavior.moment_was_cut_short("{moment_name}")")
 func moment_was_cut_short(moment_name: String) -> bool:
 	return bool(_moment_cut.get(_moment_key(moment_name), false))
 
-## @ace_expression
-## @ace_name("Moment Progress")
-## @ace_category("Juice")
-## @ace_description("How far through a moment this node is, from 0 at its first frame to 1 at its last. A moment that is not playing answers 0, and a beat of instant steps is over the moment it begins.")
-## @ace_param(moment_name, default: intro, desc: "Which moment to measure.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_progress("{moment_name}")")
+# @ace_expression
+# @ace_name("Moment Progress")
+# @ace_description("How far through a moment this node is, from 0 at its first frame to 1 at its last. A moment that is not playing answers 0, and a beat of instant steps is over the moment it begins.")
+# @ace_param(moment_name, default: intro, desc: "Which moment to measure.")
+# @ace_codegen_template("$JuiceBehavior.moment_progress("{moment_name}")")
 func moment_progress(moment_name: String) -> float:
 	var key: String = _moment_key(moment_name)
 	if not _moment_plays.has(key):
@@ -1753,13 +1651,11 @@ func moment_progress(moment_name: String) -> float:
 	var play: MomentPlay = _moment_plays[key]
 	return MomentRunner.progress_of(play.span - play.left, play.span)
 
-## @ace_expression
-## @ace_name("Moment Elapsed")
-## @ace_category("Juice")
-## @ace_description("How many seconds a moment has been playing. A moment that is not playing answers 0. Use it to draw a bar over a long beat, or to hold a row back until a beat is a certain way in.")
-## @ace_param(moment_name, default: intro, desc: "Which moment to measure.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_elapsed("{moment_name}")")
+# @ace_expression
+# @ace_name("Moment Elapsed")
+# @ace_description("How many seconds a moment has been playing. A moment that is not playing answers 0. Use it to draw a bar over a long beat, or to hold a row back until a beat is a certain way in.")
+# @ace_param(moment_name, default: intro, desc: "Which moment to measure.")
+# @ace_codegen_template("$JuiceBehavior.moment_elapsed("{moment_name}")")
 func moment_elapsed(moment_name: String) -> float:
 	var key: String = _moment_key(moment_name)
 	if not _moment_plays.has(key):
@@ -1767,55 +1663,47 @@ func moment_elapsed(moment_name: String) -> float:
 	var play: MomentPlay = _moment_plays[key]
 	return maxf(play.span - play.left, 0.0)
 
-## @ace_expression
-## @ace_name("Moment Step Name")
-## @ace_category("Juice")
-## @ace_description("What the LAST step of a moment was called - its own label when it was given one, else the word it is made of. It is the same name On Moment Step carries, so a debug line and a trigger say the same thing about the same step.")
-## @ace_param(moment_name, default: intro, desc: "Which moment to ask about.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.moment_step_name("{moment_name}")")
+# @ace_expression
+# @ace_name("Moment Step Name")
+# @ace_description("What the LAST step of a moment was called - its own label when it was given one, else the word it is made of. It is the same name On Moment Step carries, so a debug line and a trigger say the same thing about the same step.")
+# @ace_param(moment_name, default: intro, desc: "Which moment to ask about.")
+# @ace_codegen_template("$JuiceBehavior.moment_step_name("{moment_name}")")
 func moment_step_name(moment_name: String) -> String:
 	var key: String = _moment_key(moment_name)
 	if not _moment_plays.has(key):
 		return ""
 	return (_moment_plays[key] as MomentPlay).step
 
-## @ace_action
-## @ace_name("Shake Channel")
-## @ace_category("Juice")
-## @ace_description("Says one shake to a whole CHANNEL: everything listening on it shakes, and nothing else in the game hears a thing. A channel is a GROUP - the same groups the Node dock shows - so a passing truck reaches the props, a hit reaches the HUD panels, and neither side needs a reference to the other. Each listener decides what it shakes: the camera, itself, or the screen.")
-## @ace_display_template("Shake channel [b]{channel}[/b] with [b]{magnitude}[/b] for [b]{seconds}[/b] s")
-## @ace_param(channel, default: props, desc: "Which channel to shake - a group name. Everything listening on it hears this; everything else does not.")
-## @ace_param(magnitude, default: 0.5, desc: "How hard: 0 to 1 for a listener shaking the camera, pixels for one shaking itself or the screen.")
-## @ace_param(seconds, default: 0.6, desc: "How long the shake lasts before it has faded to nothing.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.shake_channel("{channel}", {magnitude}, {seconds})")
+# @ace_action
+# @ace_name("Shake Channel")
+# @ace_description("Says one shake to a whole CHANNEL: everything listening on it shakes, and nothing else in the game hears a thing. A channel is a GROUP - the same groups the Node dock shows - so a passing truck reaches the props, a hit reaches the HUD panels, and neither side needs a reference to the other. Each listener decides what it shakes: the camera, itself, or the screen.")
+# @ace_display_template("Shake channel [b]{channel}[/b] with [b]{magnitude}[/b] for [b]{seconds}[/b] s")
+# @ace_param(channel, default: props, desc: "Which channel to shake - a group name. Everything listening on it hears this; everything else does not.")
+# @ace_param(magnitude, default: 0.5, desc: "How hard: 0 to 1 for a listener shaking the camera, pixels for one shaking itself or the screen.")
+# @ace_param(seconds, default: 0.6, desc: "How long the shake lasts before it has faded to nothing.")
+# @ace_codegen_template("$JuiceBehavior.shake_channel("{channel}", {magnitude}, {seconds})")
 func shake_channel(channel: String, magnitude: float, seconds: float) -> void:
 	if not is_inside_tree():
 		return
 	get_tree().call_group(StringName(channel), "shake_from_channel", magnitude, seconds)
 
-## @ace_action
-## @ace_name("Listen On Channel")
-## @ace_category("Juice")
-## @ace_description("Makes this node a LISTENER: whenever that channel is shaken, this node shakes too. The channel is a group, so this row is the group the Node dock shows, joined from the sheet. The second field is what this node shakes, and it is its answer on every channel it listens on - a listener has one way of shaking, and a second row on another channel does not give it a second one.")
-## @ace_display_template("Listen on channel [b]{channel}[/b] and shake [b]{shakes}[/b]")
-## @ace_param(channel, default: props, desc: "Which channel to listen on - a group name. Say it once, at the start of the scene.")
-## @ace_param(shakes, options: the camera|this node|the screen, default: this node, desc: "What this node moves when the channel speaks: the camera the player looks through, this node itself, or the screen's colour channels.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.listen_on_channel("{channel}", "{shakes}")")
+# @ace_action
+# @ace_name("Listen On Channel")
+# @ace_description("Makes this node a LISTENER: whenever that channel is shaken, this node shakes too. The channel is a group, so this row is the group the Node dock shows, joined from the sheet. The second field is what this node shakes, and it is its answer on every channel it listens on - a listener has one way of shaking, and a second row on another channel does not give it a second one.")
+# @ace_display_template("Listen on channel [b]{channel}[/b] and shake [b]{shakes}[/b]")
+# @ace_param(channel, default: props, desc: "Which channel to listen on - a group name. Say it once, at the start of the scene.")
+# @ace_param(shakes, options: the camera|this node|the screen, default: this node, desc: "What this node moves when the channel speaks: the camera the player looks through, this node itself, or the screen's colour channels.")
+# @ace_codegen_template("$JuiceBehavior.listen_on_channel("{channel}", "{shakes}")")
 func listen_on_channel(channel: String, shakes: String) -> void:
 	add_to_group(StringName(channel), true)
 	_channel_shakes = shakes
 
-## @ace_action
-## @ace_name("Stop Listening On Channel")
-## @ace_category("Juice")
-## @ace_description("Takes this node off a channel: it stops hearing that channel's shakes and settles back to the pose it was found in. Every other channel it listens on is left alone.")
-## @ace_display_template("Stop listening on channel [b]{channel}[/b]")
-## @ace_param(channel, default: props, desc: "Which channel to stop hearing.")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.stop_listening_on_channel("{channel}")")
+# @ace_action
+# @ace_name("Stop Listening On Channel")
+# @ace_description("Takes this node off a channel: it stops hearing that channel's shakes and settles back to the pose it was found in. Every other channel it listens on is left alone.")
+# @ace_display_template("Stop listening on channel [b]{channel}[/b]")
+# @ace_param(channel, default: props, desc: "Which channel to stop hearing.")
+# @ace_codegen_template("$JuiceBehavior.stop_listening_on_channel("{channel}")")
 func stop_listening_on_channel(channel: String) -> void:
 	if is_in_group(StringName(channel)):
 		remove_from_group(StringName(channel))
@@ -1833,24 +1721,21 @@ func _zoom_anchored_step(f: float) -> void:
 	cam.zoom = z
 	cam.global_position = _zoom_anchor - (_zoom_anchor - _zoom_cam_from) * (_zoom_from / z)
 
-## @ace_condition
-## @ace_name("Is Shaking")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.is_shaking()")
+# @ace_condition
+# @ace_name("Is Shaking")
+# @ace_codegen_template("$JuiceBehavior.is_shaking()")
 func is_shaking() -> bool:
 	return trauma > 0.0 or not _timed_shakes.is_empty()
 
-## @ace_expression
-## @ace_name("Trauma")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.current_trauma()")
+# @ace_expression
+# @ace_name("Trauma")
+# @ace_codegen_template("$JuiceBehavior.current_trauma()")
 func current_trauma() -> float:
 	return trauma
 
-## @ace_condition
-## @ace_name("Is Hitstopped")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.is_hitstopped()")
+# @ace_condition
+# @ace_name("Is Hitstopped")
+# @ace_codegen_template("$JuiceBehavior.is_hitstopped()")
 func is_hitstopped() -> bool:
 	return _hitstop_active
 
@@ -1886,7 +1771,7 @@ func _apply_host_scale(s: Vector2) -> void:
 		c.pivot_offset = c.size / 2.0
 		c.scale = s
 
-## @ace_hidden
+# @ace_hidden
 func _ensure_tint_overlay() -> void:
 	if _tint_overlay != null or not is_inside_tree():
 		return
@@ -1899,75 +1784,69 @@ func _ensure_tint_overlay() -> void:
 	_tint_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_tint_overlay.add_child(_tint_rect)
 
+# @ace_action
+# @ace_name("Set Host Tint")
+# @ace_codegen_template("$JuiceBehavior.set_host_tint({color}, {strength})")
 ## Tints the HOST object: blends its color toward the tint by Strength (0 = its own
 ## colors untouched, 1 = fully the tint color) - the classic object tint, with the
 ## strength as your opacity dial. Children inherit (modulate).
-## @ace_action
-## @ace_name("Set Host Tint")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.set_host_tint({color}, {strength})")
 func set_host_tint(color: Color, strength: float) -> void:
 	if host is CanvasItem:
 		(host as CanvasItem).modulate = Color.WHITE.lerp(Color(color.r, color.g, color.b, 1.0), clampf(strength, 0.0, 1.0))
 
+# @ace_action
+# @ace_name("Clear Host Tint")
+# @ace_codegen_template("$JuiceBehavior.clear_host_tint()")
 ## Removes the host tint (back to its own colors).
-## @ace_action
-## @ace_name("Clear Host Tint")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.clear_host_tint()")
 func clear_host_tint() -> void:
 	if host is CanvasItem:
 		(host as CanvasItem).modulate = Color.WHITE
 
+# @ace_action
+# @ace_name("Set Screen Tint")
+# @ace_codegen_template("$JuiceBehavior.set_screen_tint({color}, {strength})")
 ## Washes the WHOLE SCREEN with a color at Strength opacity (0..1) - damage red,
 ## poison green, night blue, flashback sepia. Call again to retune; strength 0 clears.
-## @ace_action
-## @ace_name("Set Screen Tint")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.set_screen_tint({color}, {strength})")
 func set_screen_tint(color: Color, strength: float) -> void:
 	_ensure_tint_overlay()
 	if _tint_rect != null:
 		_tint_rect.color = Color(color.r, color.g, color.b, clampf(strength, 0.0, 1.0))
 		_tint_rect.visible = _tint_rect.color.a > 0.001
 
+# @ace_action
+# @ace_name("Fade Screen Tint")
+# @ace_codegen_template("$JuiceBehavior.fade_screen_tint({seconds})")
 ## Fades the screen tint's strength to zero over the given seconds - the damage-flash
 ## pattern: Set Screen Tint red 0.4, then Fade Screen Tint 0.3.
-## @ace_action
-## @ace_name("Fade Screen Tint")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.fade_screen_tint({seconds})")
 func fade_screen_tint(seconds: float) -> void:
 	if _tint_rect == null or not _tint_rect.visible:
 		return
 	create_tween().tween_property(_tint_rect, "color:a", 0.0, maxf(seconds, 0.01))
 
+# @ace_action
+# @ace_name("Clear Screen Tint")
+# @ace_codegen_template("$JuiceBehavior.clear_screen_tint()")
 ## Removes the screen tint instantly.
-## @ace_action
-## @ace_name("Clear Screen Tint")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.clear_screen_tint()")
 func clear_screen_tint() -> void:
 	if _tint_rect != null:
 		_tint_rect.visible = false
 
+# @ace_expression
+# @ace_name("Ticker Value")
+# @ace_codegen_template("$JuiceBehavior.ticker_value({ticker_name})")
 ## What a ticker currently SHOWS - the eased value Count To is rolling toward its target.
 ## Print or draw this instead of the real variable and scores roll instead of snapping.
-## @ace_expression
-## @ace_name("Ticker Value")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.ticker_value({ticker_name})")
 func ticker_value(ticker_name: String) -> float:
 	return float(_tickers.get(ticker_name, 0.0))
 
-## @ace_hidden
+# @ace_hidden
 func _finish_ticker(ticker_name: String) -> void:
 	_tickers[ticker_name] = _ticker_targets.get(ticker_name, _tickers.get(ticker_name, 0.0))
 	ticker_finished.emit(ticker_name)
 
+# @ace_hidden
 ## Stamps one fading copy of the cached sprite behind it - the trail's per-tick brush. Live
 ## ghosts are capped (oldest freed) so a high stamp rate with a long fade can't pile up.
-## @ace_hidden
 func _stamp_ghost() -> void:
 	var trail_host: Node2D = host as Node2D
 	if _ghost_sprite == null or not is_instance_valid(_ghost_sprite) or trail_host == null or not trail_host.is_inside_tree() or trail_host.get_parent() == null:
@@ -2015,8 +1894,8 @@ func _stamp_ghost() -> void:
 	tw.tween_property(ghost, "modulate:a", 0.0, maxf(_trail_fade, 0.05))
 	tw.finished.connect(ghost.queue_free)
 
+# @ace_hidden
 ## Spawns a throwaway one-shot AudioStreamPlayer (frees itself when done).
-## @ace_hidden
 func _spawn_one_shot(path: String, pitch: float, volume_db: float) -> void:
 	var stream: AudioStream = load(path) as AudioStream
 	if stream == null:
@@ -2029,7 +1908,7 @@ func _spawn_one_shot(path: String, pitch: float, volume_db: float) -> void:
 	player.finished.connect(player.queue_free)
 	player.play()
 
-## @ace_hidden
+# @ace_hidden
 func _ensure_fx_overlay() -> void:
 	if _fx_layer != null or not is_inside_tree():
 		return
@@ -2055,7 +1934,7 @@ func _ensure_fx_overlay() -> void:
 	_fx_rect.visible = false
 	_fx_layer.add_child(_fx_rect)
 
-## @ace_hidden
+# @ace_hidden
 func _fx_update_visibility() -> void:
 	if _fx_rect == null or _fx_material == null:
 		return
@@ -2064,27 +1943,27 @@ func _fx_update_visibility() -> void:
 			or float(_fx_material.get_shader_parameter("chroma_intensity")) > 0.001 \
 			or float(_fx_material.get_shader_parameter("speed_lines")) > 0.001
 
+# @ace_hidden
 ## Whether this player has asked for no flashing.
-## @ace_hidden
 func _chroma_shake_quiet() -> bool:
 	return bool(Engine.get_meta(NO_FLASHING_META, false))
 
+# @ace_hidden
 ## How fast the split's direction wanders: the same knob the camera shake scrolls its noise at,
 ## halved while no flashing is on.
-## @ace_hidden
 func _chroma_shake_rate() -> float:
 	return shake_frequency * (0.5 if _chroma_shake_quiet() else 1.0)
 
+# @ace_hidden
 ## One sample of the shared noise at the shake's own clock - what makes the split move.
-## @ace_hidden
 func _chroma_shake_wander() -> float:
 	if _noise == null:
 		return 0.0
 	return _noise.get_noise_2d(_chroma_shake_phase, 0.0)
 
+# @ace_hidden
 ## How much of the shake is left: all of it while a constant one holds, and a straight line down
 ## to nothing while a reducing one runs.
-## @ace_hidden
 func _chroma_shake_fade() -> float:
 	if not _chroma_shake_active:
 		return 0.0
@@ -2092,6 +1971,7 @@ func _chroma_shake_fade() -> float:
 		return 1.0
 	return clampf(1.0 - _chroma_shake_elapsed / maxf(_chroma_shake_duration, 0.0001), 0.0, 1.0)
 
+# @ace_hidden
 ## Which way the split points this frame: the angle it was told, or the shared noise walking it
 ## around. Without a seeded noise (a shake fired before _ready) it points right rather than
 ## nowhere, so the effect is still visible.
@@ -2103,7 +1983,6 @@ func _chroma_shake_fade() -> float:
 ## hand back a direction shorter than one almost always, and nothing at all in the frames where
 ## both samples crossed zero together, so the split would quietly be a fraction of what the row
 ## and the expression both said it was.
-## @ace_hidden
 func _chroma_shake_direction() -> Vector2:
 	if _chroma_shake_angle >= 0.0:
 		return Vector2.from_angle(deg_to_rad(_chroma_shake_angle))
@@ -2111,10 +1990,10 @@ func _chroma_shake_direction() -> Vector2:
 		return Vector2.RIGHT
 	return Vector2.from_angle(_chroma_shake_wander() * TAU)
 
+# @ace_hidden
 ## The magnitude the shake itself is at this frame, in pixels: what was asked for, less the
 ## falloff spent, less the wander a fixed angle leaves on the amount, halved while no flashing
 ## is on. The player's effect-strength dial is spent on top of this, where the frame is written.
-## @ace_hidden
 func _chroma_shake_amount() -> float:
 	var amount: float = _chroma_shake_from * _chroma_shake_fade()
 	if _chroma_shake_angle >= 0.0:
@@ -2123,6 +2002,7 @@ func _chroma_shake_amount() -> float:
 		amount *= 0.5
 	return amount
 
+# @ace_hidden
 ## Writes this frame of the shake onto the overlay shader. The shift is in pixels here and in
 ## screen fractions there, so it is divided by the viewport - a 12-pixel split is 12 pixels wide
 ## on every resolution. The magnitude is kept whether or not there is a shader to write to, so
@@ -2130,7 +2010,6 @@ func _chroma_shake_amount() -> float:
 ## stored AFTER the effect-strength dial, because the expression's promise is to answer with
 ## the width the screen is showing, not the width the row asked for before the player's
 ## setting was spent on it.
-## @ace_hidden
 func _chroma_shake_write() -> void:
 	# The same global dial the camera effects are scaled by, so a player who turned the shake
 	# down turned this down with it.
@@ -2152,12 +2031,12 @@ func _chroma_shake_write() -> void:
 	# by Stop Chromatic Shake - which is also what the overlay's visibility check reads it as.
 	_fx_material.set_shader_parameter("chroma_intensity", 1.0)
 
+# @ace_hidden
 ## One frame of the shake. The clock is advanced by DELTA, which the engine has already scaled
 ## by time: slow motion glides the split, a hitstop freezes it mid-frame, and the duration
 ## stretches with them - the shake belongs to the game's time, not the wall clock. The noise
 ## clock takes the wander rate on the way in, so a rate that changes mid-shake bends the walk
 ## from here on rather than moving where the whole walk so far was read from.
-## @ace_hidden
 func _chroma_shake_step(delta: float) -> void:
 	if not _chroma_shake_active:
 		return
@@ -2170,26 +2049,25 @@ func _chroma_shake_step(delta: float) -> void:
 		return
 	_chroma_shake_write()
 
+# @ace_condition
+# @ace_name("Is Chromatic Shaking")
+# @ace_codegen_template("$JuiceBehavior.is_chromatic_shaking()")
 ## Whether a chromatic shake is running right now - true from the row that fires it until the
 ## duration is up or Stop Chromatic Shake takes it off.
-## @ace_condition
-## @ace_name("Is Chromatic Shaking")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.is_chromatic_shaking()")
 func is_chromatic_shaking() -> bool:
 	return _chroma_shake_active
 
+# @ace_expression
+# @ace_name("Chromatic Shake Magnitude")
+# @ace_codegen_template("$JuiceBehavior.chromatic_shake_magnitude()")
 ## How wide the split is right now, in pixels: the magnitude after the falloff, the wander, the
 ## no-flashing halving and the player's effect-strength dial - the width the screen is showing,
 ## not the width the row asked for. Zero when nothing is shaking. Drive a rumble or a HUD wobble
 ## from it and the whole hit reads as one thing.
-## @ace_expression
-## @ace_name("Chromatic Shake Magnitude")
-## @ace_icon("res://eventsheet_addons/juice/icon.svg")
-## @ace_codegen_template("$JuiceBehavior.chromatic_shake_magnitude()")
 func chromatic_shake_magnitude() -> float:
 	return _chroma_shake_magnitude
 
+# @ace_hidden
 ## A moment written as ROWS rather than as a file. A Moment block compiles to one coroutine on the
 ## host - `func moment_<name>(strength, from)` - so a name the host answers to that way is played by
 ## the very same rows that play a file, and a game can keep some of its beats in files and write the
@@ -2205,7 +2083,6 @@ func chromatic_shake_magnitude() -> float:
 ## a book of values: a block's rows are the host's own code, and nothing here can know what they
 ## wrote, so Revert and Restore have nothing of a block beat to put back. The play closes when the
 ## coroutine says it is done - a block with no waits in it is over the moment it is called.
-## @ace_hidden
 func _play_moment_block(moment_name: String, strength: float) -> bool:
 	var word: String = moment_name.strip_edges().replace(" ", "_")
 	if host == null or not word.is_valid_identifier():
@@ -2223,16 +2100,16 @@ func _play_moment_block(moment_name: String, strength: float) -> bool:
 	_moment_end(key, false)
 	return true
 
+# @ace_hidden
 ## The end of a block beat, reached when its coroutine returns. A named method rather than a closure,
 ## so the connection does not keep the play it closes alive.
-## @ace_hidden
 func _moment_block_done(key: String) -> void:
 	_moment_end(key, false)
 
+# @ace_hidden
 ## A moment's steps, whatever it was made of - the moment resource class, or anything else carrying a
 ## `steps` array of the same shape. Read through `get` so this pack never has to name that class, and
 ## goes on working in a game that only installed Juice.
-## @ace_hidden
 func _moment_steps(played: Resource) -> Array:
 	if played == null:
 		return []
@@ -2241,9 +2118,9 @@ func _moment_steps(played: Resource) -> Array:
 		return steps as Array
 	return []
 
+# @ace_hidden
 ## One step of a moment. Every arm is one of this pack's own verbs or one row of the post stack, so a
 ## moment can do nothing a sheet could not have done by hand - it is those same rows, written down.
-## @ace_hidden
 func _play_moment_step(step: Dictionary, strength: float) -> void:
 	var word: String = str(step.get("verb", "")).strip_edges().to_lower()
 	var effect: String = str(step.get("effect", "")).strip_edges().to_lower()
@@ -2304,26 +2181,26 @@ func _play_moment_step(step: Dictionary, strength: float) -> void:
 			push_warning("Moment: no step word is called \"%s\" - the words are %s." % [
 				word, ", ".join(MOMENT_VERBS)])
 
+# @ace_hidden
 ## What one step's amount really becomes: the strength on the row scales the amounts a PLAYER
 ## SEES, and only those - a hitstop's freeze, a slowmo's time scale and a zoom's percentage are
 ## numbers of another kind - and the ceiling then holds down what is left. Its own function
 ## because it is the fact a reader can check without a screen, a camera or a frame.
-## @ace_hidden
 func _moment_amount(word: String, amount: float, strength: float) -> float:
 	if not MOMENT_AMPLITUDE_VERBS.has(word):
 		return amount
 	return _moment_allowed(amount * maxf(strength, 0.0))
 
+# @ace_hidden
 ## And what one step's time really becomes: the floor under the same words, for the same reason.
-## @ace_hidden
 func _moment_seconds(word: String, seconds: float) -> float:
 	if not MOMENT_AMPLITUDE_VERBS.has(word):
 		return maxf(seconds, 0.0)
 	return _moment_slowed(seconds)
 
+# @ace_hidden
 ## Where the moment happened: the object this behaviour is attached to, in world coordinates, so a
 ## shockwave rides the thing that caused it instead of the middle of the screen.
-## @ace_hidden
 func _moment_here() -> Vector2:
 	if host is Node2D:
 		return (host as Node2D).global_position
@@ -2331,21 +2208,21 @@ func _moment_here() -> Vector2:
 		return (host as Control).global_position
 	return Vector2.ZERO
 
+# @ace_hidden
 ## Says, ONCE PER SCENE, that a step asked for the post stack and this game has none. The three
 ## steps that reach the screen are the only ones that can want it, and without it a shockwave and a
 ## hold do nothing at all while a pulse draws only its vignette - each of them silently, which is a
 ## moment that looks broken and says nothing about why. The sentence names the step and the way out.
-## @ace_hidden
 func _moment_wants_screen(word: String) -> void:
 	if not _first_time_without_a_screen():
 		return
 	push_warning(("Moment: the \"%s\" step needs a post stack and this scene has none - add the "
 		+ "Screen FX pack's screen_fx.tscn to the scene, or take the step out of the moment.") % word)
 
+# @ace_hidden
 ## Whether this is the FIRST time in this scene that a step has gone without the post stack -
 ## true once, then false until the scene changes. Its own function so the once-ness is a value
 ## that can be asked for, rather than a line in a log somebody has to notice.
-## @ace_hidden
 func _first_time_without_a_screen() -> bool:
 	var here: Node = null
 	if is_inside_tree():
@@ -2356,6 +2233,7 @@ func _first_time_without_a_screen() -> bool:
 	_moment_told_scene = here
 	return true
 
+# @ace_hidden
 ## What a step's amount really becomes: held under the ceiling while no flashing is on. ONE function,
 ## so no step can be the one that forgot. The effect-strength dial is deliberately NOT applied here -
 ## whichever layer draws applies it (the camera mixer for a shake, the post stack for the screen),
@@ -2364,27 +2242,26 @@ func _first_time_without_a_screen() -> bool:
 ## The arithmetic is the moment runner's, beside this file - the same call a moment written as
 ## rows makes - so the ceiling is one number in one place and a beat is held to it whichever of
 ## its homes it was written in.
-## @ace_hidden
 func _moment_allowed(amount: float) -> float:
 	return MomentRunner.scaled(amount, 1.0)
 
+# @ace_hidden
 ## And what a step's TIME really becomes: never quicker than the floor while no flashing is on,
 ## because a small amplitude arriving ten times a second is still a strobe. The same runner
 ## answers it, for the same reason.
-## @ace_hidden
 func _moment_slowed(seconds: float) -> float:
 	return MomentRunner.seconds_of(seconds)
 
+# @ace_hidden
 ## The name a play is filed under: the moment's own name, tidied the same way the lookup tidies
 ## it, so "Impact" and "impact " are one beat rather than two.
-## @ace_hidden
 func _moment_key(moment_name: String) -> String:
 	return moment_name.strip_edges().to_lower()
 
+# @ace_hidden
 ## The method on the host a moment written as ROWS compiled to, or an empty string when this
 ## game wrote that beat as a file instead. The suffix is how a variant is asked for - a block
 ## that compiled a backwards walk of itself answers to its own name with "_backwards" on it.
-## @ace_hidden
 func _moment_block_method(moment_name: String, suffix: String) -> String:
 	var word: String = moment_name.strip_edges().replace(" ", "_")
 	if host == null or not word.is_valid_identifier():
@@ -2392,10 +2269,10 @@ func _moment_block_method(moment_name: String, suffix: String) -> String:
 	var written: String = "moment_" + word + suffix
 	return written if host.has_method(written) else ""
 
+# @ace_hidden
 ## One whole play, forwards or backwards: open the book, take each step in the order the runner
 ## gives, and then either finish at once or hold the beat open for as long as its longest step.
 ## ONE function, so Moment and Play Moment Backwards can only differ in the order they walk.
-## @ace_hidden
 func _moment_walk(key: String, steps: Array, strength: float, backwards: bool) -> void:
 	_moment_begin(key, steps)
 	for at: int in MomentRunner.walk_order(steps, backwards):
@@ -2405,6 +2282,7 @@ func _moment_walk(key: String, steps: Array, strength: float, backwards: bool) -
 			_play_moment_step(step as Dictionary, strength)
 	_moment_launched(key)
 
+# @ace_hidden
 ## Opens a play: what it is made of, how long it lasts, and - before a single step has run -
 ## what every value it is about to write was worth. Recording FIRST is the whole of Restore:
 ## a value read after the beat has touched it is the beat's own doing, not the game's.
@@ -2412,7 +2290,6 @@ func _moment_walk(key: String, steps: Array, strength: float, backwards: bool) -
 ## A beat fired again while the last one is still in the air CLOSES that one first, cut short,
 ## because a sheet that pairs a Started with a Finished must get both: two hits in quick
 ## succession are two beats, and the first of them did not run its course.
-## @ace_hidden
 func _moment_begin(key: String, steps: Array) -> void:
 	_moment_end(key, true)
 	var play: MomentPlay = MomentPlay.new()
@@ -2424,11 +2301,11 @@ func _moment_begin(key: String, steps: Array) -> void:
 	_moment_cut[key] = false
 	moment_started.emit(key)
 
+# @ace_hidden
 ## The book a Restore reads from: for every value this beat will write, what it is worth now.
 ## The play keeps its own copy (that is what a Revert walks home to) and the node keeps the
 ## FIRST one it ever saw under that name, because a beat played twice must still put back what
 ## the game had before the first play, not what the first play left behind.
-## @ace_hidden
 func _moment_remember(key: String, play: MomentPlay, steps: Array) -> void:
 	var start: Dictionary = play.start
 	var ends: Dictionary = play.end
@@ -2443,11 +2320,11 @@ func _moment_remember(key: String, play: MomentPlay, steps: Array) -> void:
 			kept[touched] = was
 	_moment_ledger[key] = kept
 
+# @ace_hidden
 ## What one recorded value is worth right now. Every reach a moment has is here and nowhere
 ## else, so the layer that records a value, the one that walks it home and the one that puts it
 ## back are reading the same five answers. A value this game has no way to reach - a camera zoom
 ## with no camera, a post effect with no stack - answers null and is simply not recorded.
-## @ace_hidden
 func _moment_value_of(key: String) -> Variant:
 	if key == MomentRunner.TOUCH_HOST_TINT:
 		if host is CanvasItem:
@@ -2473,10 +2350,10 @@ func _moment_value_of(key: String) -> Variant:
 		return float(screen.call("post_strength", key.substr(MomentRunner.TOUCH_POST_PREFIX.length())))
 	return null
 
+# @ace_hidden
 ## And the way back: one recorded value, written where it came from. The mirror of the reader
 ## above, arm for arm, and it goes through the pack's own writers where there is one so a
 ## restored scale lands on the host the same way a squash does.
-## @ace_hidden
 func _moment_write_value(key: String, value: Variant) -> void:
 	if value == null:
 		return
@@ -2500,11 +2377,11 @@ func _moment_write_value(key: String, value: Variant) -> void:
 		if screen != null:
 			screen.call("fade_post_strength", key.substr(MomentRunner.TOUCH_POST_PREFIX.length()), float(value), 0.0, 0.0)
 
+# @ace_hidden
 ## What one recorded value will be worth once the beat has run its course - which is where a
 ## Skip To End lands. Time always ends unfrozen; a held effect ends at the strength the step
 ## asked for; a zoom ends where the percentage took it; everything else comes back by itself,
 ## so it ends where it started.
-## @ace_hidden
 func _moment_settled(key: String, was: Variant, steps: Array) -> Variant:
 	if key == MomentRunner.TOUCH_TIME_SCALE:
 		return 1.0
@@ -2522,18 +2399,18 @@ func _moment_settled(key: String, was: Variant, steps: Array) -> Variant:
 			return Vector2(clampf(wanted.x, min_zoom, max_zoom), clampf(wanted.y, min_zoom, max_zoom))
 	return was
 
+# @ace_hidden
 ## Says that one step of a play has just been taken, and remembers which - the name Moment Step
 ## Name answers with and On Moment Step carries.
-## @ace_hidden
 func _moment_stepping(key: String, label: String) -> void:
 	if not _moment_plays.has(key):
 		return
 	(_moment_plays[key] as MomentPlay).step = label
 	moment_stepped.emit(key, label)
 
+# @ace_hidden
 ## The end of the opening frame: a beat whose steps are all instant is already over and says so,
 ## and one with a length holds the tick open until it has run out.
-## @ace_hidden
 func _moment_launched(key: String) -> void:
 	if not _moment_plays.has(key):
 		return
@@ -2542,9 +2419,9 @@ func _moment_launched(key: String) -> void:
 		return
 	set_process(true)
 
+# @ace_hidden
 ## Closes a play and says so, with the one fact a sheet cannot work out for itself: whether the
 ## beat ran its course or was ended early.
-## @ace_hidden
 func _moment_end(key: String, cut_short: bool) -> void:
 	if not _moment_plays.has(key):
 		return
@@ -2552,9 +2429,9 @@ func _moment_end(key: String, cut_short: bool) -> void:
 	_moment_cut[key] = cut_short
 	moment_finished.emit(key, cut_short)
 
+# @ace_hidden
 ## Puts back everything one moment moved, and forgets it - so a second Restore of the same name
 ## does nothing rather than writing a stale value over whatever the game has since done.
-## @ace_hidden
 func _moment_put_back(key: String) -> void:
 	if not _moment_ledger.has(key):
 		return
@@ -2564,11 +2441,11 @@ func _moment_put_back(key: String) -> void:
 		_moment_write_value(touched, kept[touched])
 	_moment_ledger.erase(key)
 
+# @ace_hidden
 ## Stops the tweens a moment set walking on the values about to be written. A value put back
 ## while the tween that moved it is still running is written over on the very next frame, so a
 ## Restore or a Revert that did not stop them first would look like a row that does nothing.
 ## Only the walks a MOMENT started are held, so nothing a sheet fired on its own is touched.
-## @ace_hidden
 func _moment_let_go(touched_keys: Array) -> void:
 	for touched: Variant in touched_keys:
 		var walking: Tween = _moment_tweens.get(str(touched), null) as Tween
@@ -2576,10 +2453,10 @@ func _moment_let_go(touched_keys: Array) -> void:
 			walking.kill()
 		_moment_tweens.erase(str(touched))
 
+# @ace_hidden
 ## A Juice Player is opening a play: write down, ONCE for that player, what every value its cards will
 ## touch is worth now (the first-touch rule the moments use), and what each will be worth once the
 ## cards have run their course. Stop lands there; Restore goes back to the first.
-## @ace_hidden
 func juice_player_began(key: String, steps: Array) -> void:
 	var kept: Dictionary = _moment_ledger.get(key, {})
 	var ends: Dictionary = {}
@@ -2593,11 +2470,11 @@ func juice_player_began(key: String, steps: Array) -> void:
 	_moment_ledger[key] = kept
 	_player_ends[key] = ends
 
+# @ace_hidden
 ## A Juice Player stopped (put_back false) or restored (put_back true): every effect its cards set going
 ## ends now, whether or not the list has finished walking. A value lands where the cards would have
 ## left it, or goes back to the first value the player saw. The shake, the slowmo and the hold on
 ## the clock end either way.
-## @ace_hidden
 func juice_player_ended(key: String, put_back: bool) -> void:
 	if not _player_ends.has(key) and not _moment_ledger.has(key):
 		return
@@ -2615,11 +2492,11 @@ func juice_player_ended(key: String, put_back: bool) -> void:
 		_moment_ledger.erase(key)
 	_player_ends.erase(key)
 
+# @ace_hidden
 ## One frame of every beat in the air. A forward play only has to count down; a reverting one
 ## walks each value it recorded from where the beat left it back to where the game had it, over
 ## the beat's own length, which is what makes a revert read as the same path travelled home.
 ## Keys are copied before the walk because ending a play erases it from the book.
-## @ace_hidden
 func _moment_tick(delta: float) -> void:
 	if _moment_plays.is_empty():
 		return
@@ -2649,18 +2526,18 @@ func _moment_tick(delta: float) -> void:
 		var cut: bool = ending != null and ending.reverting
 		_moment_end(ended, cut)
 
+# @ace_hidden
 ## Whether any beat is still in the air - the one thing the tick's parking check has to ask.
-## @ace_hidden
 func _moment_busy() -> bool:
 	return not _moment_plays.is_empty()
 
+# @ace_hidden
 ## What a broadcast arrives as. call_group reaches this by name, so the method's NAME is the
 ## contract between a Shake Channel row and every listener - which is why it is spelled out here
 ## rather than hidden behind a signal nobody could connect to without a reference.
 ##
 ## The accessibility dial is applied HERE for the two shakes this node draws itself, and NOT for
 ## the camera: the camera mixer applies it once already, and applying it twice would square it.
-## @ace_hidden
 func shake_from_channel(magnitude: float, seconds: float) -> void:
 	if _channel_shakes == CHANNEL_SHAKE_SCREEN:
 		chromatic_shake(magnitude * maxf(float(Engine.get_meta("effect_strength", 1.0)), 0.0), seconds, "reducing", -1.0)
@@ -2673,11 +2550,11 @@ func shake_from_channel(magnitude: float, seconds: float) -> void:
 	_channel_left = _channel_span
 	set_process(true)
 
+# @ace_hidden
 ## One frame of a channel shake. A camera listener holds the trauma the mixer already reads up
 ## to what the channel asked for, so the two never draw two shakes over each other; a node
 ## listener rides the same noise around the pose it was found in. Both fade to nothing over the
 ## time the broadcast named, and the node is put back the frame it runs out.
-## @ace_hidden
 func _channel_tick(delta: float) -> void:
 	if _channel_left <= 0.0:
 		if _channel_driving:
@@ -2704,8 +2581,8 @@ func _channel_tick(delta: float) -> void:
 	if _channel_left <= 0.0:
 		_channel_put_back()
 
+# @ace_hidden
 ## Where the node is resting, and where a shaken frame writes it.
-## @ace_hidden
 func _channel_place() -> Vector2:
 	if host is Node2D:
 		return (host as Node2D).position
@@ -2713,16 +2590,16 @@ func _channel_place() -> Vector2:
 		return (host as Control).position
 	return Vector2.ZERO
 
-## @ace_hidden
+# @ace_hidden
 func _channel_move(to: Vector2) -> void:
 	if host is Node2D:
 		(host as Node2D).position = to
 	elif host is Control:
 		(host as Control).position = to
 
+# @ace_hidden
 ## Hands the node back exactly as it was found, and forgets the shake. Called when a shake runs
 ## out and when a listener leaves the channel, so nothing is ever left displaced.
-## @ace_hidden
 func _channel_put_back() -> void:
 	if _channel_driving:
 		_channel_move(_channel_rest)
@@ -2731,14 +2608,14 @@ func _channel_put_back() -> void:
 	_channel_span = 0.0
 	_channel_left = 0.0
 
+# @ace_hidden
 ## Whether a channel shake is still costing anything - the second thing the parking check asks.
-## @ace_hidden
 func _channel_busy() -> bool:
 	return _channel_left > 0.0 or _channel_driving
 
+# @ace_hidden
 ## Starts one timed shake of `amount` that lasts `seconds` (never under a twentieth of a second) with the
 ## shape the two ticks and the curve ask for. A curve is the shape on its own and the ticks are not read.
-## @ace_hidden
 func _start_timed_shake(amount: float, seconds: float, fade_in: bool, fade_out: bool, curve: Curve) -> void:
 	if amount <= 0.0:
 		return
@@ -2746,10 +2623,10 @@ func _start_timed_shake(amount: float, seconds: float, fade_in: bool, fade_out: 
 		"fade_in": fade_in, "fade_out": fade_out, "curve": curve})
 	set_process(true)
 
+# @ace_hidden
 ## Plays a Shake card that holds a tick or a curve: the same amount and length rules a moment step has (the
 ## play's strength and the no-flashing ceiling and floor), then a timed shake. The Juice Player calls this by
 ## name when it finds it here, so an older copy of this pack without it keeps shaking the old way.
-## @ace_hidden
 func shake_from_card(card: Dictionary, strength: float) -> void:
 	# A TIMED SHAKE is the other kind of shake. Shake adds trauma, which fades at Shake Decay whatever length a
 	# card says; a timed shake lasts exactly its length and has a shape (fade in, fade out, both, neither, or a
@@ -2765,9 +2642,9 @@ func shake_from_card(card: Dictionary, strength: float) -> void:
 			push_warning("Juice: a Shake card keeps the curve \"%s\", which is no Curve file now, so it shakes with its ticks instead." % kept)
 	_start_timed_shake(amount, seconds, bool(card.get("fade_in", false)), bool(card.get("fade_out", false)), curve)
 
+# @ace_hidden
 ## Moves every timed shake on by one frame and gives back the level they add to the trauma. A shake that has
 ## run its whole length is let go, and the ones left keep their own clocks.
-## @ace_hidden
 func _tick_timed_shakes(delta: float) -> float:
 	var level: float = 0.0
 	for at: int in range(_timed_shakes.size() - 1, -1, -1):
@@ -2780,9 +2657,9 @@ func _tick_timed_shakes(delta: float) -> float:
 		level += float(one["amount"]) * MomentRunner.shake_shape(float(one["elapsed"]) / span, bool(one["fade_in"]), bool(one["fade_out"]), one["curve"] as Curve)
 	return level
 
+# @ace_hidden
 ## What the camera mixer drew its shake with on the last frame, before squaring: the trauma plus every
 ## timed shake, held to 1.
-## @ace_hidden
 func shake_level() -> float:
 	return _shake_level
 

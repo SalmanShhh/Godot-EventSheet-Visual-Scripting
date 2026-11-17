@@ -1,13 +1,13 @@
-## @ace_tags(fade, juice)
-## @ace_category("Fade")
-## @ace_version(1.0.0)
+# @ace_tags(fade, juice)
+# @ace_category("Fade")
+# @ace_version(1.0.0)
 @tool
 @icon("res://eventsheet_addons/fade/icon.svg")
 class_name FadeBehavior
 extends Node
 ## Fades any sprite or UI node in and out without tween code. Set fade-in, hold, and fade-out times in the Inspector and it runs the whole sequence on its own, optionally freeing the node when done and firing a trigger at each stage.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CanvasItem = null
 
@@ -20,12 +20,12 @@ func _enter_tree() -> void:
 		push_warning("Fade Behavior needs a CanvasItem: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Preview", "Play") var _preview_start_button: Callable = _preview_start
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
 
@@ -241,14 +241,14 @@ func _preview_repeat(run: int) -> void:
 			return
 		_preview_kick()
 
-## @ace_trigger
-## @ace_name("On Faded In")
+# @ace_trigger
+# @ace_name("On Faded In")
 signal on_faded_in
-## @ace_trigger
-## @ace_name("On Fade Out Started")
+# @ace_trigger
+# @ace_name("On Fade Out Started")
 signal on_fade_out_started
-## @ace_trigger
-## @ace_name("On Faded Out")
+# @ace_trigger
+# @ace_name("On Faded Out")
 signal on_faded_out
 
 # --- Designer knobs (tune the timing in the Inspector) ---
@@ -271,14 +271,12 @@ func _ready() -> void:
 	if start_on_ready:
 		start_fade()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Fade In")
-## @ace_category("Fade")
-## @ace_description("Fades the node from its current transparency up to fully visible over a duration, then fires On Faded In.")
-## @ace_display_template("Fade in over [b]{duration}[/b] s")
-## @ace_icon("res://eventsheet_addons/fade/icon.svg")
-## @ace_codegen_template("$FadeBehavior.fade_in({duration})")
+# @ace_action
+# @ace_featured
+# @ace_name("Fade In")
+# @ace_description("Fades the node from its current transparency up to fully visible over a duration, then fires On Faded In.")
+# @ace_display_template("Fade in over [b]{duration}[/b] s")
+# @ace_codegen_template("$FadeBehavior.fade_in({duration})")
 func fade_in(duration: float) -> void:
 	if host == null:
 		return
@@ -287,14 +285,12 @@ func fade_in(duration: float) -> void:
 	_tween.tween_property(host, "modulate:a", 1.0, maxf(duration, 0.0001))
 	_tween.finished.connect(func() -> void: on_faded_in.emit())
 
-## @ace_action
-## @ace_featured
-## @ace_name("Fade Out")
-## @ace_category("Fade")
-## @ace_description("Fades the node down to invisible over a duration (fires On Fade Out Started now, On Faded Out at the end). Frees the node afterwards if Free On Faded Out is on.")
-## @ace_display_template("Fade out over [b]{duration}[/b] s")
-## @ace_icon("res://eventsheet_addons/fade/icon.svg")
-## @ace_codegen_template("$FadeBehavior.fade_out({duration})")
+# @ace_action
+# @ace_featured
+# @ace_name("Fade Out")
+# @ace_description("Fades the node down to invisible over a duration (fires On Fade Out Started now, On Faded Out at the end). Frees the node afterwards if Free On Faded Out is on.")
+# @ace_display_template("Fade out over [b]{duration}[/b] s")
+# @ace_codegen_template("$FadeBehavior.fade_out({duration})")
 func fade_out(duration: float) -> void:
 	if host == null:
 		return
@@ -307,12 +303,10 @@ func fade_out(duration: float) -> void:
 		if free_on_faded_out and host != null:
 			host.queue_free())
 
-## @ace_action
-## @ace_name("Start Fade")
-## @ace_category("Fade")
-## @ace_description("Runs the whole sequence from the Inspector times: fade in, hold, then fade out (firing On Faded In, On Fade Out Started, and On Faded Out along the way). Freeing the node at the end if set.")
-## @ace_icon("res://eventsheet_addons/fade/icon.svg")
-## @ace_codegen_template("$FadeBehavior.start_fade()")
+# @ace_action
+# @ace_name("Start Fade")
+# @ace_description("Runs the whole sequence from the Inspector times: fade in, hold, then fade out (firing On Faded In, On Fade Out Started, and On Faded Out along the way). Freeing the node at the end if set.")
+# @ace_codegen_template("$FadeBehavior.start_fade()")
 func start_fade() -> void:
 	if host == null:
 		return
@@ -329,21 +323,17 @@ func start_fade() -> void:
 		if free_on_faded_out and host != null:
 			host.queue_free())
 
-## @ace_action
-## @ace_name("Stop Fade")
-## @ace_category("Fade")
-## @ace_description("Cancels any running fade, leaving the node at its current transparency.")
-## @ace_icon("res://eventsheet_addons/fade/icon.svg")
-## @ace_codegen_template("$FadeBehavior.stop_fade()")
+# @ace_action
+# @ace_name("Stop Fade")
+# @ace_description("Cancels any running fade, leaving the node at its current transparency.")
+# @ace_codegen_template("$FadeBehavior.stop_fade()")
 func stop_fade() -> void:
 	_kill_tween()
 
-## @ace_action
-## @ace_name("Set Opacity")
-## @ace_category("Fade")
-## @ace_description("Sets the node's transparency directly (0 = invisible, 1 = fully visible), cancelling any running fade.")
-## @ace_icon("res://eventsheet_addons/fade/icon.svg")
-## @ace_codegen_template("$FadeBehavior.set_opacity({alpha})")
+# @ace_action
+# @ace_name("Set Opacity")
+# @ace_description("Sets the node's transparency directly (0 = invisible, 1 = fully visible), cancelling any running fade.")
+# @ace_codegen_template("$FadeBehavior.set_opacity({alpha})")
 func set_opacity(alpha: float) -> void:
 	_kill_tween()
 	_set_alpha(alpha)
@@ -358,17 +348,15 @@ func _kill_tween() -> void:
 		_tween.kill()
 	_tween = null
 
-## @ace_condition
-## @ace_name("Is Fading")
-## @ace_icon("res://eventsheet_addons/fade/icon.svg")
-## @ace_codegen_template("$FadeBehavior.is_fading()")
+# @ace_condition
+# @ace_name("Is Fading")
+# @ace_codegen_template("$FadeBehavior.is_fading()")
 func is_fading() -> bool:
 	return _tween != null and _tween.is_valid() and _tween.is_running()
 
-## @ace_expression
-## @ace_name("Opacity")
-## @ace_icon("res://eventsheet_addons/fade/icon.svg")
-## @ace_codegen_template("$FadeBehavior.opacity()")
+# @ace_expression
+# @ace_name("Opacity")
+# @ace_codegen_template("$FadeBehavior.opacity()")
 func opacity() -> float:
 	return (host as CanvasItem).modulate.a if host is CanvasItem else 1.0
 

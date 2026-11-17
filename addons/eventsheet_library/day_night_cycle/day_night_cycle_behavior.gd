@@ -1,13 +1,13 @@
-## @ace_tags(lighting, time, day-night)
-## @ace_category("Day/Night Cycle")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_tags(lighting, time, day-night)
+# @ace_category("Day/Night Cycle")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/day_night_cycle/icon.svg")
 class_name DayNightCycleBehavior
 extends Node
 ## A clock that runs the sky. A whole day passes every Day Length Minutes; the sun turns with the hour, and three curves say how bright the sun, the ambient light and the sky itself are through the day. Point Sun Light at a light and World Lighting at a WorldEnvironment or a CanvasModulate - 2D and 3D both work, and an unset target is skipped. On Sunrise, On Sunset, On Midnight and On The Hour are what a game listens to; It Is Night and It Is Day are what it asks.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 
@@ -19,25 +19,25 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Day Night Cycle Behavior needs a parent node: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
+# @ace_trigger
+# @ace_name("On Sunrise")
+# @ace_category("Day/Night Cycle")
 ## Fires as the clock passes Sunrise Hour - the moment to put the torches out.
-## @ace_trigger
-## @ace_name("On Sunrise")
-## @ace_category("Day/Night Cycle")
 signal sunrise
+# @ace_trigger
+# @ace_name("On Sunset")
+# @ace_category("Day/Night Cycle")
 ## Fires as the clock passes Sunset Hour - the moment to light the streetlamps.
-## @ace_trigger
-## @ace_name("On Sunset")
-## @ace_category("Day/Night Cycle")
 signal sunset
+# @ace_trigger
+# @ace_name("On Midnight")
+# @ace_category("Day/Night Cycle")
 ## Fires as the clock passes 0:00 - one whole game day has gone by.
-## @ace_trigger
-## @ace_name("On Midnight")
-## @ace_category("Day/Night Cycle")
 signal midnight
+# @ace_trigger
+# @ace_name("On The Hour")
+# @ace_category("Day/Night Cycle")
 ## Fires every time the clock reaches a whole hour, carrying the hour it reached (0 to 23). Compare it to branch on one hour in particular.
-## @ace_trigger
-## @ace_name("On The Hour")
-## @ace_category("Day/Night Cycle")
 signal hour_struck(hour: int)
 
 ## How long a whole game day takes in real minutes. 20 is a long exploration day; 2 is a level that races through dusk.
@@ -91,35 +91,32 @@ func _process(delta: float) -> void:
 	_announce_moments(previous, time_of_day)
 	_drive_the_world()
 
+# @ace_action
+# @ace_featured
+# @ace_name("Set The Time")
+# @ace_display_template("Set the time to [b]{hour}[/b]:00")
+# @ace_codegen_template("$DayNightCycleBehavior.set_the_time({hour})")
 ## Jumps the clock to an hour on the 24 hour clock - the row a cutscene, a bed or a debug key
 ## uses. The hours it skips over do NOT ring: a jump is one moment, not the twelve it passed.
-## @ace_action
-## @ace_featured
-## @ace_name("Set The Time")
-## @ace_display_template("Set the time to [b]{hour}[/b]:00")
-## @ace_icon("res://eventsheet_addons/day_night_cycle/icon.svg")
-## @ace_codegen_template("$DayNightCycleBehavior.set_the_time({hour})")
 func set_the_time(hour: float) -> void:
 	time_of_day = fposmod(hour, 24.0)
 	_last_hour = int(floor(time_of_day))
 	_drive_the_world()
 
+# @ace_action
+# @ace_name("Run The Clock Faster")
+# @ace_display_template("Run the clock [b]{times_faster}[/b] times faster")
+# @ace_codegen_template("$DayNightCycleBehavior.run_the_clock({times_faster})")
 ## Changes how fast the clock runs without changing the day it is set to - what a game uses
 ## for a rest at an inn, or for a sky that races while a menu is open.
-## @ace_action
-## @ace_name("Run The Clock Faster")
-## @ace_display_template("Run the clock [b]{times_faster}[/b] times faster")
-## @ace_icon("res://eventsheet_addons/day_night_cycle/icon.svg")
-## @ace_codegen_template("$DayNightCycleBehavior.run_the_clock({times_faster})")
 func run_the_clock(times_faster: float) -> void:
 	clock_scale = maxf(times_faster, 0.0)
 
+# @ace_action
+# @ace_name("Pause The Clock")
+# @ace_display_template("Pause the clock")
+# @ace_codegen_template("$DayNightCycleBehavior.pause_the_clock()")
 ## Stops the clock where it is. The sky keeps whatever it is showing - nothing is reset.
-## @ace_action
-## @ace_name("Pause The Clock")
-## @ace_display_template("Pause the clock")
-## @ace_icon("res://eventsheet_addons/day_night_cycle/icon.svg")
-## @ace_codegen_template("$DayNightCycleBehavior.pause_the_clock()")
 func pause_the_clock() -> void:
 	_paused = true
 	# A stopped clock has no hour to advance, so it stops costing a frame too; Resume The Clock
@@ -127,33 +124,30 @@ func pause_the_clock() -> void:
 	# in the tick rather than switched off here, so changing either while the game runs works.
 	set_process(false)
 
+# @ace_action
+# @ace_name("Resume The Clock")
+# @ace_display_template("Resume the clock")
+# @ace_codegen_template("$DayNightCycleBehavior.resume_the_clock()")
 ## Starts the clock again from where it was paused.
-## @ace_action
-## @ace_name("Resume The Clock")
-## @ace_display_template("Resume the clock")
-## @ace_icon("res://eventsheet_addons/day_night_cycle/icon.svg")
-## @ace_codegen_template("$DayNightCycleBehavior.resume_the_clock()")
 func resume_the_clock() -> void:
 	_paused = false
 	set_process(true)
 
+# @ace_condition
+# @ace_name("It Is Day")
+# @ace_display_template("It is day")
+# @ace_codegen_template("$DayNightCycleBehavior.it_is_day()")
 ## True between sunrise and sunset. The comparison is made in hours SINCE sunrise so that a
 ## day running past midnight (sunrise 20:00, sunset 4:00) reads the same as an ordinary one.
-## @ace_condition
-## @ace_name("It Is Day")
-## @ace_display_template("It is day")
-## @ace_icon("res://eventsheet_addons/day_night_cycle/icon.svg")
-## @ace_codegen_template("$DayNightCycleBehavior.it_is_day()")
 func it_is_day() -> bool:
 	return fposmod(time_of_day - sunrise_hour, 24.0) < fposmod(sunset_hour - sunrise_hour, 24.0)
 
+# @ace_condition
+# @ace_name("It Is Night")
+# @ace_display_template("It is night")
+# @ace_codegen_template("$DayNightCycleBehavior.it_is_night()")
 ## True between sunset and sunrise - the other half of the same question, written as one row
 ## so a sheet never has to invert anything.
-## @ace_condition
-## @ace_name("It Is Night")
-## @ace_display_template("It is night")
-## @ace_icon("res://eventsheet_addons/day_night_cycle/icon.svg")
-## @ace_codegen_template("$DayNightCycleBehavior.it_is_night()")
 func it_is_night() -> bool:
 	return not it_is_day()
 

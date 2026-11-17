@@ -1,6 +1,6 @@
-## @ace_category("Sine 3D")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Sine 3D")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @tool
 @icon("res://eventsheet_addons/sine_3d/icon.svg")
 class_name Sine3DBehavior
@@ -9,7 +9,7 @@ extends Node
 ##
 ## Changes on its parent: position, rotation.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node3D = null
 
@@ -22,12 +22,12 @@ func _enter_tree() -> void:
 		push_warning("Sine3D Behavior needs a Node3D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Preview", "Play") var _preview_start_button: Callable = _preview_start
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
 
@@ -289,37 +289,31 @@ func _process(delta: float) -> void:
 	elif movement == "rotation-y":
 		host.rotation.y = base_rot_y + offset * 0.0174533
 
-## @ace_action
-## @ace_name("Set Sine 3D Active")
-## @ace_category("Sine 3D")
-## @ace_description("Pauses or resumes the oscillation.")
-## @ace_icon("res://eventsheet_addons/sine_3d/icon.svg")
-## @ace_codegen_template("$Sine3DBehavior.set_sine3d_active({is_active})")
+# @ace_action
+# @ace_name("Set Sine 3D Active")
+# @ace_description("Pauses or resumes the oscillation.")
+# @ace_codegen_template("$Sine3DBehavior.set_sine3d_active({is_active})")
 func set_sine3d_active(is_active: bool) -> void:
 	active = is_active
 	# A frozen host costs nothing per frame; resuming turns processing back on.
 	set_process(is_active)
 
-## @ace_action
-## @ace_name("Set Phase")
-## @ace_category("Sine 3D")
-## @ace_description("Phase offset in degrees.")
-## @ace_icon("res://eventsheet_addons/sine_3d/icon.svg")
-## @ace_codegen_template("$Sine3DBehavior.set_sine3d_phase({degrees})")
+# @ace_action
+# @ace_name("Set Phase")
+# @ace_description("Phase offset in degrees.")
+# @ace_codegen_template("$Sine3DBehavior.set_sine3d_phase({degrees})")
 func set_sine3d_phase(degrees: float) -> void:
 	phase_degrees = degrees
 
-## @ace_action
-## @ace_name("Reset Sine 3D")
-## @ace_category("Sine 3D")
-## @ace_description("Restarts the wave from the current state.")
-## @ace_icon("res://eventsheet_addons/sine_3d/icon.svg")
-## @ace_codegen_template("$Sine3DBehavior.reset_sine3d()")
+# @ace_action
+# @ace_name("Reset Sine 3D")
+# @ace_description("Restarts the wave from the current state.")
+# @ace_codegen_template("$Sine3DBehavior.reset_sine3d()")
 func reset_sine3d() -> void:
 	time = 0.0
 	base_captured = false
 
-## @ace_hidden
+# @ace_hidden
 func _wave(t: float) -> float:
 	var cycle := fposmod(t, 1.0)
 	match wave:

@@ -1,16 +1,16 @@
-## @ace_tags(collection, codex, progression, unlocks)
-## @ace_category("Codex")
-## @ace_version(1.0.0)
+# @ace_tags(collection, codex, progression, unlocks)
+# @ace_category("Codex")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/codex/icon.svg")
 class_name CodexAddon
 extends Node
 ## The set of things the player has found, as the Codex autoload: discover an entry, ask whether it has been found, count how many of a set are in, and walk the discovered pages to draw the codex screen. A set is a folder and an entry is a file in it, so the pages are CodexEntryResource files you own - the pack ships one empty starter and no list.
 
+# @ace_trigger
+# @ace_name("On First Discovered")
 ## Fires the FIRST time an entry is discovered, and never again for that entry - the toast, the
 ## page-turn sound, the achievement. A second Discover of the same entry is silent, so the row that
 ## fills the codex and the row that celebrates it can be the same row.
-## @ace_trigger
-## @ace_name("On First Discovered")
 signal first_discovered(set_name: String, entry_id: String)
 
 ## Folder of codex sets; each subfolder is a set and each file an entry.
@@ -20,9 +20,9 @@ signal first_discovered(set_name: String, entry_id: String)
 
 ## Entries found so far, by set name and entry id.
 var _found: Dictionary = {}
+# @ace_hidden
 ## One entry's resource, or null when no file answers to that id. Both resource extensions are
 ## tried, so a binary .res entry works exactly like a text .tres one.
-## @ace_hidden
 func _entry(codex_set: String, entry_id: String) -> Resource:
 	for extension: String in [".tres", ".res"]:
 		var path: String = _set_folder(codex_set).path_join(entry_id + extension)
@@ -30,14 +30,12 @@ func _entry(codex_set: String, entry_id: String) -> Resource:
 			return load(path)
 	return null
 
-## @ace_action
-## @ace_featured
-## @ace_name("Discover")
-## @ace_category("Codex")
-## @ace_description("Records that the player has found an entry of a set. The first Discover of an entry fires On First Discovered; every one after it is silent, so the row that fills the codex and the row that celebrates it can be the same row.")
-## @ace_display_template("Discover [b]{entry_id}[/b] in [b]{set_name}[/b]")
-## @ace_icon("res://eventsheet_addons/codex/icon.svg")
-## @ace_codegen_template("Codex.discover({set_name}, {entry_id})")
+# @ace_action
+# @ace_featured
+# @ace_name("Discover")
+# @ace_description("Records that the player has found an entry of a set. The first Discover of an entry fires On First Discovered; every one after it is silent, so the row that fills the codex and the row that celebrates it can be the same row.")
+# @ace_display_template("Discover [b]{entry_id}[/b] in [b]{set_name}[/b]")
+# @ace_codegen_template("Codex.discover({set_name}, {entry_id})")
 @warning_ignore("shadowed_variable_base_class")  # set_name: ACE parameter id of this verb, frozen since it shipped
 func discover(set_name: String, entry_id: String) -> void:
 	if entry_id.is_empty():
@@ -53,13 +51,11 @@ func discover(set_name: String, entry_id: String) -> void:
 		push_warning("Codex: \"%s\" was discovered in the \"%s\" set, but no entry file in %s answers to it - For Each Discovered will skip it." % [entry_id, set_name, _set_folder(set_name)])
 	first_discovered.emit(set_name, entry_id)
 
-## @ace_action
-## @ace_name("Forget Entry")
-## @ace_category("Codex")
-## @ace_description("Takes one entry back out of the set, so Has Discovered says no again and the page leaves For Each Discovered. The other half of Discover: a cheat menu that locks a page again, a chapter that takes its own notes back, a run-only discovery cleared between runs. An entry that was never found is left alone.")
-## @ace_display_template("Forget [b]{entry_id}[/b] in [b]{set_name}[/b]")
-## @ace_icon("res://eventsheet_addons/codex/icon.svg")
-## @ace_codegen_template("Codex.forget_entry({set_name}, {entry_id})")
+# @ace_action
+# @ace_name("Forget Entry")
+# @ace_description("Takes one entry back out of the set, so Has Discovered says no again and the page leaves For Each Discovered. The other half of Discover: a cheat menu that locks a page again, a chapter that takes its own notes back, a run-only discovery cleared between runs. An entry that was never found is left alone.")
+# @ace_display_template("Forget [b]{entry_id}[/b] in [b]{set_name}[/b]")
+# @ace_codegen_template("Codex.forget_entry({set_name}, {entry_id})")
 @warning_ignore("shadowed_variable_base_class")  # set_name: ACE parameter id of this verb, frozen since it shipped
 func forget_entry(set_name: String, entry_id: String) -> void:
 	var ids: Dictionary = _found.get(set_name, {})
@@ -68,60 +64,52 @@ func forget_entry(set_name: String, entry_id: String) -> void:
 	ids.erase(entry_id)
 	_found[set_name] = ids
 
-## @ace_action
-## @ace_name("Forget Set")
-## @ace_category("Codex")
-## @ace_description("Empties one whole set, so nothing in it counts as found any more and its count reads zero. What a New Game in the same session wants, and what a save that carries no codex of its own deliberately does NOT do by itself.")
-## @ace_display_template("Forget everything in [b]{set_name}[/b]")
-## @ace_icon("res://eventsheet_addons/codex/icon.svg")
-## @ace_codegen_template("Codex.forget_set({set_name})")
+# @ace_action
+# @ace_name("Forget Set")
+# @ace_description("Empties one whole set, so nothing in it counts as found any more and its count reads zero. What a New Game in the same session wants, and what a save that carries no codex of its own deliberately does NOT do by itself.")
+# @ace_display_template("Forget everything in [b]{set_name}[/b]")
+# @ace_codegen_template("Codex.forget_set({set_name})")
 @warning_ignore("shadowed_variable_base_class")  # set_name: ACE parameter id of this verb, frozen since it shipped
 func forget_set(set_name: String) -> void:
 	_found.erase(set_name)
 
-## @ace_condition
-## @ace_featured
-## @ace_name("Has Discovered")
-## @ace_category("Codex")
-## @ace_description("Whether that entry of that set has been found - show the page, unlock the recipe, grey the silhouette out.")
-## @ace_display_template("Has discovered [b]{entry_id}[/b] in [b]{set_name}[/b]")
-## @ace_icon("res://eventsheet_addons/codex/icon.svg")
-## @ace_codegen_template("Codex.has_discovered({set_name}, {entry_id})")
+# @ace_condition
+# @ace_featured
+# @ace_name("Has Discovered")
+# @ace_description("Whether that entry of that set has been found - show the page, unlock the recipe, grey the silhouette out.")
+# @ace_display_template("Has discovered [b]{entry_id}[/b] in [b]{set_name}[/b]")
+# @ace_codegen_template("Codex.has_discovered({set_name}, {entry_id})")
 @warning_ignore("shadowed_variable_base_class")  # set_name: ACE parameter id of this verb, frozen since it shipped
 func has_discovered(set_name: String, entry_id: String) -> bool:
 	return (_found.get(set_name, {}) as Dictionary).has(entry_id)
 
-## @ace_expression
-## @ace_name("Discovered Count")
-## @ace_category("Codex")
-## @ace_description("How many entries of a set have been found - the left-hand number of a 14-out-of-60 line.")
-## @ace_display_template("discovered count of [b]{set_name}[/b]")
-## @ace_icon("res://eventsheet_addons/codex/icon.svg")
-## @ace_codegen_template("Codex.discovered_count({set_name})")
+# @ace_expression
+# @ace_name("Discovered Count")
+# @ace_description("How many entries of a set have been found - the left-hand number of a 14-out-of-60 line.")
+# @ace_display_template("discovered count of [b]{set_name}[/b]")
+# @ace_codegen_template("Codex.discovered_count({set_name})")
 @warning_ignore("shadowed_variable_base_class")  # set_name: ACE parameter id of this verb, frozen since it shipped
 func discovered_count(set_name: String) -> int:
 	return (_found.get(set_name, {}) as Dictionary).size()
 
-## @ace_expression
-## @ace_name("Total Entries")
-## @ace_category("Codex")
-## @ace_description("How many entries a set HOLDS, counted from the files in its folder - the right-hand number of a 14-out-of-60 line. A page added to the folder joins the total with no sheet edit.")
-## @ace_display_template("total entries in [b]{set_name}[/b]")
-## @ace_icon("res://eventsheet_addons/codex/icon.svg")
-## @ace_codegen_template("Codex.total_entries({set_name})")
+# @ace_expression
+# @ace_name("Total Entries")
+# @ace_description("How many entries a set HOLDS, counted from the files in its folder - the right-hand number of a 14-out-of-60 line. A page added to the folder joins the total with no sheet edit.")
+# @ace_display_template("total entries in [b]{set_name}[/b]")
+# @ace_codegen_template("Codex.total_entries({set_name})")
 @warning_ignore("shadowed_variable_base_class")  # set_name: ACE parameter id of this verb, frozen since it shipped
 func total_entries(set_name: String) -> int:
 	return _entry_ids(set_name).size()
 
+# @ace_hidden
 ## The folder one set's entry files live in.
-## @ace_hidden
 func _set_folder(codex_set: String) -> String:
 	return codex_folder.path_join(codex_set)
 
+# @ace_hidden
 ## Every entry id a set's folder HOLDS, sorted - the file names with their extension taken off. A
 ## folder that is not there holds nothing, and says so only in debug mode, because Total Entries is
 ## the kind of row a menu asks every frame.
-## @ace_hidden
 func _entry_ids(codex_set: String) -> PackedStringArray:
 	var folder: String = _set_folder(codex_set)
 	var ids: PackedStringArray = PackedStringArray()
@@ -136,10 +124,10 @@ func _entry_ids(codex_set: String) -> PackedStringArray:
 	ids.sort()
 	return ids
 
+# @ace_hidden
 ## The save seam every autoload pack here answers to: Save All Addons snapshots this under the
 ## autoload's own name, and Load All Addons hands it straight back. Plain data only, and the ids go
 ## out sorted so two runs that found the same pages write the same bytes.
-## @ace_hidden
 func save_state() -> Dictionary:
 	var out: Dictionary = {}
 	var codex_sets: Array = _found.keys()
@@ -150,7 +138,7 @@ func save_state() -> Dictionary:
 		out[codex_set] = ids
 	return {"discovered": out}
 
-## @ace_hidden
+# @ace_hidden
 func load_state(state: Dictionary) -> void:
 	if state.is_empty():
 		return
@@ -161,15 +149,13 @@ func load_state(state: Dictionary) -> void:
 			ids[str(entry_id)] = true
 		_found[codex_set] = ids
 
+# @ace_looping(entry)
+# @ace_name("For Each Discovered")
+# @ace_codegen_template("Codex.each_discovered({set_name})")
 ## Runs this event's actions once per DISCOVERED entry of a set, in name order - the codex
 ## page itself, as one row. Read the current one as `entry`, then take its `entry_name`, `picture`
 ## and `text` straight off it. An entry that has been discovered but has no file behind it any more
 ## is skipped rather than arriving as null.
-## @ace_looping(entry)
-## @ace_name("For Each Discovered")
-## @ace_category("Codex")
-## @ace_icon("res://eventsheet_addons/codex/icon.svg")
-## @ace_codegen_template("Codex.each_discovered({set_name})")
 func each_discovered(set_name: String) -> Array:
 	var ids: Array = (_found.get(set_name, {}) as Dictionary).keys()
 	ids.sort()

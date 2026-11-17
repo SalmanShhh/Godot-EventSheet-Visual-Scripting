@@ -1,6 +1,6 @@
-## @ace_category("FPS Controller")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("FPS Controller")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/fps_controller/icon.svg")
 class_name FPSController
 extends Node
@@ -8,7 +8,7 @@ extends Node
 ##
 ## Changes on its parent: up_direction, velocity, rotation_degrees, move_and_slide().
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CharacterBody3D = null
 
@@ -20,49 +20,49 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("FPS Controller needs a CharacterBody3D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Jumped")
-## @ace_category("FPS Controller")
+# @ace_trigger
+# @ace_name("On Jumped")
+# @ace_category("FPS Controller")
 signal jumped
-## @ace_trigger
-## @ace_name("On Air Jumped")
-## @ace_category("FPS Controller")
+# @ace_trigger
+# @ace_name("On Air Jumped")
+# @ace_category("FPS Controller")
 signal air_jumped
-## @ace_trigger
-## @ace_name("On Landed")
-## @ace_category("FPS Controller")
+# @ace_trigger
+# @ace_name("On Landed")
+# @ace_category("FPS Controller")
 signal landed
-## @ace_trigger
-## @ace_name("On Camera Mode Changed")
-## @ace_category("FPS Controller")
+# @ace_trigger
+# @ace_name("On Camera Mode Changed")
+# @ace_category("FPS Controller")
 signal camera_mode_changed
-## @ace_trigger
-## @ace_name("On Crouched")
-## @ace_category("FPS Controller")
+# @ace_trigger
+# @ace_name("On Crouched")
+# @ace_category("FPS Controller")
 signal crouched
-## @ace_trigger
-## @ace_name("On Stood Up")
-## @ace_category("FPS Controller")
+# @ace_trigger
+# @ace_name("On Stood Up")
+# @ace_category("FPS Controller")
 signal stood_up
-## @ace_trigger
-## @ace_name("On Slide Started")
-## @ace_category("FPS Controller")
+# @ace_trigger
+# @ace_name("On Slide Started")
+# @ace_category("FPS Controller")
 signal slide_started
-## @ace_trigger
-## @ace_name("On Slide Ended")
-## @ace_category("FPS Controller")
+# @ace_trigger
+# @ace_name("On Slide Ended")
+# @ace_category("FPS Controller")
 signal slide_ended
-## @ace_trigger
-## @ace_name("On Wall Ride Started")
-## @ace_category("FPS Controller")
+# @ace_trigger
+# @ace_name("On Wall Ride Started")
+# @ace_category("FPS Controller")
 signal wall_ride_started
-## @ace_trigger
-## @ace_name("On Wall Ride Ended")
-## @ace_category("FPS Controller")
+# @ace_trigger
+# @ace_name("On Wall Ride Ended")
+# @ace_category("FPS Controller")
 signal wall_ride_ended
-## @ace_trigger
-## @ace_name("On Wall Jumped")
-## @ace_category("FPS Controller")
+# @ace_trigger
+# @ace_name("On Wall Jumped")
+# @ace_category("FPS Controller")
 signal wall_jumped
 
 ## Resting height of the head, which the walking bob moves around.
@@ -204,8 +204,8 @@ var yaw: float = 0.0
 @export var gravity_direction: Vector3 = Vector3.DOWN
 func _head() -> Node3D:
 	return (host.get_node_or_null("Head") as Node3D) if host != null else null
+# @ace_hidden
 ## The host's capsule collider (first CollisionShape3D child holding a CapsuleShape3D).
-## @ace_hidden
 func _capsule() -> CollisionShape3D:
 	if host == null:
 		return null
@@ -326,19 +326,17 @@ func _physics_process(delta: float) -> void:
 		landed.emit()
 	was_on_floor = host.is_on_floor()
 
-## @ace_hidden
+# @ace_hidden
 func _launch_jump() -> void:
 	# Replace the along-gravity component with the jump - frame-aware, so "up" is
 	# whatever direction gravity opposes. At default gravity this is velocity.y = jump.
 	host.velocity -= _gravity_dir() * host.velocity.dot(_gravity_dir())
 	host.velocity += -_gravity_dir() * jump_velocity
 
-## @ace_action
-## @ace_name("Jump")
-## @ace_category("FPS Controller")
-## @ace_description("Launches the host upward with Jump Velocity and fires On Jumped. The tick calls this from the floor or within Coyote Time; call it yourself for a scripted jump. Spends the coyote window, so it never grants a second ground jump.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.do_jump()")
+# @ace_action
+# @ace_name("Jump")
+# @ace_description("Launches the host upward with Jump Velocity and fires On Jumped. The tick calls this from the floor or within Coyote Time; call it yourself for a scripted jump. Spends the coyote window, so it never grants a second ground jump.")
+# @ace_codegen_template("$FPSController.do_jump()")
 func do_jump() -> void:
 	if host == null:
 		return
@@ -346,24 +344,20 @@ func do_jump() -> void:
 	_launch_jump()
 	jumped.emit()
 
-## @ace_action
-## @ace_name("Air Jump")
-## @ace_category("FPS Controller")
-## @ace_description("Performs a mid-air (double) jump with Jump Velocity and fires On Air Jumped, regardless of the remaining jump budget. The tick calls this automatically when Max Jumps allows; call it yourself for a power-up jump.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.do_air_jump()")
+# @ace_action
+# @ace_name("Air Jump")
+# @ace_description("Performs a mid-air (double) jump with Jump Velocity and fires On Air Jumped, regardless of the remaining jump budget. The tick calls this automatically when Max Jumps allows; call it yourself for a power-up jump.")
+# @ace_codegen_template("$FPSController.do_air_jump()")
 func do_air_jump() -> void:
 	if host == null:
 		return
 	_launch_jump()
 	air_jumped.emit()
 
-## @ace_action
-## @ace_name("Add Look")
-## @ace_category("FPS Controller")
-## @ace_description("Turns the view by a mouse delta (pixels): yaw rotates the host, pitch tilts the Head child, clamped to Pitch Min/Max.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.add_look({x}, {y})")
+# @ace_action
+# @ace_name("Add Look")
+# @ace_description("Turns the view by a mouse delta (pixels): yaw rotates the host, pitch tilts the Head child, clamped to Pitch Min/Max.")
+# @ace_codegen_template("$FPSController.add_look({x}, {y})")
 func add_look(x: float, y: float) -> void:
 	yaw = wrapf(yaw - x * mouse_sensitivity, -180.0, 180.0)
 	pitch = clampf(pitch - y * mouse_sensitivity, pitch_min, pitch_max)
@@ -376,32 +370,26 @@ func add_look(x: float, y: float) -> void:
 	if head != null:
 		head.rotation_degrees.x = pitch
 
-## @ace_action
-## @ace_name("Set Third Person")
-## @ace_category("FPS Controller")
-## @ace_description("Switches between first person (off) and third person (on) and fires On Camera Mode Changed.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.set_third_person({enabled})")
+# @ace_action
+# @ace_name("Set Third Person")
+# @ace_description("Switches between first person (off) and third person (on) and fires On Camera Mode Changed.")
+# @ace_codegen_template("$FPSController.set_third_person({enabled})")
 func set_third_person(enabled: bool) -> void:
 	third_person = enabled
 	apply_camera_mode()
 	camera_mode_changed.emit()
 
-## @ace_action
-## @ace_name("Toggle Camera Mode")
-## @ace_category("FPS Controller")
-## @ace_description("Flips between first and third person.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.toggle_camera_mode()")
+# @ace_action
+# @ace_name("Toggle Camera Mode")
+# @ace_description("Flips between first and third person.")
+# @ace_codegen_template("$FPSController.toggle_camera_mode()")
 func toggle_camera_mode() -> void:
 	set_third_person(not third_person)
 
-## @ace_action
-## @ace_name("Apply Camera Mode")
-## @ace_category("FPS Controller")
-## @ace_description("Re-applies the current camera mode to the Head's SpringArm3D (named Arm): ~0 length in first person, Camera Distance in third.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.apply_camera_mode()")
+# @ace_action
+# @ace_name("Apply Camera Mode")
+# @ace_description("Re-applies the current camera mode to the Head's SpringArm3D (named Arm): ~0 length in first person, Camera Distance in third.")
+# @ace_codegen_template("$FPSController.apply_camera_mode()")
 func apply_camera_mode() -> void:
 	var head := _head()
 	if head == null:
@@ -410,94 +398,74 @@ func apply_camera_mode() -> void:
 	if arm != null:
 		arm.spring_length = camera_distance if third_person else 0.05
 
-## @ace_action
-## @ace_name("Capture Mouse")
-## @ace_category("FPS Controller")
-## @ace_description("Locks the mouse to the window for looking around (Esc releases it).")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.capture_mouse()")
+# @ace_action
+# @ace_name("Capture Mouse")
+# @ace_description("Locks the mouse to the window for looking around (Esc releases it).")
+# @ace_codegen_template("$FPSController.capture_mouse()")
 func capture_mouse() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
-## @ace_action
-## @ace_name("Release Mouse")
-## @ace_category("FPS Controller")
-## @ace_description("Frees the mouse cursor.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.release_mouse()")
+# @ace_action
+# @ace_name("Release Mouse")
+# @ace_description("Frees the mouse cursor.")
+# @ace_codegen_template("$FPSController.release_mouse()")
 func release_mouse() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
-## @ace_action
-## @ace_name("Set Move Speed")
-## @ace_category("FPS Controller")
-## @ace_description("Changes the base walking speed.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.set_move_speed({value})")
+# @ace_action
+# @ace_name("Set Move Speed")
+# @ace_description("Changes the base walking speed.")
+# @ace_codegen_template("$FPSController.set_move_speed({value})")
 func set_move_speed(value: float) -> void:
 	move_speed = value
 
-## @ace_action
-## @ace_name("Set Mouse Sensitivity")
-## @ace_category("FPS Controller")
-## @ace_description("Changes look sensitivity (degrees per mouse pixel).")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.set_mouse_sensitivity({value})")
+# @ace_action
+# @ace_name("Set Mouse Sensitivity")
+# @ace_description("Changes look sensitivity (degrees per mouse pixel).")
+# @ace_codegen_template("$FPSController.set_mouse_sensitivity({value})")
 func set_mouse_sensitivity(value: float) -> void:
 	mouse_sensitivity = value
 
-## @ace_condition
-## @ace_name("Is Sprinting")
-## @ace_category("FPS Controller")
-## @ace_description("True while the sprint key (Shift) is held.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.is_sprinting()")
+# @ace_condition
+# @ace_name("Is Sprinting")
+# @ace_description("True while the sprint key (Shift) is held.")
+# @ace_codegen_template("$FPSController.is_sprinting()")
 func is_sprinting() -> bool:
 	return sprint_held
 
-## @ace_condition
-## @ace_name("Is First Person")
-## @ace_category("FPS Controller")
-## @ace_description("True in first-person camera mode.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.is_first_person()")
+# @ace_condition
+# @ace_name("Is First Person")
+# @ace_description("True in first-person camera mode.")
+# @ace_codegen_template("$FPSController.is_first_person()")
 func is_first_person() -> bool:
 	return not third_person
 
-## @ace_expression
-## @ace_name("Current Speed")
-## @ace_category("FPS Controller")
-## @ace_description("The host's horizontal speed right now (metres per second).")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.current_speed()")
+# @ace_expression
+# @ace_name("Current Speed")
+# @ace_description("The host's horizontal speed right now (metres per second).")
+# @ace_codegen_template("$FPSController.current_speed()")
 func current_speed() -> float:
 	return Vector2(host.velocity.x, host.velocity.z).length() if host != null else 0.0
 
-## @ace_expression
-## @ace_name("Look Yaw")
-## @ace_category("FPS Controller")
-## @ace_description("The current horizontal look angle in degrees (-180..180).")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.look_yaw()")
+# @ace_expression
+# @ace_name("Look Yaw")
+# @ace_description("The current horizontal look angle in degrees (-180..180).")
+# @ace_codegen_template("$FPSController.look_yaw()")
 func look_yaw() -> float:
 	return yaw
 
-## @ace_expression
-## @ace_name("Look Pitch")
-## @ace_category("FPS Controller")
-## @ace_description("The current vertical look angle in degrees (clamped to Pitch Min/Max).")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.look_pitch()")
+# @ace_expression
+# @ace_name("Look Pitch")
+# @ace_description("The current vertical look angle in degrees (clamped to Pitch Min/Max).")
+# @ace_codegen_template("$FPSController.look_pitch()")
 func look_pitch() -> float:
 	return pitch
 
-## @ace_action
-## @ace_featured
-## @ace_name("Crouch")
-## @ace_category("FPS Controller")
-## @ace_description("Crouches: the capsule shrinks to Crouch Height (feet stay planted), the Head drops, and movement slows to the crouch multiplier. Crouching at sprint speed starts a crouch slide (see Slide knobs). Fires On Crouched. Held Ctrl does this automatically.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.do_crouch()")
+# @ace_action
+# @ace_featured
+# @ace_name("Crouch")
+# @ace_description("Crouches: the capsule shrinks to Crouch Height (feet stay planted), the Head drops, and movement slows to the crouch multiplier. Crouching at sprint speed starts a crouch slide (see Slide knobs). Fires On Crouched. Held Ctrl does this automatically.")
+# @ace_codegen_template("$FPSController.do_crouch()")
 func do_crouch() -> void:
 	if crouching or host == null:
 		return
@@ -514,12 +482,10 @@ func do_crouch() -> void:
 			slide_started.emit()
 	crouched.emit()
 
-## @ace_action
-## @ace_name("Stand Up")
-## @ace_category("FPS Controller")
-## @ace_description("Stands back up from a crouch - unless a ceiling is in the way, in which case the crouch holds (re-check by calling again, or use the Can Stand Up condition). Ends any slide. Fires On Stood Up.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.stand_up()")
+# @ace_action
+# @ace_name("Stand Up")
+# @ace_description("Stands back up from a crouch - unless a ceiling is in the way, in which case the crouch holds (re-check by calling again, or use the Can Stand Up condition). Ends any slide. Fires On Stood Up.")
+# @ace_codegen_template("$FPSController.stand_up()")
 func stand_up() -> void:
 	if not crouching:
 		return
@@ -531,37 +497,31 @@ func stand_up() -> void:
 	_apply_crouch_shape(false)
 	stood_up.emit()
 
-## @ace_action
-## @ace_name("Set Crouching")
-## @ace_category("FPS Controller")
-## @ace_description("Crouches (on) or stands (off) - the scripted version of holding/releasing Ctrl.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.set_crouching({enabled})")
+# @ace_action
+# @ace_name("Set Crouching")
+# @ace_description("Crouches (on) or stands (off) - the scripted version of holding/releasing Ctrl.")
+# @ace_codegen_template("$FPSController.set_crouching({enabled})")
 func set_crouching(enabled: bool) -> void:
 	if enabled:
 		do_crouch()
 	else:
 		stand_up()
 
-## @ace_action
-## @ace_name("Stop Sliding")
-## @ace_category("FPS Controller")
-## @ace_description("Ends a crouch slide early (you stay crouched). Fires On Slide Ended.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.stop_sliding()")
+# @ace_action
+# @ace_name("Stop Sliding")
+# @ace_description("Ends a crouch slide early (you stay crouched). Fires On Slide Ended.")
+# @ace_codegen_template("$FPSController.stop_sliding()")
 func stop_sliding() -> void:
 	if not sliding:
 		return
 	sliding = false
 	slide_ended.emit()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Wall Jump")
-## @ace_category("FPS Controller")
-## @ace_description("Kicks off the wall the host is touching: Jump Velocity upward plus Wall Jump Push away from the wall (the push fades over about half a second). Ends any wall ride. Fires On Wall Jumped. Pressing jump mid-air against a wall does this automatically.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.do_wall_jump()")
+# @ace_action
+# @ace_featured
+# @ace_name("Wall Jump")
+# @ace_description("Kicks off the wall the host is touching: Jump Velocity upward plus Wall Jump Push away from the wall (the push fades over about half a second). Ends any wall ride. Fires On Wall Jumped. Pressing jump mid-air against a wall does this automatically.")
+# @ace_codegen_template("$FPSController.do_wall_jump()")
 func do_wall_jump() -> void:
 	if host == null or not host.is_on_wall():
 		return
@@ -574,51 +534,41 @@ func do_wall_jump() -> void:
 	host.velocity += -_gravity_dir() * jump_velocity
 	wall_jumped.emit()
 
-## @ace_condition
-## @ace_name("Can Jump")
-## @ace_category("FPS Controller")
-## @ace_description("True while some jump is available right now: standing on the floor, within Coyote Time after leaving it, touching a wall with Wall Jump enabled, or holding a mid-air jump. Use it to show a jump prompt or gate a jump sound.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.can_jump()")
+# @ace_condition
+# @ace_name("Can Jump")
+# @ace_description("True while some jump is available right now: standing on the floor, within Coyote Time after leaving it, touching a wall with Wall Jump enabled, or holding a mid-air jump. Use it to show a jump prompt or gate a jump sound.")
+# @ace_codegen_template("$FPSController.can_jump()")
 func can_jump() -> bool:
 	if host == null:
 		return false
 	return host.is_on_floor() or _coyote_timer > 0.0 or (wall_jump_enabled and host.is_on_wall()) or _jumps_left > 0
 
-## @ace_action
-## @ace_name("Set Coyote Time")
-## @ace_category("FPS Controller")
-## @ace_description("Changes the coyote grace window at runtime (0 turns it off) - a floaty-feel power-up, a hard-mode toggle, or a per-level tweak.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.set_coyote_time({seconds})")
+# @ace_action
+# @ace_name("Set Coyote Time")
+# @ace_description("Changes the coyote grace window at runtime (0 turns it off) - a floaty-feel power-up, a hard-mode toggle, or a per-level tweak.")
+# @ace_codegen_template("$FPSController.set_coyote_time({seconds})")
 func set_coyote_time(seconds: float) -> void:
 	coyote_time = maxf(seconds, 0.0)
 
-## @ace_action
-## @ace_name("Set Move Speed While Firing")
-## @ace_category("FPS Controller")
-## @ace_description("Holds the host to a shooter's walking speed for a moment after a shot: sets Firing Move Speed and opens the firing window for the given seconds. Drop it on your weapon's fired trigger and the player plants their feet while shooting, then eases straight back to normal walking speed when the window closes. Sprint and crouch still multiply the firing speed, and Move Speed itself is untouched.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.set_move_speed_while_firing({speed}, {seconds})")
+# @ace_action
+# @ace_name("Set Move Speed While Firing")
+# @ace_description("Holds the host to a shooter's walking speed for a moment after a shot: sets Firing Move Speed and opens the firing window for the given seconds. Drop it on your weapon's fired trigger and the player plants their feet while shooting, then eases straight back to normal walking speed when the window closes. Sprint and crouch still multiply the firing speed, and Move Speed itself is untouched.")
+# @ace_codegen_template("$FPSController.set_move_speed_while_firing({speed}, {seconds})")
 func set_move_speed_while_firing(speed: float, seconds: float) -> void:
 	firing_move_speed = maxf(speed, 0.0)
 	_firing_timer = maxf(seconds, 0.0)
 
-## @ace_condition
-## @ace_name("Is Firing")
-## @ace_category("FPS Controller")
-## @ace_description("True while the firing window opened by Set Move Speed While Firing is still open - the cue for a weapon-ready pose, a tighter camera, or a lowered aim sway.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.is_firing()")
+# @ace_condition
+# @ace_name("Is Firing")
+# @ace_description("True while the firing window opened by Set Move Speed While Firing is still open - the cue for a weapon-ready pose, a tighter camera, or a lowered aim sway.")
+# @ace_codegen_template("$FPSController.is_firing()")
 func is_firing() -> bool:
 	return _firing_timer > 0.0
 
-## @ace_action
-## @ace_name("Bob With Movement")
-## @ace_category("FPS Controller")
-## @ace_description("Bobs a weapon (or a hand, or a torch) up and down as the host runs, on a sine wave the size of Bob Amount and Bob Period long. The bob scales with how fast the host is actually moving, so it fades to nothing when you stop and never has to be turned off. Run it every frame on the node you want bobbing - the weapon's own start height is captured the first time, so wherever you placed it is where it bobs around.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.bob_with_movement({weapon})")
+# @ace_action
+# @ace_name("Bob With Movement")
+# @ace_description("Bobs a weapon (or a hand, or a torch) up and down as the host runs, on a sine wave the size of Bob Amount and Bob Period long. The bob scales with how fast the host is actually moving, so it fades to nothing when you stop and never has to be turned off. Run it every frame on the node you want bobbing - the weapon's own start height is captured the first time, so wherever you placed it is where it bobs around.")
+# @ace_codegen_template("$FPSController.bob_with_movement({weapon})")
 func bob_with_movement(weapon: Node3D) -> void:
 	if weapon == null:
 		return
@@ -629,12 +579,10 @@ func bob_with_movement(weapon: Node3D) -> void:
 	_bob_time += get_process_delta_time()
 	weapon.position.y = _bob_base_y + sin(_bob_time * TAU / maxf(bob_period, 0.001)) * bob_amount * pace
 
-## @ace_action
-## @ace_name("Sway With Mouse")
-## @ace_category("FPS Controller")
-## @ace_description("Lets a weapon lag behind the view as you turn, by Sway Amount, catching back up at Sway Speed. It is the weight of the thing in your hands - a pistol at speed 14 flicks, a launcher at speed 5 wallows. Run it every frame on the node you want swaying.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.sway_with_mouse({weapon})")
+# @ace_action
+# @ace_name("Sway With Mouse")
+# @ace_description("Lets a weapon lag behind the view as you turn, by Sway Amount, catching back up at Sway Speed. It is the weight of the thing in your hands - a pistol at speed 14 flicks, a launcher at speed 5 wallows. Run it every frame on the node you want swaying.")
+# @ace_codegen_template("$FPSController.sway_with_mouse({weapon})")
 func sway_with_mouse(weapon: Node3D) -> void:
 	if weapon == null:
 		return
@@ -642,115 +590,91 @@ func sway_with_mouse(weapon: Node3D) -> void:
 	weapon.rotation.y = lerpf(weapon.rotation.y, -_sway_x * sway_amount, catch_up)
 	weapon.rotation.x = lerpf(weapon.rotation.x, -_sway_y * sway_amount, catch_up)
 
-## @ace_action
-## @ace_name("Set Air Control")
-## @ace_category("FPS Controller")
-## @ace_description("Changes how much of the run the host keeps in mid-air, as a share (1 = full ground control, 0 = pure momentum). An ice level, a slow-fall power-up and a hard mode are all this one knob.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.set_air_control({share})")
+# @ace_action
+# @ace_name("Set Air Control")
+# @ace_description("Changes how much of the run the host keeps in mid-air, as a share (1 = full ground control, 0 = pure momentum). An ice level, a slow-fall power-up and a hard mode are all this one knob.")
+# @ace_codegen_template("$FPSController.set_air_control({share})")
 func set_air_control(share: float) -> void:
 	air_control = clampf(share, 0.0, 1.0)
 
-## @ace_condition
-## @ace_name("Is Bunny Hopping")
-## @ace_category("FPS Controller")
-## @ace_description("True on the frame a landing became the next hop instead - jump was still held as the feet touched down. The cue for a chained-hop sound, a speed streak, or the counter a speedrun HUD shows.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.is_bunny_hopping()")
+# @ace_condition
+# @ace_name("Is Bunny Hopping")
+# @ace_description("True on the frame a landing became the next hop instead - jump was still held as the feet touched down. The cue for a chained-hop sound, a speed streak, or the counter a speedrun HUD shows.")
+# @ace_codegen_template("$FPSController.is_bunny_hopping()")
 func is_bunny_hopping() -> bool:
 	return keep_momentum and host != null and host.is_on_floor() and Input.is_action_pressed("ui_accept")
 
-## @ace_action
-## @ace_name("Reset Jumps")
-## @ace_category("FPS Controller")
-## @ace_description("Refills the mid-air jump budget right now (e.g. after grabbing a double-jump power-up), so the player gets their extra jumps back without landing.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.reset_jumps()")
+# @ace_action
+# @ace_name("Reset Jumps")
+# @ace_description("Refills the mid-air jump budget right now (e.g. after grabbing a double-jump power-up), so the player gets their extra jumps back without landing.")
+# @ace_codegen_template("$FPSController.reset_jumps()")
 func reset_jumps() -> void:
 	_jumps_left = maxi(max_jumps - 1, 0)
 
-## @ace_action
-## @ace_name("Stop Wall Ride")
-## @ace_category("FPS Controller")
-## @ace_description("Detaches from the wall immediately (full gravity resumes). Fires On Wall Ride Ended.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.stop_wall_ride()")
+# @ace_action
+# @ace_name("Stop Wall Ride")
+# @ace_description("Detaches from the wall immediately (full gravity resumes). Fires On Wall Ride Ended.")
+# @ace_codegen_template("$FPSController.stop_wall_ride()")
 func stop_wall_ride() -> void:
 	if not wall_riding:
 		return
 	wall_riding = false
 	wall_ride_ended.emit()
 
-## @ace_condition
-## @ace_name("Is Crouching")
-## @ace_category("FPS Controller")
-## @ace_description("True while crouched (including during a crouch slide).")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.is_crouching()")
+# @ace_condition
+# @ace_name("Is Crouching")
+# @ace_description("True while crouched (including during a crouch slide).")
+# @ace_codegen_template("$FPSController.is_crouching()")
 func is_crouching() -> bool:
 	return crouching
 
-## @ace_condition
-## @ace_name("Is Sliding")
-## @ace_category("FPS Controller")
-## @ace_description("True during a crouch slide.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.is_sliding()")
+# @ace_condition
+# @ace_name("Is Sliding")
+# @ace_description("True during a crouch slide.")
+# @ace_codegen_template("$FPSController.is_sliding()")
 func is_sliding() -> bool:
 	return sliding
 
-## @ace_condition
-## @ace_name("Is Wall Riding")
-## @ace_category("FPS Controller")
-## @ace_description("True while riding a wall (airborne, glued to it, gravity softened).")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.is_wall_riding()")
+# @ace_condition
+# @ace_name("Is Wall Riding")
+# @ace_description("True while riding a wall (airborne, glued to it, gravity softened).")
+# @ace_codegen_template("$FPSController.is_wall_riding()")
 func is_wall_riding() -> bool:
 	return wall_riding
 
-## @ace_condition
-## @ace_name("Can Stand Up")
-## @ace_category("FPS Controller")
-## @ace_description("True when there is headroom to stand from the current crouch (no ceiling in the way).")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.can_stand_up()")
+# @ace_condition
+# @ace_name("Can Stand Up")
+# @ace_description("True when there is headroom to stand from the current crouch (no ceiling in the way).")
+# @ace_codegen_template("$FPSController.can_stand_up()")
 func can_stand_up() -> bool:
 	return _can_stand_up()
 
-## @ace_expression
-## @ace_name("Wall Normal X")
-## @ace_category("FPS Controller")
-## @ace_description("The touched wall's outward normal, X component (zero when not on a wall) - with Z, the direction a wall jump pushes; feed it to camera lean.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.wall_normal_x()")
+# @ace_expression
+# @ace_name("Wall Normal X")
+# @ace_description("The touched wall's outward normal, X component (zero when not on a wall) - with Z, the direction a wall jump pushes; feed it to camera lean.")
+# @ace_codegen_template("$FPSController.wall_normal_x()")
 func wall_normal_x() -> float:
 	return host.get_wall_normal().x if host != null and host.is_on_wall() else 0.0
 
-## @ace_expression
-## @ace_name("Wall Normal Z")
-## @ace_category("FPS Controller")
-## @ace_description("The touched wall's outward normal, Z component (zero when not on a wall).")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.wall_normal_z()")
+# @ace_expression
+# @ace_name("Wall Normal Z")
+# @ace_description("The touched wall's outward normal, Z component (zero when not on a wall).")
+# @ace_codegen_template("$FPSController.wall_normal_z()")
 func wall_normal_z() -> float:
 	return host.get_wall_normal().z if host != null and host.is_on_wall() else 0.0
 
-## @ace_action
-## @ace_name("Set Gravity Direction")
-## @ace_category("FPS Controller")
-## @ace_description("Points gravity along a new 3D direction (normalized for you). (0, -1, 0) is normal down; (0, 1, 0) walks on ceilings - floor detection and jumps follow. A tilted direction still pulls correctly but the run plane stays world-horizontal.")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.set_gravity_direction({x}, {y}, {z})")
+# @ace_action
+# @ace_name("Set Gravity Direction")
+# @ace_description("Points gravity along a new 3D direction (normalized for you). (0, -1, 0) is normal down; (0, 1, 0) walks on ceilings - floor detection and jumps follow. A tilted direction still pulls correctly but the run plane stays world-horizontal.")
+# @ace_codegen_template("$FPSController.set_gravity_direction({x}, {y}, {z})")
 func set_gravity_direction(x: float, y: float, z: float) -> void:
 	gravity_direction = Vector3(x, y, z)
 
-## @ace_action
-## @ace_name("Claim As Mine")
-## @ace_category("FPS Controller")
-## @ace_description("Marks something as belonging to this character - the round it just fired, the grenade it threw, the turret it dropped. Every ownership row afterwards traces back to this body, so friendly fire is refused, the kill is credited, and a turret this character placed still scores as its own.")
-## @ace_display_template("Claim [i]{node}[/i] as mine")
-## @ace_icon("res://eventsheet_addons/fps_controller/icon.svg")
-## @ace_codegen_template("$FPSController.claim_as_mine({node})")
+# @ace_action
+# @ace_name("Claim As Mine")
+# @ace_description("Marks something as belonging to this character - the round it just fired, the grenade it threw, the turret it dropped. Every ownership row afterwards traces back to this body, so friendly fire is refused, the kill is credited, and a turret this character placed still scores as its own.")
+# @ace_display_template("Claim [i]{node}[/i] as mine")
+# @ace_codegen_template("$FPSController.claim_as_mine({node})")
 func claim_as_mine(node: Node) -> void:
 	if node != null and host != null:
 		node.set_meta(&"owner", host)
@@ -766,12 +690,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and (event as InputEventKey).pressed and (event as InputEventKey).keycode == KEY_ESCAPE:
 		release_mouse()
 
+# @ace_hidden
 ## Shrinks/restores the capsule + drops/raises the Head so crouching physically lowers the
 ## body. The capsule shortens toward the FLOOR (the shape node shifts down by half the lost
 ## height) so the feet stay planted. The shape resource is duplicated on first use - capsule
 ## resources are commonly shared across scenes, and crouching one character must not shrink
 ## every other user of that resource.
-## @ace_hidden
 func _apply_crouch_shape(low: bool) -> void:
 	var shape_node := _capsule()
 	if shape_node != null:
@@ -794,10 +718,10 @@ func _apply_crouch_shape(low: bool) -> void:
 	if head != null and standing_height > 0.0:
 		head.position.y = head_base_y - ((standing_height - minf(crouch_height, standing_height)) if low else 0.0)
 
+# @ace_hidden
 ## Headroom test for standing up: sweeps the (crouched) body upward by the height it would
 ## regain; any hit means a ceiling is in the way and the crouch holds. The sweep needs a
 ## live physics space - outside the tree (headless tools/tests) standing is always allowed.
-## @ace_hidden
 func _can_stand_up() -> bool:
 	if host == null or standing_height <= 0.0 or not host.is_inside_tree():
 		return true
@@ -806,7 +730,7 @@ func _can_stand_up() -> bool:
 	params.motion = -_gravity_dir() * (standing_height - minf(crouch_height, standing_height))
 	return not PhysicsServer3D.body_test_motion(host.get_rid(), params)
 
-## @ace_hidden
+# @ace_hidden
 func _start_wall_ride() -> void:
 	wall_riding = true
 	wall_ride_time = 0.0

@@ -1,12 +1,12 @@
-## @ace_category("State Machine")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("State Machine")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/state_machine/icon.svg")
 class_name StateMachineBehavior
 extends Node
 ## Gives a node one named "what am I doing right now" state and a clean way to switch it. Go to state changes it, Current state is branches on it, and On any state change fires on every switch with the state you left and the state you entered.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 
@@ -18,9 +18,9 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("State Machine Behavior needs a parent node: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On any state change")
-## @ace_category("State Machine")
+# @ace_trigger
+# @ace_name("On any state change")
+# @ace_category("State Machine")
 signal state_changed(previous: String, next: String)
 
 ## Engine time in milliseconds at which the current state was entered, which Time In State reads.
@@ -30,21 +30,17 @@ var previous_state: String = ""
 ## The state the node is in now, idle at the start; any name works, and Go to state switches it.
 @export var state: String = "idle"
 
-## @ace_condition
-## @ace_name("Current state is")
-## @ace_category("State Machine")
-## @ace_description("True while the machine is in the given state.")
-## @ace_icon("res://eventsheet_addons/state_machine/icon.svg")
-## @ace_codegen_template("$StateMachineBehavior.is_in_state({state_name})")
+# @ace_condition
+# @ace_name("Current state is")
+# @ace_description("True while the machine is in the given state.")
+# @ace_codegen_template("$StateMachineBehavior.is_in_state({state_name})")
 func is_in_state(state_name: String) -> bool:
 	return state == state_name
 
-## @ace_action
-## @ace_name("Go to state")
-## @ace_category("State Machine")
-## @ace_description("Switches to the given state and fires On any state change.")
-## @ace_icon("res://eventsheet_addons/state_machine/icon.svg")
-## @ace_codegen_template("$StateMachineBehavior.set_state({next})")
+# @ace_action
+# @ace_name("Go to state")
+# @ace_description("Switches to the given state and fires On any state change.")
+# @ace_codegen_template("$StateMachineBehavior.set_state({next})")
 func set_state(next: String) -> void:
 	if state != next:
 		var previous: String = state
@@ -53,16 +49,14 @@ func set_state(next: String) -> void:
 		_state_entered_ticks = Time.get_ticks_msec()
 		state_changed.emit(previous, next)
 
-## @ace_expression
-## @ace_name("Time in state")
-## @ace_category("State Machine")
-## @ace_description("How many seconds the machine has been in its current state.")
-## @ace_icon("res://eventsheet_addons/state_machine/icon.svg")
-## @ace_codegen_template("$StateMachineBehavior.time_in_state()")
+# @ace_expression
+# @ace_name("Time in state")
+# @ace_description("How many seconds the machine has been in its current state.")
+# @ace_codegen_template("$StateMachineBehavior.time_in_state()")
 func time_in_state() -> float:
 	return (float(Time.get_ticks_msec() - _state_entered_ticks) / 1000.0)
 
-## @ace_hidden
+# @ace_hidden
 func save_state() -> Dictionary:
 	# Save-state seam: the Save System walks any node in its persist group (or targeted
 	# by Save/Load Node State) and duck-types these two methods. Plain data only.
@@ -72,7 +66,7 @@ func save_state() -> Dictionary:
 		"state": state
 	}
 
-## @ace_hidden
+# @ace_hidden
 func load_state(data: Dictionary) -> void:
 	if data.is_empty():
 		return

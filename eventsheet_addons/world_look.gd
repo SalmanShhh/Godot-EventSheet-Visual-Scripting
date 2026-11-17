@@ -1,4 +1,4 @@
-## @ace_version(1.0.0)
+# @ace_version(1.0.0)
 class_name WorldLook
 extends RefCounted
 ## A whole world's look, put on at once or crossed over to, from an Environment file the project owns - the runtime the Use World Look, Blend To World Look and Current World Look rows call.

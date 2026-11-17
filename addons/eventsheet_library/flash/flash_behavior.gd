@@ -1,6 +1,6 @@
-## @ace_category("Flash")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Flash")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @tool
 @icon("res://eventsheet_addons/flash/icon.svg")
 class_name FlashBehavior
@@ -9,7 +9,7 @@ extends Node
 ##
 ## Changes on its parent: visible, modulate.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CanvasItem = null
 
@@ -22,12 +22,12 @@ func _enter_tree() -> void:
 		push_warning("Flash Behavior needs a CanvasItem: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Preview", "Play") var _preview_start_button: Callable = _preview_start
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
 
@@ -230,9 +230,9 @@ func _preview_kill_tweens() -> void:
 func _preview_kick() -> void:
 	flash(3600.0)
 
-## @ace_trigger
-## @ace_name("On Flash Finished")
-## @ace_category("Flash")
+# @ace_trigger
+# @ace_name("On Flash Finished")
+# @ace_category("Flash")
 signal flash_finished
 
 ## Seconds between visibility toggles - smaller values blink faster.
@@ -293,39 +293,33 @@ func _process(delta: float) -> void:
 	if blinking:
 		_blink_step(delta)
 
-## @ace_action
-## @ace_name("Flash")
-## @ace_category("Flash")
-## @ace_description("Blinks the host for the given number of seconds.")
-## @ace_icon("res://eventsheet_addons/flash/icon.svg")
-## @ace_codegen_template("$FlashBehavior.flash({seconds})")
+# @ace_action
+# @ace_name("Flash")
+# @ace_description("Blinks the host for the given number of seconds.")
+# @ace_codegen_template("$FlashBehavior.flash({seconds})")
 func flash(seconds: float) -> void:
 	remaining = seconds
 	accumulator = 0.0
 	flashing = true
 	set_process(true)
 
-## @ace_action
-## @ace_name("Stop Flash")
-## @ace_category("Flash")
-## @ace_description("Stops flashing and restores visibility.")
-## @ace_icon("res://eventsheet_addons/flash/icon.svg")
-## @ace_codegen_template("$FlashBehavior.stop_flash()")
+# @ace_action
+# @ace_name("Stop Flash")
+# @ace_description("Stops flashing and restores visibility.")
+# @ace_codegen_template("$FlashBehavior.stop_flash()")
 func stop_flash() -> void:
 	flashing = false
 	set_process(false)
 	if is_instance_valid(host):
 		host.visible = true
 
-## @ace_action
-## @ace_name("Blink")
-## @ace_category("Flash")
-## @ace_description("Plays a blink pattern on the host: a BlinkPatternResource file of phases, each one "on for this long, off for that long, this many times". A player who has asked for no flashing gets the same pattern held to a floor and faded instead of hidden, so a pattern can never strobe.")
-## @ace_display_template("Blink [b]{pattern}[/b] for [b]{seconds}[/b] s")
-## @ace_param(pattern, desc: "The BlinkPatternResource file to play. It is your file: draw the rhythm once in the Inspector and share it between everything that blinks that way.")
-## @ace_param(seconds, desc: "Stop after this long, whatever the pattern is doing. 0 plays the pattern out to its last phase.")
-## @ace_icon("res://eventsheet_addons/flash/icon.svg")
-## @ace_codegen_template("$FlashBehavior.blink({pattern}, {seconds})")
+# @ace_action
+# @ace_name("Blink")
+# @ace_description("Plays a blink pattern on the host: a BlinkPatternResource file of phases, each one "on for this long, off for that long, this many times". A player who has asked for no flashing gets the same pattern held to a floor and faded instead of hidden, so a pattern can never strobe.")
+# @ace_display_template("Blink [b]{pattern}[/b] for [b]{seconds}[/b] s")
+# @ace_param(pattern, desc: "The BlinkPatternResource file to play. It is your file: draw the rhythm once in the Inspector and share it between everything that blinks that way.")
+# @ace_param(seconds, desc: "Stop after this long, whatever the pattern is doing. 0 plays the pattern out to its last phase.")
+# @ace_codegen_template("$FlashBehavior.blink({pattern}, {seconds})")
 func blink(pattern: Resource, seconds: float) -> void:
 	if pattern == null:
 		return
@@ -341,30 +335,24 @@ func blink(pattern: Resource, seconds: float) -> void:
 		# A blinking host needs the frame it blinks in; the pattern's own end turns it back off.
 		set_process(true)
 
-## @ace_action
-## @ace_name("Stop Blink")
-## @ace_category("Flash")
-## @ace_description("Ends the blink now and hands the host back fully visible, wherever in the pattern it had got to.")
-## @ace_icon("res://eventsheet_addons/flash/icon.svg")
-## @ace_codegen_template("$FlashBehavior.stop_blink()")
+# @ace_action
+# @ace_name("Stop Blink")
+# @ace_description("Ends the blink now and hands the host back fully visible, wherever in the pattern it had got to.")
+# @ace_codegen_template("$FlashBehavior.stop_blink()")
 func stop_blink() -> void:
 	_blink_end()
 
-## @ace_condition
-## @ace_name("Is Blinking")
-## @ace_category("Flash")
-## @ace_description("Whether a blink pattern is playing on this host right now.")
-## @ace_icon("res://eventsheet_addons/flash/icon.svg")
-## @ace_codegen_template("$FlashBehavior.is_blinking()")
+# @ace_condition
+# @ace_name("Is Blinking")
+# @ace_description("Whether a blink pattern is playing on this host right now.")
+# @ace_codegen_template("$FlashBehavior.is_blinking()")
 func is_blinking() -> bool:
 	return blinking
 
-## @ace_expression
-## @ace_name("Blink Phase")
-## @ace_category("Flash")
-## @ace_description("Which phase of the pattern is playing, counting from 1. 0 when nothing is blinking - so a row can tell the fast winks from the slow ones that follow them.")
-## @ace_icon("res://eventsheet_addons/flash/icon.svg")
-## @ace_codegen_template("$FlashBehavior.blink_phase()")
+# @ace_expression
+# @ace_name("Blink Phase")
+# @ace_description("Which phase of the pattern is playing, counting from 1. 0 when nothing is blinking - so a row can tell the fast winks from the slow ones that follow them.")
+# @ace_codegen_template("$FlashBehavior.blink_phase()")
 func blink_phase() -> int:
 	if not blinking:
 		return 0

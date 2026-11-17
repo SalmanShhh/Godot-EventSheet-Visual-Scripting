@@ -1,27 +1,27 @@
-## @ace_tags(incremental, idle, upgrade)
-## @ace_category("Upgrades")
-## @ace_requires(SkillTreeResource)
-## @ace_version(1.0.0)
+# @ace_tags(incremental, idle, upgrade)
+# @ace_category("Upgrades")
+# @ace_requires(SkillTreeResource)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/upgrades/icon.svg")
 class_name UpgradesAddon
 extends Node
 ## The stacking buff engine an incremental game is built from, shipped as the Upgrades autoload singleton. Register upgrades by string id with cost curves, max levels, per-level effects, and tags, then buy levels, read the stacked effect, and roll every tagged upgrade into one number.
 
-## @ace_trigger
-## @ace_name("On Upgrade Bought")
-## @ace_category("Upgrades")
+# @ace_trigger
+# @ace_name("On Upgrade Bought")
+# @ace_category("Upgrades")
 signal on_upgrade_bought
-## @ace_trigger
-## @ace_name("On Purchase Failed")
-## @ace_category("Upgrades")
+# @ace_trigger
+# @ace_name("On Purchase Failed")
+# @ace_category("Upgrades")
 signal on_purchase_failed
-## @ace_trigger
-## @ace_name("On Skill Unlocked")
-## @ace_category("Upgrades")
+# @ace_trigger
+# @ace_name("On Skill Unlocked")
+# @ace_category("Upgrades")
 signal on_skill_unlocked
-## @ace_trigger
-## @ace_name("On Unlock Refused")
-## @ace_category("Upgrades")
+# @ace_trigger
+# @ace_name("On Unlock Refused")
+# @ace_category("Upgrades")
 signal on_unlock_refused
 
 # id -> {base_cost, cost_growth, max_level (-1 = unlimited), per_level, mode ("add"/"mult"), tag, level}.
@@ -68,36 +68,30 @@ func _points_ledger() -> Node:
 		return null
 	return ledger
 
-## @ace_action
-## @ace_featured
-## @ace_name("Define Upgrade")
-## @ace_category("Upgrades")
-## @ace_description("Creates (or resets) an upgrade: base cost, cost growth per level, max level (-1 = unlimited), effect per level, mode ("add" or "mult"), and a tag to group it for Total Multiplier / Total Bonus.")
-## @ace_display_template("Define upgrade [b]{id}[/b]: base cost [b]{base_cost}[/b] growing [b]{cost_growth}[/b]x, max level [b]{max_level}[/b], [b]{per_level}[/b] per level ([b]{mode}[/b])")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.define_upgrade({id}, {base_cost}, {cost_growth}, {max_level}, {per_level}, {mode}, {tag})")
+# @ace_action
+# @ace_featured
+# @ace_name("Define Upgrade")
+# @ace_description("Creates (or resets) an upgrade: base cost, cost growth per level, max level (-1 = unlimited), effect per level, mode ("add" or "mult"), and a tag to group it for Total Multiplier / Total Bonus.")
+# @ace_display_template("Define upgrade [b]{id}[/b]: base cost [b]{base_cost}[/b] growing [b]{cost_growth}[/b]x, max level [b]{max_level}[/b], [b]{per_level}[/b] per level ([b]{mode}[/b])")
+# @ace_codegen_template("Upgrades.define_upgrade({id}, {base_cost}, {cost_growth}, {max_level}, {per_level}, {mode}, {tag})")
 func define_upgrade(id: String, base_cost: float, cost_growth: float, max_level: int, per_level: float, mode: String, tag: String) -> void:
 	_upgrades[id] = {"base_cost": base_cost, "cost_growth": cost_growth, "max_level": max_level, "per_level": per_level, "mode": mode, "tag": tag, "level": 0}
 
-## @ace_action
-## @ace_name("Set Effect")
-## @ace_category("Upgrades")
-## @ace_description("Retunes an existing upgrade's per-level effect and mode without touching its level (for live balancing).")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.set_effect({id}, {per_level}, {mode})")
+# @ace_action
+# @ace_name("Set Effect")
+# @ace_description("Retunes an existing upgrade's per-level effect and mode without touching its level (for live balancing).")
+# @ace_codegen_template("Upgrades.set_effect({id}, {per_level}, {mode})")
 func set_effect(id: String, per_level: float, mode: String) -> void:
 	var record: Dictionary = _ensure(id)
 	record.per_level = per_level
 	record.mode = mode
 
-## @ace_action
-## @ace_featured
-## @ace_name("Try Purchase")
-## @ace_category("Upgrades")
-## @ace_description("Buys the next level if `budget` covers Cost Of and it is not maxed. On success records Last Cost and fires On Upgrade Bought (Spend Last Cost from your wallet); otherwise fires On Purchase Failed. Never touches the wallet itself.")
-## @ace_display_template("Try purchase [b]{id}[/b] with budget [b]{budget}[/b]")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.try_purchase({id}, {budget})")
+# @ace_action
+# @ace_featured
+# @ace_name("Try Purchase")
+# @ace_description("Buys the next level if `budget` covers Cost Of and it is not maxed. On success records Last Cost and fires On Upgrade Bought (Spend Last Cost from your wallet); otherwise fires On Purchase Failed. Never touches the wallet itself.")
+# @ace_display_template("Try purchase [b]{id}[/b] with budget [b]{budget}[/b]")
+# @ace_codegen_template("Upgrades.try_purchase({id}, {budget})")
 func try_purchase(id: String, budget: float) -> void:
 	var cost: float = _cost_of(id)
 	if cost < 0.0 or budget < cost:
@@ -111,23 +105,19 @@ func try_purchase(id: String, budget: float) -> void:
 	_last_ok = true
 	on_upgrade_bought.emit()
 
-## @ace_action
-## @ace_name("Grant Level")
-## @ace_category("Upgrades")
-## @ace_description("Adds one free level (a reward), up to the max. No cost, no budget check.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.grant_level({id})")
+# @ace_action
+# @ace_name("Grant Level")
+# @ace_description("Adds one free level (a reward), up to the max. No cost, no budget check.")
+# @ace_codegen_template("Upgrades.grant_level({id})")
 func grant_level(id: String) -> void:
 	var record: Dictionary = _ensure(id)
 	if not _is_maxed(record):
 		record.level += 1
 
-## @ace_action
-## @ace_name("Set Level")
-## @ace_category("Upgrades")
-## @ace_description("Forces an upgrade's level (for a load or cheat), clamped to 0 and the max.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.set_level({id}, {level})")
+# @ace_action
+# @ace_name("Set Level")
+# @ace_description("Forces an upgrade's level (for a load or cheat), clamped to 0 and the max.")
+# @ace_codegen_template("Upgrades.set_level({id}, {level})")
 func set_level(id: String, level: int) -> void:
 	var record: Dictionary = _ensure(id)
 	var capped: int = maxi(level, 0)
@@ -135,87 +125,69 @@ func set_level(id: String, level: int) -> void:
 		capped = mini(capped, int(record.max_level))
 	record.level = capped
 
-## @ace_action
-## @ace_name("Reset")
-## @ace_category("Upgrades")
-## @ace_description("Sets every upgrade back to level 0 (keeps the definitions) - for a prestige wipe.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.reset_upgrades()")
+# @ace_action
+# @ace_name("Reset")
+# @ace_description("Sets every upgrade back to level 0 (keeps the definitions) - for a prestige wipe.")
+# @ace_codegen_template("Upgrades.reset_upgrades()")
 func reset_upgrades() -> void:
 	for id: String in _upgrades:
 		_upgrades[id].level = 0
 
-## @ace_condition
-## @ace_name("Is Maxed")
-## @ace_category("Upgrades")
-## @ace_description("Whether an upgrade is at its max level.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.is_maxed({id})")
+# @ace_condition
+# @ace_name("Is Maxed")
+# @ace_description("Whether an upgrade is at its max level.")
+# @ace_codegen_template("Upgrades.is_maxed({id})")
 func is_maxed(id: String) -> bool:
 	return _upgrades.has(id) and _is_maxed(_upgrades[id])
 
-## @ace_condition
-## @ace_name("Owns")
-## @ace_category("Upgrades")
-## @ace_description("Whether an upgrade has at least one level.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.owns({id})")
+# @ace_condition
+# @ace_name("Owns")
+# @ace_description("Whether an upgrade has at least one level.")
+# @ace_codegen_template("Upgrades.owns({id})")
 func owns(id: String) -> bool:
 	return _upgrades.has(id) and int(_upgrades[id].level) > 0
 
-## @ace_condition
-## @ace_name("Purchase Succeeded")
-## @ace_category("Upgrades")
-## @ace_description("Whether the last Try Purchase went through (read it right after, or in On Upgrade Bought).")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.purchase_succeeded()")
+# @ace_condition
+# @ace_name("Purchase Succeeded")
+# @ace_description("Whether the last Try Purchase went through (read it right after, or in On Upgrade Bought).")
+# @ace_codegen_template("Upgrades.purchase_succeeded()")
 func purchase_succeeded() -> bool:
 	return _last_ok
 
-## @ace_expression
-## @ace_name("Cost Of")
-## @ace_category("Upgrades")
-## @ace_description("The next level's price (-1 if maxed or undefined).")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.cost_of({id})")
+# @ace_expression
+# @ace_name("Cost Of")
+# @ace_description("The next level's price (-1 if maxed or undefined).")
+# @ace_codegen_template("Upgrades.cost_of({id})")
 func cost_of(id: String) -> float:
 	return _cost_of(id)
 
-## @ace_expression
-## @ace_name("Level Of")
-## @ace_category("Upgrades")
-## @ace_description("An upgrade's current level.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.level_of({id})")
+# @ace_expression
+# @ace_name("Level Of")
+# @ace_description("An upgrade's current level.")
+# @ace_codegen_template("Upgrades.level_of({id})")
 func level_of(id: String) -> int:
 	return int(_upgrades[id].level) if _upgrades.has(id) else 0
 
-## @ace_expression
-## @ace_name("Max Level Of")
-## @ace_category("Upgrades")
-## @ace_description("An upgrade's max level (-1 = unlimited).")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.max_level_of({id})")
+# @ace_expression
+# @ace_name("Max Level Of")
+# @ace_description("An upgrade's max level (-1 = unlimited).")
+# @ace_codegen_template("Upgrades.max_level_of({id})")
 func max_level_of(id: String) -> int:
 	return int(_upgrades[id].max_level) if _upgrades.has(id) else 0
 
-## @ace_expression
-## @ace_featured
-## @ace_name("Effect Of")
-## @ace_category("Upgrades")
-## @ace_description("An upgrade's current stacked effect (level*per_level for add mode, per_level^level for mult mode).")
-## @ace_display_template("Effect of [b]{id}[/b]")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.effect_of({id})")
+# @ace_expression
+# @ace_featured
+# @ace_name("Effect Of")
+# @ace_description("An upgrade's current stacked effect (level*per_level for add mode, per_level^level for mult mode).")
+# @ace_display_template("Effect of [b]{id}[/b]")
+# @ace_codegen_template("Upgrades.effect_of({id})")
 func effect_of(id: String) -> float:
 	return _effect_of(id)
 
-## @ace_expression
-## @ace_name("Total Multiplier")
-## @ace_category("Upgrades")
-## @ace_description("The product of every mult-mode upgrade sharing this tag (1.0 if none) - multiply production by it.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.total_multiplier({tag})")
+# @ace_expression
+# @ace_name("Total Multiplier")
+# @ace_description("The product of every mult-mode upgrade sharing this tag (1.0 if none) - multiply production by it.")
+# @ace_codegen_template("Upgrades.total_multiplier({tag})")
 func total_multiplier(tag: String) -> float:
 	var product: float = 1.0
 	for id: String in _upgrades:
@@ -224,12 +196,10 @@ func total_multiplier(tag: String) -> float:
 			product *= _effect_of(id)
 	return product
 
-## @ace_expression
-## @ace_name("Total Bonus")
-## @ace_category("Upgrades")
-## @ace_description("The sum of every add-mode upgrade sharing this tag (0.0 if none) - add it to a base value.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.total_bonus({tag})")
+# @ace_expression
+# @ace_name("Total Bonus")
+# @ace_description("The sum of every add-mode upgrade sharing this tag (0.0 if none) - add it to a base value.")
+# @ace_codegen_template("Upgrades.total_bonus({tag})")
 func total_bonus(tag: String) -> float:
 	var total: float = 0.0
 	for id: String in _upgrades:
@@ -238,40 +208,32 @@ func total_bonus(tag: String) -> float:
 			total += _effect_of(id)
 	return total
 
-## @ace_expression
-## @ace_name("Last Cost")
-## @ace_category("Upgrades")
-## @ace_description("What the last Try Purchase cost - Spend this from your wallet.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.last_cost()")
+# @ace_expression
+# @ace_name("Last Cost")
+# @ace_description("What the last Try Purchase cost - Spend this from your wallet.")
+# @ace_codegen_template("Upgrades.last_cost()")
 func last_cost() -> float:
 	return _last_cost
 
-## @ace_expression
-## @ace_name("Last Upgrade")
-## @ace_category("Upgrades")
-## @ace_description("The id of the last upgrade bought or failed (read in the trigger).")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.last_upgrade()")
+# @ace_expression
+# @ace_name("Last Upgrade")
+# @ace_description("The id of the last upgrade bought or failed (read in the trigger).")
+# @ace_codegen_template("Upgrades.last_upgrade()")
 func last_upgrade() -> String:
 	return _last_id
 
-## @ace_expression
-## @ace_name("Upgrade Count")
-## @ace_category("Upgrades")
-## @ace_description("How many upgrades are defined.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.upgrade_count()")
+# @ace_expression
+# @ace_name("Upgrade Count")
+# @ace_description("How many upgrades are defined.")
+# @ace_codegen_template("Upgrades.upgrade_count()")
 func upgrade_count() -> int:
 	return _upgrades.size()
 
-## @ace_action
-## @ace_name("Load Skill Tree")
-## @ace_category("Upgrades")
-## @ace_description("Points the tree words at a SkillTreeResource (.tres). Clears whatever was unlocked and hands the asset's Starting Points to the points counter, so one row opens a fresh tree.")
-## @ace_display_template("Load skill tree [i]{tree}[/i]")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.load_skill_tree({tree})")
+# @ace_action
+# @ace_name("Load Skill Tree")
+# @ace_description("Points the tree words at a SkillTreeResource (.tres). Clears whatever was unlocked and hands the asset's Starting Points to the points counter, so one row opens a fresh tree.")
+# @ace_display_template("Load skill tree [i]{tree}[/i]")
+# @ace_codegen_template("Upgrades.load_skill_tree({tree})")
 func load_skill_tree(tree: Resource) -> void:
 	_tree = tree
 	_unlocked.clear()
@@ -281,52 +243,42 @@ func load_skill_tree(tree: Resource) -> void:
 	if starting != null:
 		_set_points(int(starting))
 
-## @ace_action
-## @ace_name("Set Skill Points")
-## @ace_category("Upgrades")
-## @ace_description("Forces the unspent skill points to a value (for a load or a cheat). Clamped at 0.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.set_skill_points({points})")
+# @ace_action
+# @ace_name("Set Skill Points")
+# @ace_description("Forces the unspent skill points to a value (for a load or a cheat). Clamped at 0.")
+# @ace_codegen_template("Upgrades.set_skill_points({points})")
 func set_skill_points(points: int) -> void:
 	_set_points(maxi(points, 0))
 
-## @ace_action
-## @ace_name("Earn Skill Points")
-## @ace_category("Upgrades")
-## @ace_description("Adds skill points - the level-up reward. Goes into the Currency Ledger account when one was named.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.earn_skill_points({points})")
+# @ace_action
+# @ace_name("Earn Skill Points")
+# @ace_description("Adds skill points - the level-up reward. Goes into the Currency Ledger account when one was named.")
+# @ace_codegen_template("Upgrades.earn_skill_points({points})")
 func earn_skill_points(points: int) -> void:
 	_earn_points(maxi(points, 0))
 
-## @ace_action
-## @ace_name("Use Points Account")
-## @ace_category("Upgrades")
-## @ace_description("Keeps skill points in a Currency Ledger account of this id instead of here, so the HUD, the save file and the shop all read one balance. Blank goes back to the built-in counter.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.use_points_account({account_id})")
+# @ace_action
+# @ace_name("Use Points Account")
+# @ace_description("Keeps skill points in a Currency Ledger account of this id instead of here, so the HUD, the save file and the shop all read one balance. Blank goes back to the built-in counter.")
+# @ace_codegen_template("Upgrades.use_points_account({account_id})")
 func use_points_account(account_id: String) -> void:
 	_points_account = account_id.strip_edges()
 
-## @ace_action
-## @ace_name("Apply Grants To")
-## @ace_category("Upgrades")
-## @ace_description("Names the node whose StatForge stack an unlocked skill's grants are applied to, and re-applies everything already unlocked. Without it a tree still unlocks - it just grants nothing.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.apply_grants_to({stats})")
+# @ace_action
+# @ace_name("Apply Grants To")
+# @ace_description("Names the node whose StatForge stack an unlocked skill's grants are applied to, and re-applies everything already unlocked. Without it a tree still unlocks - it just grants nothing.")
+# @ace_codegen_template("Upgrades.apply_grants_to({stats})")
 func apply_grants_to(stats: Node) -> void:
 	_stats = stats
 	for id: String in _unlocked:
 		_apply_grants(id)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Unlock")
-## @ace_category("Upgrades")
-## @ace_description("Takes one level of a skill: spends its cost, records the level, applies its grants and fires On Skill Unlocked. Refuses (On Unlock Refused) when a required skill is still locked, the skill is capped, or the points are short.")
-## @ace_display_template("Unlock [b]{id}[/b]")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.unlock_skill({id})")
+# @ace_action
+# @ace_featured
+# @ace_name("Unlock")
+# @ace_description("Takes one level of a skill: spends its cost, records the level, applies its grants and fires On Skill Unlocked. Refuses (On Unlock Refused) when a required skill is still locked, the skill is capped, or the points are short.")
+# @ace_display_template("Unlock [b]{id}[/b]")
+# @ace_codegen_template("Upgrades.unlock_skill({id})")
 func unlock_skill(id: String) -> void:
 	_last_skill = id
 	if not _can_unlock(id):
@@ -337,12 +289,10 @@ func unlock_skill(id: String) -> void:
 	_apply_grants(id)
 	on_skill_unlocked.emit()
 
-## @ace_action
-## @ace_name("Respec")
-## @ace_category("Upgrades")
-## @ace_description("Refunds every point spent on the tree, clears every unlock and takes back every grant it applied - one action, so a respec button is one row.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.respec()")
+# @ace_action
+# @ace_name("Respec")
+# @ace_description("Refunds every point spent on the tree, clears every unlock and takes back every grant it applied - one action, so a respec button is one row.")
+# @ace_codegen_template("Upgrades.respec()")
 func respec() -> void:
 	var refund: int = 0
 	for id: String in _unlocked:
@@ -352,132 +302,104 @@ func respec() -> void:
 		_stats.remove_buffs_by_source(SKILL_SOURCE)
 	_earn_points(refund)
 
-## @ace_condition
-## @ace_name("Is Unlocked")
-## @ace_category("Upgrades")
-## @ace_description("Whether a skill has been taken at least once - the perk test a game asks wherever the perk matters.")
-## @ace_display_template("[b]{id}[/b] is unlocked")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.is_skill_unlocked({id})")
+# @ace_condition
+# @ace_name("Is Unlocked")
+# @ace_description("Whether a skill has been taken at least once - the perk test a game asks wherever the perk matters.")
+# @ace_display_template("[b]{id}[/b] is unlocked")
+# @ace_codegen_template("Upgrades.is_skill_unlocked({id})")
 func is_skill_unlocked(id: String) -> bool:
 	return int(_unlocked.get(id, 0)) > 0
 
-## @ace_condition
-## @ace_name("Can Unlock")
-## @ace_category("Upgrades")
-## @ace_description("Whether every skill this one requires is unlocked, it is not already capped, and the points are there.")
-## @ace_display_template("[b]{id}[/b] can be unlocked")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.can_unlock_skill({id})")
+# @ace_condition
+# @ace_name("Can Unlock")
+# @ace_description("Whether every skill this one requires is unlocked, it is not already capped, and the points are there.")
+# @ace_display_template("[b]{id}[/b] can be unlocked")
+# @ace_codegen_template("Upgrades.can_unlock_skill({id})")
 func can_unlock_skill(id: String) -> bool:
 	return _can_unlock(id)
 
-## @ace_condition
-## @ace_name("Can Afford")
-## @ace_category("Upgrades")
-## @ace_description("Whether the unspent points cover this skill's cost, ignoring its prerequisites.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.can_afford_skill({id})")
+# @ace_condition
+# @ace_name("Can Afford")
+# @ace_description("Whether the unspent points cover this skill's cost, ignoring its prerequisites.")
+# @ace_codegen_template("Upgrades.can_afford_skill({id})")
 func can_afford_skill(id: String) -> bool:
 	return _points() >= _skill_cost(id)
 
-## @ace_condition
-## @ace_name("Requires")
-## @ace_category("Upgrades")
-## @ace_description("Whether the tree says this skill needs that one unlocked first.")
-## @ace_display_template("[b]{id}[/b] requires [b]{required_id}[/b]")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.skill_requires({id}, {required_id})")
+# @ace_condition
+# @ace_name("Requires")
+# @ace_description("Whether the tree says this skill needs that one unlocked first.")
+# @ace_display_template("[b]{id}[/b] requires [b]{required_id}[/b]")
+# @ace_codegen_template("Upgrades.skill_requires({id}, {required_id})")
 func skill_requires(id: String, required_id: String) -> bool:
 	return _requires_of(id).has(required_id.strip_edges())
 
-## @ace_expression
-## @ace_name("Skill Points")
-## @ace_category("Upgrades")
-## @ace_description("The unspent skill points - the number a tree screen's "points left" label shows.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.skill_points_left()")
+# @ace_expression
+# @ace_name("Skill Points")
+# @ace_description("The unspent skill points - the number a tree screen's "points left" label shows.")
+# @ace_codegen_template("Upgrades.skill_points_left()")
 func skill_points_left() -> int:
 	return _points()
 
-## @ace_expression
-## @ace_name("Skill Cost")
-## @ace_category("Upgrades")
-## @ace_description("What one level of a skill costs in points (0 when the id is not in the tree).")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.skill_cost_of({id})")
+# @ace_expression
+# @ace_name("Skill Cost")
+# @ace_description("What one level of a skill costs in points (0 when the id is not in the tree).")
+# @ace_codegen_template("Upgrades.skill_cost_of({id})")
 func skill_cost_of(id: String) -> int:
 	return _skill_cost(id)
 
-## @ace_expression
-## @ace_name("Skill Level")
-## @ace_category("Upgrades")
-## @ace_description("How many levels of a skill are unlocked (0 = locked).")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.skill_level_of({id})")
+# @ace_expression
+# @ace_name("Skill Level")
+# @ace_description("How many levels of a skill are unlocked (0 = locked).")
+# @ace_codegen_template("Upgrades.skill_level_of({id})")
 func skill_level_of(id: String) -> int:
 	return int(_unlocked.get(id, 0))
 
-## @ace_expression
-## @ace_name("Skill Max Level")
-## @ace_category("Upgrades")
-## @ace_description("How many levels a skill can take (1 for a one-off perk).")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.skill_max_level_of({id})")
+# @ace_expression
+# @ace_name("Skill Max Level")
+# @ace_description("How many levels a skill can take (1 for a one-off perk).")
+# @ace_codegen_template("Upgrades.skill_max_level_of({id})")
 func skill_max_level_of(id: String) -> int:
 	return _skill_max_level(id)
 
-## @ace_expression
-## @ace_name("Skill Name")
-## @ace_category("Upgrades")
-## @ace_description("A skill's readable name from the asset ("" when the id is not in the tree).")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.skill_name_of({id})")
+# @ace_expression
+# @ace_name("Skill Name")
+# @ace_description("A skill's readable name from the asset ("" when the id is not in the tree).")
+# @ace_codegen_template("Upgrades.skill_name_of({id})")
 func skill_name_of(id: String) -> String:
 	return str(_skill_row(id).get("name", ""))
 
-## @ace_expression
-## @ace_name("Skill Requires")
-## @ace_category("Upgrades")
-## @ace_description("The ids a skill needs first, comma-separated as the asset wrote them ("" for a root skill).")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.skill_requires_text({id})")
+# @ace_expression
+# @ace_name("Skill Requires")
+# @ace_description("The ids a skill needs first, comma-separated as the asset wrote them ("" for a root skill).")
+# @ace_codegen_template("Upgrades.skill_requires_text({id})")
 func skill_requires_text(id: String) -> String:
 	return ", ".join(_requires_of(id))
 
-## @ace_expression
-## @ace_name("Skill Grants")
-## @ace_category("Upgrades")
-## @ace_description("What a skill grants, as the asset's own words - the line a tree screen shows on hover.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.skill_grants_text({id})")
+# @ace_expression
+# @ace_name("Skill Grants")
+# @ace_description("What a skill grants, as the asset's own words - the line a tree screen shows on hover.")
+# @ace_codegen_template("Upgrades.skill_grants_text({id})")
 func skill_grants_text(id: String) -> String:
 	return str(_skill_row(id).get("grants", ""))
 
-## @ace_expression
-## @ace_name("Skill Column")
-## @ace_category("Upgrades")
-## @ace_description("A skill's column on a tree screen, or -1 when the asset leaves the layout to the screen.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.skill_column_of({id})")
+# @ace_expression
+# @ace_name("Skill Column")
+# @ace_description("A skill's column on a tree screen, or -1 when the asset leaves the layout to the screen.")
+# @ace_codegen_template("Upgrades.skill_column_of({id})")
 func skill_column_of(id: String) -> int:
 	return int(_skill_row(id).get("column", -1))
 
-## @ace_expression
-## @ace_name("Skill Row")
-## @ace_category("Upgrades")
-## @ace_description("A skill's row on a tree screen, or -1 when the asset leaves the layout to the screen.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.skill_row_of({id})")
+# @ace_expression
+# @ace_name("Skill Row")
+# @ace_description("A skill's row on a tree screen, or -1 when the asset leaves the layout to the screen.")
+# @ace_codegen_template("Upgrades.skill_row_of({id})")
 func skill_row_of(id: String) -> int:
 	return int(_skill_row(id).get("row", -1))
 
-## @ace_expression
-## @ace_name("Skill Depth")
-## @ace_category("Upgrades")
-## @ace_description("How many prerequisites deep a skill sits - 0 for a root, 1 for its children, and so on. A screen with no column/row in its asset lays the tree out by this.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.skill_depth_of({id})")
+# @ace_expression
+# @ace_name("Skill Depth")
+# @ace_description("How many prerequisites deep a skill sits - 0 for a root, 1 for its children, and so on. A screen with no column/row in its asset lays the tree out by this.")
+# @ace_codegen_template("Upgrades.skill_depth_of({id})")
 func skill_depth_of(id: String) -> int:
 	var depth: int = 0
 	var frontier: PackedStringArray = _requires_of(id)
@@ -493,12 +415,10 @@ func skill_depth_of(id: String) -> int:
 		frontier = next
 	return depth
 
-## @ace_expression
-## @ace_name("Skill Id At")
-## @ace_category("Upgrades")
-## @ace_description("The skill id at a position in the asset's own order ("" out of range) - what a screen walks to build its nodes.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.skill_id_at({index})")
+# @ace_expression
+# @ace_name("Skill Id At")
+# @ace_description("The skill id at a position in the asset's own order ("" out of range) - what a screen walks to build its nodes.")
+# @ace_codegen_template("Upgrades.skill_id_at({index})")
 func skill_id_at(index: int) -> String:
 	if _tree == null:
 		return ""
@@ -507,42 +427,34 @@ func skill_id_at(index: int) -> String:
 		return ""
 	return str(((rows as Array)[index] as Dictionary).get("id", ""))
 
-## @ace_expression
-## @ace_name("Skill Count")
-## @ace_category("Upgrades")
-## @ace_description("How many skills the loaded tree holds (0 when none is loaded).")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.skill_count()")
+# @ace_expression
+# @ace_name("Skill Count")
+# @ace_description("How many skills the loaded tree holds (0 when none is loaded).")
+# @ace_codegen_template("Upgrades.skill_count()")
 func skill_count() -> int:
 	if _tree == null:
 		return 0
 	var rows: Variant = _tree.get("skills")
 	return (rows as Array).size() if rows is Array else 0
 
-## @ace_expression
-## @ace_name("Unlocked Count")
-## @ace_category("Upgrades")
-## @ace_description("How many skills have at least one level - the "12 of 30" a tree screen prints.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.unlocked_skill_count()")
+# @ace_expression
+# @ace_name("Unlocked Count")
+# @ace_description("How many skills have at least one level - the "12 of 30" a tree screen prints.")
+# @ace_codegen_template("Upgrades.unlocked_skill_count()")
 func unlocked_skill_count() -> int:
 	return _unlocked.size()
 
-## @ace_expression
-## @ace_name("Last Skill")
-## @ace_category("Upgrades")
-## @ace_description("The skill Unlock last touched - read it inside On Skill Unlocked or On Unlock Refused.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.last_skill_id()")
+# @ace_expression
+# @ace_name("Last Skill")
+# @ace_description("The skill Unlock last touched - read it inside On Skill Unlocked or On Unlock Refused.")
+# @ace_codegen_template("Upgrades.last_skill_id()")
 func last_skill_id() -> String:
 	return _last_skill
 
-## @ace_expression
-## @ace_name("Tree Name")
-## @ace_category("Upgrades")
-## @ace_description("The loaded tree's readable name ("" when none is loaded) - a tree screen's title.")
-## @ace_icon("res://eventsheet_addons/upgrades/icon.svg")
-## @ace_codegen_template("Upgrades.skill_tree_name()")
+# @ace_expression
+# @ace_name("Tree Name")
+# @ace_description("The loaded tree's readable name ("" when none is loaded) - a tree screen's title.")
+# @ace_codegen_template("Upgrades.skill_tree_name()")
 func skill_tree_name() -> String:
 	return str(_tree.get("tree_name")) if _tree != null and _tree.get("tree_name") != null else ""
 
@@ -689,7 +601,7 @@ func _apply_grants(id: String) -> void:
 		_stats.add_buff("skill:%s:%s" % [id, str(grant["stat"])], str(grant["stat"]), amount,
 				str(grant["mode"]), "skill", SKILL_SOURCE, 0.0)
 
-## @ace_hidden
+# @ace_hidden
 func save_state() -> Dictionary:
 	# Save-state seam: the Save System walks any node in its persist group (or targeted
 	# by Save/Load Node State) and duck-types these two methods. Plain data only.
@@ -699,7 +611,7 @@ func save_state() -> Dictionary:
 		"skill_points": _skill_points
 	}
 
-## @ace_hidden
+# @ace_hidden
 func load_state(state: Dictionary) -> void:
 	if state.is_empty():
 		return

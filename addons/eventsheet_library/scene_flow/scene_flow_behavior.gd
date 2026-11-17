@@ -1,12 +1,12 @@
-## @ace_category("Scenes")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Scenes")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/scene_flow/icon.svg")
 class_name SceneFlowBehavior
 extends Node
 ## Polished scene changes from one node: fade to another scene, fade-reload the current one, jump or reload instantly, and quit the game. The fade overlay parents itself to the tree root instead of the dying scene, so the transition survives the swap instead of vanishing halfway through.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 
@@ -18,23 +18,23 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Scene Flow Behavior needs a parent node: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
+# @ace_trigger
+# @ace_name("On Transition Finished")
 ## Fires when a transition started by Go To Scene With or Reload Scene With has finished: the new
 ## scene is up and the cover is off. It arrives on the Scene Flow node in the NEW scene, carrying the
 ## shape the transition was, so one handler can tell a wipe from an iris.
-## @ace_trigger
-## @ace_name("On Transition Finished")
 signal transition_finished(shape: String)
+# @ace_trigger
+# @ace_name("On Loading Progress")
 ## Fires every time the loading reading MOVES, on the Scene Flow node standing in the loading
 ## screen - which is exactly where a row that sets a bar wants to be. It carries nothing:
 ## Scene Load Progress answers with the number, so the row reads as a sentence.
-## @ace_trigger
-## @ace_name("On Loading Progress")
 signal loading_progress_changed
+# @ace_trigger
+# @ace_name("On Loading Finished")
 ## Fires once when the wait is over: the scene is off the disk AND the minimum seconds have
 ## been served. With Wait For Key off the swap follows immediately; with it on, this is the
 ## moment to show "press any key", and Enter Loaded Scene is what the key does.
-## @ace_trigger
-## @ace_name("On Loading Finished")
 signal loading_finished
 
 ## The cover colour the screen fades through.
@@ -339,15 +339,15 @@ class LoadingRunner:
 				(listener as SceneFlowBehavior)._announce_loading(what)
 			elif listener.has_signal(what):
 				listener.emit_signal(what)
+# @ace_hidden
 ## Whether the runner walks into the new scene by itself at that point, which it does unless the
 ## row asked to wait for a key - the press-any-key screen.
-## @ace_hidden
 static func loading_enters_itself(status: int, elapsed: float, min_seconds: float,
 		wait_for_key: bool) -> bool:
 	return loading_wait_is_over(status, elapsed, min_seconds) and not wait_for_key
+# @ace_hidden
 ## The running load, or null when nothing is loading. One at a time by construction: the group
 ## holds at most one runner because Go To Scene With Loading refuses while one is alive.
-## @ace_hidden
 func _loading_runner() -> LoadingRunner:
 	if not is_inside_tree():
 		return null
@@ -360,124 +360,104 @@ func _ready() -> void:
 	# standing in the scene the transition arrived at.
 	add_to_group(TRANSITION_LISTENERS)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Fade To Scene")
-## @ace_category("Scenes")
-## @ace_description("Fades the screen out, changes to the scene, and fades back in (ignored while a transition runs).")
-## @ace_display_template("Fade to scene [b]{path}[/b]")
-## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
-## @ace_codegen_template("$SceneFlowBehavior.fade_to_scene({path})")
+# @ace_action
+# @ace_featured
+# @ace_name("Fade To Scene")
+# @ace_description("Fades the screen out, changes to the scene, and fades back in (ignored while a transition runs).")
+# @ace_display_template("Fade to scene [b]{path}[/b]")
+# @ace_codegen_template("$SceneFlowBehavior.fade_to_scene({path})")
 func fade_to_scene(path: String) -> void:
 	if path.strip_edges().is_empty():
 		return
 	_start_fade(path.strip_edges())
 
-## @ace_action
-## @ace_name("Fade Reload Scene")
-## @ace_category("Scenes")
-## @ace_description("Fades out, reloads the current scene, and fades back in - the polished retry button.")
-## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
-## @ace_codegen_template("$SceneFlowBehavior.fade_reload_scene()")
+# @ace_action
+# @ace_name("Fade Reload Scene")
+# @ace_description("Fades out, reloads the current scene, and fades back in - the polished retry button.")
+# @ace_codegen_template("$SceneFlowBehavior.fade_reload_scene()")
 func fade_reload_scene() -> void:
 	_start_fade("")
 
-## @ace_action
-## @ace_name("Go To Scene")
-## @ace_category("Scenes")
-## @ace_description("Changes to the scene immediately (no fade).")
-## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
-## @ace_codegen_template("$SceneFlowBehavior.go_to_scene({path})")
+# @ace_action
+# @ace_name("Go To Scene")
+# @ace_description("Changes to the scene immediately (no fade).")
+# @ace_codegen_template("$SceneFlowBehavior.go_to_scene({path})")
 func go_to_scene(path: String) -> void:
 	if not path.strip_edges().is_empty():
 		get_tree().change_scene_to_file(path.strip_edges())
 
-## @ace_action
-## @ace_name("Reload Scene")
-## @ace_category("Scenes")
-## @ace_description("Reloads the current scene immediately (no fade).")
-## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
-## @ace_codegen_template("$SceneFlowBehavior.reload_scene()")
+# @ace_action
+# @ace_name("Reload Scene")
+# @ace_description("Reloads the current scene immediately (no fade).")
+# @ace_codegen_template("$SceneFlowBehavior.reload_scene()")
 func reload_scene() -> void:
 	get_tree().reload_current_scene()
 
-## @ace_action
-## @ace_name("Quit Game")
-## @ace_category("Scenes")
-## @ace_description("Quits the game (a no-op on platforms that forbid it, like web).")
-## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
-## @ace_codegen_template("$SceneFlowBehavior.quit_game()")
+# @ace_action
+# @ace_name("Quit Game")
+# @ace_description("Quits the game (a no-op on platforms that forbid it, like web).")
+# @ace_codegen_template("$SceneFlowBehavior.quit_game()")
 func quit_game() -> void:
 	get_tree().quit()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Go To Scene With")
-## @ace_category("Scenes")
-## @ace_description("Changes to the scene with a transition drawn over it: the shape walks on over the first half, the scene is swapped under the cover, and it walks off again over the second. The shapes are fade, wipe (following the Wipe Image knob), dissolve, iris, blinds, pixelate and page curl. The cover colour is the node's Fade Color. Ignored while a transition is already running; emits On Transition Finished when the new scene is up and the cover is off.")
-## @ace_display_template("Go to scene [b]{path}[/b] with a [b]{transition}[/b] over [b]{seconds}[/b] s")
-## @ace_param(path, default: ProjectSettings.get_setting("application/run/main_scene"), desc: "The scene to open. Its res:// path in quotes, or an expression that answers with one - it starts at the project's own main scene.")
-## @ace_param(transition, options: fade|wipe|dissolve|iris|blinds|pixelate|page curl, default: fade, desc: "The shape drawn over the change. Wipe follows the node's Wipe Image; pixelate and page curl read the screen back while they run.")
-## @ace_param(seconds, default: 0.6, desc: "How long the whole change takes, on and off again. Held over a floor while no flashing is on.")
-## @ace_param(ease, options: linear|smooth|in|out, default: smooth, desc: "What the walk feels like: linear is one speed, smooth eases both ends, in starts slowly, out arrives slowly.")
-## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
-## @ace_codegen_template("$SceneFlowBehavior.go_to_scene_with({path}, "{transition}", {seconds}, "{ease}")")
+# @ace_action
+# @ace_featured
+# @ace_name("Go To Scene With")
+# @ace_description("Changes to the scene with a transition drawn over it: the shape walks on over the first half, the scene is swapped under the cover, and it walks off again over the second. The shapes are fade, wipe (following the Wipe Image knob), dissolve, iris, blinds, pixelate and page curl. The cover colour is the node's Fade Color. Ignored while a transition is already running; emits On Transition Finished when the new scene is up and the cover is off.")
+# @ace_display_template("Go to scene [b]{path}[/b] with a [b]{transition}[/b] over [b]{seconds}[/b] s")
+# @ace_param(path, default: ProjectSettings.get_setting("application/run/main_scene"), desc: "The scene to open. Its res:// path in quotes, or an expression that answers with one - it starts at the project's own main scene.")
+# @ace_param(transition, options: fade|wipe|dissolve|iris|blinds|pixelate|page curl, default: fade, desc: "The shape drawn over the change. Wipe follows the node's Wipe Image; pixelate and page curl read the screen back while they run.")
+# @ace_param(seconds, default: 0.6, desc: "How long the whole change takes, on and off again. Held over a floor while no flashing is on.")
+# @ace_param(ease, options: linear|smooth|in|out, default: smooth, desc: "What the walk feels like: linear is one speed, smooth eases both ends, in starts slowly, out arrives slowly.")
+# @ace_codegen_template("$SceneFlowBehavior.go_to_scene_with({path}, "{transition}", {seconds}, "{ease}")")
 @warning_ignore("shadowed_global_identifier")  # ease: ACE parameter id of this verb, frozen since it shipped
 func go_to_scene_with(path: String, transition: String, seconds: float, ease: String) -> void:
 	if path.strip_edges().is_empty():
 		return
 	_start_transition(path.strip_edges(), transition, seconds, ease)
 
-## @ace_action
-## @ace_name("Reload Scene With")
-## @ace_category("Scenes")
-## @ace_description("Reloads the current scene with a transition drawn over it - the polished retry, in whichever shape the game uses everywhere else. Same shapes, same cover colour and same one-at-a-time rule as Go To Scene With; emits On Transition Finished when the fresh scene is up.")
-## @ace_display_template("Reload with a [b]{transition}[/b] over [b]{seconds}[/b] s")
-## @ace_param(transition, options: fade|wipe|dissolve|iris|blinds|pixelate|page curl, default: fade, desc: "The shape drawn over the reload. Wipe follows the node's Wipe Image; pixelate and page curl read the screen back while they run.")
-## @ace_param(seconds, default: 0.6, desc: "How long the whole reload takes, on and off again. Held over a floor while no flashing is on.")
-## @ace_param(ease, options: linear|smooth|in|out, default: smooth, desc: "What the walk feels like: linear is one speed, smooth eases both ends, in starts slowly, out arrives slowly.")
-## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
-## @ace_codegen_template("$SceneFlowBehavior.reload_scene_with("{transition}", {seconds}, "{ease}")")
+# @ace_action
+# @ace_name("Reload Scene With")
+# @ace_description("Reloads the current scene with a transition drawn over it - the polished retry, in whichever shape the game uses everywhere else. Same shapes, same cover colour and same one-at-a-time rule as Go To Scene With; emits On Transition Finished when the fresh scene is up.")
+# @ace_display_template("Reload with a [b]{transition}[/b] over [b]{seconds}[/b] s")
+# @ace_param(transition, options: fade|wipe|dissolve|iris|blinds|pixelate|page curl, default: fade, desc: "The shape drawn over the reload. Wipe follows the node's Wipe Image; pixelate and page curl read the screen back while they run.")
+# @ace_param(seconds, default: 0.6, desc: "How long the whole reload takes, on and off again. Held over a floor while no flashing is on.")
+# @ace_param(ease, options: linear|smooth|in|out, default: smooth, desc: "What the walk feels like: linear is one speed, smooth eases both ends, in starts slowly, out arrives slowly.")
+# @ace_codegen_template("$SceneFlowBehavior.reload_scene_with("{transition}", {seconds}, "{ease}")")
 @warning_ignore("shadowed_global_identifier")  # ease: ACE parameter id of this verb, frozen since it shipped
 func reload_scene_with(transition: String, seconds: float, ease: String) -> void:
 	_start_transition("", transition, seconds, ease)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Go To Scene With Loading")
-## @ace_category("Scenes")
-## @ace_description("Shows the node's Loading Scene while the next scene comes off the disk on a thread, then enters it. The wait is over when BOTH the load has finished and the minimum seconds have passed, so the screen cannot flash past on a fast machine; On Loading Progress moves a bar through Scene Load Progress, and Loading Tip answers with one line of the tips file. With Wait For Key on it stops there and waits for Enter Loaded Scene. The node's Loading Transition wraps both halves of the change.")
-## @ace_display_template("Go to scene [b]{scene}[/b] with loading, at least [b]{min_seconds}[/b] s")
-## @ace_param(scene, desc: "The scene to open. Its res:// path, or an expression that answers with one.")
-## @ace_param(min_seconds, default: 1.0, desc: "The shortest the loading screen stays up, in seconds. One second is enough to be read as a beat rather than as a flicker; zero enters the moment the load lands.")
-## @ace_param(wait_for_key, default: false, desc: "On: the wait ends at On Loading Finished and the screen stays up until a row runs Enter Loaded Scene - the press-any-key screen. Off: the new scene is entered as soon as the wait is over.")
-## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
-## @ace_codegen_template("$SceneFlowBehavior.go_to_with_loading({scene}, {min_seconds}, {wait_for_key})")
+# @ace_action
+# @ace_featured
+# @ace_name("Go To Scene With Loading")
+# @ace_description("Shows the node's Loading Scene while the next scene comes off the disk on a thread, then enters it. The wait is over when BOTH the load has finished and the minimum seconds have passed, so the screen cannot flash past on a fast machine; On Loading Progress moves a bar through Scene Load Progress, and Loading Tip answers with one line of the tips file. With Wait For Key on it stops there and waits for Enter Loaded Scene. The node's Loading Transition wraps both halves of the change.")
+# @ace_display_template("Go to scene [b]{scene}[/b] with loading, at least [b]{min_seconds}[/b] s")
+# @ace_param(scene, desc: "The scene to open. Its res:// path, or an expression that answers with one.")
+# @ace_param(min_seconds, default: 1.0, desc: "The shortest the loading screen stays up, in seconds. One second is enough to be read as a beat rather than as a flicker; zero enters the moment the load lands.")
+# @ace_param(wait_for_key, default: false, desc: "On: the wait ends at On Loading Finished and the screen stays up until a row runs Enter Loaded Scene - the press-any-key screen. Off: the new scene is entered as soon as the wait is over.")
+# @ace_codegen_template("$SceneFlowBehavior.go_to_with_loading({scene}, {min_seconds}, {wait_for_key})")
 func go_to_with_loading(scene: String, min_seconds: float, wait_for_key: bool) -> void:
 	_start_loading(scene, min_seconds, wait_for_key)
 
-## @ace_action
-## @ace_name("Enter Loaded Scene")
-## @ace_category("Scenes")
-## @ace_description("Enters the scene a loading screen has been holding. Does nothing at all while the wait is still on, so a bare "any key pressed" row is safe to leave on the loading screen; it is what Wait For Key waits for.")
-## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
-## @ace_codegen_template("$SceneFlowBehavior.enter_loaded_scene()")
+# @ace_action
+# @ace_name("Enter Loaded Scene")
+# @ace_description("Enters the scene a loading screen has been holding. Does nothing at all while the wait is still on, so a bare "any key pressed" row is safe to leave on the loading screen; it is what Wait For Key waits for.")
+# @ace_codegen_template("$SceneFlowBehavior.enter_loaded_scene()")
 func enter_loaded_scene() -> void:
 	var runner: LoadingRunner = _loading_runner()
 	if runner != null:
 		runner.enter()
 
-## @ace_condition
-## @ace_name("Is Transitioning")
-## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
-## @ace_codegen_template("$SceneFlowBehavior.is_transitioning()")
+# @ace_condition
+# @ace_name("Is Transitioning")
+# @ace_codegen_template("$SceneFlowBehavior.is_transitioning()")
 func is_transitioning() -> bool:
 	return not get_tree().get_nodes_in_group("scene_flow_transition").is_empty()
 
-## @ace_expression
-## @ace_name("Current Scene Path")
-## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
-## @ace_codegen_template("$SceneFlowBehavior.current_scene_path()")
+# @ace_expression
+# @ace_name("Current Scene Path")
+# @ace_codegen_template("$SceneFlowBehavior.current_scene_path()")
 func current_scene_path() -> String:
 	var current: Node = get_tree().current_scene
 	return current.scene_file_path if current != null else ""
@@ -491,10 +471,10 @@ func _start_fade(path: String) -> void:
 	runner.target_path = path
 	get_tree().root.add_child(runner)
 
+# @ace_hidden
 ## What a transition runner calls on each Scene Flow node it finds once the cover is off. The
 ## runner is a class of its own, so the signal is raised here, beside its declaration, where Godot
 ## can see it is used.
-## @ace_hidden
 func _announce_transition_finished(shape: String) -> void:
 	transition_finished.emit(shape)
 
@@ -526,18 +506,18 @@ static func transition_phase(fraction: float) -> String:
 		return "swap"
 	return "out" if walk < 0.5 else "in"
 
+# @ace_hidden
 ## The shortest a transition may be right now: the ordinary floor, or the accessibility one for a
 ## player who has asked for no flashing. A transition is one of the three things this project holds
 ## over that floor, beside a post-stack walk and a moment step.
-## @ace_hidden
 static func transition_floor_seconds() -> float:
 	if bool(Engine.get_meta(TRANSITION_NO_FLASHING_META, false)):
 		return TRANSITION_FLASH_FLOOR_SECONDS
 	return TRANSITION_FLOOR_SECONDS
 
+# @ace_hidden
 ## Starts one shaded transition, or does nothing at all if another is already running - the same
 ## one-at-a-time rule the shipped fade follows.
-## @ace_hidden
 func _start_transition(path: String, shape: String, seconds: float, ease_word: String) -> void:
 	if is_transitioning():
 		return
@@ -550,38 +530,38 @@ func _start_transition(path: String, shape: String, seconds: float, ease_word: S
 	runner.target_path = path
 	get_tree().root.add_child(runner)
 
+# @ace_hidden
 ## What the loading runner calls on each Scene Flow node it finds, naming the beat: the reading
 ## moved, or the wait is over. Raised here, beside the two declarations, for the same reason the
 ## finished transition is.
-## @ace_hidden
 func _announce_loading(what: String) -> void:
 	if what == "loading_progress_changed":
 		loading_progress_changed.emit()
 	elif what == "loading_finished":
 		loading_finished.emit()
 
+# @ace_hidden
 ## HOW FAR THE WAIT HAS GOT, from 0 to 1 - what Scene Load Progress answers with and what a bar is
 ## set to. It is the SLOWER of the two things being waited on: how much of the scene is off the
 ## disk, and how much of the minimum time has been served. A bar that races to the end and then
 ## sits there reads as a hang, so this one never runs ahead of the wait it belongs to.
-## @ace_hidden
 static func loading_reading(loaded: float, elapsed: float, min_seconds: float) -> float:
 	var by_disk: float = clampf(loaded, 0.0, 1.0)
 	if min_seconds <= 0.0:
 		return by_disk
 	return minf(by_disk, clampf(elapsed / min_seconds, 0.0, 1.0))
 
+# @ace_hidden
 ## Whether the wait is over: the scene is off the disk AND the minimum has been served. The two
 ## are one question, which is what makes a fast machine and a slow one spend the same beat on
 ## the screen instead of one of them flashing it past.
-## @ace_hidden
 static func loading_wait_is_over(status: int, elapsed: float, min_seconds: float) -> bool:
 	return status == ResourceLoader.THREAD_LOAD_LOADED and elapsed >= min_seconds
 
+# @ace_hidden
 ## The tips a tips file holds: one per line, blank lines dropped, and a line starting with # left
 ## out so a file can carry a note about itself. The file is the PROJECT'S - the pack ships one to
 ## copy and never a list of tips of its own.
-## @ace_hidden
 static func loading_tip_lines(text: String) -> PackedStringArray:
 	var tips: PackedStringArray = PackedStringArray()
 	for raw_line: String in text.split("\n"):
@@ -591,59 +571,56 @@ static func loading_tip_lines(text: String) -> PackedStringArray:
 		tips.append(line)
 	return tips
 
+# @ace_hidden
 ## The tip at a position, wrapping round, so any number at all picks one and an empty file
 ## answers with an empty string rather than reaching past the end of the list.
-## @ace_hidden
 static func loading_tip_at(tips: PackedStringArray, index: int) -> String:
 	if tips.is_empty():
 		return ""
 	return tips[posmod(index, tips.size())]
 
+# @ace_condition
+# @ace_name("Scene Is Loading")
+# @ace_codegen_template("$SceneFlowBehavior.is_loading()")
 ## Whether a background load started by Go To Scene With Loading is still in flight. It stays
 ## true while the screen is up - including the beat where it is waiting for a key, and the
 ## covered change into the new scene - so a row can gate anything on "still loading".
-## @ace_condition
-## @ace_name("Scene Is Loading")
-## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
-## @ace_codegen_template("$SceneFlowBehavior.is_loading()")
 func is_loading() -> bool:
 	return _loading_runner() != null
 
+# @ace_expression
+# @ace_name("Scene Load Progress")
+# @ace_codegen_template("$SceneFlowBehavior.loading_progress()")
 ## How far the wait has got, from 0 to 1. Multiply by 100 for a percentage, or set a bar whose
 ## maximum is 1 straight from it. Zero when nothing is loading.
-## @ace_expression
-## @ace_name("Scene Load Progress")
-## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
-## @ace_codegen_template("$SceneFlowBehavior.loading_progress()")
 func loading_progress() -> float:
 	var runner: LoadingRunner = _loading_runner()
 	return runner.reading if runner != null else 0.0
 
+# @ace_expression
+# @ace_name("Loading Tip")
+# @ace_codegen_template("$SceneFlowBehavior.loading_tip()")
 ## The one line picked out of the tips file when this load started. It stays put for the whole
 ## wait, because a tip that changes while somebody is reading it is worse than no tip. Empty
 ## when there is no tips file, or nothing is loading.
-## @ace_expression
-## @ace_name("Loading Tip")
-## @ace_icon("res://eventsheet_addons/scene_flow/icon.svg")
-## @ace_codegen_template("$SceneFlowBehavior.loading_tip()")
 func loading_tip() -> String:
 	var runner: LoadingRunner = _loading_runner()
 	return runner.tip if runner != null else ""
 
+# @ace_hidden
 ## The tips this node's tips file holds, or none at all when it has no file. Read on each load
 ## rather than kept, so editing the file while the game runs shows up on the next screen.
-## @ace_hidden
 func _loading_tips() -> PackedStringArray:
 	var path: String = loading_tips_file.strip_edges()
 	if path.is_empty() or not FileAccess.file_exists(path):
 		return PackedStringArray()
 	return loading_tip_lines(FileAccess.get_file_as_string(path))
 
+# @ace_hidden
 ## Starts one background load with a screen over it, or does nothing at all if another is
 ## already running - the same one-at-a-time rule the two transitions follow. The order matters:
 ## the poller is parented to the ROOT before the loading screen is swapped in, so it is the one
 ## thing in the change that does not die with the scene the row was standing in.
-## @ace_hidden
 func _start_loading(path: String, min_seconds: float, wait_for_key: bool) -> void:
 	var scene_path: String = path.strip_edges()
 	if scene_path.is_empty() or is_loading():

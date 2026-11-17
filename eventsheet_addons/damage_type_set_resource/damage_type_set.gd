@@ -1,6 +1,6 @@
-## @ace_tags(damage, health, resource)
-## @ace_category("Health")
-## @ace_version(1.0.0)
+# @ace_tags(damage, health, resource)
+# @ace_category("Health")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/damage_type_set_resource/icon.svg")
 class_name DamageTypeSet
 extends Resource

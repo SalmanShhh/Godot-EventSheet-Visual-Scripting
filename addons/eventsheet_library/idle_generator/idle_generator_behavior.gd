@@ -1,12 +1,12 @@
-## @ace_tags(incremental, idle, economy)
-## @ace_category("Idle Generator")
-## @ace_version(1.0.0)
+# @ace_tags(incremental, idle, economy)
+# @ace_category("Idle Generator")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/idle_generator/icon.svg")
 class_name IdleGeneratorBehavior
 extends Node
 ## A buy-more-to-make-more producer for incremental games - the cursor, farm, or factory you buy in bulk. Costs grow on a geometric curve with exact closed-form bulk buying (Buy One / Buy Amount / Buy Max), a continuous output per second, and an optional fill-and-collect cycle mode; it records what a buy cost but spending from your wallet stays your sheet's job.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 
@@ -18,11 +18,11 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Idle Generator Behavior needs a parent node: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Purchased")
+# @ace_trigger
+# @ace_name("On Purchased")
 signal on_purchased
-## @ace_trigger
-## @ace_name("On Cycle Complete")
+# @ace_trigger
+# @ace_name("On Cycle Complete")
 signal on_cycle_complete
 
 ## Price of the first unit; each further unit costs the cost growth times more than the one before.
@@ -72,13 +72,11 @@ func _process(delta: float) -> void:
 		_pending += float(owned) * base_output * output_multiplier
 		on_cycle_complete.emit()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Buy One")
-## @ace_category("Idle Generator")
-## @ace_description("Adds one unit and records its price as Last Cost (Spend that from your wallet). Guard with Can Afford Next first.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.buy_one()")
+# @ace_action
+# @ace_featured
+# @ace_name("Buy One")
+# @ace_description("Adds one unit and records its price as Last Cost (Spend that from your wallet). Guard with Can Afford Next first.")
+# @ace_codegen_template("$IdleGeneratorBehavior.buy_one()")
 func buy_one() -> void:
 	last_spent = _cost_for_n(1)
 	owned += 1
@@ -86,12 +84,10 @@ func buy_one() -> void:
 	_refresh_processing()
 	on_purchased.emit()
 
-## @ace_action
-## @ace_name("Buy Amount")
-## @ace_category("Idle Generator")
-## @ace_description("Adds `count` units at once and records the total price as Last Cost.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.buy_amount({count})")
+# @ace_action
+# @ace_name("Buy Amount")
+# @ace_description("Adds `count` units at once and records the total price as Last Cost.")
+# @ace_codegen_template("$IdleGeneratorBehavior.buy_amount({count})")
 func buy_amount(count: int) -> void:
 	if count <= 0:
 		return
@@ -101,12 +97,10 @@ func buy_amount(count: int) -> void:
 	_refresh_processing()
 	on_purchased.emit()
 
-## @ace_action
-## @ace_name("Buy Max")
-## @ace_category("Idle Generator")
-## @ace_description("Buys as many as `budget` affords, recording the exact total as Last Cost and the count as Last Bought. Buys nothing if not even one is affordable.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.buy_max({budget})")
+# @ace_action
+# @ace_name("Buy Max")
+# @ace_description("Buys as many as `budget` affords, recording the exact total as Last Cost and the count as Last Bought. Buys nothing if not even one is affordable.")
+# @ace_codegen_template("$IdleGeneratorBehavior.buy_max({budget})")
 func buy_max(budget: float) -> void:
 	var count: int = _max_affordable(budget)
 	if count <= 0:
@@ -119,183 +113,145 @@ func buy_max(budget: float) -> void:
 	_refresh_processing()
 	on_purchased.emit()
 
-## @ace_action
-## @ace_name("Set Owned")
-## @ace_category("Idle Generator")
-## @ace_description("Forces the owned count to a value (clamped to 0). Does not record a cost.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.set_owned({count})")
+# @ace_action
+# @ace_name("Set Owned")
+# @ace_description("Forces the owned count to a value (clamped to 0). Does not record a cost.")
+# @ace_codegen_template("$IdleGeneratorBehavior.set_owned({count})")
 func set_owned(count: int) -> void:
 	owned = maxi(count, 0)
 	_refresh_processing()
 
-## @ace_action
-## @ace_name("Grant")
-## @ace_category("Idle Generator")
-## @ace_description("Adds free units - a reward or a starting bonus (no cost recorded).")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.grant({count})")
+# @ace_action
+# @ace_name("Grant")
+# @ace_description("Adds free units - a reward or a starting bonus (no cost recorded).")
+# @ace_codegen_template("$IdleGeneratorBehavior.grant({count})")
 func grant(count: int) -> void:
 	owned += maxi(count, 0)
 	_refresh_processing()
 
-## @ace_action
-## @ace_name("Set Output Multiplier")
-## @ace_category("Idle Generator")
-## @ace_description("Sets the overall output multiplier - feed it your composed prestige x upgrade x boost value.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.set_output_multiplier({multiplier})")
+# @ace_action
+# @ace_name("Set Output Multiplier")
+# @ace_description("Sets the overall output multiplier - feed it your composed prestige x upgrade x boost value.")
+# @ace_codegen_template("$IdleGeneratorBehavior.set_output_multiplier({multiplier})")
 func set_output_multiplier(multiplier: float) -> void:
 	output_multiplier = multiplier
 
-## @ace_action
-## @ace_featured
-## @ace_name("Collect")
-## @ace_category("Idle Generator")
-## @ace_description("Cycle mode: hands you the banked output as Last Collected and clears the pending pile. Call it on On Cycle Complete (or from a manager) and credit Last Collected to your wallet.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.collect()")
+# @ace_action
+# @ace_featured
+# @ace_name("Collect")
+# @ace_description("Cycle mode: hands you the banked output as Last Collected and clears the pending pile. Call it on On Cycle Complete (or from a manager) and credit Last Collected to your wallet.")
+# @ace_codegen_template("$IdleGeneratorBehavior.collect()")
 func collect() -> void:
 	last_collected = _pending
 	_pending = 0.0
 
-## @ace_action
-## @ace_name("Reset")
-## @ace_category("Idle Generator")
-## @ace_description("Clears owned, pending output, and cycle progress - for a prestige wipe.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.reset_generator()")
+# @ace_action
+# @ace_name("Reset")
+# @ace_description("Clears owned, pending output, and cycle progress - for a prestige wipe.")
+# @ace_codegen_template("$IdleGeneratorBehavior.reset_generator()")
 func reset_generator() -> void:
 	owned = 0
 	_pending = 0.0
 	_cycle_progress = 0.0
 	_refresh_processing()
 
-## @ace_condition
-## @ace_name("Can Afford Next")
-## @ace_category("Idle Generator")
-## @ace_description("Whether `budget` covers the next single unit's price.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.can_afford_next({budget})")
+# @ace_condition
+# @ace_name("Can Afford Next")
+# @ace_description("Whether `budget` covers the next single unit's price.")
+# @ace_codegen_template("$IdleGeneratorBehavior.can_afford_next({budget})")
 func can_afford_next(budget: float) -> bool:
 	return budget >= _cost_for_n(1)
 
-## @ace_condition
-## @ace_name("Is Owned")
-## @ace_category("Idle Generator")
-## @ace_description("Whether at least one unit is owned.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.is_owned()")
+# @ace_condition
+# @ace_name("Is Owned")
+# @ace_description("Whether at least one unit is owned.")
+# @ace_codegen_template("$IdleGeneratorBehavior.is_owned()")
 func is_owned() -> bool:
 	return owned > 0
 
-## @ace_expression
-## @ace_name("Owned")
-## @ace_category("Idle Generator")
-## @ace_description("How many units are owned.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.owned_count()")
+# @ace_expression
+# @ace_name("Owned")
+# @ace_description("How many units are owned.")
+# @ace_codegen_template("$IdleGeneratorBehavior.owned_count()")
 func owned_count() -> int:
 	return owned
 
-## @ace_expression
-## @ace_name("Next Cost")
-## @ace_category("Idle Generator")
-## @ace_description("The price of the next single unit.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.next_cost()")
+# @ace_expression
+# @ace_name("Next Cost")
+# @ace_description("The price of the next single unit.")
+# @ace_codegen_template("$IdleGeneratorBehavior.next_cost()")
 func next_cost() -> float:
 	return _cost_for_n(1)
 
-## @ace_expression
-## @ace_name("Cost For")
-## @ace_category("Idle Generator")
-## @ace_description("The total price to buy `count` more units right now.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.cost_for({count})")
+# @ace_expression
+# @ace_name("Cost For")
+# @ace_description("The total price to buy `count` more units right now.")
+# @ace_codegen_template("$IdleGeneratorBehavior.cost_for({count})")
 func cost_for(count: int) -> float:
 	return _cost_for_n(count)
 
-## @ace_expression
-## @ace_name("Max Affordable")
-## @ace_category("Idle Generator")
-## @ace_description("How many units `budget` can buy.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.max_affordable({budget})")
+# @ace_expression
+# @ace_name("Max Affordable")
+# @ace_description("How many units `budget` can buy.")
+# @ace_codegen_template("$IdleGeneratorBehavior.max_affordable({budget})")
 func max_affordable(budget: float) -> int:
 	return _max_affordable(budget)
 
-## @ace_expression
-## @ace_name("Cost To Buy Max")
-## @ace_category("Idle Generator")
-## @ace_description("The exact total spent if you Buy Max with `budget`.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.cost_to_buy_max({budget})")
+# @ace_expression
+# @ace_name("Cost To Buy Max")
+# @ace_description("The exact total spent if you Buy Max with `budget`.")
+# @ace_codegen_template("$IdleGeneratorBehavior.cost_to_buy_max({budget})")
 func cost_to_buy_max(budget: float) -> float:
 	return _cost_for_n(_max_affordable(budget))
 
-## @ace_expression
-## @ace_featured
-## @ace_name("Output Per Second")
-## @ace_category("Idle Generator")
-## @ace_description("Current production per second (owned * base_output * multiplier; in cycle mode, the lump divided by cycle time).")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.output_per_second()")
+# @ace_expression
+# @ace_featured
+# @ace_name("Output Per Second")
+# @ace_description("Current production per second (owned * base_output * multiplier; in cycle mode, the lump divided by cycle time).")
+# @ace_codegen_template("$IdleGeneratorBehavior.output_per_second()")
 func output_per_second() -> float:
 	var raw: float = float(owned) * base_output * output_multiplier
 	return raw / cycle_time if cycle_time > 0.0 else raw
 
-## @ace_expression
-## @ace_name("Production Over")
-## @ace_category("Idle Generator")
-## @ace_description("How much is produced over `seconds` at the current rate - pass delta to credit each frame.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.production_over({seconds})")
+# @ace_expression
+# @ace_name("Production Over")
+# @ace_description("How much is produced over `seconds` at the current rate - pass delta to credit each frame.")
+# @ace_codegen_template("$IdleGeneratorBehavior.production_over({seconds})")
 func production_over(seconds: float) -> float:
 	return output_per_second() * seconds
 
-## @ace_expression
-## @ace_name("Pending")
-## @ace_category("Idle Generator")
-## @ace_description("Cycle mode: output banked and waiting for Collect.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.pending_output()")
+# @ace_expression
+# @ace_name("Pending")
+# @ace_description("Cycle mode: output banked and waiting for Collect.")
+# @ace_codegen_template("$IdleGeneratorBehavior.pending_output()")
 func pending_output() -> float:
 	return _pending
 
-## @ace_expression
-## @ace_name("Cycle Progress")
-## @ace_category("Idle Generator")
-## @ace_description("Cycle mode: how full the current cycle is, 0 to 1 (0 in continuous mode).")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.cycle_progress()")
+# @ace_expression
+# @ace_name("Cycle Progress")
+# @ace_description("Cycle mode: how full the current cycle is, 0 to 1 (0 in continuous mode).")
+# @ace_codegen_template("$IdleGeneratorBehavior.cycle_progress()")
 func cycle_progress() -> float:
 	return _cycle_progress / cycle_time if cycle_time > 0.0 else 0.0
 
-## @ace_expression
-## @ace_name("Last Cost")
-## @ace_category("Idle Generator")
-## @ace_description("What the last Buy cost - Spend this from your wallet.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.last_cost()")
+# @ace_expression
+# @ace_name("Last Cost")
+# @ace_description("What the last Buy cost - Spend this from your wallet.")
+# @ace_codegen_template("$IdleGeneratorBehavior.last_cost()")
 func last_cost() -> float:
 	return last_spent
 
-## @ace_expression
-## @ace_name("Last Bought")
-## @ace_category("Idle Generator")
-## @ace_description("How many units the last Buy added (0 if Buy Max could not afford any).")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.last_bought_count()")
+# @ace_expression
+# @ace_name("Last Bought")
+# @ace_description("How many units the last Buy added (0 if Buy Max could not afford any).")
+# @ace_codegen_template("$IdleGeneratorBehavior.last_bought_count()")
 func last_bought_count() -> int:
 	return last_bought
 
-## @ace_expression
-## @ace_name("Last Collected")
-## @ace_category("Idle Generator")
-## @ace_description("How much the last Collect handed you.")
-## @ace_icon("res://eventsheet_addons/idle_generator/icon.svg")
-## @ace_codegen_template("$IdleGeneratorBehavior.last_collected_amount()")
+# @ace_expression
+# @ace_name("Last Collected")
+# @ace_description("How much the last Collect handed you.")
+# @ace_codegen_template("$IdleGeneratorBehavior.last_collected_amount()")
 func last_collected_amount() -> float:
 	return last_collected
 
@@ -335,7 +291,7 @@ func _refresh_processing() -> void:
 	# two properties themselves, so a generator sitting at zero costs nothing per frame.
 	set_process(cycle_time > 0.0 and owned > 0)
 
-## @ace_hidden
+# @ace_hidden
 func save_state() -> Dictionary:
 	# Save-state seam: the Save System walks any node in its persist group (or targeted
 	# by Save/Load Node State) and duck-types these two methods. Plain data only.
@@ -346,7 +302,7 @@ func save_state() -> Dictionary:
 		"output_multiplier": output_multiplier
 	}
 
-## @ace_hidden
+# @ace_hidden
 func load_state(state: Dictionary) -> void:
 	if state.is_empty():
 		return

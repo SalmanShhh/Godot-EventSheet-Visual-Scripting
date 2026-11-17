@@ -1,6 +1,6 @@
-## @ace_tags(camera, viewport, minimap, ui)
-## @ace_category("Second View")
-## @ace_version(1.0.0)
+# @ace_tags(camera, viewport, minimap, ui)
+# @ace_category("Second View")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/second_view/icon.svg")
 class_name SecondViewPackAddon
 extends Node
@@ -39,15 +39,13 @@ func _texture_of(record: Dictionary) -> Texture2D:
 		handle.resource_local_to_scene = false
 	return handle
 
-## @ace_action
-## @ace_featured
-## @ace_name("Make A View")
-## @ace_category("Second View")
-## @ace_description("Builds a second view of the world you are already in, under a name every other row addresses it by. The view is a SubViewport sharing the running world with a camera of its own that follows the node you name - a Camera2D when that node is 2D, a Camera3D looking straight down at it when it is 3D. Zoom is how much of the world is in frame: below 1 shows more of it (a minimap), above 1 shows less of it (a magnifier). Making a view under a name that already exists replaces it, so a row that runs twice leaves one view rather than two cameras drawing the same picture.")
-## @ace_display_template("Make a view named [b]{view_name}[/b] following [i]{followed}[/i] at zoom [b]{zoom}[/b]")
-## @ace_param_hint(followed scene_node)
-## @ace_icon("res://eventsheet_addons/second_view/icon.svg")
-## @ace_codegen_template("SecondView.make_a_view({view_name}, {followed}, {zoom})")
+# @ace_action
+# @ace_featured
+# @ace_name("Make A View")
+# @ace_description("Builds a second view of the world you are already in, under a name every other row addresses it by. The view is a SubViewport sharing the running world with a camera of its own that follows the node you name - a Camera2D when that node is 2D, a Camera3D looking straight down at it when it is 3D. Zoom is how much of the world is in frame: below 1 shows more of it (a minimap), above 1 shows less of it (a magnifier). Making a view under a name that already exists replaces it, so a row that runs twice leaves one view rather than two cameras drawing the same picture.")
+# @ace_display_template("Make a view named [b]{view_name}[/b] following [i]{followed}[/i] at zoom [b]{zoom}[/b]")
+# @ace_param_hint(followed scene_node)
+# @ace_codegen_template("SecondView.make_a_view({view_name}, {followed}, {zoom})")
 func make_a_view(view_name: String, followed: Node, zoom: float) -> void:
 	if view_name.is_empty():
 		push_warning("Second View: Make A View needs a name to call the view by.")
@@ -91,15 +89,13 @@ func make_a_view(view_name: String, followed: Node, zoom: float) -> void:
 	_aim(record)
 	set_process(true)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Show View In")
-## @ace_category("Second View")
-## @ace_description("Hands a view's live picture to the frame you want to see it in - a TextureRect on your HUD, or anything else that takes a texture (a Sprite2D, a Sprite3D on a screen standing in the world). One view can be shown in as many frames as you like, and a Control frame also sizes the render: a minimap in a 200 by 120 panel renders 200 by 120 pixels instead of being stretched out of a square, and follows that panel when the window resizes.")
-## @ace_display_template("Show view [b]{view_name}[/b] in [i]{frame}[/i]")
-## @ace_param_hint(frame scene_node)
-## @ace_icon("res://eventsheet_addons/second_view/icon.svg")
-## @ace_codegen_template("SecondView.show_view_in({view_name}, {frame})")
+# @ace_action
+# @ace_featured
+# @ace_name("Show View In")
+# @ace_description("Hands a view's live picture to the frame you want to see it in - a TextureRect on your HUD, or anything else that takes a texture (a Sprite2D, a Sprite3D on a screen standing in the world). One view can be shown in as many frames as you like, and a Control frame also sizes the render: a minimap in a 200 by 120 panel renders 200 by 120 pixels instead of being stretched out of a square, and follows that panel when the window resizes.")
+# @ace_display_template("Show view [b]{view_name}[/b] in [i]{frame}[/i]")
+# @ace_param_hint(frame scene_node)
+# @ace_codegen_template("SecondView.show_view_in({view_name}, {frame})")
 func show_view_in(view_name: String, frame: Node) -> void:
 	if not _views.has(view_name):
 		_say_missing("Show View In", "view", view_name, _views.keys(), "make it with Make A View first, or check the spelling")
@@ -124,13 +120,11 @@ func show_view_in(view_name: String, frame: Node) -> void:
 		refit.call()
 	frames[frame.get_instance_id()] = refit
 
-## @ace_action
-## @ace_name("Set View Zoom")
-## @ace_category("Second View")
-## @ace_description("Changes how much of the world one view has in frame, without rebuilding it. Below 1 pulls back and shows more (a minimap that zooms out as the level opens up), above 1 pushes in and shows less (a magnifier over the cursor, a portrait tightening on a face). Naming a view that does not exist warns and changes nothing.")
-## @ace_display_template("Set view [b]{view_name}[/b] zoom to [b]{zoom}[/b]")
-## @ace_icon("res://eventsheet_addons/second_view/icon.svg")
-## @ace_codegen_template("SecondView.set_view_zoom({view_name}, {zoom})")
+# @ace_action
+# @ace_name("Set View Zoom")
+# @ace_description("Changes how much of the world one view has in frame, without rebuilding it. Below 1 pulls back and shows more (a minimap that zooms out as the level opens up), above 1 pushes in and shows less (a magnifier over the cursor, a portrait tightening on a face). Naming a view that does not exist warns and changes nothing.")
+# @ace_display_template("Set view [b]{view_name}[/b] zoom to [b]{zoom}[/b]")
+# @ace_codegen_template("SecondView.set_view_zoom({view_name}, {zoom})")
 func set_view_zoom(view_name: String = "minimap", zoom: float = 0.25) -> void:
 	if not _views.has(view_name):
 		_say_missing("Set View Zoom", "view", view_name, _views.keys(), "make it with Make A View first, or check the spelling")
@@ -139,13 +133,11 @@ func set_view_zoom(view_name: String = "minimap", zoom: float = 0.25) -> void:
 	record["zoom"] = maxf(zoom, 0.01)
 	_aim(record)
 
-## @ace_action
-## @ace_name("Stop View")
-## @ace_category("Second View")
-## @ace_description("Frees a view and everything it built - its SubViewport and the camera inside it - and takes its picture back off every frame it was shown in first, so a frame is left blank rather than holding the texture of a viewport that no longer exists. A view whose followed node was destroyed parks itself and costs nothing per frame, but it is still plumbing: this is the row that removes it. Stopping a view that is not there does nothing.")
-## @ace_display_template("Stop view [b]{view_name}[/b]")
-## @ace_icon("res://eventsheet_addons/second_view/icon.svg")
-## @ace_codegen_template("SecondView.stop_view({view_name})")
+# @ace_action
+# @ace_name("Stop View")
+# @ace_description("Frees a view and everything it built - its SubViewport and the camera inside it - and takes its picture back off every frame it was shown in first, so a frame is left blank rather than holding the texture of a viewport that no longer exists. A view whose followed node was destroyed parks itself and costs nothing per frame, but it is still plumbing: this is the row that removes it. Stopping a view that is not there does nothing.")
+# @ace_display_template("Stop view [b]{view_name}[/b]")
+# @ace_codegen_template("SecondView.stop_view({view_name})")
 func stop_view(view_name: String = "minimap") -> void:
 	if not _views.has(view_name):
 		return
@@ -159,12 +151,10 @@ func stop_view(view_name: String = "minimap") -> void:
 		view.queue_free()
 	_views.erase(view_name)
 
-## @ace_expression
-## @ace_name("View Texture Of")
-## @ace_category("Second View")
-## @ace_description("A view's live picture as a texture, for the places Show View In cannot reach: a material's albedo, a shader parameter, a theme icon. It is a live handle rather than a copy - whatever the view is looking at now is what it shows - and it answers with nothing for a name no view answers to.")
-## @ace_icon("res://eventsheet_addons/second_view/icon.svg")
-## @ace_codegen_template("SecondView.view_texture_of({view_name})")
+# @ace_expression
+# @ace_name("View Texture Of")
+# @ace_description("A view's live picture as a texture, for the places Show View In cannot reach: a material's albedo, a shader parameter, a theme icon. It is a live handle rather than a copy - whatever the view is looking at now is what it shows - and it answers with nothing for a name no view answers to.")
+# @ace_codegen_template("SecondView.view_texture_of({view_name})")
 func view_texture_of(view_name: String = "minimap") -> Texture2D:
 	if not _views.has(view_name):
 		return null

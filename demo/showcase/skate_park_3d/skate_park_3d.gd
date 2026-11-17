@@ -32,7 +32,7 @@ func _physics_process(_delta: float) -> void:
 	$Overlay/Hud.text = "Score %d   chain %d x%d   Space push / Up ollie / Right spin" % [score, int($Skater/Skateboard.chain_score()), $Skater/Skateboard.multiplier()]
 
 
-## @ace_hidden
+# @ace_hidden
 func _on_landed_clean() -> void:
 	if $Skater/Skateboard.spin_turns() >= 0.5:
 		$Skater/Skateboard.add_to_chain("spin", 150.0)
@@ -40,12 +40,12 @@ func _on_landed_clean() -> void:
 	score = int($Skater/Skateboard.banked_score())
 
 
-## @ace_hidden
+# @ace_hidden
 func _on_launched() -> void:
 	$Skater/Skateboard.add_to_chain("air", 100.0)
 
 
-## @ace_hidden
+# @ace_hidden
 func _on_bailed() -> void:
 	$Skater.global_position = Vector3(-9.0, 1.0, 0.0)
 	$Skater.velocity = Vector3.ZERO

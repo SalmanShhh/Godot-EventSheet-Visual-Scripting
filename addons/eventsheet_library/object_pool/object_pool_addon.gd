@@ -1,18 +1,18 @@
-## @ace_tags(performance, spawning)
-## @ace_category("Object Pool")
-## @ace_version(1.0.0)
+# @ace_tags(performance, spawning)
+# @ace_category("Object Pool")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/object_pool/icon.svg")
 class_name ObjectPoolAddon
 extends Node
 ## The ObjectPool autoload singleton: reuses nodes instead of creating and freeing them, so spawn-heavy games stop hitching. Create Pool from a scene (with optional prewarm), Spawn hands out a ready-made node, and Despawn parks it hidden with processing off until the next Spawn.
 
-## @ace_trigger
-## @ace_name("On Spawned")
-## @ace_category("Object Pool")
+# @ace_trigger
+# @ace_name("On Spawned")
+# @ace_category("Object Pool")
 signal on_spawned
-## @ace_trigger
-## @ace_name("On Despawned")
-## @ace_category("Object Pool")
+# @ace_trigger
+# @ace_name("On Despawned")
+# @ace_category("Object Pool")
 signal on_despawned
 
 # pool name -> {scene:PackedScene (or null for a custom pool), free:Array[Node], active:Array[Node]}.
@@ -82,14 +82,12 @@ func _retire_runtime_script() -> Script:
 ## Names this node has already said it could not find, so a row that runs every frame says it once.
 var _said_missing: Dictionary = {}
 
-## @ace_action
-## @ace_featured
-## @ace_name("Create Pool")
-## @ace_category("Object Pool")
-## @ace_description("The easy way: makes a pool that spawns copies of a scene (a .tscn path), optionally pre-making some now so the first spawns never hitch.")
-## @ace_display_template("Create pool [b]{pool_name}[/b] of [b]{scene_path}[/b], prewarm [b]{prewarm}[/b]")
-## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
-## @ace_codegen_template("ObjectPool.create_pool({pool_name}, {scene_path}, {prewarm})")
+# @ace_action
+# @ace_featured
+# @ace_name("Create Pool")
+# @ace_description("The easy way: makes a pool that spawns copies of a scene (a .tscn path), optionally pre-making some now so the first spawns never hitch.")
+# @ace_display_template("Create pool [b]{pool_name}[/b] of [b]{scene_path}[/b], prewarm [b]{prewarm}[/b]")
+# @ace_codegen_template("ObjectPool.create_pool({pool_name}, {scene_path}, {prewarm})")
 @warning_ignore("shadowed_variable")  # `prewarm` is this row's frozen parameter name
 func create_pool(pool_name: String, scene_path: String, prewarm: int) -> void:
 	var scene: PackedScene = load(scene_path) as PackedScene
@@ -100,33 +98,27 @@ func create_pool(pool_name: String, scene_path: String, prewarm: int) -> void:
 	for _i: int in maxi(prewarm, 0):
 		_stow(pool_name, scene.instantiate())
 
-## @ace_action
-## @ace_name("Create Empty Pool")
-## @ace_category("Object Pool")
-## @ace_description("The custom way: makes a pool with no scene of its own. Fill it with Add To Pool (your own nodes), and Spawn hands those back out.")
-## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
-## @ace_codegen_template("ObjectPool.create_empty_pool({pool_name})")
+# @ace_action
+# @ace_name("Create Empty Pool")
+# @ace_description("The custom way: makes a pool with no scene of its own. Fill it with Add To Pool (your own nodes), and Spawn hands those back out.")
+# @ace_codegen_template("ObjectPool.create_empty_pool({pool_name})")
 func create_empty_pool(pool_name: String) -> void:
 	_pools[pool_name] = {"scene": null, "free": [], "active": []}
 
-## @ace_action
-## @ace_name("Add To Pool")
-## @ace_category("Object Pool")
-## @ace_description("Puts one of your own existing nodes into a pool as a ready-to-reuse instance (for custom pools). The node is hidden and parked until spawned.")
-## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
-## @ace_codegen_template("ObjectPool.add_to_pool({pool_name}, {node})")
+# @ace_action
+# @ace_name("Add To Pool")
+# @ace_description("Puts one of your own existing nodes into a pool as a ready-to-reuse instance (for custom pools). The node is hidden and parked until spawned.")
+# @ace_codegen_template("ObjectPool.add_to_pool({pool_name}, {node})")
 func add_to_pool(pool_name: String, node: Node) -> void:
 	if not _pools.has(pool_name):
 		_say_missing("Add To Pool", "pool", pool_name, _pools.keys(), "make it with Create Pool or Create Empty Pool first, or check the spelling")
 		return
 	_stow(pool_name, node)
 
-## @ace_action
-## @ace_name("Prewarm")
-## @ace_category("Object Pool")
-## @ace_description("Pre-makes more copies for a scene pool (so a burst of spawns stays smooth).")
-## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
-## @ace_codegen_template("ObjectPool.prewarm({pool_name}, {count})")
+# @ace_action
+# @ace_name("Prewarm")
+# @ace_description("Pre-makes more copies for a scene pool (so a burst of spawns stays smooth).")
+# @ace_codegen_template("ObjectPool.prewarm({pool_name}, {count})")
 func prewarm(pool_name: String, count: int) -> void:
 	if not _pools.has(pool_name):
 		_say_missing("Prewarm", "pool", pool_name, _pools.keys(), "make it with Create Pool or Create Empty Pool first, or check the spelling")
@@ -137,14 +129,12 @@ func prewarm(pool_name: String, count: int) -> void:
 	for _i: int in maxi(count, 0):
 		_stow(pool_name, (_pools[pool_name].scene as PackedScene).instantiate())
 
-## @ace_action
-## @ace_featured
-## @ace_name("Despawn")
-## @ace_category("Object Pool")
-## @ace_description("Hands a spawned node back to its pool to be reused (hides it and stops its processing) instead of freeing it. Fires On Despawned. The handing back lands at the next idle moment rather than on this line, exactly as a destroy does, so the node is still in the world for the rest of the event and the row is safe inside a collision or area callback. Safe to run twice - a node already booked, or already back in its pool, is left alone.")
-## @ace_display_template("Despawn [i]{node}[/i]")
-## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
-## @ace_codegen_template("ObjectPool.despawn({node})")
+# @ace_action
+# @ace_featured
+# @ace_name("Despawn")
+# @ace_description("Hands a spawned node back to its pool to be reused (hides it and stops its processing) instead of freeing it. Fires On Despawned. The handing back lands at the next idle moment rather than on this line, exactly as a destroy does, so the node is still in the world for the rest of the event and the row is safe inside a collision or area callback. Safe to run twice - a node already booked, or already back in its pool, is left alone.")
+# @ace_display_template("Despawn [i]{node}[/i]")
+# @ace_codegen_template("ObjectPool.despawn({node})")
 func despawn(node: Node) -> void:
 	if node == null or not is_instance_valid(node) or node.is_queued_for_deletion():
 		return
@@ -161,12 +151,10 @@ func despawn(node: Node) -> void:
 	_booked[node.get_instance_id()] = true
 	call_deferred(&"_hand_back_by_id", node.get_instance_id())
 
-## @ace_action
-## @ace_name("Despawn All")
-## @ace_category("Object Pool")
-## @ace_description("Hands every active node of a pool back at once (for a level reset). Like Despawn, each handing back lands at the next idle moment.")
-## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
-## @ace_codegen_template("ObjectPool.despawn_all({pool_name})")
+# @ace_action
+# @ace_name("Despawn All")
+# @ace_description("Hands every active node of a pool back at once (for a level reset). Like Despawn, each handing back lands at the next idle moment.")
+# @ace_codegen_template("ObjectPool.despawn_all({pool_name})")
 func despawn_all(pool_name: String) -> void:
 	if not _pools.has(pool_name):
 		_say_missing("Despawn All", "pool", pool_name, _pools.keys(), "make it with Create Pool or Create Empty Pool first, or check the spelling")
@@ -174,12 +162,10 @@ func despawn_all(pool_name: String) -> void:
 	for node: Node in (_pools[pool_name].active as Array).duplicate():
 		despawn(node)
 
-## @ace_action
-## @ace_name("Clear Pool")
-## @ace_category("Object Pool")
-## @ace_description("Frees (deletes) every node in a pool and removes the pool. Use it when the pool is truly done.")
-## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
-## @ace_codegen_template("ObjectPool.clear_pool({pool_name})")
+# @ace_action
+# @ace_name("Clear Pool")
+# @ace_description("Frees (deletes) every node in a pool and removes the pool. Use it when the pool is truly done.")
+# @ace_codegen_template("ObjectPool.clear_pool({pool_name})")
 func clear_pool(pool_name: String) -> void:
 	if not _pools.has(pool_name):
 		_say_missing("Clear Pool", "pool", pool_name, _pools.keys(), "make it with Create Pool or Create Empty Pool first, or check the spelling")
@@ -189,21 +175,17 @@ func clear_pool(pool_name: String) -> void:
 			node.queue_free()
 	_pools.erase(pool_name)
 
-## @ace_condition
-## @ace_name("Has Pool")
-## @ace_category("Object Pool")
-## @ace_description("Whether a pool with this name exists.")
-## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
-## @ace_codegen_template("ObjectPool.has_pool({pool_name})")
+# @ace_condition
+# @ace_name("Has Pool")
+# @ace_description("Whether a pool with this name exists.")
+# @ace_codegen_template("ObjectPool.has_pool({pool_name})")
 func has_pool(pool_name: String) -> bool:
 	return _pools.has(pool_name)
 
-## @ace_expression
-## @ace_name("Spawn")
-## @ace_category("Object Pool")
-## @ace_description("Hands out a ready node from a pool (reusing a free one, or making a new copy from the pool's scene) - added to the current scene, shown, and returned so you can position it. Fires On Spawned. Returns nothing if the pool is empty and has no scene.")
-## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
-## @ace_codegen_template("ObjectPool.spawn({pool_name})")
+# @ace_expression
+# @ace_name("Spawn")
+# @ace_description("Hands out a ready node from a pool (reusing a free one, or making a new copy from the pool's scene) - added to the current scene, shown, and returned so you can position it. Fires On Spawned. Returns nothing if the pool is empty and has no scene.")
+# @ace_codegen_template("ObjectPool.spawn({pool_name})")
 func spawn(pool_name: String) -> Node:
 	if not _pools.has(pool_name):
 		_say_missing("Spawn", "pool", pool_name, _pools.keys(), "make it with Create Pool or Create Empty Pool first, or check the spelling")
@@ -217,13 +199,11 @@ func spawn(pool_name: String) -> Node:
 	on_spawned.emit()
 	return node
 
-## @ace_expression
-## @ace_name("Spawn Safely")
-## @ace_category("Object Pool")
-## @ace_description("The same spawn, with the copy joining the world on the next idle moment instead of on this line. Use it inside a collision or area callback: A 2D physics body reparented while the physics server is flushing its queries makes Godot print an error (the move still happens), and this row waits for that to finish so nothing is printed. You get the node back straight away, reset, shown and put where you say, so the rows after it can configure it - it is still parked under the pool for the rest of the event, and under the running scene from the next frame. On Spawned fires at that later moment, with the copy already in the world, so a row under it can read the copy's parent. Outside a callback prefer plain Spawn, whose copy is in the world on the line. Returns nothing if the pool is empty and has no scene.")
-## @ace_param(at, default: Vector2.ZERO, desc: "Where the copy goes, set before it joins the world - so it is a place relative to the parent it is about to get, and a pool has no transform of its own. A Vector3 places a 3D copy; a value of the wrong shape for the copy is left alone.")
-## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
-## @ace_codegen_template("ObjectPool.spawn_safely({pool_name}, {at})")
+# @ace_expression
+# @ace_name("Spawn Safely")
+# @ace_description("The same spawn, with the copy joining the world on the next idle moment instead of on this line. Use it inside a collision or area callback: A 2D physics body reparented while the physics server is flushing its queries makes Godot print an error (the move still happens), and this row waits for that to finish so nothing is printed. You get the node back straight away, reset, shown and put where you say, so the rows after it can configure it - it is still parked under the pool for the rest of the event, and under the running scene from the next frame. On Spawned fires at that later moment, with the copy already in the world, so a row under it can read the copy's parent. Outside a callback prefer plain Spawn, whose copy is in the world on the line. Returns nothing if the pool is empty and has no scene.")
+# @ace_param(at, default: Vector2.ZERO, desc: "Where the copy goes, set before it joins the world - so it is a place relative to the parent it is about to get, and a pool has no transform of its own. A Vector3 places a 3D copy; a value of the wrong shape for the copy is left alone.")
+# @ace_codegen_template("ObjectPool.spawn_safely({pool_name}, {at})")
 func spawn_safely(pool_name: String, at: Variant) -> Node:
 	if not _pools.has(pool_name):
 		_say_missing("Spawn Safely", "pool", pool_name, _pools.keys(), "make it with Create Pool or Create Empty Pool first, or check the spelling")
@@ -237,48 +217,38 @@ func spawn_safely(pool_name: String, at: Variant) -> Node:
 	call_deferred(&"_join_world_by_id", node.get_instance_id())
 	return node
 
-## @ace_expression
-## @ace_name("Last Spawned")
-## @ace_category("Object Pool")
-## @ace_description("The node most recently spawned (handy inside On Spawned).")
-## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
-## @ace_codegen_template("ObjectPool.last_spawned()")
+# @ace_expression
+# @ace_name("Last Spawned")
+# @ace_description("The node most recently spawned (handy inside On Spawned).")
+# @ace_codegen_template("ObjectPool.last_spawned()")
 func last_spawned() -> Node:
 	return _last_spawned
 
-## @ace_expression
-## @ace_name("Last Despawned")
-## @ace_category("Object Pool")
-## @ace_description("The node most recently despawned (handy inside On Despawned).")
-## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
-## @ace_codegen_template("ObjectPool.last_despawned()")
+# @ace_expression
+# @ace_name("Last Despawned")
+# @ace_description("The node most recently despawned (handy inside On Despawned).")
+# @ace_codegen_template("ObjectPool.last_despawned()")
 func last_despawned() -> Node:
 	return _last_despawned
 
-## @ace_expression
-## @ace_name("Free Count")
-## @ace_category("Object Pool")
-## @ace_description("How many ready (unused) nodes a pool holds.")
-## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
-## @ace_codegen_template("ObjectPool.free_count({pool_name})")
+# @ace_expression
+# @ace_name("Free Count")
+# @ace_description("How many ready (unused) nodes a pool holds.")
+# @ace_codegen_template("ObjectPool.free_count({pool_name})")
 func free_count(pool_name: String) -> int:
 	return (_pools[pool_name].free as Array).size() if _pools.has(pool_name) else 0
 
-## @ace_expression
-## @ace_name("Active Count")
-## @ace_category("Object Pool")
-## @ace_description("How many of a pool's nodes are currently spawned and in use.")
-## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
-## @ace_codegen_template("ObjectPool.active_count({pool_name})")
+# @ace_expression
+# @ace_name("Active Count")
+# @ace_description("How many of a pool's nodes are currently spawned and in use.")
+# @ace_codegen_template("ObjectPool.active_count({pool_name})")
 func active_count(pool_name: String) -> int:
 	return (_pools[pool_name].active as Array).size() if _pools.has(pool_name) else 0
 
-## @ace_expression
-## @ace_name("Pool Size")
-## @ace_category("Object Pool")
-## @ace_description("A pool's total nodes (free plus active).")
-## @ace_icon("res://eventsheet_addons/object_pool/icon.svg")
-## @ace_codegen_template("ObjectPool.pool_size({pool_name})")
+# @ace_expression
+# @ace_name("Pool Size")
+# @ace_description("A pool's total nodes (free plus active).")
+# @ace_codegen_template("ObjectPool.pool_size({pool_name})")
 func pool_size(pool_name: String) -> int:
 	return ((_pools[pool_name].free as Array).size() + (_pools[pool_name].active as Array).size()) if _pools.has(pool_name) else 0
 

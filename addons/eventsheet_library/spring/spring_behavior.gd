@@ -1,7 +1,7 @@
-## @ace_tags(motion, juice)
-## @ace_category("Spring")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_tags(motion, juice)
+# @ace_category("Spring")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @tool
 @icon("res://eventsheet_addons/spring/icon.svg")
 class_name SpringBehavior
@@ -10,7 +10,7 @@ extends Node
 ##
 ## Changes on its parent: position, rotation_degrees, scale.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 
@@ -23,17 +23,17 @@ func _enter_tree() -> void:
 		push_warning("Spring Behavior needs a Node2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Preview", "Play") var _preview_start_button: Callable = _preview_start
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Sets the effect off in the editor. Your scene is not changed.
 @export_tool_button("Nudge", "ToolMove") var _preview_nudge_button: Callable = _preview_nudge
 
@@ -243,11 +243,11 @@ func _preview_nudge() -> void:
 	spring_host_scale(host.scale.x)
 	add_impulse("__scale", 6.0)
 
-## @ace_trigger
-## @ace_name("On Spring Reached")
+# @ace_trigger
+# @ace_name("On Spring Reached")
 signal spring_reached(spring_name: String)
-## @ace_trigger
-## @ace_name("On Spring Started")
+# @ace_trigger
+# @ace_name("On Spring Started")
 signal spring_started(spring_name: String)
 
 ## Spring force toward the target (higher = snappier).
@@ -525,14 +525,12 @@ func _process(delta: float) -> void:
 	for landed_name: String in _reached:
 		spring_reached.emit(landed_name)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Spring To")
-## @ace_category("Spring")
-## @ace_description("Springs the named value toward a target.")
-## @ace_display_template("Spring [b]{spring_name}[/b] to [b]{target}[/b]")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.spring_to({spring_name}, {target})")
+# @ace_action
+# @ace_featured
+# @ace_name("Spring To")
+# @ace_description("Springs the named value toward a target.")
+# @ace_display_template("Spring [b]{spring_name}[/b] to [b]{target}[/b]")
+# @ace_codegen_template("$SpringBehavior.spring_to({spring_name}, {target})")
 func spring_to(spring_name: String, target: float) -> void:
 	var entry: SpringEntry = _spring_entry(spring_name)
 	var was_active := entry.active
@@ -544,12 +542,10 @@ func spring_to(spring_name: String, target: float) -> void:
 	if not was_active:
 		spring_started.emit(spring_name)
 
-## @ace_action
-## @ace_name("Spring Between")
-## @ace_category("Spring")
-## @ace_description("Snaps to a start value, then springs to the end value.")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.spring_between({spring_name}, {from_value}, {to_value})")
+# @ace_action
+# @ace_name("Spring Between")
+# @ace_description("Snaps to a start value, then springs to the end value.")
+# @ace_codegen_template("$SpringBehavior.spring_between({spring_name}, {from_value}, {to_value})")
 func spring_between(spring_name: String, from_value: float, to_value: float) -> void:
 	var entry: SpringEntry = _spring_entry(spring_name)
 	entry.value = from_value
@@ -560,12 +556,10 @@ func spring_between(spring_name: String, from_value: float, to_value: float) -> 
 	# A moving spring needs its per-frame integration back.
 	set_process(true)
 
-## @ace_action
-## @ace_name("Set Spring Value")
-## @ace_category("Spring")
-## @ace_description("Snaps the named spring (no motion).")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.set_spring({spring_name}, {value})")
+# @ace_action
+# @ace_name("Set Spring Value")
+# @ace_description("Snaps the named spring (no motion).")
+# @ace_codegen_template("$SpringBehavior.set_spring({spring_name}, {value})")
 func set_spring(spring_name: String, value: float) -> void:
 	var entry: SpringEntry = _spring_entry(spring_name)
 	entry.value = value
@@ -574,14 +568,12 @@ func set_spring(spring_name: String, value: float) -> void:
 	entry.velocity = 0.0
 	entry.active = false
 
-## @ace_action
-## @ace_featured
-## @ace_name("Add Impulse")
-## @ace_category("Spring")
-## @ace_description("Kicks the named spring's velocity (instant juice).")
-## @ace_display_template("Kick spring [b]{spring_name}[/b] by [b]{amount}[/b]")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.add_impulse({spring_name}, {amount})")
+# @ace_action
+# @ace_featured
+# @ace_name("Add Impulse")
+# @ace_description("Kicks the named spring's velocity (instant juice).")
+# @ace_display_template("Kick spring [b]{spring_name}[/b] by [b]{amount}[/b]")
+# @ace_codegen_template("$SpringBehavior.add_impulse({spring_name}, {amount})")
 func add_impulse(spring_name: String, amount: float) -> void:
 	var entry: SpringEntry = _spring_entry(spring_name)
 	entry.velocity += amount
@@ -589,34 +581,28 @@ func add_impulse(spring_name: String, amount: float) -> void:
 	# A moving spring needs its per-frame integration back.
 	set_process(true)
 
-## @ace_action
-## @ace_name("Stop Spring")
-## @ace_category("Spring")
-## @ace_description("Freezes the named spring where it is.")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.stop_spring({spring_name})")
+# @ace_action
+# @ace_name("Stop Spring")
+# @ace_description("Freezes the named spring where it is.")
+# @ace_codegen_template("$SpringBehavior.stop_spring({spring_name})")
 func stop_spring(spring_name: String) -> void:
 	if springs.has(spring_name):
 		(springs[spring_name] as SpringEntry).active = false
 
-## @ace_action
-## @ace_name("Configure Spring")
-## @ace_category("Spring")
-## @ace_description("Per-spring stiffness/damping/precision overrides.")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.configure_spring({spring_name}, {stiffness}, {damping}, {precision})")
+# @ace_action
+# @ace_name("Configure Spring")
+# @ace_description("Per-spring stiffness/damping/precision overrides.")
+# @ace_codegen_template("$SpringBehavior.configure_spring({spring_name}, {stiffness}, {damping}, {precision})")
 func configure_spring(spring_name: String, stiffness: float, damping: float, precision: float) -> void:
 	var entry: SpringEntry = _spring_entry(spring_name)
 	entry.stiffness = stiffness
 	entry.damping = clampf(damping, 0.0, 1.0)
 	entry.precision = precision
 
-## @ace_action
-## @ace_name("Spring Host X")
-## @ace_category("Spring")
-## @ace_description("Springs the host's X position.")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.spring_host_x({target})")
+# @ace_action
+# @ace_name("Spring Host X")
+# @ace_description("Springs the host's X position.")
+# @ace_codegen_template("$SpringBehavior.spring_host_x({target})")
 func spring_host_x(target: float) -> void:
 	var entry: SpringEntry = _spring_entry("__x")
 	if not entry.active and host != null:
@@ -627,12 +613,10 @@ func spring_host_x(target: float) -> void:
 	# A moving spring needs its per-frame integration back.
 	set_process(true)
 
-## @ace_action
-## @ace_name("Spring Host Y")
-## @ace_category("Spring")
-## @ace_description("Springs the host's Y position.")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.spring_host_y({target})")
+# @ace_action
+# @ace_name("Spring Host Y")
+# @ace_description("Springs the host's Y position.")
+# @ace_codegen_template("$SpringBehavior.spring_host_y({target})")
 func spring_host_y(target: float) -> void:
 	var entry: SpringEntry = _spring_entry("__y")
 	if not entry.active and host != null:
@@ -643,12 +627,10 @@ func spring_host_y(target: float) -> void:
 	# A moving spring needs its per-frame integration back.
 	set_process(true)
 
-## @ace_action
-## @ace_name("Spring Host Angle")
-## @ace_category("Spring")
-## @ace_description("Springs the host's rotation (degrees).")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.spring_host_angle({degrees})")
+# @ace_action
+# @ace_name("Spring Host Angle")
+# @ace_description("Springs the host's rotation (degrees).")
+# @ace_codegen_template("$SpringBehavior.spring_host_angle({degrees})")
 func spring_host_angle(degrees: float) -> void:
 	var entry: SpringEntry = _spring_entry("__angle")
 	if not entry.active and host != null:
@@ -659,12 +641,10 @@ func spring_host_angle(degrees: float) -> void:
 	# A moving spring needs its per-frame integration back.
 	set_process(true)
 
-## @ace_action
-## @ace_name("Spring Host Scale")
-## @ace_category("Spring")
-## @ace_description("Springs the host's uniform scale (squash & stretch!).")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.spring_host_scale({target})")
+# @ace_action
+# @ace_name("Spring Host Scale")
+# @ace_description("Springs the host's uniform scale (squash & stretch!).")
+# @ace_codegen_template("$SpringBehavior.spring_host_scale({target})")
 func spring_host_scale(target: float) -> void:
 	var entry: SpringEntry = _spring_entry("__scale")
 	if not entry.active and host != null:
@@ -675,12 +655,10 @@ func spring_host_scale(target: float) -> void:
 	# A moving spring needs its per-frame integration back.
 	set_process(true)
 
-## @ace_action
-## @ace_name("Set Color Value")
-## @ace_category("Spring")
-## @ace_description("Snaps a named colour spring (no motion) - seed it before springing.")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.set_color({spring_name}, {color})")
+# @ace_action
+# @ace_name("Set Color Value")
+# @ace_description("Snaps a named colour spring (no motion) - seed it before springing.")
+# @ace_codegen_template("$SpringBehavior.set_color({spring_name}, {color})")
 func set_color(spring_name: String, color: Color) -> void:
 	var entry: ColorSpringEntry = _color_entry(spring_name)
 	entry.value = color
@@ -688,12 +666,10 @@ func set_color(spring_name: String, color: Color) -> void:
 	entry.velocity = Color(0, 0, 0, 0)
 	entry.active = false
 
-## @ace_action
-## @ace_name("Spring Color")
-## @ace_category("Spring")
-## @ace_description("Springs a named colour toward a target (read it back with Color Value - great for hit flashes).")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.spring_color({spring_name}, {target_color})")
+# @ace_action
+# @ace_name("Spring Color")
+# @ace_description("Springs a named colour toward a target (read it back with Color Value - great for hit flashes).")
+# @ace_codegen_template("$SpringBehavior.spring_color({spring_name}, {target_color})")
 func spring_color(spring_name: String, target_color: Color) -> void:
 	var entry: ColorSpringEntry = _color_entry(spring_name)
 	var was_active := entry.active
@@ -704,24 +680,20 @@ func spring_color(spring_name: String, target_color: Color) -> void:
 	if not was_active:
 		spring_started.emit(spring_name)
 
-## @ace_action
-## @ace_name("Pause Spring")
-## @ace_category("Spring")
-## @ace_description("Freezes a spring in place (resume continues it).")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.pause_spring({spring_name})")
+# @ace_action
+# @ace_name("Pause Spring")
+# @ace_description("Freezes a spring in place (resume continues it).")
+# @ace_codegen_template("$SpringBehavior.pause_spring({spring_name})")
 func pause_spring(spring_name: String) -> void:
 	if springs.has(spring_name):
 		(springs[spring_name] as SpringEntry).active = false
 	if color_springs.has(spring_name):
 		(color_springs[spring_name] as ColorSpringEntry).active = false
 
-## @ace_action
-## @ace_name("Resume Spring")
-## @ace_category("Spring")
-## @ace_description("Resumes a paused spring toward its target.")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.resume_spring({spring_name})")
+# @ace_action
+# @ace_name("Resume Spring")
+# @ace_description("Resumes a paused spring toward its target.")
+# @ace_codegen_template("$SpringBehavior.resume_spring({spring_name})")
 func resume_spring(spring_name: String) -> void:
 	if springs.has(spring_name):
 		(springs[spring_name] as SpringEntry).active = true
@@ -730,35 +702,29 @@ func resume_spring(spring_name: String) -> void:
 	# A moving spring needs its per-frame integration back.
 	set_process(true)
 
-## @ace_action
-## @ace_name("Remove Spring")
-## @ace_category("Spring")
-## @ace_description("Deletes a named spring (numeric and/or colour).")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.remove_spring({spring_name})")
+# @ace_action
+# @ace_name("Remove Spring")
+# @ace_description("Deletes a named spring (numeric and/or colour).")
+# @ace_codegen_template("$SpringBehavior.remove_spring({spring_name})")
 func remove_spring(spring_name: String) -> void:
 	springs.erase(spring_name)
 	color_springs.erase(spring_name)
 
-## @ace_action
-## @ace_name("Reset All Springs")
-## @ace_category("Spring")
-## @ace_description("Clears every spring on this behavior.")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.reset_springs()")
+# @ace_action
+# @ace_name("Reset All Springs")
+# @ace_description("Clears every spring on this behavior.")
+# @ace_codegen_template("$SpringBehavior.reset_springs()")
 func reset_springs() -> void:
 	springs.clear()
 	color_springs.clear()
 
-## @ace_action
-## @ace_name("Spring Property To")
-## @ace_category("Spring")
-## @ace_description("Springs any property of the host toward a value: a number, a Vector2, a Vector3 or a Color, addressed by the same path the Inspector shows. The property's own type is read once, on the first row that springs it, and the spring writes it back every frame until it settles.")
-## @ace_display_template("Spring [b]{property_path}[/b] to [b]{target_value}[/b]")
-## @ace_param(property_path, desc: "The property to spring, as the Inspector spells it: modulate, position, rotation_degrees, scale:x.")
-## @ace_param(target_value, desc: "Where it should end up. Give it the same kind of value the property holds.")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.spring_property_to({property_path}, {target_value})")
+# @ace_action
+# @ace_name("Spring Property To")
+# @ace_description("Springs any property of the host toward a value: a number, a Vector2, a Vector3 or a Color, addressed by the same path the Inspector shows. The property's own type is read once, on the first row that springs it, and the spring writes it back every frame until it settles.")
+# @ace_display_template("Spring [b]{property_path}[/b] to [b]{target_value}[/b]")
+# @ace_param(property_path, desc: "The property to spring, as the Inspector spells it: modulate, position, rotation_degrees, scale:x.")
+# @ace_param(target_value, desc: "Where it should end up. Give it the same kind of value the property holds.")
+# @ace_codegen_template("$SpringBehavior.spring_property_to({property_path}, {target_value})")
 func spring_property_to(property_path: String, target_value: Variant) -> void:
 	var entry: PropertySpring = _property_spring(property_path)
 	if not entry.supported:
@@ -768,15 +734,13 @@ func spring_property_to(property_path: String, target_value: Variant) -> void:
 	# A moving spring needs its per-frame integration back.
 	set_process(true)
 
-## @ace_action
-## @ace_name("Bump Property")
-## @ace_category("Spring")
-## @ace_description("Kicks a property's spring by an amount and lets it settle back on its own - the fastest juice there is: one row, no duration, nothing to clean up. Bump a field of view on a shot, a light's energy on a hit, a panel's scale on a press.")
-## @ace_display_template("Bump [b]{property_path}[/b] by [b]{amount}[/b]")
-## @ace_param(property_path, desc: "The property to push, as the Inspector spells it.")
-## @ace_param(amount, desc: "How hard the push is, in the property's own units. Negative pushes the other way.")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.bump_property({property_path}, {amount})")
+# @ace_action
+# @ace_name("Bump Property")
+# @ace_description("Kicks a property's spring by an amount and lets it settle back on its own - the fastest juice there is: one row, no duration, nothing to clean up. Bump a field of view on a shot, a light's energy on a hit, a panel's scale on a press.")
+# @ace_display_template("Bump [b]{property_path}[/b] by [b]{amount}[/b]")
+# @ace_param(property_path, desc: "The property to push, as the Inspector spells it.")
+# @ace_param(amount, desc: "How hard the push is, in the property's own units. Negative pushes the other way.")
+# @ace_codegen_template("$SpringBehavior.bump_property({property_path}, {amount})")
 func bump_property(property_path: String, amount: Variant) -> void:
 	var entry: PropertySpring = _property_spring(property_path)
 	if not entry.supported:
@@ -786,16 +750,14 @@ func bump_property(property_path: String, amount: Variant) -> void:
 	# A moving spring needs its per-frame integration back.
 	set_process(true)
 
-## @ace_action
-## @ace_name("Set Spring Damping And Frequency")
-## @ace_category("Spring")
-## @ace_description("The two numbers a spring really has: how fast the bounce dies out (0 loose, 1 dead) and how many swings a second it wants. Set them per property, before the motion or during it.")
-## @ace_display_template("Spring [b]{property_path}[/b]: damping [b]{damping}[/b], [b]{frequency}[/b] per second")
-## @ace_param(property_path, desc: "The property whose spring is being tuned.")
-## @ace_param(damping, desc: "0 oscillates for ever, 1 never overshoots.")
-## @ace_param(frequency, desc: "Swings per second - how eager the spring is to get there.")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.set_property_spring({property_path}, {damping}, {frequency})")
+# @ace_action
+# @ace_name("Set Spring Damping And Frequency")
+# @ace_description("The two numbers a spring really has: how fast the bounce dies out (0 loose, 1 dead) and how many swings a second it wants. Set them per property, before the motion or during it.")
+# @ace_display_template("Spring [b]{property_path}[/b]: damping [b]{damping}[/b], [b]{frequency}[/b] per second")
+# @ace_param(property_path, desc: "The property whose spring is being tuned.")
+# @ace_param(damping, desc: "0 oscillates for ever, 1 never overshoots.")
+# @ace_param(frequency, desc: "Swings per second - how eager the spring is to get there.")
+# @ace_codegen_template("$SpringBehavior.set_property_spring({property_path}, {damping}, {frequency})")
 func set_property_spring(property_path: String, damping: float, frequency: float) -> void:
 	var entry: PropertySpring = _property_spring(property_path)
 	entry.damping = clampf(damping, 0.0, 1.0)
@@ -803,16 +765,14 @@ func set_property_spring(property_path: String, damping: float, frequency: float
 	var swings: float = maxf(frequency, 0.01) * TAU
 	entry.stiffness = swings * swings
 
-## @ace_action
-## @ace_name("Clamp Spring Between")
-## @ace_category("Spring")
-## @ace_description("Holds a property's spring between two numbers: it stops dead at the wall instead of pushing through it. A lid that must not pass its hinge, a bar that must not go under zero. The same number on both sides takes the clamp off again.")
-## @ace_display_template("Clamp [b]{property_path}[/b] between [b]{min_value}[/b] and [b]{max_value}[/b]")
-## @ace_param(property_path, desc: "The property whose spring is being fenced in.")
-## @ace_param(min_value, desc: "The lowest the value may go.")
-## @ace_param(max_value, desc: "The highest the value may go.")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.clamp_property_spring({property_path}, {min_value}, {max_value})")
+# @ace_action
+# @ace_name("Clamp Spring Between")
+# @ace_description("Holds a property's spring between two numbers: it stops dead at the wall instead of pushing through it. A lid that must not pass its hinge, a bar that must not go under zero. The same number on both sides takes the clamp off again.")
+# @ace_display_template("Clamp [b]{property_path}[/b] between [b]{min_value}[/b] and [b]{max_value}[/b]")
+# @ace_param(property_path, desc: "The property whose spring is being fenced in.")
+# @ace_param(min_value, desc: "The lowest the value may go.")
+# @ace_param(max_value, desc: "The highest the value may go.")
+# @ace_codegen_template("$SpringBehavior.clamp_property_spring({property_path}, {min_value}, {max_value})")
 func clamp_property_spring(property_path: String, min_value: float, max_value: float) -> void:
 	var entry: PropertySpring = _property_spring(property_path)
 	entry.min_value = minf(min_value, max_value)
@@ -820,80 +780,69 @@ func clamp_property_spring(property_path: String, min_value: float, max_value: f
 	# One number on both sides is how a row says there is no fence: a spring pinned to a point is not a clamp.
 	entry.clamped = not is_equal_approx(min_value, max_value)
 
-## @ace_condition
-## @ace_name("Spring Is Settled")
-## @ace_category("Spring")
-## @ace_description("True while nothing is springing that property - it has arrived, or it was never sprung at all.")
-## @ace_param(property_path, desc: "The property to ask about.")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.property_spring_is_settled({property_path})")
+# @ace_condition
+# @ace_name("Spring Is Settled")
+# @ace_description("True while nothing is springing that property - it has arrived, or it was never sprung at all.")
+# @ace_param(property_path, desc: "The property to ask about.")
+# @ace_codegen_template("$SpringBehavior.property_spring_is_settled({property_path})")
 func property_spring_is_settled(property_path: String) -> bool:
 	if not property_springs.has(property_path):
 		return true
 	return not (property_springs[property_path] as PropertySpring).active
 
-## @ace_expression
-## @ace_name("Spring Value Of")
-## @ace_category("Spring")
-## @ace_description("What the property's spring reads right now, as a number: the value itself for a number, x for a vector, red for a colour. 0 if nothing has sprung it.")
-## @ace_param(property_path, desc: "The property to read.")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.property_spring_value({property_path})")
+# @ace_expression
+# @ace_name("Spring Value Of")
+# @ace_description("What the property's spring reads right now, as a number: the value itself for a number, x for a vector, red for a colour. 0 if nothing has sprung it.")
+# @ace_param(property_path, desc: "The property to read.")
+# @ace_codegen_template("$SpringBehavior.property_spring_value({property_path})")
 func property_spring_value(property_path: String) -> float:
 	if not property_springs.has(property_path):
 		return 0.0
 	return (property_springs[property_path] as PropertySpring).value.x
 
-## @ace_expression
-## @ace_name("Spring Velocity Of")
-## @ace_category("Spring")
-## @ace_description("How fast the property's spring is moving right now, as a number - drive a lean, a blur or a stretch off it so the motion shows its own speed. 0 if nothing has sprung it.")
-## @ace_param(property_path, desc: "The property to read.")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.property_spring_velocity({property_path})")
+# @ace_expression
+# @ace_name("Spring Velocity Of")
+# @ace_description("How fast the property's spring is moving right now, as a number - drive a lean, a blur or a stretch off it so the motion shows its own speed. 0 if nothing has sprung it.")
+# @ace_param(property_path, desc: "The property to read.")
+# @ace_codegen_template("$SpringBehavior.property_spring_velocity({property_path})")
 func property_spring_velocity(property_path: String) -> float:
 	if not property_springs.has(property_path):
 		return 0.0
 	return (property_springs[property_path] as PropertySpring).velocity.x
 
-## @ace_expression
-## @ace_name("Color Value")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.color_value({spring_name})")
+# @ace_expression
+# @ace_name("Color Value")
+# @ace_codegen_template("$SpringBehavior.color_value({spring_name})")
 func color_value(spring_name: String) -> Color:
 	if not color_springs.has(spring_name):
 		return Color.WHITE
 	return (color_springs[spring_name] as ColorSpringEntry).value
 
-## @ace_condition
-## @ace_name("Is Springing")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.is_springing({spring_name})")
+# @ace_condition
+# @ace_name("Is Springing")
+# @ace_codegen_template("$SpringBehavior.is_springing({spring_name})")
 func is_springing(spring_name: String) -> bool:
 	return springs.has(spring_name) and (springs[spring_name] as SpringEntry).active
 
-## @ace_expression
-## @ace_name("Spring Value")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.spring_value({spring_name})")
+# @ace_expression
+# @ace_name("Spring Value")
+# @ace_codegen_template("$SpringBehavior.spring_value({spring_name})")
 func spring_value(spring_name: String) -> float:
 	if not springs.has(spring_name):
 		return 0.0
 	return (springs[spring_name] as SpringEntry).value
 
-## @ace_expression
-## @ace_name("Spring Velocity")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.spring_velocity({spring_name})")
+# @ace_expression
+# @ace_name("Spring Velocity")
+# @ace_codegen_template("$SpringBehavior.spring_velocity({spring_name})")
 func spring_velocity(spring_name: String) -> float:
 	if not springs.has(spring_name):
 		return 0.0
 	return (springs[spring_name] as SpringEntry).velocity
 
-## @ace_expression
-## @ace_name("Spring Progress")
-## @ace_icon("res://eventsheet_addons/spring/icon.svg")
-## @ace_codegen_template("$SpringBehavior.spring_progress({spring_name})")
+# @ace_expression
+# @ace_name("Spring Progress")
+# @ace_codegen_template("$SpringBehavior.spring_progress({spring_name})")
 func spring_progress(spring_name: String) -> float:
 	if not springs.has(spring_name):
 		return 1.0

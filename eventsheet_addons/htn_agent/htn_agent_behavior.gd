@@ -1,13 +1,13 @@
-## @ace_tags(ai, planning)
-## @ace_category("HTN")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_tags(ai, planning)
+# @ace_category("HTN")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/htn_agent/icon.svg")
 class_name HTNAgent
 extends Node
 ## A small hierarchical task planner on any Node2D: describe goals as compound tasks that break down into primitive steps through methods with preconditions and utility scores. Feed it world-state facts, request a plan, and run the ordered task list it hands back - re-plan when the situation changes instead of rewriting a state machine.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 
@@ -19,14 +19,14 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("HTN Agent needs a Node2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Task Started")
+# @ace_trigger
+# @ace_name("On Task Started")
 signal task_started(task_name: String)
-## @ace_trigger
-## @ace_name("On Plan Complete")
+# @ace_trigger
+# @ace_name("On Plan Complete")
 signal plan_complete
-## @ace_trigger
-## @ace_name("On Plan Failed")
+# @ace_trigger
+# @ace_name("On Plan Failed")
 signal plan_failed
 
 ## Mark Failed re-plans from the root instead of giving up.
@@ -63,51 +63,41 @@ func _find_method(task_name: String, method_id: String) -> HTNMethod:
 			return method
 	return null
 
-## @ace_action
-## @ace_featured
-## @ace_name("Set World State")
-## @ace_category("HTN")
-## @ace_description("Writes a fact the planner reads in method preconditions.")
-## @ace_display_template("Set world fact [b]{key}[/b] to [b]{value}[/b]")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.set_world_state({key}, {value})")
+# @ace_action
+# @ace_featured
+# @ace_name("Set World State")
+# @ace_description("Writes a fact the planner reads in method preconditions.")
+# @ace_display_template("Set world fact [b]{key}[/b] to [b]{value}[/b]")
+# @ace_codegen_template("$HTNAgent.set_world_state({key}, {value})")
 func set_world_state(key: String, value: Variant) -> void:
 	world_state[key] = value
 
-## @ace_action
-## @ace_name("Clear World State")
-## @ace_category("HTN")
-## @ace_description("Removes a world-state key.")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.clear_world_state({key})")
+# @ace_action
+# @ace_name("Clear World State")
+# @ace_description("Removes a world-state key.")
+# @ace_codegen_template("$HTNAgent.clear_world_state({key})")
 func clear_world_state(key: String) -> void:
 	world_state.erase(key)
 
-## @ace_action
-## @ace_name("Add Primitive Task")
-## @ace_category("HTN")
-## @ace_description("Registers a leaf task your sheet executes directly.")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.add_primitive({task_name})")
+# @ace_action
+# @ace_name("Add Primitive Task")
+# @ace_description("Registers a leaf task your sheet executes directly.")
+# @ace_codegen_template("$HTNAgent.add_primitive({task_name})")
 func add_primitive(task_name: String) -> void:
 	primitives[task_name] = true
 
-## @ace_action
-## @ace_name("Add Compound Task")
-## @ace_category("HTN")
-## @ace_description("Registers a task that decomposes via methods.")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.add_compound({task_name})")
+# @ace_action
+# @ace_name("Add Compound Task")
+# @ace_description("Registers a task that decomposes via methods.")
+# @ace_codegen_template("$HTNAgent.add_compound({task_name})")
 func add_compound(task_name: String) -> void:
 	if not compounds.has(task_name):
 		compounds[task_name] = []
 
-## @ace_action
-## @ace_name("Add Method")
-## @ace_category("HTN")
-## @ace_description("Adds (or re-scores) a way to accomplish a compound task; highest utility wins.")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.add_method({task_name}, {method_id}, {utility})")
+# @ace_action
+# @ace_name("Add Method")
+# @ace_description("Adds (or re-scores) a way to accomplish a compound task; highest utility wins.")
+# @ace_codegen_template("$HTNAgent.add_method({task_name}, {method_id}, {utility})")
 func add_method(task_name: String, method_id: String, utility: float) -> void:
 	if not compounds.has(task_name):
 		compounds[task_name] = []
@@ -120,12 +110,10 @@ func add_method(task_name: String, method_id: String, utility: float) -> void:
 	else:
 		method.utility = utility
 
-## @ace_action
-## @ace_name("Add Method Condition")
-## @ace_category("HTN")
-## @ace_description("A precondition (world-state key, operator, value) the method needs to be chosen.")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.add_method_condition({task_name}, {method_id}, {key}, {op}, {value})")
+# @ace_action
+# @ace_name("Add Method Condition")
+# @ace_description("A precondition (world-state key, operator, value) the method needs to be chosen.")
+# @ace_codegen_template("$HTNAgent.add_method_condition({task_name}, {method_id}, {key}, {op}, {value})")
 func add_method_condition(task_name: String, method_id: String, key: String, op: String, value: Variant) -> void:
 	var method: HTNMethod = _find_method(task_name, method_id)
 	if method != null:
@@ -135,45 +123,37 @@ func add_method_condition(task_name: String, method_id: String, key: String, op:
 		c.value = value
 		method.conditions.append(c)
 
-## @ace_action
-## @ace_name("Add Method Subtask")
-## @ace_category("HTN")
-## @ace_description("Appends a subtask (primitive or compound) to a method, in order.")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.add_method_subtask({task_name}, {method_id}, {subtask})")
+# @ace_action
+# @ace_name("Add Method Subtask")
+# @ace_description("Appends a subtask (primitive or compound) to a method, in order.")
+# @ace_codegen_template("$HTNAgent.add_method_subtask({task_name}, {method_id}, {subtask})")
 func add_method_subtask(task_name: String, method_id: String, subtask: String) -> void:
 	var method: HTNMethod = _find_method(task_name, method_id)
 	if method != null:
 		method.subtasks.append(subtask)
 
-## @ace_action
-## @ace_name("Set Method Utility")
-## @ace_category("HTN")
-## @ace_description("Updates a method's utility at runtime (utility-driven re-prioritising).")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.set_method_utility({task_name}, {method_id}, {utility})")
+# @ace_action
+# @ace_name("Set Method Utility")
+# @ace_description("Updates a method's utility at runtime (utility-driven re-prioritising).")
+# @ace_codegen_template("$HTNAgent.set_method_utility({task_name}, {method_id}, {utility})")
 func set_method_utility(task_name: String, method_id: String, utility: float) -> void:
 	var method: HTNMethod = _find_method(task_name, method_id)
 	if method != null:
 		method.utility = utility
 
-## @ace_action
-## @ace_name("Clear Task Network")
-## @ace_category("HTN")
-## @ace_description("Wipes all tasks/methods (keeps world state).")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.clear_network()")
+# @ace_action
+# @ace_name("Clear Task Network")
+# @ace_description("Wipes all tasks/methods (keeps world state).")
+# @ace_codegen_template("$HTNAgent.clear_network()")
 func clear_network() -> void:
 	primitives.clear()
 	compounds.clear()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Request Plan")
-## @ace_category("HTN")
-## @ace_description("Decomposes the root task into a plan and starts the first task.")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.request_plan()")
+# @ace_action
+# @ace_featured
+# @ace_name("Request Plan")
+# @ace_description("Decomposes the root task into a plan and starts the first task.")
+# @ace_codegen_template("$HTNAgent.request_plan()")
 func request_plan() -> void:
 	plan = _decompose(root_task, 0)
 	plan_index = 0
@@ -182,13 +162,11 @@ func request_plan() -> void:
 	else:
 		task_started.emit(str(plan[0]))
 
-## @ace_action
-## @ace_featured
-## @ace_name("Mark Task Complete")
-## @ace_category("HTN")
-## @ace_description("Advances to the next task, or fires On Plan Complete at the end.")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.mark_complete()")
+# @ace_action
+# @ace_featured
+# @ace_name("Mark Task Complete")
+# @ace_description("Advances to the next task, or fires On Plan Complete at the end.")
+# @ace_codegen_template("$HTNAgent.mark_complete()")
 func mark_complete() -> void:
 	if plan_index >= plan.size():
 		return
@@ -200,12 +178,10 @@ func mark_complete() -> void:
 	else:
 		task_started.emit(str(plan[plan_index]))
 
-## @ace_action
-## @ace_name("Mark Task Failed")
-## @ace_category("HTN")
-## @ace_description("Re-plans from the root (or fires On Plan Failed if auto-replan is off).")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.mark_failed()")
+# @ace_action
+# @ace_name("Mark Task Failed")
+# @ace_description("Re-plans from the root (or fires On Plan Failed if auto-replan is off).")
+# @ace_codegen_template("$HTNAgent.mark_failed()")
 func mark_failed() -> void:
 	if auto_replan_on_fail:
 		request_plan()
@@ -214,48 +190,41 @@ func mark_failed() -> void:
 		plan_index = 0
 		plan_failed.emit()
 
-## @ace_action
-## @ace_name("Invalidate Plan")
-## @ace_category("HTN")
-## @ace_description("Drops the current plan so the next Request Plan rebuilds it.")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.invalidate_plan()")
+# @ace_action
+# @ace_name("Invalidate Plan")
+# @ace_description("Drops the current plan so the next Request Plan rebuilds it.")
+# @ace_codegen_template("$HTNAgent.invalidate_plan()")
 func invalidate_plan() -> void:
 	plan = []
 	plan_index = 0
 
-## @ace_condition
-## @ace_name("Has Plan")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.has_plan()")
+# @ace_condition
+# @ace_name("Has Plan")
+# @ace_codegen_template("$HTNAgent.has_plan()")
 func has_plan() -> bool:
 	return plan_index < plan.size()
 
-## @ace_condition
-## @ace_name("Current Task Is")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.current_task_is({task_name})")
+# @ace_condition
+# @ace_name("Current Task Is")
+# @ace_codegen_template("$HTNAgent.current_task_is({task_name})")
 func current_task_is(task_name: String) -> bool:
 	return current_task() == task_name
 
-## @ace_expression
-## @ace_name("Current Task")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.current_task()")
+# @ace_expression
+# @ace_name("Current Task")
+# @ace_codegen_template("$HTNAgent.current_task()")
 func current_task() -> String:
 	return str(plan[plan_index]) if plan_index < plan.size() else ""
 
-## @ace_expression
-## @ace_name("Plan Length")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.plan_length()")
+# @ace_expression
+# @ace_name("Plan Length")
+# @ace_codegen_template("$HTNAgent.plan_length()")
 func plan_length() -> int:
 	return plan.size()
 
-## @ace_expression
-## @ace_name("World Value")
-## @ace_icon("res://eventsheet_addons/htn_agent/icon.svg")
-## @ace_codegen_template("$HTNAgent.world_value({key})")
+# @ace_expression
+# @ace_name("World Value")
+# @ace_codegen_template("$HTNAgent.world_value({key})")
 func world_value(key: String) -> Variant:
 	return world_state.get(key, 0)
 

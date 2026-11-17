@@ -54,7 +54,7 @@ func _on_quest_advanced(_phase: int) -> void:
 	$Icon/TweenBehavior.tween_rotation($Icon.rotation_degrees + 120.0, 0.4)
 	$Icon/SpringBehavior.spring_host_scale(1.6)
 
-## @ace_hidden
+# @ace_hidden
 func grant_item(id: String, qty: int) -> void:
 	inventory[id] = inventory.get(id, 0) + qty
 	quest_log.append(id)

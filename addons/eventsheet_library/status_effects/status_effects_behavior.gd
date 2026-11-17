@@ -1,13 +1,13 @@
-## @ace_tags(combat, status, buff, debuff)
-## @ace_category("Status Effects")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_tags(combat, status, buff, debuff)
+# @ace_category("Status Effects")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/status_effects/icon.svg")
 class_name StatusEffectsBehavior
 extends Node
 ## Burn, poison, slow, stun, freeze and shield on any node: apply a status for a time, let it tick damage of its own kind through the Health pack, stack the way its file says, tint the host and take the tint off again when it ends. The effects are StatusEffectResource files you own - six starters ship beside the pack to edit or delete.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 
@@ -19,23 +19,23 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Status Effects Behavior needs a parent node: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
+# @ace_trigger
+# @ace_name("On Status Applied")
 ## Fires when a status lands, including the second and later times it is applied.
-## @ace_trigger
-## @ace_name("On Status Applied")
 signal status_applied(status: String, stacks: int)
+# @ace_trigger
+# @ace_name("On Status Ticked")
 ## Fires on every tick of an active status, after its damage and healing have been dealt.
-## @ace_trigger
-## @ace_name("On Status Ticked")
 signal status_ticked(status: String, stacks: int)
+# @ace_trigger
+# @ace_name("On Status Expired")
 ## Fires when a status ends, however it ended - the clock ran out, it was removed, it was cleansed,
 ## or an immunity pushed it off.
-## @ace_trigger
-## @ace_name("On Status Expired")
 signal status_expired(status: String)
+# @ace_trigger
+# @ace_name("On Stacks Changed")
 ## Fires when an active status changes how many stacks it is on, and not when it lands at the count
 ## it was already on.
-## @ace_trigger
-## @ace_name("On Stacks Changed")
 signal stacks_changed(status: String, stacks: int)
 
 # An effect is a FILE in this folder, so `burn.tres` is the effect a
@@ -95,6 +95,7 @@ const MINIMUM_TICK_SECONDS: float = 0.05
 
 ## The ownership key this whole project credits kills through, written by the Claim row.
 const OWNER_META: StringName = &"owner"
+# @ace_hidden
 ## The effect file a status word names: one dropped on this node first, then the folder, and null
 ## when nothing answers to it. A status with no file still applies - it is a name and a clock, which
 ## is all Has Status needs - so a plain flag costs no authoring at all.
@@ -108,7 +109,6 @@ const OWNER_META: StringName = &"owner"
 ## The ordinary case still costs one existence test: the file named after the word, when it agrees
 ## that the word is its name. The folder is only READ THROUGH when that misses, and sorted when it
 ## is, so two machines pick the same file if two of them claim the word.
-## @ace_hidden
 func _effect(status: String) -> Resource:
 	for candidate: Variant in effects:
 		if _answers_to(candidate as Resource, status):
@@ -132,10 +132,10 @@ func _effect(status: String) -> Resource:
 	if debug_mode:
 		push_warning("Status Effects: \"%s\" was applied, but no file in %s answers to it - it is a name and a clock only." % [status, effects_folder])
 	return null
+# @ace_hidden
 ## The Health behaviour a tick's damage goes to: the host itself when it has the typed pipeline, and
 ## otherwise the first child that does. Duck-typed on the method rather than on a class, so this
 ## pack never has to name another pack.
-## @ace_hidden
 func _health() -> Node:
 	if host == null:
 		return null
@@ -145,6 +145,7 @@ func _health() -> Node:
 		if child.has_method("take_typed_damage"):
 			return child
 	return null
+# @ace_hidden
 ## The Boosts autoload, when the project has one and it is the pack this expects. An effect with a
 ## multiplier tag feeds it while the effect lasts; a project without Boosts simply gets no
 ## multiplier, which is the honest answer rather than an error.
@@ -154,7 +155,6 @@ func _health() -> Node:
 ## a node with no tree is an engine error rather than a null. So being in the tree is tested first,
 ## and a status ending off-tree simply stops no boost, which is the same answer a project with no
 ## Boosts pack gets.
-## @ace_hidden
 func _boosts() -> Node:
 	if not is_inside_tree():
 		return null
@@ -165,6 +165,7 @@ func _boosts() -> Node:
 	if found != null and found.has_method("start_tagged_boost") and found.has_method("stop_boost"):
 		return found
 	return null
+# @ace_hidden
 ## Who a tick's damage is credited to: the node this behaviour was CLAIMED for, read through the
 ## project's own ownership key, and nobody when nobody claimed it. Claim the Status Effects node for
 ## the poisoner and a kill by the poison is scored to them, exactly as a bullet's would be.
@@ -179,7 +180,6 @@ func _boosts() -> Node:
 ##
 ## The key is read as it was stored and tested BEFORE it is cast, because casting a freed object to
 ## a Node is itself the error the check is here to avoid.
-## @ace_hidden
 func _source() -> Node:
 	if not has_meta(OWNER_META):
 		return null
@@ -233,14 +233,12 @@ func _process(delta: float) -> void:
 	# alive: once the last clock is gone, the countdown switches itself off.
 	set_process(not (_active.is_empty() and _immune.is_empty()))
 
-## @ace_action
-## @ace_featured
-## @ace_name("Apply Status")
-## @ace_category("Status Effects")
-## @ace_description("Puts a status on this node for a time, stacking by the rule in its own file. The name is a StatusEffectResource in the effects folder, so "burn" is burn.tres; a name no file answers to still applies as a name and a clock, which is all a pure flag like "stunned" needs.")
-## @ace_display_template("Apply status [b]{status}[/b] for [b]{seconds}[/b] s")
-## @ace_icon("res://eventsheet_addons/status_effects/icon.svg")
-## @ace_codegen_template("$StatusEffectsBehavior.apply({status}, {seconds}, {stacks})")
+# @ace_action
+# @ace_featured
+# @ace_name("Apply Status")
+# @ace_description("Puts a status on this node for a time, stacking by the rule in its own file. The name is a StatusEffectResource in the effects folder, so "burn" is burn.tres; a name no file answers to still applies as a name and a clock, which is all a pure flag like "stunned" needs.")
+# @ace_display_template("Apply status [b]{status}[/b] for [b]{seconds}[/b] s")
+# @ace_codegen_template("$StatusEffectsBehavior.apply({status}, {seconds}, {stacks})")
 func apply(status: String, seconds: float, stacks: int) -> void:
 	var word: String = status.strip_edges()
 	if word.is_empty():
@@ -282,13 +280,11 @@ func apply(status: String, seconds: float, stacks: int) -> void:
 	if now != was:
 		stacks_changed.emit(word, now)
 
-## @ace_action
-## @ace_name("Extend Status")
-## @ace_category("Status Effects")
-## @ace_description("Adds seconds to a status that is already on, leaving its stacks alone. Nothing happens if it is not on - extending is for a fire being fed, not for lighting one.")
-## @ace_display_template("Extend [b]{status}[/b] by [b]{seconds}[/b] s")
-## @ace_icon("res://eventsheet_addons/status_effects/icon.svg")
-## @ace_codegen_template("$StatusEffectsBehavior.extend_status({status}, {seconds})")
+# @ace_action
+# @ace_name("Extend Status")
+# @ace_description("Adds seconds to a status that is already on, leaving its stacks alone. Nothing happens if it is not on - extending is for a fire being fed, not for lighting one.")
+# @ace_display_template("Extend [b]{status}[/b] by [b]{seconds}[/b] s")
+# @ace_codegen_template("$StatusEffectsBehavior.extend_status({status}, {seconds})")
 func extend_status(status: String, seconds: float) -> void:
 	if not _active.has(status):
 		return
@@ -301,23 +297,19 @@ func extend_status(status: String, seconds: float) -> void:
 	if boosts != null and boosts.has_method("extend_boost"):
 		boosts.call("extend_boost", _boost_id(status), maxf(seconds, 0.0))
 
-## @ace_action
-## @ace_name("Remove Status")
-## @ace_category("Status Effects")
-## @ace_description("Takes one status off now, whatever its file says about being cleansable - the boss shrugs it off, the scene moved on, the shield was spent. On Status Expired still fires, so the row that cleans up after a status is the same row either way.")
-## @ace_display_template("Remove status [b]{status}[/b]")
-## @ace_icon("res://eventsheet_addons/status_effects/icon.svg")
-## @ace_codegen_template("$StatusEffectsBehavior.remove_status({status})")
+# @ace_action
+# @ace_name("Remove Status")
+# @ace_description("Takes one status off now, whatever its file says about being cleansable - the boss shrugs it off, the scene moved on, the shield was spent. On Status Expired still fires, so the row that cleans up after a status is the same row either way.")
+# @ace_display_template("Remove status [b]{status}[/b]")
+# @ace_codegen_template("$StatusEffectsBehavior.remove_status({status})")
 func remove_status(status: String) -> void:
 	_end(status)
 
-## @ace_action
-## @ace_name("Cleanse")
-## @ace_category("Status Effects")
-## @ace_description("Takes a status off, or - given no name at all - every status whose file says it may be cleansed. That is what makes an antidote one row, and what makes a curse survive it.")
-## @ace_display_template("Cleanse [b]{status}[/b]")
-## @ace_icon("res://eventsheet_addons/status_effects/icon.svg")
-## @ace_codegen_template("$StatusEffectsBehavior.cleanse({status})")
+# @ace_action
+# @ace_name("Cleanse")
+# @ace_description("Takes a status off, or - given no name at all - every status whose file says it may be cleansed. That is what makes an antidote one row, and what makes a curse survive it.")
+# @ace_display_template("Cleanse [b]{status}[/b]")
+# @ace_codegen_template("$StatusEffectsBehavior.cleanse({status})")
 func cleanse(status: String) -> void:
 	var word: String = status.strip_edges()
 	if not word.is_empty():
@@ -335,13 +327,11 @@ func cleanse(status: String) -> void:
 		if bool(_knob((_active[active] as ActiveStatus).effect, &"cleansable", true)):
 			_end(active)
 
-## @ace_action
-## @ace_name("Immune To Status")
-## @ace_category("Status Effects")
-## @ace_description("Stops a status from landing here for a while, and takes it off if it is already on. The i-frames of the status world: the potion that makes you proof against poison for ten seconds.")
-## @ace_display_template("Immune to [b]{status}[/b] for [b]{seconds}[/b] s")
-## @ace_icon("res://eventsheet_addons/status_effects/icon.svg")
-## @ace_codegen_template("$StatusEffectsBehavior.make_immune({status}, {seconds})")
+# @ace_action
+# @ace_name("Immune To Status")
+# @ace_description("Stops a status from landing here for a while, and takes it off if it is already on. The i-frames of the status world: the potion that makes you proof against poison for ten seconds.")
+# @ace_display_template("Immune to [b]{status}[/b] for [b]{seconds}[/b] s")
+# @ace_codegen_template("$StatusEffectsBehavior.make_immune({status}, {seconds})")
 func make_immune(status: String, seconds: float) -> void:
 	var word: String = status.strip_edges()
 	if word.is_empty():
@@ -352,82 +342,70 @@ func make_immune(status: String, seconds: float) -> void:
 	_end(word)
 	set_process(true)
 
-## @ace_condition
-## @ace_featured
-## @ace_name("Has Status")
-## @ace_category("Status Effects")
-## @ace_description("True while that status is on. This is the row a movement pack or a state machine asks before it moves anything, which is why stun and freeze need no code of their own.")
-## @ace_display_template("Has status [b]{status}[/b]")
-## @ace_icon("res://eventsheet_addons/status_effects/icon.svg")
-## @ace_codegen_template("$StatusEffectsBehavior.has({status})")
+# @ace_condition
+# @ace_featured
+# @ace_name("Has Status")
+# @ace_description("True while that status is on. This is the row a movement pack or a state machine asks before it moves anything, which is why stun and freeze need no code of their own.")
+# @ace_display_template("Has status [b]{status}[/b]")
+# @ace_codegen_template("$StatusEffectsBehavior.has({status})")
 func has(status: String) -> bool:
 	return _active.has(status)
 
-## @ace_expression
-## @ace_name("Status Stacks")
-## @ace_category("Status Effects")
-## @ace_description("How many stacks of a status are on, and 0 when it is not. Ticks and healing are multiplied by it, so it is also how hard the effect is hitting.")
-## @ace_display_template("stacks of [b]{status}[/b]")
-## @ace_icon("res://eventsheet_addons/status_effects/icon.svg")
-## @ace_codegen_template("$StatusEffectsBehavior.status_stacks({status})")
+# @ace_expression
+# @ace_name("Status Stacks")
+# @ace_description("How many stacks of a status are on, and 0 when it is not. Ticks and healing are multiplied by it, so it is also how hard the effect is hitting.")
+# @ace_display_template("stacks of [b]{status}[/b]")
+# @ace_codegen_template("$StatusEffectsBehavior.status_stacks({status})")
 func status_stacks(status: String) -> int:
 	if not _active.has(status):
 		return 0
 	return (_active[status] as ActiveStatus).stacks
 
-## @ace_expression
-## @ace_name("Status Time Left")
-## @ace_category("Status Effects")
-## @ace_description("Seconds left before a status ends, and 0 when it is not on - the fill of the little bar under its icon.")
-## @ace_display_template("time left on [b]{status}[/b]")
-## @ace_icon("res://eventsheet_addons/status_effects/icon.svg")
-## @ace_codegen_template("$StatusEffectsBehavior.status_time_left({status})")
+# @ace_expression
+# @ace_name("Status Time Left")
+# @ace_description("Seconds left before a status ends, and 0 when it is not on - the fill of the little bar under its icon.")
+# @ace_display_template("time left on [b]{status}[/b]")
+# @ace_codegen_template("$StatusEffectsBehavior.status_time_left({status})")
 func status_time_left(status: String) -> float:
 	if not _active.has(status):
 		return 0.0
 	return maxf((_active[status] as ActiveStatus).remaining, 0.0)
 
-## @ace_expression
-## @ace_name("Status Icon")
-## @ace_category("Status Effects")
-## @ace_description("The picture the effect's own file names for it, straight into a HUD texture. A status with no icon, or one that is not on, answers with nothing.")
-## @ace_display_template("icon of [b]{status}[/b]")
-## @ace_icon("res://eventsheet_addons/status_effects/icon.svg")
-## @ace_codegen_template("$StatusEffectsBehavior.status_icon({status})")
+# @ace_expression
+# @ace_name("Status Icon")
+# @ace_description("The picture the effect's own file names for it, straight into a HUD texture. A status with no icon, or one that is not on, answers with nothing.")
+# @ace_display_template("icon of [b]{status}[/b]")
+# @ace_codegen_template("$StatusEffectsBehavior.status_icon({status})")
 func status_icon(status: String) -> Texture2D:
 	if not _active.has(status):
 		return null
 	return _knob((_active[status] as ActiveStatus).effect, &"icon", null) as Texture2D
 
-## @ace_expression
-## @ace_name("Active Statuses")
-## @ace_category("Status Effects")
-## @ace_description("Every status on this node right now, in name order - the list a status bar walks to draw one icon per effect.")
-## @ace_icon("res://eventsheet_addons/status_effects/icon.svg")
-## @ace_codegen_template("$StatusEffectsBehavior.active_statuses()")
+# @ace_expression
+# @ace_name("Active Statuses")
+# @ace_description("Every status on this node right now, in name order - the list a status bar walks to draw one icon per effect.")
+# @ace_codegen_template("$StatusEffectsBehavior.active_statuses()")
 func active_statuses() -> Array:
 	var words: Array = _active.keys()
 	words.sort()
 	return words
 
-## @ace_expression
-## @ace_featured
-## @ace_name("Speed Factor")
-## @ace_category("Status Effects")
-## @ace_description("The product of every active effect's speed factor: 1 when nothing is on, 0.5 under one slow, 0.25 under two. Multiply your movement speed by it and every slow, root and haste in the game already works.")
-## @ace_display_template("speed factor")
-## @ace_icon("res://eventsheet_addons/status_effects/icon.svg")
-## @ace_codegen_template("$StatusEffectsBehavior.speed_factor()")
+# @ace_expression
+# @ace_featured
+# @ace_name("Speed Factor")
+# @ace_description("The product of every active effect's speed factor: 1 when nothing is on, 0.5 under one slow, 0.25 under two. Multiply your movement speed by it and every slow, root and haste in the game already works.")
+# @ace_display_template("speed factor")
+# @ace_codegen_template("$StatusEffectsBehavior.speed_factor()")
 func speed_factor() -> float:
 	var product: float = 1.0
 	for status: String in _active:
 		product *= float(_knob((_active[status] as ActiveStatus).effect, &"speed_factor", 1.0))
 	return product
 
+# @ace_hidden
 ## Whether one effect file is the one a word names. A file that says its own name is asked; anything
 ## else - a resource of somebody else's making that happens to be in the folder - answers to the
 ## name it is saved under, which is the only name it has.
-## @ace_hidden
 func _answers_to(candidate: Resource, status: String) -> bool:
 	if candidate == null:
 		return false
@@ -435,49 +413,49 @@ func _answers_to(candidate: Resource, status: String) -> bool:
 		return str(candidate.call("called")) == status
 	return str(candidate.resource_path).get_file().get_basename() == status
 
+# @ace_hidden
 ## One knob off an effect file, with the value a status carrying no file behaves as. Every read of
 ## an effect goes through here, so the no-file case is decided once instead of at fifteen sites.
-## @ace_hidden
 func _knob(effect: Resource, field: StringName, fallback: Variant) -> Variant:
 	if effect == null:
 		return fallback
 	var value: Variant = effect.get(field)
 	return fallback if value == null else value
 
+# @ace_hidden
 ## How many stacks a second application leaves. The rule belongs to the effect file, which is where
 ## refresh, extend and add differ; a status with no file is one stack, refreshed.
-## @ace_hidden
 func _stacks_after(effect: Resource, current: int, added: int) -> int:
 	if effect == null or not effect.has_method("stacks_after"):
 		return 1
 	return int(effect.call("stacks_after", current, added))
 
+# @ace_hidden
 ## And how much time it leaves. Same rule, same place.
-## @ace_hidden
 func _seconds_after(effect: Resource, remaining: float, added: float) -> float:
 	if effect == null or not effect.has_method("seconds_after"):
 		return maxf(added, 0.0)
 	return float(effect.call("seconds_after", remaining, added))
 
+# @ace_hidden
 ## The boost id one status feeds its tag through - namespaced by the host, so two poisoned enemies
 ## do not share one multiplier.
-## @ace_hidden
 func _boost_id(status: String) -> String:
 	return "status:%d:%s" % [get_instance_id(), status]
 
+# @ace_hidden
 ## How far a tint is allowed to pull the host's colour: the project's effect-strength dial, held
 ## under the ceiling while a player has asked for no flashing.
-## @ace_hidden
 func _tint_strength() -> float:
 	var dial: float = clampf(float(Engine.get_meta(EFFECT_STRENGTH_META, 1.0)), 0.0, 1.0)
 	if bool(Engine.get_meta(NO_FLASHING_META, false)):
 		return minf(dial, TINT_CEILING)
 	return dial
 
+# @ace_hidden
 ## Re-mixes the host's colour from everything active. Called whenever the set changes rather than
 ## every frame, because the answer only moves when a status lands or leaves. A host that is not a
 ## CanvasItem - a 3D enemy, a plain Node - is left alone, and its statuses work exactly the same.
-## @ace_hidden
 func _retint() -> void:
 	var canvas: CanvasItem = host as CanvasItem
 	if canvas == null:
@@ -508,6 +486,7 @@ func _retint() -> void:
 	_tint_written = _base_modulate * wanted
 	canvas.modulate = _tint_written
 
+# @ace_hidden
 ## The host's colour with this behaviour's own tint taken back out of it, channel by channel.
 ##
 ## NOTHING IS DIVIDED. Dividing a channel by the tint assumes every other writer of modulate is
@@ -517,7 +496,6 @@ func _retint() -> void:
 ## undid a multiplication anyway. So a channel is compared with what this behaviour wrote instead:
 ## unchanged means the tint is the only thing on it and the remembered colour is what is underneath;
 ## changed means somebody wrote that value on purpose and it is the colour underneath now.
-## @ace_hidden
 func _under_tint(current: Color) -> Color:
 	return Color(
 		_channel_under(current.r, _tint_written.r, _base_modulate.r),
@@ -525,16 +503,16 @@ func _under_tint(current: Color) -> Color:
 		_channel_under(current.b, _tint_written.b, _base_modulate.b),
 		_channel_under(current.a, _tint_written.a, _base_modulate.a))
 
+# @ace_hidden
 ## One channel of that: the remembered value while the channel still reads as this behaviour left
 ## it, and the value on the host the moment anything else has written one.
-## @ace_hidden
 func _channel_under(shown: float, written: float, remembered: float) -> float:
 	return remembered if is_equal_approx(shown, written) else shown
 
+# @ace_hidden
 ## Ends one status: its boost stops, its particles go, the tint is re-mixed without it, and On
 ## Status Expired fires. Every way a status can end comes through here, so none of them can forget
 ## one of those four.
-## @ace_hidden
 func _end(status: String) -> void:
 	if not _active.has(status):
 		return
@@ -549,9 +527,9 @@ func _end(status: String) -> void:
 	_retint()
 	status_expired.emit(status)
 
+# @ace_hidden
 ## One tick of one status: its damage through the Health pack's typed pipeline so resistances,
 ## armour and the damage report all apply, then its healing, then the trigger a sheet listens to.
-## @ace_hidden
 func _tick(status: String, entry: ActiveStatus) -> void:
 	var effect: Resource = entry.effect
 	var stacks: int = entry.stacks
@@ -569,6 +547,7 @@ func _tick(status: String, entry: ActiveStatus) -> void:
 				health.call("heal", healing)
 	status_ticked.emit(status, stacks)
 
+# @ace_hidden
 ## Ends everything the moment this node leaves the tree, however it left it - a pooled enemy stowed
 ## on the shelf, a room unloaded, a node freed. A status is a clock, a tint, a boost and sometimes a
 ## particle scene, and `_process` merely STOPS off-tree rather than tidying any of that up: without
@@ -582,7 +561,6 @@ func _tick(status: String, entry: ActiveStatus) -> void:
 ## MOVING A NODE TO A NEW PARENT IS A LEAVE AND A RETURN, so it ends the statuses too. That is the
 ## same rule said once rather than two rules: what is on this node is what has happened to it since
 ## it arrived where it is.
-## @ace_hidden
 func _exit_tree() -> void:
 	for status: String in _active.keys():
 		if _active.has(status):

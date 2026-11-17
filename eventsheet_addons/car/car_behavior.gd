@@ -1,6 +1,6 @@
-## @ace_category("Car")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Car")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/car/icon.svg")
 class_name CarBehavior
 extends Node
@@ -8,7 +8,7 @@ extends Node
 ##
 ## Changes on its parent: rotation, velocity, move_and_slide().
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CharacterBody2D = null
 
@@ -20,11 +20,11 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Car Behavior needs a CharacterBody2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Drift Started")
+# @ace_trigger
+# @ace_name("On Drift Started")
 signal drift_started
-## @ace_trigger
-## @ace_name("On Drift Recovered")
+# @ace_trigger
+# @ace_name("On Drift Recovered")
 signal drift_recovered
 
 ## True while the car's heading and travel direction differ enough to count as a drift.
@@ -79,12 +79,10 @@ func _physics_process(delta: float) -> void:
 		drift_recovered.emit()
 	host.move_and_slide()
 
-## @ace_action
-## @ace_name("Stop Car")
-## @ace_category("Car")
-## @ace_description("Kills all momentum.")
-## @ace_icon("res://eventsheet_addons/car/icon.svg")
-## @ace_codegen_template("$CarBehavior.stop_car()")
+# @ace_action
+# @ace_name("Stop Car")
+# @ace_description("Kills all momentum.")
+# @ace_codegen_template("$CarBehavior.stop_car()")
 func stop_car() -> void:
 	speed = 0.0
 	if host != null:

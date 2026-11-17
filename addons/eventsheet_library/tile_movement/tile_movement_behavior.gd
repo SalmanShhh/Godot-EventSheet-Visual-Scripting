@@ -1,6 +1,6 @@
-## @ace_category("Tile Movement")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Tile Movement")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/tile_movement/icon.svg")
 class_name TileMovementBehavior
 extends Node
@@ -8,7 +8,7 @@ extends Node
 ##
 ## Changes on its parent: position.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 
@@ -20,8 +20,8 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Tile Movement Behavior needs a Node2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Step Finished")
+# @ace_trigger
+# @ace_name("On Step Finished")
 signal step_finished
 
 ## AI drive: read the AI move inputs instead of the arrow keys (a sheet or AI driver flips this on to steer).
@@ -53,7 +53,7 @@ var to_x: float = 0.0
 ## Y position of the tile the current step is heading to, in pixels.
 var to_y: float = 0.0
 
-## @ace_hidden
+# @ace_hidden
 func to_grid(pixel: Vector2) -> Vector2i:
 	return Vector2i(roundi(pixel.x / tile_size), roundi(pixel.y / tile_size))
 
@@ -92,13 +92,11 @@ func _ready() -> void:
 	if host is RigidBody2D:
 		push_warning("Tile Movement on %s: this behaviour moves a RigidBody2D by changing its position, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the Sprite2D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 
-## @ace_action
-## @ace_name("Simulate Step")
-## @ace_category("Tile Movement")
-## @ace_description("Steps one tile in a direction: left, right, up or down (simulate control).")
-## @ace_param_options(direction left, right, up, down)
-## @ace_icon("res://eventsheet_addons/tile_movement/icon.svg")
-## @ace_codegen_template("$TileMovementBehavior.simulate_step("{direction}")")
+# @ace_action
+# @ace_name("Simulate Step")
+# @ace_description("Steps one tile in a direction: left, right, up or down (simulate control).")
+# @ace_param_options(direction left, right, up, down)
+# @ace_codegen_template("$TileMovementBehavior.simulate_step("{direction}")")
 func simulate_step(direction: String) -> void:
 	if direction == "left":
 		pending_x = -1.0
@@ -109,18 +107,16 @@ func simulate_step(direction: String) -> void:
 	elif direction == "down":
 		pending_y = 1.0
 
-## @ace_action
-## @ace_name("Teleport To Tile")
-## @ace_category("Tile Movement")
-## @ace_description("Snaps to a tile coordinate instantly.")
-## @ace_icon("res://eventsheet_addons/tile_movement/icon.svg")
-## @ace_codegen_template("$TileMovementBehavior.teleport_to_tile({tile_x}, {tile_y})")
+# @ace_action
+# @ace_name("Teleport To Tile")
+# @ace_description("Snaps to a tile coordinate instantly.")
+# @ace_codegen_template("$TileMovementBehavior.teleport_to_tile({tile_x}, {tile_y})")
 func teleport_to_tile(tile_x: float, tile_y: float) -> void:
 	if host != null:
 		host.position = Vector2(tile_x, tile_y) * tile_size
 	moving = false
 
-## @ace_hidden
+# @ace_hidden
 func from_grid(tile: Vector2i) -> Vector2:
 	return Vector2(tile) * tile_size
 

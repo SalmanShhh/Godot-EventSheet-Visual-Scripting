@@ -1,4 +1,4 @@
-## @ace_version(1.0.0)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/juice/icon.svg")
 class_name JuiceCard
 extends Resource

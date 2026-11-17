@@ -1,6 +1,6 @@
-## @ace_category("Home & Leash")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Home & Leash")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/home_leash/icon.svg")
 class_name HomeLeashBehavior
 extends Node
@@ -8,7 +8,7 @@ extends Node
 ##
 ## Changes on its parent: global_position.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 
@@ -20,9 +20,9 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Home Leash Behavior needs a Node2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Arrived Home")
-## @ace_category("Home & Leash")
+# @ace_trigger
+# @ace_name("On Arrived Home")
+# @ace_category("Home & Leash")
 signal arrived_home
 
 ## True once a home position has been set.
@@ -40,37 +40,31 @@ func _ready() -> void:
 	if host is RigidBody2D:
 		push_warning("Home Leash on %s: this behaviour moves a RigidBody2D by changing its position, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the Sprite2D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 
-## @ace_action
-## @ace_name("Set Home Here")
-## @ace_category("Home & Leash")
-## @ace_description("Plants home on the spot the host is standing on right now.")
-## @ace_display_template("Set home [b]here[/b]")
-## @ace_icon("res://eventsheet_addons/home_leash/icon.svg")
-## @ace_codegen_template("$HomeLeashBehavior.set_home_here()")
+# @ace_action
+# @ace_name("Set Home Here")
+# @ace_description("Plants home on the spot the host is standing on right now.")
+# @ace_display_template("Set home [b]here[/b]")
+# @ace_codegen_template("$HomeLeashBehavior.set_home_here()")
 func set_home_here() -> void:
 	if host == null:
 		return
 	_home = host.global_position
 	_has_home = true
 
-## @ace_action
-## @ace_name("Set Home At")
-## @ace_category("Home & Leash")
-## @ace_description("Plants home on any point in the world, without moving the host.")
-## @ace_display_template("Set home at [b]{point}[/b]")
-## @ace_icon("res://eventsheet_addons/home_leash/icon.svg")
-## @ace_codegen_template("$HomeLeashBehavior.set_home_at({point})")
+# @ace_action
+# @ace_name("Set Home At")
+# @ace_description("Plants home on any point in the world, without moving the host.")
+# @ace_display_template("Set home at [b]{point}[/b]")
+# @ace_codegen_template("$HomeLeashBehavior.set_home_at({point})")
 func set_home_at(point: Vector2) -> void:
 	_home = point
 	_has_home = true
 
-## @ace_expression
-## @ace_name("Distance From Home")
-## @ace_category("Home & Leash")
-## @ace_description("How far the host is from its home point, measured the way you pick: straight line, one axis only, grid steps (across plus down), or king moves (the larger of the two).")
-## @ace_param_options(metric 0=Straight line, 1=Horizontal only, 2=Vertical only, 3=Grid steps, 4=King moves)
-## @ace_icon("res://eventsheet_addons/home_leash/icon.svg")
-## @ace_codegen_template("$HomeLeashBehavior.distance_from_home({metric})")
+# @ace_expression
+# @ace_name("Distance From Home")
+# @ace_description("How far the host is from its home point, measured the way you pick: straight line, one axis only, grid steps (across plus down), or king moves (the larger of the two).")
+# @ace_param_options(metric 0=Straight line, 1=Horizontal only, 2=Vertical only, 3=Grid steps, 4=King moves)
+# @ace_codegen_template("$HomeLeashBehavior.distance_from_home({metric})")
 func distance_from_home(metric: int) -> float:
 	if host == null:
 		return 0.0
@@ -87,25 +81,21 @@ func distance_from_home(metric: int) -> float:
 			return maxf(absf(offset.x), absf(offset.y))
 	return offset.length()
 
-## @ace_condition
-## @ace_featured
-## @ace_name("Is Beyond Home")
-## @ace_category("Home & Leash")
-## @ace_description("True while the host has wandered further than this from home, in the distance metric you pick.")
-## @ace_param_options(metric 0=Straight line, 1=Horizontal only, 2=Vertical only, 3=Grid steps, 4=King moves)
-## @ace_icon("res://eventsheet_addons/home_leash/icon.svg")
-## @ace_codegen_template("$HomeLeashBehavior.is_beyond_home({distance}, {metric})")
+# @ace_condition
+# @ace_featured
+# @ace_name("Is Beyond Home")
+# @ace_description("True while the host has wandered further than this from home, in the distance metric you pick.")
+# @ace_param_options(metric 0=Straight line, 1=Horizontal only, 2=Vertical only, 3=Grid steps, 4=King moves)
+# @ace_codegen_template("$HomeLeashBehavior.is_beyond_home({distance}, {metric})")
 func is_beyond_home(distance: float, metric: int) -> bool:
 	return distance_from_home(metric) > distance
 
-## @ace_action
-## @ace_featured
-## @ace_name("Return Home")
-## @ace_category("Home & Leash")
-## @ace_description("Walks the host one step back toward home - run it under a per-frame trigger and pass that trigger's delta. Fires On Arrived Home once, on the step that lands (within a pixel of home), not on every frame the host sits there.")
-## @ace_display_template("Walk home at [b]{speed}[/b]")
-## @ace_icon("res://eventsheet_addons/home_leash/icon.svg")
-## @ace_codegen_template("$HomeLeashBehavior.return_home({speed}, {delta})")
+# @ace_action
+# @ace_featured
+# @ace_name("Return Home")
+# @ace_description("Walks the host one step back toward home - run it under a per-frame trigger and pass that trigger's delta. Fires On Arrived Home once, on the step that lands (within a pixel of home), not on every frame the host sits there.")
+# @ace_display_template("Walk home at [b]{speed}[/b]")
+# @ace_codegen_template("$HomeLeashBehavior.return_home({speed}, {delta})")
 func return_home(speed: float, delta: float) -> void:
 	if host == null:
 		return
@@ -120,7 +110,7 @@ func return_home(speed: float, delta: float) -> void:
 		return
 	_returning = true
 
-## @ace_hidden
+# @ace_hidden
 func _ensure_home() -> void:
 	if _has_home or host == null:
 		return

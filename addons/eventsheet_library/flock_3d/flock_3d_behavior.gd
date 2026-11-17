@@ -1,6 +1,6 @@
-## @ace_tags(movement, steering, group)
-## @ace_category("Flock 3D")
-## @ace_version(1.0.0)
+# @ace_tags(movement, steering, group)
+# @ace_category("Flock 3D")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/flock_3d/icon.svg")
 class_name Flock3DBehavior
 extends Node
@@ -8,7 +8,7 @@ extends Node
 ##
 ## Changes on its parent: global_position, position, basis.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node3D = null
 
@@ -95,71 +95,59 @@ func _physics_process(delta: float) -> void:
 	else:
 		host.position += flock_velocity * delta
 
-## @ace_action
-## @ace_featured
-## @ace_name("Set Flock Weights")
-## @ace_category("Flock 3D")
-## @ace_description("Sets how strongly the three rules pull: separation keeps members apart, alignment turns them the way their neighbours fly, cohesion draws them toward their neighbours' middle. Zero switches a rule off; a weight is relative to the other two.")
-## @ace_display_template("flock with separation [b]{separation}[/b], alignment [b]{alignment}[/b], cohesion [b]{cohesion}[/b]")
-## @ace_icon("res://eventsheet_addons/flock_3d/icon.svg")
-## @ace_codegen_template("$Flock3DBehavior.set_flock_weights({separation}, {alignment}, {cohesion})")
+# @ace_action
+# @ace_featured
+# @ace_name("Set Flock Weights")
+# @ace_description("Sets how strongly the three rules pull: separation keeps members apart, alignment turns them the way their neighbours fly, cohesion draws them toward their neighbours' middle. Zero switches a rule off; a weight is relative to the other two.")
+# @ace_display_template("flock with separation [b]{separation}[/b], alignment [b]{alignment}[/b], cohesion [b]{cohesion}[/b]")
+# @ace_codegen_template("$Flock3DBehavior.set_flock_weights({separation}, {alignment}, {cohesion})")
 func set_flock_weights(separation: float, alignment: float, cohesion: float) -> void:
 	separation_weight = separation
 	alignment_weight = alignment
 	cohesion_weight = cohesion
 
-## @ace_action
-## @ace_name("Set Flock Speeds")
-## @ace_category("Flock 3D")
-## @ace_description("Sets the slowest and the fastest a member flies, in metres per second. A maximum below the minimum is raised to it, so the two can never cross.")
-## @ace_display_template("fly between [b]{minimum}[/b] and [b]{maximum}[/b] m/s")
-## @ace_icon("res://eventsheet_addons/flock_3d/icon.svg")
-## @ace_codegen_template("$Flock3DBehavior.set_flock_speeds({minimum}, {maximum})")
+# @ace_action
+# @ace_name("Set Flock Speeds")
+# @ace_description("Sets the slowest and the fastest a member flies, in metres per second. A maximum below the minimum is raised to it, so the two can never cross.")
+# @ace_display_template("fly between [b]{minimum}[/b] and [b]{maximum}[/b] m/s")
+# @ace_codegen_template("$Flock3DBehavior.set_flock_speeds({minimum}, {maximum})")
 func set_flock_speeds(minimum: float, maximum: float) -> void:
 	min_speed = maxf(minimum, 0.0)
 	max_speed = maxf(maximum, min_speed)
 
-## @ace_action
-## @ace_name("Set Max Force")
-## @ace_category("Flock 3D")
-## @ace_description("Sets how quickly a member may change its velocity, in metres per second per second, for each rule. Low turns in wide arcs; high turns on the spot.")
-## @ace_display_template("steer with at most [b]{force}[/b] force")
-## @ace_icon("res://eventsheet_addons/flock_3d/icon.svg")
-## @ace_codegen_template("$Flock3DBehavior.set_max_force({force})")
+# @ace_action
+# @ace_name("Set Max Force")
+# @ace_description("Sets how quickly a member may change its velocity, in metres per second per second, for each rule. Low turns in wide arcs; high turns on the spot.")
+# @ace_display_template("steer with at most [b]{force}[/b] force")
+# @ace_codegen_template("$Flock3DBehavior.set_max_force({force})")
 func set_max_force(force: float) -> void:
 	max_force = maxf(force, 0.0)
 
-## @ace_action
-## @ace_name("Set Flock Radii")
-## @ace_category("Flock 3D")
-## @ace_description("Sets how far a member looks for neighbours, and how close a neighbour may come before separation pushes it away. Make the second a little wider than the model and members never overlap.")
-## @ace_display_template("see neighbours within [b]{neighbours}[/b], keep [b]{too_close}[/b] apart")
-## @ace_icon("res://eventsheet_addons/flock_3d/icon.svg")
-## @ace_codegen_template("$Flock3DBehavior.set_flock_radii({neighbours}, {too_close})")
+# @ace_action
+# @ace_name("Set Flock Radii")
+# @ace_description("Sets how far a member looks for neighbours, and how close a neighbour may come before separation pushes it away. Make the second a little wider than the model and members never overlap.")
+# @ace_display_template("see neighbours within [b]{neighbours}[/b], keep [b]{too_close}[/b] apart")
+# @ace_codegen_template("$Flock3DBehavior.set_flock_radii({neighbours}, {too_close})")
 func set_flock_radii(neighbours: float, too_close: float) -> void:
 	neighbour_radius = maxf(neighbours, 0.0)
 	separation_radius = maxf(too_close, 0.0)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Set Avoid Group")
-## @ace_category("Flock 3D")
-## @ace_description("Sets the group the flock flees - a predator, the player, a hazard - how close it must come before the flock reacts, and how strongly it flees. An empty group avoids nothing.")
-## @ace_display_template("flee [b]{group}[/b] within [b]{radius}[/b], weight [b]{weight}[/b]")
-## @ace_icon("res://eventsheet_addons/flock_3d/icon.svg")
-## @ace_codegen_template("$Flock3DBehavior.set_avoid_group({group}, {radius}, {weight})")
+# @ace_action
+# @ace_featured
+# @ace_name("Set Avoid Group")
+# @ace_description("Sets the group the flock flees - a predator, the player, a hazard - how close it must come before the flock reacts, and how strongly it flees. An empty group avoids nothing.")
+# @ace_display_template("flee [b]{group}[/b] within [b]{radius}[/b], weight [b]{weight}[/b]")
+# @ace_codegen_template("$Flock3DBehavior.set_avoid_group({group}, {radius}, {weight})")
 func set_avoid_group(group: StringName, radius: float, weight: float) -> void:
 	avoid_group = group
 	avoid_radius = maxf(radius, 0.0)
 	avoid_weight = weight
 
-## @ace_action
-## @ace_name("Set Flock Group")
-## @ace_category("Flock 3D")
-## @ace_description("Moves the host from its flock to another one in a single row: it leaves the old group and joins the new, so it is never counted by both.")
-## @ace_display_template("fly with the [b]{group}[/b] flock")
-## @ace_icon("res://eventsheet_addons/flock_3d/icon.svg")
-## @ace_codegen_template("$Flock3DBehavior.set_flock_group({group})")
+# @ace_action
+# @ace_name("Set Flock Group")
+# @ace_description("Moves the host from its flock to another one in a single row: it leaves the old group and joins the new, so it is never counted by both.")
+# @ace_display_template("fly with the [b]{group}[/b] flock")
+# @ace_codegen_template("$Flock3DBehavior.set_flock_group({group})")
 func set_flock_group(group: StringName) -> void:
 	# Leaving the old flock and joining the new one in a single row, so a bird that is told to
 	# follow another flock is never counted by both.
@@ -170,29 +158,27 @@ func set_flock_group(group: StringName) -> void:
 			host.add_to_group(group)
 	flock_group = group
 
-## @ace_action
-## @ace_name("Set Flocking Enabled")
-## @ace_category("Flock 3D")
-## @ace_description("Turns the steering on or off at runtime. Off, the host keeps still and costs nothing per frame; on again, it flies off at the velocity it had.")
-## @ace_display_template("Set flocking to [b]{enabled}[/b]")
-## @ace_icon("res://eventsheet_addons/flock_3d/icon.svg")
-## @ace_codegen_template("$Flock3DBehavior.set_flocking_enabled({enabled})")
+# @ace_action
+# @ace_name("Set Flocking Enabled")
+# @ace_description("Turns the steering on or off at runtime. Off, the host keeps still and costs nothing per frame; on again, it flies off at the velocity it had.")
+# @ace_display_template("Set flocking to [b]{enabled}[/b]")
+# @ace_codegen_template("$Flock3DBehavior.set_flocking_enabled({enabled})")
 func set_flocking_enabled(enabled: bool) -> void:
 	flocking_enabled = enabled
 	# Flocking off means no steering to run, so stop paying for the physics frame.
 	set_physics_process(enabled)
 
+# @ace_hidden
 ## Everything in a group, as the tree holds it. One seam, because a headless test has no tree and
 ## both group searches in this pack go through here.
-## @ace_hidden
 func _group_members(group: StringName) -> Array:
 	if host == null or not host.is_inside_tree() or String(group).is_empty():
 		return []
 	return host.get_tree().get_nodes_in_group(group)
 
+# @ace_hidden
 ## How fast a neighbour is flying. A neighbour carrying this same behaviour answers with its own
 ## flock velocity; a physics body answers with its velocity; anything else is standing still.
-## @ace_hidden
 func _velocity_of(member: Node3D) -> Vector3:
 	for child: Node in member.get_children():
 		if child.get_script() == get_script():
@@ -204,41 +190,41 @@ func _velocity_of(member: Node3D) -> Vector3:
 		return (member as RigidBody3D).linear_velocity
 	return Vector3.ZERO
 
+# @ace_hidden
 ## The change of velocity that turns this member toward a direction at full speed, no larger than
 ## max force - the one shape all three rules and the avoid group are steered through.
-## @ace_hidden
 func _steer_toward(direction: Vector3) -> Vector3:
 	if direction.is_zero_approx():
 		return Vector3.ZERO
 	return (direction.normalized() * max_speed - flock_velocity).limit_length(max_force)
 
+# @ace_hidden
 ## The direction away from a neighbour that sits exactly on top of this member. Two members on one
 ## spot would otherwise push each other along the same line and never part, so each one leaves
 ## along an angle of its own, fixed for its lifetime: a hash of its instance id spread over the
 ## whole turn, where a remainder by 360 gave two members a one-in-360 chance of the same angle.
-## @ace_hidden
 func _away_from_the_same_spot() -> Vector3:
 	return Vector3.RIGHT.rotated(Vector3.UP, float(hash(get_instance_id())) / 4294967296.0 * TAU)
 
+# @ace_hidden
 ## Where a node is in the world. A node outside the scene tree has no global transform to ask, so
 ## its own position stands in - which is what a headless test, and a member not yet added, has.
-## @ace_hidden
 func _place_of(node: Node3D) -> Vector3:
 	return node.global_position if node.is_inside_tree() else node.position
 
+# @ace_hidden
 ## Turns the host to look along its flight, keeping its scale. Flying straight up or down has no
 ## single "level" way to face, so the host keeps the facing it had until it turns again.
-## @ace_hidden
 func _face_along(direction: Vector3) -> void:
 	var forward: Vector3 = direction.normalized()
 	if absf(forward.dot(Vector3.UP)) > 0.999:
 		return
 	host.basis = Basis.looking_at(forward, Vector3.UP) * Basis.from_scale(host.scale)
 
+# @ace_hidden
 ## The velocity after one step of the three rules and the avoid group: separation from the
 ## neighbours that are too close, alignment with the way the neighbours fly, cohesion toward their
 ## middle, and a flight from anything in the avoid group nearby. Clamped between the two speeds.
-## @ace_hidden
 func _next_velocity(delta: float) -> Vector3:
 	var here: Vector3 = _place_of(host)
 	var apart: Vector3 = Vector3.ZERO

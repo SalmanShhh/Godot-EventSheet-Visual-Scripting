@@ -1,14 +1,14 @@
-## @ace_tags(time, day-night, cycle)
-## @ace_category("Phase Cycle")
-## @ace_version(1.0.0)
+# @ace_tags(time, day-night, cycle)
+# @ace_category("Phase Cycle")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/phase_cycle/icon.svg")
 class_name PhaseCycleAddon
 extends Node
 ## A named cycle the whole game shares - day/night, seasons, waves, shop-then-fight. Give Cycle Phases a comma-separated list and a length in seconds; it ticks itself, rolls to the next name when the time is up, and fires On Phase Changed with the phase you left and the phase you entered. Phase Is branches on the current one and Phase Progress (0-1) drives sun dials and fades.
 
-## @ace_trigger
-## @ace_name("On Phase Changed")
-## @ace_category("Phase Cycle")
+# @ace_trigger
+# @ace_name("On Phase Changed")
+# @ace_category("Phase Cycle")
 signal on_phase_changed(previous: String, next: String)
 
 # The parsed phase names, which one is current, how long each lasts, and how far into the
@@ -30,14 +30,12 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	advance(delta)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Cycle Phases")
-## @ace_category("Phase Cycle")
-## @ace_description("Starts (or restarts) the cycle from a comma-separated list of phase names - "day,night" or "spring,summer,autumn,winter" - with each phase lasting seconds_each. Begins on the first name and fires On Phase Changed for it right away, so the systems listening set themselves up correctly on the first frame.")
-## @ace_display_template("Cycle phases [b]{phases}[/b], [b]{seconds_each}[/b] s each")
-## @ace_icon("res://eventsheet_addons/phase_cycle/icon.svg")
-## @ace_codegen_template("Phases.cycle_phases({phases}, {seconds_each})")
+# @ace_action
+# @ace_featured
+# @ace_name("Cycle Phases")
+# @ace_description("Starts (or restarts) the cycle from a comma-separated list of phase names - "day,night" or "spring,summer,autumn,winter" - with each phase lasting seconds_each. Begins on the first name and fires On Phase Changed for it right away, so the systems listening set themselves up correctly on the first frame.")
+# @ace_display_template("Cycle phases [b]{phases}[/b], [b]{seconds_each}[/b] s each")
+# @ace_codegen_template("Phases.cycle_phases({phases}, {seconds_each})")
 func cycle_phases(phases: String, seconds_each: float) -> void:
 	_phases = PackedStringArray()
 	for part: String in phases.split(",", false):
@@ -54,55 +52,45 @@ func cycle_phases(phases: String, seconds_each: float) -> void:
 	if _running:
 		on_phase_changed.emit("", _phases[0])
 
-## @ace_action
-## @ace_name("Stop Cycle")
-## @ace_category("Phase Cycle")
-## @ace_description("Freezes the cycle where it stands. The current phase and its progress keep their values (Phase Is and Phase Progress still read them) - only the clock stops. Call Cycle Phases again to start over.")
-## @ace_icon("res://eventsheet_addons/phase_cycle/icon.svg")
-## @ace_codegen_template("Phases.stop_cycle()")
+# @ace_action
+# @ace_name("Stop Cycle")
+# @ace_description("Freezes the cycle where it stands. The current phase and its progress keep their values (Phase Is and Phase Progress still read them) - only the clock stops. Call Cycle Phases again to start over.")
+# @ace_codegen_template("Phases.stop_cycle()")
 func stop_cycle() -> void:
 	_running = false
 	# A frozen cycle costs nothing per frame; Cycle Phases turns the clock back on.
 	set_process(false)
 
-## @ace_condition
-## @ace_name("Phase Is")
-## @ace_category("Phase Cycle")
-## @ace_description("True while the cycle is on the named phase - the branch for "only spawn ghosts at night". Names are matched exactly, so keep the spelling identical to the list you passed Cycle Phases.")
-## @ace_icon("res://eventsheet_addons/phase_cycle/icon.svg")
-## @ace_codegen_template("Phases.phase_is({phase_name})")
+# @ace_condition
+# @ace_name("Phase Is")
+# @ace_description("True while the cycle is on the named phase - the branch for "only spawn ghosts at night". Names are matched exactly, so keep the spelling identical to the list you passed Cycle Phases.")
+# @ace_codegen_template("Phases.phase_is({phase_name})")
 func phase_is(phase_name: String) -> bool:
 	return not _phases.is_empty() and _phases[_index] == phase_name
 
-## @ace_expression
-## @ace_featured
-## @ace_name("Current Phase")
-## @ace_category("Phase Cycle")
-## @ace_description("The name of the phase the cycle is on right now (nothing at all before Cycle Phases runs) - print it straight into a HUD label.")
-## @ace_icon("res://eventsheet_addons/phase_cycle/icon.svg")
-## @ace_codegen_template("Phases.current_phase()")
+# @ace_expression
+# @ace_featured
+# @ace_name("Current Phase")
+# @ace_description("The name of the phase the cycle is on right now (nothing at all before Cycle Phases runs) - print it straight into a HUD label.")
+# @ace_codegen_template("Phases.current_phase()")
 func current_phase() -> String:
 	return _phases[_index] if not _phases.is_empty() else ""
 
-## @ace_expression
-## @ace_name("Phase Progress")
-## @ace_category("Phase Cycle")
-## @ace_description("How far through the current phase the cycle is, from 0 at its start to 1 at its end. Feed it to a sun dial's rotation, a light's colour blend, or a Progress Of style bar.")
-## @ace_icon("res://eventsheet_addons/phase_cycle/icon.svg")
-## @ace_codegen_template("Phases.phase_progress()")
+# @ace_expression
+# @ace_name("Phase Progress")
+# @ace_description("How far through the current phase the cycle is, from 0 at its start to 1 at its end. Feed it to a sun dial's rotation, a light's colour blend, or a Progress Of style bar.")
+# @ace_codegen_template("Phases.phase_progress()")
 func phase_progress() -> float:
 	return clampf(_elapsed / _seconds_per, 0.0, 1.0) if _seconds_per > 0.0 else 0.0
 
-## @ace_expression
-## @ace_name("Phases Count")
-## @ace_category("Phase Cycle")
-## @ace_description("How many phases the cycle holds - useful for a "day 3 of 4" readout or for stepping a dial in even slices.")
-## @ace_icon("res://eventsheet_addons/phase_cycle/icon.svg")
-## @ace_codegen_template("Phases.phases_count()")
+# @ace_expression
+# @ace_name("Phases Count")
+# @ace_description("How many phases the cycle holds - useful for a "day 3 of 4" readout or for stepping a dial in even slices.")
+# @ace_codegen_template("Phases.phases_count()")
 func phases_count() -> int:
 	return _phases.size()
 
-## @ace_hidden
+# @ace_hidden
 func advance(delta: float) -> void:
 	# The clock. A while loop (not an if) so one huge delta - a stall, a loading hitch, a sped-up
 	# clock - rolls through every phase it crossed and fires On Phase Changed for each of them.
@@ -115,7 +103,7 @@ func advance(delta: float) -> void:
 		_index = (_index + 1) % _phases.size()
 		on_phase_changed.emit(previous, _phases[_index])
 
-## @ace_hidden
+# @ace_hidden
 func save_state() -> Dictionary:
 	# Save-state seam: the Save System walks any node in its persist group (or targeted
 	# by Save/Load Node State) and duck-types these two methods. Plain data only.
@@ -128,7 +116,7 @@ func save_state() -> Dictionary:
 		"running": _running
 	}
 
-## @ace_hidden
+# @ace_hidden
 func load_state(state: Dictionary) -> void:
 	if state.is_empty():
 		return

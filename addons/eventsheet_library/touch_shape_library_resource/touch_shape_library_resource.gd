@@ -1,4 +1,4 @@
-## @ace_version(1.0.0)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/touch_shape_library_resource/icon.svg")
 class_name TouchShapeLibraryResource
 extends Resource

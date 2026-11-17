@@ -1,6 +1,6 @@
-## @ace_tags(mods, resource, files)
-## @ace_category("Mods")
-## @ace_version(1.0.0)
+# @ace_tags(mods, resource, files)
+# @ace_category("Mods")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/mod_manifest_resource/icon.svg")
 class_name ModManifest
 extends Resource

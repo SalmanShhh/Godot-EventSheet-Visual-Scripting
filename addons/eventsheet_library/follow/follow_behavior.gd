@@ -1,6 +1,6 @@
-## @ace_category("Follow")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Follow")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/follow/icon.svg")
 class_name FollowBehavior
 extends Node
@@ -8,7 +8,7 @@ extends Node
 ##
 ## Changes on its parent: position.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 
@@ -20,11 +20,11 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Follow Behavior needs a Node2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Reached Target")
+# @ace_trigger
+# @ace_name("On Reached Target")
 signal reached_target
-## @ace_trigger
-## @ace_name("On Path Blocked")
+# @ace_trigger
+# @ace_name("On Path Blocked")
 signal path_blocked
 
 ## Node path (relative to the host) of the node to follow; empty means idle.
@@ -98,12 +98,10 @@ func _process(delta: float) -> void:
 	_reached = false
 	host.position = step_toward(host.position, host.position.lerp(target_2d.position, clampf(follow_speed * delta, 0.0, 1.0)))
 
-## @ace_action
-## @ace_name("Start Following")
-## @ace_category("Follow")
-## @ace_description("Follows the node at the given path.")
-## @ace_icon("res://eventsheet_addons/follow/icon.svg")
-## @ace_codegen_template("$FollowBehavior.start_following({path})")
+# @ace_action
+# @ace_name("Start Following")
+# @ace_description("Follows the node at the given path.")
+# @ace_codegen_template("$FollowBehavior.start_following({path})")
 func start_following(path: String) -> void:
 	target_path = path
 	target_group = ""
@@ -113,12 +111,10 @@ func start_following(path: String) -> void:
 	# delayed mode replays is gathered by that same tick.
 	set_process(true)
 
-## @ace_action
-## @ace_name("Follow Group")
-## @ace_category("Follow")
-## @ace_description("Follows the first node in a group - no tree path, so it survives the target being moved or renamed.")
-## @ace_icon("res://eventsheet_addons/follow/icon.svg")
-## @ace_codegen_template("$FollowBehavior.follow_group({group})")
+# @ace_action
+# @ace_name("Follow Group")
+# @ace_description("Follows the first node in a group - no tree path, so it survives the target being moved or renamed.")
+# @ace_codegen_template("$FollowBehavior.follow_group({group})")
 func follow_group(group: String) -> void:
 	target_group = group
 	target_path = ""
@@ -128,12 +124,10 @@ func follow_group(group: String) -> void:
 	# delayed mode replays is gathered by that same tick.
 	set_process(true)
 
-## @ace_action
-## @ace_name("Stop Following")
-## @ace_category("Follow")
-## @ace_description("Stops trailing the target.")
-## @ace_icon("res://eventsheet_addons/follow/icon.svg")
-## @ace_codegen_template("$FollowBehavior.stop_following()")
+# @ace_action
+# @ace_name("Stop Following")
+# @ace_description("Stops trailing the target.")
+# @ace_codegen_template("$FollowBehavior.stop_following()")
 func stop_following() -> void:
 	following = false
 	# Nothing is being trailed any more, so the frame that watched the target is wasted work -

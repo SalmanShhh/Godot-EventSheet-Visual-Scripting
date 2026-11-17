@@ -1,6 +1,6 @@
-## @ace_tags(quest, objective, resource)
-## @ace_category("Quest")
-## @ace_version(1.0.0)
+# @ace_tags(quest, objective, resource)
+# @ace_category("Quest")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/quest_resource/icon.svg")
 class_name QuestResource
 extends Resource

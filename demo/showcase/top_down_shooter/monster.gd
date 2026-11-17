@@ -1,4 +1,4 @@
-## @ace_family(ShooterMonster)
+# @ace_family(ShooterMonster)
 class_name ShooterMonster
 extends Area2D
 ## A monster that walks toward the player. A family, so the main sheet can pick every one at once.

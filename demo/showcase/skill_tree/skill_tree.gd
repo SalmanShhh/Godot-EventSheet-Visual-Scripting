@@ -25,7 +25,7 @@ func _process(_delta: float) -> void:
 	$HudKit.set_text("PointsValue", "Skill points left: %d" % upgrades.skill_points_left())
 	$HudKit.set_text("SpeedValue", "Speed: %0.0f" % $Runner/Stats.stat_total("speed"))
 
-## @ace_hidden
+# @ace_hidden
 func lay_out() -> void:
 	for index: int in range(upgrades.skill_count()):
 		var id: String = upgrades.skill_id_at(index)
@@ -41,7 +41,7 @@ func lay_out() -> void:
 	refresh_states()
 	queue_redraw()
 
-## @ace_hidden
+# @ace_hidden
 func refresh_states() -> void:
 	for id: String in buttons:
 		var button: Button = buttons[id]
@@ -54,17 +54,17 @@ func refresh_states() -> void:
 			button.modulate = locked_tint
 		button.disabled = not takeable
 
-## @ace_hidden
+# @ace_hidden
 func unlock_pressed() -> void:
 	upgrades.unlock_skill($HudKit.last_button_name_value())
 	refresh_states()
 
-## @ace_hidden
+# @ace_hidden
 func show_grants(id: String) -> void:
 	var grants: String = upgrades.skill_grants_text(id)
 	$HudKit.set_text("GrantsValue", grants if not grants.is_empty() else "a perk the runner asks about")
 
-## @ace_hidden
+# @ace_hidden
 func _draw() -> void:
 	for id: String in buttons:
 		var button: Button = buttons[id]

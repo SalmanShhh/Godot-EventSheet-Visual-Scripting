@@ -1,7 +1,7 @@
-## @ace_tags(movement, platformer)
-## @ace_category("Platformer")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_tags(movement, platformer)
+# @ace_category("Platformer")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/platformer_movement/icon.svg")
 class_name PlatformerMovement
 extends Node
@@ -9,7 +9,7 @@ extends Node
 ##
 ## Changes on its parent: up_direction, velocity, move_and_slide().
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CharacterBody2D = null
 
@@ -21,17 +21,17 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Platformer Movement needs a CharacterBody2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Jumped")
+# @ace_trigger
+# @ace_name("On Jumped")
 signal jumped
-## @ace_trigger
-## @ace_name("On Landed")
+# @ace_trigger
+# @ace_name("On Landed")
 signal landed
-## @ace_trigger
-## @ace_name("On Double Jumped")
+# @ace_trigger
+# @ace_name("On Double Jumped")
 signal double_jumped
-## @ace_trigger
-## @ace_name("On Wall Jumped")
+# @ace_trigger
+# @ace_name("On Wall Jumped")
 signal wall_jumped
 
 ## Seconds since the host left the ground.
@@ -132,13 +132,11 @@ func _physics_process(delta: float) -> void:
 		jump()
 	host.move_and_slide()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Jump")
-## @ace_category("Platformer")
-## @ace_description("Jumps: from the floor or within coyote time, off a wall (if enabled), or a mid-air (double) jump if any remain. If none are available right now, the press is buffered.")
-## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
-## @ace_codegen_template("$PlatformerMovement.jump()")
+# @ace_action
+# @ace_featured
+# @ace_name("Jump")
+# @ace_description("Jumps: from the floor or within coyote time, off a wall (if enabled), or a mid-air (double) jump if any remain. If none are available right now, the press is buffered.")
+# @ace_codegen_template("$PlatformerMovement.jump()")
 func jump() -> void:
 	if host == null:
 		return
@@ -158,107 +156,90 @@ func jump() -> void:
 	else:
 		_buffer_timer = jump_buffer_time
 
-## @ace_action
-## @ace_name("Jump Released")
-## @ace_category("Platformer")
-## @ace_description("Call when the jump button is released - cuts the rise short for variable jump height (hold = higher).")
-## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
-## @ace_codegen_template("$PlatformerMovement.jump_released()")
+# @ace_action
+# @ace_name("Jump Released")
+# @ace_description("Call when the jump button is released - cuts the rise short for variable jump height (hold = higher).")
+# @ace_codegen_template("$PlatformerMovement.jump_released()")
 func jump_released() -> void:
 	if host != null and variable_jump_height:
 		var rise := host.velocity.dot(_gravity_down())
 		if rise < 0.0:
 			_set_down_velocity(rise * jump_cut_factor)
 
-## @ace_action
-## @ace_name("Set Gravity Angle")
-## @ace_category("Platformer")
-## @ace_description("Points gravity in a new direction, in degrees (90 = down, 270 = up, 0 = right) - the whole movement frame rotates with it: floor detection, running, and jumps follow. Flip a level upside down or run on walls with one action.")
-## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
-## @ace_codegen_template("$PlatformerMovement.set_gravity_angle({angle})")
+# @ace_action
+# @ace_name("Set Gravity Angle")
+# @ace_description("Points gravity in a new direction, in degrees (90 = down, 270 = up, 0 = right) - the whole movement frame rotates with it: floor detection, running, and jumps follow. Flip a level upside down or run on walls with one action.")
+# @ace_codegen_template("$PlatformerMovement.set_gravity_angle({angle})")
 func set_gravity_angle(angle: float) -> void:
 	gravity_angle = wrapf(angle, 0.0, 360.0)
 
-## @ace_action
-## @ace_name("Set Move Speed")
-## @ace_category("Platformer")
-## @ace_description("Changes the horizontal move speed.")
-## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
-## @ace_codegen_template("$PlatformerMovement.set_move_speed({speed})")
+# @ace_action
+# @ace_name("Set Move Speed")
+# @ace_description("Changes the horizontal move speed.")
+# @ace_codegen_template("$PlatformerMovement.set_move_speed({speed})")
 func set_move_speed(speed: float) -> void:
 	move_speed = speed
 
-## @ace_action
-## @ace_name("Reset Jumps")
-## @ace_category("Platformer")
-## @ace_description("Refills the air-jump count (e.g. after grabbing a power-up).")
-## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
-## @ace_codegen_template("$PlatformerMovement.reset_jumps()")
+# @ace_action
+# @ace_name("Reset Jumps")
+# @ace_description("Refills the air-jump count (e.g. after grabbing a power-up).")
+# @ace_codegen_template("$PlatformerMovement.reset_jumps()")
 func reset_jumps() -> void:
 	_jumps_left = maxi(max_jumps - 1, 0)
 
-## @ace_condition
-## @ace_name("Is Moving")
-## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
-## @ace_codegen_template("$PlatformerMovement.is_moving()")
+# @ace_condition
+# @ace_name("Is Moving")
+# @ace_codegen_template("$PlatformerMovement.is_moving()")
 func is_moving() -> bool:
 	return host != null and absf(host.velocity.dot(_gravity_right())) > 1.0
 
-## @ace_condition
-## @ace_name("Is Jumping")
-## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
-## @ace_codegen_template("$PlatformerMovement.is_jumping()")
+# @ace_condition
+# @ace_name("Is Jumping")
+# @ace_codegen_template("$PlatformerMovement.is_jumping()")
 func is_jumping() -> bool:
 	return host != null and not host.is_on_floor() and host.velocity.dot(_gravity_down()) < 0.0
 
-## @ace_condition
-## @ace_name("Is Falling")
-## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
-## @ace_codegen_template("$PlatformerMovement.is_falling()")
+# @ace_condition
+# @ace_name("Is Falling")
+# @ace_codegen_template("$PlatformerMovement.is_falling()")
 func is_falling() -> bool:
 	return host != null and not host.is_on_floor() and host.velocity.dot(_gravity_down()) > 0.0
 
-## @ace_expression
-## @ace_name("Gravity Angle")
-## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
-## @ace_codegen_template("$PlatformerMovement.get_gravity_angle()")
+# @ace_expression
+# @ace_name("Gravity Angle")
+# @ace_codegen_template("$PlatformerMovement.get_gravity_angle()")
 func get_gravity_angle() -> float:
 	return gravity_angle
 
-## @ace_condition
-## @ace_name("Is Wall Sliding")
-## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
-## @ace_codegen_template("$PlatformerMovement.is_wall_sliding()")
+# @ace_condition
+# @ace_name("Is Wall Sliding")
+# @ace_codegen_template("$PlatformerMovement.is_wall_sliding()")
 func is_wall_sliding() -> bool:
 	return _wall_sliding
 
-## @ace_condition
-## @ace_name("Can Jump")
-## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
-## @ace_codegen_template("$PlatformerMovement.can_jump()")
+# @ace_condition
+# @ace_name("Can Jump")
+# @ace_codegen_template("$PlatformerMovement.can_jump()")
 func can_jump() -> bool:
 	if host == null:
 		return false
 	return host.is_on_floor() or _coyote_timer > 0.0 or _jumps_left > 0 or (enable_wall_jump and host.is_on_wall())
 
-## @ace_expression
-## @ace_name("Jumps Remaining")
-## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
-## @ace_codegen_template("$PlatformerMovement.jumps_remaining()")
+# @ace_expression
+# @ace_name("Jumps Remaining")
+# @ace_codegen_template("$PlatformerMovement.jumps_remaining()")
 func jumps_remaining() -> int:
 	return _jumps_left
 
-## @ace_expression
-## @ace_name("Air Time")
-## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
-## @ace_codegen_template("$PlatformerMovement.air_time()")
+# @ace_expression
+# @ace_name("Air Time")
+# @ace_codegen_template("$PlatformerMovement.air_time()")
 func air_time() -> float:
 	return _air_time
 
-## @ace_expression
-## @ace_name("Facing Direction")
-## @ace_icon("res://eventsheet_addons/platformer_movement/icon.svg")
-## @ace_codegen_template("$PlatformerMovement.facing_direction()")
+# @ace_expression
+# @ace_name("Facing Direction")
+# @ace_codegen_template("$PlatformerMovement.facing_direction()")
 func facing_direction() -> int:
 	return _facing
 

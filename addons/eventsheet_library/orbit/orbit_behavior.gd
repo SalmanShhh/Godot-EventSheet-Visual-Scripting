@@ -1,6 +1,6 @@
-## @ace_category("Orbit")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Orbit")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @tool
 @icon("res://eventsheet_addons/orbit/icon.svg")
 class_name OrbitBehavior
@@ -9,7 +9,7 @@ extends Node
 ##
 ## Changes on its parent: position, rotation.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 
@@ -22,12 +22,12 @@ func _enter_tree() -> void:
 		push_warning("Orbit Behavior needs a Node2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Preview", "Play") var _preview_start_button: Callable = _preview_start
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
 
@@ -274,32 +274,26 @@ func _ready() -> void:
 	if host is RigidBody2D:
 		push_warning("Orbit on %s: this behaviour moves a RigidBody2D by changing its position, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the Sprite2D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 
-## @ace_action
-## @ace_name("Set Orbit Center")
-## @ace_category("Orbit")
-## @ace_description("Orbits around the given point from now on.")
-## @ace_icon("res://eventsheet_addons/orbit/icon.svg")
-## @ace_codegen_template("$OrbitBehavior.set_orbit_center({x}, {y})")
+# @ace_action
+# @ace_name("Set Orbit Center")
+# @ace_description("Orbits around the given point from now on.")
+# @ace_codegen_template("$OrbitBehavior.set_orbit_center({x}, {y})")
 func set_orbit_center(x: float, y: float) -> void:
 	center_x = x
 	center_y = y
 	center_captured = true
 
-## @ace_action
-## @ace_name("Set Orbit Speed")
-## @ace_category("Orbit")
-## @ace_description("Degrees per second (negative reverses).")
-## @ace_icon("res://eventsheet_addons/orbit/icon.svg")
-## @ace_codegen_template("$OrbitBehavior.set_orbit_speed({degrees_per_second})")
+# @ace_action
+# @ace_name("Set Orbit Speed")
+# @ace_description("Degrees per second (negative reverses).")
+# @ace_codegen_template("$OrbitBehavior.set_orbit_speed({degrees_per_second})")
 func set_orbit_speed(degrees_per_second: float) -> void:
 	speed_degrees = degrees_per_second
 
-## @ace_action
-## @ace_name("Set Orbit Radii")
-## @ace_category("Orbit")
-## @ace_description("Primary/secondary radii (secondary 0 = circle).")
-## @ace_icon("res://eventsheet_addons/orbit/icon.svg")
-## @ace_codegen_template("$OrbitBehavior.set_orbit_radii({primary}, {secondary})")
+# @ace_action
+# @ace_name("Set Orbit Radii")
+# @ace_description("Primary/secondary radii (secondary 0 = circle).")
+# @ace_codegen_template("$OrbitBehavior.set_orbit_radii({primary}, {secondary})")
 func set_orbit_radii(primary: float, secondary: float) -> void:
 	primary_radius = primary
 	secondary_radius = secondary

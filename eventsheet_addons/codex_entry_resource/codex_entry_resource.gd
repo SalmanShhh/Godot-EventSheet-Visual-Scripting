@@ -1,6 +1,6 @@
-## @ace_tags(codex, collection, resource)
-## @ace_category("Codex")
-## @ace_version(1.0.0)
+# @ace_tags(codex, collection, resource)
+# @ace_category("Codex")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/codex_entry_resource/icon.svg")
 class_name CodexEntryResource
 extends Resource

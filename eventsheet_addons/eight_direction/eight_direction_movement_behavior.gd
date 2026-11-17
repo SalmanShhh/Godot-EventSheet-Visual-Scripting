@@ -1,6 +1,6 @@
-## @ace_category("Eight Direction")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Eight Direction")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/eight_direction/icon.svg")
 class_name EightDirectionMovement
 extends Node
@@ -8,7 +8,7 @@ extends Node
 ##
 ## Changes on its parent: velocity, move_and_slide().
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CharacterBody2D = null
 
@@ -35,12 +35,10 @@ func _physics_process(_delta: float) -> void:
 		host.velocity = input_vector * move_speed
 		host.move_and_slide()
 
-## @ace_action
-## @ace_name("Set Move Speed")
-## @ace_category("Eight Direction")
-## @ace_description("Changes the movement speed.")
-## @ace_icon("res://eventsheet_addons/eight_direction/icon.svg")
-## @ace_codegen_template("$EightDirectionMovement.set_move_speed({speed})")
+# @ace_action
+# @ace_name("Set Move Speed")
+# @ace_description("Changes the movement speed.")
+# @ace_codegen_template("$EightDirectionMovement.set_move_speed({speed})")
 func set_move_speed(speed: float) -> void:
 	move_speed = speed
 

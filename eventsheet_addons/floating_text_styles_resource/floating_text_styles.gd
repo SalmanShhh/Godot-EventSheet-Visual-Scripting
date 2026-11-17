@@ -1,6 +1,6 @@
-## @ace_tags(text, damage, hud, resource)
-## @ace_category("UI")
-## @ace_version(1.0.0)
+# @ace_tags(text, damage, hud, resource)
+# @ace_category("UI")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/floating_text_styles_resource/icon.svg")
 class_name FloatingTextStyles
 extends Resource

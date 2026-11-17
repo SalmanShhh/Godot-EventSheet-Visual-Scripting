@@ -1,13 +1,13 @@
-## @ace_tags(movement, visual)
-## @ace_category("Rotate")
-## @ace_version(1.0.0)
+# @ace_tags(movement, visual)
+# @ace_category("Rotate")
+# @ace_version(1.0.0)
 @tool
 @icon("res://eventsheet_addons/rotate/icon.svg")
 class_name RotateBehavior
 extends Node
 ## Constant rotation for the host node: spins at Speed in degrees per second, optionally ramping by Acceleration, with one Rotation Type knob covering a 2D node's rotation and a 3D node's X, Y, or Z axis. Previewable in the editor with the Preview button in the Inspector, no game run needed.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 
@@ -20,12 +20,12 @@ func _enter_tree() -> void:
 		push_warning("Rotate Behavior needs a parent node: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Preview", "Play") var _preview_start_button: Callable = _preview_start
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
 
@@ -290,63 +290,56 @@ func _physics_process(delta: float) -> void:
 			ROTATION_TYPE_Z:
 				(host as Node3D).rotation.z += step
 
-## @ace_condition
-## @ace_name("Is Rotating")
-## @ace_icon("res://eventsheet_addons/rotate/icon.svg")
-## @ace_codegen_template("$RotateBehavior.is_rotating()")
+# @ace_condition
+# @ace_name("Is Rotating")
+# @ace_codegen_template("$RotateBehavior.is_rotating()")
 func is_rotating() -> bool:
 	return rotate_enabled and absf(_current_speed if _speed_primed else speed) > 0.001
 
-## @ace_expression
-## @ace_name("Rotation Speed")
-## @ace_icon("res://eventsheet_addons/rotate/icon.svg")
-## @ace_codegen_template("$RotateBehavior.rotation_speed()")
+# @ace_expression
+# @ace_name("Rotation Speed")
+# @ace_codegen_template("$RotateBehavior.rotation_speed()")
 func rotation_speed() -> float:
 	return _current_speed if _speed_primed else speed
 
+# @ace_action
+# @ace_name("Set Rotation Enabled")
+# @ace_codegen_template("$RotateBehavior.set_rotation_enabled({enabled})")
 ## Turns the spin on or off - the pause/resume toggle.
-## @ace_action
-## @ace_name("Set Rotation Enabled")
-## @ace_icon("res://eventsheet_addons/rotate/icon.svg")
-## @ace_codegen_template("$RotateBehavior.set_rotation_enabled({enabled})")
 func set_rotation_enabled(enabled: bool) -> void:
 	rotate_enabled = enabled
 	# A stopped spin costs nothing per physics frame; turning it back on restores the tick.
 	set_physics_process(enabled)
 
+# @ace_action
+# @ace_name("Set Rotation Speed")
+# @ace_codegen_template("$RotateBehavior.set_rotation_speed({degrees_per_second})")
 ## Sets the live rotation speed in degrees per second (negative = the other way).
-## @ace_action
-## @ace_name("Set Rotation Speed")
-## @ace_icon("res://eventsheet_addons/rotate/icon.svg")
-## @ace_codegen_template("$RotateBehavior.set_rotation_speed({degrees_per_second})")
 func set_rotation_speed(degrees_per_second: float) -> void:
 	speed = degrees_per_second
 	_current_speed = degrees_per_second
 	_speed_primed = true
 
+# @ace_action
+# @ace_name("Set Rotation Acceleration")
+# @ace_codegen_template("$RotateBehavior.set_rotation_acceleration({degrees_per_second_squared})")
 ## Sets the acceleration in degrees per second, per second (0 = constant).
-## @ace_action
-## @ace_name("Set Rotation Acceleration")
-## @ace_icon("res://eventsheet_addons/rotate/icon.svg")
-## @ace_codegen_template("$RotateBehavior.set_rotation_acceleration({degrees_per_second_squared})")
 func set_rotation_acceleration(degrees_per_second_squared: float) -> void:
 	acceleration = degrees_per_second_squared
 
+# @ace_action
+# @ace_name("Set Rotation Type")
+# @ace_param_options(type 2d=2D rotation, x=3D X axis, y=3D Y axis, z=3D Z axis)
+# @ace_codegen_template("$RotateBehavior.set_rotation_type("{type}")")
 ## Switches what spins: a Node2D's rotation, or a Node3D's X / Y / Z axis.
-## @ace_action
-## @ace_name("Set Rotation Type")
-## @ace_param_options(type 2d=2D rotation, x=3D X axis, y=3D Y axis, z=3D Z axis)
-## @ace_icon("res://eventsheet_addons/rotate/icon.svg")
-## @ace_codegen_template("$RotateBehavior.set_rotation_type("{type}")")
 func set_rotation_type(type: String) -> void:
 	if type in [ROTATION_TYPE_2D, ROTATION_TYPE_X, ROTATION_TYPE_Y, ROTATION_TYPE_Z]:
 		rotation_type = type
 
+# @ace_action
+# @ace_name("Reverse Rotation")
+# @ace_codegen_template("$RotateBehavior.reverse_rotation()")
 ## Flips the spin direction (negates the live speed).
-## @ace_action
-## @ace_name("Reverse Rotation")
-## @ace_icon("res://eventsheet_addons/rotate/icon.svg")
-## @ace_codegen_template("$RotateBehavior.reverse_rotation()")
 func reverse_rotation() -> void:
 	if not _speed_primed:
 		_current_speed = speed

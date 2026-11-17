@@ -1,13 +1,13 @@
-## @ace_tags(files, tools)
-## @ace_category("Folder Watcher")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_tags(files, tools)
+# @ace_category("Folder Watcher")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/folder_watcher/icon.svg")
 class_name FolderWatcher
 extends Node
 ## Watches one folder and raises On A File Appeared / Changed / Removed. Godot has no runtime file watcher, so this POLLS: it reads the folder every few seconds and compares what it finds with what it found last time, by name and by modified time. Watch Folder starts it, Stop Watching parks it, and a stopped watcher costs nothing per frame.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 
@@ -19,10 +19,12 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Folder Watcher needs a parent node: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
+# @ace_trigger
+# @ace_name("On A File Appeared")
 ## Raised on the first look that finds a file the look before did not.
-## @ace_trigger
-## @ace_name("On A File Appeared")
 signal file_appeared(path: String)
+# @ace_trigger
+# @ace_name("On A File Changed")
 ## Raised when a file that was already there has a DIFFERENT modified time from the one it had
 ## at the last look. Usually that means newer; a file restored from a backup or copied back
 ## over is older and is still a change. A program that writes a file in several goes can raise
@@ -33,13 +35,11 @@ signal file_appeared(path: String)
 ## put back by a restore tool, is different content under an unchanged stamp. Asking the size
 ## as well would mean opening every watched file on every look, which is a cost this row does
 ## not pay behind your back - so what it can and cannot see is said instead.
-## @ace_trigger
-## @ace_name("On A File Changed")
 signal file_changed(path: String)
+# @ace_trigger
+# @ace_name("On A File Removed")
 ## Raised on the first look that no longer finds a file the look before did. The path names
 ## what went; there is nothing left at it to read.
-## @ace_trigger
-## @ace_name("On A File Removed")
 signal file_removed(path: String)
 
 ## Folder to watch; prefer user:// since res:// cannot be written once exported.
@@ -81,16 +81,14 @@ func _process(delta: float) -> void:
 	_since_last_look = minf(_since_last_look - interval, interval)
 	_look()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Watch Folder")
-## @ace_category("Folder Watcher")
-## @ace_description("Starts watching a folder, looking every so many seconds. This is a POLL: the folder is read on that interval and compared with the reading before it, because Godot raises no file-change notification of its own at run time. The first look is the baseline and raises nothing - a folder that already holds files is not a folder where things just happened. A tenth of a second is the shortest gap honoured, so a zero or a negative number is a look every tenth of a second rather than a look every frame.")
-## @ace_display_template("Watch folder [b]{folder}[/b] every [b]{every_seconds}[/b] s")
-## @ace_param(folder, desc: "The folder to watch. Its files are read on the interval below; the folders inside it are not walked, and a folder that is not there yet raises nothing until it appears. Prefer user:// - res:// is the game's own files and is a packed archive once the game is exported.")
-## @ace_param(every_seconds, desc: "Seconds between looks. Every look is one directory read plus one modified-time question per file, so a second or two is generous for a mods folder and far too often for one holding thousands of files. A TENTH OF A SECOND IS THE FLOOR: a zero or a negative number is honoured as 0.1, because a look every frame is not what anybody means by an interval.")
-## @ace_icon("res://eventsheet_addons/folder_watcher/icon.svg")
-## @ace_codegen_template("$FolderWatcher.watch_folder({folder}, {every_seconds})")
+# @ace_action
+# @ace_featured
+# @ace_name("Watch Folder")
+# @ace_description("Starts watching a folder, looking every so many seconds. This is a POLL: the folder is read on that interval and compared with the reading before it, because Godot raises no file-change notification of its own at run time. The first look is the baseline and raises nothing - a folder that already holds files is not a folder where things just happened. A tenth of a second is the shortest gap honoured, so a zero or a negative number is a look every tenth of a second rather than a look every frame.")
+# @ace_display_template("Watch folder [b]{folder}[/b] every [b]{every_seconds}[/b] s")
+# @ace_param(folder, desc: "The folder to watch. Its files are read on the interval below; the folders inside it are not walked, and a folder that is not there yet raises nothing until it appears. Prefer user:// - res:// is the game's own files and is a packed archive once the game is exported.")
+# @ace_param(every_seconds, desc: "Seconds between looks. Every look is one directory read plus one modified-time question per file, so a second or two is generous for a mods folder and far too often for one holding thousands of files. A TENTH OF A SECOND IS THE FLOOR: a zero or a negative number is honoured as 0.1, because a look every frame is not what anybody means by an interval.")
+# @ace_codegen_template("$FolderWatcher.watch_folder({folder}, {every_seconds})")
 func watch_folder(folder: String, every_seconds: float) -> void:
 	watched_folder = folder
 	look_every_seconds = every_seconds
@@ -101,59 +99,49 @@ func watch_folder(folder: String, every_seconds: float) -> void:
 	# Looking costs a frame's attention only while a watch is running.
 	set_process(true)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Stop Watching")
-## @ace_category("Folder Watcher")
-## @ace_description("Stops looking. The per-frame tick is parked, so a stopped watcher is a node the engine no longer visits at all, and nothing is read from disk until it is started again.")
-## @ace_display_template("[b]Stop[/b] watching the folder")
-## @ace_icon("res://eventsheet_addons/folder_watcher/icon.svg")
-## @ace_codegen_template("$FolderWatcher.stop_watching()")
+# @ace_action
+# @ace_featured
+# @ace_name("Stop Watching")
+# @ace_description("Stops looking. The per-frame tick is parked, so a stopped watcher is a node the engine no longer visits at all, and nothing is read from disk until it is started again.")
+# @ace_display_template("[b]Stop[/b] watching the folder")
+# @ace_codegen_template("$FolderWatcher.stop_watching()")
 func stop_watching() -> void:
 	_watching = false
 	set_process(false)
 
-## @ace_action
-## @ace_name("Look Now")
-## @ace_category("Folder Watcher")
-## @ace_description("Takes one look immediately, without waiting for the interval, and raises whatever the difference means. Use it after your own game has written into the folder, when waiting a second or two for the next look would just be a pause nobody asked for.")
-## @ace_display_template("[b]Look[/b] at the folder now")
-## @ace_icon("res://eventsheet_addons/folder_watcher/icon.svg")
-## @ace_codegen_template("$FolderWatcher.look_now()")
+# @ace_action
+# @ace_name("Look Now")
+# @ace_description("Takes one look immediately, without waiting for the interval, and raises whatever the difference means. Use it after your own game has written into the folder, when waiting a second or two for the next look would just be a pause nobody asked for.")
+# @ace_display_template("[b]Look[/b] at the folder now")
+# @ace_codegen_template("$FolderWatcher.look_now()")
 func look_now() -> void:
 	_since_last_look = 0.0
 	_look()
 
-## @ace_condition
-## @ace_name("Is Watching")
-## @ace_category("Folder Watcher")
-## @ace_description("True while a watch is running - that is, between Watch Folder and Stop Watching.")
-## @ace_icon("res://eventsheet_addons/folder_watcher/icon.svg")
-## @ace_codegen_template("$FolderWatcher.is_watching()")
+# @ace_condition
+# @ace_name("Is Watching")
+# @ace_description("True while a watch is running - that is, between Watch Folder and Stop Watching.")
+# @ace_codegen_template("$FolderWatcher.is_watching()")
 func is_watching() -> bool:
 	return _watching
 
-## @ace_expression
-## @ace_name("Watched File Count")
-## @ace_category("Folder Watcher")
-## @ace_description("How many files the last look found, after the name filter. Zero before the first look.")
-## @ace_icon("res://eventsheet_addons/folder_watcher/icon.svg")
-## @ace_codegen_template("$FolderWatcher.watched_file_count()")
+# @ace_expression
+# @ace_name("Watched File Count")
+# @ace_description("How many files the last look found, after the name filter. Zero before the first look.")
+# @ace_codegen_template("$FolderWatcher.watched_file_count()")
 func watched_file_count() -> int:
 	return _seen.size()
 
-## @ace_expression
-## @ace_name("Watched File Names")
-## @ace_category("Folder Watcher")
-## @ace_description("The file names the last look found, after the name filter, in sorted order. Names, not whole paths - join one onto the folder to read it.")
-## @ace_icon("res://eventsheet_addons/folder_watcher/icon.svg")
-## @ace_codegen_template("$FolderWatcher.watched_file_names()")
+# @ace_expression
+# @ace_name("Watched File Names")
+# @ace_description("The file names the last look found, after the name filter, in sorted order. Names, not whole paths - join one onto the folder to read it.")
+# @ace_codegen_template("$FolderWatcher.watched_file_names()")
 func watched_file_names() -> Array:
 	return _seen.keys()
 
+# @ace_hidden
 ## What the folder held at the last look: file name -> the time that file was last modified.
 ## The whole mechanism is this dictionary compared with the next look's.
-## @ace_hidden
 func _read_folder() -> Dictionary:
 	var found: Dictionary = {}
 	# One directory read per look. The names are sorted so two machines walking the same folder
@@ -166,9 +154,9 @@ func _read_folder() -> Dictionary:
 		found[entry] = FileAccess.get_modified_time(watched_folder.path_join(entry))
 	return found
 
+# @ace_hidden
 ## One look: read the folder, raise what the difference means, and keep the new reading as the
 ## one the next look is compared against.
-## @ace_hidden
 func _look() -> void:
 	# A FOLDER THAT IS NOT THERE IS NOT A FOLDER THAT EMPTIED. DirAccess answers with an
 	# empty list for a folder that was deleted, unmounted or is on a drive somebody unplugged,

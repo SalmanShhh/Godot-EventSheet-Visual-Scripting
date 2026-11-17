@@ -1,4 +1,4 @@
-## @ace_version(1.0.0)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/color_palette_resource/icon.svg")
 class_name ColorPaletteResource
 extends Resource

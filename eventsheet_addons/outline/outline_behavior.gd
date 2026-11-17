@@ -1,7 +1,7 @@
-## @ace_tags(effects, shader, ui, visual)
-## @ace_category("Outline")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_tags(effects, shader, ui, visual)
+# @ace_category("Outline")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/outline/icon.svg")
 class_name OutlineBehavior
 extends Node
@@ -9,7 +9,7 @@ extends Node
 ##
 ## Changes on its parent: material.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CanvasItem = null
 
@@ -126,42 +126,38 @@ func _dial(dial: String, when_unset: float) -> float:
 	var held: Variant = used.get_shader_parameter(dial)
 	return when_unset if held == null else float(held)
 
+# @ace_action
+# @ace_featured
+# @ace_name("Outline")
+# @ace_display_template("Outline [b]{colour}[/b] at [b]{pixels}[/b] px")
+# @ace_codegen_template("$OutlineBehavior.outline({colour}, {pixels})")
 ## Draws a border of the given colour and thickness. Thickness is in pixels of the host's own
 ## image, so a sprite scaled up in the scene gets a border scaled up with it.
-## @ace_action
-## @ace_featured
-## @ace_name("Outline")
-## @ace_display_template("Outline [b]{colour}[/b] at [b]{pixels}[/b] px")
-## @ace_icon("res://eventsheet_addons/outline/icon.svg")
-## @ace_codegen_template("$OutlineBehavior.outline({colour}, {pixels})")
 func outline(colour: Color = Color.WHITE, pixels: float = 2.0) -> void:
 	_set_dial(COLOUR_DIAL, colour)
 	_set_dial(WIDTH_DIAL, maxf(pixels, 0.0))
 
+# @ace_action
+# @ace_name("No Outline")
+# @ace_codegen_template("$OutlineBehavior.no_outline()")
 ## Clears the border. The colour is left where it was, so the next Outline with no colour
 ## given comes back the same as the last one.
-## @ace_action
-## @ace_name("No Outline")
-## @ace_icon("res://eventsheet_addons/outline/icon.svg")
-## @ace_codegen_template("$OutlineBehavior.no_outline()")
 func no_outline() -> void:
 	_set_dial(WIDTH_DIAL, 0.0)
 
+# @ace_action
+# @ace_name("Fade Outline")
+# @ace_display_template("Fade outline to [b]{pixels}[/b] px over [b]{seconds}[/b] s")
+# @ace_codegen_template("$OutlineBehavior.fade_outline({pixels}, {seconds})")
 ## Fades the border in or out over a time rather than switching it, for a highlight that
 ## breathes instead of blinking.
-## @ace_action
-## @ace_name("Fade Outline")
-## @ace_display_template("Fade outline to [b]{pixels}[/b] px over [b]{seconds}[/b] s")
-## @ace_icon("res://eventsheet_addons/outline/icon.svg")
-## @ace_codegen_template("$OutlineBehavior.fade_outline({pixels}, {seconds})")
 func fade_outline(pixels: float = 0.0, seconds: float = 0.25) -> void:
 	_walk_dial(WIDTH_DIAL, maxf(pixels, 0.0), maxf(seconds, 0.0))
 
+# @ace_condition
+# @ace_name("Is Outlined")
+# @ace_codegen_template("$OutlineBehavior.is_outlined()")
 ## True while a border is being drawn.
-## @ace_condition
-## @ace_name("Is Outlined")
-## @ace_icon("res://eventsheet_addons/outline/icon.svg")
-## @ace_codegen_template("$OutlineBehavior.is_outlined()")
 func is_outlined() -> bool:
 	return _dial(WIDTH_DIAL, 0.0) > 0.001
 

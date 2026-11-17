@@ -1,12 +1,12 @@
-## @ace_tags(shop, economy, purchase, unlock)
-## @ace_category("Priced Tables")
-## @ace_version(1.0.0)
+# @ace_tags(shop, economy, purchase, unlock)
+# @ace_category("Priced Tables")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/priced_table/icon.svg")
 class_name PricedTableBehavior
 extends Node
 ## The priced-interaction table, worn by the thing that sells: a vendor, an upgrade kiosk, a toll gate, a skill tree. Load a PriceTableResource (.tres) of entries - id, label, price, currency, stock, locked, requires - and Buy Entry runs the whole transaction (unlocked? in stock? affordable?), takes the money through whatever wallet answers, and fires On Purchased or On Purchase Refused with the reason.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 
@@ -18,13 +18,13 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Priced Table Behavior needs a parent node: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Purchased")
-## @ace_category("Priced Tables")
+# @ace_trigger
+# @ace_name("On Purchased")
+# @ace_category("Priced Tables")
 signal on_purchased(entry_id: String, price: float)
-## @ace_trigger
-## @ace_name("On Purchase Refused")
-## @ace_category("Priced Tables")
+# @ace_trigger
+# @ace_name("On Purchase Refused")
+# @ace_category("Priced Tables")
 signal on_purchase_refused(entry_id: String, reason: String)
 
 ## Fallback balance used when no wallet node or ledger answers.
@@ -119,14 +119,12 @@ func _ready() -> void:
 	if price_table != null:
 		load_price_table(price_table)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Load Price Table")
-## @ace_category("Priced Tables")
-## @ace_description("Stocks this table from a PriceTableResource (.tres) - every entry with its price, currency, stock, locked flag and requirement note - in one step instead of a wall of Add Entry actions. Entries that share an id with one already stocked are REPLACED (so loading a second table re-prices rather than duplicating); ids it has never seen are appended.")
-## @ace_display_template("Load price table [b]{table}[/b]")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.load_price_table({table})")
+# @ace_action
+# @ace_featured
+# @ace_name("Load Price Table")
+# @ace_description("Stocks this table from a PriceTableResource (.tres) - every entry with its price, currency, stock, locked flag and requirement note - in one step instead of a wall of Add Entry actions. Entries that share an id with one already stocked are REPLACED (so loading a second table re-prices rather than duplicating); ids it has never seen are appended.")
+# @ace_display_template("Load price table [b]{table}[/b]")
+# @ace_codegen_template("$PricedTableBehavior.load_price_table({table})")
 func load_price_table(table: Resource) -> void:
 	if table == null:
 		return
@@ -152,13 +150,11 @@ func load_price_table(table: Resource) -> void:
 		entry.requires = str(_cell(row, "requires", ""))
 		_put(entry)
 
-## @ace_action
-## @ace_name("Add Entry")
-## @ace_category("Priced Tables")
-## @ace_description("Adds (or replaces) one entry from a sheet, for a table built at runtime - a shop whose stock is rolled per visit, a skill tree grown as the player levels. A stock of -1 is unlimited; the entry starts unlocked with no requirement note (set those with Set Entry Unlocked and the resource's requires column).")
-## @ace_display_template("Add entry [b]{entry_id}[/b] ([b]{label}[/b]) at [b]{price}[/b] [b]{currency}[/b], stock [b]{stock}[/b]")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.add_entry({entry_id}, {label}, {price}, {currency}, {stock})")
+# @ace_action
+# @ace_name("Add Entry")
+# @ace_description("Adds (or replaces) one entry from a sheet, for a table built at runtime - a shop whose stock is rolled per visit, a skill tree grown as the player levels. A stock of -1 is unlimited; the entry starts unlocked with no requirement note (set those with Set Entry Unlocked and the resource's requires column).")
+# @ace_display_template("Add entry [b]{entry_id}[/b] ([b]{label}[/b]) at [b]{price}[/b] [b]{currency}[/b], stock [b]{stock}[/b]")
+# @ace_codegen_template("$PricedTableBehavior.add_entry({entry_id}, {label}, {price}, {currency}, {stock})")
 func add_entry(entry_id: String, label: String, price: float, currency: String, stock: int) -> void:
 	if entry_id.is_empty():
 		return
@@ -171,24 +167,20 @@ func add_entry(entry_id: String, label: String, price: float, currency: String, 
 	entry.initial_stock = stock
 	_put(entry)
 
-## @ace_action
-## @ace_name("Clear Table")
-## @ace_category("Priced Tables")
-## @ace_description("Empties the table - every entry, price and stock count. Use it before loading a different table when you do NOT want the two merged by id.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.clear_table()")
+# @ace_action
+# @ace_name("Clear Table")
+# @ace_description("Empties the table - every entry, price and stock count. Use it before loading a different table when you do NOT want the two merged by id.")
+# @ace_codegen_template("$PricedTableBehavior.clear_table()")
 func clear_table() -> void:
 	_entries.clear()
 	_by_id.clear()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Buy Entry")
-## @ace_category("Priced Tables")
-## @ace_description("The whole purchase in one row: refuses (firing On Purchase Refused with a reason) when the id is unknown, the entry is locked, its stock is 0, or the wallet cannot cover the price; otherwise it takes the price through whatever wallet answers, counts the stock down by one, and fires On Purchased with the id and what was paid. Hand over the goods in On Purchased - the pack never guesses what an entry means.")
-## @ace_display_template("Buy [b]{entry_id}[/b]")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.buy({entry_id})")
+# @ace_action
+# @ace_featured
+# @ace_name("Buy Entry")
+# @ace_description("The whole purchase in one row: refuses (firing On Purchase Refused with a reason) when the id is unknown, the entry is locked, its stock is 0, or the wallet cannot cover the price; otherwise it takes the price through whatever wallet answers, counts the stock down by one, and fires On Purchased with the id and what was paid. Hand over the goods in On Purchased - the pack never guesses what an entry means.")
+# @ace_display_template("Buy [b]{entry_id}[/b]")
+# @ace_codegen_template("$PricedTableBehavior.buy({entry_id})")
 func buy(entry_id: String) -> void:
 	var record: PriceEntry = _by_id.get(entry_id, null)
 	if record == null:
@@ -213,257 +205,205 @@ func buy(entry_id: String) -> void:
 	_last_currency = currency
 	on_purchased.emit(entry_id, price)
 
-## @ace_action
-## @ace_name("Restock Entry")
-## @ace_category("Priced Tables")
-## @ace_description("Adds to one entry's remaining stock (a delivery, a daily refill). An unlimited entry (-1) is left alone, and stock never falls below 0.")
-## @ace_display_template("Restock [b]{entry_id}[/b] by [b]{amount}[/b]")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.restock({entry_id}, {amount})")
+# @ace_action
+# @ace_name("Restock Entry")
+# @ace_description("Adds to one entry's remaining stock (a delivery, a daily refill). An unlimited entry (-1) is left alone, and stock never falls below 0.")
+# @ace_display_template("Restock [b]{entry_id}[/b] by [b]{amount}[/b]")
+# @ace_codegen_template("$PricedTableBehavior.restock({entry_id}, {amount})")
 func restock(entry_id: String, amount: int) -> void:
 	var record: PriceEntry = _by_id.get(entry_id, null)
 	if record == null or record.stock < 0:
 		return
 	record.stock = maxi(int(record.stock) + amount, 0)
 
-## @ace_action
-## @ace_name("Restock All")
-## @ace_category("Priced Tables")
-## @ace_description("Puts every entry back to the stock its table shipped with - the one row behind "the shop restocks each morning". Prices, locks and requirement notes are untouched.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.restock_all()")
+# @ace_action
+# @ace_name("Restock All")
+# @ace_description("Puts every entry back to the stock its table shipped with - the one row behind "the shop restocks each morning". Prices, locks and requirement notes are untouched.")
+# @ace_codegen_template("$PricedTableBehavior.restock_all()")
 func restock_all() -> void:
 	for record: PriceEntry in _entries:
 		record.stock = record.initial_stock
 
-## @ace_action
-## @ace_name("Set Stock")
-## @ace_category("Priced Tables")
-## @ace_description("Forces one entry's remaining stock to an exact number. -1 makes it unlimited, 0 sells it out.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.set_stock({entry_id}, {stock})")
+# @ace_action
+# @ace_name("Set Stock")
+# @ace_description("Forces one entry's remaining stock to an exact number. -1 makes it unlimited, 0 sells it out.")
+# @ace_codegen_template("$PricedTableBehavior.set_stock({entry_id}, {stock})")
 func set_stock(entry_id: String, stock: int) -> void:
 	var record: PriceEntry = _by_id.get(entry_id, null)
 	if record != null:
 		record.stock = stock
 
-## @ace_action
-## @ace_name("Set Price")
-## @ace_category("Priced Tables")
-## @ace_description("Re-prices one entry while the game runs - a sale, a haggle, a reputation discount. Negative prices are clamped to 0 (a free entry still goes through the whole purchase, so its trigger still fires).")
-## @ace_display_template("Set price of [b]{entry_id}[/b] to [b]{price}[/b]")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.set_price({entry_id}, {price})")
+# @ace_action
+# @ace_name("Set Price")
+# @ace_description("Re-prices one entry while the game runs - a sale, a haggle, a reputation discount. Negative prices are clamped to 0 (a free entry still goes through the whole purchase, so its trigger still fires).")
+# @ace_display_template("Set price of [b]{entry_id}[/b] to [b]{price}[/b]")
+# @ace_codegen_template("$PricedTableBehavior.set_price({entry_id}, {price})")
 func set_price(entry_id: String, price: float) -> void:
 	var record: PriceEntry = _by_id.get(entry_id, null)
 	if record != null:
 		record.price = maxf(price, 0.0)
 
-## @ace_action
-## @ace_name("Set Entry Unlocked")
-## @ace_category("Priced Tables")
-## @ace_description("Opens (or closes) one entry. A locked entry still shows in the table - Entry Is Unlocked greys it out in your UI, and buying it is refused with the reason "locked" - which is how a tier gate, a skill-tree prerequisite or a story unlock is expressed without deleting the row.")
-## @ace_display_template("Set [b]{entry_id}[/b] unlocked to [b]{unlocked}[/b]")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.set_unlocked({entry_id}, {unlocked})")
+# @ace_action
+# @ace_name("Set Entry Unlocked")
+# @ace_description("Opens (or closes) one entry. A locked entry still shows in the table - Entry Is Unlocked greys it out in your UI, and buying it is refused with the reason "locked" - which is how a tier gate, a skill-tree prerequisite or a story unlock is expressed without deleting the row.")
+# @ace_display_template("Set [b]{entry_id}[/b] unlocked to [b]{unlocked}[/b]")
+# @ace_codegen_template("$PricedTableBehavior.set_unlocked({entry_id}, {unlocked})")
 func set_unlocked(entry_id: String, unlocked: bool) -> void:
 	var record: PriceEntry = _by_id.get(entry_id, null)
 	if record != null:
 		record.unlocked = unlocked
 
-## @ace_action
-## @ace_name("Use Wallet Node")
-## @ace_category("Priced Tables")
-## @ace_description("Points this table at ONE wallet node, tried before anything else - the direct way when the purse is already in hand (the player's own wallet node, a shared bank, a per-faction till). The contract is two functions, balance(currency) and spend(currency, amount); a node missing either is ignored, so a wrong drag can never silently swallow the money. Pass nothing to go back to searching the wallet group and then the CurrencyLedger autoload.")
-## @ace_display_template("Use wallet node [i]{node}[/i]")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.use_wallet_node({node})")
+# @ace_action
+# @ace_name("Use Wallet Node")
+# @ace_description("Points this table at ONE wallet node, tried before anything else - the direct way when the purse is already in hand (the player's own wallet node, a shared bank, a per-faction till). The contract is two functions, balance(currency) and spend(currency, amount); a node missing either is ignored, so a wrong drag can never silently swallow the money. Pass nothing to go back to searching the wallet group and then the CurrencyLedger autoload.")
+# @ace_display_template("Use wallet node [i]{node}[/i]")
+# @ace_codegen_template("$PricedTableBehavior.use_wallet_node({node})")
 func use_wallet_node(node: Node) -> void:
 	_wallet_node = node
 
-## @ace_action
-## @ace_name("Set Local Wallet")
-## @ace_category("Priced Tables")
-## @ace_description("Sets the fallback purse - the number this table spends from when no wallet node and no CurrencyLedger autoload answer. It is deliberately the ONLY money action here: as soon as your game has a real economy, install one and this number stops being consulted.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.set_local_wallet({amount})")
+# @ace_action
+# @ace_name("Set Local Wallet")
+# @ace_description("Sets the fallback purse - the number this table spends from when no wallet node and no CurrencyLedger autoload answer. It is deliberately the ONLY money action here: as soon as your game has a real economy, install one and this number stops being consulted.")
+# @ace_codegen_template("$PricedTableBehavior.set_local_wallet({amount})")
 func set_local_wallet(amount: float) -> void:
 	local_wallet = amount
 
-## @ace_condition
-## @ace_name("Can Afford Entry")
-## @ace_category("Priced Tables")
-## @ace_description("True when the wallet covers this entry's price right now - the condition that greys out a shop button before the player clicks it. Reads through the same seam the purchase uses, so it can never disagree with Buy Entry.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.can_afford_entry({entry_id})")
+# @ace_condition
+# @ace_name("Can Afford Entry")
+# @ace_description("True when the wallet covers this entry's price right now - the condition that greys out a shop button before the player clicks it. Reads through the same seam the purchase uses, so it can never disagree with Buy Entry.")
+# @ace_codegen_template("$PricedTableBehavior.can_afford_entry({entry_id})")
 func can_afford_entry(entry_id: String) -> bool:
 	var record: PriceEntry = _by_id.get(entry_id, null)
 	return record != null and _balance_of(str(record.currency)) >= float(record.price)
 
-## @ace_condition
-## @ace_name("Entry In Stock")
-## @ace_category("Priced Tables")
-## @ace_description("True while the entry has something left to sell. An unlimited entry (-1) is always in stock; an unknown id never is.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.entry_in_stock({entry_id})")
+# @ace_condition
+# @ace_name("Entry In Stock")
+# @ace_description("True while the entry has something left to sell. An unlimited entry (-1) is always in stock; an unknown id never is.")
+# @ace_codegen_template("$PricedTableBehavior.entry_in_stock({entry_id})")
 func entry_in_stock(entry_id: String) -> bool:
 	var record: PriceEntry = _by_id.get(entry_id, null)
 	return record != null and int(record.stock) != 0
 
-## @ace_condition
-## @ace_name("Entry Is Unlocked")
-## @ace_category("Priced Tables")
-## @ace_description("True when the entry is open for business - the gate behind a tier, a prerequisite or a story beat.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.entry_is_unlocked({entry_id})")
+# @ace_condition
+# @ace_name("Entry Is Unlocked")
+# @ace_description("True when the entry is open for business - the gate behind a tier, a prerequisite or a story beat.")
+# @ace_codegen_template("$PricedTableBehavior.entry_is_unlocked({entry_id})")
 func entry_is_unlocked(entry_id: String) -> bool:
 	var record: PriceEntry = _by_id.get(entry_id, null)
 	return record != null and bool(record.unlocked)
 
-## @ace_condition
-## @ace_name("Has Entry")
-## @ace_category("Priced Tables")
-## @ace_description("Whether the table holds an entry with this id at all - the guard that tells a typo apart from a sold-out row.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.has_entry({entry_id})")
+# @ace_condition
+# @ace_name("Has Entry")
+# @ace_description("Whether the table holds an entry with this id at all - the guard that tells a typo apart from a sold-out row.")
+# @ace_codegen_template("$PricedTableBehavior.has_entry({entry_id})")
 func has_entry(entry_id: String) -> bool:
 	return _by_id.has(entry_id)
 
-## @ace_condition
-## @ace_name("Table Is Sold Out")
-## @ace_category("Priced Tables")
-## @ace_description("True when nothing in the table can be bought any more: every entry is either at 0 stock or locked. An empty table counts as sold out.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.is_sold_out()")
+# @ace_condition
+# @ace_name("Table Is Sold Out")
+# @ace_description("True when nothing in the table can be bought any more: every entry is either at 0 stock or locked. An empty table counts as sold out.")
+# @ace_codegen_template("$PricedTableBehavior.is_sold_out()")
 func is_sold_out() -> bool:
 	for record: PriceEntry in _entries:
 		if record.stock != 0 and record.unlocked:
 			return false
 	return true
 
-## @ace_expression
-## @ace_name("Price Of")
-## @ace_category("Priced Tables")
-## @ace_description("What one entry costs (-1 when the table has no such id, so a missing price never reads as free).")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.price_of({entry_id})")
+# @ace_expression
+# @ace_name("Price Of")
+# @ace_description("What one entry costs (-1 when the table has no such id, so a missing price never reads as free).")
+# @ace_codegen_template("$PricedTableBehavior.price_of({entry_id})")
 func price_of(entry_id: String) -> float:
 	return float(_by_id[entry_id].price) if _by_id.has(entry_id) else -1.0
 
-## @ace_expression
-## @ace_name("Stock Of")
-## @ace_category("Priced Tables")
-## @ace_description("How many of one entry are left: -1 for unlimited, 0 for sold out (which is also what an unknown id reads).")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.stock_of({entry_id})")
+# @ace_expression
+# @ace_name("Stock Of")
+# @ace_description("How many of one entry are left: -1 for unlimited, 0 for sold out (which is also what an unknown id reads).")
+# @ace_codegen_template("$PricedTableBehavior.stock_of({entry_id})")
 func stock_of(entry_id: String) -> int:
 	return int(_by_id[entry_id].stock) if _by_id.has(entry_id) else 0
 
-## @ace_expression
-## @ace_name("Currency Of")
-## @ace_category("Priced Tables")
-## @ace_description("The currency id one entry is priced in - pass it to your wallet's own expressions to show the right icon.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.currency_of({entry_id})")
+# @ace_expression
+# @ace_name("Currency Of")
+# @ace_description("The currency id one entry is priced in - pass it to your wallet's own expressions to show the right icon.")
+# @ace_codegen_template("$PricedTableBehavior.currency_of({entry_id})")
 func currency_of(entry_id: String) -> String:
 	return str(_by_id[entry_id].currency) if _by_id.has(entry_id) else ""
 
-## @ace_expression
-## @ace_name("Label Of")
-## @ace_category("Priced Tables")
-## @ace_description("The player-facing name of one entry ("Iron Sword"), for the shop row's text.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.label_of({entry_id})")
+# @ace_expression
+# @ace_name("Label Of")
+# @ace_description("The player-facing name of one entry ("Iron Sword"), for the shop row's text.")
+# @ace_codegen_template("$PricedTableBehavior.label_of({entry_id})")
 func label_of(entry_id: String) -> String:
 	return str(_by_id[entry_id].label) if _by_id.has(entry_id) else ""
 
-## @ace_expression
-## @ace_name("Requirement Of")
-## @ace_category("Priced Tables")
-## @ace_description("The plain-language requirement note written on one entry ("needs the guild badge"), for the tooltip on a locked row. The pack never interprets it - YOUR game decides when to call Set Entry Unlocked.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.requirement_of({entry_id})")
+# @ace_expression
+# @ace_name("Requirement Of")
+# @ace_description("The plain-language requirement note written on one entry ("needs the guild badge"), for the tooltip on a locked row. The pack never interprets it - YOUR game decides when to call Set Entry Unlocked.")
+# @ace_codegen_template("$PricedTableBehavior.requirement_of({entry_id})")
 func requirement_of(entry_id: String) -> String:
 	return str(_by_id[entry_id].requires) if _by_id.has(entry_id) else ""
 
-## @ace_expression
-## @ace_name("Entry Count")
-## @ace_category("Priced Tables")
-## @ace_description("How many entries the table holds - the row count for a shop list.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.entry_count()")
+# @ace_expression
+# @ace_name("Entry Count")
+# @ace_description("How many entries the table holds - the row count for a shop list.")
+# @ace_codegen_template("$PricedTableBehavior.entry_count()")
 func entry_count() -> int:
 	return _entries.size()
 
-## @ace_expression
-## @ace_name("Entry Id At")
-## @ace_category("Priced Tables")
-## @ace_description("The entry id at a position, in table order ("" out of range) - walk 0..Entry Count to build the shop UI.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.entry_id_at({index})")
+# @ace_expression
+# @ace_name("Entry Id At")
+# @ace_description("The entry id at a position, in table order ("" out of range) - walk 0..Entry Count to build the shop UI.")
+# @ace_codegen_template("$PricedTableBehavior.entry_id_at({index})")
 func entry_id_at(index: int) -> String:
 	return str(_entries[index].id) if index >= 0 and index < _entries.size() else ""
 
-## @ace_expression
-## @ace_name("Table Name")
-## @ace_category("Priced Tables")
-## @ace_description("The readable name written on the loaded table resource ("Blacksmith") - the shop window's title.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.table_title()")
+# @ace_expression
+# @ace_name("Table Name")
+# @ace_description("The readable name written on the loaded table resource ("Blacksmith") - the shop window's title.")
+# @ace_codegen_template("$PricedTableBehavior.table_title()")
 func table_title() -> String:
 	return _table_name
 
-## @ace_expression
-## @ace_name("Wallet Balance")
-## @ace_category("Priced Tables")
-## @ace_description("What the buyer can spend of one currency, read through the same seam a purchase uses: the node given to Use Wallet Node, else a wallet node in the wallet group, else the CurrencyLedger autoload, else this table's Local Wallet number (which is currency-blind).")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.wallet_balance({currency})")
+# @ace_expression
+# @ace_name("Wallet Balance")
+# @ace_description("What the buyer can spend of one currency, read through the same seam a purchase uses: the node given to Use Wallet Node, else a wallet node in the wallet group, else the CurrencyLedger autoload, else this table's Local Wallet number (which is currency-blind).")
+# @ace_codegen_template("$PricedTableBehavior.wallet_balance({currency})")
 func wallet_balance(currency: String) -> float:
 	return _balance_of(currency)
 
-## @ace_expression
-## @ace_name("Last Purchased Id")
-## @ace_category("Priced Tables")
-## @ace_description("The entry bought most recently ("" before the first one) - readable long after On Purchased, for a receipt line.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.last_purchased_id()")
+# @ace_expression
+# @ace_name("Last Purchased Id")
+# @ace_description("The entry bought most recently ("" before the first one) - readable long after On Purchased, for a receipt line.")
+# @ace_codegen_template("$PricedTableBehavior.last_purchased_id()")
 func last_purchased_id() -> String:
 	return _last_id
 
-## @ace_expression
-## @ace_name("Last Price Paid")
-## @ace_category("Priced Tables")
-## @ace_description("What the last purchase actually cost - the number to show in "-25 gold" feedback.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.last_price_paid()")
+# @ace_expression
+# @ace_name("Last Price Paid")
+# @ace_description("What the last purchase actually cost - the number to show in "-25 gold" feedback.")
+# @ace_codegen_template("$PricedTableBehavior.last_price_paid()")
 func last_price_paid() -> float:
 	return _last_price
 
-## @ace_expression
-## @ace_name("Last Currency Paid")
-## @ace_category("Priced Tables")
-## @ace_description("The currency the last purchase was paid in.")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.last_currency_paid()")
+# @ace_expression
+# @ace_name("Last Currency Paid")
+# @ace_description("The currency the last purchase was paid in.")
+# @ace_codegen_template("$PricedTableBehavior.last_currency_paid()")
 func last_currency_paid() -> String:
 	return _last_currency
 
-## @ace_expression
-## @ace_name("Refused Entry Id")
-## @ace_category("Priced Tables")
-## @ace_description("The entry of the most recent refusal ("" if none yet).")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.refused_entry_id()")
+# @ace_expression
+# @ace_name("Refused Entry Id")
+# @ace_description("The entry of the most recent refusal ("" if none yet).")
+# @ace_codegen_template("$PricedTableBehavior.refused_entry_id()")
 func refused_entry_id() -> String:
 	return _refused_id
 
-## @ace_expression
-## @ace_name("Refused Reason")
-## @ace_category("Priced Tables")
-## @ace_description("Why the most recent purchase was refused, as plain words you can show: "unknown entry", "locked", "out of stock" or "too expensive".")
-## @ace_icon("res://eventsheet_addons/priced_table/icon.svg")
-## @ace_codegen_template("$PricedTableBehavior.refused_reason()")
+# @ace_expression
+# @ace_name("Refused Reason")
+# @ace_description("Why the most recent purchase was refused, as plain words you can show: "unknown entry", "locked", "out of stock" or "too expensive".")
+# @ace_codegen_template("$PricedTableBehavior.refused_reason()")
 func refused_reason() -> String:
 	return _refused_reason
 
@@ -544,7 +484,7 @@ func _entries_as_dicts() -> Array:
 		records.append(entry.to_dict())
 	return records
 
-## @ace_hidden
+# @ace_hidden
 func save_state() -> Dictionary:
 	return {
 		"entries": _entries_as_dicts(),
@@ -553,7 +493,7 @@ func save_state() -> Dictionary:
 		"local_wallet": local_wallet
 	}
 
-## @ace_hidden
+# @ace_hidden
 func load_state(state: Dictionary) -> void:
 	if state.is_empty():
 		return

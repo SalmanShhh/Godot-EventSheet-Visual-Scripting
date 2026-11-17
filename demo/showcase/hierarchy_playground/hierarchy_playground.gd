@@ -44,17 +44,17 @@ func _physics_process(_delta: float) -> void:
 		crates_settled = true
 
 
-## @ace_hidden
+# @ace_hidden
 func mount(rider: Node3D) -> void:
 	rider.reparent($Horse/Saddle, false)
 
 
-## @ace_hidden
+# @ace_hidden
 func dismount(rider: Node3D) -> void:
 	rider.reparent(get_tree().current_scene)
 
 
-## @ace_hidden
+# @ace_hidden
 func equip(hat: Node3D) -> void:
 	hat.reparent(%Head)
 	hat.top_level = true
@@ -64,7 +64,7 @@ func equip(hat: Node3D) -> void:
 	__follow_hat.update_scale = false
 
 
-## @ace_hidden
+# @ace_hidden
 func heal_squad(leader: Node3D) -> void:
 	squad_hp = 0
 	for unit in leader.get_children():

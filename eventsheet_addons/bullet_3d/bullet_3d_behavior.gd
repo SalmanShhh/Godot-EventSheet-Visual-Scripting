@@ -1,6 +1,6 @@
-## @ace_category("Bullet 3D")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Bullet 3D")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/bullet_3d/icon.svg")
 class_name Bullet3DBehavior
 extends Node
@@ -8,7 +8,7 @@ extends Node
 ##
 ## Changes on its parent: global_position, position.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node3D = null
 
@@ -20,8 +20,8 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Bullet3D Behavior needs a Node3D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Bullet Hit")
+# @ace_trigger
+# @ace_name("On Bullet Hit")
 signal on_bullet_hit(collider: Object, point: Vector3, normal: Vector3)
 
 ## Units per second the bullet travels along the host's forward (-Z).
@@ -107,12 +107,10 @@ func _process(delta: float) -> void:
 	host.position += motion
 	distance_travelled += motion.length()
 
-## @ace_action
-## @ace_name("Launch Forward")
-## @ace_category("Bullet 3D")
-## @ace_description("(Re)launches along the host's current forward direction.")
-## @ace_icon("res://eventsheet_addons/bullet_3d/icon.svg")
-## @ace_codegen_template("$Bullet3DBehavior.launch_forward()")
+# @ace_action
+# @ace_name("Launch Forward")
+# @ace_description("(Re)launches along the host's current forward direction.")
+# @ace_codegen_template("$Bullet3DBehavior.launch_forward()")
 func launch_forward() -> void:
 	if host == null:
 		return
@@ -125,12 +123,10 @@ func launch_forward() -> void:
 	# through its Inspector flag and then relaunched still flies.
 	set_process(enabled_movement)
 
-## @ace_action
-## @ace_name("Set Bullet 3D Speed")
-## @ace_category("Bullet 3D")
-## @ace_description("Changes speed, keeping the current direction.")
-## @ace_icon("res://eventsheet_addons/bullet_3d/icon.svg")
-## @ace_codegen_template("$Bullet3DBehavior.set_bullet3d_speed({value})")
+# @ace_action
+# @ace_name("Set Bullet 3D Speed")
+# @ace_description("Changes speed, keeping the current direction.")
+# @ace_codegen_template("$Bullet3DBehavior.set_bullet3d_speed({value})")
 func set_bullet3d_speed(value: float) -> void:
 	speed = value
 	var direction := Vector3(vel_x, vel_y, vel_z).normalized()
@@ -144,22 +140,18 @@ func set_bullet3d_speed(value: float) -> void:
 	# through its Inspector flag still flies.
 	set_process(enabled_movement)
 
-## @ace_action
-## @ace_name("Set Gravity Direction")
-## @ace_category("Bullet 3D")
-## @ace_description("Points gravity along a new 3D direction (it is normalized for you) - the arc bends that way from now on. (0, -1, 0) is normal down, (0, 1, 0) pulls up, (1, 0, 0) pulls along +X.")
-## @ace_icon("res://eventsheet_addons/bullet_3d/icon.svg")
-## @ace_codegen_template("$Bullet3DBehavior.set_gravity_direction({x}, {y}, {z})")
+# @ace_action
+# @ace_name("Set Gravity Direction")
+# @ace_description("Points gravity along a new 3D direction (it is normalized for you) - the arc bends that way from now on. (0, -1, 0) is normal down, (0, 1, 0) pulls up, (1, 0, 0) pulls along +X.")
+# @ace_codegen_template("$Bullet3DBehavior.set_gravity_direction({x}, {y}, {z})")
 func set_gravity_direction(x: float, y: float, z: float) -> void:
 	gravity_direction = Vector3(x, y, z)
 
-## @ace_action
-## @ace_name("Fired By")
-## @ace_category("Bullet 3D")
-## @ace_description("Marks who fired this shot. Drop it on the row that spawns the bullet and every ownership row afterwards can answer: Hit Is Not My Owner stops it hurting its own shooter, Take Damage From credits the kill to the person rather than the projectile, and a turret's shot still traces back to whoever built the turret.")
-## @ace_display_template("Fired by [i]{shooter}[/i]")
-## @ace_icon("res://eventsheet_addons/bullet_3d/icon.svg")
-## @ace_codegen_template("$Bullet3DBehavior.set_fired_by({shooter})")
+# @ace_action
+# @ace_name("Fired By")
+# @ace_description("Marks who fired this shot. Drop it on the row that spawns the bullet and every ownership row afterwards can answer: Hit Is Not My Owner stops it hurting its own shooter, Take Damage From credits the kill to the person rather than the projectile, and a turret's shot still traces back to whoever built the turret.")
+# @ace_display_template("Fired by [i]{shooter}[/i]")
+# @ace_codegen_template("$Bullet3DBehavior.set_fired_by({shooter})")
 func set_fired_by(shooter: Node) -> void:
 	if host != null:
 		host.set_meta(&"owner", shooter)

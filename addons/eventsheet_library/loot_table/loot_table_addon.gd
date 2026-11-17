@@ -1,22 +1,22 @@
-## @ace_tags(loot, random)
-## @ace_category("Loot")
-## @ace_version(1.0.0)
+# @ace_tags(loot, random)
+# @ace_category("Loot")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/loot_table/icon.svg")
 class_name LootBoxAddon
 extends Node
 ## A weighted drop roller as the LootBox autoload: register named tables of weighted entries once, roll a table by id from any sheet, and react to what fell out through triggers. Balancing your drops becomes editing weight numbers, not rewiring events.
 
-## @ace_trigger
-## @ace_name("On Roll Result")
-## @ace_category("Loot")
+# @ace_trigger
+# @ace_name("On Roll Result")
+# @ace_category("Loot")
 signal on_roll_result
-## @ace_trigger
-## @ace_name("On Roll Complete")
-## @ace_category("Loot")
+# @ace_trigger
+# @ace_name("On Roll Complete")
+# @ace_category("Loot")
 signal on_roll_complete
-## @ace_trigger
-## @ace_name("On Pity Triggered")
-## @ace_category("Loot")
+# @ace_trigger
+# @ace_name("On Pity Triggered")
+# @ace_category("Loot")
 signal on_pity_triggered
 
 # id -> {entries: Array of {kind:"item"|"table", ref, weight, quantity, tags:PackedStringArray}, guarantees: Array of {tag, minimum}}.
@@ -54,34 +54,28 @@ var _use_shared: bool = false
 func _ready() -> void:
 	_rng.randomize()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Create Table")
-## @ace_category("Loot")
-## @ace_description("Starts a fresh, empty loot table with this id (replaces any existing one).")
-## @ace_display_template("Create loot table [b]{table_id}[/b]")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.create_table({table_id})")
+# @ace_action
+# @ace_featured
+# @ace_name("Create Table")
+# @ace_description("Starts a fresh, empty loot table with this id (replaces any existing one).")
+# @ace_display_template("Create loot table [b]{table_id}[/b]")
+# @ace_codegen_template("LootBox.create_table({table_id})")
 func create_table(table_id: String) -> void:
 	_tables[table_id] = {"entries": [], "guarantees": []}
 
-## @ace_action
-## @ace_featured
-## @ace_name("Add Entry")
-## @ace_category("Loot")
-## @ace_description("Adds an item to a table with a relative weight (higher = likelier). Quantity 1, no tags.")
-## @ace_display_template("Add [b]{item_id}[/b] to [b]{table_id}[/b] with weight [b]{weight}[/b]")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.add_entry({table_id}, {item_id}, {weight})")
+# @ace_action
+# @ace_featured
+# @ace_name("Add Entry")
+# @ace_description("Adds an item to a table with a relative weight (higher = likelier). Quantity 1, no tags.")
+# @ace_display_template("Add [b]{item_id}[/b] to [b]{table_id}[/b] with weight [b]{weight}[/b]")
+# @ace_codegen_template("LootBox.add_entry({table_id}, {item_id}, {weight})")
 func add_entry(table_id: String, item_id: String, weight: float) -> void:
 	_table(table_id).entries.append({"kind": "item", "ref": item_id, "weight": maxf(weight, 0.0), "quantity": 1.0, "tags": PackedStringArray()})
 
-## @ace_action
-## @ace_name("Add Rare Entry")
-## @ace_category("Loot")
-## @ace_description("Adds an item with a weight, a quantity, and comma-separated tags (tags drive guarantees + pity).")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.add_entry_full({table_id}, {item_id}, {weight}, {quantity}, {tags})")
+# @ace_action
+# @ace_name("Add Rare Entry")
+# @ace_description("Adds an item with a weight, a quantity, and comma-separated tags (tags drive guarantees + pity).")
+# @ace_codegen_template("LootBox.add_entry_full({table_id}, {item_id}, {weight}, {quantity}, {tags})")
 func add_entry_full(table_id: String, item_id: String, weight: float, quantity: float, tags: String) -> void:
 	var tag_list: PackedStringArray = PackedStringArray()
 	for raw: String in tags.split(",", false):
@@ -90,72 +84,58 @@ func add_entry_full(table_id: String, item_id: String, weight: float, quantity: 
 			tag_list.append(trimmed)
 	_table(table_id).entries.append({"kind": "item", "ref": item_id, "weight": maxf(weight, 0.0), "quantity": maxf(quantity, 1.0), "tags": tag_list})
 
-## @ace_action
-## @ace_name("Add Table Reference")
-## @ace_category("Loot")
-## @ace_description("Adds an entry that rolls ANOTHER table inline when picked (shared common-loot pools). Depth-limited.")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.add_table_ref({table_id}, {sub_table_id}, {weight})")
+# @ace_action
+# @ace_name("Add Table Reference")
+# @ace_description("Adds an entry that rolls ANOTHER table inline when picked (shared common-loot pools). Depth-limited.")
+# @ace_codegen_template("LootBox.add_table_ref({table_id}, {sub_table_id}, {weight})")
 func add_table_ref(table_id: String, sub_table_id: String, weight: float) -> void:
 	_table(table_id).entries.append({"kind": "table", "ref": sub_table_id, "weight": maxf(weight, 0.0), "quantity": 1.0, "tags": PackedStringArray()})
 
-## @ace_action
-## @ace_name("Set Guarantee")
-## @ace_category("Loot")
-## @ace_description("Guarantees at least `minimum` drops carrying this tag in every multi-roll batch.")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.set_guarantee({table_id}, {tag}, {minimum})")
+# @ace_action
+# @ace_name("Set Guarantee")
+# @ace_description("Guarantees at least `minimum` drops carrying this tag in every multi-roll batch.")
+# @ace_codegen_template("LootBox.set_guarantee({table_id}, {tag}, {minimum})")
 func set_guarantee(table_id: String, tag: String, minimum: int) -> void:
 	_table(table_id).guarantees.append({"tag": tag, "minimum": maxi(minimum, 0)})
 
-## @ace_action
-## @ace_name("Set Pity")
-## @ace_category("Loot")
-## @ace_description("Hard pity: after `threshold` rolls in a row WITHOUT a tagged drop, the next roll GUARANTEES one (and fires On Pity Triggered).")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.set_pity({table_id}, {tag}, {threshold})")
+# @ace_action
+# @ace_name("Set Pity")
+# @ace_description("Hard pity: after `threshold` rolls in a row WITHOUT a tagged drop, the next roll GUARANTEES one (and fires On Pity Triggered).")
+# @ace_codegen_template("LootBox.set_pity({table_id}, {tag}, {threshold})")
 func set_pity(table_id: String, tag: String, threshold: int) -> void:
 	if not _pity.has(table_id):
 		_pity[table_id] = {}
 	_pity[table_id][tag] = {"threshold": maxi(threshold, 1), "count": 0}
 
-## @ace_action
-## @ace_name("Reset Pity")
-## @ace_category("Loot")
-## @ace_description("Zeroes a tag's pity counter for a table.")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.reset_pity({table_id}, {tag})")
+# @ace_action
+# @ace_name("Reset Pity")
+# @ace_description("Zeroes a tag's pity counter for a table.")
+# @ace_codegen_template("LootBox.reset_pity({table_id}, {tag})")
 func reset_pity(table_id: String, tag: String) -> void:
 	if _pity.has(table_id) and _pity[table_id].has(tag):
 		_pity[table_id][tag].count = 0
 
-## @ace_action
-## @ace_name("Set Seed")
-## @ace_category("Loot")
-## @ace_description("Makes rolls repeatable from a fixed seed (same seed = same sequence). Pass 0 to go back to random.")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.set_seed({seed_value})")
+# @ace_action
+# @ace_name("Set Seed")
+# @ace_description("Makes rolls repeatable from a fixed seed (same seed = same sequence). Pass 0 to go back to random.")
+# @ace_codegen_template("LootBox.set_seed({seed_value})")
 func set_seed(seed_value: int) -> void:
 	if seed_value == 0:
 		_rng.randomize()
 	else:
 		_rng.seed = seed_value
 
-## @ace_action
-## @ace_name("Use Advanced Random")
-## @ace_category("Loot")
-## @ace_description("When on, rolls draw from the shared AdvancedRandom autoload instead of this pack's own generator, so one seed drives your whole game's randomness. When off (the default) it uses its own seed. Needs the Advanced Random pack installed (it safely falls back to the local generator if not).")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.use_advanced_random({enabled})")
+# @ace_action
+# @ace_name("Use Advanced Random")
+# @ace_description("When on, rolls draw from the shared AdvancedRandom autoload instead of this pack's own generator, so one seed drives your whole game's randomness. When off (the default) it uses its own seed. Needs the Advanced Random pack installed (it safely falls back to the local generator if not).")
+# @ace_codegen_template("LootBox.use_advanced_random({enabled})")
 func use_advanced_random(enabled: bool) -> void:
 	_use_shared = enabled
 
-## @ace_action
-## @ace_name("Load From Resource")
-## @ace_category("Loot")
-## @ace_description("Loads a whole table from a Loot Table resource (a .tres you filled in the Inspector) - its name, entries, and pity - in one step. The data-driven alternative to Create Table plus a string of Add Entry actions.")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.load_from_resource({loot_table})")
+# @ace_action
+# @ace_name("Load From Resource")
+# @ace_description("Loads a whole table from a Loot Table resource (a .tres you filled in the Inspector) - its name, entries, and pity - in one step. The data-driven alternative to Create Table plus a string of Add Entry actions.")
+# @ace_codegen_template("LootBox.load_from_resource({loot_table})")
 func load_from_resource(loot_table: Resource) -> void:
 	if loot_table == null:
 		push_warning("LootBox: Load From Resource was given no resource.")
@@ -178,41 +158,33 @@ func load_from_resource(loot_table: Resource) -> void:
 	if not pity_tag_value.is_empty() and pity_threshold_value > 0:
 		set_pity(table_id, pity_tag_value, pity_threshold_value)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Roll")
-## @ace_category("Loot")
-## @ace_description("Rolls the table once, firing On Roll Result then On Roll Complete.")
-## @ace_display_template("Roll [b]{table_id}[/b]")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.roll({table_id})")
+# @ace_action
+# @ace_featured
+# @ace_name("Roll")
+# @ace_description("Rolls the table once, firing On Roll Result then On Roll Complete.")
+# @ace_display_template("Roll [b]{table_id}[/b]")
+# @ace_codegen_template("LootBox.roll({table_id})")
 func roll(table_id: String) -> void:
 	_roll_batch(table_id, 1)
 
-## @ace_action
-## @ace_name("Roll Times")
-## @ace_category("Loot")
-## @ace_description("Rolls the table `count` times in one batch (guarantees + pity apply across the batch), then shuffles.")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.roll_times({table_id}, {count})")
+# @ace_action
+# @ace_name("Roll Times")
+# @ace_description("Rolls the table `count` times in one batch (guarantees + pity apply across the batch), then shuffles.")
+# @ace_codegen_template("LootBox.roll_times({table_id}, {count})")
 func roll_times(table_id: String, count: int) -> void:
 	_roll_batch(table_id, maxi(count, 1))
 
-## @ace_condition
-## @ace_name("Has Table")
-## @ace_category("Loot")
-## @ace_description("Whether a table with this id is registered.")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.has_table({table_id})")
+# @ace_condition
+# @ace_name("Has Table")
+# @ace_description("Whether a table with this id is registered.")
+# @ace_codegen_template("LootBox.has_table({table_id})")
 func has_table(table_id: String) -> bool:
 	return _tables.has(table_id)
 
-## @ace_condition
-## @ace_name("Entry Has Tag")
-## @ace_category("Loot")
-## @ace_description("Whether any entry in a table carries the given tag.")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.entry_has_tag({table_id}, {tag})")
+# @ace_condition
+# @ace_name("Entry Has Tag")
+# @ace_description("Whether any entry in a table carries the given tag.")
+# @ace_codegen_template("LootBox.entry_has_tag({table_id}, {tag})")
 func entry_has_tag(table_id: String, tag: String) -> bool:
 	if not _tables.has(table_id):
 		return false
@@ -221,120 +193,94 @@ func entry_has_tag(table_id: String, tag: String) -> bool:
 			return true
 	return false
 
-## @ace_expression
-## @ace_name("Table Count")
-## @ace_category("Loot")
-## @ace_description("How many tables are registered.")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.table_count()")
+# @ace_expression
+# @ace_name("Table Count")
+# @ace_description("How many tables are registered.")
+# @ace_codegen_template("LootBox.table_count()")
 func table_count() -> int:
 	return _tables.size()
 
-## @ace_expression
-## @ace_name("Entry Count")
-## @ace_category("Loot")
-## @ace_description("How many entries a table has.")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.entry_count({table_id})")
+# @ace_expression
+# @ace_name("Entry Count")
+# @ace_description("How many entries a table has.")
+# @ace_codegen_template("LootBox.entry_count({table_id})")
 func entry_count(table_id: String) -> int:
 	return int(_tables[table_id].entries.size()) if _tables.has(table_id) else 0
 
-## @ace_expression
-## @ace_name("Pity Count")
-## @ace_category("Loot")
-## @ace_description("The current miss streak for a table's tag.")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.pity_count_of({table_id}, {tag})")
+# @ace_expression
+# @ace_name("Pity Count")
+# @ace_description("The current miss streak for a table's tag.")
+# @ace_codegen_template("LootBox.pity_count_of({table_id}, {tag})")
 func pity_count_of(table_id: String, tag: String) -> int:
 	return int(_pity[table_id][tag].count) if _pity.has(table_id) and _pity[table_id].has(tag) else 0
 
-## @ace_expression
-## @ace_name("Roll Table")
-## @ace_category("Loot")
-## @ace_description("The table that was rolled (inside On Roll Result / Complete).")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.roll_table()")
+# @ace_expression
+# @ace_name("Roll Table")
+# @ace_description("The table that was rolled (inside On Roll Result / Complete).")
+# @ace_codegen_template("LootBox.roll_table()")
 func roll_table() -> String:
 	return _roll_table
 
-## @ace_expression
-## @ace_name("Roll Item")
-## @ace_category("Loot")
-## @ace_description("The item id that dropped (inside On Roll Result).")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.roll_item()")
+# @ace_expression
+# @ace_name("Roll Item")
+# @ace_description("The item id that dropped (inside On Roll Result).")
+# @ace_codegen_template("LootBox.roll_item()")
 func roll_item() -> String:
 	return _roll_item
 
-## @ace_expression
-## @ace_name("Roll Quantity")
-## @ace_category("Loot")
-## @ace_description("The quantity of the dropped item (inside On Roll Result).")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.roll_quantity()")
+# @ace_expression
+# @ace_name("Roll Quantity")
+# @ace_description("The quantity of the dropped item (inside On Roll Result).")
+# @ace_codegen_template("LootBox.roll_quantity()")
 func roll_quantity() -> float:
 	return _roll_quantity
 
-## @ace_expression
-## @ace_name("Roll Tags")
-## @ace_category("Loot")
-## @ace_description("Comma-separated tags of the dropped item (inside On Roll Result).")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.roll_tags()")
+# @ace_expression
+# @ace_name("Roll Tags")
+# @ace_description("Comma-separated tags of the dropped item (inside On Roll Result).")
+# @ace_codegen_template("LootBox.roll_tags()")
 func roll_tags() -> String:
 	return _roll_tags
 
-## @ace_expression
-## @ace_name("Roll Index")
-## @ace_category("Loot")
-## @ace_description("The 0-based position of this drop in the batch (inside On Roll Result).")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.roll_index()")
+# @ace_expression
+# @ace_name("Roll Index")
+# @ace_description("The 0-based position of this drop in the batch (inside On Roll Result).")
+# @ace_codegen_template("LootBox.roll_index()")
 func roll_index() -> int:
 	return _roll_index
 
-## @ace_expression
-## @ace_name("Total Rolls")
-## @ace_category("Loot")
-## @ace_description("How many items dropped in the last batch (inside On Roll Complete).")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.total_rolls()")
+# @ace_expression
+# @ace_name("Total Rolls")
+# @ace_description("How many items dropped in the last batch (inside On Roll Complete).")
+# @ace_codegen_template("LootBox.total_rolls()")
 func total_rolls() -> int:
 	return _roll_total
 
-## @ace_expression
-## @ace_name("Last Seed")
-## @ace_category("Loot")
-## @ace_description("The seed used for the last roll (store it to replay the exact drop).")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.last_seed()")
+# @ace_expression
+# @ace_name("Last Seed")
+# @ace_description("The seed used for the last roll (store it to replay the exact drop).")
+# @ace_codegen_template("LootBox.last_seed()")
 func last_seed() -> int:
 	return _last_seed
 
-## @ace_expression
-## @ace_name("Pity Table")
-## @ace_category("Loot")
-## @ace_description("The table whose pity fired (inside On Pity Triggered).")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.pity_table()")
+# @ace_expression
+# @ace_name("Pity Table")
+# @ace_description("The table whose pity fired (inside On Pity Triggered).")
+# @ace_codegen_template("LootBox.pity_table()")
 func pity_table() -> String:
 	return _pity_ctx_table
 
-## @ace_expression
-## @ace_name("Pity Tag")
-## @ace_category("Loot")
-## @ace_description("The tag whose pity fired (inside On Pity Triggered).")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.pity_tag()")
+# @ace_expression
+# @ace_name("Pity Tag")
+# @ace_description("The tag whose pity fired (inside On Pity Triggered).")
+# @ace_codegen_template("LootBox.pity_tag()")
 func pity_tag() -> String:
 	return _pity_ctx_tag
 
-## @ace_expression
-## @ace_name("Pity Count At Trigger")
-## @ace_category("Loot")
-## @ace_description("The miss streak when pity fired (inside On Pity Triggered).")
-## @ace_icon("res://eventsheet_addons/loot_table/icon.svg")
-## @ace_codegen_template("LootBox.pity_count()")
+# @ace_expression
+# @ace_name("Pity Count At Trigger")
+# @ace_description("The miss streak when pity fired (inside On Pity Triggered).")
+# @ace_codegen_template("LootBox.pity_count()")
 func pity_count() -> int:
 	return _pity_ctx_count
 
@@ -456,7 +402,7 @@ func _roll_batch(table_id: String, count: int) -> void:
 		on_roll_result.emit()
 	on_roll_complete.emit()
 
-## @ace_hidden
+# @ace_hidden
 func save_state() -> Dictionary:
 	# Save-state seam: the Save System walks any node in its persist group (or targeted
 	# by Save/Load Node State) and duck-types these two methods. Plain data only.
@@ -464,7 +410,7 @@ func save_state() -> Dictionary:
 		"pity": _pity.duplicate(true)
 	}
 
-## @ace_hidden
+# @ace_hidden
 func load_state(state: Dictionary) -> void:
 	if state.is_empty():
 		return

@@ -1,14 +1,14 @@
-## @ace_tags(motion, juice)
-## @ace_category("Tween")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_tags(motion, juice)
+# @ace_category("Tween")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @tool
 @icon("res://eventsheet_addons/tween/icon.svg")
 class_name TweenBehavior
 extends Node
 ## Wraps Godot's tween system in plain event rows: pick the feel once in the Inspector (transition curve and easing), then one action slides, scales, spins, or fades the host, with a trigger when it finishes. Compiles down to a normal create_tween() with zero plugin dependency.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 
@@ -21,12 +21,12 @@ func _enter_tree() -> void:
 		push_warning("Tween Behavior needs a Node2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Preview", "Play") var _preview_start_button: Callable = _preview_start
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
 
@@ -238,8 +238,8 @@ func _preview_repeat(run: int) -> void:
 			return
 		_preview_kick()
 
-## @ace_trigger
-## @ace_name("On Tween Finished")
+# @ace_trigger
+# @ace_name("On Tween Finished")
 signal tween_finished
 
 ## Seconds used when a tween call passes 0.
@@ -284,119 +284,100 @@ func _tween_along(property_path: String, final_value: float, seconds: float, cur
 	_along_tween = along
 	return along
 
-## @ace_action
-## @ace_featured
-## @ace_name("Tween Property")
-## @ace_category("Tween")
-## @ace_description("Tweens any host property (e.g. position:x) to a value.")
-## @ace_display_template("Tween [b]{property_path}[/b] to [b]{final_value}[/b] over [b]{duration}[/b] s")
-## @ace_icon("res://eventsheet_addons/tween/icon.svg")
-## @ace_codegen_template("$TweenBehavior.tween_property_to({property_path}, {final_value}, {duration})")
+# @ace_action
+# @ace_featured
+# @ace_name("Tween Property")
+# @ace_description("Tweens any host property (e.g. position:x) to a value.")
+# @ace_display_template("Tween [b]{property_path}[/b] to [b]{final_value}[/b] over [b]{duration}[/b] s")
+# @ace_codegen_template("$TweenBehavior.tween_property_to({property_path}, {final_value}, {duration})")
 func tween_property_to(property_path: String, final_value: float, duration: float) -> void:
 	_start_tween(property_path, final_value, duration)
 
-## @ace_action
-## @ace_name("Tween Position")
-## @ace_category("Tween")
-## @ace_description("Moves the host to (x, y).")
-## @ace_icon("res://eventsheet_addons/tween/icon.svg")
-## @ace_codegen_template("$TweenBehavior.tween_position({x}, {y}, {duration})")
+# @ace_action
+# @ace_name("Tween Position")
+# @ace_description("Moves the host to (x, y).")
+# @ace_codegen_template("$TweenBehavior.tween_position({x}, {y}, {duration})")
 func tween_position(x: float, y: float, duration: float) -> void:
 	_start_tween("position", Vector2(x, y), duration)
 
-## @ace_action
-## @ace_name("Tween Scale")
-## @ace_category("Tween")
-## @ace_description("Scales the host uniformly.")
-## @ace_icon("res://eventsheet_addons/tween/icon.svg")
-## @ace_codegen_template("$TweenBehavior.tween_scale({amount}, {duration})")
+# @ace_action
+# @ace_name("Tween Scale")
+# @ace_description("Scales the host uniformly.")
+# @ace_codegen_template("$TweenBehavior.tween_scale({amount}, {duration})")
 func tween_scale(amount: float, duration: float) -> void:
 	_start_tween("scale", Vector2(amount, amount), duration)
 
-## @ace_action
-## @ace_name("Tween Rotation")
-## @ace_category("Tween")
-## @ace_description("Rotates the host to the given degrees.")
-## @ace_icon("res://eventsheet_addons/tween/icon.svg")
-## @ace_codegen_template("$TweenBehavior.tween_rotation({degrees}, {duration})")
+# @ace_action
+# @ace_name("Tween Rotation")
+# @ace_description("Rotates the host to the given degrees.")
+# @ace_codegen_template("$TweenBehavior.tween_rotation({degrees}, {duration})")
 func tween_rotation(degrees: float, duration: float) -> void:
 	_start_tween("rotation_degrees", degrees, duration)
 
-## @ace_action
-## @ace_name("Tween Alpha")
-## @ace_category("Tween")
-## @ace_description("Fades the host's modulate alpha.")
-## @ace_icon("res://eventsheet_addons/tween/icon.svg")
-## @ace_codegen_template("$TweenBehavior.tween_alpha({alpha}, {duration})")
+# @ace_action
+# @ace_name("Tween Alpha")
+# @ace_description("Fades the host's modulate alpha.")
+# @ace_codegen_template("$TweenBehavior.tween_alpha({alpha}, {duration})")
 func tween_alpha(alpha: float, duration: float) -> void:
 	_start_tween("modulate:a", clampf(alpha, 0.0, 1.0), duration)
 
-## @ace_action
-## @ace_name("Stop Tweens")
-## @ace_category("Tween")
-## @ace_description("Kills the running tween (host stays where it is).")
-## @ace_icon("res://eventsheet_addons/tween/icon.svg")
-## @ace_codegen_template("$TweenBehavior.stop_tweens()")
+# @ace_action
+# @ace_name("Stop Tweens")
+# @ace_description("Kills the running tween (host stays where it is).")
+# @ace_codegen_template("$TweenBehavior.stop_tweens()")
 func stop_tweens() -> void:
 	if _active_tween != null:
 		_active_tween.kill()
 		_active_tween = null
 
-## @ace_action
-## @ace_name("Tween Property Along Curve")
-## @ace_category("Tween")
-## @ace_description("Tweens a number property along a Curve file you own, in one of four readings: the curve as the value, added to where the property was, from there to a destination, or the curve's 0 to 1 remapped between two numbers. The value the property had before the first of these touched it is remembered, so Tween Property Back can return to it.")
-## @ace_display_template("Tween [b]{property_path}[/b] along [b]{curve}[/b] over [b]{seconds}[/b] s")
-## @ace_param(property_path, desc: "The number property to move, as the Inspector spells it: rotation_degrees, modulate:a, position:x.")
-## @ace_param(final_value, desc: "The number the mode reads: the value, the offset, or the destination. Ignored by remap.")
-## @ace_param(seconds, default: 0.4, desc: "How long the whole curve takes. 0 uses the behavior's default duration.")
-## @ace_param(curve, desc: "The Curve file the motion follows. It is your file: draw it once in the Inspector and reuse it anywhere.")
-## @ace_param(mode, options: absolute|relative|to destination|remap, default: to destination, desc: "How the curve is read: absolute, relative, to destination, or remap.")
-## @ace_param(from_value, desc: "Remap only: the number the curve's 0 stands for.")
-## @ace_param(to_value, desc: "Remap only: the number the curve's 1 stands for.")
-## @ace_icon("res://eventsheet_addons/tween/icon.svg")
-## @ace_codegen_template("$TweenBehavior.tween_along({property_path}, {final_value}, {seconds}, {curve}, "{mode}", {from_value}, {to_value})")
+# @ace_action
+# @ace_name("Tween Property Along Curve")
+# @ace_description("Tweens a number property along a Curve file you own, in one of four readings: the curve as the value, added to where the property was, from there to a destination, or the curve's 0 to 1 remapped between two numbers. The value the property had before the first of these touched it is remembered, so Tween Property Back can return to it.")
+# @ace_display_template("Tween [b]{property_path}[/b] along [b]{curve}[/b] over [b]{seconds}[/b] s")
+# @ace_param(property_path, desc: "The number property to move, as the Inspector spells it: rotation_degrees, modulate:a, position:x.")
+# @ace_param(final_value, desc: "The number the mode reads: the value, the offset, or the destination. Ignored by remap.")
+# @ace_param(seconds, default: 0.4, desc: "How long the whole curve takes. 0 uses the behavior's default duration.")
+# @ace_param(curve, desc: "The Curve file the motion follows. It is your file: draw it once in the Inspector and reuse it anywhere.")
+# @ace_param(mode, options: absolute|relative|to destination|remap, default: to destination, desc: "How the curve is read: absolute, relative, to destination, or remap.")
+# @ace_param(from_value, desc: "Remap only: the number the curve's 0 stands for.")
+# @ace_param(to_value, desc: "Remap only: the number the curve's 1 stands for.")
+# @ace_codegen_template("$TweenBehavior.tween_along({property_path}, {final_value}, {seconds}, {curve}, "{mode}", {from_value}, {to_value})")
 func tween_along(property_path: String, final_value: float, seconds: float, curve: Curve, mode: String, from_value: float, to_value: float) -> void:
 	_tween_along(property_path, final_value, seconds, curve, mode, from_value, to_value)
 
-## @ace_action
-## @ace_name("Tween Property And Wait")
-## @ace_category("Tween")
-## @ace_description("The same curve tween, waited on: the rows under it run when the property has arrived. Use it to write a beat as one column of rows instead of a timer guessed to match.")
-## @ace_display_template("Tween [b]{property_path}[/b] along [b]{curve}[/b] over [b]{seconds}[/b] s and wait")
-## @ace_param(property_path, desc: "The number property to move, as the Inspector spells it.")
-## @ace_param(final_value, desc: "The number the mode reads: the value, the offset, or the destination. Ignored by remap.")
-## @ace_param(seconds, default: 0.4, desc: "How long the whole curve takes. 0 uses the behavior's default duration.")
-## @ace_param(curve, desc: "The Curve file the motion follows.")
-## @ace_param(mode, options: absolute|relative|to destination|remap, default: to destination, desc: "How the curve is read: absolute, relative, to destination, or remap.")
-## @ace_param(from_value, desc: "Remap only: the number the curve's 0 stands for.")
-## @ace_param(to_value, desc: "Remap only: the number the curve's 1 stands for.")
-## @ace_icon("res://eventsheet_addons/tween/icon.svg")
-## @ace_codegen_template("await $TweenBehavior.tween_along_and_wait({property_path}, {final_value}, {seconds}, {curve}, "{mode}", {from_value}, {to_value})")
+# @ace_action
+# @ace_name("Tween Property And Wait")
+# @ace_description("The same curve tween, waited on: the rows under it run when the property has arrived. Use it to write a beat as one column of rows instead of a timer guessed to match.")
+# @ace_display_template("Tween [b]{property_path}[/b] along [b]{curve}[/b] over [b]{seconds}[/b] s and wait")
+# @ace_param(property_path, desc: "The number property to move, as the Inspector spells it.")
+# @ace_param(final_value, desc: "The number the mode reads: the value, the offset, or the destination. Ignored by remap.")
+# @ace_param(seconds, default: 0.4, desc: "How long the whole curve takes. 0 uses the behavior's default duration.")
+# @ace_param(curve, desc: "The Curve file the motion follows.")
+# @ace_param(mode, options: absolute|relative|to destination|remap, default: to destination, desc: "How the curve is read: absolute, relative, to destination, or remap.")
+# @ace_param(from_value, desc: "Remap only: the number the curve's 0 stands for.")
+# @ace_param(to_value, desc: "Remap only: the number the curve's 1 stands for.")
+# @ace_codegen_template("await $TweenBehavior.tween_along_and_wait({property_path}, {final_value}, {seconds}, {curve}, "{mode}", {from_value}, {to_value})")
 func tween_along_and_wait(property_path: String, final_value: float, seconds: float, curve: Curve, mode: String, from_value: float, to_value: float) -> void:
 	var along: Tween = _tween_along(property_path, final_value, seconds, curve, mode, from_value, to_value)
 	if along != null:
 		await along.finished
 
-## @ace_action
-## @ace_name("Tween Property Back")
-## @ace_category("Tween")
-## @ace_description("Returns a property to the value it held before the first curve tween touched it, over the behavior's own transition and easing. A lid that opened closes with the same number nobody had to type twice.")
-## @ace_display_template("Tween [b]{property_path}[/b] back over [b]{seconds}[/b] s")
-## @ace_param(property_path, desc: "The property to send home.")
-## @ace_param(seconds, default: 0.3, desc: "How long the way back takes. 0 uses the behavior's default duration.")
-## @ace_icon("res://eventsheet_addons/tween/icon.svg")
-## @ace_codegen_template("$TweenBehavior.tween_back({property_path}, {seconds})")
+# @ace_action
+# @ace_name("Tween Property Back")
+# @ace_description("Returns a property to the value it held before the first curve tween touched it, over the behavior's own transition and easing. A lid that opened closes with the same number nobody had to type twice.")
+# @ace_display_template("Tween [b]{property_path}[/b] back over [b]{seconds}[/b] s")
+# @ace_param(property_path, desc: "The property to send home.")
+# @ace_param(seconds, default: 0.3, desc: "How long the way back takes. 0 uses the behavior's default duration.")
+# @ace_codegen_template("$TweenBehavior.tween_back({property_path}, {seconds})")
 func tween_back(property_path: String, seconds: float) -> void:
 	if host == null or not _tween_starts.has(property_path):
 		return
 	_along_kill()
 	_start_tween(property_path, float(_tween_starts[property_path]), seconds)
 
-## @ace_condition
-## @ace_name("Is Tweening")
-## @ace_icon("res://eventsheet_addons/tween/icon.svg")
-## @ace_codegen_template("$TweenBehavior.is_tweening()")
+# @ace_condition
+# @ace_name("Is Tweening")
+# @ace_codegen_template("$TweenBehavior.is_tweening()")
 func is_tweening() -> bool:
 	return _active_tween != null and _active_tween.is_running()
 

@@ -1,4 +1,4 @@
-## @ace_version(1.0.0)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/drawing_prefab_resource/icon.svg")
 class_name DrawingPrefabResource
 extends Resource
@@ -51,6 +51,7 @@ static func line_span(entry: Dictionary) -> PackedVector2Array:
 		Vector2(float(entry.get("p1", 0.0)), float(entry.get("p2", 0.0))),
 	])
 
+# @ace_hidden
 ## The outline of a step drawn as a polygon or a stroke - an arc, a pie, a rounded rectangle or a regular
 ## polygon - as points in the prefab's own space. The stamp node, Draw Prefab and the Inspector picture
 ## all draw these four from the same rules, so a shape is one picture wherever it is seen. An arc is the
@@ -64,7 +65,6 @@ static func line_span(entry: Dictionary) -> PackedVector2Array:
 ##   rounded_rect       p1 width, p2 height, p3 corner radius, placed right and down from the offset like
 ##                      a Rectangle; corners larger than half the short side are held to half of it.
 ##   regular_polygon    p1 radius (centre to corner), p2 sides (3 to 32), p3 angle of the first corner.
-## @ace_hidden
 static func shape_outline(entry: Dictionary) -> PackedVector2Array:
 	var out: PackedVector2Array = PackedVector2Array()
 	var at: Vector2 = Vector2(float(entry.get("x", 0.0)), float(entry.get("y", 0.0)))
@@ -105,9 +105,9 @@ static func shape_outline(entry: Dictionary) -> PackedVector2Array:
 				out.append(at + Vector2.from_angle(deg_to_rad(p3) + TAU * float(corner) / float(sides)) * p1)
 	return out
 
+# @ace_hidden
 ## One line step's stroke: its ends, and its dash pattern when it has one. A step that says
 ## neither draws the single plain line it always drew, so an older prefab is untouched.
-## @ace_hidden
 static func draw_stroke(canvas: CanvasItem, from: Vector2, to: Vector2, width: float, tint: Color, entry: Dictionary) -> void:
 	if not bool(entry.get("dashed", false)):
 		draw_capped(canvas, from, to, width, tint, str(entry.get("caps", "none")))
@@ -131,9 +131,9 @@ static func draw_stroke(canvas: CanvasItem, from: Vector2, to: Vector2, width: f
 				draw_capped(canvas, from + direction * starts, from + direction * ends, width, tint, "round" if style == "rounded" else "none")
 		along += period
 
+# @ace_hidden
 ## One straight run with its ends: cut square at the point (none), half a width past it
 ## (square), or rounded off with a disc at each end (round).
-## @ace_hidden
 static func draw_capped(canvas: CanvasItem, from: Vector2, to: Vector2, width: float, tint: Color, caps: String) -> void:
 	var line_from: Vector2 = from
 	var line_to: Vector2 = to
@@ -146,9 +146,9 @@ static func draw_capped(canvas: CanvasItem, from: Vector2, to: Vector2, width: f
 		canvas.draw_circle(from, width * 0.5, tint)
 		canvas.draw_circle(to, width * 0.5, tint)
 
+# @ace_hidden
 ## One angled dash: the same run leaning over by half a width, drawn as the parallelogram it
 ## is - which is what makes a row of them read as a slant rather than as ticks.
-## @ace_hidden
 static func draw_leaning_dash(canvas: CanvasItem, from: Vector2, direction: Vector2, starts: float, ends: float, width: float, tint: Color) -> void:
 	var half: float = width * 0.5
 	var side: Vector2 = Vector2(-direction.y, direction.x) * half

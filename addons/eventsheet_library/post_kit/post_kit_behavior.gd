@@ -1,12 +1,12 @@
-## @ace_tags(camera, effects, shader, 3d, visual)
-## @ace_category("Post Kit")
-## @ace_version(1.0.0)
+# @ace_tags(camera, effects, shader, 3d, visual)
+# @ace_category("Post Kit")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/post_kit/icon.svg")
 class_name PostKitBehavior
 extends Node
 ## The camera's own post stack, for Forward+: vignette, desaturate, pixelate, tint and fade, under the same names the 2D post stack uses, added by name and pulsed in one row. Plus an outline drawn through walls - mark a group, and a second camera's mask of one visual layer is edge-detected over the frame. Attach it under the Camera3D or the WorldEnvironment that carries the Compositor.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 
@@ -184,6 +184,14 @@ func _process(_delta: float) -> void:
 	if outline != null:
 		outline.mask_texture = RenderingServer.texture_get_rd_texture(_mask.get_texture().get_rid())
 
+# @ace_action
+# @ace_featured
+# @ace_name("Add Post Effect")
+# @ace_display_template("Add [b]{effect}[/b] at [b]{strength}[/b]")
+# @ace_param(effect, options: vignette=Vignette|desaturate=Desaturate|pixelate=Pixelate|tint=Tint|fade=Fade, default: vignette, desc: "Which effect. Each one runs a compute shader over the whole frame, so each one costs a pass over every pixel the camera drew.")
+# @ace_param(called, default_word: "", desc: "What later rows address it by. Empty names it after its effect, which is what one of each wants.")
+# @ace_param(strength, default: 0.6, desc: "How far it goes, 0 to 1. Scaled by the effect-strength dial, and held under a ceiling while no flashing is on.")
+# @ace_codegen_template("$PostKitBehavior.add_post_effect("{effect}", "{called}", {strength})")
 ## Adds one effect to the end of the camera's post stack and turns it on. The five words are
 ## vignette, desaturate, pixelate, tint and fade - the same words the 2D post stack uses, so a row
 ## reads alike on either. Leave the name empty and the entry is called after its effect, which is
@@ -191,15 +199,6 @@ func _process(_delta: float) -> void:
 ##
 ## FORWARD+ ONLY. Mobile and Compatibility have no compositor, so this row does nothing at all
 ## there; Screen FX does the same looks on any renderer.
-## @ace_action
-## @ace_featured
-## @ace_name("Add Post Effect")
-## @ace_display_template("Add [b]{effect}[/b] at [b]{strength}[/b]")
-## @ace_param(effect, options: vignette=Vignette|desaturate=Desaturate|pixelate=Pixelate|tint=Tint|fade=Fade, default: vignette, desc: "Which effect. Each one runs a compute shader over the whole frame, so each one costs a pass over every pixel the camera drew.")
-## @ace_param(called, default_word: "", desc: "What later rows address it by. Empty names it after its effect, which is what one of each wants.")
-## @ace_param(strength, default: 0.6, desc: "How far it goes, 0 to 1. Scaled by the effect-strength dial, and held under a ceiling while no flashing is on.")
-## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
-## @ace_codegen_template("$PostKitBehavior.add_post_effect("{effect}", "{called}", {strength})")
 func add_post_effect(effect: String = "vignette", called: String = "", strength: float = 0.6) -> void:
 	var word: String = effect.strip_edges().to_lower()
 	if not POST_EFFECTS.has(word):
@@ -211,13 +210,12 @@ func add_post_effect(effect: String = "vignette", called: String = "", strength:
 		name_of_it = word
 	_add_entry(word, name_of_it, strength)
 
+# @ace_action
+# @ace_name("Remove Post Effect")
+# @ace_display_template("Remove post effect [b]{called}[/b]")
+# @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+# @ace_codegen_template("$PostKitBehavior.remove_post_effect("{called}")")
 ## Takes one effect off the stack, so it stops costing anything at all.
-## @ace_action
-## @ace_name("Remove Post Effect")
-## @ace_display_template("Remove post effect [b]{called}[/b]")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
-## @ace_codegen_template("$PostKitBehavior.remove_post_effect("{called}")")
 func remove_post_effect(called: String = "vignette") -> void:
 	var at: int = _find(called)
 	if at < 0:
@@ -226,53 +224,49 @@ func remove_post_effect(called: String = "vignette") -> void:
 	_stack.remove_at(at)
 	_write_effects()
 
+# @ace_action
+# @ace_name("Enable Post Effect")
+# @ace_display_template("Enable post effect [b]{called}[/b]")
+# @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+# @ace_codegen_template("$PostKitBehavior.enable_post_effect("{called}")")
 ## Turns one effect back on without forgetting how far up it was.
-## @ace_action
-## @ace_name("Enable Post Effect")
-## @ace_display_template("Enable post effect [b]{called}[/b]")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
-## @ace_codegen_template("$PostKitBehavior.enable_post_effect("{called}")")
 func enable_post_effect(called: String = "vignette") -> void:
 	_set_enabled(called, true)
 
+# @ace_action
+# @ace_name("Disable Post Effect")
+# @ace_display_template("Disable post effect [b]{called}[/b]")
+# @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+# @ace_codegen_template("$PostKitBehavior.disable_post_effect("{called}")")
 ## Turns one effect off and leaves it in the stack, so a later Enable Post Effect brings back the
 ## same strength rather than a fresh guess at it.
-## @ace_action
-## @ace_name("Disable Post Effect")
-## @ace_display_template("Disable post effect [b]{called}[/b]")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
-## @ace_codegen_template("$PostKitBehavior.disable_post_effect("{called}")")
 func disable_post_effect(called: String = "vignette") -> void:
 	_set_enabled(called, false)
 
+# @ace_action
+# @ace_name("Set Post Strength")
+# @ace_display_template("Set [b]{called}[/b] strength to [b]{strength}[/b]")
+# @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+# @ace_param(strength, default: 1.0, desc: "How far it goes, 0 to 1, before the accessibility dials have their say.")
+# @ace_codegen_template("$PostKitBehavior.set_post_strength("{called}", {strength})")
 ## Sets how far one effect goes, straight away.
-## @ace_action
-## @ace_name("Set Post Strength")
-## @ace_display_template("Set [b]{called}[/b] strength to [b]{strength}[/b]")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-## @ace_param(strength, default: 1.0, desc: "How far it goes, 0 to 1, before the accessibility dials have their say.")
-## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
-## @ace_codegen_template("$PostKitBehavior.set_post_strength("{called}", {strength})")
 func set_post_strength(called: String = "vignette", strength: float = 1.0) -> void:
 	_stop_walk_on(called.strip_edges().to_lower())
 	_write_strength(called, strength)
 
+# @ace_action
+# @ace_name("Set Post Dial")
+# @ace_display_template("Set [b]{called}[/b] [b]{dial}[/b] to [b]{value}[/b]")
+# @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+# @ace_param(dial, default: tint, desc: "Which of that effect's own dials - the property the effect declares. The pack guide lists them per effect.")
+# @ace_param(value, default: 0.5, desc: "What to set it to: a number, a Color, whatever that dial takes.")
+# @ace_codegen_template("$PostKitBehavior.set_post_dial("{called}", "{dial}", {value})")
 ## Sets ONE OF AN EFFECT'S OWN DIALS - the tint's colour, the vignette's softness, the pixelate's
 ## block size. Strength is how far the effect goes; this is what the effect is, and it is the row
 ## that sits one dropdown deeper than the quick form. The same words the screen's own stack uses, so
 ## a project that moves renderer keeps its sheet.
 ##
 ## FORWARD+ ONLY. Nothing happens on Mobile or Compatibility.
-## @ace_action
-## @ace_name("Set Post Dial")
-## @ace_display_template("Set [b]{called}[/b] [b]{dial}[/b] to [b]{value}[/b]")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-## @ace_param(dial, default: tint, desc: "Which of that effect's own dials - the property the effect declares. The pack guide lists them per effect.")
-## @ace_param(value, default: 0.5, desc: "What to set it to: a number, a Color, whatever that dial takes.")
-## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
-## @ace_codegen_template("$PostKitBehavior.set_post_dial("{called}", "{dial}", {value})")
 func set_post_dial(called: String = "vignette", dial: String = "tint", value: Variant = 0.5) -> void:
 	var at: int = _find(called)
 	var dial_name: String = dial.strip_edges()
@@ -287,16 +281,15 @@ func set_post_dial(called: String = "vignette", dial: String = "tint", value: Va
 		return
 	made.set(dial_name, value)
 
+# @ace_expression
+# @ace_name("Post Dial")
+# @ace_display_template("[b]{called}[/b] [b]{dial}[/b]")
+# @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+# @ace_param(dial, default: tint, desc: "Which of that effect's own dials to read back.")
+# @ace_codegen_template("$PostKitBehavior.post_dial("{called}", "{dial}")")
 ## What one of an effect's own dials currently holds - the other half of Set Post Dial, for a row
 ## that nudges a value rather than naming one. Nothing at all for an entry or a dial that is not
 ## there.
-## @ace_expression
-## @ace_name("Post Dial")
-## @ace_display_template("[b]{called}[/b] [b]{dial}[/b]")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-## @ace_param(dial, default: tint, desc: "Which of that effect's own dials to read back.")
-## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
-## @ace_codegen_template("$PostKitBehavior.post_dial("{called}", "{dial}")")
 func post_dial(called: String = "vignette", dial: String = "tint") -> Variant:
 	var at: int = _find(called)
 	if at < 0:
@@ -306,35 +299,33 @@ func post_dial(called: String = "vignette", dial: String = "tint") -> Variant:
 		return null
 	return made.get(dial.strip_edges())
 
+# @ace_action
+# @ace_name("Fade Post Strength")
+# @ace_display_template("Fade [b]{called}[/b] to [b]{to}[/b] over [b]{seconds}[/b] s")
+# @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+# @ace_param(to, default: 1.0, desc: "The strength it arrives at, 0 to 1.")
+# @ace_param(seconds, default: 0.5, desc: "How long the walk takes. Held over a floor while no flashing is on.")
+# @ace_codegen_template("$PostKitBehavior.fade_post_strength("{called}", {to}, {seconds})")
 ## Walks one effect's strength to a value over a number of seconds - the slow drain of colour as the
 ## health goes, the vignette closing in.
-## @ace_action
-## @ace_name("Fade Post Strength")
-## @ace_display_template("Fade [b]{called}[/b] to [b]{to}[/b] over [b]{seconds}[/b] s")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-## @ace_param(to, default: 1.0, desc: "The strength it arrives at, 0 to 1.")
-## @ace_param(seconds, default: 0.5, desc: "How long the walk takes. Held over a floor while no flashing is on.")
-## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
-## @ace_codegen_template("$PostKitBehavior.fade_post_strength("{called}", {to}, {seconds})")
 func fade_post_strength(called: String = "vignette", to: float = 1.0, seconds: float = 0.5) -> void:
 	_walk_strength(called.strip_edges().to_lower(), clampf(to, 0.0, 1.0), _slowed(seconds), 0.0,
 		0.0, false)
 
+# @ace_action
+# @ace_featured
+# @ace_name("Pulse Post Effect")
+# @ace_display_template("Pulse [b]{effect}[/b] at [b]{strength}[/b] for [b]{seconds}[/b] s")
+# @ace_param(effect, options: vignette=Vignette|desaturate=Desaturate|pixelate=Pixelate|tint=Tint|fade=Fade, default: vignette, desc: "Which effect to flash up and let fall.")
+# @ace_param(strength, default: 0.6, desc: "How far up it goes, 0 to 1. Held under a ceiling while no flashing is on.")
+# @ace_param(seconds, default: 0.35, desc: "How long it takes to fall back to where it was.")
+# @ace_codegen_template("$PostKitBehavior.pulse_post_effect("{effect}", {strength}, {seconds})")
 ## Flashes one effect up and lets it fall back - the whole sentence a hit, a pickup or a near miss
 ## wants, in one row and with nothing to tune. An effect that was not on the stack is borrowed for
 ## the moment and taken off again at the end.
 ##
 ## FORWARD+ ONLY. Nothing happens on Mobile or Compatibility; Screen FX pulses the same words on
 ## any renderer.
-## @ace_action
-## @ace_featured
-## @ace_name("Pulse Post Effect")
-## @ace_display_template("Pulse [b]{effect}[/b] at [b]{strength}[/b] for [b]{seconds}[/b] s")
-## @ace_param(effect, options: vignette=Vignette|desaturate=Desaturate|pixelate=Pixelate|tint=Tint|fade=Fade, default: vignette, desc: "Which effect to flash up and let fall.")
-## @ace_param(strength, default: 0.6, desc: "How far up it goes, 0 to 1. Held under a ceiling while no flashing is on.")
-## @ace_param(seconds, default: 0.35, desc: "How long it takes to fall back to where it was.")
-## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
-## @ace_codegen_template("$PostKitBehavior.pulse_post_effect("{effect}", {strength}, {seconds})")
 func pulse_post_effect(effect: String = "vignette", strength: float = 0.6, seconds: float = 0.35) -> void:
 	var word: String = effect.strip_edges().to_lower()
 	if not POST_EFFECTS.has(word):
@@ -355,34 +346,41 @@ func pulse_post_effect(effect: String = "vignette", strength: float = 0.6, secon
 		return
 	_walk_strength(word, clampf(strength, 0.0, 1.0), 0.0, falls_back_to, _slowed(seconds), borrowed)
 
+# @ace_condition
+# @ace_name("Has Post Effect")
+# @ace_display_template("has the post effect [b]{called}[/b]")
+# @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+# @ace_codegen_template("$PostKitBehavior.has_post_effect("{called}")")
 ## Whether an effect by that name is on the stack at all, on or off. The gate for a row that should
 ## only add one once.
-## @ace_condition
-## @ace_name("Has Post Effect")
-## @ace_display_template("has the post effect [b]{called}[/b]")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
-## @ace_codegen_template("$PostKitBehavior.has_post_effect("{called}")")
 func has_post_effect(called: String = "vignette") -> bool:
 	return _find(called) >= 0
 
+# @ace_expression
+# @ace_name("Post Strength")
+# @ace_param(called, default: vignette, desc: "The name the entry was added under.")
+# @ace_codegen_template("$PostKitBehavior.post_strength("{called}")")
 ## How far one effect has been ASKED to go, 0 to 1 - the strength the rows set, before the
 ## effect-strength setting and the no-flashing ceiling are applied on the way to the CompositorEffect.
 ## That is the number a sheet's own arithmetic means: Set Post Strength to Post Strength + 0.1 walks
 ## up in tenths whatever a player's accessibility dials are doing, where reading the dialled value
 ## back would fold those dials in again on every round trip and the effect would sink towards
 ## nothing. 0 for one that is not there.
-## @ace_expression
-## @ace_name("Post Strength")
-## @ace_param(called, default: vignette, desc: "The name the entry was added under.")
-## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
-## @ace_codegen_template("$PostKitBehavior.post_strength("{called}")")
 func post_strength(called: String = "vignette") -> float:
 	var at: int = _find(called)
 	if at < 0:
 		return 0.0
 	return _stack[at].strength
 
+# @ace_action
+# @ace_featured
+# @ace_name("Outline Group Through Walls")
+# @ace_display_template("Outline group [b]{group}[/b] through walls in [b]{colour}[/b]")
+# @ace_param(group, default: enemies, desc: "The group whose nodes are outlined. Every visual instance under each of them is marked.")
+# @ace_param(colour, default: Color.YELLOW, desc: "The colour the outline is drawn in.")
+# @ace_param(width, default: 2.0, desc: "How thick the outline is, in pixels of the frame.")
+# @ace_param(seconds, default: 0.0, desc: "How long it lasts. 0 leaves it on until Stop Outlining.")
+# @ace_codegen_template("$PostKitBehavior.outline_group_through_walls("{group}", {colour}, {width}, {seconds})")
 ## Draws an outline around every node in a group, THROUGH whatever is standing in front of them -
 ## the enemies behind the wall, the objective across the level, the teammate in the smoke.
 ##
@@ -392,16 +390,6 @@ func post_strength(called: String = "vignette") -> float:
 ## marked. Ask for seconds and it takes itself off again; ask for 0 and Stop Outlining ends it.
 ##
 ## FORWARD+ ONLY. Nothing happens on Mobile or Compatibility.
-## @ace_action
-## @ace_featured
-## @ace_name("Outline Group Through Walls")
-## @ace_display_template("Outline group [b]{group}[/b] through walls in [b]{colour}[/b]")
-## @ace_param(group, default: enemies, desc: "The group whose nodes are outlined. Every visual instance under each of them is marked.")
-## @ace_param(colour, default: Color.YELLOW, desc: "The colour the outline is drawn in.")
-## @ace_param(width, default: 2.0, desc: "How thick the outline is, in pixels of the frame.")
-## @ace_param(seconds, default: 0.0, desc: "How long it lasts. 0 leaves it on until Stop Outlining.")
-## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
-## @ace_codegen_template("$PostKitBehavior.outline_group_through_walls("{group}", {colour}, {width}, {seconds})")
 func outline_group_through_walls(group: String = "enemies", colour: Color = Color.YELLOW, width: float = 2.0, seconds: float = 0.0) -> void:
 	if not is_inside_tree() or not _has_compositor():
 		# THE RENDERER IS ASKED FIRST, because "does nothing" has to mean nothing: marking the meshes
@@ -416,16 +404,15 @@ func outline_group_through_walls(group: String = "enemies", colour: Color = Colo
 		return
 	_start_outline(colour, width, 0.0, seconds)
 
+# @ace_action
+# @ace_name("Silhouette Node Through Walls")
+# @ace_display_template("Silhouette [i]{node}[/i] through walls in [b]{colour}[/b]")
+# @ace_param(node, hint: node_path, default: $Enemy, desc: "The node to fill. Every visual instance under it is marked.")
+# @ace_param(colour, default: Color.YELLOW, desc: "The colour it is filled with.")
+# @ace_param(seconds, default: 0.0, desc: "How long it lasts. 0 leaves it on until Stop Outlining.")
+# @ace_codegen_template("$PostKitBehavior.silhouette_node_through_walls({node}, {colour}, {seconds})")
 ## Fills one node in a flat colour, through whatever is in front of it - where the thing is, rather
 ## than what shape it is. The same mask as the outline, drawn solid.
-## @ace_action
-## @ace_name("Silhouette Node Through Walls")
-## @ace_display_template("Silhouette [i]{node}[/i] through walls in [b]{colour}[/b]")
-## @ace_param(node, hint: node_path, default: $Enemy, desc: "The node to fill. Every visual instance under it is marked.")
-## @ace_param(colour, default: Color.YELLOW, desc: "The colour it is filled with.")
-## @ace_param(seconds, default: 0.0, desc: "How long it lasts. 0 leaves it on until Stop Outlining.")
-## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
-## @ace_codegen_template("$PostKitBehavior.silhouette_node_through_walls({node}, {colour}, {seconds})")
 func silhouette_node_through_walls(node: Node3D, colour: Color = Color.YELLOW, seconds: float = 0.0) -> void:
 	if node == null or not is_inside_tree() or not _has_compositor():
 		# The renderer is asked before anything is marked, for the reason the group row asks first.
@@ -435,12 +422,11 @@ func silhouette_node_through_walls(node: Node3D, colour: Color = Color.YELLOW, s
 		return
 	_start_outline(colour, 2.0, 1.0, seconds)
 
+# @ace_action
+# @ace_name("Stop Outlining")
+# @ace_codegen_template("$PostKitBehavior.stop_outlining()")
 ## Ends every outline and silhouette at once: the mask layer goes back off the meshes that were
 ## marked, the entry leaves the stack, and the mask rig is freed, so nothing is left running.
-## @ace_action
-## @ace_name("Stop Outlining")
-## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
-## @ace_codegen_template("$PostKitBehavior.stop_outlining()")
 func stop_outlining() -> void:
 	for instance: VisualInstance3D in _marked:
 		if is_instance_valid(instance):
@@ -449,13 +435,12 @@ func stop_outlining() -> void:
 	remove_post_effect(OUTLINE_EFFECT)
 	_free_mask()
 
+# @ace_condition
+# @ace_name("Is Outlined")
+# @ace_display_template("[i]{node}[/i] is outlined")
+# @ace_param(node, hint: node_path, default: $Enemy, desc: "The node to ask about.")
+# @ace_codegen_template("$PostKitBehavior.is_outlined({node})")
 ## Whether a node is one of the ones being drawn through walls right now.
-## @ace_condition
-## @ace_name("Is Outlined")
-## @ace_display_template("[i]{node}[/i] is outlined")
-## @ace_param(node, hint: node_path, default: $Enemy, desc: "The node to ask about.")
-## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
-## @ace_codegen_template("$PostKitBehavior.is_outlined({node})")
 func is_outlined(node: Node3D) -> bool:
 	if node == null:
 		return false
@@ -464,18 +449,17 @@ func is_outlined(node: Node3D) -> bool:
 			return true
 	return false
 
+# @ace_condition
+# @ace_name("Is Hidden From View")
+# @ace_display_template("[i]{node}[/i] is hidden from view")
+# @ace_param(node, hint: node_path, default: $Enemy, desc: "The node to ask about.")
+# @ace_codegen_template("$PostKitBehavior.is_hidden_from_view({node})")
 ## Whether something solid is standing between the camera and a node - the question an outline row
 ## is usually the answer to, asked on its own so a sheet can decide instead of always drawing.
 ##
 ## It is one ray from the camera to the node's own origin, so a body whose middle is visible past
 ## the corner of a wall reads as seen. That is a cheap question with an honest answer, not a
 ## visibility test.
-## @ace_condition
-## @ace_name("Is Hidden From View")
-## @ace_display_template("[i]{node}[/i] is hidden from view")
-## @ace_param(node, hint: node_path, default: $Enemy, desc: "The node to ask about.")
-## @ace_icon("res://eventsheet_addons/post_kit/icon.svg")
-## @ace_codegen_template("$PostKitBehavior.is_hidden_from_view({node})")
 func is_hidden_from_view(node: Node3D) -> bool:
 	if node == null or not is_inside_tree():
 		return false

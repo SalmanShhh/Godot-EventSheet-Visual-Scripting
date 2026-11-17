@@ -1,12 +1,12 @@
-## @ace_category("Health")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Health")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/health/icon.svg")
 class_name SimpleHealthBehavior
 extends Node
 ## Gives any Node2D a real health model: current health seeded from a max, damage and healing, a death latch, a resistance multiplier, and named shield/armour pools that intercept damage in priority order. Triggers fire on damage, death, and pool breaks so your sheet reacts without writing GDScript.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 
@@ -18,29 +18,29 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Simple Health Behavior needs a Node2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Damaged")
+# @ace_trigger
+# @ace_name("On Damaged")
 signal on_damaged
-## @ace_trigger
-## @ace_name("On Death")
+# @ace_trigger
+# @ace_name("On Death")
 signal on_death
-## @ace_trigger
-## @ace_name("On Healed")
+# @ace_trigger
+# @ace_name("On Healed")
 signal on_healed
-## @ace_trigger
-## @ace_name("On Health Changed")
+# @ace_trigger
+# @ace_name("On Health Changed")
 signal on_health_changed
-## @ace_trigger
-## @ace_name("On Revived")
+# @ace_trigger
+# @ace_name("On Revived")
 signal on_revived
-## @ace_trigger
-## @ace_name("On Health Pool Added")
+# @ace_trigger
+# @ace_name("On Health Pool Added")
 signal on_health_pool_added
-## @ace_trigger
-## @ace_name("On Health Pool Absorbed")
+# @ace_trigger
+# @ace_name("On Health Pool Absorbed")
 signal on_health_pool_absorbed
-## @ace_trigger
-## @ace_name("On Health Pool Depleted")
+# @ace_trigger
+# @ace_name("On Health Pool Depleted")
 signal on_health_pool_depleted
 
 ## Starting maximum HP; the current health starts at this value.
@@ -146,14 +146,12 @@ func _process(delta: float) -> void:
 	# keeps the tick alive: once nothing is decaying, the countdown switches itself off.
 	set_process(_any_pool_decaying())
 
-## @ace_action
-## @ace_featured
-## @ace_name("Take Damage")
-## @ace_category("Health")
-## @ace_description("Applies damage; health pools absorb in ascending-priority order before real HP. Ignored entirely while invincible (no HP lost, no On Damaged).")
-## @ace_display_template("Take [b]{amount}[/b] damage")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.take_damage({amount})")
+# @ace_action
+# @ace_featured
+# @ace_name("Take Damage")
+# @ace_description("Applies damage; health pools absorb in ascending-priority order before real HP. Ignored entirely while invincible (no HP lost, no On Damaged).")
+# @ace_display_template("Take [b]{amount}[/b] damage")
+# @ace_codegen_template("$SimpleHealthBehavior.take_damage({amount})")
 func take_damage(amount: float) -> void:
 	if amount <= 0.0 or invulnerable or is_dead_flag or is_invincible():
 		return
@@ -191,14 +189,12 @@ func take_damage(amount: float) -> void:
 		on_damaged.emit()
 		on_health_changed.emit()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Heal")
-## @ace_category("Health")
-## @ace_description("Restores health up to max_health.")
-## @ace_display_template("Heal [b]{amount}[/b] HP")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.heal({amount})")
+# @ace_action
+# @ace_featured
+# @ace_name("Heal")
+# @ace_description("Restores health up to max_health.")
+# @ace_display_template("Heal [b]{amount}[/b] HP")
+# @ace_codegen_template("$SimpleHealthBehavior.heal({amount})")
 func heal(amount: float) -> void:
 	if is_dead_flag:
 		return
@@ -207,13 +203,11 @@ func heal(amount: float) -> void:
 	on_healed.emit()
 	on_health_changed.emit()
 
-## @ace_action
-## @ace_name("Set Health")
-## @ace_category("Health")
-## @ace_description("Sets current health directly, firing damage/heal/death as appropriate.")
-## @ace_display_template("Set health to [b]{amount}[/b]")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.set_health_value({amount})")
+# @ace_action
+# @ace_name("Set Health")
+# @ace_description("Sets current health directly, firing damage/heal/death as appropriate.")
+# @ace_display_template("Set health to [b]{amount}[/b]")
+# @ace_codegen_template("$SimpleHealthBehavior.set_health_value({amount})")
 func set_health_value(amount: float) -> void:
 	if is_dead_flag:
 		return
@@ -238,66 +232,54 @@ func set_health_value(amount: float) -> void:
 		on_healed.emit()
 		on_health_changed.emit()
 
-## @ace_action
-## @ace_name("Set Max Health")
-## @ace_category("Health")
-## @ace_description("Sets max health (clamps current down if needed).")
-## @ace_display_template("Set max health to [b]{amount}[/b]")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.set_max_health_value({amount})")
+# @ace_action
+# @ace_name("Set Max Health")
+# @ace_description("Sets max health (clamps current down if needed).")
+# @ace_display_template("Set max health to [b]{amount}[/b]")
+# @ace_codegen_template("$SimpleHealthBehavior.set_max_health_value({amount})")
 func set_max_health_value(amount: float) -> void:
 	max_health = maxf(1.0, amount)
 	if current_health > max_health:
 		current_health = max_health
 		on_health_changed.emit()
 
-## @ace_action
-## @ace_name("Set Invulnerable")
-## @ace_category("Health")
-## @ace_description("Toggles invulnerability (takeDamage no-op while true).")
-## @ace_display_template("Set invulnerable to [b]{state}[/b]")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.set_invulnerable({state})")
+# @ace_action
+# @ace_name("Set Invulnerable")
+# @ace_description("Toggles invulnerability (takeDamage no-op while true).")
+# @ace_display_template("Set invulnerable to [b]{state}[/b]")
+# @ace_codegen_template("$SimpleHealthBehavior.set_invulnerable({state})")
 func set_invulnerable(state: bool) -> void:
 	invulnerable = state
 
-## @ace_action
-## @ace_name("Grant Invincibility")
-## @ace_category("Health")
-## @ace_description("Opens an invincibility window for the given seconds: Take Damage is ignored (no HP lost, no On Damaged) until it closes. Pair it with the Flash pack for the classic i-frame flicker.")
-## @ace_display_template("Grant [b]{seconds}[/b] s of invincibility")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.grant_invincibility({seconds})")
+# @ace_action
+# @ace_name("Grant Invincibility")
+# @ace_description("Opens an invincibility window for the given seconds: Take Damage is ignored (no HP lost, no On Damaged) until it closes. Pair it with the Flash pack for the classic i-frame flicker.")
+# @ace_display_template("Grant [b]{seconds}[/b] s of invincibility")
+# @ace_codegen_template("$SimpleHealthBehavior.grant_invincibility({seconds})")
 func grant_invincibility(seconds: float) -> void:
 	_invincible_until = Time.get_ticks_msec() + int(maxf(seconds, 0.0) * 1000.0)
 
-## @ace_condition
-## @ace_name("Is Invincible")
-## @ace_category("Health")
-## @ace_description("True while an invincibility window granted by Grant Invincibility is still open.")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.is_invincible()")
+# @ace_condition
+# @ace_name("Is Invincible")
+# @ace_description("True while an invincibility window granted by Grant Invincibility is still open.")
+# @ace_codegen_template("$SimpleHealthBehavior.is_invincible()")
 func is_invincible() -> bool:
 	return Time.get_ticks_msec() < _invincible_until
 
-## @ace_action
-## @ace_name("Set Health Absorption Rate")
-## @ace_category("Health")
-## @ace_description("Damage multiplier for real HP (resistance); 0 = invulnerable.")
-## @ace_display_template("Set health absorption rate to [b]{rate}[/b]")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.set_health_absorption_rate({rate})")
+# @ace_action
+# @ace_name("Set Health Absorption Rate")
+# @ace_description("Damage multiplier for real HP (resistance); 0 = invulnerable.")
+# @ace_display_template("Set health absorption rate to [b]{rate}[/b]")
+# @ace_codegen_template("$SimpleHealthBehavior.set_health_absorption_rate({rate})")
 func set_health_absorption_rate(rate: float) -> void:
 	health_absorption_rate = maxf(0.0, rate)
 	invulnerable = (rate == 0.0)
 
-## @ace_action
-## @ace_name("Add Health Pool")
-## @ace_category("Health")
-## @ace_description("Adds to a named health pool (shield/armour).")
-## @ace_display_template("Add [b]{amount}[/b] to the [b]{type}[/b] pool")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.add_health_pool({type}, {amount})")
+# @ace_action
+# @ace_name("Add Health Pool")
+# @ace_description("Adds to a named health pool (shield/armour).")
+# @ace_display_template("Add [b]{amount}[/b] to the [b]{type}[/b] pool")
+# @ace_codegen_template("$SimpleHealthBehavior.add_health_pool({type}, {amount})")
 func add_health_pool(type: String, amount: float) -> void:
 	if amount <= 0.0:
 		return
@@ -308,13 +290,11 @@ func add_health_pool(type: String, amount: float) -> void:
 	last_trigger_pool_type = type
 	on_health_pool_added.emit()
 
-## @ace_action
-## @ace_name("Set Health Pool")
-## @ace_category("Health")
-## @ace_description("Sets a health pool amount (fires Added only when it increases).")
-## @ace_display_template("Set the [b]{type}[/b] pool to [b]{amount}[/b]")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.set_health_pool({type}, {amount})")
+# @ace_action
+# @ace_name("Set Health Pool")
+# @ace_description("Sets a health pool amount (fires Added only when it increases).")
+# @ace_display_template("Set the [b]{type}[/b] pool to [b]{amount}[/b]")
+# @ace_codegen_template("$SimpleHealthBehavior.set_health_pool({type}, {amount})")
 func set_health_pool(type: String, amount: float) -> void:
 	var pool: HealthPool = _get_pool(type)
 	var new_amount: float = maxf(0.0, amount)
@@ -327,56 +307,46 @@ func set_health_pool(type: String, amount: float) -> void:
 	else:
 		pool.amount = new_amount
 
-## @ace_action
-## @ace_name("Clear Health Pool")
-## @ace_category("Health")
-## @ace_description("Zeroes one named health pool.")
-## @ace_display_template("Clear the [b]{type}[/b] pool")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.clear_health_pool({type})")
+# @ace_action
+# @ace_name("Clear Health Pool")
+# @ace_description("Zeroes one named health pool.")
+# @ace_display_template("Clear the [b]{type}[/b] pool")
+# @ace_codegen_template("$SimpleHealthBehavior.clear_health_pool({type})")
 func clear_health_pool(type: String) -> void:
 	if health_pools.has(type):
 		(health_pools[type] as HealthPool).amount = 0.0
 
-## @ace_action
-## @ace_name("Clear All Health Pools")
-## @ace_category("Health")
-## @ace_description("Zeroes every health pool.")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.clear_all_health_pools()")
+# @ace_action
+# @ace_name("Clear All Health Pools")
+# @ace_description("Zeroes every health pool.")
+# @ace_codegen_template("$SimpleHealthBehavior.clear_all_health_pools()")
 func clear_all_health_pools() -> void:
 	for pool_name: String in health_pools.keys():
 		(health_pools[pool_name] as HealthPool).amount = 0.0
 
-## @ace_action
-## @ace_name("Set Health Pool Decay Rate")
-## @ace_category("Health")
-## @ace_description("Sets a pool's per-second decay rate.")
-## @ace_display_template("Set [b]{type}[/b] pool decay rate to [b]{rate}[/b]")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.set_health_pool_decay_rate({type}, {rate})")
+# @ace_action
+# @ace_name("Set Health Pool Decay Rate")
+# @ace_description("Sets a pool's per-second decay rate.")
+# @ace_display_template("Set [b]{type}[/b] pool decay rate to [b]{rate}[/b]")
+# @ace_codegen_template("$SimpleHealthBehavior.set_health_pool_decay_rate({type}, {rate})")
 func set_health_pool_decay_rate(type: String, rate: float) -> void:
 	_get_pool(type).decay_rate = maxf(0.0, rate)
 	# A pool that might decay needs the frame back; the tick stops itself once none does.
 	set_process(true)
 
-## @ace_action
-## @ace_name("Set Health Pool Absorption Rate")
-## @ace_category("Health")
-## @ace_description("Sets a pool's absorption multiplier (how hard it spends to soak damage).")
-## @ace_display_template("Set [b]{type}[/b] pool absorption rate to [b]{rate}[/b]")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.set_health_pool_absorption_rate({type}, {rate})")
+# @ace_action
+# @ace_name("Set Health Pool Absorption Rate")
+# @ace_description("Sets a pool's absorption multiplier (how hard it spends to soak damage).")
+# @ace_display_template("Set [b]{type}[/b] pool absorption rate to [b]{rate}[/b]")
+# @ace_codegen_template("$SimpleHealthBehavior.set_health_pool_absorption_rate({type}, {rate})")
 func set_health_pool_absorption_rate(type: String, rate: float) -> void:
 	_get_pool(type).absorption_rate = maxf(0.0, rate)
 
-## @ace_action
-## @ace_name("Set Health Pool Rates")
-## @ace_category("Health")
-## @ace_description("Sets a pool's decay and absorption rates at once.")
-## @ace_display_template("Set [b]{type}[/b] pool rates to decay [b]{decay_rate}[/b], absorption [b]{absorption_rate}[/b]")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.set_health_pool_rates({type}, {decay_rate}, {absorption_rate})")
+# @ace_action
+# @ace_name("Set Health Pool Rates")
+# @ace_description("Sets a pool's decay and absorption rates at once.")
+# @ace_display_template("Set [b]{type}[/b] pool rates to decay [b]{decay_rate}[/b], absorption [b]{absorption_rate}[/b]")
+# @ace_codegen_template("$SimpleHealthBehavior.set_health_pool_rates({type}, {decay_rate}, {absorption_rate})")
 func set_health_pool_rates(type: String, decay_rate: float, absorption_rate: float) -> void:
 	var pool: HealthPool = _get_pool(type)
 	pool.decay_rate = maxf(0.0, decay_rate)
@@ -384,23 +354,19 @@ func set_health_pool_rates(type: String, decay_rate: float, absorption_rate: flo
 	# A pool that might decay needs the frame back; the tick stops itself once none does.
 	set_process(true)
 
-## @ace_action
-## @ace_name("Set Health Pool Priority")
-## @ace_category("Health")
-## @ace_description("Sets a pool's absorption priority (lower absorbs first).")
-## @ace_display_template("Set [b]{type}[/b] pool priority to [b]{priority}[/b]")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.set_health_pool_priority({type}, {priority})")
+# @ace_action
+# @ace_name("Set Health Pool Priority")
+# @ace_description("Sets a pool's absorption priority (lower absorbs first).")
+# @ace_display_template("Set [b]{type}[/b] pool priority to [b]{priority}[/b]")
+# @ace_codegen_template("$SimpleHealthBehavior.set_health_pool_priority({type}, {priority})")
 func set_health_pool_priority(type: String, priority: float) -> void:
 	_get_pool(type).priority = priority
 
-## @ace_action
-## @ace_name("Setup Health Pool")
-## @ace_category("Health")
-## @ace_description("Creates/configures a health pool in one call.")
-## @ace_display_template("Setup [b]{type}[/b] pool: [b]{amount}[/b] HP, decay [b]{decay_rate}[/b], absorption [b]{absorption_rate}[/b], priority [b]{priority}[/b]")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.setup_health_pool({type}, {amount}, {decay_rate}, {absorption_rate}, {priority})")
+# @ace_action
+# @ace_name("Setup Health Pool")
+# @ace_description("Creates/configures a health pool in one call.")
+# @ace_display_template("Setup [b]{type}[/b] pool: [b]{amount}[/b] HP, decay [b]{decay_rate}[/b], absorption [b]{absorption_rate}[/b], priority [b]{priority}[/b]")
+# @ace_codegen_template("$SimpleHealthBehavior.setup_health_pool({type}, {amount}, {decay_rate}, {absorption_rate}, {priority})")
 func setup_health_pool(type: String, amount: float, decay_rate: float, absorption_rate: float, priority: float) -> void:
 	var pool: HealthPool = _get_pool(type)
 	pool.amount = maxf(0.0, amount)
@@ -410,27 +376,23 @@ func setup_health_pool(type: String, amount: float, decay_rate: float, absorptio
 	# A pool that might decay needs the frame back; the tick stops itself once none does.
 	set_process(true)
 
-## @ace_action
-## @ace_name("Revive")
-## @ace_category("Health")
-## @ace_description("Clears death and restores health (amount<=0 → full).")
-## @ace_display_template("Revive with [b]{amount}[/b] HP")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.revive({amount})")
+# @ace_action
+# @ace_name("Revive")
+# @ace_description("Clears death and restores health (amount<=0 → full).")
+# @ace_display_template("Revive with [b]{amount}[/b] HP")
+# @ace_codegen_template("$SimpleHealthBehavior.revive({amount})")
 func revive(amount: float) -> void:
 	is_dead_flag = false
 	current_health = minf(amount, max_health) if amount > 0.0 else max_health
 	on_revived.emit()
 	on_health_changed.emit()
 
-## @ace_action
-## @ace_name("Take Damage From")
-## @ace_category("Health")
-## @ace_description("Damage that remembers who dealt it. Records the source first - walked up the ownership chain, so a bullet credits whoever fired it rather than the bullet - and then applies exactly the damage Take Damage would. Killer Of, Assists Of and Killed By Me read what this writes.")
-## @ace_display_template("Take [b]{amount}[/b] damage from [i]{from}[/i]")
-## @ace_param(from, default: self, desc: "Who dealt it - the bullet, the trap, the node running this row. It is walked up the ownership chain, so the credit lands on the person rather than on the thing they fired.")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.take_damage_from({amount}, {from})")
+# @ace_action
+# @ace_name("Take Damage From")
+# @ace_description("Damage that remembers who dealt it. Records the source first - walked up the ownership chain, so a bullet credits whoever fired it rather than the bullet - and then applies exactly the damage Take Damage would. Killer Of, Assists Of and Killed By Me read what this writes.")
+# @ace_display_template("Take [b]{amount}[/b] damage from [i]{from}[/i]")
+# @ace_param(from, default: self, desc: "Who dealt it - the bullet, the trap, the node running this row. It is walked up the ownership chain, so the credit lands on the person rather than on the thing they fired.")
+# @ace_codegen_template("$SimpleHealthBehavior.take_damage_from({amount}, {from})")
 func take_damage_from(amount: float, from: Node) -> void:
 	# Credit is for a hit that lands. A hit refused by invulnerability or by i-frames changed
 	# nothing, so it must not rewrite who this node was last hurt by.
@@ -448,30 +410,24 @@ func take_damage_from(amount: float, from: Node) -> void:
 	last_damage_dealt = amount
 	take_damage(amount)
 
-## @ace_expression
-## @ace_name("Last Hit From")
-## @ace_category("Health")
-## @ace_description("Who last damaged this node, as the person rather than the projectile - the boss's next target, the health bar's attacker name, the direction a hit came from. Reads as nothing until something has damaged it through Take Damage From.")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.last_hit_from_value()")
+# @ace_expression
+# @ace_name("Last Hit From")
+# @ace_description("Who last damaged this node, as the person rather than the projectile - the boss's next target, the health bar's attacker name, the direction a hit came from. Reads as nothing until something has damaged it through Take Damage From.")
+# @ace_codegen_template("$SimpleHealthBehavior.last_hit_from_value()")
 func last_hit_from_value() -> Node:
 	return last_hit_from if is_instance_valid(last_hit_from) else null
 
-## @ace_expression
-## @ace_name("Killer Of")
-## @ace_category("Health")
-## @ace_description("Who killed this node, or nothing while it is still alive. It is already written when On Death fires, so a row under that trigger can score the kill, name the killer on the death screen, or hand the bounty over without an extra step.")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.killer_of()")
+# @ace_expression
+# @ace_name("Killer Of")
+# @ace_description("Who killed this node, or nothing while it is still alive. It is already written when On Death fires, so a row under that trigger can score the kill, name the killer on the death screen, or hand the bounty over without an extra step.")
+# @ace_codegen_template("$SimpleHealthBehavior.killer_of()")
 func killer_of() -> Node:
 	return last_hit_from if is_dead_flag and is_instance_valid(last_hit_from) else null
 
-## @ace_expression
-## @ace_name("Assists Of")
-## @ace_category("Health")
-## @ace_description("Everyone else who damaged this node recently, as a list, with the killer left out and each helper listed once however many times they hit. Recently means the Assist Seconds property in the Inspector. The assist column of a results screen, in one row.")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.assists_of()")
+# @ace_expression
+# @ace_name("Assists Of")
+# @ace_description("Everyone else who damaged this node recently, as a list, with the killer left out and each helper listed once however many times they hit. Recently means the Assist Seconds property in the Inspector. The assist column of a results screen, in one row.")
+# @ace_codegen_template("$SimpleHealthBehavior.assists_of()")
 func assists_of() -> Array:
 	# THE WINDOW IS MEASURED FROM THE DEATH, not from the moment somebody asks. A results screen
 	# read nine seconds after the kill would otherwise list nobody at all. The killing hit's own
@@ -490,26 +446,22 @@ func assists_of() -> Array:
 			helpers.append(who)
 	return helpers
 
-## @ace_condition
-## @ace_name("Killed By Me")
-## @ace_category("Health")
-## @ace_description("True when this node is dead and the kill traces back to the node asking - the your-kill pop, the personal score, the achievement that only counts your own. The asker is walked up the ownership chain too, so a kill by your turret still counts as yours.")
-## @ace_param(who, default: self, desc: "The node asking. Left as it is, that is the one running this row, and its own owner chain is walked too - a kill by your turret still counts as yours.")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.killed_by_me({who})")
+# @ace_condition
+# @ace_name("Killed By Me")
+# @ace_description("True when this node is dead and the kill traces back to the node asking - the your-kill pop, the personal score, the achievement that only counts your own. The asker is walked up the ownership chain too, so a kill by your turret still counts as yours.")
+# @ace_param(who, default: self, desc: "The node asking. Left as it is, that is the one running this row, and its own owner chain is walked too - a kill by your turret still counts as yours.")
+# @ace_codegen_template("$SimpleHealthBehavior.killed_by_me({who})")
 func killed_by_me(who: Node) -> bool:
 	return is_dead_flag and is_instance_valid(last_hit_from) and last_hit_from == _root_owner(who)
 
-## @ace_action
-## @ace_name("Take Damage Of Type")
-## @ace_category("Health")
-## @ace_description("Damage that knows what kind it is and who dealt it. Resistance comes off as a percentage, then armour as flat points (never below Minimum Damage), then a critical multiplies what got through, and the pools and health of Take Damage finish the job. The report - Last Damage Type, Last Damage Dealt, Last Damage Before Mitigation, Last Hit Was A Crit - is written before On Damaged fires, so a row under that trigger reads it with no expression. Naming a difficulty factor in Scaled By scales the hit by it first, so the difficulty is a field on the row rather than a multiplication in front of it; leaving it blank changes nothing at all.")
-## @ace_display_template("Take [b]{amount}[/b] damage of [b]{type}[/b] from [i]{from}[/i]")
-## @ace_param_hint(type damage_type)
-## @ace_param(from, default: self, desc: "Who dealt it - the bullet, the trap, the node running this row. It is walked up the ownership chain, so the credit lands on the person rather than on the thing they fired.")
-## @ace_param(scaled_by, desc: "Optional: the name of a difficulty factor to scale this hit by first - damage_taken on the player's side, damage_dealt on the enemy's. A factor the difficulty in force has no key for, and a game that chose no difficulty at all, both count as 1, so the field is safe to fill in before any difficulty file mentions it. Blank means the hit is not scaled by anything.")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.take_typed_damage({amount}, {type}, {from}, {scaled_by})")
+# @ace_action
+# @ace_name("Take Damage Of Type")
+# @ace_description("Damage that knows what kind it is and who dealt it. Resistance comes off as a percentage, then armour as flat points (never below Minimum Damage), then a critical multiplies what got through, and the pools and health of Take Damage finish the job. The report - Last Damage Type, Last Damage Dealt, Last Damage Before Mitigation, Last Hit Was A Crit - is written before On Damaged fires, so a row under that trigger reads it with no expression. Naming a difficulty factor in Scaled By scales the hit by it first, so the difficulty is a field on the row rather than a multiplication in front of it; leaving it blank changes nothing at all.")
+# @ace_display_template("Take [b]{amount}[/b] damage of [b]{type}[/b] from [i]{from}[/i]")
+# @ace_param_hint(type damage_type)
+# @ace_param(from, default: self, desc: "Who dealt it - the bullet, the trap, the node running this row. It is walked up the ownership chain, so the credit lands on the person rather than on the thing they fired.")
+# @ace_param(scaled_by, desc: "Optional: the name of a difficulty factor to scale this hit by first - damage_taken on the player's side, damage_dealt on the enemy's. A factor the difficulty in force has no key for, and a game that chose no difficulty at all, both count as 1, so the field is safe to fill in before any difficulty file mentions it. Blank means the hit is not scaled by anything.")
+# @ace_codegen_template("$SimpleHealthBehavior.take_typed_damage({amount}, {type}, {from}, {scaled_by})")
 func take_typed_damage(amount: float, type: String, from: Node, scaled_by: String = "") -> void:
 	if amount <= 0.0 or invulnerable or is_dead_flag or is_invincible():
 		return
@@ -538,225 +490,188 @@ func take_typed_damage(amount: float, type: String, from: Node, scaled_by: Strin
 	# On Damaged all happen in exactly one place and behave exactly as they always did.
 	take_damage(landed)
 
-## @ace_action
-## @ace_name("Resist")
-## @ace_category("Health")
-## @ace_description("Takes a percentage off every hit of one kind - 50 for half damage, 100 for none at all. Set it once on the enemy and every fireball in the game already respects it. A negative percentage is a weakness, which is what Weak To says more plainly. One opinion per kind: Resist, Immune To and Weak To all write the same slot, so the last of them to run is the one that counts.")
-## @ace_display_template("Resist [b]{type}[/b] by [b]{percent}[/b] percent")
-## @ace_param_hint(type damage_type)
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.resist({type}, {percent})")
+# @ace_action
+# @ace_name("Resist")
+# @ace_description("Takes a percentage off every hit of one kind - 50 for half damage, 100 for none at all. Set it once on the enemy and every fireball in the game already respects it. A negative percentage is a weakness, which is what Weak To says more plainly. One opinion per kind: Resist, Immune To and Weak To all write the same slot, so the last of them to run is the one that counts.")
+# @ace_display_template("Resist [b]{type}[/b] by [b]{percent}[/b] percent")
+# @ace_param_hint(type damage_type)
+# @ace_codegen_template("$SimpleHealthBehavior.resist({type}, {percent})")
 func resist(type: String, percent: float) -> void:
 	resistances[type] = minf(percent, 100.0) / 100.0
 
-## @ace_action
-## @ace_name("Immune To")
-## @ace_category("Health")
-## @ace_description("Makes one kind of damage do nothing at all - no health lost, no pool spent and no On Damaged. The same as resisting it by 100, said the way a designer says it. One opinion per kind: a Weak To of the same kind afterwards replaces this, rather than arguing with it.")
-## @ace_display_template("Immune to [b]{type}[/b]")
-## @ace_param_hint(type damage_type)
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.immune_to({type})")
+# @ace_action
+# @ace_name("Immune To")
+# @ace_description("Makes one kind of damage do nothing at all - no health lost, no pool spent and no On Damaged. The same as resisting it by 100, said the way a designer says it. One opinion per kind: a Weak To of the same kind afterwards replaces this, rather than arguing with it.")
+# @ace_display_template("Immune to [b]{type}[/b]")
+# @ace_param_hint(type damage_type)
+# @ace_codegen_template("$SimpleHealthBehavior.immune_to({type})")
 func immune_to(type: String) -> void:
 	resistances[type] = 1.0
 
-## @ace_action
-## @ace_name("Weak To")
-## @ace_category("Health")
-## @ace_description("Takes extra damage from one kind - 50 for half again, 100 for double. The ice enemy the fire spell was made for, in one row on the enemy rather than a branch on every spell. One opinion per kind: a Resist or an Immune To of the same kind afterwards replaces this, rather than arguing with it.")
-## @ace_display_template("Weak to [b]{type}[/b] by [b]{percent}[/b] percent")
-## @ace_param_hint(type damage_type)
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.weak_to({type}, {percent})")
+# @ace_action
+# @ace_name("Weak To")
+# @ace_description("Takes extra damage from one kind - 50 for half again, 100 for double. The ice enemy the fire spell was made for, in one row on the enemy rather than a branch on every spell. One opinion per kind: a Resist or an Immune To of the same kind afterwards replaces this, rather than arguing with it.")
+# @ace_display_template("Weak to [b]{type}[/b] by [b]{percent}[/b] percent")
+# @ace_param_hint(type damage_type)
+# @ace_codegen_template("$SimpleHealthBehavior.weak_to({type}, {percent})")
 func weak_to(type: String, percent: float) -> void:
 	resistances[type] = -maxf(percent, 0.0) / 100.0
 
-## @ace_action
-## @ace_name("Set Armour")
-## @ace_category("Health")
-## @ace_description("Sets the flat points taken off every typed hit after resistance. A hit that got past resistance still lands for at least Minimum Damage, so armour is a blunting rather than a wall.")
-## @ace_display_template("Set armour to [b]{amount}[/b]")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.set_armour({amount})")
+# @ace_action
+# @ace_name("Set Armour")
+# @ace_description("Sets the flat points taken off every typed hit after resistance. A hit that got past resistance still lands for at least Minimum Damage, so armour is a blunting rather than a wall.")
+# @ace_display_template("Set armour to [b]{amount}[/b]")
+# @ace_codegen_template("$SimpleHealthBehavior.set_armour({amount})")
 func set_armour(amount: float) -> void:
 	armour = maxf(0.0, amount)
 
-## @ace_action
-## @ace_name("Set Crit")
-## @ace_category("Health")
-## @ace_description("Sets how often a typed hit on this node lands as a critical and what it multiplies by. Chance runs 0 to 1; a multiplier below 1 is raised to 1, because a critical that hurt less would read as a bug in every game ever made.")
-## @ace_display_template("Set crit [b]{chance}[/b] at [b]{multiplier}[/b] times damage")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.set_crit({chance}, {multiplier})")
+# @ace_action
+# @ace_name("Set Crit")
+# @ace_description("Sets how often a typed hit on this node lands as a critical and what it multiplies by. Chance runs 0 to 1; a multiplier below 1 is raised to 1, because a critical that hurt less would read as a bug in every game ever made.")
+# @ace_display_template("Set crit [b]{chance}[/b] at [b]{multiplier}[/b] times damage")
+# @ace_codegen_template("$SimpleHealthBehavior.set_crit({chance}, {multiplier})")
 func set_crit(chance: float, multiplier: float) -> void:
 	crit_chance = clampf(chance, 0.0, 1.0)
 	crit_multiplier = maxf(1.0, multiplier)
 
-## @ace_expression
-## @ace_name("Last Damage Type")
-## @ace_category("Health")
-## @ace_description("What kind the last hit was - the word the row dealt it with. Empty until something has damaged this node through Take Damage Of Type.")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.last_damage_type_value()")
+# @ace_expression
+# @ace_name("Last Damage Type")
+# @ace_description("What kind the last hit was - the word the row dealt it with. Empty until something has damaged this node through Take Damage Of Type.")
+# @ace_codegen_template("$SimpleHealthBehavior.last_damage_type_value()")
 func last_damage_type_value() -> String:
 	return last_damage_type
 
-## @ace_expression
-## @ace_name("Last Damage Dealt")
-## @ace_category("Health")
-## @ace_description("What the last typed hit came to after resistance, armour and the critical - the number a floating damage label should show.")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.last_damage_dealt_value()")
+# @ace_expression
+# @ace_name("Last Damage Dealt")
+# @ace_description("What the last typed hit came to after resistance, armour and the critical - the number a floating damage label should show.")
+# @ace_codegen_template("$SimpleHealthBehavior.last_damage_dealt_value()")
 func last_damage_dealt_value() -> float:
 	return last_damage_dealt
 
-## @ace_expression
-## @ace_name("Last Damage Before Mitigation")
-## @ace_category("Health")
-## @ace_description("What the last typed hit was worth before this node's resistance, armour and critical touched it. Paired with Last Damage Dealt it is how a sheet shows an absorbed or a resisted label without doing the arithmetic twice.")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.last_damage_before_mitigation_value()")
+# @ace_expression
+# @ace_name("Last Damage Before Mitigation")
+# @ace_description("What the last typed hit was worth before this node's resistance, armour and critical touched it. Paired with Last Damage Dealt it is how a sheet shows an absorbed or a resisted label without doing the arithmetic twice.")
+# @ace_codegen_template("$SimpleHealthBehavior.last_damage_before_mitigation_value()")
 func last_damage_before_mitigation_value() -> float:
 	return last_damage_before_mitigation
 
-## @ace_condition
-## @ace_name("Last Hit Was A Crit")
-## @ace_category("Health")
-## @ace_description("Whether the last typed hit rolled a critical. Under On Damaged this is the row that makes the number bigger, the shake harder and the sound sharper.")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.last_hit_was_a_crit()")
+# @ace_condition
+# @ace_name("Last Hit Was A Crit")
+# @ace_description("Whether the last typed hit rolled a critical. Under On Damaged this is the row that makes the number bigger, the shake harder and the sound sharper.")
+# @ace_codegen_template("$SimpleHealthBehavior.last_hit_was_a_crit()")
 func last_hit_was_a_crit() -> bool:
 	return last_hit_was_crit
 
-## @ace_condition
-## @ace_name("Damage Type Is")
-## @ace_category("Health")
-## @ace_description("Whether the last hit was of one particular kind - burning after fire, freezing after ice, nothing after physical. Under On Damaged it is how one trigger branches into as many reactions as the game has kinds.")
-## @ace_param_hint(type damage_type)
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.damage_type_is({type})")
+# @ace_condition
+# @ace_name("Damage Type Is")
+# @ace_description("Whether the last hit was of one particular kind - burning after fire, freezing after ice, nothing after physical. Under On Damaged it is how one trigger branches into as many reactions as the game has kinds.")
+# @ace_param_hint(type damage_type)
+# @ace_codegen_template("$SimpleHealthBehavior.damage_type_is({type})")
 func damage_type_is(type: String) -> bool:
 	return last_damage_type == type
 
-## @ace_condition
-## @ace_name("Is Dead")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.is_dead()")
+# @ace_condition
+# @ace_name("Is Dead")
+# @ace_codegen_template("$SimpleHealthBehavior.is_dead()")
 func is_dead() -> bool:
 	return is_dead_flag
 
-## @ace_condition
-## @ace_name("Is Invulnerable")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.is_invulnerable()")
+# @ace_condition
+# @ace_name("Is Invulnerable")
+# @ace_codegen_template("$SimpleHealthBehavior.is_invulnerable()")
 func is_invulnerable() -> bool:
 	return invulnerable
 
-## @ace_condition
-## @ace_name("Has Any Health Pool")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.has_any_health_pool()")
+# @ace_condition
+# @ace_name("Has Any Health Pool")
+# @ace_codegen_template("$SimpleHealthBehavior.has_any_health_pool()")
 func has_any_health_pool() -> bool:
 	for pool_name: String in health_pools.keys():
 		if (health_pools[pool_name] as HealthPool).amount > 0.0:
 			return true
 	return false
 
-## @ace_condition
-## @ace_name("Has Health Pool")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.has_health_pool({type})")
+# @ace_condition
+# @ace_name("Has Health Pool")
+# @ace_codegen_template("$SimpleHealthBehavior.has_health_pool({type})")
 func has_health_pool(type: String) -> bool:
 	return health_pools.has(type) and (health_pools[type] as HealthPool).amount > 0.0
 
-## @ace_condition
-## @ace_name("Health Pool Is Type")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.is_health_pool_type({type})")
+# @ace_condition
+# @ace_name("Health Pool Is Type")
+# @ace_codegen_template("$SimpleHealthBehavior.is_health_pool_type({type})")
 func is_health_pool_type(type: String) -> bool:
 	return last_trigger_pool_type == type
 
-## @ace_expression
-## @ace_name("Current Health")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.current_health_value()")
+# @ace_expression
+# @ace_name("Current Health")
+# @ace_codegen_template("$SimpleHealthBehavior.current_health_value()")
 func current_health_value() -> float:
 	return current_health
 
-## @ace_expression
-## @ace_name("Max Health")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.max_health_value()")
+# @ace_expression
+# @ace_name("Max Health")
+# @ace_codegen_template("$SimpleHealthBehavior.max_health_value()")
 func max_health_value() -> float:
 	return max_health
 
-## @ace_expression
-## @ace_name("Health Percent")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.health_percent()")
+# @ace_expression
+# @ace_name("Health Percent")
+# @ace_codegen_template("$SimpleHealthBehavior.health_percent()")
 func health_percent() -> float:
 	return (current_health / max_health) * 100.0 if max_health != 0.0 else 0.0
 
-## @ace_expression
-## @ace_name("Health Absorption Rate")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.health_absorption_rate_value()")
+# @ace_expression
+# @ace_name("Health Absorption Rate")
+# @ace_codegen_template("$SimpleHealthBehavior.health_absorption_rate_value()")
 func health_absorption_rate_value() -> float:
 	return health_absorption_rate
 
-## @ace_expression
-## @ace_name("Last Damage")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.last_damage_value()")
+# @ace_expression
+# @ace_name("Last Damage")
+# @ace_codegen_template("$SimpleHealthBehavior.last_damage_value()")
 func last_damage_value() -> float:
 	return last_damage
 
-## @ace_expression
-## @ace_name("Last Heal")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.last_heal_value()")
+# @ace_expression
+# @ace_name("Last Heal")
+# @ace_codegen_template("$SimpleHealthBehavior.last_heal_value()")
 func last_heal_value() -> float:
 	return last_heal
 
-## @ace_expression
-## @ace_name("Health Pool")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.health_pool_value({type})")
+# @ace_expression
+# @ace_name("Health Pool")
+# @ace_codegen_template("$SimpleHealthBehavior.health_pool_value({type})")
 func health_pool_value(type: String) -> float:
 	return (health_pools[type] as HealthPool).amount if health_pools.has(type) else 0.0
 
-## @ace_expression
-## @ace_name("Health Pool Decay Rate")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.health_pool_decay_rate_value({type})")
+# @ace_expression
+# @ace_name("Health Pool Decay Rate")
+# @ace_codegen_template("$SimpleHealthBehavior.health_pool_decay_rate_value({type})")
 func health_pool_decay_rate_value(type: String) -> float:
 	return (health_pools[type] as HealthPool).decay_rate if health_pools.has(type) else 0.0
 
-## @ace_expression
-## @ace_name("Health Pool Absorption Rate")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.health_pool_absorption_rate_value({type})")
+# @ace_expression
+# @ace_name("Health Pool Absorption Rate")
+# @ace_codegen_template("$SimpleHealthBehavior.health_pool_absorption_rate_value({type})")
 func health_pool_absorption_rate_value(type: String) -> float:
 	return (health_pools[type] as HealthPool).absorption_rate if health_pools.has(type) else 1.0
 
-## @ace_expression
-## @ace_name("Health Pool Priority")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.health_pool_priority_value({type})")
+# @ace_expression
+# @ace_name("Health Pool Priority")
+# @ace_codegen_template("$SimpleHealthBehavior.health_pool_priority_value({type})")
 func health_pool_priority_value(type: String) -> float:
 	return (health_pools[type] as HealthPool).priority if health_pools.has(type) else 0.0
 
-## @ace_expression
-## @ace_name("Last Pool Damage Absorbed")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.last_pool_damage_absorbed_value()")
+# @ace_expression
+# @ace_name("Last Pool Damage Absorbed")
+# @ace_codegen_template("$SimpleHealthBehavior.last_pool_damage_absorbed_value()")
 func last_pool_damage_absorbed_value() -> float:
 	return last_pool_damage_absorbed
 
-## @ace_expression
-## @ace_name("Last Health Pool Type")
-## @ace_icon("res://eventsheet_addons/health/icon.svg")
-## @ace_codegen_template("$SimpleHealthBehavior.last_health_pool_type_value()")
+# @ace_expression
+# @ace_name("Last Health Pool Type")
+# @ace_codegen_template("$SimpleHealthBehavior.last_health_pool_type_value()")
 func last_health_pool_type_value() -> String:
 	return last_trigger_pool_type
 
@@ -809,7 +724,7 @@ func _forget_stale_assists() -> void:
 		if not is_instance_valid(who) or int(assist_hits[who]) < cutoff:
 			assist_hits.erase(who)
 
-## @ace_hidden
+# @ace_hidden
 func _difficulty_factor(key: String) -> float:
 	# The number one named difficulty factor stands for, or 1.0. A row that named no factor never
 	# reaches the dictionary at all, which is what makes the field free to leave blank.
@@ -817,7 +732,7 @@ func _difficulty_factor(key: String) -> float:
 		return 1.0
 	return float((Engine.get_meta("difficulty_factors", {}) as Dictionary).get(key, 1.0))
 
-## @ace_hidden
+# @ace_hidden
 func save_state() -> Dictionary:
 	# Save-state seam: the Save System walks any node in its persist group (or targeted
 	# by Save/Load Node State) and duck-types these two methods. Plain data only -
@@ -834,7 +749,7 @@ func save_state() -> Dictionary:
 		"invulnerable": invulnerable
 	}
 
-## @ace_hidden
+# @ace_hidden
 func load_state(state: Dictionary) -> void:
 	if state.is_empty():
 		return

@@ -1,7 +1,7 @@
-## @ace_tags(effects, shader, juice, visual)
-## @ace_category("Wave")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_tags(effects, shader, juice, visual)
+# @ace_category("Wave")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @tool
 @icon("res://eventsheet_addons/wave/icon.svg")
 class_name WaveBehavior
@@ -10,7 +10,7 @@ extends Node
 ##
 ## Changes on its parent: material.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CanvasItem = null
 
@@ -23,12 +23,12 @@ func _enter_tree() -> void:
 		push_warning("Wave Behavior needs a CanvasItem: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Preview", "Play") var _preview_start_button: Callable = _preview_start
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
 
@@ -335,40 +335,36 @@ func _dial(dial: String, when_unset: float) -> float:
 	var held: Variant = used.get_shader_parameter(dial)
 	return when_unset if held == null else float(held)
 
+# @ace_action
+# @ace_featured
+# @ace_name("Wave")
+# @ace_display_template("Wave at [b]{strength}[/b] over [b]{seconds}[/b] s")
+# @ace_codegen_template("$WaveBehavior.wave({strength}, {seconds})")
 ## Eases the ripple in to the given strength. Strength is a share of the picture's width:
 ## 0.01 is a shimmer, 0.05 is water, 0.15 is a hallucination.
-## @ace_action
-## @ace_featured
-## @ace_name("Wave")
-## @ace_display_template("Wave at [b]{strength}[/b] over [b]{seconds}[/b] s")
-## @ace_icon("res://eventsheet_addons/wave/icon.svg")
-## @ace_codegen_template("$WaveBehavior.wave({strength}, {seconds})")
 func wave(strength: float = 0.03, seconds: float = 0.4) -> void:
 	_walk_dial(PUSH_DIAL, maxf(strength, 0.0), maxf(seconds, 0.0))
 
+# @ace_action
+# @ace_name("Settle")
+# @ace_display_template("Settle over [b]{seconds}[/b] s")
+# @ace_codegen_template("$WaveBehavior.settle({seconds})")
 ## Eases the ripple back out to still. A ripple stopped instantly snaps the picture sideways,
 ## which is why this takes a time rather than a switch.
-## @ace_action
-## @ace_name("Settle")
-## @ace_display_template("Settle over [b]{seconds}[/b] s")
-## @ace_icon("res://eventsheet_addons/wave/icon.svg")
-## @ace_codegen_template("$WaveBehavior.settle({seconds})")
 func settle(seconds: float = 0.4) -> void:
 	_walk_dial(PUSH_DIAL, 0.0, maxf(seconds, 0.0))
 
+# @ace_condition
+# @ace_name("Is Waving")
+# @ace_codegen_template("$WaveBehavior.is_waving()")
 ## True while the picture is still moving.
-## @ace_condition
-## @ace_name("Is Waving")
-## @ace_icon("res://eventsheet_addons/wave/icon.svg")
-## @ace_codegen_template("$WaveBehavior.is_waving()")
 func is_waving() -> bool:
 	return _dial(PUSH_DIAL, 0.0) > 0.0005
 
+# @ace_expression
+# @ace_name("Wave Strength")
+# @ace_codegen_template("$WaveBehavior.wave_strength()")
 ## How hard the ripple is pushing right now, as a share of the picture's width.
-## @ace_expression
-## @ace_name("Wave Strength")
-## @ace_icon("res://eventsheet_addons/wave/icon.svg")
-## @ace_codegen_template("$WaveBehavior.wave_strength()")
 func wave_strength() -> float:
 	return _dial(PUSH_DIAL, 0.0)
 

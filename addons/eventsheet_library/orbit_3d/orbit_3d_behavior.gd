@@ -1,6 +1,6 @@
-## @ace_category("Orbit 3D")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Orbit 3D")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @tool
 @icon("res://eventsheet_addons/orbit_3d/icon.svg")
 class_name Orbit3DBehavior
@@ -9,7 +9,7 @@ extends Node
 ##
 ## Changes on its parent: position.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node3D = null
 
@@ -22,12 +22,12 @@ func _enter_tree() -> void:
 		push_warning("Orbit3D Behavior needs a Node3D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Preview", "Play") var _preview_start_button: Callable = _preview_start
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
 
@@ -262,12 +262,10 @@ func _ready() -> void:
 	if host is RigidBody3D:
 		push_warning("Orbit 3D on %s: this behaviour moves a RigidBody3D by changing its position, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the MeshInstance3D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 
-## @ace_action
-## @ace_name("Set Orbit 3D Center")
-## @ace_category("Orbit 3D")
-## @ace_description("Orbits around the given point from now on.")
-## @ace_icon("res://eventsheet_addons/orbit_3d/icon.svg")
-## @ace_codegen_template("$Orbit3DBehavior.set_orbit3d_center({x}, {y}, {z})")
+# @ace_action
+# @ace_name("Set Orbit 3D Center")
+# @ace_description("Orbits around the given point from now on.")
+# @ace_codegen_template("$Orbit3DBehavior.set_orbit3d_center({x}, {y}, {z})")
 func set_orbit3d_center(x: float, y: float, z: float) -> void:
 	center_x = x
 	center_y = y

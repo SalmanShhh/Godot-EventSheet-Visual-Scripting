@@ -1,6 +1,6 @@
-## @ace_tags(status, effect, buff, debuff, resource)
-## @ace_category("Status Effects")
-## @ace_version(1.0.0)
+# @ace_tags(status, effect, buff, debuff, resource)
+# @ace_category("Status Effects")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/status_effect_resource/icon.svg")
 class_name StatusEffectResource
 extends Resource

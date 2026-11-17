@@ -1,6 +1,6 @@
-## @ace_tags(spawning, waves, resource)
-## @ace_category("Encounter Timeline")
-## @ace_version(1.0.0)
+# @ace_tags(spawning, waves, resource)
+# @ace_category("Encounter Timeline")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/encounter_resource/icon.svg")
 class_name EncounterResource
 extends Resource

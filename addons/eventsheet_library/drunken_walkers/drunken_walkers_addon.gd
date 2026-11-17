@@ -1,43 +1,43 @@
-## @ace_tags(procedural, generation, random, grid)
-## @ace_category("Drunken Walkers")
-## @ace_version(1.0.0)
+# @ace_tags(procedural, generation, random, grid)
+# @ace_category("Drunken Walkers")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/drunken_walkers/icon.svg")
 class_name DrunkenWalkersAddon
 extends Node
 ## A seeded grid generator as the DrunkenWalkers autoload: register walkers that stagger across a grid of integers carving caves, corridors, rivers and ore veins, scatter tagged marks with real spacing and placement rules, then read the result back as cells and marks. One seed string reproduces the whole map, placement included, on every machine.
 
+# @ace_trigger
+# @ace_name("On Cell Carved")
 ## Fires once for every cell whose value actually CHANGES - during walker runs, Dilate Cells and
 ## Outline Cells. Carved X, Carved Y and Carved Value describe the cell; Walker ID names the walker
 ## responsible, and reads empty for the two post-processing passes. A walker re-crossing ground it
 ## already carved does not fire it again, because nothing changed.
-## @ace_trigger
-## @ace_name("On Cell Carved")
 signal cell_carved(x: int, y: int, value: int, walker_id: String)
+# @ace_trigger
+# @ace_name("On Walker Stepped")
 ## Fires after each step of Step Walker, and ONLY from Step Walker - batch runs skip it on purpose
 ## so bulk generation stays fast. Walker X, Walker Y, Walker Angle and Walker Steps Left are all
 ## live inside it. Compare the walker id yourself to filter; an empty comparison matches them all.
-## @ace_trigger
-## @ace_name("On Walker Stepped")
 signal walker_stepped(walker_id: String)
+# @ace_trigger
+# @ace_name("On Walker Finished")
 ## Fires when a walker exhausts its step budget or runs out of legal moves. Walker X and Walker Y
 ## are its final cell, which is how one walker starts where another stopped.
-## @ace_trigger
-## @ace_name("On Walker Finished")
 signal walker_finished(walker_id: String)
+# @ace_trigger
+# @ace_name("On Mark Placed")
 ## Fires once per mark placed by Drop Marks Along Walk and Scatter Marks. Mark X, Mark Y and
 ## Mark Tag describe it.
-## @ace_trigger
-## @ace_name("On Mark Placed")
 signal mark_placed(tag: String)
+# @ace_trigger
+# @ace_name("On Walkers By Tag Complete")
 ## Fires after a Run Walkers By Tag batch has finished every walker carrying that tag. Walker Tag
 ## holds the batch tag inside it.
-## @ace_trigger
-## @ace_name("On Walkers By Tag Complete")
 signal walkers_by_tag_complete(tag: String)
+# @ace_trigger
+# @ace_name("On Generation Complete")
 ## Fires after Run All Walkers has run every registered walker. The idiomatic place to scatter
 ## marks, outline the walls and paint the tilemap.
-## @ace_trigger
-## @ace_name("On Generation Complete")
 signal generation_complete
 
 # @inspector_side_by_side
@@ -276,16 +276,16 @@ var _index_cache: Dictionary = {}
 # from the first frame. This flag is set by the one function that does the whole start-up.
 ## True once a run has been started.
 var _started: bool = false
+# @ace_hidden
 ## The neighbour a heading resolves to. Degrees in, one of the eight grid neighbours out.
-## @ace_hidden
 func _heading_step(heading: float) -> Vector2i:
 	var octant: int = int(round(fposmod(heading, 360.0) / 45.0)) % 8
 	return NEIGHBOUR_STEPS[octant]
+# @ace_hidden
 ## The directions reachable from `from_heading` this step: the members of the direction set whose
 ## heading is within Max Turn of where the walker is already pointing. This is the difference
 ## between a scribble and a path, and it is why two directions with a small max turn draw a
 ## straight line - the other heading is 180 degrees away and simply out of reach.
-## @ace_hidden
 func _reachable(walker: Walker, from_heading: float) -> Array[int]:
 	var found: Array[int] = []
 	for index: int in maxi(1, walker.directions):
@@ -295,17 +295,17 @@ func _reachable(walker: Walker, from_heading: float) -> Array[int]:
 		if gap <= walker.max_turn + 0.000001:
 			found.append(index)
 	return found
+# @ace_hidden
 ## Every member of the walker's direction set, by index. The pool the border re-roll widens to
 ## when Max Turn has left it nothing in bounds to pick.
-## @ace_hidden
 func _all_headings(walker: Walker) -> Array[int]:
 	var found: Array[int] = []
 	for index: int in maxi(1, walker.directions):
 		found.append(index)
 	return found
+# @ace_hidden
 ## Those of `choices` whose step would land inside the grid. Kept apart from the border re-roll
 ## so the narrowed pool and the widened one are filtered by one rule rather than two.
-## @ace_hidden
 func _in_bounds(walker: Walker, choices: Array[int]) -> Array[int]:
 	var legal: Array[int] = []
 	for index: int in choices:
@@ -313,9 +313,9 @@ func _in_bounds(walker: Walker, choices: Array[int]) -> Array[int]:
 		if _inside(walker.x + candidate.x, walker.y + candidate.y):
 			legal.append(index)
 	return legal
+# @ace_hidden
 ## A weights list from the comma-separated spelling the action takes. An empty string restores
 ## equal weights, negatives floor to 0, and anything that is not a number falls back to 1.
-## @ace_hidden
 func _weights_from_text(text: String) -> Array[float]:
 	var parsed: Array[float] = []
 	if text.strip_edges().is_empty():
@@ -324,14 +324,14 @@ func _weights_from_text(text: String) -> Array[float]:
 		var piece: String = part.strip_edges()
 		parsed.append(maxf(0.0, piece.to_float()) if piece.is_valid_float() else 1.0)
 	return parsed
+# @ace_hidden
 ## A weights list from a JSON array, under the same rules as the text spelling.
-## @ace_hidden
 func _weights_from_array(values: Array) -> Array[float]:
 	return Walker.weights_from_array(values)
+# @ace_hidden
 ## Registers a walker under an id, keeping its place in the run order when the id is already
 ## taken - because the run order is part of the seed, and replacing a walker must not reshuffle
 ## the map. Returns the walker so the caller can fill in the rest of the definition.
-## @ace_hidden
 func _register(id: String) -> Walker:
 	var walker: Walker = Walker.new()
 	walker.id = id
@@ -341,9 +341,9 @@ func _register(id: String) -> Walker:
 	return walker
 ## Names this node has already said it could not find, so a row that runs every frame says it once.
 var _said_missing: Dictionary = {}
+# @ace_hidden
 ## The registered walker, or null. Every action that names a walker goes through this one door, and a
 ## name nothing answers to says so once - in every run, not only in debug mode - naming the row.
-## @ace_hidden
 func _walker(id: String, action: String = "") -> Walker:
 	if _walkers.has(id):
 		return _walkers[id] as Walker
@@ -353,14 +353,12 @@ func _walker(id: String, action: String = "") -> Walker:
 func _ready() -> void:
 	_ensure_started()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Create Grid")
-## @ace_category("Drunken Walkers")
-## @ace_description("Allocates a fresh grid filled with the Empty Value, clamped to Max Grid Size. Only needed for a size other than the Grid Width / Grid Height properties, because that grid already exists from the start. A width or height of 0 or less falls back to its property. Destroys the previous grid, every registered walker and every mark - it is "start a new level". The seed is not touched.")
-## @ace_display_template("start a new [b]{width}[/b] x [b]{height}[/b] grid")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.create_grid({width}, {height})")
+# @ace_action
+# @ace_featured
+# @ace_name("Create Grid")
+# @ace_description("Allocates a fresh grid filled with the Empty Value, clamped to Max Grid Size. Only needed for a size other than the Grid Width / Grid Height properties, because that grid already exists from the start. A width or height of 0 or less falls back to its property. Destroys the previous grid, every registered walker and every mark - it is "start a new level". The seed is not touched.")
+# @ace_display_template("start a new [b]{width}[/b] x [b]{height}[/b] grid")
+# @ace_codegen_template("DrunkenWalkers.create_grid({width}, {height})")
 func create_grid(width: int, height: int) -> void:
 	_ensure_started()
 	var cap: int = maxi(1, max_grid_size)
@@ -388,25 +386,21 @@ func create_grid(width: int, height: int) -> void:
 	_order.clear()
 	_marks.clear()
 
-## @ace_action
-## @ace_name("Clear Grid")
-## @ace_category("Drunken Walkers")
-## @ace_description("Refills every cell with a value you choose. Walkers, marks and the random stream are left alone, and it does not fire On Cell Carved. Use it to re-run the same walkers over a blank slate without re-registering them.")
-## @ace_display_template("wipe every cell back to [b]{value}[/b]")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.clear_grid({value})")
+# @ace_action
+# @ace_name("Clear Grid")
+# @ace_description("Refills every cell with a value you choose. Walkers, marks and the random stream are left alone, and it does not fire On Cell Carved. Use it to re-run the same walkers over a blank slate without re-registering them.")
+# @ace_display_template("wipe every cell back to [b]{value}[/b]")
+# @ace_codegen_template("DrunkenWalkers.clear_grid({value})")
 func clear_grid(value: int) -> void:
 	_ensure_started()
 	_cells.fill(value)
 	_index_cache.clear()
 
-## @ace_action
-## @ace_name("Set Cell")
-## @ace_category("Drunken Walkers")
-## @ace_description("Writes one cell directly. Deliberately silent: it does not fire On Cell Carved, which makes it the right tool for pre-placing anchors like a guaranteed entrance or a boss room before the walkers run.")
-## @ace_display_template("write [b]{value}[/b] into cell ([b]{x}[/b], [b]{y}[/b])")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.set_cell({x}, {y}, {value})")
+# @ace_action
+# @ace_name("Set Cell")
+# @ace_description("Writes one cell directly. Deliberately silent: it does not fire On Cell Carved, which makes it the right tool for pre-placing anchors like a guaranteed entrance or a boss room before the walkers run.")
+# @ace_display_template("write [b]{value}[/b] into cell ([b]{x}[/b], [b]{y}[/b])")
+# @ace_codegen_template("DrunkenWalkers.set_cell({x}, {y}, {value})")
 func set_cell(x: int, y: int, value: int) -> void:
 	_ensure_started()
 	if not _inside(x, y):
@@ -414,27 +408,23 @@ func set_cell(x: int, y: int, value: int) -> void:
 	_cells[y * _width + x] = value
 	_index_cache.clear()
 
-## @ace_action
-## @ace_name("Set Origin")
-## @ace_category("Drunken Walkers")
-## @ace_description("Moves the grid in world space and optionally changes the cell size, for the four coordinate expressions. Pass 0 for the cell size to keep the current one.")
-## @ace_display_template("put the grid's corner at ([b]{x}[/b], [b]{y}[/b]), cells [b]{new_cell_size}[/b] px")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.set_origin({x}, {y}, {new_cell_size})")
+# @ace_action
+# @ace_name("Set Origin")
+# @ace_description("Moves the grid in world space and optionally changes the cell size, for the four coordinate expressions. Pass 0 for the cell size to keep the current one.")
+# @ace_display_template("put the grid's corner at ([b]{x}[/b], [b]{y}[/b]), cells [b]{new_cell_size}[/b] px")
+# @ace_codegen_template("DrunkenWalkers.set_origin({x}, {y}, {new_cell_size})")
 func set_origin(x: float, y: float, new_cell_size: int) -> void:
 	origin_x = x
 	origin_y = y
 	if new_cell_size != 0:
 		cell_size = maxi(1, new_cell_size)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Draw Cells To Tilemap")
-## @ace_category("Drunken Walkers")
-## @ace_description("Paints one tile into a TileMapLayer for every cell holding a value, replacing the whole paint loop. Cell coordinates map straight onto tile coordinates. Call it once per value; a source id of -1 erases those tiles instead.")
-## @ace_display_template("paint every [b]{value}[/b] cell into [i]{layer}[/i] as tile ([b]{atlas_x}[/b], [b]{atlas_y}[/b]) of source [b]{source_id}[/b]")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.draw_cells_to_tilemap({layer}, {value}, {source_id}, {atlas_x}, {atlas_y})")
+# @ace_action
+# @ace_featured
+# @ace_name("Draw Cells To Tilemap")
+# @ace_description("Paints one tile into a TileMapLayer for every cell holding a value, replacing the whole paint loop. Cell coordinates map straight onto tile coordinates. Call it once per value; a source id of -1 erases those tiles instead.")
+# @ace_display_template("paint every [b]{value}[/b] cell into [i]{layer}[/i] as tile ([b]{atlas_x}[/b], [b]{atlas_y}[/b]) of source [b]{source_id}[/b]")
+# @ace_codegen_template("DrunkenWalkers.draw_cells_to_tilemap({layer}, {value}, {source_id}, {atlas_x}, {atlas_y})")
 func draw_cells_to_tilemap(layer: TileMapLayer, value: int, source_id: int, atlas_x: int, atlas_y: int) -> void:
 	_ensure_started()
 	if layer == null:
@@ -444,14 +434,12 @@ func draw_cells_to_tilemap(layer: TileMapLayer, value: int, source_id: int, atla
 	for index: int in _cells_holding(value):
 		layer.set_cell(Vector2i(index % _width, int(index / float(_width))), source_id, Vector2i(atlas_x, atlas_y))
 
-## @ace_action
-## @ace_featured
-## @ace_name("Set Seed")
-## @ace_category("Drunken Walkers")
-## @ace_description("Resets the generator from a seed string. Call it BEFORE generating: the same seed with the same action order reproduces identical output, and calling it afterwards changes nothing about the map you just built. It does not clear the grid.")
-## @ace_display_template("seed the generator with [b]{seed_text}[/b]")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.set_seed({seed_text})")
+# @ace_action
+# @ace_featured
+# @ace_name("Set Seed")
+# @ace_description("Resets the generator from a seed string. Call it BEFORE generating: the same seed with the same action order reproduces identical output, and calling it afterwards changes nothing about the map you just built. It does not clear the grid.")
+# @ace_display_template("seed the generator with [b]{seed_text}[/b]")
+# @ace_codegen_template("DrunkenWalkers.set_seed({seed_text})")
 func set_seed(seed_text: String) -> void:
 	_ensure_started()
 	_seed_text = seed_text
@@ -459,14 +447,12 @@ func set_seed(seed_text: String) -> void:
 	# Set Seed resets the stream and NOTHING ELSE. The grid, the walkers and the marks are left
 	# exactly as they are, so you can re-seed and re-run without reallocating anything.
 
-## @ace_action
-## @ace_name("Set Random Source")
-## @ace_category("Drunken Walkers")
-## @ace_description("Switches where every decision draws from: this pack's own seeded generator, the shared Advanced Random autoload, or the injected queue Inject Random fills. You may switch mid-run, so one pass can audit through a single stream while the rest does not.")
-## @ace_display_template("draw randomness from [b]{source}[/b]")
-## @ace_param_options(source internal=Internal seeded, shared=Shared Advanced Random, injected=Injected queue)
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.set_random_source("{source}")")
+# @ace_action
+# @ace_name("Set Random Source")
+# @ace_description("Switches where every decision draws from: this pack's own seeded generator, the shared Advanced Random autoload, or the injected queue Inject Random fills. You may switch mid-run, so one pass can audit through a single stream while the rest does not.")
+# @ace_display_template("draw randomness from [b]{source}[/b]")
+# @ace_param_options(source internal=Internal seeded, shared=Shared Advanced Random, injected=Injected queue)
+# @ace_codegen_template("DrunkenWalkers.set_random_source("{source}")")
 func set_random_source(source: String) -> void:
 	var wanted: String = source.strip_edges().to_lower()
 	if wanted in ["internal", "shared", "injected"]:
@@ -476,24 +462,20 @@ func set_random_source(source: String) -> void:
 	if debug_mode:
 		push_warning("Drunken Walkers: '%s' is not a random source. Use internal, shared or injected." % source)
 
-## @ace_action
-## @ace_name("Inject Random")
-## @ace_category("Drunken Walkers")
-## @ace_description("Queues one value between 0 and 1 for the injected source, generation consuming them in order. Budget roughly two per walker step plus one per mark candidate. A queue that runs dry falls back to the internal generator rather than failing, and says so in Debug Mode.")
-## @ace_display_template("queue [b]{value}[/b] for the injected stream")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.inject_random({value})")
+# @ace_action
+# @ace_name("Inject Random")
+# @ace_description("Queues one value between 0 and 1 for the injected source, generation consuming them in order. Budget roughly two per walker step plus one per mark candidate. A queue that runs dry falls back to the internal generator rather than failing, and says so in Debug Mode.")
+# @ace_display_template("queue [b]{value}[/b] for the injected stream")
+# @ace_codegen_template("DrunkenWalkers.inject_random({value})")
 func inject_random(value: float) -> void:
 	_injected.append(clampf(value, 0.0, 1.0))
 
-## @ace_action
-## @ace_featured
-## @ace_name("Add Walker")
-## @ace_category("Drunken Walkers")
-## @ace_description("Registers a walker with the eight settings you change most: where it starts, how many steps it has, how many headings it may face (1 to 8), how far it may turn in one step, its tag and the value it carves. Everything else takes its default. Re-using an id replaces that walker without moving it in the run order.")
-## @ace_display_template("add walker [b]{id}[/b] at ([b]{start_x}[/b], [b]{start_y}[/b]) - [b]{steps}[/b] steps, [b]{directions}[/b] headings, turning up to [b]{max_turn}[/b], tagged [b]{tag}[/b], carving [b]{carve_value}[/b]")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.add_walker({id}, {start_x}, {start_y}, {steps}, {directions}, {max_turn}, {tag}, {carve_value})")
+# @ace_action
+# @ace_featured
+# @ace_name("Add Walker")
+# @ace_description("Registers a walker with the eight settings you change most: where it starts, how many steps it has, how many headings it may face (1 to 8), how far it may turn in one step, its tag and the value it carves. Everything else takes its default. Re-using an id replaces that walker without moving it in the run order.")
+# @ace_display_template("add walker [b]{id}[/b] at ([b]{start_x}[/b], [b]{start_y}[/b]) - [b]{steps}[/b] steps, [b]{directions}[/b] headings, turning up to [b]{max_turn}[/b], tagged [b]{tag}[/b], carving [b]{carve_value}[/b]")
+# @ace_codegen_template("DrunkenWalkers.add_walker({id}, {start_x}, {start_y}, {steps}, {directions}, {max_turn}, {tag}, {carve_value})")
 func add_walker(id: String, start_x: int, start_y: int, steps: int, directions: int, max_turn: float, tag: String, carve_value: int) -> void:
 	_ensure_started()
 	var walker: Walker = _register(id)
@@ -508,15 +490,13 @@ func add_walker(id: String, start_x: int, start_y: int, steps: int, directions: 
 	walker.tag = tag
 	walker.carve_value = carve_value
 
-## @ace_action
-## @ace_featured
-## @ace_name("Add Walker From Preset")
-## @ace_category("Drunken Walkers")
-## @ace_description("Registers a walker from a named shape recipe - Cave, Corridors, River, Ore Vein, Lightning or Blob - so you only need a position, a tag and a carve value. Tune it afterwards with the Set Walker actions.")
-## @ace_display_template("add a [b]{preset}[/b] walker [b]{id}[/b] at ([b]{start_x}[/b], [b]{start_y}[/b]), tagged [b]{tag}[/b], carving [b]{carve_value}[/b]")
-## @ace_param_options(preset cave=Cave, corridors=Corridors, river=River, ore_vein=Ore Vein, lightning=Lightning, blob=Blob)
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.add_walker_from_preset("{preset}", {id}, {start_x}, {start_y}, {tag}, {carve_value})")
+# @ace_action
+# @ace_featured
+# @ace_name("Add Walker From Preset")
+# @ace_description("Registers a walker from a named shape recipe - Cave, Corridors, River, Ore Vein, Lightning or Blob - so you only need a position, a tag and a carve value. Tune it afterwards with the Set Walker actions.")
+# @ace_display_template("add a [b]{preset}[/b] walker [b]{id}[/b] at ([b]{start_x}[/b], [b]{start_y}[/b]), tagged [b]{tag}[/b], carving [b]{carve_value}[/b]")
+# @ace_param_options(preset cave=Cave, corridors=Corridors, river=River, ore_vein=Ore Vein, lightning=Lightning, blob=Blob)
+# @ace_codegen_template("DrunkenWalkers.add_walker_from_preset("{preset}", {id}, {start_x}, {start_y}, {tag}, {carve_value})")
 func add_walker_from_preset(preset: String, id: String, start_x: int, start_y: int, tag: String, carve_value: int) -> void:
 	_ensure_started()
 	var recipe_name: String = preset.strip_edges().to_lower().replace("_", " ")
@@ -539,13 +519,11 @@ func add_walker_from_preset(preset: String, id: String, start_x: int, start_y: i
 	walker.tag = tag
 	walker.carve_value = carve_value
 
-## @ace_action
-## @ace_name("Define Walker")
-## @ace_category("Drunken Walkers")
-## @ace_description("Registers a walker from a whole JSON definition in one string, which suits definitions that live in a data file or a level editor. Anything you leave out takes its default. Both spellings of every field are accepted, so startX and start_x both work.")
-## @ace_display_template("define a walker from [b]{definition}[/b]")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.define_walker({definition})")
+# @ace_action
+# @ace_name("Define Walker")
+# @ace_description("Registers a walker from a whole JSON definition in one string, which suits definitions that live in a data file or a level editor. Anything you leave out takes its default. Both spellings of every field are accepted, so startX and start_x both work.")
+# @ace_display_template("define a walker from [b]{definition}[/b]")
+# @ace_codegen_template("DrunkenWalkers.define_walker({definition})")
 func define_walker(definition: String) -> void:
 	_ensure_started()
 	var parsed: Variant = JSON.parse_string(definition)
@@ -579,13 +557,11 @@ func define_walker(definition: String) -> void:
 	walker.heading = walker.start_angle
 	walker.steps_left = walker.steps
 
-## @ace_action
-## @ace_name("Set Walker Carve Value")
-## @ace_category("Drunken Walkers")
-## @ace_description("Changes the integer an existing walker writes into the cells it visits. It applies from that walker's next step, so anything already carved keeps its old value - which is how one walker lays down two materials along one path.")
-## @ace_display_template("walker [b]{id}[/b] carves [b]{value}[/b] from now on")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.set_walker_carve_value({id}, {value})")
+# @ace_action
+# @ace_name("Set Walker Carve Value")
+# @ace_description("Changes the integer an existing walker writes into the cells it visits. It applies from that walker's next step, so anything already carved keeps its old value - which is how one walker lays down two materials along one path.")
+# @ace_display_template("walker [b]{id}[/b] carves [b]{value}[/b] from now on")
+# @ace_codegen_template("DrunkenWalkers.set_walker_carve_value({id}, {value})")
 func set_walker_carve_value(id: String, value: int) -> void:
 	var walker: Walker = _walker(id, "Set Walker Carve Value")
 	if walker != null:
@@ -593,13 +569,11 @@ func set_walker_carve_value(id: String, value: int) -> void:
 		# That is the point: change it mid-walk and one walker lays down two materials.
 		walker.carve_value = value
 
-## @ace_action
-## @ace_name("Set Walker Steps")
-## @ace_category("Drunken Walkers")
-## @ace_description("Sets a walker's REMAINING step budget, and un-finishes a finished walker, so topping one up and running it again extends the path it already drew.")
-## @ace_display_template("give walker [b]{id}[/b] [b]{steps}[/b] steps left")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.set_walker_steps({id}, {steps})")
+# @ace_action
+# @ace_name("Set Walker Steps")
+# @ace_description("Sets a walker's REMAINING step budget, and un-finishes a finished walker, so topping one up and running it again extends the path it already drew.")
+# @ace_display_template("give walker [b]{id}[/b] [b]{steps}[/b] steps left")
+# @ace_codegen_template("DrunkenWalkers.set_walker_steps({id}, {steps})")
 func set_walker_steps(id: String, steps: int) -> void:
 	var walker: Walker = _walker(id, "Set Walker Steps")
 	if walker == null:
@@ -611,37 +585,31 @@ func set_walker_steps(id: String, steps: int) -> void:
 	if walker.steps_left > 0:
 		walker.finished = false
 
-## @ace_action
-## @ace_name("Set Walker Turn Chance")
-## @ace_category("Drunken Walkers")
-## @ace_description("Sets the 0 to 1 probability that a walker even considers turning on a given step. At 1 the heading performs its own random walk and the path curls; around 0.15 to 0.3 is what actually reads as a road or a river.")
-## @ace_display_template("walker [b]{id}[/b] considers turning [b]{chance}[/b] of the time")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.set_walker_turn_chance({id}, {chance})")
+# @ace_action
+# @ace_name("Set Walker Turn Chance")
+# @ace_description("Sets the 0 to 1 probability that a walker even considers turning on a given step. At 1 the heading performs its own random walk and the path curls; around 0.15 to 0.3 is what actually reads as a road or a river.")
+# @ace_display_template("walker [b]{id}[/b] considers turning [b]{chance}[/b] of the time")
+# @ace_codegen_template("DrunkenWalkers.set_walker_turn_chance({id}, {chance})")
 func set_walker_turn_chance(id: String, chance: float) -> void:
 	var walker: Walker = _walker(id, "Set Walker Turn Chance")
 	if walker != null:
 		walker.turn_chance = clampf(chance, 0.0, 1.0)
 
-## @ace_action
-## @ace_name("Set Walker Brush Size")
-## @ace_category("Drunken Walkers")
-## @ace_description("Sets the square block a walker stamps each step. 1 is a single cell, 3 is a centred 3x3. It never rotates, so it is right for blobby caves and wrong for corridors - use the dig size for those. Ignored while a dig size is set.")
-## @ace_display_template("walker [b]{id}[/b] stamps a [b]{size}[/b] cell square")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.set_walker_brush_size({id}, {size})")
+# @ace_action
+# @ace_name("Set Walker Brush Size")
+# @ace_description("Sets the square block a walker stamps each step. 1 is a single cell, 3 is a centred 3x3. It never rotates, so it is right for blobby caves and wrong for corridors - use the dig size for those. Ignored while a dig size is set.")
+# @ace_display_template("walker [b]{id}[/b] stamps a [b]{size}[/b] cell square")
+# @ace_codegen_template("DrunkenWalkers.set_walker_brush_size({id}, {size})")
 func set_walker_brush_size(id: String, size: int) -> void:
 	var walker: Walker = _walker(id, "Set Walker Brush Size")
 	if walker != null:
 		walker.brush_size = maxi(1, size)
 
-## @ace_action
-## @ace_name("Set Walker Start Angle")
-## @ace_category("Drunken Walkers")
-## @ace_description("Rotates the walker's whole direction set to a new anchor angle, in degrees, 0 being right and 90 down. The direction weights rotate with it, because weight entry 0 always weighs the start angle.")
-## @ace_display_template("point walker [b]{id}[/b]'s direction set at [b]{degrees}[/b] degrees")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.set_walker_start_angle({id}, {degrees})")
+# @ace_action
+# @ace_name("Set Walker Start Angle")
+# @ace_description("Rotates the walker's whole direction set to a new anchor angle, in degrees, 0 being right and 90 down. The direction weights rotate with it, because weight entry 0 always weighs the start angle.")
+# @ace_display_template("point walker [b]{id}[/b]'s direction set at [b]{degrees}[/b] degrees")
+# @ace_codegen_template("DrunkenWalkers.set_walker_start_angle({id}, {degrees})")
 func set_walker_start_angle(id: String, degrees: float) -> void:
 	var walker: Walker = _walker(id, "Set Walker Start Angle")
 	if walker == null:
@@ -652,13 +620,11 @@ func set_walker_start_angle(id: String, degrees: float) -> void:
 	walker.heading = fposmod(walker.heading + degrees - walker.start_angle, 360.0)
 	walker.start_angle = fposmod(degrees, 360.0)
 
-## @ace_action
-## @ace_name("Set Walker Dig Size")
-## @ace_category("Drunken Walkers")
-## @ace_description("Swaps the square brush for a rectangle that TURNS WITH THE WALKER. Width is measured across the heading and is always centred, so a corridor keeps its width around every corner. Depth is measured along the heading and is signed: positive digs ahead of the walker, negative digs behind it. 0 on an axis falls back to the brush size, and 0 on both restores the square brush.")
-## @ace_display_template("walker [b]{id}[/b] digs [b]{width}[/b] wide by [b]{depth}[/b] deep")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.set_walker_dig_size({id}, {width}, {depth})")
+# @ace_action
+# @ace_name("Set Walker Dig Size")
+# @ace_description("Swaps the square brush for a rectangle that TURNS WITH THE WALKER. Width is measured across the heading and is always centred, so a corridor keeps its width around every corner. Depth is measured along the heading and is signed: positive digs ahead of the walker, negative digs behind it. 0 on an axis falls back to the brush size, and 0 on both restores the square brush.")
+# @ace_display_template("walker [b]{id}[/b] digs [b]{width}[/b] wide by [b]{depth}[/b] deep")
+# @ace_codegen_template("DrunkenWalkers.set_walker_dig_size({id}, {width}, {depth})")
 func set_walker_dig_size(id: String, width: int, depth: int) -> void:
 	var walker: Walker = _walker(id, "Set Walker Dig Size")
 	if walker != null:
@@ -667,25 +633,21 @@ func set_walker_dig_size(id: String, width: int, depth: int) -> void:
 		walker.brush_width = width
 		walker.brush_height = depth
 
-## @ace_action
-## @ace_name("Set Walker Direction Weights")
-## @ace_category("Drunken Walkers")
-## @ace_description("Biases which heading a walker turns toward, as a comma separated list of relative weights in direction order starting at the start angle. A 0 rules that heading out, a missing entry counts as 1, extra entries are ignored, and an empty string restores equal weights.")
-## @ace_display_template("weight walker [b]{id}[/b]'s headings [b]{weights}[/b]")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.set_walker_direction_weights({id}, {weights})")
+# @ace_action
+# @ace_name("Set Walker Direction Weights")
+# @ace_description("Biases which heading a walker turns toward, as a comma separated list of relative weights in direction order starting at the start angle. A 0 rules that heading out, a missing entry counts as 1, extra entries are ignored, and an empty string restores equal weights.")
+# @ace_display_template("weight walker [b]{id}[/b]'s headings [b]{weights}[/b]")
+# @ace_codegen_template("DrunkenWalkers.set_walker_direction_weights({id}, {weights})")
 func set_walker_direction_weights(id: String, weights: String) -> void:
 	var walker: Walker = _walker(id, "Set Walker Direction Weights")
 	if walker != null:
 		walker.weights = _weights_from_text(weights)
 
-## @ace_action
-## @ace_name("Remove Walker")
-## @ace_category("Drunken Walkers")
-## @ace_description("Unregisters a walker. Everything it already carved stays exactly as it is, because carving writes into the grid as it happens rather than being replayed at the end.")
-## @ace_display_template("unregister walker [b]{id}[/b]")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.remove_walker({id})")
+# @ace_action
+# @ace_name("Remove Walker")
+# @ace_description("Unregisters a walker. Everything it already carved stays exactly as it is, because carving writes into the grid as it happens rather than being replayed at the end.")
+# @ace_display_template("unregister walker [b]{id}[/b]")
+# @ace_codegen_template("DrunkenWalkers.remove_walker({id})")
 func remove_walker(id: String) -> void:
 	if not _walkers.has(id):
 		return
@@ -694,14 +656,12 @@ func remove_walker(id: String) -> void:
 	_walkers.erase(id)
 	_order.erase(id)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Run All Walkers")
-## @ace_category("Drunken Walkers")
-## @ace_description("Runs every registered walker to the end of its budget, in registration order, then fires On Generation Complete. This is the whole generation in one row.")
-## @ace_display_template("run every walker")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.run_all_walkers()")
+# @ace_action
+# @ace_featured
+# @ace_name("Run All Walkers")
+# @ace_description("Runs every registered walker to the end of its budget, in registration order, then fires On Generation Complete. This is the whole generation in one row.")
+# @ace_display_template("run every walker")
+# @ace_codegen_template("DrunkenWalkers.run_all_walkers()")
 func run_all_walkers() -> void:
 	_ensure_started()
 	if debug_mode and _order.is_empty():
@@ -719,13 +679,11 @@ func run_all_walkers() -> void:
 		push_warning("Drunken Walkers: every registered walker had already finished, so Run All Walkers carved nothing. Set Walker Steps tops one up.")
 	generation_complete.emit()
 
-## @ace_action
-## @ace_name("Run Walkers By Tag")
-## @ace_category("Drunken Walkers")
-## @ace_description("Runs only the walkers carrying a tag, in registration order, then fires On Walkers By Tag Complete. Staging generation in tagged passes is how a later pass reacts to what an earlier one carved. An empty tag is not a wildcard here: it runs the walkers that genuinely have no tag.")
-## @ace_display_template("run the walkers tagged [b]{tag}[/b]")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.run_walkers_by_tag({tag})")
+# @ace_action
+# @ace_name("Run Walkers By Tag")
+# @ace_description("Runs only the walkers carrying a tag, in registration order, then fires On Walkers By Tag Complete. Staging generation in tagged passes is how a later pass reacts to what an earlier one carved. An empty tag is not a wildcard here: it runs the walkers that genuinely have no tag.")
+# @ace_display_template("run the walkers tagged [b]{tag}[/b]")
+# @ace_codegen_template("DrunkenWalkers.run_walkers_by_tag({tag})")
 func run_walkers_by_tag(tag: String) -> void:
 	_ensure_started()
 	var matched: int = 0
@@ -742,13 +700,11 @@ func run_walkers_by_tag(tag: String) -> void:
 	walkers_by_tag_complete.emit(tag)
 	_ctx_walker_tag = ""
 
-## @ace_action
-## @ace_name("Run Walker")
-## @ace_category("Drunken Walkers")
-## @ace_description("Runs one walker by id to the end of its budget. It fires On Cell Carved and On Walker Finished but deliberately NOT On Generation Complete, because it is one pass of a bigger generation rather than the end of it.")
-## @ace_display_template("run walker [b]{id}[/b]")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.run_walker({id})")
+# @ace_action
+# @ace_name("Run Walker")
+# @ace_description("Runs one walker by id to the end of its budget. It fires On Cell Carved and On Walker Finished but deliberately NOT On Generation Complete, because it is one pass of a bigger generation rather than the end of it.")
+# @ace_display_template("run walker [b]{id}[/b]")
+# @ace_codegen_template("DrunkenWalkers.run_walker({id})")
 func run_walker(id: String) -> void:
 	_ensure_started()
 	var walker: Walker = _walker(id, "Run Walker")
@@ -757,14 +713,12 @@ func run_walker(id: String) -> void:
 		# this is one pass of a bigger generation, not the end of it.
 		_run_to_end(walker)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Step Walker")
-## @ace_category("Drunken Walkers")
-## @ace_description("Advances one walker by up to this many steps instead of running it out, firing On Walker Stepped per step - the row that makes the map draw itself in front of the player. The walk is identical to an instant run, just spread over time. The first call carves the start cell, so nothing has to place the walker first.")
-## @ace_display_template("step walker [b]{id}[/b] on by [b]{steps}[/b]")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.step_walker({id}, {steps})")
+# @ace_action
+# @ace_featured
+# @ace_name("Step Walker")
+# @ace_description("Advances one walker by up to this many steps instead of running it out, firing On Walker Stepped per step - the row that makes the map draw itself in front of the player. The walk is identical to an instant run, just spread over time. The first call carves the start cell, so nothing has to place the walker first.")
+# @ace_display_template("step walker [b]{id}[/b] on by [b]{steps}[/b]")
+# @ace_codegen_template("DrunkenWalkers.step_walker({id}, {steps})")
 func step_walker(id: String, steps: int) -> void:
 	_ensure_started()
 	var walker: Walker = _walker(id, "Step Walker")
@@ -774,13 +728,11 @@ func step_walker(id: String, steps: int) -> void:
 		if not _advance(walker, true):
 			return
 
-## @ace_action
-## @ace_name("Drop Marks Along Walk")
-## @ace_category("Drunken Walkers")
-## @ace_description("Replays a walker's recorded path and considers a candidate every N steps, keeping each with the given chance and rejecting it if it lands too close to an existing mark of the same tag. The walker must have run already, because the path is recorded as it walks. Candidates start at step N, not at the start cell.")
-## @ace_display_template("drop [b]{tag}[/b] marks along walker [b]{walker_id}[/b] every [b]{every_steps}[/b] steps, chance [b]{chance}[/b], spacing [b]{min_spacing}[/b]")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.drop_marks_along_walk({walker_id}, {tag}, {every_steps}, {chance}, {min_spacing})")
+# @ace_action
+# @ace_name("Drop Marks Along Walk")
+# @ace_description("Replays a walker's recorded path and considers a candidate every N steps, keeping each with the given chance and rejecting it if it lands too close to an existing mark of the same tag. The walker must have run already, because the path is recorded as it walks. Candidates start at step N, not at the start cell.")
+# @ace_display_template("drop [b]{tag}[/b] marks along walker [b]{walker_id}[/b] every [b]{every_steps}[/b] steps, chance [b]{chance}[/b], spacing [b]{min_spacing}[/b]")
+# @ace_codegen_template("DrunkenWalkers.drop_marks_along_walk({walker_id}, {tag}, {every_steps}, {chance}, {min_spacing})")
 @warning_ignore("shadowed_variable")  # walker_id: ACE parameter id of this verb, frozen since it shipped
 func drop_marks_along_walk(walker_id: String, tag: String, every_steps: int, chance: float, min_spacing: float) -> void:
 	_ensure_started()
@@ -806,15 +758,13 @@ func drop_marks_along_walk(walker_id: String, tag: String, every_steps: int, cha
 		push_warning("Drunken Walkers: Drop Marks Along Walk considered %d candidate(s) along '%s' and placed %d '%s' mark(s)." % [
 			candidates, walker_id, placed, tag])
 
-## @ace_action
-## @ace_featured
-## @ace_name("Scatter Marks")
-## @ace_category("Drunken Walkers")
-## @ace_description("Places up to this many tagged marks on cells holding a value, filtered by the placement rule and thinned by minimum spacing. The count is a maximum, not a promise: tight spacing or a rule that matches almost nothing places fewer, and Debug Mode says how many it managed.")
-## @ace_display_template("scatter [b]{count}[/b] [b]{tag}[/b] marks on [b]{value}[/b] cells, [b]{placement}[/b], spacing [b]{min_spacing}[/b]")
-## @ace_param_options(placement any=Any cell, interior=Interior only, edge=Edge only)
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.scatter_marks({count}, {tag}, {value}, "{placement}", {min_spacing})")
+# @ace_action
+# @ace_featured
+# @ace_name("Scatter Marks")
+# @ace_description("Places up to this many tagged marks on cells holding a value, filtered by the placement rule and thinned by minimum spacing. The count is a maximum, not a promise: tight spacing or a rule that matches almost nothing places fewer, and Debug Mode says how many it managed.")
+# @ace_display_template("scatter [b]{count}[/b] [b]{tag}[/b] marks on [b]{value}[/b] cells, [b]{placement}[/b], spacing [b]{min_spacing}[/b]")
+# @ace_param_options(placement any=Any cell, interior=Interior only, edge=Edge only)
+# @ace_codegen_template("DrunkenWalkers.scatter_marks({count}, {tag}, {value}, "{placement}", {min_spacing})")
 func scatter_marks(count: int, tag: String, value: int, placement: String, min_spacing: float) -> void:
 	_ensure_started()
 	var rule: String = placement.strip_edges().to_lower()
@@ -839,13 +789,11 @@ func scatter_marks(count: int, tag: String, value: int, placement: String, min_s
 		push_warning("Drunken Walkers: Scatter Marks placed %d of the %d '%s' mark(s) asked for - the spacing, the placement rule or the space available ran out first." % [
 			placed, count, tag])
 
-## @ace_action
-## @ace_name("Clear Marks")
-## @ace_category("Drunken Walkers")
-## @ace_description("Removes every mark carrying a tag, an empty tag removing all of them. The grid is untouched, so clearing marks and re-scattering only re-rolls the placement.")
-## @ace_display_template("forget the [b]{tag}[/b] marks")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.clear_marks({tag})")
+# @ace_action
+# @ace_name("Clear Marks")
+# @ace_description("Removes every mark carrying a tag, an empty tag removing all of them. The grid is untouched, so clearing marks and re-scattering only re-rolls the placement.")
+# @ace_display_template("forget the [b]{tag}[/b] marks")
+# @ace_codegen_template("DrunkenWalkers.clear_marks({tag})")
 func clear_marks(tag: String) -> void:
 	# An empty tag clears them all. The grid is untouched either way, so clearing marks and
 	# re-scattering is cheap.
@@ -858,13 +806,11 @@ func clear_marks(tag: String) -> void:
 			kept.append(mark)
 	_marks = kept
 
-## @ace_action
-## @ace_name("Dilate Cells")
-## @ace_category("Drunken Walkers")
-## @ace_description("Grows every region of a value outward by one ring per iteration, which is how one-cell corridors become chambers. It converts ANY neighbouring cell, including ones holding other values, so dilate before you carve terrain you want to keep. Each iteration works from a snapshot, so one pass grows exactly one ring.")
-## @ace_display_template("grow the [b]{value}[/b] cells outward [b]{iterations}[/b] ring(s)")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.dilate_cells({value}, {iterations})")
+# @ace_action
+# @ace_name("Dilate Cells")
+# @ace_description("Grows every region of a value outward by one ring per iteration, which is how one-cell corridors become chambers. It converts ANY neighbouring cell, including ones holding other values, so dilate before you carve terrain you want to keep. Each iteration works from a snapshot, so one pass grows exactly one ring.")
+# @ace_display_template("grow the [b]{value}[/b] cells outward [b]{iterations}[/b] ring(s)")
+# @ace_codegen_template("DrunkenWalkers.dilate_cells({value}, {iterations})")
 func dilate_cells(value: int, iterations: int) -> void:
 	_ensure_started()
 	for _pass: int in maxi(1, iterations):
@@ -886,14 +832,12 @@ func dilate_cells(value: int, iterations: int) -> void:
 					_write(x, y, value, "")
 					break
 
-## @ace_action
-## @ace_featured
-## @ace_name("Outline Cells")
-## @ace_category("Drunken Walkers")
-## @ace_description("Writes an outline value into every Empty Value cell touching a cell of the target value - the classic walls-around-the-floor pass. Unlike dilation it only ever overwrites the Empty Value, so water and ore survive it, which makes it safe to run last.")
-## @ace_display_template("outline the [b]{value}[/b] cells with [b]{outline_value}[/b]")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.outline_cells({value}, {outline_value})")
+# @ace_action
+# @ace_featured
+# @ace_name("Outline Cells")
+# @ace_description("Writes an outline value into every Empty Value cell touching a cell of the target value - the classic walls-around-the-floor pass. Unlike dilation it only ever overwrites the Empty Value, so water and ore survive it, which makes it safe to run last.")
+# @ace_display_template("outline the [b]{value}[/b] cells with [b]{outline_value}[/b]")
+# @ace_codegen_template("DrunkenWalkers.outline_cells({value}, {outline_value})")
 func outline_cells(value: int, outline_value: int) -> void:
 	_ensure_started()
 	var before: PackedInt32Array = _cells.duplicate()
@@ -911,13 +855,11 @@ func outline_cells(value: int, outline_value: int) -> void:
 				_write(x, y, outline_value, "")
 				break
 
-## @ace_action
-## @ace_name("Load State From Text")
-## @ace_category("Drunken Walkers")
-## @ace_description("Restores a whole generator from the text Save State As Text produced: the grid, the origin and cell size, the seed, the random stream's own position, every walker with its progress and recorded path, and every mark. Restoring is SILENT - no On Cell Carved and no On Mark Placed - so repaint from Count Cells and the index expressions afterwards.")
-## @ace_display_template("restore the generator from [b]{state}[/b]")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.load_state_from_text({state})")
+# @ace_action
+# @ace_name("Load State From Text")
+# @ace_description("Restores a whole generator from the text Save State As Text produced: the grid, the origin and cell size, the seed, the random stream's own position, every walker with its progress and recorded path, and every mark. Restoring is SILENT - no On Cell Carved and no On Mark Placed - so repaint from Count Cells and the index expressions afterwards.")
+# @ace_display_template("restore the generator from [b]{state}[/b]")
+# @ace_codegen_template("DrunkenWalkers.load_state_from_text({state})")
 func load_state_from_text(state: String) -> void:
 	var parsed: Variant = JSON.parse_string(state)
 	if not (parsed is Dictionary):
@@ -926,59 +868,49 @@ func load_state_from_text(state: String) -> void:
 		return
 	load_state(parsed as Dictionary)
 
-## @ace_condition
-## @ace_name("Is Cell Value")
-## @ace_category("Drunken Walkers")
-## @ace_description("True when the cell holds exactly that value. Stricter than the Cell Value expression: an out-of-bounds cell matches nothing, not even the Empty Value, which is what lets you test the border honestly.")
-## @ace_display_template("cell ([b]{x}[/b], [b]{y}[/b]) is [b]{value}[/b]")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.is_cell_value({x}, {y}, {value})")
+# @ace_condition
+# @ace_name("Is Cell Value")
+# @ace_description("True when the cell holds exactly that value. Stricter than the Cell Value expression: an out-of-bounds cell matches nothing, not even the Empty Value, which is what lets you test the border honestly.")
+# @ace_display_template("cell ([b]{x}[/b], [b]{y}[/b]) is [b]{value}[/b]")
+# @ace_codegen_template("DrunkenWalkers.is_cell_value({x}, {y}, {value})")
 func is_cell_value(x: int, y: int, value: int) -> bool:
 	_ensure_started()
 	# Stricter than the Cell Value expression on purpose: an out-of-bounds cell matches NOTHING,
 	# not even the Empty Value, which is what lets you test the border honestly.
 	return _inside(x, y) and _cells[y * _width + x] == value
 
-## @ace_condition
-## @ace_name("Is Inside Grid")
-## @ace_category("Drunken Walkers")
-## @ace_description("True when the X and Y fall inside the current grid. Guard anything built from Layout To X / Layout To Y with it, because a point on screen may simply not be over the grid.")
-## @ace_display_template("([b]{x}[/b], [b]{y}[/b]) is inside the grid")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.is_inside_grid({x}, {y})")
+# @ace_condition
+# @ace_name("Is Inside Grid")
+# @ace_description("True when the X and Y fall inside the current grid. Guard anything built from Layout To X / Layout To Y with it, because a point on screen may simply not be over the grid.")
+# @ace_display_template("([b]{x}[/b], [b]{y}[/b]) is inside the grid")
+# @ace_codegen_template("DrunkenWalkers.is_inside_grid({x}, {y})")
 func is_inside_grid(x: int, y: int) -> bool:
 	_ensure_started()
 	return _inside(x, y)
 
-## @ace_condition
-## @ace_name("Has Mark At")
-## @ace_category("Drunken Walkers")
-## @ace_description("True when a mark with the tag sits on that cell. An empty tag matches any mark, which is the quick way to ask whether anything is already here.")
-## @ace_display_template("a [b]{tag}[/b] mark sits on ([b]{x}[/b], [b]{y}[/b])")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.has_mark_at({x}, {y}, {tag})")
+# @ace_condition
+# @ace_name("Has Mark At")
+# @ace_description("True when a mark with the tag sits on that cell. An empty tag matches any mark, which is the quick way to ask whether anything is already here.")
+# @ace_display_template("a [b]{tag}[/b] mark sits on ([b]{x}[/b], [b]{y}[/b])")
+# @ace_codegen_template("DrunkenWalkers.has_mark_at({x}, {y}, {tag})")
 func has_mark_at(x: int, y: int, tag: String) -> bool:
 	for mark: Mark in _marks:
 		if mark.x == x and mark.y == y and (tag.is_empty() or mark.tag == tag):
 			return true
 	return false
 
-## @ace_condition
-## @ace_name("Has Walker")
-## @ace_category("Drunken Walkers")
-## @ace_description("True when a walker with that id is currently registered.")
-## @ace_display_template("walker [b]{id}[/b] is registered")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.has_walker({id})")
+# @ace_condition
+# @ace_name("Has Walker")
+# @ace_description("True when a walker with that id is currently registered.")
+# @ace_display_template("walker [b]{id}[/b] is registered")
+# @ace_codegen_template("DrunkenWalkers.has_walker({id})")
 func has_walker(id: String) -> bool:
 	return _walkers.has(id)
 
-## @ace_expression
-## @ace_name("Cell Value")
-## @ace_category("Drunken Walkers")
-## @ace_description("The value at a cell. Asking outside the grid reads the Empty Value rather than erroring, so it is always safe to call.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.cell_value({x}, {y})")
+# @ace_expression
+# @ace_name("Cell Value")
+# @ace_description("The value at a cell. Asking outside the grid reads the Empty Value rather than erroring, so it is always safe to call.")
+# @ace_codegen_template("DrunkenWalkers.cell_value({x}, {y})")
 func cell_value(x: int, y: int) -> int:
 	_ensure_started()
 	# Never errors: a cell outside the grid reads as the Empty Value.
@@ -986,32 +918,26 @@ func cell_value(x: int, y: int) -> int:
 		return empty_value
 	return _cells[y * _width + x]
 
-## @ace_expression
-## @ace_name("Current Grid Width")
-## @ace_category("Drunken Walkers")
-## @ace_description("The current grid width in cells, which is what Create Grid last built rather than the property.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.current_grid_width()")
+# @ace_expression
+# @ace_name("Current Grid Width")
+# @ace_description("The current grid width in cells, which is what Create Grid last built rather than the property.")
+# @ace_codegen_template("DrunkenWalkers.current_grid_width()")
 func current_grid_width() -> int:
 	_ensure_started()
 	return _width
 
-## @ace_expression
-## @ace_name("Current Grid Height")
-## @ace_category("Drunken Walkers")
-## @ace_description("The current grid height in cells, which is what Create Grid last built rather than the property.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.current_grid_height()")
+# @ace_expression
+# @ace_name("Current Grid Height")
+# @ace_description("The current grid height in cells, which is what Create Grid last built rather than the property.")
+# @ace_codegen_template("DrunkenWalkers.current_grid_height()")
 func current_grid_height() -> int:
 	_ensure_started()
 	return _height
 
-## @ace_expression
-## @ace_name("As Text")
-## @ace_category("Drunken Walkers")
-## @ace_description("The whole grid as text, one character per cell and one line per row. Character N of what you pass stands for value N, and an unmapped value shows as a question mark. Put it in a Label to see the map instantly, before you have a tilemap at all.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.as_text({characters})")
+# @ace_expression
+# @ace_name("As Text")
+# @ace_description("The whole grid as text, one character per cell and one line per row. Character N of what you pass stands for value N, and an unmapped value shows as a question mark. Put it in a Label to see the map instantly, before you have a tilemap at all.")
+# @ace_codegen_template("DrunkenWalkers.as_text({characters})")
 func as_text(characters: String) -> String:
 	_ensure_started()
 	var rows: PackedStringArray = PackedStringArray()
@@ -1023,71 +949,57 @@ func as_text(characters: String) -> String:
 		rows.append(row)
 	return "\n".join(rows)
 
-## @ace_expression
-## @ace_name("Neighbour Count")
-## @ace_category("Drunken Walkers")
-## @ace_description("How many of the eight surrounding cells hold a value. Off-grid neighbours never match, which is what makes border detection and autotiling work without special-casing the edge.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.neighbour_count({x}, {y}, {value})")
+# @ace_expression
+# @ace_name("Neighbour Count")
+# @ace_description("How many of the eight surrounding cells hold a value. Off-grid neighbours never match, which is what makes border detection and autotiling work without special-casing the edge.")
+# @ace_codegen_template("DrunkenWalkers.neighbour_count({x}, {y}, {value})")
 func neighbour_count(x: int, y: int, value: int) -> int:
 	_ensure_started()
 	return _neighbours_holding(x, y, value)
 
-## @ace_expression
-## @ace_name("Cell To World X")
-## @ace_category("Drunken Walkers")
-## @ace_description("The world X of that cell's CENTRE, from Origin X and Cell Size - so a sprite placed on it lands centred in its tile whatever the origin is.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.cell_to_world_x({x})")
+# @ace_expression
+# @ace_name("Cell To World X")
+# @ace_description("The world X of that cell's CENTRE, from Origin X and Cell Size - so a sprite placed on it lands centred in its tile whatever the origin is.")
+# @ace_codegen_template("DrunkenWalkers.cell_to_world_x({x})")
 func cell_to_world_x(x: int) -> float:
 	return origin_x + (float(x) + 0.5) * float(cell_size)
 
-## @ace_expression
-## @ace_name("Cell To World Y")
-## @ace_category("Drunken Walkers")
-## @ace_description("The world Y of that cell's centre, from Origin Y and Cell Size.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.cell_to_world_y({y})")
+# @ace_expression
+# @ace_name("Cell To World Y")
+# @ace_description("The world Y of that cell's centre, from Origin Y and Cell Size.")
+# @ace_codegen_template("DrunkenWalkers.cell_to_world_y({y})")
 func cell_to_world_y(y: int) -> float:
 	return origin_y + (float(y) + 0.5) * float(cell_size)
 
-## @ace_expression
-## @ace_name("World To Cell X")
-## @ace_category("Drunken Walkers")
-## @ace_description("The cell X containing that world X. It may fall outside the grid, so guard it with Is Inside Grid.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.world_to_cell_x({world_x})")
+# @ace_expression
+# @ace_name("World To Cell X")
+# @ace_description("The cell X containing that world X. It may fall outside the grid, so guard it with Is Inside Grid.")
+# @ace_codegen_template("DrunkenWalkers.world_to_cell_x({world_x})")
 func world_to_cell_x(world_x: float) -> int:
 	# May land outside the grid, because a point on screen may simply not be over it. Guard the
 	# answer with Is Inside Grid before you use it.
 	return floori((world_x - origin_x) / float(maxi(1, cell_size)))
 
-## @ace_expression
-## @ace_name("World To Cell Y")
-## @ace_category("Drunken Walkers")
-## @ace_description("The cell Y containing that world Y. It may fall outside the grid, so guard it with Is Inside Grid.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.world_to_cell_y({world_y})")
+# @ace_expression
+# @ace_name("World To Cell Y")
+# @ace_description("The cell Y containing that world Y. It may fall outside the grid, so guard it with Is Inside Grid.")
+# @ace_codegen_template("DrunkenWalkers.world_to_cell_y({world_y})")
 func world_to_cell_y(world_y: float) -> int:
 	return floori((world_y - origin_y) / float(maxi(1, cell_size)))
 
-## @ace_expression
-## @ace_featured
-## @ace_name("Count Cells")
-## @ace_category("Drunken Walkers")
-## @ace_description("How many cells currently hold the value. Pairs with the two index expressions to walk the whole set, which is the fast way to paint a generated map.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.count_cells({value})")
+# @ace_expression
+# @ace_featured
+# @ace_name("Count Cells")
+# @ace_description("How many cells currently hold the value. Pairs with the two index expressions to walk the whole set, which is the fast way to paint a generated map.")
+# @ace_codegen_template("DrunkenWalkers.count_cells({value})")
 func count_cells(value: int) -> int:
 	_ensure_started()
 	return _cells_holding(value).size()
 
-## @ace_expression
-## @ace_name("Cell X By Index")
-## @ace_category("Drunken Walkers")
-## @ace_description("The X of the index-th cell holding the value, counted from 0 in a stable left-to-right, top-to-bottom order. Out of range reads -1 rather than erroring.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.cell_x_by_index({value}, {index})")
+# @ace_expression
+# @ace_name("Cell X By Index")
+# @ace_description("The X of the index-th cell holding the value, counted from 0 in a stable left-to-right, top-to-bottom order. Out of range reads -1 rather than erroring.")
+# @ace_codegen_template("DrunkenWalkers.cell_x_by_index({value}, {index})")
 func cell_x_by_index(value: int, index: int) -> int:
 	_ensure_started()
 	var found: PackedInt32Array = _cells_holding(value)
@@ -1095,12 +1007,10 @@ func cell_x_by_index(value: int, index: int) -> int:
 		return -1
 	return found[index] % _width
 
-## @ace_expression
-## @ace_name("Cell Y By Index")
-## @ace_category("Drunken Walkers")
-## @ace_description("The Y of the index-th cell holding the value, in the same stable order. Out of range reads -1.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.cell_y_by_index({value}, {index})")
+# @ace_expression
+# @ace_name("Cell Y By Index")
+# @ace_description("The Y of the index-th cell holding the value, in the same stable order. Out of range reads -1.")
+# @ace_codegen_template("DrunkenWalkers.cell_y_by_index({value}, {index})")
 func cell_y_by_index(value: int, index: int) -> int:
 	_ensure_started()
 	var found: PackedInt32Array = _cells_holding(value)
@@ -1108,12 +1018,10 @@ func cell_y_by_index(value: int, index: int) -> int:
 		return -1
 	return int(found[index] / float(_width))
 
-## @ace_expression
-## @ace_name("Count Marks")
-## @ace_category("Drunken Walkers")
-## @ace_description("How many marks carry the tag. An empty tag counts every mark, whatever its tag.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.count_marks({tag})")
+# @ace_expression
+# @ace_name("Count Marks")
+# @ace_description("How many marks carry the tag. An empty tag counts every mark, whatever its tag.")
+# @ace_codegen_template("DrunkenWalkers.count_marks({tag})")
 func count_marks(tag: String) -> int:
 	if tag.is_empty():
 		return _marks.size()
@@ -1123,12 +1031,10 @@ func count_marks(tag: String) -> int:
 			found += 1
 	return found
 
-## @ace_expression
-## @ace_name("Mark X By Index")
-## @ace_category("Drunken Walkers")
-## @ace_description("The X of the index-th mark with the tag, counted from 0 in placement order. Out of range reads -1.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.mark_x_by_index({tag}, {index})")
+# @ace_expression
+# @ace_name("Mark X By Index")
+# @ace_description("The X of the index-th mark with the tag, counted from 0 in placement order. Out of range reads -1.")
+# @ace_codegen_template("DrunkenWalkers.mark_x_by_index({tag}, {index})")
 func mark_x_by_index(tag: String, index: int) -> int:
 	var found: int = 0
 	for mark: Mark in _marks:
@@ -1139,12 +1045,10 @@ func mark_x_by_index(tag: String, index: int) -> int:
 		found += 1
 	return -1
 
-## @ace_expression
-## @ace_name("Mark Y By Index")
-## @ace_category("Drunken Walkers")
-## @ace_description("The Y of the index-th mark with the tag, in placement order. Out of range reads -1.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.mark_y_by_index({tag}, {index})")
+# @ace_expression
+# @ace_name("Mark Y By Index")
+# @ace_description("The Y of the index-th mark with the tag, in placement order. Out of range reads -1.")
+# @ace_codegen_template("DrunkenWalkers.mark_y_by_index({tag}, {index})")
 func mark_y_by_index(tag: String, index: int) -> int:
 	var found: int = 0
 	for mark: Mark in _marks:
@@ -1155,145 +1059,115 @@ func mark_y_by_index(tag: String, index: int) -> int:
 		found += 1
 	return -1
 
-## @ace_expression
-## @ace_name("Current Seed")
-## @ace_category("Drunken Walkers")
-## @ace_description("The seed the generator was last set with, including one derived from the clock - so a player can always be shown the code that reproduces the run they are in.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.current_seed()")
+# @ace_expression
+# @ace_name("Current Seed")
+# @ace_description("The seed the generator was last set with, including one derived from the clock - so a player can always be shown the code that reproduces the run they are in.")
+# @ace_codegen_template("DrunkenWalkers.current_seed()")
 func current_seed() -> String:
 	_ensure_started()
 	return _seed_text
 
-## @ace_expression
-## @ace_name("Injected Remaining")
-## @ace_category("Drunken Walkers")
-## @ace_description("How many injected values are still queued. Read it after a generation to see how much headroom the queue actually had.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.injected_remaining()")
+# @ace_expression
+# @ace_name("Injected Remaining")
+# @ace_description("How many injected values are still queued. Read it after a generation to see how much headroom the queue actually had.")
+# @ace_codegen_template("DrunkenWalkers.injected_remaining()")
 func injected_remaining() -> int:
 	return maxi(0, _injected.size() - _injected_head)
 
-## @ace_expression
-## @ace_name("Save State As Text")
-## @ace_category("Drunken Walkers")
-## @ace_description("The whole generator as one JSON string: the grid, the origin and cell size, the seed, the random stream's own position, every walker with its progress and recorded path, and every mark. Because the stream position round-trips, a half-finished Step Walker animation resumes and produces the identical remaining path. Save it with any save pack, hand it back to Load State From Text.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.save_state_as_text()")
+# @ace_expression
+# @ace_name("Save State As Text")
+# @ace_description("The whole generator as one JSON string: the grid, the origin and cell size, the seed, the random stream's own position, every walker with its progress and recorded path, and every mark. Because the stream position round-trips, a half-finished Step Walker animation resumes and produces the identical remaining path. Save it with any save pack, hand it back to Load State From Text.")
+# @ace_codegen_template("DrunkenWalkers.save_state_as_text()")
 func save_state_as_text() -> String:
 	return JSON.stringify(save_state())
 
-## @ace_expression
-## @ace_name("Walker X")
-## @ace_category("Drunken Walkers")
-## @ace_description("The current X of the triggering walker. Reads 0 outside the walker triggers, never a stale cell.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.walker_x()")
+# @ace_expression
+# @ace_name("Walker X")
+# @ace_description("The current X of the triggering walker. Reads 0 outside the walker triggers, never a stale cell.")
+# @ace_codegen_template("DrunkenWalkers.walker_x()")
 func walker_x() -> int:
 	return _ctx_walker_x
 
-## @ace_expression
-## @ace_name("Walker Y")
-## @ace_category("Drunken Walkers")
-## @ace_description("The current Y of the triggering walker. Reads 0 outside the walker triggers.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.walker_y()")
+# @ace_expression
+# @ace_name("Walker Y")
+# @ace_description("The current Y of the triggering walker. Reads 0 outside the walker triggers.")
+# @ace_codegen_template("DrunkenWalkers.walker_y()")
 func walker_y() -> int:
 	return _ctx_walker_y
 
-## @ace_expression
-## @ace_name("Walker Angle")
-## @ace_category("Drunken Walkers")
-## @ace_description("The current heading of the triggering walker in degrees, 0 being right and 90 down - point a digger sprite at it and it faces where it is going.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.walker_angle()")
+# @ace_expression
+# @ace_name("Walker Angle")
+# @ace_description("The current heading of the triggering walker in degrees, 0 being right and 90 down - point a digger sprite at it and it faces where it is going.")
+# @ace_codegen_template("DrunkenWalkers.walker_angle()")
 func walker_angle() -> float:
 	return _ctx_walker_angle
 
-## @ace_expression
-## @ace_name("Walker Steps Left")
-## @ace_category("Drunken Walkers")
-## @ace_description("The remaining step budget of the triggering walker, which is the natural driver for a generation progress bar.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.walker_steps_left()")
+# @ace_expression
+# @ace_name("Walker Steps Left")
+# @ace_description("The remaining step budget of the triggering walker, which is the natural driver for a generation progress bar.")
+# @ace_codegen_template("DrunkenWalkers.walker_steps_left()")
 func walker_steps_left() -> int:
 	return _ctx_walker_steps_left
 
-## @ace_expression
-## @ace_name("Walker ID")
-## @ace_category("Drunken Walkers")
-## @ace_description("The id of the triggering walker. It is empty inside the post-processing passes and outside the triggers, which is how On Cell Carved tells a dilated cell from a carved one.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.walker_id()")
+# @ace_expression
+# @ace_name("Walker ID")
+# @ace_description("The id of the triggering walker. It is empty inside the post-processing passes and outside the triggers, which is how On Cell Carved tells a dilated cell from a carved one.")
+# @ace_codegen_template("DrunkenWalkers.walker_id()")
 func walker_id() -> String:
 	return _ctx_walker_id
 
-## @ace_expression
-## @ace_name("Walker Tag")
-## @ace_category("Drunken Walkers")
-## @ace_description("The tag of the triggering walker, or the batch tag inside On Walkers By Tag Complete.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.walker_tag()")
+# @ace_expression
+# @ace_name("Walker Tag")
+# @ace_description("The tag of the triggering walker, or the batch tag inside On Walkers By Tag Complete.")
+# @ace_codegen_template("DrunkenWalkers.walker_tag()")
 func walker_tag() -> String:
 	return _ctx_walker_tag
 
-## @ace_expression
-## @ace_name("Carved X")
-## @ace_category("Drunken Walkers")
-## @ace_description("The X of the cell just written, inside On Cell Carved.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.carved_x()")
+# @ace_expression
+# @ace_name("Carved X")
+# @ace_description("The X of the cell just written, inside On Cell Carved.")
+# @ace_codegen_template("DrunkenWalkers.carved_x()")
 func carved_x() -> int:
 	return _ctx_carved_x
 
-## @ace_expression
-## @ace_name("Carved Y")
-## @ace_category("Drunken Walkers")
-## @ace_description("The Y of the cell just written, inside On Cell Carved.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.carved_y()")
+# @ace_expression
+# @ace_name("Carved Y")
+# @ace_description("The Y of the cell just written, inside On Cell Carved.")
+# @ace_codegen_template("DrunkenWalkers.carved_y()")
 func carved_y() -> int:
 	return _ctx_carved_y
 
-## @ace_expression
-## @ace_name("Carved Value")
-## @ace_category("Drunken Walkers")
-## @ace_description("The value just written into the cell, inside On Cell Carved.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.carved_value()")
+# @ace_expression
+# @ace_name("Carved Value")
+# @ace_description("The value just written into the cell, inside On Cell Carved.")
+# @ace_codegen_template("DrunkenWalkers.carved_value()")
 func carved_value() -> int:
 	return _ctx_carved_value
 
-## @ace_expression
-## @ace_name("Mark X")
-## @ace_category("Drunken Walkers")
-## @ace_description("The X of the mark just placed, inside On Mark Placed.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.mark_x()")
+# @ace_expression
+# @ace_name("Mark X")
+# @ace_description("The X of the mark just placed, inside On Mark Placed.")
+# @ace_codegen_template("DrunkenWalkers.mark_x()")
 func mark_x() -> int:
 	return _ctx_mark_x
 
-## @ace_expression
-## @ace_name("Mark Y")
-## @ace_category("Drunken Walkers")
-## @ace_description("The Y of the mark just placed, inside On Mark Placed.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.mark_y()")
+# @ace_expression
+# @ace_name("Mark Y")
+# @ace_description("The Y of the mark just placed, inside On Mark Placed.")
+# @ace_codegen_template("DrunkenWalkers.mark_y()")
 func mark_y() -> int:
 	return _ctx_mark_y
 
-## @ace_expression
-## @ace_name("Mark Tag")
-## @ace_category("Drunken Walkers")
-## @ace_description("The tag of the mark just placed, inside On Mark Placed.")
-## @ace_icon("res://eventsheet_addons/drunken_walkers/icon.svg")
-## @ace_codegen_template("DrunkenWalkers.mark_tag()")
+# @ace_expression
+# @ace_name("Mark Tag")
+# @ace_description("The tag of the mark just placed, inside On Mark Placed.")
+# @ace_codegen_template("DrunkenWalkers.mark_tag()")
 func mark_tag() -> String:
 	return _ctx_mark_tag
 
+# @ace_hidden
 ## Allocates the grid and seeds the stream, once. Called from _ready and from every entry point,
 ## so a generator driven from code before it enters the tree behaves exactly like one in a scene.
-## @ace_hidden
 func _ensure_started() -> void:
 	if _started:
 		return
@@ -1308,8 +1182,8 @@ func _ensure_started() -> void:
 		_seed_text = start_seed
 		_rng.seed = hash(start_seed)
 
+# @ace_hidden
 ## Fills a fresh buffer of the given size with the Empty Value.
-## @ace_hidden
 func _allocate(width: int, height: int) -> void:
 	_width = maxi(1, width)
 	_height = maxi(1, height)
@@ -1318,17 +1192,17 @@ func _allocate(width: int, height: int) -> void:
 	_cells.fill(empty_value)
 	_index_cache.clear()
 
+# @ace_hidden
 ## Whether the cell is on the grid at all. Off-grid is not an error anywhere in this pack, it is
 ## simply a cell that matches nothing and can never be stepped into.
-## @ace_hidden
 func _inside(x: int, y: int) -> bool:
 	return x >= 0 and y >= 0 and x < _width and y < _height
 
+# @ace_hidden
 ## One value from the stream, in [0, 1). EVERY stochastic decision in this pack comes through
 ## here, which is what makes the seed reproduce a whole map: internal is the pack's own seeded
 ## generator, shared borrows the Advanced Random autoload so one seed drives a whole game, and
 ## injected reads the queue Inject Random filled. A dry queue falls back rather than failing.
-## @ace_hidden
 func _next_random() -> float:
 	if random_source == "injected":
 		if _injected_head < _injected.size():
@@ -1344,10 +1218,10 @@ func _next_random() -> float:
 			return float(shared.random_value())
 	return _rng.randf()
 
+# @ace_hidden
 ## Writes one cell and fires On Cell Carved when the value actually changed. Everything that
 ## carves - walkers, dilation, outlining - goes through this one door, which is why the trigger
 ## can promise "only on a change" without any caller having to remember it.
-## @ace_hidden
 func _write(x: int, y: int, value: int, carver_id: String) -> void:
 	if not _inside(x, y):
 		return
@@ -1367,25 +1241,25 @@ func _write(x: int, y: int, value: int, carver_id: String) -> void:
 	_ctx_carved_value = 0
 	_ctx_walker_id = kept_id
 
+# @ace_hidden
 ## Heading number `index` of a walker's direction set: `directions` evenly spaced headings
 ## anchored at the start angle, so entry 0 is always the start angle.
-## @ace_hidden
 func _heading_of(walker: Walker, index: int) -> float:
 	return fposmod(walker.start_angle + float(index) * 360.0 / float(maxi(1, walker.directions)), 360.0)
 
+# @ace_hidden
 ## The relative weight of direction `index`: what the weights list says, or 1 for an entry it
 ## does not reach. Negative entries are floored to 0, which is how a weight rules a heading out.
-## @ace_hidden
 func _weight_of(walker: Walker, index: int) -> float:
 	if index < walker.weights.size():
 		return maxf(0.0, walker.weights[index])
 	return 1.0
 
+# @ace_hidden
 ## The weighted pick, spending EXACTLY ONE value whether or not weights are set - so adding
 ## weights to a walker never shifts anything downstream of it in the stream. All-zero weights
 ## fall back to an even pick rather than deadlocking, so a walker can never be stuck by its own
 ## weights.
-## @ace_hidden
 func _pick(walker: Walker, choices: Array[int]) -> float:
 	var roll: float = _next_random()
 	if choices.is_empty():
@@ -1403,9 +1277,9 @@ func _pick(walker: Walker, choices: Array[int]) -> float:
 			return _heading_of(walker, index)
 	return _heading_of(walker, choices[choices.size() - 1])
 
+# @ace_hidden
 ## Stamps the walker's brush at its current cell: the square brush, or the oriented dig rectangle
 ## when either dig dimension is set.
-## @ace_hidden
 func _stamp(walker: Walker) -> void:
 	if walker.brush_width != 0 or walker.brush_height != 0:
 		_stamp_dig(walker)
@@ -1418,12 +1292,12 @@ func _stamp(walker: Walker) -> void:
 		for column: int in size:
 			_write(walker.x + column - low, walker.y + row - low, walker.carve_value, walker.id)
 
+# @ace_hidden
 ## The dig rectangle: a brush that TURNS WITH THE WALKER. Width is measured across the heading and
 ## is always centred, so a corridor keeps its width around every corner. Depth is measured along
 ## the heading and is signed: positive digs ahead of the walker, negative digs behind it, and both
 ## include the walker's own cell. On a diagonal the rectangle is filled solidly rather than left as
 ## the lattice of holes a naive rotation would produce.
-## @ace_hidden
 func _stamp_dig(walker: Walker) -> void:
 	var fallback: int = maxi(1, walker.brush_size)
 	var width: int = absi(walker.brush_width) if walker.brush_width != 0 else fallback
@@ -1439,8 +1313,8 @@ func _stamp_dig(walker: Walker) -> void:
 			var point: Vector2 = base + forward * (float(along) * forward_sign) + across * float(side - low)
 			_write(roundi(point.x), roundi(point.y), walker.carve_value, walker.id)
 
+# @ace_hidden
 ## Publishes a walker as the context the trigger expressions read.
-## @ace_hidden
 func _set_context(walker: Walker) -> void:
 	_ctx_walker_id = walker.id
 	_ctx_walker_tag = walker.tag
@@ -1449,9 +1323,9 @@ func _set_context(walker: Walker) -> void:
 	_ctx_walker_angle = fposmod(walker.heading, 360.0)
 	_ctx_walker_steps_left = walker.steps_left
 
+# @ace_hidden
 ## Puts the walker context back to its resting reading, so an expression asked outside a trigger
 ## answers 0 and "" rather than whatever the last walker happened to leave behind.
-## @ace_hidden
 func _clear_context() -> void:
 	_ctx_walker_id = ""
 	_ctx_walker_tag = ""
@@ -1460,9 +1334,9 @@ func _clear_context() -> void:
 	_ctx_walker_angle = 0.0
 	_ctx_walker_steps_left = 0
 
+# @ace_hidden
 ## Ends a walker once, whatever ended it, and fires On Walker Finished with its final cell in
 ## context - so chaining logic never stalls, not even on a walker that ran out of legal moves.
-## @ace_hidden
 func _finish(walker: Walker) -> void:
 	if walker.finished:
 		return
@@ -1474,6 +1348,7 @@ func _finish(walker: Walker) -> void:
 	walker_finished.emit(walker.id)
 	_clear_context()
 
+# @ace_hidden
 ## One step. Returns false when the walker cannot continue, which is the only way a walk ends.
 ##
 ## The randomness is spent here, in this order, and nowhere else in a walk: one value on the turn
@@ -1482,7 +1357,6 @@ func _finish(walker: Walker) -> void:
 ## widening at a corner never shifts the stream. The turn check is rolled even when the turn
 ## chance is 1, on purpose: it means changing a probability changes THAT decision and leaves
 ## every later one exactly where it was in the stream.
-## @ace_hidden
 func _advance(walker: Walker, emit_stepped: bool) -> bool:
 	if walker.finished:
 		return false
@@ -1536,15 +1410,15 @@ func _advance(walker: Walker, emit_stepped: bool) -> bool:
 		return false
 	return true
 
+# @ace_hidden
 ## Runs one registered walker to the end of its budget. Batch runs skip On Walker Stepped.
-## @ace_hidden
 func _run_to_end(walker: Walker) -> void:
 	while _advance(walker, false):
 		pass
 
+# @ace_hidden
 ## The cells holding a value, as linear indices in a stable left-to-right, top-to-bottom order.
 ## Cached until the next write, because painting a map asks for this once per cell.
-## @ace_hidden
 func _cells_holding(value: int) -> PackedInt32Array:
 	if _index_cache.has(value):
 		return _index_cache[value] as PackedInt32Array
@@ -1555,11 +1429,11 @@ func _cells_holding(value: int) -> PackedInt32Array:
 	_index_cache[value] = found
 	return found
 
+# @ace_hidden
 ## Whether a mark of this tag may sit here: minimum spacing is a EUCLIDEAN distance in cells and
 ## only ever applies BETWEEN MARKS OF THE SAME TAG, so coins never crowd enemies out. A spacing of
 ## 0 still forbids two marks of one tag stacking on a single cell, so you never get a double coin
 ## by accident. Marks already on the grid count, not just the ones this pass placed.
-## @ace_hidden
 func _spacing_allows(x: int, y: int, tag: String, min_spacing: float) -> bool:
 	var limit: float = maxf(0.0, min_spacing)
 	for mark: Mark in _marks:
@@ -1572,8 +1446,8 @@ func _spacing_allows(x: int, y: int, tag: String, min_spacing: float) -> bool:
 			return false
 	return true
 
+# @ace_hidden
 ## Records a mark and fires On Mark Placed with it in context.
-## @ace_hidden
 func _place_mark(x: int, y: int, tag: String) -> void:
 	var mark: Mark = Mark.new()
 	mark.x = x
@@ -1588,9 +1462,9 @@ func _place_mark(x: int, y: int, tag: String) -> void:
 	_ctx_mark_y = 0
 	_ctx_mark_tag = ""
 
+# @ace_hidden
 ## Whether a cell passes the placement rule. Off-grid neighbours never match, which is what makes
 ## a cell on the grid border always an edge cell and never an interior one, with no special case.
-## @ace_hidden
 func _placement_allows(x: int, y: int, value: int, placement: String) -> bool:
 	match placement:
 		"interior":
@@ -1600,8 +1474,8 @@ func _placement_allows(x: int, y: int, value: int, placement: String) -> bool:
 		_:
 			return true
 
+# @ace_hidden
 ## How many of the eight surrounding cells hold a value. Off-grid neighbours never match.
-## @ace_hidden
 func _neighbours_holding(x: int, y: int, value: int) -> int:
 	var found: int = 0
 	for step: Vector2i in NEIGHBOUR_STEPS:
@@ -1611,9 +1485,9 @@ func _neighbours_holding(x: int, y: int, value: int) -> int:
 			found += 1
 	return found
 
+# @ace_hidden
 ## One field of a walker definition, under either spelling: the documented definition key, or the
 ## snake_case name the same field wears everywhere else in a Godot project.
-## @ace_hidden
 func _field(data: Dictionary, key: String, alias: String, fallback: Variant) -> Variant:
 	if data.has(key):
 		return data[key]
@@ -1621,6 +1495,7 @@ func _field(data: Dictionary, key: String, alias: String, fallback: Variant) -> 
 		return data[alias]
 	return fallback
 
+# @ace_hidden
 ## The whole generator as one Dictionary, and the door a save pack comes in through: any node
 ## answering save_state / load_state is snapshotted with no registration and no base class, and an
 ## autoload is walked by name, so a save pack picks this generator up as "DrunkenWalkers" the
@@ -1628,7 +1503,6 @@ func _field(data: Dictionary, key: String, alias: String, fallback: Variant) -> 
 ##
 ## The RNG seed and state travel as TEXT: they are 64-bit integers, and a JSON number is a double,
 ## which would quietly round the biggest of them and land the reload on a different stream.
-## @ace_hidden
 func save_state() -> Dictionary:
 	_ensure_started()
 	var saved_walkers: Array[Dictionary] = []
@@ -1650,10 +1524,10 @@ func save_state() -> Dictionary:
 		"walkers": saved_walkers, "marks": saved_marks,
 	}
 
+# @ace_hidden
 ## Puts a saved record back, SILENTLY: no On Cell Carved and no On Mark Placed for restored
 ## content, which is why a repaint after a load reads Count Cells and the index expressions rather
 ## than waiting for a trigger.
-## @ace_hidden
 func load_state(state: Dictionary) -> void:
 	# A record written by a newer version of this behaviour is still read, field by field, with what
 	# this version knows; it is said once that parts of it may be lost, rather than read in silence.

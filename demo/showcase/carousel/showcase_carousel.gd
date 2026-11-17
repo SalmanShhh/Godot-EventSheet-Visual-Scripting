@@ -1,7 +1,7 @@
 class_name CarouselOfJuice
 extends Node2D
 ## [b]Carousel of Juice[/b] - 8 tiles sine-sway and spring-pop on the beat (one reused juice_tile function), and every beat pulses a vignette over the screen and pulls the colour channels apart along a fresh angle. A runtime-toggleable Juice group plus an if/elif/else keypress chain re-skin the board: [b]ui_accept[/b] starts the party - an impact moment at your own intensity, one more effect on the post stack, then the live look written to user:// and worn straight back off disk - and [b]ui_cancel[/b] calms it and starts over behind a fade. One tile is drawn blended as screen - Blend Modes ships as an autoload, and this row is that autoload's verb called on a child node of the same name, so the showcase runs with no project setting added. Watch beat/intensity/moments_played stream in Live Values.
-## @ace_group(uid="juice", name="Juice", color="#8C66D9", toggleable=true)
+# @ace_group(uid="juice", name="Juice", color="#8C66D9", toggleable=true)
 
 ## Beats elapsed.
 @export_range(0, 9999, 1) var beat: int = 0
@@ -56,7 +56,7 @@ func _ready() -> void:
 		c.get_node("SineBehavior").active = true
 	$BlendModes.blend_as($Tiles/Tile3, "screen", 1.0)
 
-## @ace_hidden
+# @ace_hidden
 func juice_tile(index: int, kick: float) -> void:
 	var t: Node2D = $Tiles.get_child(index % $Tiles.get_child_count())
 	t.get_node("SpringBehavior").add_impulse("__scale", kick)

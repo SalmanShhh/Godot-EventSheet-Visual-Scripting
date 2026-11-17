@@ -1,6 +1,6 @@
-## @ace_tags(movement, path, curve)
-## @ace_category("Path")
-## @ace_version(1.0.0)
+# @ace_tags(movement, path, curve)
+# @ace_category("Path")
+# @ace_version(1.0.0)
 @tool
 @icon("res://eventsheet_addons/follow_path/icon.svg")
 class_name PathFollowBehavior
@@ -9,7 +9,7 @@ extends Node
 ##
 ## Changes on its parent: global_position, global_rotation.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 
@@ -22,12 +22,12 @@ func _enter_tree() -> void:
 		push_warning("Path Follow Behavior needs a Node2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Preview", "Play") var _preview_start_button: Callable = _preview_start
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
 
@@ -239,8 +239,8 @@ func _preview_repeat(run: int) -> void:
 			return
 		_preview_kick()
 
-## @ace_trigger
-## @ace_name("On Path Finished")
+# @ace_trigger
+# @ace_name("On Path Finished")
 signal path_finished
 
 # --- Choices (the stored words are the promise: saved scenes keep them) ---
@@ -314,9 +314,9 @@ func _ready() -> void:
 	# waiting for a Follow Path row costs nothing until that row runs.
 	set_process(_following)
 
+# @ace_hidden
 ## Puts the host where _distance says, and turns it if rotate_to_face is on. Positions come
 ## out of the curve in the PATH's own space, so they are converted through the path node.
-## @ace_hidden
 func _apply_path_position() -> void:
 	if host == null or route == null or route.curve == null:
 		return
@@ -326,13 +326,12 @@ func _apply_path_position() -> void:
 		var facing: Vector2 = sample.x if _travel_direction >= 0 else -sample.x
 		host.global_rotation = route.global_rotation + facing.angle()
 
-## @ace_action
-## @ace_name("Follow Path")
-## @ace_description("Sends the host travelling along a drawn Path2D at a real speed - patrol routes, conveyor lanes, camera dollies, tower-defence lanes. Ping-pong walks it back and forth forever; Once fires On Path Finished at the end.")
-## @ace_param_hint(path node)
-## @ace_param_options(mode once=Once, loop=Loop, pingpong=Ping-pong)
-## @ace_icon("res://eventsheet_addons/follow_path/icon.svg")
-## @ace_codegen_template("$PathFollowBehavior.follow_path({path}, {speed}, "{mode}")")
+# @ace_action
+# @ace_name("Follow Path")
+# @ace_description("Sends the host travelling along a drawn Path2D at a real speed - patrol routes, conveyor lanes, camera dollies, tower-defence lanes. Ping-pong walks it back and forth forever; Once fires On Path Finished at the end.")
+# @ace_param_hint(path node)
+# @ace_param_options(mode once=Once, loop=Loop, pingpong=Ping-pong)
+# @ace_codegen_template("$PathFollowBehavior.follow_path({path}, {speed}, "{mode}")")
 func follow_path(path: Path2D, speed: float = 120.0, mode: String = "once") -> void:
 	if path == null or path.curve == null or path.curve.get_baked_length() <= 0.0:
 		return
@@ -346,84 +345,76 @@ func follow_path(path: Path2D, speed: float = 120.0, mode: String = "once") -> v
 	set_process(true)
 	_apply_path_position()
 
-## @ace_action
-## @ace_name("Stop Following Path")
-## @ace_description("Halts the run where it stands, WITHOUT firing On Path Finished - a stunned patroller, a conveyor switched off, a dolly interrupted by the player. Follow Path starts it again from the top.")
-## @ace_icon("res://eventsheet_addons/follow_path/icon.svg")
-## @ace_codegen_template("$PathFollowBehavior.stop_following_path()")
+# @ace_action
+# @ace_name("Stop Following Path")
+# @ace_description("Halts the run where it stands, WITHOUT firing On Path Finished - a stunned patroller, a conveyor switched off, a dolly interrupted by the player. Follow Path starts it again from the top.")
+# @ace_codegen_template("$PathFollowBehavior.stop_following_path()")
 func stop_following_path() -> void:
 	_following = false
 	# A halted run costs nothing per frame; Follow Path turns processing back on.
 	set_process(false)
 
-## @ace_condition
-## @ace_name("Is Following Path")
-## @ace_description("True while the host is actually travelling - the gate for a walk animation, a conveyor's hum, or a Stop row that should only fire once.")
-## @ace_icon("res://eventsheet_addons/follow_path/icon.svg")
-## @ace_codegen_template("$PathFollowBehavior.is_following_path()")
+# @ace_condition
+# @ace_name("Is Following Path")
+# @ace_description("True while the host is actually travelling - the gate for a walk animation, a conveyor's hum, or a Stop row that should only fire once.")
+# @ace_codegen_template("$PathFollowBehavior.is_following_path()")
 func is_following_path() -> bool:
 	return _following
 
-## @ace_condition
-## @ace_name("Is At Path End")
-## @ace_description("True while the host is parked at the far end of its route right now. This is the STATE question, asked whenever a row is reached; for the moment of arrival use the On Path Finished trigger instead - it fires once, for free, with no per-frame checking.")
-## @ace_icon("res://eventsheet_addons/follow_path/icon.svg")
-## @ace_codegen_template("$PathFollowBehavior.is_at_path_end()")
+# @ace_condition
+# @ace_name("Is At Path End")
+# @ace_description("True while the host is parked at the far end of its route right now. This is the STATE question, asked whenever a row is reached; for the moment of arrival use the On Path Finished trigger instead - it fires once, for free, with no per-frame checking.")
+# @ace_codegen_template("$PathFollowBehavior.is_at_path_end()")
 func is_at_path_end() -> bool:
 	if route == null or route.curve == null:
 		return false
 	return _distance >= route.curve.get_baked_length() - 0.5
 
-## @ace_expression
-## @ace_name("Progress Along Path")
-## @ace_description("How far along its route the host has come, from 0 at the start to 1 at the end - a racer's lap bar, a delivery tracker, a boss phase keyed to how far the sweep has gone.")
-## @ace_icon("res://eventsheet_addons/follow_path/icon.svg")
-## @ace_codegen_template("$PathFollowBehavior.progress_along_path()")
+# @ace_expression
+# @ace_name("Progress Along Path")
+# @ace_description("How far along its route the host has come, from 0 at the start to 1 at the end - a racer's lap bar, a delivery tracker, a boss phase keyed to how far the sweep has gone.")
+# @ace_codegen_template("$PathFollowBehavior.progress_along_path()")
 func progress_along_path() -> float:
 	if route == null or route.curve == null or route.curve.get_baked_length() <= 0.0:
 		return 0.0
 	return clampf(_distance / route.curve.get_baked_length(), 0.0, 1.0)
 
-## @ace_expression
-## @ace_name("Point On Path At")
-## @ace_description("The world point a fraction of the way along a path (0 is the start, 1 is the end) - drive a camera dolly, a progress marker, or a preview ghost without moving anything.")
-## @ace_param_hint(path node)
-## @ace_icon("res://eventsheet_addons/follow_path/icon.svg")
-## @ace_codegen_template("$PathFollowBehavior.point_on_path_at({path}, {progress})")
+# @ace_expression
+# @ace_name("Point On Path At")
+# @ace_description("The world point a fraction of the way along a path (0 is the start, 1 is the end) - drive a camera dolly, a progress marker, or a preview ghost without moving anything.")
+# @ace_param_hint(path node)
+# @ace_codegen_template("$PathFollowBehavior.point_on_path_at({path}, {progress})")
 func point_on_path_at(path: Path2D, progress: float = 0.5) -> Vector2:
 	if path == null or path.curve == null:
 		return Vector2.ZERO
 	return path.to_global(path.curve.sample_baked(clampf(progress, 0.0, 1.0) * path.curve.get_baked_length()))
 
-## @ace_expression
-## @ace_name("Direction Along Path At")
-## @ace_description("Which way the path is heading a fraction of the way along it, as a direction one unit long - point a camera down the track, aim a spawned thing along the lane, or rotate a marker to match the curve.")
-## @ace_param_hint(path node)
-## @ace_icon("res://eventsheet_addons/follow_path/icon.svg")
-## @ace_codegen_template("$PathFollowBehavior.direction_along_path_at({path}, {progress})")
+# @ace_expression
+# @ace_name("Direction Along Path At")
+# @ace_description("Which way the path is heading a fraction of the way along it, as a direction one unit long - point a camera down the track, aim a spawned thing along the lane, or rotate a marker to match the curve.")
+# @ace_param_hint(path node)
+# @ace_codegen_template("$PathFollowBehavior.direction_along_path_at({path}, {progress})")
 func direction_along_path_at(path: Path2D, progress: float = 0.5) -> Vector2:
 	if path == null or path.curve == null:
 		return Vector2.RIGHT
 	var sample: Transform2D = path.curve.sample_baked_with_rotation(clampf(progress, 0.0, 1.0) * path.curve.get_baked_length())
 	return (Vector2.RIGHT.rotated(path.global_rotation + sample.x.angle())).normalized()
 
-## @ace_expression
-## @ace_name("Path Length")
-## @ace_description("How long a route is in pixels, measured along the curve rather than corner to corner - divide by a speed to know how many seconds the trip takes, or space things evenly along it.")
-## @ace_param_hint(path node)
-## @ace_icon("res://eventsheet_addons/follow_path/icon.svg")
-## @ace_codegen_template("$PathFollowBehavior.path_length({path})")
+# @ace_expression
+# @ace_name("Path Length")
+# @ace_description("How long a route is in pixels, measured along the curve rather than corner to corner - divide by a speed to know how many seconds the trip takes, or space things evenly along it.")
+# @ace_param_hint(path node)
+# @ace_codegen_template("$PathFollowBehavior.path_length({path})")
 func path_length(path: Path2D) -> float:
 	if path == null or path.curve == null:
 		return 0.0
 	return path.curve.get_baked_length()
 
-## @ace_expression
-## @ace_name("Nearest Point On Path")
-## @ace_description("The point on a route closest to a world position - snap a dragged tower onto the lane, work out where a stray unit rejoins its patrol, or find the spot on the track a racer left.")
-## @ace_param_hint(path node)
-## @ace_icon("res://eventsheet_addons/follow_path/icon.svg")
-## @ace_codegen_template("$PathFollowBehavior.nearest_point_on_path({path}, {point})")
+# @ace_expression
+# @ace_name("Nearest Point On Path")
+# @ace_description("The point on a route closest to a world position - snap a dragged tower onto the lane, work out where a stray unit rejoins its patrol, or find the spot on the track a racer left.")
+# @ace_param_hint(path node)
+# @ace_codegen_template("$PathFollowBehavior.nearest_point_on_path({path}, {point})")
 func nearest_point_on_path(path: Path2D, point: Vector2) -> Vector2:
 	if path == null or path.curve == null:
 		return point

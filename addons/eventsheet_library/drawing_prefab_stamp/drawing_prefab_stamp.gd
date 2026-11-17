@@ -1,8 +1,8 @@
 @tool
-## @ace_tags(drawing, visual)
-## @ace_category("Drawing Canvas")
-## @ace_requires(DrawingPrefabResource)
-## @ace_version(1.0.0)
+# @ace_tags(drawing, visual)
+# @ace_category("Drawing Canvas")
+# @ace_requires(DrawingPrefabResource)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/drawing_prefab_stamp/icon.svg")
 class_name DrawingPrefabStamp
 extends Node2D
@@ -31,10 +31,10 @@ extends Node2D
 func _draw() -> void:
 	draw_prefab_steps(self, prefab, Vector2.ZERO, prefab_scale, prefab_rotation)
 
+# @ace_hidden
 ## Draws a DrawingPrefabResource's ordered steps onto any CanvasItem at an origin, scaled and
 ## rotated as one - the shared vector renderer for the stamp node and the DrawingCanvas preview
 ## gizmo. Sets the canvas transform once so every step draws in prefab-local space.
-## @ace_hidden
 static func draw_prefab_steps(canvas: CanvasItem, prefab_res: Resource, origin: Vector2, scale_by: float, rotation_deg: float) -> void:
 	if prefab_res == null:
 		return
@@ -99,27 +99,27 @@ static func draw_prefab_steps(canvas: CanvasItem, prefab_res: Resource, origin: 
 						canvas.draw_set_transform_matrix(base)
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
+# @ace_hidden
 ## One line step's stroke: its ends, and its dash pattern when it has one. The stroke code lives
 ## on DrawingPrefabResource so the Drawing Canvas draws a prefab's line the same way; this name stays
 ## for anything that already calls it.
-## @ace_hidden
 static func draw_stroke(canvas: CanvasItem, from: Vector2, to: Vector2, width: float, tint: Color, entry: Dictionary) -> void:
 	DrawingPrefabResource.draw_stroke(canvas, from, to, width, tint, entry)
 
+# @ace_hidden
 ## One straight run with its ends (none, square or round) - see DrawingPrefabResource.draw_capped.
-## @ace_hidden
 static func draw_capped(canvas: CanvasItem, from: Vector2, to: Vector2, width: float, tint: Color, caps: String) -> void:
 	DrawingPrefabResource.draw_capped(canvas, from, to, width, tint, caps)
 
+# @ace_hidden
 ## One angled dash - see DrawingPrefabResource.draw_leaning_dash.
-## @ace_hidden
 static func draw_leaning_dash(canvas: CanvasItem, from: Vector2, direction: Vector2, starts: float, ends: float, width: float, tint: Color) -> void:
 	DrawingPrefabResource.draw_leaning_dash(canvas, from, direction, starts, ends, width, tint)
 
+# @ace_hidden
 ## Typed draw entries for a prefab: the resource's cached compiled_steps() (parsed once, shared by
 ## every stamp) when it exposes one, else a raw parse of any Resource's steps into the same shape -
 ## so the draw loop above is a single path and the generic "any Resource with steps" contract holds.
-## @ace_hidden
 static func _prefab_entries(prefab_res: Resource) -> Array:
 	if prefab_res.has_method("compiled_steps"):
 		var compiled: Variant = prefab_res.compiled_steps()

@@ -16,7 +16,7 @@ var locked_hint: String = ""
 func locked_door_tried(key: Variant) -> void:
 	locked_hint = "Locked. You need the %s keycard." % str(key)
 
-## @ace_hidden
+# @ace_hidden
 func open_door() -> void:
 	if not door_open:
 		door_open = true

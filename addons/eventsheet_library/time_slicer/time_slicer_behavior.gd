@@ -1,13 +1,13 @@
-## @ace_tags(performance, scheduling)
-## @ace_category("Time Slicer")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_tags(performance, scheduling)
+# @ace_category("Time Slicer")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/time_slicer/icon.svg")
 class_name TimeSlicerBehavior
 extends Node
 ## A managed work queue that spreads heavy work across frames: enqueue items in one event and the slicer drains them a slice at a time, firing On Process Item for each until the per-frame budget runs out. Spawning 500 enemies or carving a dungeon no longer freezes the frame.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 
@@ -19,11 +19,11 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Time Slicer Behavior needs a parent node: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Process Item")
+# @ace_trigger
+# @ace_name("On Process Item")
 signal process_item(item: Variant)
-## @ace_trigger
-## @ace_name("On Drained")
+# @ace_trigger
+# @ace_name("On Drained")
 signal drained
 
 ## Max milliseconds per frame spent draining the queue (used when Mode includes ms).
@@ -64,102 +64,85 @@ func _process(_delta: float) -> void:
 	# from inside it; every enqueue verb turns processing back on the same way.
 	set_process(not _queue.is_empty() and not _paused)
 
-## @ace_action
-## @ace_name("Enqueue Item")
-## @ace_category("Time Slicer")
-## @ace_description("Adds one item to the work queue (processed later within the per-frame budget).")
-## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
-## @ace_codegen_template("$TimeSlicerBehavior.enqueue_item({item})")
+# @ace_action
+# @ace_name("Enqueue Item")
+# @ace_description("Adds one item to the work queue (processed later within the per-frame budget).")
+# @ace_codegen_template("$TimeSlicerBehavior.enqueue_item({item})")
 func enqueue_item(item: Variant) -> void:
 	_queue.append(item)
 	# Work to do means frames to do it in - unless the slicer is paused, which is the one
 	# state that keeps items queued on purpose.
 	set_process(not _paused)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Enqueue Items")
-## @ace_category("Time Slicer")
-## @ace_description("Adds every element of an array to the work queue.")
-## @ace_display_template("Enqueue [b]{items}[/b]")
-## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
-## @ace_codegen_template("$TimeSlicerBehavior.enqueue_items({items})")
+# @ace_action
+# @ace_featured
+# @ace_name("Enqueue Items")
+# @ace_description("Adds every element of an array to the work queue.")
+# @ace_display_template("Enqueue [b]{items}[/b]")
+# @ace_codegen_template("$TimeSlicerBehavior.enqueue_items({items})")
 func enqueue_items(items: Array) -> void:
 	_queue.append_array(items)
 	set_process(not _paused)
 
-## @ace_action
-## @ace_name("Enqueue Group")
-## @ace_category("Time Slicer")
-## @ace_description("Adds every node in a group to the work queue (e.g. process all enemies, spread over frames).")
-## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
-## @ace_codegen_template("$TimeSlicerBehavior.enqueue_group({group})")
+# @ace_action
+# @ace_name("Enqueue Group")
+# @ace_description("Adds every node in a group to the work queue (e.g. process all enemies, spread over frames).")
+# @ace_codegen_template("$TimeSlicerBehavior.enqueue_group({group})")
 func enqueue_group(group: String) -> void:
 	_queue.append_array(get_tree().get_nodes_in_group(group))
 	set_process(not _paused)
 
-## @ace_action
-## @ace_name("Clear Queue")
-## @ace_category("Time Slicer")
-## @ace_description("Drops all pending items without processing them.")
-## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
-## @ace_codegen_template("$TimeSlicerBehavior.clear_queue()")
+# @ace_action
+# @ace_name("Clear Queue")
+# @ace_description("Drops all pending items without processing them.")
+# @ace_codegen_template("$TimeSlicerBehavior.clear_queue()")
 func clear_queue() -> void:
 	_queue.clear()
 	# Nothing left to drain, so nothing left to spend a frame on.
 	set_process(false)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Set Frame Budget")
-## @ace_category("Time Slicer")
-## @ace_description("Sets the per-frame millisecond budget at runtime (dial it down during heavy scenes).")
-## @ace_display_template("Set frame budget to [b]{ms}[/b] ms")
-## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
-## @ace_codegen_template("$TimeSlicerBehavior.set_frame_budget({ms})")
+# @ace_action
+# @ace_featured
+# @ace_name("Set Frame Budget")
+# @ace_description("Sets the per-frame millisecond budget at runtime (dial it down during heavy scenes).")
+# @ace_display_template("Set frame budget to [b]{ms}[/b] ms")
+# @ace_codegen_template("$TimeSlicerBehavior.set_frame_budget({ms})")
 func set_frame_budget(ms: float) -> void:
 	frame_budget_ms = maxf(0.0, ms)
 
-## @ace_action
-## @ace_name("Pause")
-## @ace_category("Time Slicer")
-## @ace_description("Stops draining (items stay queued).")
-## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
-## @ace_codegen_template("$TimeSlicerBehavior.pause_slicer()")
+# @ace_action
+# @ace_name("Pause")
+# @ace_description("Stops draining (items stay queued).")
+# @ace_codegen_template("$TimeSlicerBehavior.pause_slicer()")
 func pause_slicer() -> void:
 	_paused = true
 	# A paused slicer is not waiting on anything - it holds its items and does no work, so it
 	# should not be charged a frame for holding them.
 	set_process(false)
 
-## @ace_action
-## @ace_name("Resume")
-## @ace_category("Time Slicer")
-## @ace_description("Resumes draining the queue.")
-## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
-## @ace_codegen_template("$TimeSlicerBehavior.resume_slicer()")
+# @ace_action
+# @ace_name("Resume")
+# @ace_description("Resumes draining the queue.")
+# @ace_codegen_template("$TimeSlicerBehavior.resume_slicer()")
 func resume_slicer() -> void:
 	_paused = false
 	set_process(not _queue.is_empty())
 
-## @ace_condition
-## @ace_name("Is Busy")
-## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
-## @ace_codegen_template("$TimeSlicerBehavior.is_busy()")
+# @ace_condition
+# @ace_name("Is Busy")
+# @ace_codegen_template("$TimeSlicerBehavior.is_busy()")
 func is_busy() -> bool:
 	return not _queue.is_empty()
 
-## @ace_expression
-## @ace_name("Items Remaining")
-## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
-## @ace_codegen_template("$TimeSlicerBehavior.items_remaining()")
+# @ace_expression
+# @ace_name("Items Remaining")
+# @ace_codegen_template("$TimeSlicerBehavior.items_remaining()")
 func items_remaining() -> int:
 	return _queue.size()
 
-## @ace_expression
-## @ace_name("Last Frame Item Count")
-## @ace_icon("res://eventsheet_addons/time_slicer/icon.svg")
-## @ace_codegen_template("$TimeSlicerBehavior.last_frame_item_count()")
+# @ace_expression
+# @ace_name("Last Frame Item Count")
+# @ace_codegen_template("$TimeSlicerBehavior.last_frame_item_count()")
 func last_frame_item_count() -> int:
 	return _last_count
 

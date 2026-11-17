@@ -1,6 +1,6 @@
-## @ace_category("Move To")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Move To")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @tool
 @icon("res://eventsheet_addons/move_to/icon.svg")
 class_name MoveToBehavior
@@ -9,7 +9,7 @@ extends Node
 ##
 ## Changes on its parent: position, rotation.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 
@@ -22,12 +22,12 @@ func _enter_tree() -> void:
 		push_warning("Move To Behavior needs a Node2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Preview", "Play") var _preview_start_button: Callable = _preview_start
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
 
@@ -239,13 +239,13 @@ func _preview_repeat(run: int) -> void:
 			return
 		_preview_kick()
 
-## @ace_trigger
-## @ace_name("On Arrived")
-## @ace_category("Move To")
+# @ace_trigger
+# @ace_name("On Arrived")
+# @ace_category("Move To")
 signal arrived
-## @ace_trigger
-## @ace_name("On Path Blocked")
-## @ace_category("Move To")
+# @ace_trigger
+# @ace_name("On Path Blocked")
+# @ace_category("Move To")
 signal path_blocked
 
 ## Pixels per second the host glides toward its target.
@@ -286,7 +286,7 @@ func _process(delta: float) -> void:
 				self.set_process(false)
 				arrived.emit()
 
-## @ace_hidden
+# @ace_hidden
 func step_toward(from: Vector2, to: Vector2) -> Vector2:
 	if not stepping or from == to or host == null or not host.is_inside_tree():
 		return to
@@ -303,34 +303,28 @@ func step_toward(from: Vector2, to: Vector2) -> Vector2:
 	path_blocked.emit()
 	return from + (step_hit.get("position", world_from) - (to - from).normalized() * 0.5 - world_from)
 
-## @ace_action
-## @ace_name("Move To Position")
-## @ace_category("Move To")
-## @ace_description("Replaces the queue and glides toward the point.")
-## @ace_icon("res://eventsheet_addons/move_to/icon.svg")
-## @ace_codegen_template("$MoveToBehavior.move_to_position({x}, {y})")
+# @ace_action
+# @ace_name("Move To Position")
+# @ace_description("Replaces the queue and glides toward the point.")
+# @ace_codegen_template("$MoveToBehavior.move_to_position({x}, {y})")
 func move_to_position(x: float, y: float) -> void:
 	waypoints = [Vector2(x, y)]
 	moving = true
 	self.set_process(true)
 
-## @ace_action
-## @ace_name("Add Waypoint")
-## @ace_category("Move To")
-## @ace_description("Appends a stop to the queue (waypoints).")
-## @ace_icon("res://eventsheet_addons/move_to/icon.svg")
-## @ace_codegen_template("$MoveToBehavior.add_waypoint({x}, {y})")
+# @ace_action
+# @ace_name("Add Waypoint")
+# @ace_description("Appends a stop to the queue (waypoints).")
+# @ace_codegen_template("$MoveToBehavior.add_waypoint({x}, {y})")
 func add_waypoint(x: float, y: float) -> void:
 	waypoints.append(Vector2(x, y))
 	moving = true
 	self.set_process(true)
 
-## @ace_action
-## @ace_name("Stop Moving")
-## @ace_category("Move To")
-## @ace_description("Clears the queue without firing On Arrived.")
-## @ace_icon("res://eventsheet_addons/move_to/icon.svg")
-## @ace_codegen_template("$MoveToBehavior.stop_moving()")
+# @ace_action
+# @ace_name("Stop Moving")
+# @ace_description("Clears the queue without firing On Arrived.")
+# @ace_codegen_template("$MoveToBehavior.stop_moving()")
 func stop_moving() -> void:
 	moving = false
 	waypoints = []

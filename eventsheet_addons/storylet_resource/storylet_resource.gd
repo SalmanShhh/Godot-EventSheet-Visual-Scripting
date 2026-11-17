@@ -1,6 +1,6 @@
-## @ace_tags(narrative, storylet, resource)
-## @ace_category("Storylets")
-## @ace_version(1.0.0)
+# @ace_tags(narrative, storylet, resource)
+# @ace_category("Storylets")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/storylet_resource/icon.svg")
 class_name StoryletResource
 extends Resource

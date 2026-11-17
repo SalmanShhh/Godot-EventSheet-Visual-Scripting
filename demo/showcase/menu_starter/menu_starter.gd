@@ -16,7 +16,7 @@ func _process(delta: float) -> void:
 		$HudKit.set_text("ScoreLabel", "Time: %0.1fs" % time_alive)
 
 
-## @ace_hidden
+# @ace_hidden
 func handle_button() -> void:
 	var pressed_button: String = $HudKit.last_button_name_value()
 	match pressed_button:

@@ -1,7 +1,7 @@
 @tool
-## @ace_tags(visual, shapes, drawing, 3d)
-## @ace_category("Vector Shapes")
-## @ace_version(1.0.0)
+# @ace_tags(visual, shapes, drawing, 3d)
+# @ace_category("Vector Shapes")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/vector_shapes/icon_3d.svg")
 class_name ShapeCuboid3D
 extends VectorShape3D
@@ -16,41 +16,41 @@ extends VectorShape3D
 		shape_changed()
 
 @export_group("Surface")
+# @ace_hidden
 ## The shape's colour. A solid wrapper is real geometry drawn unshaded, so this is the colour on screen rather than a tint a light has an opinion about.
-## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var colour: Color = Color("#e6e6e6"):
 	set(value):
 		colour = value
 		shape_changed()
+# @ace_hidden
 ## How many sides the mesh is built from. Higher is rounder and costs more vertices.
-## @ace_hidden
 @export_range(3, 64, 1) var detail: int = 16:
 	set(value):
 		detail = value
 		shape_changed()
+# @ace_hidden
 ## How the shape blends with what is behind it.
-## @ace_hidden
 @export_enum("normal", "add", "subtract", "multiply", "premultiplied") var blend: String = "normal":
 	set(value):
 		blend = value
 		shape_changed()
 # @inspector_look toggle_row:segmented
+# @ace_hidden
 ## Sort with the world normally, or draw over everything in front.
-## @ace_hidden
 @export_enum("test", "through walls") var depth: String = "test":
 	set(value):
 		depth = value
 		shape_changed()
 
-## @ace_hidden
+# @ace_hidden
 func shape_volume_mesh(_detail: int) -> Mesh:
 	var block: BoxMesh = BoxMesh.new()
 	block.size = size
 	return block
-## @ace_hidden
+# @ace_hidden
 func shape_plane_bounds() -> Rect2:
 	return Rect2(Vector2(-size.x, -size.y) * 0.5, Vector2(size.x, size.y))
 
-## @ace_hidden
+# @ace_hidden
 func shape_is_solid() -> bool:
 	return true

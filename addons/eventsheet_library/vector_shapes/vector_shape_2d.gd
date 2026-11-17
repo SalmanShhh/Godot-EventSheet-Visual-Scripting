@@ -1,7 +1,7 @@
 @tool
-## @ace_tags(visual, shapes, drawing, shader, 2d)
-## @ace_category("Vector Shapes")
-## @ace_version(1.0.0)
+# @ace_tags(visual, shapes, drawing, shader, 2d)
+# @ace_category("Vector Shapes")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/vector_shapes/icon.svg")
 class_name VectorShape2D
 extends Node2D
@@ -168,11 +168,11 @@ var _fade: Tween = null
 
 ## The scale a stroke fixed on screen was last drawn at, so a zoom is noticed and redrawn.
 var _canvas_scale_seen: float = 0.0
+# @ace_hidden
 ## What a node covers, in world coordinates - what a Fit Around row sizes itself to. A node that
 ## draws a rectangle (a sprite, a texture rect) is measured by it; anything else is measured by the
 ## collision shapes and drawable children under it. An empty rectangle is a node with nothing to
 ## measure, which Fit Around leaves alone rather than shrinking to a point.
-## @ace_hidden
 static func node_bounds(node: Node2D) -> Rect2:
 	if not is_instance_valid(node):
 		return Rect2()
@@ -208,9 +208,9 @@ static func node_bounds(node: Node2D) -> Rect2:
 		low = low.min(corner)
 		high = high.max(corner)
 	return Rect2(low, high - low)
+# @ace_hidden
 ## The box one collision shape fills, in its own coordinates. The three shapes a level is actually
 ## built out of are measured; anything else answers with nothing rather than a guess.
-## @ace_hidden
 static func shape_extents(shape: Shape2D) -> Rect2:
 	if shape is RectangleShape2D:
 		var size: Vector2 = (shape as RectangleShape2D).size
@@ -223,13 +223,13 @@ static func shape_extents(shape: Shape2D) -> Rect2:
 		var half: Vector2 = Vector2(capsule.radius, capsule.height * 0.5)
 		return Rect2(-half, half * 2.0)
 	return Rect2()
+# @ace_hidden
 ## The rectangle the shape needs before its stroke is padded onto it, in its own coordinates.
-## @ace_hidden
 func shape_bounds() -> Rect2:
 	return Rect2(Vector2(-32.0, -32.0), Vector2(64.0, 64.0))
+# @ace_hidden
 ## This shape's current look as a style resource - every field a style speaks for, copied out. The
 ## shape is left exactly as it is; what is done with the answer is the caller's business.
-## @ace_hidden
 func style_from_fields() -> ShapeStyle:
 	var made: ShapeStyle = ShapeStyle.new()
 	for key: String in ShapeStyle.styled_keys():
@@ -237,9 +237,9 @@ func style_from_fields() -> ShapeStyle:
 		if value != null:
 			made.set(key, value)
 	return made
+# @ace_hidden
 ## The material this shape draws with, built once per blend word. The Shader itself is shared by
 ## every shape in the project; only the uniforms are this node's.
-## @ace_hidden
 func _shape_material() -> ShaderMaterial:
 	var blend: String = _word("blend", BLEND_NORMAL)
 	if not BLEND_SHADERS.has(blend):
@@ -254,9 +254,9 @@ func _shape_material() -> ShaderMaterial:
 	_material_blend = blend
 	material = _material
 	return _material
+# @ace_hidden
 ## The shared Shader for one blend word, loaded once per session. Null when the pack's shader files
 ## are not installed beside the script, which is a broken install rather than a state to draw in.
-## @ace_hidden
 static func shader_for_blend(blend: String) -> Shader:
 	if _shaders.has(blend):
 		return _shaders[blend]
@@ -267,9 +267,9 @@ static func shader_for_blend(blend: String) -> Shader:
 	var shader: Shader = load(path) as Shader
 	_shaders[blend] = shader
 	return shader
+# @ace_hidden
 ## The gradient a gradient fill samples, baked into a strip when the gradient changes and kept until
 ## it does - one texture per shape, never one per draw.
-## @ace_hidden
 func _gradient_texture() -> Texture2D:
 	var value: Variant = get("gradient")
 	if not (value is Gradient):
@@ -280,11 +280,11 @@ func _gradient_texture() -> Texture2D:
 	_gradient_strip.gradient = value
 	_gradient_strip.width = 256
 	return _gradient_strip
+# @ace_hidden
 ## The three dash-style buttons, drawn by the pack rather than shipped as pictures: the icon IS the
 ## dash it stands for, with the same duty and the same ends the shader gives it. It is drawn into an
 ## image rather than through the shader itself because the Inspector asks for the picture and uses
 ## it in the same breath, and a shader can only answer after a frame has been drawn.
-## @ace_hidden
 static func dash_style_icon(option: String, size: int) -> Texture2D:
 	var key: String = "%s:%d" % [option, size]
 	if _dash_icons.has(key):
@@ -314,15 +314,13 @@ static func dash_style_icon(option: String, size: int) -> Texture2D:
 	_dash_icons[key] = texture
 	return texture
 
-## @ace_action
-## @ace_featured
-## @ace_name("Set Thickness")
-## @ace_category("Vector Shapes")
-## @ace_description("Sets how wide the shape's stroke is. The unit is the one you typed the number in: pixels and world units are the same in Godot's 2D, and a screen unit is a whole viewport width, so a line set in screen units keeps its weight on every phone. The field itself always stores pixels.")
-## @ace_display_template("Set thickness to [b]{value}[/b] [b]{unit}[/b]")
-## @ace_param_options(unit px, world, screen)
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.set_thickness({value}, "{unit}")")
+# @ace_action
+# @ace_featured
+# @ace_name("Set Thickness")
+# @ace_description("Sets how wide the shape's stroke is. The unit is the one you typed the number in: pixels and world units are the same in Godot's 2D, and a screen unit is a whole viewport width, so a line set in screen units keeps its weight on every phone. The field itself always stores pixels.")
+# @ace_display_template("Set thickness to [b]{value}[/b] [b]{unit}[/b]")
+# @ace_param_options(unit px, world, screen)
+# @ace_codegen_template("$VectorShape2D.set_thickness({value}, "{unit}")")
 func set_thickness(value: float, unit: String) -> void:
 	var width: float = 1152.0
 	var viewport: Viewport = get_viewport()
@@ -331,24 +329,20 @@ func set_thickness(value: float, unit: String) -> void:
 	set("thickness", thickness_in_pixels(value, unit, width))
 	shape_changed()
 
-## @ace_action
-## @ace_name("Set Shape Colour")
-## @ace_category("Vector Shapes")
-## @ace_description("Sets the shape's main colour - the whole of it in single mode, and the first end of the blend in every other mode.")
-## @ace_display_template("Set shape colour to [b]{colour}[/b]")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.set_shape_colour({colour})")
+# @ace_action
+# @ace_name("Set Shape Colour")
+# @ace_description("Sets the shape's main colour - the whole of it in single mode, and the first end of the blend in every other mode.")
+# @ace_display_template("Set shape colour to [b]{colour}[/b]")
+# @ace_codegen_template("$VectorShape2D.set_shape_colour({colour})")
 func set_shape_colour(colour: Color) -> void:
 	set("colour", colour)
 	shape_changed()
 
-## @ace_action
-## @ace_name("Set Shape Colour From Palette")
-## @ace_category("Vector Shapes")
-## @ace_description("Sets the shape's main colour to one role of a colour palette - Danger, Safe - from the colour set you name, so one row draws the right colour for every kind of colour vision. An empty set name uses the first set. Anything the palette does not have leaves the colour as it is and says so once in the Output panel.")
-## @ace_display_template("Set shape colour to [b]{role}[/b] from [b]{palette}[/b] ([b]{colour_set}[/b])")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.set_shape_colour_from_palette({palette}, {colour_set}, {role})")
+# @ace_action
+# @ace_name("Set Shape Colour From Palette")
+# @ace_description("Sets the shape's main colour to one role of a colour palette - Danger, Safe - from the colour set you name, so one row draws the right colour for every kind of colour vision. An empty set name uses the first set. Anything the palette does not have leaves the colour as it is and says so once in the Output panel.")
+# @ace_display_template("Set shape colour to [b]{role}[/b] from [b]{palette}[/b] ([b]{colour_set}[/b])")
+# @ace_codegen_template("$VectorShape2D.set_shape_colour_from_palette({palette}, {colour_set}, {role})")
 func set_shape_colour_from_palette(palette: Resource, colour_set: String, role: String) -> void:
 	var picked: Variant = palette_colour(palette, colour_set, role)
 	if picked is Color:
@@ -359,13 +353,11 @@ func set_shape_colour_from_palette(palette: Resource, colour_set: String, role: 
 		_palette_warned = true
 		push_warning("%s: Set Shape Colour From Palette left the colour as it was, because %s." % [str(get_path()) if is_inside_tree() else str(name), str(picked)])
 
-## @ace_action
-## @ace_name("Set Colours")
-## @ace_category("Vector Shapes")
-## @ace_description("Sets both ends of a two-colour shape at once, and switches a single-colour one to that mode: a line that goes red to transparent, an arc that goes danger to healthy along its sweep.")
-## @ace_display_template("Set colours [b]{from_colour}[/b] to [b]{to_colour}[/b]")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.set_colours({from_colour}, {to_colour})")
+# @ace_action
+# @ace_name("Set Colours")
+# @ace_description("Sets both ends of a two-colour shape at once, and switches a single-colour one to that mode: a line that goes red to transparent, an arc that goes danger to healthy along its sweep.")
+# @ace_display_template("Set colours [b]{from_colour}[/b] to [b]{to_colour}[/b]")
+# @ace_codegen_template("$VectorShape2D.set_colours({from_colour}, {to_colour})")
 func set_colours(from_colour: Color, to_colour: Color) -> void:
 	set("colour", from_colour)
 	set("colour_b", to_colour)
@@ -373,37 +365,31 @@ func set_colours(from_colour: Color, to_colour: Color) -> void:
 		set("colour_mode", COLOUR_MODE_TWO)
 	shape_changed()
 
-## @ace_action
-## @ace_name("Set Gradient")
-## @ace_category("Vector Shapes")
-## @ace_description("Hands the shape a Gradient resource and switches it to the gradient mode - the whole ramp, shaped in Godot's own gradient editor and re-used by every shape that points at it.")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.set_gradient({gradient_resource})")
+# @ace_action
+# @ace_name("Set Gradient")
+# @ace_description("Hands the shape a Gradient resource and switches it to the gradient mode - the whole ramp, shaped in Godot's own gradient editor and re-used by every shape that points at it.")
+# @ace_codegen_template("$VectorShape2D.set_gradient({gradient_resource})")
 func set_gradient(gradient_resource: Gradient) -> void:
 	set("gradient", gradient_resource)
 	set("colour_mode", COLOUR_MODE_GRADIENT)
 	shape_changed()
 
-## @ace_action
-## @ace_name("Set Fill")
-## @ace_category("Vector Shapes")
-## @ace_description("Fills the shape, or leaves it as an outline. A filled shape draws its border rather than its stroke, so the two can never sit a pixel apart.")
-## @ace_display_template("Set fill to [b]{filled}[/b]")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.set_fill({filled})")
+# @ace_action
+# @ace_name("Set Fill")
+# @ace_description("Fills the shape, or leaves it as an outline. A filled shape draws its border rather than its stroke, so the two can never sit a pixel apart.")
+# @ace_display_template("Set fill to [b]{filled}[/b]")
+# @ace_codegen_template("$VectorShape2D.set_fill({filled})")
 func set_fill(filled: bool) -> void:
 	set("fill", filled)
 	shape_changed()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Set Dashes")
-## @ace_category("Vector Shapes")
-## @ace_description("Sets the dash pattern in one row: how many dashes fit the shape however long it is, how much of each period is gap, and which of the three ends the dashes wear.")
-## @ace_display_template("Set dashes [b]{count}[/b], spacing [b]{spacing}[/b], [b]{style}[/b]")
-## @ace_param_options(style plain, angled, rounded)
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.set_dashes({count}, {spacing}, "{style}")")
+# @ace_action
+# @ace_featured
+# @ace_name("Set Dashes")
+# @ace_description("Sets the dash pattern in one row: how many dashes fit the shape however long it is, how much of each period is gap, and which of the three ends the dashes wear.")
+# @ace_display_template("Set dashes [b]{count}[/b], spacing [b]{spacing}[/b], [b]{style}[/b]")
+# @ace_param_options(style plain, angled, rounded)
+# @ace_codegen_template("$VectorShape2D.set_dashes({count}, {spacing}, "{style}")")
 func set_dashes(count: int, spacing: float, style: String) -> void:
 	set("dashed", true)
 	set("dash_space", DASH_SPACE_COUNT)
@@ -413,24 +399,20 @@ func set_dashes(count: int, spacing: float, style: String) -> void:
 		set("dash_style", style)
 	shape_changed()
 
-## @ace_action
-## @ace_name("Set Dash Offset")
-## @ace_category("Vector Shapes")
-## @ace_description("Moves the dash pattern along the shape without changing it. Whole numbers land where they started, so an offset that has been scrolling for an hour is still in step.")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.set_dash_offset({offset})")
+# @ace_action
+# @ace_name("Set Dash Offset")
+# @ace_description("Moves the dash pattern along the shape without changing it. Whole numbers land where they started, so an offset that has been scrolling for an hour is still in step.")
+# @ace_codegen_template("$VectorShape2D.set_dash_offset({offset})")
 func set_dash_offset(offset: float) -> void:
 	set("dash_offset", offset)
 	shape_changed()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Scroll Dashes")
-## @ace_category("Vector Shapes")
-## @ace_description("Marches the dashes at so many patterns per second - the ants around a selection, the footprint that says "placing". A speed of 0 stops them and parks the tick with them, so a stopped shape costs nothing per frame.")
-## @ace_display_template("Scroll dashes at [b]{patterns_per_second}[/b] per second")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.scroll_dashes({patterns_per_second})")
+# @ace_action
+# @ace_featured
+# @ace_name("Scroll Dashes")
+# @ace_description("Marches the dashes at so many patterns per second - the ants around a selection, the footprint that says "placing". A speed of 0 stops them and parks the tick with them, so a stopped shape costs nothing per frame.")
+# @ace_display_template("Scroll dashes at [b]{patterns_per_second}[/b] per second")
+# @ace_codegen_template("$VectorShape2D.scroll_dashes({patterns_per_second})")
 func scroll_dashes(patterns_per_second: float) -> void:
 	_dash_scroll_speed = patterns_per_second
 	# A speed asks for the tick; a zero does NOT take it away, because a tether or a followed
@@ -438,12 +420,10 @@ func scroll_dashes(patterns_per_second: float) -> void:
 	if not is_zero_approx(patterns_per_second):
 		set_process(true)
 
-## @ace_action
-## @ace_name("Fade Shape Over")
-## @ace_category("Vector Shapes")
-## @ace_description("Fades the shape's colour to an alpha over a number of seconds - the one animation worth a verb, since every other field is an ordinary property a Tween Property row already drives.")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.fade_shape_over({to_alpha}, {seconds})")
+# @ace_action
+# @ace_name("Fade Shape Over")
+# @ace_description("Fades the shape's colour to an alpha over a number of seconds - the one animation worth a verb, since every other field is an ordinary property a Tween Property row already drives.")
+# @ace_codegen_template("$VectorShape2D.fade_shape_over({to_alpha}, {seconds})")
 func fade_shape_over(to_alpha: float, seconds: float) -> void:
 	if _fade != null and _fade.is_valid():
 		_fade.kill()
@@ -456,12 +436,10 @@ func fade_shape_over(to_alpha: float, seconds: float) -> void:
 	_fade = create_tween()
 	_fade.tween_method(set_shape_colour, tint, target, seconds)
 
-## @ace_action
-## @ace_name("Set Shape Points")
-## @ace_category("Vector Shapes")
-## @ace_description("Replaces a Polygon's or a Polyline's points with a list of positions in the shape's own coordinates - a drawn route, a hull worked out at run time, an outline read from data.")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.set_shape_points({new_points})")
+# @ace_action
+# @ace_name("Set Shape Points")
+# @ace_description("Replaces a Polygon's or a Polyline's points with a list of positions in the shape's own coordinates - a drawn route, a hull worked out at run time, an outline read from data.")
+# @ace_codegen_template("$VectorShape2D.set_shape_points({new_points})")
 func set_shape_points(new_points: Array) -> void:
 	var outline: PackedVector2Array = PackedVector2Array()
 	for entry: Variant in new_points:
@@ -470,68 +448,56 @@ func set_shape_points(new_points: Array) -> void:
 	set("points", outline)
 	shape_changed()
 
-## @ace_action
-## @ace_name("Set Shape Radius")
-## @ace_category("Vector Shapes")
-## @ace_description("Sets the radius of a Disc or a Regular Polygon - the one number a ring, a pie and a hexagon are all sized by.")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.set_shape_radius({new_radius})")
+# @ace_action
+# @ace_name("Set Shape Radius")
+# @ace_description("Sets the radius of a Disc or a Regular Polygon - the one number a ring, a pie and a hexagon are all sized by.")
+# @ace_codegen_template("$VectorShape2D.set_shape_radius({new_radius})")
 func set_shape_radius(new_radius: float) -> void:
 	set("radius", maxf(new_radius, 0.0))
 	shape_changed()
 
-## @ace_action
-## @ace_name("Set Shape Sides")
-## @ace_category("Vector Shapes")
-## @ace_description("Sets how many sides a Regular Polygon has: three is a triangle, six a hexagon, and a high number is a circle drawn the expensive way (a Disc is the cheap one).")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.set_shape_sides({count})")
+# @ace_action
+# @ace_name("Set Shape Sides")
+# @ace_description("Sets how many sides a Regular Polygon has: three is a triangle, six a hexagon, and a high number is a circle drawn the expensive way (a Disc is the cheap one).")
+# @ace_codegen_template("$VectorShape2D.set_shape_sides({count})")
 func set_shape_sides(count: int) -> void:
 	set("sides", clampi(count, 3, MAX_POINTS))
 	shape_changed()
 
-## @ace_action
-## @ace_name("Set Arc")
-## @ace_category("Vector Shapes")
-## @ace_description("Sets a Disc's sweep, in degrees: 0 to 360 is the whole disc, and anything less is the pie or the arc a cooldown, a vision cone or a health ring is drawn as.")
-## @ace_display_template("Set arc from [b]{from_degrees}[/b] to [b]{to_degrees}[/b] degrees")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.set_arc({from_degrees}, {to_degrees})")
+# @ace_action
+# @ace_name("Set Arc")
+# @ace_description("Sets a Disc's sweep, in degrees: 0 to 360 is the whole disc, and anything less is the pie or the arc a cooldown, a vision cone or a health ring is drawn as.")
+# @ace_display_template("Set arc from [b]{from_degrees}[/b] to [b]{to_degrees}[/b] degrees")
+# @ace_codegen_template("$VectorShape2D.set_arc({from_degrees}, {to_degrees})")
 func set_arc(from_degrees: float, to_degrees: float) -> void:
 	set("start_angle", from_degrees)
 	set("end_angle", to_degrees)
 	shape_changed()
 
-## @ace_action
-## @ace_name("Apply Shape Style")
-## @ace_category("Vector Shapes")
-## @ace_description("Puts a Shape Style file into the shape's Style slot: its thickness, caps, colours, dashes and blend are read from that file from now on. An empty slot hands the shape its own fields back.")
-## @ace_display_template("Apply shape style [b]{style_file}[/b]")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.apply_shape_style({style_file})")
+# @ace_action
+# @ace_name("Apply Shape Style")
+# @ace_description("Puts a Shape Style file into the shape's Style slot: its thickness, caps, colours, dashes and blend are read from that file from now on. An empty slot hands the shape its own fields back.")
+# @ace_display_template("Apply shape style [b]{style_file}[/b]")
+# @ace_codegen_template("$VectorShape2D.apply_shape_style({style_file})")
 func apply_shape_style(style_file: ShapeStyle) -> void:
 	set("style", style_file)
 
-## @ace_action
-## @ace_name("Apply Shape Style To Group")
-## @ace_category("Vector Shapes")
-## @ace_description("Puts one Shape Style file into every shape in a group at once - the whole HUD re-skinned from one file, which is what a style is for.")
-## @ace_display_template("Apply shape style [b]{style_file}[/b] to group [b]{group_name}[/b]")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.apply_shape_style_to_group({group_name}, {style_file})")
+# @ace_action
+# @ace_name("Apply Shape Style To Group")
+# @ace_description("Puts one Shape Style file into every shape in a group at once - the whole HUD re-skinned from one file, which is what a style is for.")
+# @ace_display_template("Apply shape style [b]{style_file}[/b] to group [b]{group_name}[/b]")
+# @ace_codegen_template("$VectorShape2D.apply_shape_style_to_group({group_name}, {style_file})")
 func apply_shape_style_to_group(group_name: String, style_file: ShapeStyle) -> void:
 	if not is_inside_tree() or group_name.strip_edges().is_empty():
 		return
 	get_tree().call_group(StringName(group_name), "apply_shape_style", style_file)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Tether Between")
-## @ace_category("Vector Shapes")
-## @ace_description("Runs the shape between two nodes and keeps it there: its start follows the first, its end follows the second, and it redraws only on the frames one of them actually moved. The leash, the grapple rope, the wire between a machine and its switch.")
-## @ace_display_template("Tether between [b]{first}[/b] and [b]{second}[/b]")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.tether_between({first}, {second})")
+# @ace_action
+# @ace_featured
+# @ace_name("Tether Between")
+# @ace_description("Runs the shape between two nodes and keeps it there: its start follows the first, its end follows the second, and it redraws only on the frames one of them actually moved. The leash, the grapple rope, the wire between a machine and its switch.")
+# @ace_display_template("Tether between [b]{first}[/b] and [b]{second}[/b]")
+# @ace_codegen_template("$VectorShape2D.tether_between({first}, {second})")
 func tether_between(first: Node2D, second: Node2D) -> void:
 	_tether_a = first
 	_tether_b = second
@@ -541,57 +507,47 @@ func tether_between(first: Node2D, second: Node2D) -> void:
 	set_process(true)
 	_follow_tether()
 
-## @ace_action
-## @ace_name("Untether")
-## @ace_category("Vector Shapes")
-## @ace_description("Lets go of both nodes. The shape stays exactly where the last frame left it, and its tick parks.")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.untether()")
+# @ace_action
+# @ace_name("Untether")
+# @ace_description("Lets go of both nodes. The shape stays exactly where the last frame left it, and its tick parks.")
+# @ace_codegen_template("$VectorShape2D.untether()")
 func untether() -> void:
 	_tether_a = null
 	_tether_b = null
 	_tether_seen = PackedVector2Array()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Fill Ring To")
-## @ace_category("Vector Shapes")
-## @ace_description("Sweeps a Disc's arc to a fraction of the way round - 0 is empty, 1 is the whole ring. The cooldown, the stamina wheel, the loading circle, in one row per frame.")
-## @ace_display_template("Fill ring to [b]{fraction}[/b]")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.fill_ring_to({fraction})")
+# @ace_action
+# @ace_featured
+# @ace_name("Fill Ring To")
+# @ace_description("Sweeps a Disc's arc to a fraction of the way round - 0 is empty, 1 is the whole ring. The cooldown, the stamina wheel, the loading circle, in one row per frame.")
+# @ace_display_template("Fill ring to [b]{fraction}[/b]")
+# @ace_codegen_template("$VectorShape2D.fill_ring_to({fraction})")
 func fill_ring_to(fraction: float) -> void:
 	set("end_angle", _number("start_angle", 0.0) + 360.0 * clampf(fraction, 0.0, 1.0))
 	shape_changed()
 
-## @ace_action
-## @ace_name("Follow Cursor")
-## @ace_category("Vector Shapes")
-## @ace_description("Puts the shape under the pointer every frame, snapped to a grid of that many pixels (0 for no snap) - the placement footprint, the brush outline, the target marker. Stop Following ends it and parks the tick.")
-## @ace_display_template("Follow the cursor, snapped to [b]{snap_to}[/b]")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.follow_cursor({snap_to})")
+# @ace_action
+# @ace_name("Follow Cursor")
+# @ace_description("Puts the shape under the pointer every frame, snapped to a grid of that many pixels (0 for no snap) - the placement footprint, the brush outline, the target marker. Stop Following ends it and parks the tick.")
+# @ace_display_template("Follow the cursor, snapped to [b]{snap_to}[/b]")
+# @ace_codegen_template("$VectorShape2D.follow_cursor({snap_to})")
 func follow_cursor(snap_to: float) -> void:
 	_cursor_snap = maxf(snap_to, 0.0)
 	set_process(true)
 	_follow_pointer()
 
-## @ace_action
-## @ace_name("Stop Following")
-## @ace_category("Vector Shapes")
-## @ace_description("Stops the shape following the pointer. It stays where it was left.")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.stop_following()")
+# @ace_action
+# @ace_name("Stop Following")
+# @ace_description("Stops the shape following the pointer. It stays where it was left.")
+# @ace_codegen_template("$VectorShape2D.stop_following()")
 func stop_following() -> void:
 	_cursor_snap = -1.0
 
-## @ace_action
-## @ace_name("Fit Around")
-## @ace_category("Vector Shapes")
-## @ace_description("Sizes the shape to what a node covers, plus a margin, and centres it on it - the selection box round a picked unit, the highlight round a card, the ring round a building.")
-## @ace_display_template("Fit around [b]{node}[/b] with a margin of [b]{margin}[/b]")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.fit_around({node}, {margin})")
+# @ace_action
+# @ace_name("Fit Around")
+# @ace_description("Sizes the shape to what a node covers, plus a margin, and centres it on it - the selection box round a picked unit, the highlight round a card, the ring round a building.")
+# @ace_display_template("Fit around [b]{node}[/b] with a margin of [b]{margin}[/b]")
+# @ace_codegen_template("$VectorShape2D.fit_around({node}, {margin})")
 func fit_around(node: Node2D, margin: float) -> void:
 	var bounds: Rect2 = node_bounds(node)
 	if bounds.size.is_zero_approx():
@@ -604,46 +560,38 @@ func fit_around(node: Node2D, margin: float) -> void:
 		set("radius", maxf(bounds.size.x, bounds.size.y) * 0.5)
 	shape_changed()
 
-## @ace_action
-## @ace_name("Show For")
-## @ace_category("Vector Shapes")
-## @ace_description("Shows the shape and hides it again after so many seconds - the hit marker, the ping, the flash of a footprint that says "placed".")
-## @ace_display_template("Show for [b]{seconds}[/b] seconds")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.show_shape_for({seconds})")
+# @ace_action
+# @ace_name("Show For")
+# @ace_description("Shows the shape and hides it again after so many seconds - the hit marker, the ping, the flash of a footprint that says "placed".")
+# @ace_display_template("Show for [b]{seconds}[/b] seconds")
+# @ace_codegen_template("$VectorShape2D.show_shape_for({seconds})")
 func show_shape_for(seconds: float) -> void:
 	_show_seconds = maxf(seconds, 0.0)
 	visible = _show_seconds > 0.0
 	if visible:
 		set_process(true)
 
-## @ace_condition
-## @ace_name("Shape Is Tethered")
-## @ace_category("Vector Shapes")
-## @ace_description("True while the shape is running between two nodes that both still exist.")
-## @ace_display_template("the shape is tethered")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.shape_is_tethered()")
+# @ace_condition
+# @ace_name("Shape Is Tethered")
+# @ace_description("True while the shape is running between two nodes that both still exist.")
+# @ace_display_template("the shape is tethered")
+# @ace_codegen_template("$VectorShape2D.shape_is_tethered()")
 func shape_is_tethered() -> bool:
 	return is_instance_valid(_tether_a) and is_instance_valid(_tether_b)
 
-## @ace_condition
-## @ace_name("Ring Is Full")
-## @ace_category("Vector Shapes")
-## @ace_description("True while a Disc's arc goes the whole way round - the cooldown that has finished, the wheel that is charged.")
-## @ace_display_template("the ring is full")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.ring_is_full()")
+# @ace_condition
+# @ace_name("Ring Is Full")
+# @ace_description("True while a Disc's arc goes the whole way round - the cooldown that has finished, the wheel that is charged.")
+# @ace_display_template("the ring is full")
+# @ace_codegen_template("$VectorShape2D.ring_is_full()")
 func ring_is_full() -> bool:
 	return absf(_number("end_angle", 360.0) - _number("start_angle", 0.0)) >= 359.9
 
-## @ace_expression
-## @ace_name("Point Along Shape At")
-## @ace_category("Vector Shapes")
-## @ace_description("The point a fraction of the way along the shape's outline, in the shape's own coordinates - 0 is the start, 0.5 the middle, 1 the end. Where to put a marker on a route, a spark on a wire, a label on a border.")
-## @ace_display_template("the point [b]{fraction}[/b] along the shape")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.point_along_shape_at({fraction})")
+# @ace_expression
+# @ace_name("Point Along Shape At")
+# @ace_description("The point a fraction of the way along the shape's outline, in the shape's own coordinates - 0 is the start, 0.5 the middle, 1 the end. Where to put a marker on a route, a spark on a wire, a label on a border.")
+# @ace_display_template("the point [b]{fraction}[/b] along the shape")
+# @ace_codegen_template("$VectorShape2D.point_along_shape_at({fraction})")
 func point_along_shape_at(fraction: float) -> Vector2:
 	var outline: PackedVector2Array = shape_points()
 	if outline.is_empty():
@@ -667,33 +615,27 @@ func point_along_shape_at(fraction: float) -> Vector2:
 		travelled += step
 	return walk[walk.size() - 1]
 
-## @ace_condition
-## @ace_name("Shape Is Visible")
-## @ace_category("Vector Shapes")
-## @ace_description("True while the shape is drawn at all: visible in the tree, and not fully transparent.")
-## @ace_display_template("the shape is visible")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.shape_is_visible()")
+# @ace_condition
+# @ace_name("Shape Is Visible")
+# @ace_description("True while the shape is drawn at all: visible in the tree, and not fully transparent.")
+# @ace_display_template("the shape is visible")
+# @ace_codegen_template("$VectorShape2D.shape_is_visible()")
 func shape_is_visible() -> bool:
 	return is_visible_in_tree() and _colour("colour").a > 0.0
 
-## @ace_condition
-## @ace_name("Shape Style Is")
-## @ace_category("Vector Shapes")
-## @ace_description("True while the shape is wearing that exact Shape Style file - the test a row makes before re-skinning, and the one an exception is written against.")
-## @ace_display_template("the shape style is [b]{style_file}[/b]")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.shape_style_is({style_file})")
+# @ace_condition
+# @ace_name("Shape Style Is")
+# @ace_description("True while the shape is wearing that exact Shape Style file - the test a row makes before re-skinning, and the one an exception is written against.")
+# @ace_display_template("the shape style is [b]{style_file}[/b]")
+# @ace_codegen_template("$VectorShape2D.shape_style_is({style_file})")
 func shape_style_is(style_file: ShapeStyle) -> bool:
 	return get("style") == style_file
 
-## @ace_condition
-## @ace_name("Point Is Inside Shape")
-## @ace_category("Vector Shapes")
-## @ace_description("True when a point (in world coordinates) lands inside the shape - inside the outline for a filled one, within half a thickness of the line otherwise. The pick test for a shape you can click, with no collision body under it.")
-## @ace_display_template("[b]{point}[/b] is inside the shape")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.point_is_inside_shape({point})")
+# @ace_condition
+# @ace_name("Point Is Inside Shape")
+# @ace_description("True when a point (in world coordinates) lands inside the shape - inside the outline for a filled one, within half a thickness of the line otherwise. The pick test for a shape you can click, with no collision body under it.")
+# @ace_display_template("[b]{point}[/b] is inside the shape")
+# @ace_codegen_template("$VectorShape2D.point_is_inside_shape({point})")
 func point_is_inside_shape(point: Vector2) -> bool:
 	var local: Vector2 = to_local(point)
 	var outline: PackedVector2Array = shape_points()
@@ -709,12 +651,10 @@ func point_is_inside_shape(point: Vector2) -> bool:
 			return true
 	return false
 
-## @ace_expression
-## @ace_name("Shape Length")
-## @ace_category("Vector Shapes")
-## @ace_description("How long the shape's outline is, in pixels - the length a dash pattern is fitted into, and the number a "walk along it" row divides by.")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.shape_length()")
+# @ace_expression
+# @ace_name("Shape Length")
+# @ace_description("How long the shape's outline is, in pixels - the length a dash pattern is fitted into, and the number a "walk along it" row divides by.")
+# @ace_codegen_template("$VectorShape2D.shape_length()")
 func shape_length() -> float:
 	var outline: PackedVector2Array = shape_points()
 	if outline.size() < 2:
@@ -726,12 +666,10 @@ func shape_length() -> float:
 		total += outline[outline.size() - 1].distance_to(outline[0])
 	return total
 
-## @ace_expression
-## @ace_name("Shape Area")
-## @ace_category("Vector Shapes")
-## @ace_description("How much area the shape covers, in square pixels. A shape that is only a line covers none.")
-## @ace_icon("res://eventsheet_addons/vector_shapes/icon.svg")
-## @ace_codegen_template("$VectorShape2D.shape_area()")
+# @ace_expression
+# @ace_name("Shape Area")
+# @ace_description("How much area the shape covers, in square pixels. A shape that is only a line covers none.")
+# @ace_codegen_template("$VectorShape2D.shape_area()")
 func shape_area() -> float:
 	var outline: PackedVector2Array = shape_points()
 	if outline.size() < 3 or not shape_is_closed():
@@ -803,10 +741,10 @@ func _process(delta: float) -> void:
 	if not working:
 		set_process(false)
 
+# @ace_hidden
 ## Puts the shape's two ends on the nodes it is tethered between, and does NOTHING AT ALL when
 ## neither of them has moved since the last frame. A shape with no end point to move (a disc, a
 ## rect) still follows the first node, which is the sensible half of the same sentence.
-## @ace_hidden
 func _follow_tether() -> void:
 	if not shape_is_tethered():
 		untether()
@@ -825,9 +763,9 @@ func _follow_tether() -> void:
 		set("end_point", to_local(to_point))
 	shape_changed()
 
+# @ace_hidden
 ## Puts the shape where the pointer is, snapped to a grid when one was asked for. A pointer that has
 ## not left the spot the shape is already on writes nothing.
-## @ace_hidden
 func _follow_pointer() -> void:
 	if not is_inside_tree():
 		return
@@ -838,38 +776,38 @@ func _follow_pointer() -> void:
 		return
 	global_position = at
 
+# @ace_hidden
 ## The shape's own kind number, as the shader numbers them. Every shape script answers with its own.
-## @ace_hidden
 func shape_kind_id() -> int:
 	return 0
 
+# @ace_hidden
 ## The outline this shape is made of, in its own coordinates - the points the segment shapes walk,
 ## and the outline the length, area and pick tests measure. The analytic shapes answer with the
 ## outline they would have, so those three rows work on them too.
-## @ace_hidden
 func shape_points() -> PackedVector2Array:
 	return PackedVector2Array()
 
+# @ace_hidden
 ## Whether that outline comes back to its start.
-## @ace_hidden
 func shape_is_closed() -> bool:
 	return false
 
+# @ace_hidden
 ## Redraws after a field a shape script wrote - the one line every setter in the seven scripts
 ## calls, so a change made in the Inspector and a change made by a row look the same. The one write
 ## it does NOT redraw for is a dash scroll, which moves a single uniform and hands the shader that
 ## uniform itself rather than paying for the whole shape once a frame.
-## @ace_hidden
 func shape_changed() -> void:
 	if _scrolling:
 		return
 	_gradient_strip = null
 	queue_redraw()
 
+# @ace_hidden
 ## The colour a palette resource holds for a role in a colour set: a Color, or a plain sentence saying what
 ## is missing. Role and set names match without regard to capitals, so "danger" finds Danger. An empty set
 ## name is the palette's first set. Both bases ask this one function.
-## @ace_hidden
 static func palette_colour(palette: Resource, colour_set: String, role: String) -> Variant:
 	if palette == null:
 		return "no palette was given"
@@ -902,21 +840,21 @@ static func palette_colour(palette: Resource, colour_set: String, role: String) 
 		return "that colour set has no colour for \"%s\"" % role
 	return (colours as PackedColorArray)[role_at]
 
+# @ace_hidden
 ## The thickness to draw with, in the shape's own units, after the scale rule. A stroke that follows
 ## the node is the number typed. A stroke fixed on screen is that number divided by the scale the
 ## shape is SHOWN at - its own scale, any parent's, a camera's zoom, and the editor view's zoom - so
 ## a 4 px line is 4 px on the screen however far the view is zoomed. Screen pixels here are the
 ## game's own pixels: the window stretch, which scales the whole picture, stays out of it.
-## @ace_hidden
 static func on_screen_thickness(typed: float, rule: String, screen_scale: float) -> float:
 	if rule == THICKNESS_SCALE_FIXED_ON_SCREEN:
 		return typed / maxf(absf(screen_scale), 0.0001)
 	return typed
 
+# @ace_hidden
 ## The scale the shape is shown at: its transform with the canvas (the camera's zoom and a canvas
 ## layer's scale) and the viewport's own canvas transform (what the editor's 2D view zooms with).
 ## Outside the tree there is no canvas, so the node's own scale stands in.
-## @ace_hidden
 func _shown_scale() -> float:
 	if not is_inside_tree():
 		return global_scale.x
@@ -926,55 +864,55 @@ func _shown_scale() -> float:
 		shown = viewport.get_global_canvas_transform() * shown
 	return shown.get_scale().x
 
+# @ace_hidden
 ## True when the stroke is set to keep its weight on screen.
-## @ace_hidden
 func _is_fixed_on_screen() -> bool:
 	return _word("thickness_scale", THICKNESS_SCALE_WITH_THE_NODE) == THICKNESS_SCALE_FIXED_ON_SCREEN
 
+# @ace_hidden
 ## The shape's thickness in pixels, after the scale rule.
-## @ace_hidden
 func _pixel_thickness() -> float:
 	return on_screen_thickness(_number("thickness", 2.0), _word("thickness_scale", THICKNESS_SCALE_WITH_THE_NODE), _shown_scale())
 
+# @ace_hidden
 ## One exported number of whichever shape script this is, or the fallback when that shape has no
 ## such field. The base declares no fields of its own on purpose (a subclass cannot re-export an
 ## inherited one), so it reads them by name.
-## @ace_hidden
 func _number(key: String, fallback: float) -> float:
 	var value: Variant = _read(key)
 	if value is float or value is int:
 		return float(value)
 	return fallback
 
+# @ace_hidden
 ## One exported word, or the fallback.
-## @ace_hidden
 func _word(key: String, fallback: String) -> String:
 	var value: Variant = _read(key)
 	if value is String or value is StringName:
 		return str(value)
 	return fallback
 
+# @ace_hidden
 ## One exported tick box, or false.
-## @ace_hidden
 func _flag(key: String) -> bool:
 	var value: Variant = _read(key)
 	return value is bool and value
 
+# @ace_hidden
 ## One exported colour, or white.
-## @ace_hidden
 func _colour(key: String) -> Color:
 	var value: Variant = _read(key)
 	if value is Color:
 		return value
 	return Color.WHITE
 
+# @ace_hidden
 ## What the shape draws one field with: the style's value when a style is in the slot and speaks
 ## for that field, and the shape's own otherwise.
 ##
 ## THE SHAPE'S OWN FIELD IS ASKED FIRST, and a field this shape has not got ends the question there.
 ## That is what lets one style carry a dash pattern and a Triangle wear it: the Triangle declares no
 ## `dashed`, so nothing reads it, and the style's dashes stay for the shapes that have them.
-## @ace_hidden
 func _read(key: String) -> Variant:
 	var own: Variant = get(key)
 	if own == null:
@@ -986,24 +924,24 @@ func _read(key: String) -> Variant:
 			return styled
 	return own
 
+# @ace_hidden
 ## Whether a style is speaking for one of this shape's fields right now - what the Inspector greys
 ## on, and what a reader of the shape asks before believing a number in the file.
-## @ace_hidden
 func style_speaks_for(property_name: String) -> bool:
 	return get("style") is ShapeStyle and ShapeStyle.styled_keys().has(property_name)
 
+# @ace_hidden
 ## The one line a style file's own `changed` signal runs: the shape it is dropped into redraws, and
 ## its Inspector re-reads which fields are the style's.
-## @ace_hidden
 func style_changed_externally() -> void:
 	notify_property_list_changed()
 	shape_changed()
 
+# @ace_hidden
 ## Writes this shape's look out as a new style file beside the scene it sits in, and wears it. The
 ## button in the Inspector header; nothing about the shape changes on screen, because the file holds
 ## exactly what the shape was already drawing with. Answers the path it wrote, or "" when it could
 ## not write one.
-## @ace_hidden
 func save_as_style() -> String:
 	var made: ShapeStyle = style_from_fields()
 	var folder: String = "res://"
@@ -1024,9 +962,9 @@ func save_as_style() -> String:
 	set("style", made)
 	return path
 
+# @ace_hidden
 ## Hands every field the shader needs over in one pass, at redraw time - never per frame, because a
 ## shape nothing writes to never redraws.
-## @ace_hidden
 func _push_uniforms(target_material: ShaderMaterial, quad: Rect2) -> void:
 	var thickness: float = _pixel_thickness()
 	var space: String = _word("dash_space", DASH_SPACE_COUNT)
@@ -1075,38 +1013,38 @@ func _push_uniforms(target_material: ShaderMaterial, quad: Rect2) -> void:
 	target_material.set_shader_parameter("points", padded)
 	target_material.set_shader_parameter("point_count", outline.size())
 
+# @ace_hidden
 ## Turns a dash length a designer typed into the pixels the shader wants. A world length is pixels;
 ## a relative length is that many times the stroke's own thickness; in count mode the length is not
 ## read at all, because the count decides the period.
-## @ace_hidden
 static func dash_length_in_pixels(value: float, space: String, thickness: float) -> float:
 	if space == DASH_SPACE_RELATIVE:
 		return maxf(value, 0.0) * maxf(thickness, 0.01)
 	return maxf(value, 0.0)
 
+# @ace_hidden
 ## Turns a thickness a designer typed in one of the three units into the pixels the field stores.
 ## Pixels and world units are one to one in Godot's 2D; a screen unit is the viewport's own width,
 ## so a line set in screen units keeps its weight on every phone. The field itself always stores
 ## pixels, which is why nothing in an emitted sheet moves when the Inspector's unit dropdown is
 ## flipped - that dropdown is a view of one stored number.
-## @ace_hidden
 static func thickness_in_pixels(value: float, unit: String, viewport_width: float) -> float:
 	if unit == THICKNESS_UNIT_SCREEN:
 		return value * maxf(viewport_width, 1.0)
 	return value
 
+# @ace_hidden
 ## How many whole dashes a span holds, at a dash length and a gap - the same arithmetic the shader
 ## does, so a row can answer without reading a pixel back.
-## @ace_hidden
 static func dash_count_for(span: float, dash_length: float, gap: float) -> int:
 	var period: float = maxf(dash_length, 0.01) + maxf(gap, 0.0)
 	if span <= 0.0:
 		return 0
 	return int(floor(span / period + 0.0001))
 
+# @ace_hidden
 ## Whether a point (in the shape's own coordinates) is inside a closed outline - the ray-crossing
 ## test, which is what the shader's fill does per pixel.
-## @ace_hidden
 static func point_in_polygon(point: Vector2, outline: PackedVector2Array) -> bool:
 	if outline.size() < 3:
 		return false
@@ -1122,10 +1060,10 @@ static func point_in_polygon(point: Vector2, outline: PackedVector2Array) -> boo
 		previous = index
 	return inside
 
+# @ace_hidden
 ## Hands the editor the dash-style pictures, once per session and only while the editor is running.
 ## The plugin is reached by PATH rather than by class name, so a project without it still loads this
 ## pack, and a shipped game never runs this at all.
-## @ace_hidden
 func _offer_dash_icons() -> void:
 	if _icons_offered or not Engine.is_editor_hint():
 		return

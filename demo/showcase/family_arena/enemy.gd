@@ -1,5 +1,5 @@
-## @ace_tags(family, demo)
-## @ace_family(Enemy)
+# @ace_tags(family, demo)
+# @ace_family(Enemy)
 class_name Enemy
 extends Sprite2D
 ## A falling enemy that moves itself, marked as a Family so one rule can damage every Enemy at once.
@@ -20,10 +20,10 @@ func _process(delta: float) -> void:
 	if position.y > 560.0:
 		position.y = -20.0
 
-## @ace_action
-## @ace_name("Take Damage")
-## @ace_category("Enemy")
-## @ace_codegen_template("take_damage({amount})")
+# @ace_action
+# @ace_name("Take Damage")
+# @ace_category("Enemy")
+# @ace_codegen_template("take_damage({amount})")
 func take_damage(amount: int) -> void:
 	health -= amount
 	if health <= 0:

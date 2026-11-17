@@ -1,7 +1,7 @@
 @tool
-## @ace_tags(visual, shapes, drawing, 3d)
-## @ace_category("Vector Shapes")
-## @ace_version(1.0.0)
+# @ace_tags(visual, shapes, drawing, 3d)
+# @ace_category("Vector Shapes")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/vector_shapes/icon_3d.svg")
 class_name ShapePolyline3D
 extends VectorShape3D
@@ -9,15 +9,15 @@ extends VectorShape3D
 
 # @inspector_look toggle_row:segmented
 @export_group("Geometry")
+# @ace_hidden
 ## How the shape lives in 3D: flat, facing the camera, or real geometry.
-## @ace_hidden
 @export_enum("flat", "billboard", "volumetric") var geometry: String = "billboard":
 	set(value):
 		geometry = value
 		notify_property_list_changed()
 		shape_changed()
+# @ace_hidden
 ## Sides of the volumetric form; higher is rounder and costs more.
-## @ace_hidden
 @export_range(3, 64, 1) var detail: int = 16:
 	set(value):
 		detail = value
@@ -26,8 +26,8 @@ extends VectorShape3D
 # @inspector_preview
 # @inspector_handle points points
 @export_group("Polyline")
+# @ace_hidden
 ## The points the path runs through, in the node's own coordinates. Each one is a handle in the 3D viewport while the node is selected.
-## @ace_hidden
 @export var points: PackedVector3Array = PackedVector3Array([
 	Vector3(-0.7, 0.25, 0.0), Vector3(-0.2, -0.35, 0.0), Vector3(0.35, 0.2, 0.0), Vector3(0.8, -0.25, 0.0)
 ]):
@@ -41,8 +41,8 @@ extends VectorShape3D
 		shape_changed()
 
 @export_group("Stroke")
+# @ace_hidden
 ## Stroke width, in metres (the node's own units) or in screen pixels when the unit below says so.
-## @ace_hidden
 @export var thickness: float = 0.05:
 	set(value):
 		thickness = value
@@ -52,23 +52,23 @@ extends VectorShape3D
 # which is what a range ring or a gizmo line wants. The unit is a mode rather than a view here,
 # because a distance is what turns one into the other and only the camera knows it.
 # @inspector_look toggle_row:segmented
+# @ace_hidden
 ## Whether thickness is in world units or in screen pixels.
-## @ace_hidden
 @export_enum("world", "screen") var thickness_unit: String = "world":
 	set(value):
 		thickness_unit = value
 		shape_changed()
 
 # @inspector_look toggle_row:segmented
+# @ace_hidden
 ## What the two ends of the stroke look like: cut off, squared off half a thickness past the end, or rounded.
-## @ace_hidden
 @export_enum("none", "square", "round") var caps: String = "round":
 	set(value):
 		caps = value
 		shape_changed()
 
+# @ace_hidden
 ## Turns the stroke into dashes. The Dashed section below sets how they run.
-## @ace_hidden
 @export var dashed: bool = false:
 	set(value):
 		dashed = value
@@ -84,32 +84,32 @@ extends VectorShape3D
 		shape_changed()
 
 @export_group("Colour")
+# @ace_hidden
 ## The shape's colour - the whole of it in single mode, and the first end of the blend in every other mode.
-## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var colour: Color = Color("#e6e6e6"):
 	set(value):
 		colour = value
 		shape_changed()
+# @ace_hidden
 ## The other end of the blend: the far end of a rope, the outer edge of a ring, the end of a sweep.
-## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var colour_b: Color = Color("#4a90d9"):
 	set(value):
 		colour_b = value
 		shape_changed()
+# @ace_hidden
 ## The third corner's colour, in per-corner mode.
-## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var colour_c: Color = Color("#d94a4a"):
 	set(value):
 		colour_c = value
 		shape_changed()
+# @ace_hidden
 ## The fourth corner's colour, in per-corner mode.
-## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var colour_d: Color = Color("#4ad98a"):
 	set(value):
 		colour_d = value
 		shape_changed()
+# @ace_hidden
 ## The ramp a gradient shape is coloured with - Godot's own Gradient resource, edited in Godot's own gradient editor.
-## @ace_hidden
 @export var gradient: Gradient = null:
 	set(value):
 		gradient = value
@@ -117,74 +117,74 @@ extends VectorShape3D
 
 # @inspector_show_if dashed
 @export_group("Dashed")
+# @ace_hidden
 ## How dash length is measured: world units, thickness multiples, or count.
-## @ace_hidden
 @export_enum("world", "relative", "count") var dash_space: String = "count":
 	set(value):
 		dash_space = value
 		notify_property_list_changed()
 		shape_changed()
+# @ace_hidden
 ## How dashes meet the ends: off, tiling to fit whole, or end to end.
-## @ace_hidden
 @export_enum("off", "tiling", "end to end") var dash_snap: String = "tiling":
 	set(value):
 		dash_snap = value
 		shape_changed()
+# @ace_hidden
 ## One dash, in the space above.
-## @ace_hidden
 @export var dash_size: float = 0.2:
 	set(value):
 		dash_size = value
 		shape_changed()
 # @inspector_link dash_count dash_spacing
+# @ace_hidden
 ## How many dashes the shape carries, in count mode.
-## @ace_hidden
 @export_range(1, 128, 1) var dash_count: int = 12:
 	set(value):
 		dash_count = value
 		shape_changed()
+# @ace_hidden
 ## The gap after each dash: a share of one dash period in count mode (0.5 is half dash, half gap), and a length in the space above otherwise.
-## @ace_hidden
 @export var dash_spacing: float = 0.5:
 	set(value):
 		dash_spacing = value
 		shape_changed()
+# @ace_hidden
 ## Moves the pattern along the shape. Whole numbers tile, so scrolling never jumps.
-## @ace_hidden
 @export var dash_offset: float = 0.0:
 	set(value):
 		dash_offset = value
 		shape_changed()
 # @inspector_look toggle_row:icons=vector_shapes_dash
+# @ace_hidden
 ## What one dash looks like: cut square, leaning over, or rounded at both ends.
-## @ace_hidden
 @export_enum("plain", "angled", "rounded") var dash_style: String = "plain":
 	set(value):
 		dash_style = value
 		shape_changed()
 
 @export_group("Drawing")
+# @ace_hidden
 ## How the shape blends with what is behind it.
-## @ace_hidden
 @export_enum("normal", "add", "subtract", "multiply", "premultiplied") var blend: String = "normal":
 	set(value):
 		blend = value
 		shape_changed()
 # @inspector_look toggle_row:segmented
+# @ace_hidden
 ## Sort with the world normally, or draw over everything in front.
-## @ace_hidden
 @export_enum("test", "through walls") var depth: String = "test":
 	set(value):
 		depth = value
 		shape_changed()
+# @ace_hidden
 ## How wide the fade at an edge is, in pixels. One pixel is a crisp edge at any distance; wider is a deliberate glow; zero is a hard, aliased edge.
-## @ace_hidden
 @export_range(0.0, 4.0, 0.1) var antialias_width: float = 1.0:
 	set(value):
 		antialias_width = value
 		shape_changed()
 
-## @ace_hidden
+# @ace_hidden
 func shape_plane_bounds() -> Rect2:
 	if points.is_empty():
 		return Rect2()
@@ -222,14 +222,14 @@ func _validate_property(property: Dictionary) -> void:
 	if str(property.name) == "dash_count" and not bool(_word("dash_space", SHAPE_WORDS.DASH_SPACE_COUNT) == SHAPE_WORDS.DASH_SPACE_COUNT):
 		property.usage &= ~PROPERTY_USAGE_EDITOR
 
-## @ace_hidden
+# @ace_hidden
 func shape_kind_id() -> int:
 	return 4
 
-## @ace_hidden
+# @ace_hidden
 func shape_points_3d() -> PackedVector3Array:
 	return points
 
-## @ace_hidden
+# @ace_hidden
 func shape_is_closed() -> bool:
 	return closed

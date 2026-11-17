@@ -50,7 +50,7 @@ func _process(delta: float) -> void:
 		$Player/Movement.jump_released()
 
 
-## @ace_hidden
+# @ace_hidden
 func toggle_bridge() -> void:
 	bridge_on = not bridge_on
 	for x in range(15, 18):

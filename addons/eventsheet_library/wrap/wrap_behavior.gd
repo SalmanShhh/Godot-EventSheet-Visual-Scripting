@@ -1,6 +1,6 @@
-## @ace_tags(movement, screen)
-## @ace_category("Wrap")
-## @ace_version(1.0.0)
+# @ace_tags(movement, screen)
+# @ace_category("Wrap")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/wrap/icon.svg")
 class_name WrapBehavior
 extends Node
@@ -8,7 +8,7 @@ extends Node
 ##
 ## Changes on its parent: global_position.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 
@@ -20,8 +20,8 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Wrap Behavior needs a Node2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Wrapped")
+# @ace_trigger
+# @ace_name("On Wrapped")
 signal wrapped(side: String)
 
 # --- Choices (the stored words are the promise: saved scenes keep them) ---
@@ -65,9 +65,9 @@ const WRAP_SHAPE_CIRCLE := "circle"
 # emit from the variables dict, so it lives here; Set Custom Wrap Bounds writes it.
 ## The rectangle the host wraps around, in pixels, used when the bounds are custom.
 var custom_bounds: Rect2 = Rect2(0.0, 0.0, 1152.0, 648.0)
+# @ace_hidden
 ## The world-space rectangle being wrapped around: the camera's visible rect (the canvas
 ## transform inverted maps screen space to world space) or the custom rectangle.
-## @ace_hidden
 func _wrap_rect() -> Rect2:
 	if wrap_space == WRAP_SPACE_CUSTOM:
 		return custom_bounds
@@ -119,75 +119,65 @@ func _physics_process(_delta: float) -> void:
 			host.global_position = pos
 			wrapped.emit("top")
 
-## @ace_action
-## @ace_featured
-## @ace_name("Set Wrap Enabled")
-## @ace_category("Wrap")
-## @ace_description("Turns wrapping on or off at runtime.")
-## @ace_display_template("Set wrap to [b]{enabled}[/b]")
-## @ace_icon("res://eventsheet_addons/wrap/icon.svg")
-## @ace_codegen_template("$WrapBehavior.set_wrap_enabled({enabled})")
+# @ace_action
+# @ace_featured
+# @ace_name("Set Wrap Enabled")
+# @ace_description("Turns wrapping on or off at runtime.")
+# @ace_display_template("Set wrap to [b]{enabled}[/b]")
+# @ace_codegen_template("$WrapBehavior.set_wrap_enabled({enabled})")
 func set_wrap_enabled(enabled: bool) -> void:
 	wrap_enabled = enabled
 	# Wrapping off means no edge test to run, so stop paying for the physics frame.
 	set_physics_process(enabled)
 
-## @ace_action
-## @ace_name("Set Custom Wrap Bounds")
-## @ace_category("Wrap")
-## @ace_description("Sets the custom rectangle (world-space pixels) and switches wrapping to it - your arena's edges.")
-## @ace_icon("res://eventsheet_addons/wrap/icon.svg")
-## @ace_codegen_template("$WrapBehavior.set_custom_wrap_bounds({x}, {y}, {width}, {height})")
+# @ace_action
+# @ace_name("Set Custom Wrap Bounds")
+# @ace_description("Sets the custom rectangle (world-space pixels) and switches wrapping to it - your arena's edges.")
+# @ace_codegen_template("$WrapBehavior.set_custom_wrap_bounds({x}, {y}, {width}, {height})")
 func set_custom_wrap_bounds(x: float, y: float, width: float, height: float) -> void:
 	custom_bounds = Rect2(x, y, width, height)
 	wrap_shape = WRAP_SHAPE_RECT
 	wrap_space = WRAP_SPACE_CUSTOM
 
-## @ace_action
-## @ace_name("Set Wrap Axes")
-## @ace_category("Wrap")
-## @ace_description("Chooses which axes wrap (horizontal: left/right edges, vertical: top/bottom).")
-## @ace_icon("res://eventsheet_addons/wrap/icon.svg")
-## @ace_codegen_template("$WrapBehavior.set_wrap_axes({horizontal}, {vertical})")
+# @ace_action
+# @ace_name("Set Wrap Axes")
+# @ace_description("Chooses which axes wrap (horizontal: left/right edges, vertical: top/bottom).")
+# @ace_codegen_template("$WrapBehavior.set_wrap_axes({horizontal}, {vertical})")
 func set_wrap_axes(horizontal: bool, vertical: bool) -> void:
 	wrap_horizontal = horizontal
 	wrap_vertical = vertical
 
-## @ace_action
-## @ace_name("Set Wrap Extents")
-## @ace_category("Wrap")
-## @ace_description("Sets the host's half-size (half the sprite's width and height) used by the fully-outside test.")
-## @ace_icon("res://eventsheet_addons/wrap/icon.svg")
-## @ace_codegen_template("$WrapBehavior.set_wrap_extents({new_half_width}, {new_half_height})")
+# @ace_action
+# @ace_name("Set Wrap Extents")
+# @ace_description("Sets the host's half-size (half the sprite's width and height) used by the fully-outside test.")
+# @ace_codegen_template("$WrapBehavior.set_wrap_extents({new_half_width}, {new_half_height})")
 func set_wrap_extents(new_half_width: float, new_half_height: float) -> void:
 	half_width = new_half_width
 	half_height = new_half_height
 
+# @ace_action
+# @ace_name("Set Wrap Space")
+# @ace_param_options(space screen=The on-screen camera view, custom=A custom rectangle)
+# @ace_codegen_template("$WrapBehavior.set_wrap_space("{space}")")
 ## Switches what the host wraps around: the on-screen camera view, or the custom rectangle.
-## @ace_action
-## @ace_name("Set Wrap Space")
-## @ace_param_options(space screen=The on-screen camera view, custom=A custom rectangle)
-## @ace_icon("res://eventsheet_addons/wrap/icon.svg")
-## @ace_codegen_template("$WrapBehavior.set_wrap_space("{space}")")
 func set_wrap_space(space: String) -> void:
 	if space in [WRAP_SPACE_SCREEN, WRAP_SPACE_CUSTOM]:
 		wrap_space = space
 
+# @ace_action
+# @ace_name("Set Circle Wrap Bounds")
+# @ace_codegen_template("$WrapBehavior.set_circle_wrap_bounds({center_x}, {center_y}, {radius})")
 ## Sets a CIRCULAR wrap constraint (world-space center + radius) and switches to it:
 ## fully outside the circle teleports to the antipode - a round arena in one action.
-## @ace_action
-## @ace_name("Set Circle Wrap Bounds")
-## @ace_icon("res://eventsheet_addons/wrap/icon.svg")
-## @ace_codegen_template("$WrapBehavior.set_circle_wrap_bounds({center_x}, {center_y}, {radius})")
 func set_circle_wrap_bounds(center_x: float, center_y: float, radius: float) -> void:
 	wrap_circle_center = Vector2(center_x, center_y)
 	wrap_circle_radius = maxf(radius, 1.0)
 	wrap_shape = WRAP_SHAPE_CIRCLE
 	wrap_space = WRAP_SPACE_CUSTOM
 
+# @ace_hidden
 ## The dominant exit direction as a side word - so circle wraps report through the
 ## same On Wrapped vocabulary the rect edges use.
-## @ace_hidden
 func _direction_side(direction: Vector2) -> String:
 	if absf(direction.x) >= absf(direction.y):
 		return "right" if direction.x >= 0.0 else "left"

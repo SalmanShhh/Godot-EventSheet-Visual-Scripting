@@ -69,6 +69,6 @@ func _on_exit_body_entered(_body: Node) -> void:
 	level_over = true
 	$HudLayer/Tally.text = "Kills %d of %d   Secrets %d of %d   Time %s of %s" % [kills, enemies_total, secrets_found.size(), secrets_total, ("%02d:%02d" % [int(level_seconds / 60.0), int(level_seconds) % 60]), ("%02d:%02d" % [int(par_seconds / 60.0), int(par_seconds) % 60])]
 
-## @ace_hidden
+# @ace_hidden
 func count_kill() -> void:
 	kills += 1

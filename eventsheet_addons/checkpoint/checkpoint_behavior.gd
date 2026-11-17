@@ -1,6 +1,6 @@
-## @ace_category("Checkpoint")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Checkpoint")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/checkpoint/icon.svg")
 class_name CheckpointBehavior
 extends Node
@@ -8,7 +8,7 @@ extends Node
 ##
 ## Changes on its parent: global_position.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 
@@ -20,9 +20,9 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Checkpoint Behavior needs a Node2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Respawned")
-## @ace_category("Checkpoint")
+# @ace_trigger
+# @ace_name("On Respawned")
+# @ace_category("Checkpoint")
 signal respawned
 
 ## The position the host returns to on respawn.
@@ -38,39 +38,33 @@ func _ready() -> void:
 	if host is RigidBody2D:
 		push_warning("Checkpoint on %s: this behaviour moves a RigidBody2D by changing its position, but the physics engine moves that body too, so the two will fight (jitter, snapping back, passing through walls). Put the behaviour under a node that is not a physics body, such as the Sprite2D inside it, or move the body with apply_central_impulse() or its linear_velocity instead." % (str(get_path()) if is_inside_tree() else str(name)))
 
-## @ace_action
-## @ace_featured
-## @ace_name("Set Checkpoint Here")
-## @ace_category("Checkpoint")
-## @ace_description("Marks the spot the host is standing on right now as its checkpoint.")
-## @ace_display_template("Set the checkpoint [b]here[/b]")
-## @ace_icon("res://eventsheet_addons/checkpoint/icon.svg")
-## @ace_codegen_template("$CheckpointBehavior.set_checkpoint_here()")
+# @ace_action
+# @ace_featured
+# @ace_name("Set Checkpoint Here")
+# @ace_description("Marks the spot the host is standing on right now as its checkpoint.")
+# @ace_display_template("Set the checkpoint [b]here[/b]")
+# @ace_codegen_template("$CheckpointBehavior.set_checkpoint_here()")
 func set_checkpoint_here() -> void:
 	if host == null:
 		return
 	_checkpoint = host.global_position
 	_has_checkpoint = true
 
-## @ace_action
-## @ace_name("Set Checkpoint At")
-## @ace_category("Checkpoint")
-## @ace_description("Marks any point in the world as the checkpoint, without moving the host.")
-## @ace_display_template("Set the checkpoint at [b]{point}[/b]")
-## @ace_icon("res://eventsheet_addons/checkpoint/icon.svg")
-## @ace_codegen_template("$CheckpointBehavior.set_checkpoint_at({point})")
+# @ace_action
+# @ace_name("Set Checkpoint At")
+# @ace_description("Marks any point in the world as the checkpoint, without moving the host.")
+# @ace_display_template("Set the checkpoint at [b]{point}[/b]")
+# @ace_codegen_template("$CheckpointBehavior.set_checkpoint_at({point})")
 func set_checkpoint_at(point: Vector2) -> void:
 	_checkpoint = point
 	_has_checkpoint = true
 
-## @ace_action
-## @ace_featured
-## @ace_name("Respawn At Checkpoint")
-## @ace_category("Checkpoint")
-## @ace_description("Teleports the host back to its checkpoint and fires On Respawned. If the host defines a reset() method it is called too - the same duck-typed seam the Object Pool uses when it wakes a pooled node - so velocity, health, and timers clear without this behavior knowing about them.")
-## @ace_display_template("[b]Respawn[/b] at the checkpoint")
-## @ace_icon("res://eventsheet_addons/checkpoint/icon.svg")
-## @ace_codegen_template("$CheckpointBehavior.respawn()")
+# @ace_action
+# @ace_featured
+# @ace_name("Respawn At Checkpoint")
+# @ace_description("Teleports the host back to its checkpoint and fires On Respawned. If the host defines a reset() method it is called too - the same duck-typed seam the Object Pool uses when it wakes a pooled node - so velocity, health, and timers clear without this behavior knowing about them.")
+# @ace_display_template("[b]Respawn[/b] at the checkpoint")
+# @ace_codegen_template("$CheckpointBehavior.respawn()")
 func respawn() -> void:
 	if host == null:
 		return
@@ -80,16 +74,14 @@ func respawn() -> void:
 		host.call(&"reset")
 	respawned.emit()
 
-## @ace_expression
-## @ace_name("Checkpoint Position")
-## @ace_category("Checkpoint")
-## @ace_description("The point the host respawns at.")
-## @ace_icon("res://eventsheet_addons/checkpoint/icon.svg")
-## @ace_codegen_template("$CheckpointBehavior.checkpoint_position()")
+# @ace_expression
+# @ace_name("Checkpoint Position")
+# @ace_description("The point the host respawns at.")
+# @ace_codegen_template("$CheckpointBehavior.checkpoint_position()")
 func checkpoint_position() -> Vector2:
 	return _checkpoint
 
-## @ace_hidden
+# @ace_hidden
 func _ensure_checkpoint() -> void:
 	if _has_checkpoint or host == null:
 		return

@@ -1,22 +1,22 @@
-## @ace_tags(mods, files, content, modding)
-## @ace_category("Mods")
-## @ace_version(1.0.0)
+# @ace_tags(mods, files, content, modding)
+# @ace_category("Mods")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/mods/icon.svg")
 class_name ModsAddon
 extends Node
 ## The folder players put their own content in, as the Mods autoload: load every mod in a folder in load order, ask what loaded and what did not, switch one off, and walk the list for an options screen. A data-only load reads a pack file's own contents and refuses one carrying code; a script mod loads only when the row says so, and runs with everything the game can reach.
 
+# @ace_trigger
+# @ace_name("On Mod Loaded")
 ## Fires once per mod that loaded, in load order. Mod Name and Mod Version answer about it.
-## @ace_trigger
-## @ace_name("On Mod Loaded")
 signal mod_loaded(loaded_name: String, loaded_version: String)
+# @ace_trigger
+# @ace_name("On Mod Refused")
 ## Fires once per mod that did NOT load, with the reason in plain words. Mod Name and Mod Reason answer about it.
-## @ace_trigger
-## @ace_name("On Mod Refused")
 signal mod_refused(refused_name: String, reason: String)
+# @ace_trigger
+# @ace_name("On Mods Changed")
 ## Fires once after anything changes what is loaded or switched on - the moment a mod list should be redrawn.
-## @ace_trigger
-## @ace_name("On Mods Changed")
 signal mods_changed
 
 ## Default folder mods load from; prefer user:// since res:// cannot be written once exported.
@@ -156,11 +156,11 @@ var _folder_was_truncated: bool = false
 
 ## Most bytes of one scene or resource read at once; larger is refused.
 const MOST_RESOURCE_BYTES: int = 32 * 1024 * 1024
+# @ace_hidden
 ## Every mod a folder holds, in load order: a subfolder with a manifest is a folder mod, a .pck or
 ## .zip in it is a pack mod. Named mods come first in the order Set Load Order named them, and the
 ## rest follow in name order - ignoring case and reading digits as numbers, so the order is the one
 ## a player would have written down, and the same one on two machines.
-## @ace_hidden
 func _mods_in(folder: String) -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
 	if not DirAccess.dir_exists_absolute(folder):
@@ -187,9 +187,9 @@ func _mods_in(folder: String) -> Array[Dictionary]:
 			return (first_at if first_at >= 0 else behind) < (second_at if second_at >= 0 else behind)
 		return str(first.get("name", "")).naturalnocasecmp_to(str(second.get("name", ""))) < 0)
 	return found
+# @ace_hidden
 ## The settings autoload, found once. A director that is not in a tree yet (a test, or a tool)
 ## keeps whatever was handed to it instead of asking the tree for a node it has no way to reach.
-## @ace_hidden
 func _settings() -> Object:
 	if settings_node != null:
 		return settings_node
@@ -202,26 +202,22 @@ func _ready() -> void:
 	# before any row asks to load anything.
 	_recall_disabled()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Load Mods From")
-## @ace_category("Mods")
-## @ace_description("Loads every mod in a folder, in load order: a subfolder with a manifest in it, or a .pck / .zip pack file. With Data Only on, a mod carrying code is refused and says so through On Mod Refused instead of loading. A mod switched off is skipped in silence, and On Mods Changed fires once at the end.")
-## @ace_display_template("Load mods from [b]{folder}[/b], data only [b]{data_only}[/b]")
-## @ace_icon("res://eventsheet_addons/mods/icon.svg")
-## @ace_codegen_template("Mods.load_from({folder}, {data_only})")
+# @ace_action
+# @ace_featured
+# @ace_name("Load Mods From")
+# @ace_description("Loads every mod in a folder, in load order: a subfolder with a manifest in it, or a .pck / .zip pack file. With Data Only on, a mod carrying code is refused and says so through On Mod Refused instead of loading. A mod switched off is skipped in silence, and On Mods Changed fires once at the end.")
+# @ace_display_template("Load mods from [b]{folder}[/b], data only [b]{data_only}[/b]")
+# @ace_codegen_template("Mods.load_from({folder}, {data_only})")
 func load_from(folder: String, data_only: bool) -> void:
 	for record: Dictionary in _mods_in(folder):
 		_load_record(record, data_only)
 	mods_changed.emit()
 
-## @ace_action
-## @ace_name("Load Mod")
-## @ace_category("Mods")
-## @ace_description("Loads one mod by path - a mod folder or a pack file - with the same two tiers Load Mods From uses. A path with no mod at it is refused with that reason rather than passed over.")
-## @ace_display_template("Load mod [b]{path}[/b], data only [b]{data_only}[/b]")
-## @ace_icon("res://eventsheet_addons/mods/icon.svg")
-## @ace_codegen_template("Mods.load_mod({path}, {data_only})")
+# @ace_action
+# @ace_name("Load Mod")
+# @ace_description("Loads one mod by path - a mod folder or a pack file - with the same two tiers Load Mods From uses. A path with no mod at it is refused with that reason rather than passed over.")
+# @ace_display_template("Load mod [b]{path}[/b], data only [b]{data_only}[/b]")
+# @ace_codegen_template("Mods.load_mod({path}, {data_only})")
 func load_mod(path: String, data_only: bool) -> void:
 	var record: Dictionary = _manifest_at(path)
 	if record.is_empty():
@@ -231,13 +227,11 @@ func load_mod(path: String, data_only: bool) -> void:
 	_load_record(record, data_only)
 	mods_changed.emit()
 
-## @ace_action
-## @ace_name("Unload Mod")
-## @ace_category("Mods")
-## @ace_description("Takes a FOLDER mod back out of the loaded list, so the rows that read mod folders stop seeing it. A pack file cannot be unloaded: once Godot has loaded one, its files stay in the running game, so this row refuses with that reason and the way to do it is to switch the mod off and start again.")
-## @ace_display_template("Unload mod [b]{unloading_name}[/b]")
-## @ace_icon("res://eventsheet_addons/mods/icon.svg")
-## @ace_codegen_template("Mods.unload_mod({unloading_name})")
+# @ace_action
+# @ace_name("Unload Mod")
+# @ace_description("Takes a FOLDER mod back out of the loaded list, so the rows that read mod folders stop seeing it. A pack file cannot be unloaded: once Godot has loaded one, its files stay in the running game, so this row refuses with that reason and the way to do it is to switch the mod off and start again.")
+# @ace_display_template("Unload mod [b]{unloading_name}[/b]")
+# @ace_codegen_template("Mods.unload_mod({unloading_name})")
 func unload_mod(unloading_name: String) -> void:
 	var at: int = _index_of(unloading_name)
 	if at < 0:
@@ -252,13 +246,11 @@ func unload_mod(unloading_name: String) -> void:
 	_about = {"name": unloading_name, "version": "", "author": "", "reason": ""}
 	mods_changed.emit()
 
-## @ace_action
-## @ace_name("Set Load Order")
-## @ace_category("Mods")
-## @ace_description("Says which mods load first, as a comma-separated list of names. Everything not named follows in name order, and later mods replace the files earlier ones brought - which is what a load order is for. It also re-lists what is already loaded, so the list an options screen shows and the order the next load uses are the same order.")
-## @ace_display_template("Set load order [b]{names}[/b]")
-## @ace_icon("res://eventsheet_addons/mods/icon.svg")
-## @ace_codegen_template("Mods.set_load_order({names})")
+# @ace_action
+# @ace_name("Set Load Order")
+# @ace_description("Says which mods load first, as a comma-separated list of names. Everything not named follows in name order, and later mods replace the files earlier ones brought - which is what a load order is for. It also re-lists what is already loaded, so the list an options screen shows and the order the next load uses are the same order.")
+# @ace_display_template("Set load order [b]{names}[/b]")
+# @ace_codegen_template("Mods.set_load_order({names})")
 func set_load_order(names: String) -> void:
 	_order = PackedStringArray()
 	for wanted: String in names.split(",", false):
@@ -280,25 +272,21 @@ func set_load_order(names: String) -> void:
 		return str(first.get("name", "")).naturalnocasecmp_to(str(second.get("name", ""))) < 0)
 	mods_changed.emit()
 
-## @ace_action
-## @ace_name("Enable Mod")
-## @ace_category("Mods")
-## @ace_description("Switches a mod back on. A mod is on unless it has been switched off, so this is the way back from Disable Mod rather than something every mod needs. The choice is remembered through the Settings autoload when the project has one.")
-## @ace_display_template("Enable mod [b]{enabling_name}[/b]")
-## @ace_icon("res://eventsheet_addons/mods/icon.svg")
-## @ace_codegen_template("Mods.enable_mod({enabling_name})")
+# @ace_action
+# @ace_name("Enable Mod")
+# @ace_description("Switches a mod back on. A mod is on unless it has been switched off, so this is the way back from Disable Mod rather than something every mod needs. The choice is remembered through the Settings autoload when the project has one.")
+# @ace_display_template("Enable mod [b]{enabling_name}[/b]")
+# @ace_codegen_template("Mods.enable_mod({enabling_name})")
 func enable_mod(enabling_name: String) -> void:
 	_disabled.erase(enabling_name)
 	_remember_disabled()
 	mods_changed.emit()
 
-## @ace_action
-## @ace_name("Disable Mod")
-## @ace_category("Mods")
-## @ace_description("Switches a mod off: it is skipped the next time mods are loaded, and a folder mod drops out of the loaded list at once. A pack file's files are already in the running game and stay until it starts again. The choice is remembered through the Settings autoload when the project has one.")
-## @ace_display_template("Disable mod [b]{disabling_name}[/b]")
-## @ace_icon("res://eventsheet_addons/mods/icon.svg")
-## @ace_codegen_template("Mods.disable_mod({disabling_name})")
+# @ace_action
+# @ace_name("Disable Mod")
+# @ace_description("Switches a mod off: it is skipped the next time mods are loaded, and a folder mod drops out of the loaded list at once. A pack file's files are already in the running game and stay until it starts again. The choice is remembered through the Settings autoload when the project has one.")
+# @ace_display_template("Disable mod [b]{disabling_name}[/b]")
+# @ace_codegen_template("Mods.disable_mod({disabling_name})")
 func disable_mod(disabling_name: String) -> void:
 	_disabled[disabling_name] = true
 	_remember_disabled()
@@ -309,83 +297,67 @@ func disable_mod(disabling_name: String) -> void:
 		_mods.remove_at(at)
 	mods_changed.emit()
 
-## @ace_condition
-## @ace_featured
-## @ace_name("Mod Is Loaded")
-## @ace_category("Mods")
-## @ace_description("Whether a mod of that name is loaded right now - the check in front of using what it brought.")
-## @ace_display_template("Mod [b]{wanted}[/b] is loaded")
-## @ace_icon("res://eventsheet_addons/mods/icon.svg")
-## @ace_codegen_template("Mods.mod_is_loaded({wanted})")
+# @ace_condition
+# @ace_featured
+# @ace_name("Mod Is Loaded")
+# @ace_description("Whether a mod of that name is loaded right now - the check in front of using what it brought.")
+# @ace_display_template("Mod [b]{wanted}[/b] is loaded")
+# @ace_codegen_template("Mods.mod_is_loaded({wanted})")
 func mod_is_loaded(wanted: String) -> bool:
 	return _index_of(wanted) >= 0
 
-## @ace_expression
-## @ace_name("Mod Count")
-## @ace_category("Mods")
-## @ace_description("How many mods are loaded - the number on the options screen's mods line.")
-## @ace_icon("res://eventsheet_addons/mods/icon.svg")
-## @ace_codegen_template("Mods.mod_count()")
+# @ace_expression
+# @ace_name("Mod Count")
+# @ace_description("How many mods are loaded - the number on the options screen's mods line.")
+# @ace_codegen_template("Mods.mod_count()")
 func mod_count() -> int:
 	return _mods.size()
 
-## @ace_expression
-## @ace_name("Mod Name")
-## @ace_category("Mods")
-## @ace_description("The name of the mod the last Mods event was about - the one that just loaded, or the one that was just refused.")
-## @ace_icon("res://eventsheet_addons/mods/icon.svg")
-## @ace_codegen_template("Mods.mod_name()")
+# @ace_expression
+# @ace_name("Mod Name")
+# @ace_description("The name of the mod the last Mods event was about - the one that just loaded, or the one that was just refused.")
+# @ace_codegen_template("Mods.mod_name()")
 func mod_name() -> String:
 	return str(_about.get("name", ""))
 
-## @ace_expression
-## @ace_name("Mod Version")
-## @ace_category("Mods")
-## @ace_description("The version of the mod the last Mods event was about, as its manifest spells it.")
-## @ace_icon("res://eventsheet_addons/mods/icon.svg")
-## @ace_codegen_template("Mods.mod_version()")
+# @ace_expression
+# @ace_name("Mod Version")
+# @ace_description("The version of the mod the last Mods event was about, as its manifest spells it.")
+# @ace_codegen_template("Mods.mod_version()")
 func mod_version() -> String:
 	return str(_about.get("version", ""))
 
-## @ace_expression
-## @ace_name("Mod Author")
-## @ace_category("Mods")
-## @ace_description("The author of the mod the last Mods event was about - the credit line beside its name.")
-## @ace_icon("res://eventsheet_addons/mods/icon.svg")
-## @ace_codegen_template("Mods.mod_author()")
+# @ace_expression
+# @ace_name("Mod Author")
+# @ace_description("The author of the mod the last Mods event was about - the credit line beside its name.")
+# @ace_codegen_template("Mods.mod_author()")
 func mod_author() -> String:
 	return str(_about.get("author", ""))
 
-## @ace_expression
-## @ace_name("Mod Reason")
-## @ace_category("Mods")
-## @ace_description("Why the last refused mod was refused, in plain words a player can read, and nothing at all when none has been.")
-## @ace_icon("res://eventsheet_addons/mods/icon.svg")
-## @ace_codegen_template("Mods.mod_reason()")
+# @ace_expression
+# @ace_name("Mod Reason")
+# @ace_description("Why the last refused mod was refused, in plain words a player can read, and nothing at all when none has been.")
+# @ace_codegen_template("Mods.mod_reason()")
 func mod_reason() -> String:
 	return str(_about.get("reason", ""))
 
-## @ace_expression
-## @ace_featured
-## @ace_name("Mod Folder")
-## @ace_category("Mods")
-## @ace_description("Where a loaded mod's files live, so Resources In Folder, a Skin Vault catalog, a loot table or Data Folder Problems can be pointed straight at it. A pack file has no folder of its own - its files replace the game's by path - so this is empty for one.")
-## @ace_display_template("folder of mod [b]{wanted}[/b]")
-## @ace_icon("res://eventsheet_addons/mods/icon.svg")
-## @ace_codegen_template("Mods.mod_folder({wanted})")
+# @ace_expression
+# @ace_featured
+# @ace_name("Mod Folder")
+# @ace_description("Where a loaded mod's files live, so Resources In Folder, a Skin Vault catalog, a loot table or Data Folder Problems can be pointed straight at it. A pack file has no folder of its own - its files replace the game's by path - so this is empty for one.")
+# @ace_display_template("folder of mod [b]{wanted}[/b]")
+# @ace_codegen_template("Mods.mod_folder({wanted})")
 func mod_folder(wanted: String) -> String:
 	var at: int = _index_of(wanted)
 	if at < 0:
 		return ""
 	return str(_mods[at].get("folder", ""))
 
-## @ace_expression
-## @ace_name("Mod Folders")
-## @ace_category("Mods")
-## @ace_description("The same folder inside every loaded folder mod, in load order, skipping the mods that do not have one - hand it "items" and it is every mod's items folder, ready for a loop that loads each one's data assets.")
-## @ace_display_template("every mod's [b]{subfolder}[/b] folder")
-## @ace_icon("res://eventsheet_addons/mods/icon.svg")
-## @ace_codegen_template("Mods.mod_folders({subfolder})")
+# @ace_expression
+# @ace_name("Mod Folders")
+# @ace_description("The same folder inside every loaded folder mod, in load order, skipping the mods that do not have one - hand it "items" and it is every mod's items folder, ready for a loop that loads each one's data assets.")
+# @ace_display_template("every mod's [b]{subfolder}[/b] folder")
+# @ace_codegen_template("Mods.mod_folders({subfolder})")
 func mod_folders(subfolder: String) -> Array:
 	var folders: Array = []
 	for record: Dictionary in _mods:
@@ -397,13 +369,11 @@ func mod_folders(subfolder: String) -> Array:
 			folders.append(reading)
 	return folders
 
-## @ace_expression
-## @ace_name("Mod Content Problems")
-## @ace_category("Mods")
-## @ace_description("Every structural problem in the loaded mods' content, one per line, and nothing at all when it is clean: a data asset that will not load, and a file two mods both bring, where the one loaded last wins. It is the Data Folder Problems check over the mod folders, so a broken mod is named rather than crashed on.")
-## @ace_display_template("mod problems in [b]{subfolder}[/b]")
-## @ace_icon("res://eventsheet_addons/mods/icon.svg")
-## @ace_codegen_template("Mods.mod_content_problems({subfolder})")
+# @ace_expression
+# @ace_name("Mod Content Problems")
+# @ace_description("Every structural problem in the loaded mods' content, one per line, and nothing at all when it is clean: a data asset that will not load, and a file two mods both bring, where the one loaded last wins. It is the Data Folder Problems check over the mod folders, so a broken mod is named rather than crashed on.")
+# @ace_display_template("mod problems in [b]{subfolder}[/b]")
+# @ace_codegen_template("Mods.mod_content_problems({subfolder})")
 func mod_content_problems(subfolder: String) -> String:
 	var problems: PackedStringArray = PackedStringArray()
 	var claimed: Dictionary = {}
@@ -430,8 +400,8 @@ func mod_content_problems(subfolder: String) -> String:
 			claimed[plain] = str(record.get("name", ""))
 	return "\n".join(problems)
 
+# @ace_hidden
 ## One mod's record, made from whatever the manifest gave and filled in for whatever it did not.
-## @ace_hidden
 func _record(declared: Dictionary, path: String, kind: String, folder: String) -> Dictionary:
 	var declared_name: String = str(declared.get("name", "")).strip_edges()
 	if declared_name.is_empty():
@@ -447,11 +417,11 @@ func _record(declared: Dictionary, path: String, kind: String, folder: String) -
 		"folder": folder,
 	}
 
+# @ace_hidden
 ## The manifest at a path, or an empty record when there is no mod there. A FOLDER mod declares
 ## itself in mod.json, or in a mod.tres a ModManifest resource was saved as. A PACK file declares
 ## itself in a .json beside it, or in a mod.json inside it when it is a .zip - and when it declares
 ## nothing at all, the file's own name is the mod's name.
-## @ace_hidden
 func _manifest_at(path: String) -> Dictionary:
 	if DirAccess.dir_exists_absolute(path):
 		var json_path: String = path.path_join("mod.json")
@@ -477,9 +447,9 @@ func _manifest_at(path: String) -> Dictionary:
 			return _record(inside, path, "pack", "")
 	return _record({}, path, "pack", "")
 
+# @ace_hidden
 ## One manifest file read as plain data. A file that is not readable JSON, or is JSON that is not a
 ## record, gives nothing back rather than half a mod.
-## @ace_hidden
 func _read_json(path: String) -> Dictionary:
 	var text: String = FileAccess.get_file_as_string(path)
 	var parsed: Variant = JSON.parse_string(text)
@@ -489,6 +459,7 @@ func _read_json(path: String) -> Dictionary:
 		push_warning("Mods: %s is not a JSON record, so the mod's name comes from its folder instead." % path)
 	return {}
 
+# @ace_hidden
 ## A manifest saved as a resource (a ModManifest .tres), read into the same plain record the JSON
 ## form gives, so nothing downstream knows which spelling a mod used.
 ##
@@ -504,7 +475,6 @@ func _read_json(path: String) -> Dictionary:
 ## is readable and is not a manifest at all carries none of the five names, and the record falls back
 ## to the folder's own name rather than to the word "<null>" - which is what `str(null)` put there
 ## while this was asking a BUILT object for properties it did not have.
-## @ace_hidden
 func _read_resource(path: String, own_folder: String) -> Dictionary:
 	var text: String = FileAccess.get_file_as_string(path)
 	var refusal: String = _resource_reason(path.get_file(), text, own_folder)
@@ -521,6 +491,7 @@ func _read_resource(path: String, own_folder: String) -> Dictionary:
 		"scripts": str(written.get("scripts", "")) == "true",
 	}
 
+# @ace_hidden
 ## The `[resource]` section's own property lines, as the text each was written with. A quoted value
 ## comes back without its quotes and everything else exactly as spelled, so `true` is four letters
 ## the caller compares - which is what keeps a hand-typed `scripts = 1` from quietly meaning false.
@@ -528,7 +499,6 @@ func _read_resource(path: String, own_folder: String) -> Dictionary:
 ## Values the engine would BUILD - `ExtResource("1_x")`, `Resource("...")` - are read as the text
 ## they are and never resolved. The script line of a manifest saved from a class is exactly one of
 ## those, and it is not one of the five names asked for.
-## @ace_hidden
 func _resource_values(text: String) -> Dictionary:
 	var values: Dictionary = {}
 	var reading: bool = false
@@ -565,9 +535,9 @@ func _resource_values(text: String) -> Dictionary:
 			values[field] = value
 	return values
 
+# @ace_hidden
 ## One file read out of a .zip as JSON, without loading the archive as a resource pack - which
 ## matters, because a pack that has been loaded cannot be unloaded again.
-## @ace_hidden
 func _read_json_in_zip(path: String, inner: String) -> Dictionary:
 	var reader: ZIPReader = ZIPReader.new()
 	if reader.open(path) != OK:
@@ -580,12 +550,12 @@ func _read_json_in_zip(path: String, inner: String) -> Dictionary:
 	reader.close()
 	return found
 
+# @ace_hidden
 ## Every file a pack file holds, WITHOUT loading it: `read` says whether the list could be trusted
 ## at all, `paths` is what was in it, and `entries` is the same list with the place and size of each
 ## file's bytes - which is what lets a scene or a resource inside a pack be READ rather than merely
 ## named. A .zip is read with Godot's own archive reader; a .pck is read out of the file table the
 ## exporter wrote at the front of it.
-## @ace_hidden
 func _pack_index(path: String) -> Dictionary:
 	if path.get_extension().to_lower() == "zip":
 		var reader: ZIPReader = ZIPReader.new()
@@ -601,6 +571,7 @@ func _pack_index(path: String) -> Dictionary:
 		return {"read": true, "paths": files, "entries": []}
 	return _pck_index(path)
 
+# @ace_hidden
 ## The file table of a .pck, read off the file's own bytes. Anything this reader is not sure of - a
 ## file that does not open, a magic number that is not a pack's, a format newer than it knows, an
 ## encrypted directory, a count that cannot be right, or an entry pointing at bytes the file does
@@ -618,7 +589,6 @@ func _pack_index(path: String) -> Dictionary:
 ## THE LAST CHECK IS ARITHMETIC RATHER THAN SPELLING: every entry must point at bytes this file
 ## actually holds. A table read the wrong way produces places that run off the end of the file,
 ## which is how a mis-read is noticed instead of being reported as a pack full of nothing.
-## @ace_hidden
 func _pck_index(path: String) -> Dictionary:
 	var refused: Dictionary = {"read": false, "paths": PackedStringArray(), "entries": []}
 	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
@@ -672,16 +642,17 @@ func _pck_index(path: String) -> Dictionary:
 	file.close()
 	return {"read": true, "paths": paths, "entries": entries}
 
+# @ace_hidden
 ## One path out of a pack's table. Paths are written padded out to a round number of bytes with
 ## zeros, and a zero is not a character a path is spelled with - so the padding comes off before
 ## the letters are read rather than travelling on inside the name.
-## @ace_hidden
 func _path_of_bytes(raw: PackedByteArray) -> String:
 	var written: PackedByteArray = raw
 	while written.size() > 0 and written[written.size() - 1] == 0:
 		written.remove_at(written.size() - 1)
 	return written.get_string_from_utf8().strip_edges()
 
+# @ace_hidden
 ## Why one resource file inside a mod may not be taken by a data-only row, in plain words, or ""
 ## when it may. THE OTHER HALF OF THE DATA-ONLY DECISION: the list of names above answers about the
 ## files that are code by their extension, and this answers about the files that are not.
@@ -718,7 +689,6 @@ func _path_of_bytes(raw: PackedByteArray) -> String:
 ## scene may still hold a connection naming one of your own methods, or an animation track that
 ## calls one at a keyframe. None of that brings a stranger's code in; each of them can reach yours.
 ## A mod is somebody else's DATA, so what it can reach is worth the same thought as any other input.
-## @ace_hidden
 func _resource_reason(file_name: String, text: String, own_folder: String) -> String:
 	var inside: String = own_folder
 	if not inside.is_empty() and not inside.ends_with("/"):
@@ -796,36 +766,36 @@ func _resource_reason(file_name: String, text: String, own_folder: String) -> St
 			return "%s names the shader %s, and this row loads data only" % [file_name, place]
 	return ""
 
+# @ace_hidden
 ## Every extension the engine itself reads as a resource or a scene - the files this row opens and
 ## reads rather than merely names. See the note beside the cache above.
-## @ace_hidden
 func _resource_extensions() -> PackedStringArray:
 	if _resource_extension_cache.is_empty():
 		_resource_extension_cache = ResourceLoader.get_recognized_extensions_for_type("Resource")
 	return _resource_extension_cache
 
+# @ace_hidden
 ## True when a path is CODE by its own extension, whatever a tag claims its type is. The type is a
 ## word in a file a stranger wrote; the extension is what the engine will compile.
-## @ace_hidden
 func _names_code(place: String) -> bool:
 	return place.get_file().trim_suffix(".remap").get_extension().to_lower() in CODE_EXTENSIONS
 
+# @ace_hidden
 ## True when a path is a SHADER by its own extension, for the same reason.
-## @ace_hidden
 func _names_shader(place: String) -> bool:
 	return place.get_file().trim_suffix(".remap").get_extension().to_lower() in SHADER_EXTENSIONS
 
+# @ace_hidden
 ## True when a resource tag's TYPE is a shader - `Shader`, `VisualShader`, `ShaderInclude`. Read as
 ## a tail for the same reason a script type is: the shader type this reading has never heard of is
 ## exactly the one a crafted file would name.
-## @ace_hidden
 func _type_is_shader(kind: String) -> bool:
 	return kind.ends_with(SHADER_TYPE_TAIL) or kind == SHADER_INCLUDE_TYPE
 
+# @ace_hidden
 ## Where a tag closes, or -1 when it does not close on the text so far. Quotes are respected, so a
 ## `]` inside a value does not end a tag early, and a tag written over more than one line is
 ## gathered rather than cut in half.
-## @ace_hidden
 func _tag_closes_at(tag: String) -> int:
 	var quoted: bool = false
 	var scan: int = 0
@@ -837,10 +807,10 @@ func _tag_closes_at(tag: String) -> int:
 		scan += 1
 	return -1
 
+# @ace_hidden
 ## A tag's attributes as the pairs they are, or an empty dictionary when one of them cannot be
 ## read. `type = "Script"` with spaces around the `=` is the same tag as `type="Script"`, which is
 ## exactly why this is parsed rather than searched for as a substring.
-## @ace_hidden
 func _tag_fields(rest: String) -> Dictionary:
 	var fields: Dictionary = {}
 	var cursor: int = 0
@@ -872,9 +842,9 @@ func _tag_fields(rest: String) -> Dictionary:
 		fields[field] = value
 	return fields
 
+# @ace_hidden
 ## The code files in a list of paths - the whole data-only decision, over a list, with no disk in
 ## it. Everything that reads a mod's contents ends here.
-## @ace_hidden
 func _code_in(paths: PackedStringArray) -> PackedStringArray:
 	var carried: PackedStringArray = PackedStringArray()
 	for path: String in paths:
@@ -882,9 +852,9 @@ func _code_in(paths: PackedStringArray) -> PackedStringArray:
 			carried.append(path)
 	return carried
 
+# @ace_hidden
 ## The shader files in a list of paths, kept apart from the code files so the refusal can say which of the
 ## two a mod was refused for. Both are code; only one of them can reach the player's machine.
-## @ace_hidden
 func _shaders_in(paths: PackedStringArray) -> PackedStringArray:
 	var carried: PackedStringArray = PackedStringArray()
 	for path: String in paths:
@@ -892,6 +862,7 @@ func _shaders_in(paths: PackedStringArray) -> PackedStringArray:
 			carried.append(path)
 	return carried
 
+# @ace_hidden
 ## Every file in a folder and the folders under it, to the limits above - what a folder mod's own
 ## contents are, for the same code question a pack file answers from its table.
 ##
@@ -903,7 +874,6 @@ func _shaders_in(paths: PackedStringArray) -> PackedStringArray:
 ## with a `.gd` seven folders deep was cleared as data by a reading that never saw it. The limits
 ## are wider now and, far more importantly, hitting one sets `_folder_was_truncated` - and the tier
 ## refuses a mod it could not finish reading rather than passing what it did not reach.
-## @ace_hidden
 func _files_under(folder: String) -> PackedStringArray:
 	_folder_was_truncated = false
 	var found: PackedStringArray = PackedStringArray()
@@ -927,6 +897,7 @@ func _files_under(folder: String) -> PackedStringArray:
 			pending.append([at.path_join(sub_name), depth + 1])
 	return found
 
+# @ace_hidden
 ## Why this mod may not be loaded by a data-only row, in plain words, or "" when it may. The pack
 ## file's own table and the folder's own files are the answer - not the manifest's `scripts` flag,
 ## which is what the mod SAYS about itself and is checked first only so a mod that admits it gets
@@ -937,7 +908,6 @@ func _files_under(folder: String) -> PackedStringArray:
 ## by its name may carry code all the same, so every scene and every resource the mod holds is READ
 ## as well. Deciding by extension alone was a data-only tier a `.tscn` with a script written inside
 ## it walked straight through.
-## @ace_hidden
 func _code_reason(record: Dictionary) -> String:
 	if bool(record.get("scripts", false)):
 		return "its manifest says it carries code, and this row loads data only"
@@ -980,9 +950,9 @@ func _code_reason(record: Dictionary) -> String:
 		return "it holds more files, or deeper folders, than this row can read, so it cannot be cleared of code"
 	return _folder_resource_reason(folder)
 
+# @ace_hidden
 ## The first refusal among a folder mod's own scenes and resources, or "" when every one of them
 ## reads as data. Sorted, so two machines refusing the same mod name the same file.
-## @ace_hidden
 func _folder_resource_reason(folder: String) -> String:
 	var paths: PackedStringArray = _files_under(folder)
 	paths.sort()
@@ -995,10 +965,10 @@ func _folder_resource_reason(folder: String) -> String:
 			return reason
 	return ""
 
+# @ace_hidden
 ## The same question of a .zip, whose entries Godot's own archive reader hands over without the
 ## archive ever being mounted - which matters, because a pack that has been loaded cannot be
 ## unloaded again.
-## @ace_hidden
 func _zip_resource_reason(path: String) -> String:
 	var reader: ZIPReader = ZIPReader.new()
 	if reader.open(path) != OK:
@@ -1017,10 +987,10 @@ func _zip_resource_reason(path: String) -> String:
 	reader.close()
 	return reason
 
+# @ace_hidden
 ## The same question of a .pck, read straight off the file's own bytes at the places its table
 ## gives. An entry the exporter encrypted cannot be read without the game's key, and an entry that
 ## cannot be read is not one that has been cleared.
-## @ace_hidden
 func _pck_resource_reason(path: String, entries: Array) -> String:
 	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 	if file == null:
@@ -1048,17 +1018,17 @@ func _pck_resource_reason(path: String, entries: Array) -> String:
 	file.close()
 	return reason
 
+# @ace_hidden
 ## Where a loaded mod sits in the list, or -1.
-## @ace_hidden
 func _index_of(wanted: String) -> int:
 	for at: int in _mods.size():
 		if str(_mods[at].get("name", "")) == wanted:
 			return at
 	return -1
 
+# @ace_hidden
 ## Loads one mod that has already been read, or refuses it and says why. A mod that is switched off
 ## is skipped in silence: it is not a refusal, it is a choice the player made.
-## @ace_hidden
 func _load_record(record: Dictionary, data_only: bool) -> void:
 	var loading_name: String = str(record.get("name", ""))
 	if _disabled.get(loading_name, false):
@@ -1086,15 +1056,15 @@ func _load_record(record: Dictionary, data_only: bool) -> void:
 	}
 	mod_loaded.emit(loading_name, str(record.get("version", "")))
 
+# @ace_hidden
 ## Records a refusal and raises it. The reason is a sentence a player can read, because it is what
 ## the options screen puts beside the mod's name.
-## @ace_hidden
 func _refuse(refused: String, reason: String) -> void:
 	_about = {"name": refused, "version": "", "author": "", "reason": reason}
 	mod_refused.emit(refused, reason)
 
+# @ace_hidden
 ## Writes the switched-off list into the settings autoload, when the project has one.
-## @ace_hidden
 func _remember_disabled() -> void:
 	var settings: Object = _settings()
 	if settings == null or not settings.has_method("set_setting"):
@@ -1110,9 +1080,9 @@ func _remember_disabled() -> void:
 			settings.declare_setting(settings_key, "", "text")
 	settings.set_setting(settings_key, ",".join(written))
 
+# @ace_hidden
 ## Reads the switched-off list back out of the settings autoload. Called once when the director is
 ## ready, so the rows that load mods already know what the player switched off last time.
-## @ace_hidden
 func _recall_disabled() -> void:
 	var settings: Object = _settings()
 	if settings == null or not settings.has_method("setting_value"):
@@ -1123,14 +1093,12 @@ func _recall_disabled() -> void:
 		if not trimmed.is_empty():
 			_disabled[trimmed] = true
 
+# @ace_looping(mod)
+# @ace_name("For Each Mod")
+# @ace_codegen_template("Mods.each_mod()")
 ## Runs this event's actions once per LOADED mod, in load order - the mod list on the options
 ## screen, as one row. Read the current one as `mod`, then take `mod.name`, `mod.version`,
 ## `mod.author`, `mod.kind` ("folder" or "pack") and `mod.folder` straight off it.
-## @ace_looping(mod)
-## @ace_name("For Each Mod")
-## @ace_category("Mods")
-## @ace_icon("res://eventsheet_addons/mods/icon.svg")
-## @ace_codegen_template("Mods.each_mod()")
 func each_mod() -> Array:
 	return _mods.duplicate()
 

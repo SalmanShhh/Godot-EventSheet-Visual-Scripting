@@ -1,7 +1,7 @@
-## @ace_tags(effects, shader, juice, visual)
-## @ace_category("Hit Flash")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_tags(effects, shader, juice, visual)
+# @ace_category("Hit Flash")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @tool
 @icon("res://eventsheet_addons/hit_flash/icon.svg")
 class_name HitFlashBehavior
@@ -10,7 +10,7 @@ extends Node
 ##
 ## Changes on its parent: material.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CanvasItem = null
 
@@ -23,12 +23,12 @@ func _enter_tree() -> void:
 		push_warning("Hit Flash Behavior needs a CanvasItem: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Preview", "Play") var _preview_start_button: Callable = _preview_start
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
 
@@ -345,34 +345,31 @@ func _dial(dial: String, when_unset: float) -> float:
 	var held: Variant = used.get_shader_parameter(dial)
 	return when_unset if held == null else float(held)
 
+# @ace_action
+# @ace_featured
+# @ace_name("Flash")
+# @ace_display_template("Flash [b]{colour}[/b] for [b]{seconds}[/b] s")
+# @ace_codegen_template("$HitFlashBehavior.flash({colour}, {seconds})")
 ## Washes the host towards a colour and lets it drain back over the given time. A second
 ## flash while one is running restarts it rather than stacking, so a fast string of hits
 ## reads as one bright thing rather than as a stuck white square.
-## @ace_action
-## @ace_featured
-## @ace_name("Flash")
-## @ace_display_template("Flash [b]{colour}[/b] for [b]{seconds}[/b] s")
-## @ace_icon("res://eventsheet_addons/hit_flash/icon.svg")
-## @ace_codegen_template("$HitFlashBehavior.flash({colour}, {seconds})")
 func flash(colour: Color = Color.WHITE, seconds: float = 0.15) -> void:
 	_set_dial(COLOUR_DIAL, colour)
 	_set_dial(AMOUNT_DIAL, 1.0)
 	_walk_dial(AMOUNT_DIAL, 0.0, maxf(seconds, 0.0))
 
+# @ace_action
+# @ace_name("Stop Flashing")
+# @ace_codegen_template("$HitFlashBehavior.stop_flashing()")
 ## Ends the wash now, whatever was left of it. The row for an interruption: the hit was
 ## cancelled, the enemy died mid-flash, the scene is moving on.
-## @ace_action
-## @ace_name("Stop Flashing")
-## @ace_icon("res://eventsheet_addons/hit_flash/icon.svg")
-## @ace_codegen_template("$HitFlashBehavior.stop_flashing()")
 func stop_flashing() -> void:
 	_set_dial(AMOUNT_DIAL, 0.0)
 
+# @ace_condition
+# @ace_name("Is Flashing")
+# @ace_codegen_template("$HitFlashBehavior.is_flashing()")
 ## True while any of the wash is still showing.
-## @ace_condition
-## @ace_name("Is Flashing")
-## @ace_icon("res://eventsheet_addons/hit_flash/icon.svg")
-## @ace_codegen_template("$HitFlashBehavior.is_flashing()")
 func is_flashing() -> bool:
 	return _dial(AMOUNT_DIAL, 0.0) > 0.001
 

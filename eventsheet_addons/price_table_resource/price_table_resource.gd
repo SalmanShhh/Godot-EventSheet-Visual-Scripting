@@ -1,6 +1,6 @@
-## @ace_tags(shop, economy, resource)
-## @ace_category("Priced Tables")
-## @ace_version(1.0.0)
+# @ace_tags(shop, economy, resource)
+# @ace_category("Priced Tables")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/price_table_resource/icon.svg")
 class_name PriceTableResource
 extends Resource

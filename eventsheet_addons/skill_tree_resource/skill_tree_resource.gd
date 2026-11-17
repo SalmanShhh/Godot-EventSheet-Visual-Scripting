@@ -1,6 +1,6 @@
-## @ace_tags(skill, progression, resource)
-## @ace_category("Upgrades")
-## @ace_version(1.0.0)
+# @ace_tags(skill, progression, resource)
+# @ace_category("Upgrades")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/skill_tree_resource/icon.svg")
 class_name SkillTreeResource
 extends Resource

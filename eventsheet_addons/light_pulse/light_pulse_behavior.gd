@@ -1,14 +1,14 @@
-## @ace_tags(lighting, juice, visual)
-## @ace_category("Light Pulse")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_tags(lighting, juice, visual)
+# @ace_category("Light Pulse")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @tool
 @icon("res://eventsheet_addons/light_pulse/icon.svg")
 class_name LightPulseBehavior
 extends Node
 ## Makes a light breathe. Attach it to any light, 2D or 3D, and its brightness rides a smooth wave between two numbers - a beacon, a pickup, a rune that should read as deliberate rather than as merely alight. Between and Period Seconds are tuned in the Inspector while the game runs; the sheet says when it starts and when it stops, and what it settles at.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 
@@ -21,12 +21,12 @@ func _enter_tree() -> void:
 		push_warning("Light Pulse Behavior needs a parent node: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Preview", "Play") var _preview_start_button: Callable = _preview_start
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
 
@@ -298,26 +298,24 @@ func _bind_to_light() -> bool:
 func _apply_light(brightness: float) -> void:
 	host.set(_brightness_property, brightness)
 
+# @ace_action
+# @ace_featured
+# @ace_name("Start Pulsing")
+# @ace_display_template("Start pulsing after [b]{after_seconds}[/b] s")
+# @ace_codegen_template("$LightPulseBehavior.start_pulsing({after_seconds})")
 ## Starts the pulse, either now or after a delay - the delay is what a row uses when a beacon
 ## should come up a moment after the thing that switched it on.
-## @ace_action
-## @ace_featured
-## @ace_name("Start Pulsing")
-## @ace_display_template("Start pulsing after [b]{after_seconds}[/b] s")
-## @ace_icon("res://eventsheet_addons/light_pulse/icon.svg")
-## @ace_codegen_template("$LightPulseBehavior.start_pulsing({after_seconds})")
 func start_pulsing(after_seconds: float = 0.0) -> void:
 	_waiting = maxf(after_seconds, 0.0)
 	running = _waiting <= 0.0
 	# A delayed start still counts its delay down per frame - waiting is not idle.
 	set_process(true)
 
+# @ace_action
+# @ace_name("Stop Pulsing")
+# @ace_display_template("Stop pulsing and settle at [b]{settle_at}[/b]")
+# @ace_codegen_template("$LightPulseBehavior.stop_pulsing({settle_at})")
 ## Stops the pulse and leaves the light at one steady brightness - the number the row names.
-## @ace_action
-## @ace_name("Stop Pulsing")
-## @ace_display_template("Stop pulsing and settle at [b]{settle_at}[/b]")
-## @ace_icon("res://eventsheet_addons/light_pulse/icon.svg")
-## @ace_codegen_template("$LightPulseBehavior.stop_pulsing({settle_at})")
 func stop_pulsing(settle_at: float = 1.0) -> void:
 	running = false
 	_waiting = 0.0
@@ -327,12 +325,11 @@ func stop_pulsing(settle_at: float = 1.0) -> void:
 		return
 	_apply_light(settle_at)
 
+# @ace_condition
+# @ace_name("Is Pulsing")
+# @ace_codegen_template("$LightPulseBehavior.is_pulsing()")
 ## True while the light is actually pulsing - false while it waits out a delay, and false
 ## once it has been stopped.
-## @ace_condition
-## @ace_name("Is Pulsing")
-## @ace_icon("res://eventsheet_addons/light_pulse/icon.svg")
-## @ace_codegen_template("$LightPulseBehavior.is_pulsing()")
 func is_pulsing() -> bool:
 	return running and _waiting <= 0.0
 

@@ -22,6 +22,22 @@ The stamp node, Draw Prefab and the Inspector picture draw the four from the sam
 
 An older copy of the Drawing Canvas, Drawing Prefab Stamp and Drawing Prefab Resource packs in a project does not know the new kinds and draws nothing for them, without an error. Add the three packs again from the behaviour library to draw the new shapes in a game.
 
+### Changed: the plugin's annotation comments are written with one hash, so Godot's Help and tooltips show only what you wrote for people
+
+Godot shows every `##` line as documentation, so a pack's Help page and its Inspector tooltips used to read `@ace_category(\"Sine\") @ace_expose_all(node)` beside the sentence the author wrote. New annotation lines are `# @ace_name(\"Wave\")` (one hash, an ordinary comment Godot keeps out of its documentation); the `##` lines that remain are the descriptions written for people. Every reader accepts both spellings in any file: the picker's reader, the importer, the annotation editor, the Doctor, the pack catalog and library, the vocabulary list, the test-sheet and shared-sheet markers. A file keeps the spelling it has: opening and saving a script untouched writes the same bytes, editing one verb does not respell the file's other lines, a verb added to a two-hash file is written with two hashes, and a file with no annotation yet gets one-hash lines from its first. A file that mixes both is read as it stands and written back unchanged.
+
+A one-hash line counts as an annotation only when it cannot be anything else: a known word alone on the line, or followed by a bracket that closes at the end of the line. A comment such as `# @ace_hidden is what the old version used` stays a comment, and the older space form (`## @ace_category Score`) is read with two hashes only. Annotation words are unchanged; only the comment marker moved. The guides show the new spelling.
+
+All behaviour packs and the library copies are regenerated with one hash, and the showcases that carry annotation lines follow. A pack already installed in a project is not touched and keeps working.
+
+### Changed: a pack leaves out the member icon and category lines that only repeat the class's own
+
+A pack that names its icon and category once on the class used to write the same two lines again above every verb (3,829 lines across 114 shipped pack files). The reader gives a verb the class's icon and category when it has none of its own, so a sheet built from rows now writes them only where they differ. A pack opened from a file keeps the lines it has, and a pack written without them opens with its verbs as function rows, exactly as before.
+
+### Fixed: confirming the parameters of an Every X To Y Seconds row no longer prints a parse error in the Output
+
+Looking at a field of a row that keeps a clock or a flag (Every X To Y Seconds and the 28 other stateful conditions) made Godot print `Parse Error: Function \"__everyr_0()\" not found in base self.` into the Output panel, sometimes a dozen times, because the stand-in script the kind-of-value check compiles had the verb's call but not the helper function the row declares beside it. The stand-in now carries the verb's own members, so the line is quiet; a wrong value in such a field is still refused in the same words.
+
 ### Fixed: a shape set to \"fixed on screen\" keeps its weight when the camera zooms
 
 A 4 px line set to \"fixed on screen\" was drawn 8 px wide under a Camera2D at zoom 2, and 2 px wide at zoom 0.5, because the width followed the shape's own scale and ignored the camera. It now follows the scale the shape is actually shown at, so the line is 4 px at every zoom, in a running game and in the editor's 2D view when you zoom it. A fixed shape checks that scale once a frame to redraw when it changes; a shape set to \"with the node\" stays parked as before. Shapes in a project made before this fix pick it up when the Vector Shapes pack is added again from the library.

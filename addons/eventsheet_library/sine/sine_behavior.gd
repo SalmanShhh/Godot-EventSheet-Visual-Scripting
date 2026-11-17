@@ -1,6 +1,6 @@
-## @ace_category("Sine")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Sine")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @tool
 @icon("res://eventsheet_addons/sine/icon.svg")
 class_name SineBehavior
@@ -9,7 +9,7 @@ extends Node
 ##
 ## Changes on its parent: position, scale, rotation, modulate.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 
@@ -22,12 +22,12 @@ func _enter_tree() -> void:
 		push_warning("Sine Behavior needs a Node2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Preview", "Play") var _preview_start_button: Callable = _preview_start
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
 
@@ -296,23 +296,19 @@ func _process(delta: float) -> void:
 	elif movement == "opacity":
 		host.modulate.a = clampf(base_alpha + wave_value * magnitude * 0.01, 0.0, 1.0)
 
-## @ace_action
-## @ace_name("Set Sine Active")
-## @ace_category("Sine")
-## @ace_description("Pauses or resumes the oscillation.")
-## @ace_icon("res://eventsheet_addons/sine/icon.svg")
-## @ace_codegen_template("$SineBehavior.set_sine_active({is_active})")
+# @ace_action
+# @ace_name("Set Sine Active")
+# @ace_description("Pauses or resumes the oscillation.")
+# @ace_codegen_template("$SineBehavior.set_sine_active({is_active})")
 func set_sine_active(is_active: bool) -> void:
 	active = is_active
 	# A paused wave costs nothing per frame; resuming turns processing back on.
 	set_process(is_active)
 
-## @ace_action
-## @ace_name("Update Initial State")
-## @ace_category("Sine")
-## @ace_description("Re-captures the host's current position/scale/angle/opacity as the wave's base (updateInitialState).")
-## @ace_icon("res://eventsheet_addons/sine/icon.svg")
-## @ace_codegen_template("$SineBehavior.update_initial_state()")
+# @ace_action
+# @ace_name("Update Initial State")
+# @ace_description("Re-captures the host's current position/scale/angle/opacity as the wave's base (updateInitialState).")
+# @ace_codegen_template("$SineBehavior.update_initial_state()")
 func update_initial_state() -> void:
 	if host == null:
 		return
@@ -324,26 +320,22 @@ func update_initial_state() -> void:
 	base_alpha = host.modulate.a
 	base_captured = true
 
-## @ace_action
-## @ace_name("Set Phase")
-## @ace_category("Sine")
-## @ace_description("Phase offset in degrees.")
-## @ace_icon("res://eventsheet_addons/sine/icon.svg")
-## @ace_codegen_template("$SineBehavior.set_sine_phase({degrees})")
+# @ace_action
+# @ace_name("Set Phase")
+# @ace_description("Phase offset in degrees.")
+# @ace_codegen_template("$SineBehavior.set_sine_phase({degrees})")
 func set_sine_phase(degrees: float) -> void:
 	phase_degrees = degrees
 
-## @ace_action
-## @ace_name("Reset Sine")
-## @ace_category("Sine")
-## @ace_description("Restarts the wave from the current state.")
-## @ace_icon("res://eventsheet_addons/sine/icon.svg")
-## @ace_codegen_template("$SineBehavior.reset_sine()")
+# @ace_action
+# @ace_name("Reset Sine")
+# @ace_description("Restarts the wave from the current state.")
+# @ace_codegen_template("$SineBehavior.reset_sine()")
 func reset_sine() -> void:
 	time = 0.0
 	base_captured = false
 
-## @ace_hidden
+# @ace_hidden
 func _wave(t: float) -> float:
 	var cycle := fposmod(t, 1.0)
 	match wave:

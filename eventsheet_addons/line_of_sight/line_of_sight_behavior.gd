@@ -1,12 +1,12 @@
-## @ace_category("Line Of Sight")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Line Of Sight")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/line_of_sight/icon.svg")
 class_name LOSBehavior
 extends Node
 ## Turns a Node2D into a sensor that answers whether it can actually see a target: it checks distance against sight range, a vision cone around the host's facing, then fires a physics raycast to make sure no wall is in the way. One pair of eyes per node - perfect for guards, turrets, and cameras.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 
@@ -25,8 +25,8 @@ func _enter_tree() -> void:
 ## Physics layers the sight raycast tests against - matching bodies block the view.
 @export var collision_mask: int = 1
 
-## @ace_expression
-## @ace_name("Nearest Visible In Group")
+# @ace_expression
+# @ace_name("Nearest Visible In Group")
 ## The closest group member this node can actually SEE (range + cone + raycast) - scans every
 ## candidate and skips occluded ones, so a nearer-but-blocked enemy can't shadow a visible farther
 ## one. Returns null if none are visible. The targeting primitive for auto-attack AI.
@@ -53,10 +53,9 @@ func _process(_delta: float) -> void:
 	# on ready, so anything added here needs a set_process(true) to run.
 	pass
 
-## @ace_condition
-## @ace_name("Has Line Of Sight To")
-## @ace_icon("res://eventsheet_addons/line_of_sight/icon.svg")
-## @ace_codegen_template("$LOSBehavior.has_los_to({point})")
+# @ace_condition
+# @ace_name("Has Line Of Sight To")
+# @ace_codegen_template("$LOSBehavior.has_los_to({point})")
 func has_los_to(point: Vector2) -> bool:
 	if host == null or host.global_position.distance_to(point) > sight_range:
 		return false
@@ -66,10 +65,9 @@ func has_los_to(point: Vector2) -> bool:
 			return false
 	return has_los_between(host.global_position, point)
 
-## @ace_condition
-## @ace_name("Has LOS Between")
-## @ace_icon("res://eventsheet_addons/line_of_sight/icon.svg")
-## @ace_codegen_template("$LOSBehavior.has_los_between({from_point}, {to_point})")
+# @ace_condition
+# @ace_name("Has LOS Between")
+# @ace_codegen_template("$LOSBehavior.has_los_between({from_point}, {to_point})")
 func has_los_between(from_point: Vector2, to_point: Vector2) -> bool:
 	if host == null:
 		return false

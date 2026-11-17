@@ -1,21 +1,21 @@
 @tool
-## @ace_tags(visual, shapes, drawing, 2d)
-## @ace_category("Vector Shapes")
-## @ace_version(1.0.0)
+# @ace_tags(visual, shapes, drawing, 2d)
+# @ace_category("Vector Shapes")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/vector_shapes/icon.svg")
 class_name ShapeTriangle2D
 extends VectorShape2D
 ## Three corners, the first of them the node's own origin, with a colour per corner if you want one - the arrow head, the wedge, the pointer.
 
+# @ace_hidden
 ## Writes the current fields out as a new style file, ready to reuse.
-## @ace_hidden
 @export_tool_button("Save As Style") var save_as_style_button = save_as_style
 # The style slot is empty in the usual case - the fields
 # below are this shape's own. With one dropped in, every field the style speaks for is read from
 # the file and shown greyed here, so twenty lines share one thickness, one cap and one dash
 # pattern; the button above writes the current fields out as a new style file to reuse.
+# @ace_hidden
 ## A Shape Style file this shape wears instead of its own look.
-## @ace_hidden
 @export var style: ShapeStyle = null:
 	set(value):
 		if style != null and style.changed.is_connected(style_changed_externally):
@@ -43,14 +43,14 @@ extends VectorShape2D
 
 # @inspector_look unit:kinds=px|world|screen,store=px
 @export_group("Stroke")
+# @ace_hidden
 ## Stroke width; the dropdown reads it in pixels, world units or screen units.
-## @ace_hidden
 @export_range(0, 1, 0.001, "or_greater", "or_less", "hide_slider", "suffix:px") var thickness: float = 2.0:
 	set(value):
 		thickness = value
 		shape_changed()
+# @ace_hidden
 ## Whether the stroke follows the node's own scale, or keeps the weight it has on screen however far the camera zooms - which is what a HUD line wants.
-## @ace_hidden
 @export_enum("with the node", "fixed on screen") var thickness_scale: String = "with the node":
 	set(value):
 		thickness_scale = value
@@ -64,39 +64,39 @@ extends VectorShape2D
 		notify_property_list_changed()
 		shape_changed()
 
+# @ace_hidden
 ## The shape's colour - the whole of it in single mode, and the first end of the blend in every other mode.
-## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var colour: Color = Color("#e6e6e6"):
 	set(value):
 		colour = value
 		shape_changed()
+# @ace_hidden
 ## The other end of the blend: the far end of a line, the outer edge of a ring, the end of a sweep.
-## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var colour_b: Color = Color("#4a90d9"):
 	set(value):
 		colour_b = value
 		shape_changed()
+# @ace_hidden
 ## The third corner's colour, in per-corner mode.
-## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var colour_c: Color = Color("#d94a4a"):
 	set(value):
 		colour_c = value
 		shape_changed()
+# @ace_hidden
 ## The fourth corner's colour, in per-corner mode. A three-cornered shape ignores it.
-## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var colour_d: Color = Color("#4ad98a"):
 	set(value):
 		colour_d = value
 		shape_changed()
+# @ace_hidden
 ## The ramp a gradient shape is coloured with - Godot's own Gradient resource, edited in Godot's own gradient editor.
-## @ace_hidden
 @export var gradient: Gradient = null:
 	set(value):
 		gradient = value
 		shape_changed()
 
+# @ace_hidden
 ## Fills the shape rather than drawing only its outline. A filled shape draws its BORDER instead of its stroke, so the two can never sit a pixel apart.
-## @ace_hidden
 @export var fill: bool = false:
 	set(value):
 		fill = value
@@ -104,22 +104,22 @@ extends VectorShape2D
 
 # @inspector_show_if border
 @export_group("Border")
+# @ace_hidden
 ## Draws a line around the filled shape, on the fill's own edge.
-## @ace_hidden
 @export var border: bool = false:
 	set(value):
 		border = value
 		notify_property_list_changed()
 		shape_changed()
+# @ace_hidden
 ## The border's colour.
-## @ace_hidden
 @export_custom(PROPERTY_HINT_NONE, "eventsheet:swatch_row") var border_colour: Color = Color("#1c1c1c"):
 	set(value):
 		border_colour = value
 		shape_changed()
 # @inspector_look unit:kinds=px|world|screen,store=px
+# @ace_hidden
 ## How wide the border is. Read in pixels, world units or screen units; stored in pixels.
-## @ace_hidden
 @export_range(0, 1, 0.001, "or_greater", "or_less", "hide_slider", "suffix:px") var border_thickness: float = 2.0:
 	set(value):
 		border_thickness = value
@@ -128,20 +128,20 @@ extends VectorShape2D
 @export_group("Drawing")
 # A canvas shader can be compiled for five blends; a shape that wants one of the screen-reading modes goes under a parent the Blend Modes pack
 # has blended, because a shape owns its own material.
+# @ace_hidden
 ## How the shape blends with what is behind it.
-## @ace_hidden
 @export_enum("normal", "add", "subtract", "multiply", "premultiplied") var blend: String = "normal":
 	set(value):
 		blend = value
 		shape_changed()
+# @ace_hidden
 ## How wide the fade at an edge is, in pixels. One pixel is a crisp edge at any zoom; wider is a deliberate glow; zero is a hard, aliased edge.
-## @ace_hidden
 @export_range(0.0, 4.0, 0.1) var antialias_width: float = 1.0:
 	set(value):
 		antialias_width = value
 		shape_changed()
 
-## @ace_hidden
+# @ace_hidden
 func shape_bounds() -> Rect2:
 	return Rect2(Vector2.ZERO, Vector2.ZERO).expand(corner_b).expand(corner_c)
 
@@ -175,14 +175,14 @@ func _validate_property(property: Dictionary) -> void:
 	if style_speaks_for(str(property.name)):
 		property.usage |= PROPERTY_USAGE_READ_ONLY
 
-## @ace_hidden
+# @ace_hidden
 func shape_kind_id() -> int:
 	return 5
 
-## @ace_hidden
+# @ace_hidden
 func shape_points() -> PackedVector2Array:
 	return PackedVector2Array([Vector2.ZERO, corner_b, corner_c])
 
-## @ace_hidden
+# @ace_hidden
 func shape_is_closed() -> bool:
 	return true

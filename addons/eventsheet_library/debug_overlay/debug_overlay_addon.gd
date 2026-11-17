@@ -1,14 +1,14 @@
-## @ace_tags(debug, overlay, hud, profiling)
-## @ace_category("Debug Overlay")
-## @ace_version(1.0.0)
+# @ace_tags(debug, overlay, hud, profiling)
+# @ace_category("Debug Overlay")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/debug_overlay/icon.svg")
 class_name DebugOverlayAddon
 extends CanvasLayer
 ## An on-screen debug display driven from event rows, drawn over the running game and only in debug builds. Watch Value lists named values, Show Bar draws a labelled meter, Mark Point drops a fading cross in the world, Draw Ray shows a direction, Draw Rect outlines an area, Draw Ray (3D) shows a direction in a 3D world, and Label Above floats text over a node. Nothing exists until a row calls one of them, and the toggle key hides the whole thing while you play.
 
-## @ace_trigger
-## @ace_name("On Overlay Toggled")
-## @ace_category("Debug Overlay")
+# @ace_trigger
+# @ace_name("On Overlay Toggled")
+# @ace_category("Debug Overlay")
 signal overlay_toggled(shown: bool)
 
 ## Key that shows and hides the overlay while the game runs, by name (F3, F1, Tab, Escape). Leave blank for no key.
@@ -56,14 +56,12 @@ func _ready() -> void:
 	# No surface yet, so no frame to pay for: the first verb that builds one turns the tick on.
 	set_process(false)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Watch Value")
-## @ace_category("Debug Overlay")
-## @ace_description("Shows name = value in the on-screen list, refreshed every time you set it. Call it from an On Process row and it reads like a live watch window over the running game. Debug builds only.")
-## @ace_display_template("Watch [b]{watch_name}[/b] = [b]{value}[/b]")
-## @ace_icon("res://eventsheet_addons/debug_overlay/icon.svg")
-## @ace_codegen_template("DebugOverlay.watch_value({watch_name}, {value})")
+# @ace_action
+# @ace_featured
+# @ace_name("Watch Value")
+# @ace_description("Shows name = value in the on-screen list, refreshed every time you set it. Call it from an On Process row and it reads like a live watch window over the running game. Debug builds only.")
+# @ace_display_template("Watch [b]{watch_name}[/b] = [b]{value}[/b]")
+# @ace_codegen_template("DebugOverlay.watch_value({watch_name}, {value})")
 func watch_value(watch_name: String, value: Variant) -> void:
 	if not _ensure_surface():
 		return
@@ -71,26 +69,22 @@ func watch_value(watch_name: String, value: Variant) -> void:
 		_watch_order.append(watch_name)
 	_watches[watch_name] = str(value)
 
-## @ace_action
-## @ace_name("Clear Watch")
-## @ace_category("Debug Overlay")
-## @ace_description("Drops one named value from the on-screen list, for when a watch has served its purpose and is just taking up a line.")
-## @ace_display_template("Stop watching [b]{watch_name}[/b]")
-## @ace_icon("res://eventsheet_addons/debug_overlay/icon.svg")
-## @ace_codegen_template("DebugOverlay.clear_watch({watch_name})")
+# @ace_action
+# @ace_name("Clear Watch")
+# @ace_description("Drops one named value from the on-screen list, for when a watch has served its purpose and is just taking up a line.")
+# @ace_display_template("Stop watching [b]{watch_name}[/b]")
+# @ace_codegen_template("DebugOverlay.clear_watch({watch_name})")
 func clear_watch(watch_name: String) -> void:
 	_watches.erase(watch_name)
 	var index: int = _watch_order.find(watch_name)
 	if index >= 0:
 		_watch_order.remove_at(index)
 
-## @ace_action
-## @ace_name("Show Bar")
-## @ace_category("Debug Overlay")
-## @ace_description("Draws a named meter filled to a fraction from 0 to 1, in the colour you pick. The fastest way to see stamina, a cooldown, or an AI's confidence without building any UI.")
-## @ace_display_template("Bar [b]{bar_name}[/b] = [b]{fraction}[/b] in [b]{bar_color}[/b]")
-## @ace_icon("res://eventsheet_addons/debug_overlay/icon.svg")
-## @ace_codegen_template("DebugOverlay.show_bar({bar_name}, {fraction}, {bar_color})")
+# @ace_action
+# @ace_name("Show Bar")
+# @ace_description("Draws a named meter filled to a fraction from 0 to 1, in the colour you pick. The fastest way to see stamina, a cooldown, or an AI's confidence without building any UI.")
+# @ace_display_template("Bar [b]{bar_name}[/b] = [b]{fraction}[/b] in [b]{bar_color}[/b]")
+# @ace_codegen_template("DebugOverlay.show_bar({bar_name}, {fraction}, {bar_color})")
 func show_bar(bar_name: String, fraction: float, bar_color: Color) -> void:
 	if not _ensure_surface():
 		return
@@ -98,100 +92,82 @@ func show_bar(bar_name: String, fraction: float, bar_color: Color) -> void:
 		_bar_order.append(bar_name)
 	_bars[bar_name] = [fraction, bar_color]
 
-## @ace_action
-## @ace_featured
-## @ace_name("Mark Point")
-## @ace_category("Debug Overlay")
-## @ace_description("Drops a labelled cross at a world position for a moment, so you can SEE where something happened. The mark stays glued to the world while the camera moves, then fades out on its own.")
-## @ace_display_template("Mark point [b]{at}[/b] label [b]{mark_label}[/b] for [b]{seconds}[/b]s")
-## @ace_icon("res://eventsheet_addons/debug_overlay/icon.svg")
-## @ace_codegen_template("DebugOverlay.mark_point({at}, {mark_label}, {seconds})")
+# @ace_action
+# @ace_featured
+# @ace_name("Mark Point")
+# @ace_description("Drops a labelled cross at a world position for a moment, so you can SEE where something happened. The mark stays glued to the world while the camera moves, then fades out on its own.")
+# @ace_display_template("Mark point [b]{at}[/b] label [b]{mark_label}[/b] for [b]{seconds}[/b]s")
+# @ace_codegen_template("DebugOverlay.mark_point({at}, {mark_label}, {seconds})")
 func mark_point(at: Vector2, mark_label: String, seconds: float) -> void:
 	if not _ensure_surface():
 		return
 	_marks.append([at, mark_label, Color(1.0, 0.4, 0.4), Time.get_ticks_msec() + int(maxf(seconds, 0.05) * 1000.0)])
 
-## @ace_action
-## @ace_name("Draw Ray")
-## @ace_category("Debug Overlay")
-## @ace_description("Draws a line from a world position along a direction for a given length, which is what you want on screen while tuning a detection cone, an aim vector, or a raycast that keeps missing.")
-## @ace_display_template("Draw ray from [b]{origin}[/b] toward [b]{direction}[/b] length [b]{length}[/b]")
-## @ace_icon("res://eventsheet_addons/debug_overlay/icon.svg")
-## @ace_codegen_template("DebugOverlay.draw_ray({origin}, {direction}, {length}, {ray_color}, {seconds})")
+# @ace_action
+# @ace_name("Draw Ray")
+# @ace_description("Draws a line from a world position along a direction for a given length, which is what you want on screen while tuning a detection cone, an aim vector, or a raycast that keeps missing.")
+# @ace_display_template("Draw ray from [b]{origin}[/b] toward [b]{direction}[/b] length [b]{length}[/b]")
+# @ace_codegen_template("DebugOverlay.draw_ray({origin}, {direction}, {length}, {ray_color}, {seconds})")
 func draw_ray(origin: Vector2, direction: Vector2, length: float, ray_color: Color, seconds: float) -> void:
 	if not _ensure_surface():
 		return
 	_rays.append([origin, origin + direction.normalized() * length, ray_color, Time.get_ticks_msec() + int(maxf(seconds, 0.05) * 1000.0)])
 
-## @ace_action
-## @ace_name("Draw Rect")
-## @ace_category("Debug Overlay")
-## @ace_description("Outlines an area of the world for a given time, the way Draw Ray shows a direction - a hitbox you are tuning, a spawn zone, the box a camera is limited to, the region a query just searched.")
-## @ace_display_template("Draw rect [b]{area}[/b] in [b]{rect_color}[/b] for [b]{seconds}[/b]s")
-## @ace_icon("res://eventsheet_addons/debug_overlay/icon.svg")
-## @ace_codegen_template("DebugOverlay.draw_rect({area}, {rect_color}, {seconds})")
+# @ace_action
+# @ace_name("Draw Rect")
+# @ace_description("Outlines an area of the world for a given time, the way Draw Ray shows a direction - a hitbox you are tuning, a spawn zone, the box a camera is limited to, the region a query just searched.")
+# @ace_display_template("Draw rect [b]{area}[/b] in [b]{rect_color}[/b] for [b]{seconds}[/b]s")
+# @ace_codegen_template("DebugOverlay.draw_rect({area}, {rect_color}, {seconds})")
 func draw_rect(area: Rect2, rect_color: Color, seconds: float) -> void:
 	if not _ensure_surface():
 		return
 	_rects.append([area, rect_color, Time.get_ticks_msec() + int(maxf(seconds, 0.05) * 1000.0)])
 
-## @ace_action
-## @ace_name("Draw Ray (3D)")
-## @ace_category("Debug Overlay")
-## @ace_description("Draws a line in a 3D world from a position along a direction for a given length, seen through the active camera - a raycast that keeps missing, an aim direction, the way a character thinks it is facing. A ray that reaches behind the camera is not drawn.")
-## @ace_display_template("Draw 3D ray from [b]{origin}[/b] toward [b]{direction}[/b] length [b]{length}[/b]")
-## @ace_icon("res://eventsheet_addons/debug_overlay/icon.svg")
-## @ace_codegen_template("DebugOverlay.draw_ray_3d({origin}, {direction}, {length}, {ray_color}, {seconds})")
+# @ace_action
+# @ace_name("Draw Ray (3D)")
+# @ace_description("Draws a line in a 3D world from a position along a direction for a given length, seen through the active camera - a raycast that keeps missing, an aim direction, the way a character thinks it is facing. A ray that reaches behind the camera is not drawn.")
+# @ace_display_template("Draw 3D ray from [b]{origin}[/b] toward [b]{direction}[/b] length [b]{length}[/b]")
+# @ace_codegen_template("DebugOverlay.draw_ray_3d({origin}, {direction}, {length}, {ray_color}, {seconds})")
 func draw_ray_3d(origin: Vector3, direction: Vector3, length: float, ray_color: Color, seconds: float) -> void:
 	if not _ensure_surface():
 		return
 	_rays_3d.append([origin, origin + direction.normalized() * length, ray_color, Time.get_ticks_msec() + int(maxf(seconds, 0.05) * 1000.0)])
 
-## @ace_action
-## @ace_name("Label Above")
-## @ace_category("Debug Overlay")
-## @ace_description("Floats a line of text above a node for a moment - the fastest way to debug a dozen enemies at once, because each one carries its own state on screen. Works for a Node2D, a Control, or a Node3D seen through the active camera.")
-## @ace_display_template("Label above [i]{node}[/i] text [b]{label_text}[/b]")
-## @ace_icon("res://eventsheet_addons/debug_overlay/icon.svg")
-## @ace_codegen_template("DebugOverlay.label_above({node}, {label_text}, {seconds})")
+# @ace_action
+# @ace_name("Label Above")
+# @ace_description("Floats a line of text above a node for a moment - the fastest way to debug a dozen enemies at once, because each one carries its own state on screen. Works for a Node2D, a Control, or a Node3D seen through the active camera.")
+# @ace_display_template("Label above [i]{node}[/i] text [b]{label_text}[/b]")
+# @ace_codegen_template("DebugOverlay.label_above({node}, {label_text}, {seconds})")
 func label_above(node: Node, label_text: String, seconds: float) -> void:
 	if not _ensure_surface():
 		return
 	_labels.append([node, label_text, Time.get_ticks_msec() + int(maxf(seconds, 0.05) * 1000.0)])
 
-## @ace_action
-## @ace_name("Show Overlay")
-## @ace_category("Debug Overlay")
-## @ace_description("Makes the overlay visible again after it was hidden. Fires On Overlay Toggled when it was actually hidden.")
-## @ace_icon("res://eventsheet_addons/debug_overlay/icon.svg")
-## @ace_codegen_template("DebugOverlay.show_overlay()")
+# @ace_action
+# @ace_name("Show Overlay")
+# @ace_description("Makes the overlay visible again after it was hidden. Fires On Overlay Toggled when it was actually hidden.")
+# @ace_codegen_template("DebugOverlay.show_overlay()")
 func show_overlay() -> void:
 	_set_overlay_shown(true)
 
-## @ace_action
-## @ace_name("Hide Overlay")
-## @ace_category("Debug Overlay")
-## @ace_description("Hides the overlay without clearing anything. Rows keep recording, so showing it again brings the values straight back.")
-## @ace_icon("res://eventsheet_addons/debug_overlay/icon.svg")
-## @ace_codegen_template("DebugOverlay.hide_overlay()")
+# @ace_action
+# @ace_name("Hide Overlay")
+# @ace_description("Hides the overlay without clearing anything. Rows keep recording, so showing it again brings the values straight back.")
+# @ace_codegen_template("DebugOverlay.hide_overlay()")
 func hide_overlay() -> void:
 	_set_overlay_shown(false)
 
-## @ace_action
-## @ace_name("Toggle Overlay")
-## @ace_category("Debug Overlay")
-## @ace_description("Flips the overlay between shown and hidden, the same thing the toggle key does - put it on a button so a playtester can turn it on for a screenshot.")
-## @ace_icon("res://eventsheet_addons/debug_overlay/icon.svg")
-## @ace_codegen_template("DebugOverlay.toggle_overlay()")
+# @ace_action
+# @ace_name("Toggle Overlay")
+# @ace_description("Flips the overlay between shown and hidden, the same thing the toggle key does - put it on a button so a playtester can turn it on for a screenshot.")
+# @ace_codegen_template("DebugOverlay.toggle_overlay()")
 func toggle_overlay() -> void:
 	_set_overlay_shown(not _shown)
 
-## @ace_action
-## @ace_name("Clear Overlay")
-## @ace_category("Debug Overlay")
-## @ace_description("Wipes every watch, bar, mark, ray, rect and label at once. Useful between levels, or at the head of a run so last run's evidence does not confuse this one.")
-## @ace_icon("res://eventsheet_addons/debug_overlay/icon.svg")
-## @ace_codegen_template("DebugOverlay.clear_overlay()")
+# @ace_action
+# @ace_name("Clear Overlay")
+# @ace_description("Wipes every watch, bar, mark, ray, rect and label at once. Useful between levels, or at the head of a run so last run's evidence does not confuse this one.")
+# @ace_codegen_template("DebugOverlay.clear_overlay()")
 func clear_overlay() -> void:
 	_watches.clear()
 	_watch_order = PackedStringArray()
@@ -203,16 +179,14 @@ func clear_overlay() -> void:
 	_rays_3d.clear()
 	_labels.clear()
 
-## @ace_condition
-## @ace_name("Overlay Is Visible")
-## @ace_category("Debug Overlay")
-## @ace_description("True while the overlay is on screen. False in a release build, before any row has drawn to it, and while the toggle key has it hidden.")
-## @ace_icon("res://eventsheet_addons/debug_overlay/icon.svg")
-## @ace_codegen_template("DebugOverlay.is_overlay_visible()")
+# @ace_condition
+# @ace_name("Overlay Is Visible")
+# @ace_description("True while the overlay is on screen. False in a release build, before any row has drawn to it, and while the toggle key has it hidden.")
+# @ace_codegen_template("DebugOverlay.is_overlay_visible()")
 func is_overlay_visible() -> bool:
 	return _shown and _surface != null
 
-## @ace_hidden
+# @ace_hidden
 func _ensure_surface() -> bool:
 	# Builds the surface on FIRST use, and only in a debug build. Every verb starts with this,
 	# so an exported release build never creates a node and never draws a pixel.
@@ -233,7 +207,7 @@ func _ensure_surface() -> bool:
 	set_process(true)
 	return true
 
-## @ace_hidden
+# @ace_hidden
 func _expire_overlay_entries() -> void:
 	# Ages every timed entry out and repaints. Called once a frame by the pack's own tick row.
 	if _surface == null:
@@ -257,7 +231,7 @@ func _expire_overlay_entries() -> void:
 			_labels.remove_at(index)
 	_surface.queue_redraw()
 
-## @ace_hidden
+# @ace_hidden
 func _paint_overlay() -> void:
 	# The painter. Watches and bars stack down the top-left corner; marks, rays and labels are
 	# world positions pushed through the canvas transform so they sit where the thing is.
@@ -301,7 +275,7 @@ func _paint_overlay() -> void:
 			continue
 		_surface.draw_string(font, _node_screen_position(label_entry[0] as Node) + Vector2(-16.0, -18.0), str(label_entry[1]), HORIZONTAL_ALIGNMENT_LEFT, -1.0, 13, Color(1.0, 0.9, 0.55))
 
-## @ace_hidden
+# @ace_hidden
 func _world_to_screen(world_position: Vector2) -> Vector2:
 	# World space to screen space. The 2D canvas transform already accounts for the camera, so
 	# a marked point stays glued to the world while the camera moves.
@@ -310,7 +284,7 @@ func _world_to_screen(world_position: Vector2) -> Vector2:
 		return world_position
 	return view.get_canvas_transform() * world_position
 
-## @ace_hidden
+# @ace_hidden
 func _node_screen_position(node: Node) -> Vector2:
 	# Where a node appears on screen, in 2D or in 3D (a Node3D goes through the active camera's
 	# projection). An off-tree or unprojectable node reads as the top-left corner.
@@ -325,7 +299,7 @@ func _node_screen_position(node: Node) -> Vector2:
 			return camera.unproject_position((node as Node3D).global_position)
 	return Vector2.ZERO
 
-## @ace_hidden
+# @ace_hidden
 func _set_overlay_shown(shown: bool) -> void:
 	# Shows or hides the overlay and announces it. The signal only fires on a real change, so a
 	# row under On Overlay Toggled never sees a repeat of the state it is already in.

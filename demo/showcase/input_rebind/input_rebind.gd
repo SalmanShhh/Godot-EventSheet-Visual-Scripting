@@ -34,7 +34,7 @@ func _process(_delta: float) -> void:
 		$HudKit.set_text("GamepadLabel", "%d gamepad(s) - %s" % [pads.size(), Input.get_joy_name(pads[0])])
 
 
-## @ace_hidden
+# @ace_hidden
 func handle_button() -> void:
 	var pressed_button: String = $HudKit.last_button_name_value()
 	match pressed_button:
@@ -52,7 +52,7 @@ func handle_button() -> void:
 			$HudKit.set_text("StatusLabel", "Vibrating gamepad 0 (if one is connected).")
 
 
-## @ace_hidden
+# @ace_hidden
 func setup_default_bindings() -> void:
 	if not InputMap.has_action("demo_jump"):
 		InputMap.add_action("demo_jump")
@@ -69,13 +69,13 @@ func setup_default_bindings() -> void:
 	refresh_binding_labels()
 
 
-## @ace_hidden
+# @ace_hidden
 func refresh_binding_labels() -> void:
 	$HudKit.set_text("JumpLabel", "Jump: %s" % binding_text("demo_jump"))
 	$HudKit.set_text("DashLabel", "Dash: %s" % binding_text("demo_dash"))
 
 
-## @ace_hidden
+# @ace_hidden
 func binding_text(action_name: String) -> String:
 	var events: Array = InputMap.action_get_events(action_name)
 	return events[0].as_text() if not events.is_empty() else "unbound"

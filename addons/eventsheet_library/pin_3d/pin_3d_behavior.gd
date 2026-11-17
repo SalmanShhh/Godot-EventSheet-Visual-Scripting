@@ -1,6 +1,6 @@
-## @ace_tags(movement, attachment, 3d)
-## @ace_category("Pin 3D")
-## @ace_version(1.0.0)
+# @ace_tags(movement, attachment, 3d)
+# @ace_category("Pin 3D")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/pin_3d/icon.svg")
 class_name Pin3DBehavior
 extends Node
@@ -8,7 +8,7 @@ extends Node
 ##
 ## Changes on its parent: global_basis, scale, global_position.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node3D = null
 
@@ -94,13 +94,13 @@ var pin_velocity: Vector3 = Vector3.ZERO
 
 # The modes that copy a PLACE and the modes that copy an ANGLE, written out rather than
 # inferred, exactly as the 2D pack has them.
+# @ace_hidden
 ## The ways the host's place can be pinned, as the words a row picks from.
-## @ace_hidden
 const PIN_PLACE_MODES: PackedStringArray = [
 	PIN_MODE_POSITION, PIN_MODE_POSITION_AND_ANGLE, PIN_MODE_ROPE, PIN_MODE_BAR, PIN_MODE_SOFT, PIN_MODE_SPRING
 ]
+# @ace_hidden
 ## The ways the host's turn can be pinned, as the words a row picks from.
-## @ace_hidden
 const PIN_ANGLE_MODES: PackedStringArray = [PIN_MODE_ANGLE, PIN_MODE_POSITION_AND_ANGLE]
 # The node the host actually rides: the anchor, or the named point on it - in 3D usually the
 # BoneAttachment3D a skeleton keeps on a bone. The lookup is a RECURSIVE search of the
@@ -154,14 +154,12 @@ func _physics_process(delta: float) -> void:
 	if pin_follow_size or pin_mode == PIN_MODE_SIZE:
 		host.scale = seat.scale
 
-## @ace_action
-## @ace_featured
-## @ace_name("Pin To")
-## @ace_category("Pin 3D")
-## @ace_description("Sticks the host to an object, remembering how far apart the two are right now. From this frame on the host rides it. A pin follows at runtime and can let go; a child is structure and is destroyed with its parent - this is the first of those two.")
-## @ace_display_template("Pin to [b]{target}[/b]")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.pin_to({target})")
+# @ace_action
+# @ace_featured
+# @ace_name("Pin To")
+# @ace_description("Sticks the host to an object, remembering how far apart the two are right now. From this frame on the host rides it. A pin follows at runtime and can let go; a child is structure and is destroyed with its parent - this is the first of those two.")
+# @ace_display_template("Pin to [b]{target}[/b]")
+# @ace_codegen_template("$Pin3DBehavior.pin_to({target})")
 func pin_to(target: Node3D) -> void:
 	anchor = target
 	pin_enabled = is_instance_valid(target)
@@ -173,12 +171,10 @@ func pin_to(target: Node3D) -> void:
 		return
 	_remember_gap(target)
 
-## @ace_action
-## @ace_name("Pin To At Offset")
-## @ace_category("Pin 3D")
-## @ace_description("Sticks the host to an object at a chosen distance from it, in world units, instead of wherever it happens to be standing.")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.pin_to_at({target}, {offset_x}, {offset_y}, {offset_z})")
+# @ace_action
+# @ace_name("Pin To At Offset")
+# @ace_description("Sticks the host to an object at a chosen distance from it, in world units, instead of wherever it happens to be standing.")
+# @ace_codegen_template("$Pin3DBehavior.pin_to_at({target}, {offset_x}, {offset_y}, {offset_z})")
 func pin_to_at(target: Node3D, offset_x: float, offset_y: float, offset_z: float) -> void:
 	anchor = target
 	pin_enabled = is_instance_valid(target)
@@ -189,111 +185,91 @@ func pin_to_at(target: Node3D, offset_x: float, offset_y: float, offset_z: float
 	# is already gone leaves the tick off rather than running it for nothing.
 	set_physics_process(pin_enabled)
 
-## @ace_action
-## @ace_name("Set Pin Offset")
-## @ace_category("Pin 3D")
-## @ace_description("Moves the host to a new distance from the object it is riding, in world units.")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.set_pin_offset({offset_x}, {offset_y}, {offset_z})")
+# @ace_action
+# @ace_name("Set Pin Offset")
+# @ace_description("Moves the host to a new distance from the object it is riding, in world units.")
+# @ace_codegen_template("$Pin3DBehavior.set_pin_offset({offset_x}, {offset_y}, {offset_z})")
 func set_pin_offset(offset_x: float, offset_y: float, offset_z: float) -> void:
 	pin_offset = Vector3(offset_x, offset_y, offset_z)
 
-## @ace_action
-## @ace_name("Pin To Rope")
-## @ace_category("Pin 3D")
-## @ace_description("Hangs the host off an object on a rope of the given length. Inside that length it moves freely; past it the rope goes taut and pulls it back - a lantern on a pole, a leash, a wrecking ball.")
-## @ace_display_template("Pin to [i]{target}[/i] on a rope of [b]{max_length}[/b]")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.pin_rope({target}, {max_length})")
+# @ace_action
+# @ace_name("Pin To Rope")
+# @ace_description("Hangs the host off an object on a rope of the given length. Inside that length it moves freely; past it the rope goes taut and pulls it back - a lantern on a pole, a leash, a wrecking ball.")
+# @ace_display_template("Pin to [i]{target}[/i] on a rope of [b]{max_length}[/b]")
+# @ace_codegen_template("$Pin3DBehavior.pin_rope({target}, {max_length})")
 func pin_rope(target: Node3D, max_length: float) -> void:
 	_begin_pin(target, PIN_MODE_ROPE)
 	pin_length = maxf(max_length, 0.0)
 
-## @ace_action
-## @ace_name("Pin To Bar")
-## @ace_category("Pin 3D")
-## @ace_description("Holds the host at exactly the given distance from an object, every frame, in whatever direction it already lies - a linked cart, a rigid arm, a carriage coupling.")
-## @ace_display_template("Pin to [i]{target}[/i] on a bar of [b]{length}[/b]")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.pin_bar({target}, {length})")
+# @ace_action
+# @ace_name("Pin To Bar")
+# @ace_description("Holds the host at exactly the given distance from an object, every frame, in whatever direction it already lies - a linked cart, a rigid arm, a carriage coupling.")
+# @ace_display_template("Pin to [i]{target}[/i] on a bar of [b]{length}[/b]")
+# @ace_codegen_template("$Pin3DBehavior.pin_bar({target}, {length})")
 func pin_bar(target: Node3D, length: float) -> void:
 	_begin_pin(target, PIN_MODE_BAR)
 	pin_length = maxf(length, 0.0)
 
-## @ace_action
-## @ace_name("Pin To Softly")
-## @ace_category("Pin 3D")
-## @ace_description("Follows an object with a lag instead of snapping onto it. The speed is how much of the gap is closed each second - low numbers trail a long way behind, which is what makes a chase camera feel alive.")
-## @ace_display_template("Pin to [i]{target}[/i] softly at [b]{speed}[/b]")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.pin_soft({target}, {speed})")
+# @ace_action
+# @ace_name("Pin To Softly")
+# @ace_description("Follows an object with a lag instead of snapping onto it. The speed is how much of the gap is closed each second - low numbers trail a long way behind, which is what makes a chase camera feel alive.")
+# @ace_display_template("Pin to [i]{target}[/i] softly at [b]{speed}[/b]")
+# @ace_codegen_template("$Pin3DBehavior.pin_soft({target}, {speed})")
 func pin_soft(target: Node3D, speed: float) -> void:
 	_begin_pin(target, PIN_MODE_SOFT)
 	pin_speed = maxf(speed, 0.0)
 
-## @ace_action
-## @ace_name("Pin To With Spring")
-## @ace_category("Pin 3D")
-## @ace_description("Follows an object on a spring: it overshoots, wobbles and settles instead of arriving flat. Stiffness is the pull, damping is how fast the wobble dies (0 never settles, 1 never overshoots) - the same pair of numbers the Spring pack's own integrator takes.")
-## @ace_display_template("Pin to [i]{target}[/i] with a spring ([b]{stiffness}[/b], [b]{damping}[/b])")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.pin_spring({target}, {stiffness}, {damping})")
+# @ace_action
+# @ace_name("Pin To With Spring")
+# @ace_description("Follows an object on a spring: it overshoots, wobbles and settles instead of arriving flat. Stiffness is the pull, damping is how fast the wobble dies (0 never settles, 1 never overshoots) - the same pair of numbers the Spring pack's own integrator takes.")
+# @ace_display_template("Pin to [i]{target}[/i] with a spring ([b]{stiffness}[/b], [b]{damping}[/b])")
+# @ace_codegen_template("$Pin3DBehavior.pin_spring({target}, {stiffness}, {damping})")
 func pin_spring(target: Node3D, stiffness: float, damping: float) -> void:
 	_begin_pin(target, PIN_MODE_SPRING)
 	pin_stiffness = maxf(stiffness, 0.0)
 	pin_damping = clampf(damping, 0.0, 1.0)
 
-## @ace_action
-## @ace_name("Pin X Position To")
-## @ace_category("Pin 3D")
-## @ace_description("Follows an object along X and nothing else: the host keeps its own height and depth.")
-## @ace_display_template("Pin X position to [i]{target}[/i]")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.pin_x_to({target})")
+# @ace_action
+# @ace_name("Pin X Position To")
+# @ace_description("Follows an object along X and nothing else: the host keeps its own height and depth.")
+# @ace_display_template("Pin X position to [i]{target}[/i]")
+# @ace_codegen_template("$Pin3DBehavior.pin_x_to({target})")
 func pin_x_to(target: Node3D) -> void:
 	_begin_pin(target, PIN_MODE_POSITION)
 	pin_axes = PIN_AXES_X_ONLY
 
-## @ace_action
-## @ace_name("Pin Y Position To")
-## @ace_category("Pin 3D")
-## @ace_description("Follows an object's height and nothing else: the host keeps its own place on the floor. A marker that rides a lift, a water line.")
-## @ace_display_template("Pin Y position to [i]{target}[/i]")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.pin_y_to({target})")
+# @ace_action
+# @ace_name("Pin Y Position To")
+# @ace_description("Follows an object's height and nothing else: the host keeps its own place on the floor. A marker that rides a lift, a water line.")
+# @ace_display_template("Pin Y position to [i]{target}[/i]")
+# @ace_codegen_template("$Pin3DBehavior.pin_y_to({target})")
 func pin_y_to(target: Node3D) -> void:
 	_begin_pin(target, PIN_MODE_POSITION)
 	pin_axes = PIN_AXES_Y_ONLY
 
-## @ace_action
-## @ace_name("Pin Z Position To")
-## @ace_category("Pin 3D")
-## @ace_description("Follows an object along Z and nothing else: the host keeps its own X and height.")
-## @ace_display_template("Pin Z position to [i]{target}[/i]")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.pin_z_to({target})")
+# @ace_action
+# @ace_name("Pin Z Position To")
+# @ace_description("Follows an object along Z and nothing else: the host keeps its own X and height.")
+# @ace_display_template("Pin Z position to [i]{target}[/i]")
+# @ace_codegen_template("$Pin3DBehavior.pin_z_to({target})")
 func pin_z_to(target: Node3D) -> void:
 	_begin_pin(target, PIN_MODE_POSITION)
 	pin_axes = PIN_AXES_Z_ONLY
 
-## @ace_action
-## @ace_name("Pin Size To")
-## @ace_category("Pin 3D")
-## @ace_description("Copies an object's scale and nothing else, so the host grows and shrinks with it - a shadow decal that swells as its owner lands, a selection ring around a resizing prop.")
-## @ace_display_template("Pin size to [i]{target}[/i]")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.pin_size_to({target})")
+# @ace_action
+# @ace_name("Pin Size To")
+# @ace_description("Copies an object's scale and nothing else, so the host grows and shrinks with it - a shadow decal that swells as its owner lands, a selection ring around a resizing prop.")
+# @ace_display_template("Pin size to [i]{target}[/i]")
+# @ace_codegen_template("$Pin3DBehavior.pin_size_to({target})")
 func pin_size_to(target: Node3D) -> void:
 	_begin_pin(target, PIN_MODE_SIZE)
 	pin_follow_size = true
 
-## @ace_action
-## @ace_name("Pin To Point")
-## @ace_category("Pin 3D")
-## @ace_description("Rides a NAMED child of an object rather than the object itself - usually the BoneAttachment3D a skeleton keeps on a bone, so "pin the sword to the hand" is one name. The gap the two are standing at right now is remembered, exactly as Pin To does.")
-## @ace_display_template("Pin to [i]{target}[/i]'s [b]{point_name}[/b]")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.pin_to_point({target}, {point_name})")
+# @ace_action
+# @ace_name("Pin To Point")
+# @ace_description("Rides a NAMED child of an object rather than the object itself - usually the BoneAttachment3D a skeleton keeps on a bone, so "pin the sword to the hand" is one name. The gap the two are standing at right now is remembered, exactly as Pin To does.")
+# @ace_display_template("Pin to [i]{target}[/i]'s [b]{point_name}[/b]")
+# @ace_codegen_template("$Pin3DBehavior.pin_to_point({target}, {point_name})")
 func pin_to_point(target: Node3D, point_name: String) -> void:
 	anchor = target
 	pin_enabled = is_instance_valid(target)
@@ -310,13 +286,11 @@ func pin_to_point(target: Node3D, point_name: String) -> void:
 		return
 	_remember_gap(seat)
 
-## @ace_action
-## @ace_name("Pin To Path")
-## @ace_category("Pin 3D")
-## @ace_description("Rides a point that travels a curve. Pass a PathFollow3D and the host rides that one; pass a Path3D and the pack makes the follower once and rides it. Set Path Progress then drives the host along the curve.")
-## @ace_display_template("Pin to [i]{path_node}[/i]'s path position")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.pin_to_path({path_node})")
+# @ace_action
+# @ace_name("Pin To Path")
+# @ace_description("Rides a point that travels a curve. Pass a PathFollow3D and the host rides that one; pass a Path3D and the pack makes the follower once and rides it. Set Path Progress then drives the host along the curve.")
+# @ace_display_template("Pin to [i]{path_node}[/i]'s path position")
+# @ace_codegen_template("$Pin3DBehavior.pin_to_path({path_node})")
 func pin_to_path(path_node: Node3D) -> void:
 	var follower: PathFollow3D = path_node as PathFollow3D
 	if follower == null:
@@ -332,12 +306,10 @@ func pin_to_path(path_node: Node3D) -> void:
 	_begin_pin(follower, PIN_MODE_POSITION)
 	pin_point = ""
 
-## @ace_action
-## @ace_name("Set Path Progress")
-## @ace_category("Pin 3D")
-## @ace_description("Moves a path pin along its curve, 0 at the start and 1 at the end. Does nothing when the pin is not riding a path.")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.set_path_progress({ratio})")
+# @ace_action
+# @ace_name("Set Path Progress")
+# @ace_description("Moves a path pin along its curve, 0 at the start and 1 at the end. Does nothing when the pin is not riding a path.")
+# @ace_codegen_template("$Pin3DBehavior.set_path_progress({ratio})")
 func set_path_progress(ratio: float) -> void:
 	if not is_instance_valid(anchor):
 		return
@@ -345,14 +317,12 @@ func set_path_progress(ratio: float) -> void:
 	if follower != null:
 		follower.progress_ratio = clampf(ratio, 0.0, 1.0)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Unpin")
-## @ace_category("Pin 3D")
-## @ace_description("Lets go. The host stays exactly where it was and moves on its own again.")
-## @ace_display_template("Unpin")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.unpin()")
+# @ace_action
+# @ace_featured
+# @ace_name("Unpin")
+# @ace_description("Lets go. The host stays exactly where it was and moves on its own again.")
+# @ace_display_template("Unpin")
+# @ace_codegen_template("$Pin3DBehavior.unpin()")
 func unpin() -> void:
 	anchor = null
 	pin_enabled = false
@@ -361,87 +331,78 @@ func unpin() -> void:
 	# turns processing back on. The host keeps the place it already had, written before this.
 	set_physics_process(false)
 
-## @ace_condition
-## @ace_name("Is Pinned")
-## @ace_description("True while the host is riding another object.")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.is_pinned()")
+# @ace_condition
+# @ace_name("Is Pinned")
+# @ace_description("True while the host is riding another object.")
+# @ace_codegen_template("$Pin3DBehavior.is_pinned()")
 func is_pinned() -> bool:
 	return pin_enabled and is_instance_valid(anchor)
 
-## @ace_condition
-## @ace_name("Is Taut")
-## @ace_description("True while a rope or bar pin is stretched out to its full length - the frame a swing starts pulling. Always false in the other modes, which have no length to be stretched to.")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.is_taut()")
+# @ace_condition
+# @ace_name("Is Taut")
+# @ace_description("True while a rope or bar pin is stretched out to its full length - the frame a swing starts pulling. Always false in the other modes, which have no length to be stretched to.")
+# @ace_codegen_template("$Pin3DBehavior.is_taut()")
 func is_taut() -> bool:
 	if not pin_mode in [PIN_MODE_ROPE, PIN_MODE_BAR] or host == null or not is_instance_valid(anchor):
 		return false
 	return host.global_position.distance_to(anchor.global_position) >= pin_length - 0.01
 
-## @ace_expression
-## @ace_name("PinOffsetX")
-## @ace_description("How far the host sits from its anchor along X, in world units.")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.pin_offset_x()")
+# @ace_expression
+# @ace_name("PinOffsetX")
+# @ace_description("How far the host sits from its anchor along X, in world units.")
+# @ace_codegen_template("$Pin3DBehavior.pin_offset_x()")
 func pin_offset_x() -> float:
 	return pin_offset.x
 
-## @ace_expression
-## @ace_name("PinOffsetY")
-## @ace_description("How far the host sits from its anchor along Y, in world units.")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.pin_offset_y()")
+# @ace_expression
+# @ace_name("PinOffsetY")
+# @ace_description("How far the host sits from its anchor along Y, in world units.")
+# @ace_codegen_template("$Pin3DBehavior.pin_offset_y()")
 func pin_offset_y() -> float:
 	return pin_offset.y
 
-## @ace_expression
-## @ace_name("PinOffsetZ")
-## @ace_description("How far the host sits from its anchor along Z, in world units.")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.pin_offset_z()")
+# @ace_expression
+# @ace_name("PinOffsetZ")
+# @ace_description("How far the host sits from its anchor along Z, in world units.")
+# @ace_codegen_template("$Pin3DBehavior.pin_offset_z()")
 func pin_offset_z() -> float:
 	return pin_offset.z
 
-## @ace_expression
-## @ace_name("PinDistance")
-## @ace_description("How far the host currently is from the object it rides, in world units.")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.pin_distance()")
+# @ace_expression
+# @ace_name("PinDistance")
+# @ace_description("How far the host currently is from the object it rides, in world units.")
+# @ace_codegen_template("$Pin3DBehavior.pin_distance()")
 func pin_distance() -> float:
 	if host == null or not is_instance_valid(anchor):
 		return 0.0
 	return host.global_position.distance_to(anchor.global_position)
 
-## @ace_expression
-## @ace_name("PinPathProgress")
-## @ace_description("How far along its path a path pin has travelled, 0 to 1. Zero when the pin is not riding a path.")
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.pin_path_progress()")
+# @ace_expression
+# @ace_name("PinPathProgress")
+# @ace_description("How far along its path a path pin has travelled, 0 to 1. Zero when the pin is not riding a path.")
+# @ace_codegen_template("$Pin3DBehavior.pin_path_progress()")
 func pin_path_progress() -> float:
 	if not is_instance_valid(anchor):
 		return 0.0
 	var follower: PathFollow3D = anchor as PathFollow3D
 	return follower.progress_ratio if follower != null else 0.0
 
+# @ace_action
+# @ace_name("Set Pin Mode")
+# @ace_param_options(mode position=Follow its place only, angle=Follow its angles only, position and angle=Follow both, rope=Hang on a rope and pull only when taut, bar=Hold at exactly the length, soft=Follow with a lag, spring=Overshoot and settle, size=Copy its scale only)
+# @ace_codegen_template("$Pin3DBehavior.set_pin_mode("{mode}")")
 ## Chooses what the host copies from its anchor, and how it travels there.
 ## Option labels carry no commas on purpose - the picker splits the list on them, so a comma
 ## inside a label would offer half a sentence as a ninth mode nothing answers to.
-## @ace_action
-## @ace_name("Set Pin Mode")
-## @ace_param_options(mode position=Follow its place only, angle=Follow its angles only, position and angle=Follow both, rope=Hang on a rope and pull only when taut, bar=Hold at exactly the length, soft=Follow with a lag, spring=Overshoot and settle, size=Copy its scale only)
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.set_pin_mode("{mode}")")
 func set_pin_mode(mode: String) -> void:
 	if mode in [PIN_MODE_POSITION, PIN_MODE_ANGLE, PIN_MODE_POSITION_AND_ANGLE, PIN_MODE_ROPE, PIN_MODE_BAR, PIN_MODE_SOFT, PIN_MODE_SPRING, PIN_MODE_SIZE]:
 		pin_mode = mode
 
+# @ace_action
+# @ace_name("Set Pin Axes")
+# @ace_param_options(axes all=Follow all three axes, x only=Follow X only, y only=Follow the height only, z only=Follow Z only)
+# @ace_codegen_template("$Pin3DBehavior.set_pin_axes("{axes}")")
 ## Chooses which axes of the place follow: all of them, or one line of the world only.
-## @ace_action
-## @ace_name("Set Pin Axes")
-## @ace_param_options(axes all=Follow all three axes, x only=Follow X only, y only=Follow the height only, z only=Follow Z only)
-## @ace_icon("res://eventsheet_addons/pin_3d/icon.svg")
-## @ace_codegen_template("$Pin3DBehavior.set_pin_axes("{axes}")")
 func set_pin_axes(axes: String) -> void:
 	if axes in [PIN_AXES_ALL, PIN_AXES_X_ONLY, PIN_AXES_Y_ONLY, PIN_AXES_Z_ONLY]:
 		pin_axes = axes

@@ -25,7 +25,7 @@ func _physics_process(_delta: float) -> void:
 		velocity.z = toward.normalized().z * walk_speed
 	move_and_slide()
 
-## @ace_hidden
+# @ace_hidden
 func take_damage(amount: float) -> void:
 	hp -= amount
 	for __alerted_hurt in get_tree().get_nodes_in_group("enemies"):

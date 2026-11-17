@@ -116,7 +116,7 @@ func _process(_delta: float) -> void:
 	$HudLayer/Readout.text = "cursor: %s   face %d   in sphere %d   in box %d   under turret %d   ball travel %.2f   sweep %.2f (%d)" % ["TARGET" if pick_on_target else ("scenery" if not pick.is_empty() else "sky"), pick_face, nearby.size(), in_box.size(), at_point.size(), travel, sweep_travel, sweep_count]
 
 
-## @ace_hidden
+# @ace_hidden
 func aim_beam(beam: Node3D, from: Vector3, to: Vector3) -> void:
 	var span: float = from.distance_to(to)
 	beam.visible = span > 0.05

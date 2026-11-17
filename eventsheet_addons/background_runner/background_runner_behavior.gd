@@ -1,13 +1,13 @@
-## @ace_tags(performance, threading)
-## @ace_category("Background")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_tags(performance, threading)
+# @ace_category("Background")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/background_runner/icon.svg")
 class_name BackgroundRunner
 extends Node
 ## Runs a pure function on a worker thread so heavy computation never hitches the game. Call Run In Background with a callable, keep playing at full frame rate, and On Done hands the result back on the main thread.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 
@@ -19,8 +19,8 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Background Runner needs a parent node: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Done")
+# @ace_trigger
+# @ace_name("On Done")
 signal done(result: Variant)
 
 # In-flight tasks as [task_id, call_id]; results keyed by call_id, written off-thread under _mutex.
@@ -57,14 +57,12 @@ func _process(_delta: float) -> void:
 	# because an On Done handler is free to start the next task from inside it.
 	set_process(not _tasks.is_empty())
 
-## @ace_action
-## @ace_featured
-## @ace_name("Run In Background")
-## @ace_category("Background")
-## @ace_description("Runs a PURE callable off the main thread; On Done(result) fires when it finishes. WARNING: the callable must NOT touch nodes / the scene tree / non-thread-safe resources - data in, data out only.")
-## @ace_display_template("Run [b]{work}[/b] in the background")
-## @ace_icon("res://eventsheet_addons/background_runner/icon.svg")
-## @ace_codegen_template("$BackgroundRunner.run_in_background({work})")
+# @ace_action
+# @ace_featured
+# @ace_name("Run In Background")
+# @ace_description("Runs a PURE callable off the main thread; On Done(result) fires when it finishes. WARNING: the callable must NOT touch nodes / the scene tree / non-thread-safe resources - data in, data out only.")
+# @ace_display_template("Run [b]{work}[/b] in the background")
+# @ace_codegen_template("$BackgroundRunner.run_in_background({work})")
 func run_in_background(work: Callable) -> void:
 	if _mutex == null:
 		_mutex = Mutex.new()
@@ -75,27 +73,23 @@ func run_in_background(work: Callable) -> void:
 	# A task in flight has to be polled for every frame until it lands.
 	set_process(true)
 
-## @ace_action
-## @ace_name("Run Batch In Background")
-## @ace_category("Background")
-## @ace_description("Fans an array across worker threads: runs work.bind(item) for each item (On Done fires per item). The callable must be PURE.")
-## @ace_icon("res://eventsheet_addons/background_runner/icon.svg")
-## @ace_codegen_template("$BackgroundRunner.run_batch_in_background({items}, {work})")
+# @ace_action
+# @ace_name("Run Batch In Background")
+# @ace_description("Fans an array across worker threads: runs work.bind(item) for each item (On Done fires per item). The callable must be PURE.")
+# @ace_codegen_template("$BackgroundRunner.run_batch_in_background({items}, {work})")
 func run_batch_in_background(items: Array, work: Callable) -> void:
 	for __item: Variant in items:
 		run_in_background(work.bind(__item))
 
-## @ace_condition
-## @ace_name("Is Running")
-## @ace_icon("res://eventsheet_addons/background_runner/icon.svg")
-## @ace_codegen_template("$BackgroundRunner.is_running()")
+# @ace_condition
+# @ace_name("Is Running")
+# @ace_codegen_template("$BackgroundRunner.is_running()")
 func is_running() -> bool:
 	return not _tasks.is_empty()
 
-## @ace_expression
-## @ace_name("Tasks Running")
-## @ace_icon("res://eventsheet_addons/background_runner/icon.svg")
-## @ace_codegen_template("$BackgroundRunner.tasks_running()")
+# @ace_expression
+# @ace_name("Tasks Running")
+# @ace_codegen_template("$BackgroundRunner.tasks_running()")
 func tasks_running() -> int:
 	return _tasks.size()
 

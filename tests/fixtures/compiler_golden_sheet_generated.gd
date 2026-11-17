@@ -3,7 +3,7 @@
 # DO NOT EDIT — this file is regenerated on every compile.
 
 extends CharacterBody2D
-## @ace_group(uid="boss_phase", name="Boss Phase", toggleable=true, enabled=false)
+# @ace_group(uid="boss_phase", name="Boss Phase", toggleable=true, enabled=false)
 
 signal damage_taken(amount: int)
 

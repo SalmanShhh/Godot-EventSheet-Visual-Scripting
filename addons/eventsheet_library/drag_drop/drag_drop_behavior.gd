@@ -1,6 +1,6 @@
-## @ace_category("Drag & Drop")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Drag & Drop")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/drag_drop/icon.svg")
 class_name DragDropBehavior
 extends Node
@@ -8,7 +8,7 @@ extends Node
 ##
 ## Changes on its parent: global_position.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 
@@ -20,17 +20,17 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Drag Drop Behavior needs a Node2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Drag Started")
+# @ace_trigger
+# @ace_name("On Drag Started")
 signal drag_started
-## @ace_trigger
-## @ace_name("On Dropped")
+# @ace_trigger
+# @ace_name("On Dropped")
 signal dropped
-## @ace_trigger
-## @ace_name("On Drag Cancelled")
+# @ace_trigger
+# @ace_name("On Drag Cancelled")
 signal drag_cancelled
-## @ace_trigger
-## @ace_name("On Snapped")
+# @ace_trigger
+# @ace_name("On Snapped")
 signal snapped
 
 ## Max catch-up speed (px/s); 0 = instant snap each tick.
@@ -147,14 +147,12 @@ func _process(delta: float) -> void:
 	if break_distance > 0.0 and distance_from_point > break_distance:
 		_end_drag(break_action != 1, "broke_distance")
 
-## @ace_action
-## @ace_featured
-## @ace_name("Start Drag")
-## @ace_category("Drag & Drop")
-## @ace_description("Begins a drag at a point. grab_mode 0 = keep offset from the host; 1 = centre on the point.")
-## @ace_display_template("Start drag at ([b]{drag_point_x}[/b], [b]{drag_point_y}[/b]) grab mode [b]{grab_mode}[/b]")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.start_drag({drag_point_x}, {drag_point_y}, {grab_mode})")
+# @ace_action
+# @ace_featured
+# @ace_name("Start Drag")
+# @ace_description("Begins a drag at a point. grab_mode 0 = keep offset from the host; 1 = centre on the point.")
+# @ace_display_template("Start drag at ([b]{drag_point_x}[/b], [b]{drag_point_y}[/b]) grab mode [b]{grab_mode}[/b]")
+# @ace_codegen_template("$DragDropBehavior.start_drag({drag_point_x}, {drag_point_y}, {grab_mode})")
 @warning_ignore("shadowed_variable")  # drag_point_x, drag_point_y: ACE parameter id of this verb, frozen since it shipped
 func start_drag(drag_point_x: float, drag_point_y: float, grab_mode: int) -> void:
 	if not enabled or dragging or host == null:
@@ -173,12 +171,10 @@ func start_drag(drag_point_x: float, drag_point_y: float, grab_mode: int) -> voi
 	set_process(true)
 	drag_started.emit()
 
-## @ace_action
-## @ace_name("Start Drag At Object")
-## @ace_category("Drag & Drop")
-## @ace_description("Begins a drag that follows the given object each tick.")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.start_drag_at_object({target}, {grab_mode})")
+# @ace_action
+# @ace_name("Start Drag At Object")
+# @ace_description("Begins a drag that follows the given object each tick.")
+# @ace_codegen_template("$DragDropBehavior.start_drag_at_object({target}, {grab_mode})")
 func start_drag_at_object(target: Node2D, grab_mode: int) -> void:
 	if target == null:
 		return
@@ -186,86 +182,70 @@ func start_drag_at_object(target: Node2D, grab_mode: int) -> void:
 	if dragging:
 		follow_uid = target.get_instance_id()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Drop")
-## @ace_category("Drag & Drop")
-## @ace_description("Ends the drag. how 0 = apply throw/snap; 1 = cancel silently.")
-## @ace_display_template("Drop with mode [b]{how}[/b]")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.drop_drag({how})")
+# @ace_action
+# @ace_featured
+# @ace_name("Drop")
+# @ace_description("Ends the drag. how 0 = apply throw/snap; 1 = cancel silently.")
+# @ace_display_template("Drop with mode [b]{how}[/b]")
+# @ace_codegen_template("$DragDropBehavior.drop_drag({how})")
 func drop_drag(how: int) -> void:
 	if not dragging:
 		return
 	drop_reason = "manual"
 	_end_drag(how == 0, "manual")
 
-## @ace_action
-## @ace_name("Set Drag Point")
-## @ace_category("Drag & Drop")
-## @ace_description("Updates the drag point (call each tick from your input source).")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.set_drag_point({x}, {y})")
+# @ace_action
+# @ace_name("Set Drag Point")
+# @ace_description("Updates the drag point (call each tick from your input source).")
+# @ace_codegen_template("$DragDropBehavior.set_drag_point({x}, {y})")
 func set_drag_point(x: float, y: float) -> void:
 	if is_finite(x) and is_finite(y):
 		_sample_throw(Vector2(x, y))
 	follow_uid = -1
 
-## @ace_action
-## @ace_name("Set Drag Point To Object")
-## @ace_category("Drag & Drop")
-## @ace_description("Sets the drag point to an object's current position (one-shot).")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.set_drag_point_to_object({target})")
+# @ace_action
+# @ace_name("Set Drag Point To Object")
+# @ace_description("Sets the drag point to an object's current position (one-shot).")
+# @ace_codegen_template("$DragDropBehavior.set_drag_point_to_object({target})")
 func set_drag_point_to_object(target: Node2D) -> void:
 	if target != null:
 		_sample_throw(target.global_position)
 		follow_uid = -1
 
-## @ace_action
-## @ace_name("Set Follow Speed")
-## @ace_category("Drag & Drop")
-## @ace_description("Max catch-up speed (px/s); 0 = instant snap each tick.")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.set_follow_speed({speed})")
+# @ace_action
+# @ace_name("Set Follow Speed")
+# @ace_description("Max catch-up speed (px/s); 0 = instant snap each tick.")
+# @ace_codegen_template("$DragDropBehavior.set_follow_speed({speed})")
 func set_follow_speed(speed: float) -> void:
 	follow_speed = maxf(0.0, speed)
 
-## @ace_action
-## @ace_name("Set Directions")
-## @ace_category("Drag & Drop")
-## @ace_description("Direction lock: 0 free, 1 up/down, 2 left/right, 3 four-dir, 4 eight-dir.")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.set_directions({dirs})")
+# @ace_action
+# @ace_name("Set Directions")
+# @ace_description("Direction lock: 0 free, 1 up/down, 2 left/right, 3 four-dir, 4 eight-dir.")
+# @ace_codegen_template("$DragDropBehavior.set_directions({dirs})")
 func set_directions(dirs: int) -> void:
 	directions = clampi(dirs, 0, 4) as Directions
 
-## @ace_action
-## @ace_name("Set Break Distance")
-## @ace_category("Drag & Drop")
-## @ace_description("Auto-end the drag past this gap; action 0 = drop, 1 = cancel. 0 distance disables.")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.set_break_distance({distance}, {action})")
+# @ace_action
+# @ace_name("Set Break Distance")
+# @ace_description("Auto-end the drag past this gap; action 0 = drop, 1 = cancel. 0 distance disables.")
+# @ace_codegen_template("$DragDropBehavior.set_break_distance({distance}, {action})")
 func set_break_distance(distance: float, action: int) -> void:
 	break_distance = maxf(0.0, distance)
 	break_action = action
 
-## @ace_action
-## @ace_name("Set Throw Velocity")
-## @ace_category("Drag & Drop")
-## @ace_description("Overrides the auto-measured throw velocity for the next drop.")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.set_throw_velocity({velocity_x}, {velocity_y})")
+# @ace_action
+# @ace_name("Set Throw Velocity")
+# @ace_description("Overrides the auto-measured throw velocity for the next drop.")
+# @ace_codegen_template("$DragDropBehavior.set_throw_velocity({velocity_x}, {velocity_y})")
 func set_throw_velocity(velocity_x: float, velocity_y: float) -> void:
 	override_throw = Vector2(velocity_x, velocity_y)
 	has_throw_override = true
 
-## @ace_action
-## @ace_name("Set Enabled")
-## @ace_category("Drag & Drop")
-## @ace_description("Enables/disables; disabling mid-drag cancels silently.")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.set_dragdrop_enabled({is_enabled})")
+# @ace_action
+# @ace_name("Set Enabled")
+# @ace_description("Enables/disables; disabling mid-drag cancels silently.")
+# @ace_codegen_template("$DragDropBehavior.set_dragdrop_enabled({is_enabled})")
 func set_dragdrop_enabled(is_enabled: bool) -> void:
 	enabled = is_enabled
 	if not is_enabled and dragging:
@@ -277,160 +257,134 @@ func set_dragdrop_enabled(is_enabled: bool) -> void:
 		is_snapping_flag = false
 		throw_history = PackedVector2Array()
 
-## @ace_action
-## @ace_name("Add Snap Position")
-## @ace_category("Drag & Drop")
-## @ace_description("Registers a fixed snap/magnet position.")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.add_snap_position({x}, {y})")
+# @ace_action
+# @ace_name("Add Snap Position")
+# @ace_description("Registers a fixed snap/magnet position.")
+# @ace_codegen_template("$DragDropBehavior.add_snap_position({x}, {y})")
 func add_snap_position(x: float, y: float) -> void:
 	snap_positions.append(Vector2(x, y))
 
-## @ace_action
-## @ace_name("Add Snap Object")
-## @ace_category("Drag & Drop")
-## @ace_description("Registers an object whose position is a live snap/magnet target.")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.add_snap_object({target})")
+# @ace_action
+# @ace_name("Add Snap Object")
+# @ace_description("Registers an object whose position is a live snap/magnet target.")
+# @ace_codegen_template("$DragDropBehavior.add_snap_object({target})")
 func add_snap_object(target: Node2D) -> void:
 	if target != null:
 		var id := target.get_instance_id()
 		if not snap_uids.has(id):
 			snap_uids.append(id)
 
-## @ace_action
-## @ace_name("Clear Snap Targets")
-## @ace_category("Drag & Drop")
-## @ace_description("Removes every snap position and object.")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.clear_snap_targets()")
+# @ace_action
+# @ace_name("Clear Snap Targets")
+# @ace_description("Removes every snap position and object.")
+# @ace_codegen_template("$DragDropBehavior.clear_snap_targets()")
 func clear_snap_targets() -> void:
 	snap_positions.clear()
 	snap_uids.clear()
 	is_snapping_flag = false
 
-## @ace_action
-## @ace_name("Set Snap Radius")
-## @ace_category("Drag & Drop")
-## @ace_description("Distance within which snapping/magnetism engages.")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.set_snap_radius({radius})")
+# @ace_action
+# @ace_name("Set Snap Radius")
+# @ace_description("Distance within which snapping/magnetism engages.")
+# @ace_codegen_template("$DragDropBehavior.set_snap_radius({radius})")
 func set_snap_radius(radius: float) -> void:
 	snap_radius = maxf(0.0, radius)
 
-## @ace_action
-## @ace_name("Set Snap Mode")
-## @ace_category("Drag & Drop")
-## @ace_description("0 = host-position proximity; 1 = drag-point overlap (v1 radius approximation).")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.set_snap_mode({mode})")
+# @ace_action
+# @ace_name("Set Snap Mode")
+# @ace_description("0 = host-position proximity; 1 = drag-point overlap (v1 radius approximation).")
+# @ace_codegen_template("$DragDropBehavior.set_snap_mode({mode})")
 func set_snap_mode(mode: int) -> void:
 	snap_mode = clampi(mode, 0, 1)
 
-## @ace_action
-## @ace_name("Set Magnet Strength")
-## @ace_category("Drag & Drop")
-## @ace_description("How strongly the drag is pulled toward a nearby snap target (0..1).")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.set_magnet_strength({strength})")
+# @ace_action
+# @ace_name("Set Magnet Strength")
+# @ace_description("How strongly the drag is pulled toward a nearby snap target (0..1).")
+# @ace_codegen_template("$DragDropBehavior.set_magnet_strength({strength})")
 func set_magnet_strength(strength: float) -> void:
 	magnet_strength = clampf(strength, 0.0, 1.0)
 
-## @ace_condition
-## @ace_name("Is Dragging")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.is_dragging()")
+# @ace_condition
+# @ace_name("Is Dragging")
+# @ace_codegen_template("$DragDropBehavior.is_dragging()")
 func is_dragging() -> bool:
 	return dragging
 
-## @ace_condition
-## @ace_name("Is Enabled")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.is_dragdrop_enabled()")
+# @ace_condition
+# @ace_name("Is Enabled")
+# @ace_codegen_template("$DragDropBehavior.is_dragdrop_enabled()")
 func is_dragdrop_enabled() -> bool:
 	return enabled
 
-## @ace_condition
-## @ace_name("Is Snapping")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.is_snapping()")
+# @ace_condition
+# @ace_name("Is Snapping")
+# @ace_codegen_template("$DragDropBehavior.is_snapping()")
 func is_snapping() -> bool:
 	return is_snapping_flag
 
-## @ace_expression
-## @ace_name("Drag Point X")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.drag_point_x()")
+# @ace_expression
+# @ace_name("Drag Point X")
+# @ace_codegen_template("$DragDropBehavior.drag_point_x()")
 func drag_point_x() -> float:
 	return drag_point.x
 
-## @ace_expression
-## @ace_name("Drag Point Y")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.drag_point_y()")
+# @ace_expression
+# @ace_name("Drag Point Y")
+# @ace_codegen_template("$DragDropBehavior.drag_point_y()")
 func drag_point_y() -> float:
 	return drag_point.y
 
-## @ace_expression
-## @ace_name("Drag Point Object UID")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.drag_point_object_uid()")
+# @ace_expression
+# @ace_name("Drag Point Object UID")
+# @ace_codegen_template("$DragDropBehavior.drag_point_object_uid()")
 func drag_point_object_uid() -> int:
 	return follow_uid
 
-## @ace_expression
-## @ace_name("Distance From Point")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.distance_from_point_value()")
+# @ace_expression
+# @ace_name("Distance From Point")
+# @ace_codegen_template("$DragDropBehavior.distance_from_point_value()")
 func distance_from_point_value() -> float:
 	return distance_from_point
 
-## @ace_expression
-## @ace_name("Throw Velocity X")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.throw_velocity_x()")
+# @ace_expression
+# @ace_name("Throw Velocity X")
+# @ace_codegen_template("$DragDropBehavior.throw_velocity_x()")
 func throw_velocity_x() -> float:
 	return throw_vel.x
 
-## @ace_expression
-## @ace_name("Throw Velocity Y")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.throw_velocity_y()")
+# @ace_expression
+# @ace_name("Throw Velocity Y")
+# @ace_codegen_template("$DragDropBehavior.throw_velocity_y()")
 func throw_velocity_y() -> float:
 	return throw_vel.y
 
-## @ace_expression
-## @ace_name("Throw Speed")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.throw_speed_value()")
+# @ace_expression
+# @ace_name("Throw Speed")
+# @ace_codegen_template("$DragDropBehavior.throw_speed_value()")
 func throw_speed_value() -> float:
 	return throw_speed
 
-## @ace_expression
-## @ace_name("Drop Reason")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.drop_reason_value()")
+# @ace_expression
+# @ace_name("Drop Reason")
+# @ace_codegen_template("$DragDropBehavior.drop_reason_value()")
 func drop_reason_value() -> String:
 	return drop_reason
 
-## @ace_expression
-## @ace_name("Snap Target X")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.snap_target_x()")
+# @ace_expression
+# @ace_name("Snap Target X")
+# @ace_codegen_template("$DragDropBehavior.snap_target_x()")
 func snap_target_x() -> float:
 	return snap_target.x
 
-## @ace_expression
-## @ace_name("Snap Target Y")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.snap_target_y()")
+# @ace_expression
+# @ace_name("Snap Target Y")
+# @ace_codegen_template("$DragDropBehavior.snap_target_y()")
 func snap_target_y() -> float:
 	return snap_target.y
 
-## @ace_expression
-## @ace_name("Snapped Object UID")
-## @ace_icon("res://eventsheet_addons/drag_drop/icon.svg")
-## @ace_codegen_template("$DragDropBehavior.snapped_object_uid()")
+# @ace_expression
+# @ace_name("Snapped Object UID")
+# @ace_codegen_template("$DragDropBehavior.snapped_object_uid()")
 func snapped_object_uid() -> int:
 	return snapped_uid
 

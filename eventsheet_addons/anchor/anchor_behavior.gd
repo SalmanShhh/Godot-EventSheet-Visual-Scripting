@@ -1,6 +1,6 @@
-## @ace_tags(ui, layout)
-## @ace_category("Anchor")
-## @ace_version(1.0.0)
+# @ace_tags(ui, layout)
+# @ace_category("Anchor")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/anchor/icon.svg")
 class_name AnchorBehavior
 extends Node
@@ -8,7 +8,7 @@ extends Node
 ##
 ## Changes on its parent: offset_left, offset_top, offset_right, offset_bottom.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Control = null
 
@@ -20,8 +20,8 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Anchor Behavior needs a Control: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Anchored")
+# @ace_trigger
+# @ace_name("On Anchored")
 signal anchored(corner: String)
 
 # --- Choices (the stored words are the promise: saved scenes keep them) ---
@@ -54,8 +54,8 @@ const ANCHORED_TO_RIGHT_EDGE := "right edge"
 ## Re-apply the anchor whenever the parent changes size. Off pins it once and leaves it.
 @export var follow_resizes: bool = true
 
+# @ace_hidden
 ## The Godot preset each corner word stands for. The words are the row's; the numbers are the engine's, and this table is the one place the two meet.
-## @ace_hidden
 const CORNER_PRESETS: Dictionary = {
 	ANCHORED_TO_TOP_LEFT: Control.PRESET_TOP_LEFT,
 	ANCHORED_TO_TOP_RIGHT: Control.PRESET_TOP_RIGHT,
@@ -78,14 +78,12 @@ func _ready() -> void:
 	if follow_resizes and host.get_parent() is Control:
 		host.get_parent().resized.connect(func() -> void: anchor_to(anchored_to))
 
-## @ace_action
-## @ace_featured
-## @ace_name("Set Margins")
-## @ace_category("Anchor")
-## @ace_description("Sets the gap in pixels between the host and the corner it is anchored to - left, top, right, bottom.")
-## @ace_display_template("Set margins [b]{left}[/b], [b]{top}[/b], [b]{right}[/b], [b]{bottom}[/b]")
-## @ace_icon("res://eventsheet_addons/anchor/icon.svg")
-## @ace_codegen_template("$AnchorBehavior.set_margins({left}, {top}, {right}, {bottom})")
+# @ace_action
+# @ace_featured
+# @ace_name("Set Margins")
+# @ace_description("Sets the gap in pixels between the host and the corner it is anchored to - left, top, right, bottom.")
+# @ace_display_template("Set margins [b]{left}[/b], [b]{top}[/b], [b]{right}[/b], [b]{bottom}[/b]")
+# @ace_codegen_template("$AnchorBehavior.set_margins({left}, {top}, {right}, {bottom})")
 func set_margins(left: float, top: float, right: float, bottom: float) -> void:
 	if host == null:
 		return
@@ -94,31 +92,26 @@ func set_margins(left: float, top: float, right: float, bottom: float) -> void:
 	host.offset_right = right
 	host.offset_bottom = bottom
 
-## @ace_action
-## @ace_name("Set Keep Size")
-## @ace_category("Anchor")
-## @ace_description("Whether anchoring keeps the host's current size instead of letting the corner stretch it.")
-## @ace_icon("res://eventsheet_addons/anchor/icon.svg")
-## @ace_codegen_template("$AnchorBehavior.set_keep_size({enabled})")
+# @ace_action
+# @ace_name("Set Keep Size")
+# @ace_description("Whether anchoring keeps the host's current size instead of letting the corner stretch it.")
+# @ace_codegen_template("$AnchorBehavior.set_keep_size({enabled})")
 func set_keep_size(enabled: bool) -> void:
 	keep_size = enabled
 
-## @ace_action
-## @ace_name("Set Follow Resizes")
-## @ace_category("Anchor")
-## @ace_description("Whether the host is placed again every time its parent changes size.")
-## @ace_icon("res://eventsheet_addons/anchor/icon.svg")
-## @ace_codegen_template("$AnchorBehavior.set_follow_resizes({enabled})")
+# @ace_action
+# @ace_name("Set Follow Resizes")
+# @ace_description("Whether the host is placed again every time its parent changes size.")
+# @ace_codegen_template("$AnchorBehavior.set_follow_resizes({enabled})")
 func set_follow_resizes(enabled: bool) -> void:
 	follow_resizes = enabled
 
+# @ace_action
+# @ace_name("Anchor To")
+# @ace_param_options(corner top left=The top-left corner, top right=The top-right corner, bottom left=The bottom-left corner, bottom right=The bottom-right corner, centre=The middle, full rect=The whole parent, top edge=Across the top, bottom edge=Across the bottom, left edge=Down the left, right edge=Down the right)
+# @ace_codegen_template("$AnchorBehavior.anchor_to("{corner}")")
 ## Puts the host on a corner, an edge or the whole rectangle of its parent - the one
 ## action this behavior exists for.
-## @ace_action
-## @ace_name("Anchor To")
-## @ace_param_options(corner top left=The top-left corner, top right=The top-right corner, bottom left=The bottom-left corner, bottom right=The bottom-right corner, centre=The middle, full rect=The whole parent, top edge=Across the top, bottom edge=Across the bottom, left edge=Down the left, right edge=Down the right)
-## @ace_icon("res://eventsheet_addons/anchor/icon.svg")
-## @ace_codegen_template("$AnchorBehavior.anchor_to("{corner}")")
 func anchor_to(corner: String) -> void:
 	if host == null or not CORNER_PRESETS.has(corner):
 		return
@@ -127,20 +120,18 @@ func anchor_to(corner: String) -> void:
 	host.set_anchors_and_offsets_preset(CORNER_PRESETS[corner], mode)
 	anchored.emit(corner)
 
+# @ace_condition
+# @ace_name("Is Anchored To")
+# @ace_codegen_template("$AnchorBehavior.is_anchored_to({corner})")
 ## True while the host is anchored to the given corner - what a row asks before moving it
 ## somewhere else.
-## @ace_condition
-## @ace_name("Is Anchored To")
-## @ace_icon("res://eventsheet_addons/anchor/icon.svg")
-## @ace_codegen_template("$AnchorBehavior.is_anchored_to({corner})")
 func is_anchored_to(corner: String) -> bool:
 	return anchored_to == corner
 
+# @ace_expression
+# @ace_name("Anchored Corner")
+# @ace_codegen_template("$AnchorBehavior.anchored_corner()")
 ## The corner the host is anchored to right now, as its word - what a row shows or compares.
-## @ace_expression
-## @ace_name("Anchored Corner")
-## @ace_icon("res://eventsheet_addons/anchor/icon.svg")
-## @ace_codegen_template("$AnchorBehavior.anchored_corner()")
 func anchored_corner() -> String:
 	return anchored_to
 

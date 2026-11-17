@@ -1,12 +1,12 @@
-## @ace_category("UI")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("UI")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/hud_kit/icon.svg")
 class_name HudKitBehavior
 extends Node
 ## Drives a whole menu or HUD by node name with zero signal wiring. Attach it to your UI root and set labels, fill bars, show panels, flip screens, and pop toasts by passing the name string, while every descendant Button auto-wires into one On Button Pressed trigger.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 
@@ -18,8 +18,8 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Hud Kit Behavior needs a parent node: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Button Pressed")
+# @ace_trigger
+# @ace_name("On Button Pressed")
 signal on_button_pressed
 
 ## On Ready, wire every descendant Button's pressed signal into On Button Pressed. Re-run with Connect Buttons after spawning UI.
@@ -65,12 +65,10 @@ func _ready() -> void:
 	if auto_connect_buttons:
 		connect_buttons()
 
-## @ace_action
-## @ace_name("Connect Buttons")
-## @ace_category("UI")
-## @ace_description("Wires every descendant Button's pressed signal into On Button Pressed (idempotent; re-run after spawning UI).")
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.connect_buttons()")
+# @ace_action
+# @ace_name("Connect Buttons")
+# @ace_description("Wires every descendant Button's pressed signal into On Button Pressed (idempotent; re-run after spawning UI).")
+# @ace_codegen_template("$HudKitBehavior.connect_buttons()")
 func connect_buttons() -> void:
 	if host == null:
 		return
@@ -81,14 +79,12 @@ func connect_buttons() -> void:
 		if not button.pressed.is_connected(handler):
 			button.pressed.connect(handler)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Set Text")
-## @ace_category("UI")
-## @ace_description("Sets the text of a named Label, RichTextLabel, Button or LineEdit.")
-## @ace_display_template("Set text of [b]{control_name}[/b] to [b]{text}[/b]")
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.set_text({control_name}, {text})")
+# @ace_action
+# @ace_featured
+# @ace_name("Set Text")
+# @ace_description("Sets the text of a named Label, RichTextLabel, Button or LineEdit.")
+# @ace_display_template("Set text of [b]{control_name}[/b] to [b]{text}[/b]")
+# @ace_codegen_template("$HudKitBehavior.set_text({control_name}, {text})")
 func set_text(control_name: String, text: String) -> void:
 	var target: Node = _ui(control_name)
 	if target != null:
@@ -98,14 +94,12 @@ func set_text(control_name: String, text: String) -> void:
 				push_warning("HUD Kit: %s has no text, so Set Text cannot write it." % control_name)
 		target.set("text", text)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Set Bar")
-## @ace_category("UI")
-## @ace_description("Sets a named ProgressBar/TextureProgressBar's value (max_value too when > 0).")
-## @ace_display_template("Set bar [b]{bar_name}[/b] to [b]{value}[/b] of [b]{max_value}[/b]")
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.set_bar({bar_name}, {value}, {max_value})")
+# @ace_action
+# @ace_featured
+# @ace_name("Set Bar")
+# @ace_description("Sets a named ProgressBar/TextureProgressBar's value (max_value too when > 0).")
+# @ace_display_template("Set bar [b]{bar_name}[/b] to [b]{value}[/b] of [b]{max_value}[/b]")
+# @ace_codegen_template("$HudKitBehavior.set_bar({bar_name}, {value}, {max_value})")
 func set_bar(bar_name: String, value: float, max_value: float) -> void:
 	var target: Node = _ui(bar_name)
 	if target is Range:
@@ -113,13 +107,11 @@ func set_bar(bar_name: String, value: float, max_value: float) -> void:
 			(target as Range).max_value = max_value
 		(target as Range).value = value
 
-## @ace_action
-## @ace_name("Set Bar Lag")
-## @ace_category("UI")
-## @ace_description("Gives a named bar an underlay that follows it DOWN after a delay, so a hit shows how much was just lost. The underlay waits the seconds you name and then slides to the new value, taking those same seconds to cross the whole bar; a bar going UP has nothing to trail, so the underlay lands with it. It watches the bar rather than being told, so any way the value is set - Set Bar, a sheet writing the Range, an animation - trails the same. Seconds of 0 takes the underlay away again. Nothing is added to the scene but one rectangle inside the bar, built the first time and hidden whenever the two values agree.")
-## @ace_display_template("Set bar [b]{bar_name}[/b] lag to [b]{seconds}[/b] s in [b]{lag_colour}[/b]")
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.set_bar_lag({bar_name}, {seconds}, {lag_colour})")
+# @ace_action
+# @ace_name("Set Bar Lag")
+# @ace_description("Gives a named bar an underlay that follows it DOWN after a delay, so a hit shows how much was just lost. The underlay waits the seconds you name and then slides to the new value, taking those same seconds to cross the whole bar; a bar going UP has nothing to trail, so the underlay lands with it. It watches the bar rather than being told, so any way the value is set - Set Bar, a sheet writing the Range, an animation - trails the same. Seconds of 0 takes the underlay away again. Nothing is added to the scene but one rectangle inside the bar, built the first time and hidden whenever the two values agree.")
+# @ace_display_template("Set bar [b]{bar_name}[/b] lag to [b]{seconds}[/b] s in [b]{lag_colour}[/b]")
+# @ace_codegen_template("$HudKitBehavior.set_bar_lag({bar_name}, {seconds}, {lag_colour})")
 func set_bar_lag(bar_name: String, seconds: float, lag_colour: Color) -> void:
 	var target: Node = _ui(bar_name)
 	if not target is Range:
@@ -141,45 +133,37 @@ func set_bar_lag(bar_name: String, seconds: float, lag_colour: Color) -> void:
 		bar.value_changed.connect(watcher)
 	set_process(true)
 
-## @ace_action
-## @ace_name("Show Panel")
-## @ace_category("UI")
-## @ace_description("Makes a named panel (any CanvasItem) visible.")
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.show_panel({panel_name})")
+# @ace_action
+# @ace_name("Show Panel")
+# @ace_description("Makes a named panel (any CanvasItem) visible.")
+# @ace_codegen_template("$HudKitBehavior.show_panel({panel_name})")
 func show_panel(panel_name: String) -> void:
 	var target: Node = _ui(panel_name)
 	if target is CanvasItem:
 		(target as CanvasItem).visible = true
 
-## @ace_action
-## @ace_name("Hide Panel")
-## @ace_category("UI")
-## @ace_description("Hides a named panel (any CanvasItem).")
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.hide_panel({panel_name})")
+# @ace_action
+# @ace_name("Hide Panel")
+# @ace_description("Hides a named panel (any CanvasItem).")
+# @ace_codegen_template("$HudKitBehavior.hide_panel({panel_name})")
 func hide_panel(panel_name: String) -> void:
 	var target: Node = _ui(panel_name)
 	if target is CanvasItem:
 		(target as CanvasItem).visible = false
 
-## @ace_action
-## @ace_name("Toggle Panel")
-## @ace_category("UI")
-## @ace_description("Flips a named panel's visibility.")
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.toggle_panel({panel_name})")
+# @ace_action
+# @ace_name("Toggle Panel")
+# @ace_description("Flips a named panel's visibility.")
+# @ace_codegen_template("$HudKitBehavior.toggle_panel({panel_name})")
 func toggle_panel(panel_name: String) -> void:
 	var target: Node = _ui(panel_name)
 	if target is CanvasItem:
 		(target as CanvasItem).visible = not (target as CanvasItem).visible
 
-## @ace_action
-## @ace_name("Switch Screen")
-## @ace_category("UI")
-## @ace_description("Shows the named panel and hides its sibling panels - one call flips a whole menu screen.")
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.switch_screen({panel_name})")
+# @ace_action
+# @ace_name("Switch Screen")
+# @ace_description("Shows the named panel and hides its sibling panels - one call flips a whole menu screen.")
+# @ace_codegen_template("$HudKitBehavior.switch_screen({panel_name})")
 func switch_screen(panel_name: String) -> void:
 	var target: Node = _ui(panel_name)
 	if not (target is CanvasItem) or target.get_parent() == null:
@@ -188,14 +172,12 @@ func switch_screen(panel_name: String) -> void:
 		if sibling is CanvasItem:
 			(sibling as CanvasItem).visible = (sibling == target)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Show Toast")
-## @ace_category("UI")
-## @ace_description("Pops a bottom-centre message that fades out after toast_seconds.")
-## @ace_display_template("Show toast [b]{text}[/b]")
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.show_toast({text})")
+# @ace_action
+# @ace_featured
+# @ace_name("Show Toast")
+# @ace_description("Pops a bottom-centre message that fades out after toast_seconds.")
+# @ace_display_template("Show toast [b]{text}[/b]")
+# @ace_codegen_template("$HudKitBehavior.show_toast({text})")
 func show_toast(text: String) -> void:
 	var toast: Label = Label.new()
 	toast.text = text
@@ -214,13 +196,11 @@ func show_toast(text: String) -> void:
 	fade.tween_property(toast, "modulate:a", 0.0, 0.35)
 	fade.tween_callback(toast.queue_free)
 
-## @ace_action
-## @ace_name("Pop Floating Text")
-## @ace_category("UI")
-## @ace_description("Pops a damage number or score popup at a position: it drifts up, fades out and frees itself. No label to place, no tween to write, no cleanup to remember.")
-## @ace_display_template("Pop floating text [b]{text}[/b] at [b]{at}[/b]")
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.pop_floating_text({text}, {at}, {color})")
+# @ace_action
+# @ace_name("Pop Floating Text")
+# @ace_description("Pops a damage number or score popup at a position: it drifts up, fades out and frees itself. No label to place, no tween to write, no cleanup to remember.")
+# @ace_display_template("Pop floating text [b]{text}[/b] at [b]{at}[/b]")
+# @ace_codegen_template("$HudKitBehavior.pop_floating_text({text}, {at}, {color})")
 func pop_floating_text(text: String, at: Vector2, color: Color) -> void:
 	var label: Label = Label.new()
 	label.text = text
@@ -237,14 +217,12 @@ func pop_floating_text(text: String, at: Vector2, color: Color) -> void:
 	pop.set_parallel(false)
 	pop.tween_callback(label.queue_free)
 
-## @ace_action
-## @ace_name("Pop Floating Text As")
-## @ace_category("UI")
-## @ace_description("Pops a damage number in the colour its kind is drawn in - fire orange, ice blue - taken from the DamageTypeSet in this behaviour's Inspector rather than typed into the row. The style "crit" draws the number bigger, which is the whole language of a critical hit. Point Text Styles at a FloatingTextStyles file and the style also says how big, how far it rises, how hard it shakes and how long it stays. A style nothing names is drawn white and plain, so a game with neither file still gets its numbers.")
-## @ace_display_template("Pop floating text [b]{text}[/b] as [b]{style}[/b] at [b]{at}[/b]")
-## @ace_param_hint(style damage_type)
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.pop_floating_text_as({text}, {style}, {at})")
+# @ace_action
+# @ace_name("Pop Floating Text As")
+# @ace_description("Pops a damage number in the colour its kind is drawn in - fire orange, ice blue - taken from the DamageTypeSet in this behaviour's Inspector rather than typed into the row. The style "crit" draws the number bigger, which is the whole language of a critical hit. Point Text Styles at a FloatingTextStyles file and the style also says how big, how far it rises, how hard it shakes and how long it stays. A style nothing names is drawn white and plain, so a game with neither file still gets its numbers.")
+# @ace_display_template("Pop floating text [b]{text}[/b] as [b]{style}[/b] at [b]{at}[/b]")
+# @ace_param_hint(style damage_type)
+# @ace_codegen_template("$HudKitBehavior.pop_floating_text_as({text}, {style}, {at})")
 func pop_floating_text_as(text: String, style: String, at: Vector2) -> void:
 	var tint: Color = Color.WHITE
 	# Duck-typed rather than cast: the DamageTypeSet class ships in a pack a game need not have
@@ -292,13 +270,11 @@ func pop_floating_text_as(text: String, style: String, at: Vector2) -> void:
 	pop.set_parallel(false)
 	pop.tween_callback(label.queue_free)
 
-## @ace_action
-## @ace_name("Set Needle")
-## @ace_category("UI")
-## @ace_description("Shows a value from -1 to 1 as a needle in a named Control, with a mark at dead centre. The needle is built inside that Control the first time this runs, so the only thing the scene needs is an empty box of the right size. Past the warning mark the needle turns the warning colour, which is the whole of a balance meter's language.")
-## @ace_display_template("Set needle [b]{needle_name}[/b] to [b]{value}[/b], warning past [b]{warn_at}[/b]")
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.set_needle({needle_name}, {value}, {warn_at})")
+# @ace_action
+# @ace_name("Set Needle")
+# @ace_description("Shows a value from -1 to 1 as a needle in a named Control, with a mark at dead centre. The needle is built inside that Control the first time this runs, so the only thing the scene needs is an empty box of the right size. Past the warning mark the needle turns the warning colour, which is the whole of a balance meter's language.")
+# @ace_display_template("Set needle [b]{needle_name}[/b] to [b]{value}[/b], warning past [b]{warn_at}[/b]")
+# @ace_codegen_template("$HudKitBehavior.set_needle({needle_name}, {value}, {warn_at})")
 func set_needle(needle_name: String, value: float, warn_at: float) -> void:
 	var frame: Node = _ui(needle_name)
 	if not frame is Control:
@@ -325,32 +301,28 @@ func set_needle(needle_name: String, value: float, warn_at: float) -> void:
 	needle.position = Vector2((clampf(value, -1.0, 1.0) * 0.5 + 0.5) * width - 2.0, 0.0)
 	needle.color = needle_warning_colour if absf(value) >= warn_at else needle_colour
 
-## @ace_condition
-## @ace_name("Button Is")
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.button_is({button_name})")
+# @ace_condition
+# @ace_name("Button Is")
+# @ace_codegen_template("$HudKitBehavior.button_is({button_name})")
 func button_is(button_name: String) -> bool:
 	return last_button_name == button_name
 
-## @ace_condition
-## @ace_name("Is Panel Visible")
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.is_panel_visible({panel_name})")
+# @ace_condition
+# @ace_name("Is Panel Visible")
+# @ace_codegen_template("$HudKitBehavior.is_panel_visible({panel_name})")
 func is_panel_visible(panel_name: String) -> bool:
 	var target: Node = _ui(panel_name)
 	return target is CanvasItem and (target as CanvasItem).visible
 
-## @ace_expression
-## @ace_name("Last Button Name")
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.last_button_name_value()")
+# @ace_expression
+# @ace_name("Last Button Name")
+# @ace_codegen_template("$HudKitBehavior.last_button_name_value()")
 func last_button_name_value() -> String:
 	return last_button_name
 
-## @ace_expression
-## @ace_name("Bar Value")
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.bar_value({bar_name})")
+# @ace_expression
+# @ace_name("Bar Value")
+# @ace_codegen_template("$HudKitBehavior.bar_value({bar_name})")
 func bar_value(bar_name: String) -> float:
 	var target: Node = _ui(bar_name)
 	return (target as Range).value if target is Range else 0.0
@@ -365,18 +337,16 @@ func _on_hud_button_pressed(button_name: String) -> void:
 	last_button_name = button_name
 	on_button_pressed.emit()
 
-## @ace_expression
-## @ace_name("Bar Lag Value")
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.bar_lag_value({bar_name})")
+# @ace_expression
+# @ace_name("Bar Lag Value")
+# @ace_codegen_template("$HudKitBehavior.bar_lag_value({bar_name})")
 func bar_lag_value(bar_name: String) -> float:
 	var record: Variant = bar_lags.get(bar_name)
 	return float((record as Dictionary)["ghost"]) if record is Dictionary else bar_value(bar_name)
 
-## @ace_condition
-## @ace_name("Is Bar Lagging")
-## @ace_icon("res://eventsheet_addons/hud_kit/icon.svg")
-## @ace_codegen_template("$HudKitBehavior.is_bar_lagging({bar_name})")
+# @ace_condition
+# @ace_name("Is Bar Lagging")
+# @ace_codegen_template("$HudKitBehavior.is_bar_lagging({bar_name})")
 func is_bar_lagging(bar_name: String) -> bool:
 	var record: Variant = bar_lags.get(bar_name)
 	if not record is Dictionary:

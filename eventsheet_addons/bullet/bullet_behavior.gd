@@ -1,6 +1,6 @@
-## @ace_category("Bullet")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Bullet")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/bullet/icon.svg")
 class_name BulletBehavior
 extends Node
@@ -8,7 +8,7 @@ extends Node
 ##
 ## Changes on its parent: global_position, rotation, position.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 
@@ -20,8 +20,8 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Bullet Behavior needs a Node2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Bullet Hit")
+# @ace_trigger
+# @ace_name("On Bullet Hit")
 signal on_bullet_hit(collider: Object, point: Vector2, normal: Vector2)
 
 ## Travel speed in pixels per second.
@@ -114,12 +114,10 @@ func _process(delta: float) -> void:
 	if align_rotation and motion != Vector2.ZERO:
 		host.rotation = motion.angle()
 
-## @ace_action
-## @ace_name("Set Bullet Speed")
-## @ace_category("Bullet")
-## @ace_description("Changes speed, keeping the current direction.")
-## @ace_icon("res://eventsheet_addons/bullet/icon.svg")
-## @ace_codegen_template("$BulletBehavior.set_bullet_speed({value})")
+# @ace_action
+# @ace_name("Set Bullet Speed")
+# @ace_description("Changes speed, keeping the current direction.")
+# @ace_codegen_template("$BulletBehavior.set_bullet_speed({value})")
 func set_bullet_speed(value: float) -> void:
 	speed = value
 	var direction := Vector2(vel_x, vel_y).normalized()
@@ -132,12 +130,10 @@ func set_bullet_speed(value: float) -> void:
 	# through its Inspector flag rather than through Set Bullet Enabled still flies.
 	set_process(enabled_movement)
 
-## @ace_action
-## @ace_name("Set Angle Of Motion")
-## @ace_category("Bullet")
-## @ace_description("Redirects the bullet (degrees).")
-## @ace_icon("res://eventsheet_addons/bullet/icon.svg")
-## @ace_codegen_template("$BulletBehavior.set_angle_of_motion({degrees})")
+# @ace_action
+# @ace_name("Set Angle Of Motion")
+# @ace_description("Redirects the bullet (degrees).")
+# @ace_codegen_template("$BulletBehavior.set_angle_of_motion({degrees})")
 func set_angle_of_motion(degrees: float) -> void:
 	vel_x = cos(deg_to_rad(degrees)) * speed
 	vel_y = sin(deg_to_rad(degrees)) * speed
@@ -146,33 +142,27 @@ func set_angle_of_motion(degrees: float) -> void:
 	# through its Inspector flag rather than through Set Bullet Enabled still flies.
 	set_process(enabled_movement)
 
-## @ace_action
-## @ace_name("Set Gravity Angle")
-## @ace_category("Bullet")
-## @ace_description("Points gravity in a new direction, in degrees (90 = down, 270 = up, 0 = right) - the arc bends that way from now on. Magnet fields, wind wells, and upside-down zones in one action.")
-## @ace_icon("res://eventsheet_addons/bullet/icon.svg")
-## @ace_codegen_template("$BulletBehavior.set_gravity_angle({angle})")
+# @ace_action
+# @ace_name("Set Gravity Angle")
+# @ace_description("Points gravity in a new direction, in degrees (90 = down, 270 = up, 0 = right) - the arc bends that way from now on. Magnet fields, wind wells, and upside-down zones in one action.")
+# @ace_codegen_template("$BulletBehavior.set_gravity_angle({angle})")
 func set_gravity_angle(angle: float) -> void:
 	gravity_angle = wrapf(angle, 0.0, 360.0)
 
-## @ace_action
-## @ace_name("Set Bullet Enabled")
-## @ace_category("Bullet")
-## @ace_description("Pauses or resumes the movement.")
-## @ace_icon("res://eventsheet_addons/bullet/icon.svg")
-## @ace_codegen_template("$BulletBehavior.set_bullet_enabled({is_enabled})")
+# @ace_action
+# @ace_name("Set Bullet Enabled")
+# @ace_description("Pauses or resumes the movement.")
+# @ace_codegen_template("$BulletBehavior.set_bullet_enabled({is_enabled})")
 func set_bullet_enabled(is_enabled: bool) -> void:
 	enabled_movement = is_enabled
 	# A frozen bullet costs nothing per frame; enabling it turns the tick back on.
 	set_process(is_enabled)
 
-## @ace_action
-## @ace_name("Fired By")
-## @ace_category("Bullet")
-## @ace_description("Marks who fired this shot. Drop it on the row that spawns the bullet and every ownership row afterwards can answer: Hit Is Not My Owner stops it hurting its own shooter, Take Damage From credits the kill to the person rather than the projectile, and a turret's shot still traces back to whoever built the turret.")
-## @ace_display_template("Fired by [i]{shooter}[/i]")
-## @ace_icon("res://eventsheet_addons/bullet/icon.svg")
-## @ace_codegen_template("$BulletBehavior.set_fired_by({shooter})")
+# @ace_action
+# @ace_name("Fired By")
+# @ace_description("Marks who fired this shot. Drop it on the row that spawns the bullet and every ownership row afterwards can answer: Hit Is Not My Owner stops it hurting its own shooter, Take Damage From credits the kill to the person rather than the projectile, and a turret's shot still traces back to whoever built the turret.")
+# @ace_display_template("Fired by [i]{shooter}[/i]")
+# @ace_codegen_template("$BulletBehavior.set_fired_by({shooter})")
 func set_fired_by(shooter: Node) -> void:
 	if host != null:
 		host.set_meta(&"owner", shooter)

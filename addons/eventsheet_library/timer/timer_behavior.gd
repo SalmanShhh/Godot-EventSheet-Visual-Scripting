@@ -1,12 +1,12 @@
-## @ace_category("Timer")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Timer")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/timer/icon.svg")
 class_name TimerBehavior
 extends Node
 ## A private countdown clock on any node: set the seconds, start it, and On Timer fires when it reaches zero. Turn on repeating for a fixed metronome beat, or leave it off to fire once and stop.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node = null
 
@@ -18,9 +18,9 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Timer Behavior needs a parent node: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Timer")
-## @ace_category("Timer")
+# @ace_trigger
+# @ace_name("On Timer")
+# @ace_category("Timer")
 signal timer_finished
 
 ## Length of the countdown in seconds; the timer resets to this each time it repeats.
@@ -46,29 +46,25 @@ func _process(delta: float) -> void:
 				running = false
 				set_process(false)
 
-## @ace_action
-## @ace_name("Start Timer")
-## @ace_category("Timer")
-## @ace_description("Starts (or restarts) the countdown with the given duration.")
-## @ace_icon("res://eventsheet_addons/timer/icon.svg")
-## @ace_codegen_template("$TimerBehavior.start_timer({seconds})")
+# @ace_action
+# @ace_name("Start Timer")
+# @ace_description("Starts (or restarts) the countdown with the given duration.")
+# @ace_codegen_template("$TimerBehavior.start_timer({seconds})")
 func start_timer(seconds: float) -> void:
 	duration = seconds
 	remaining = seconds
 	running = true
 	set_process(true)
 
-## @ace_action
-## @ace_name("Stop Timer")
-## @ace_category("Timer")
-## @ace_description("Stops the countdown without firing On Timer.")
-## @ace_icon("res://eventsheet_addons/timer/icon.svg")
-## @ace_codegen_template("$TimerBehavior.stop_timer()")
+# @ace_action
+# @ace_name("Stop Timer")
+# @ace_description("Stops the countdown without firing On Timer.")
+# @ace_codegen_template("$TimerBehavior.stop_timer()")
 func stop_timer() -> void:
 	running = false
 	set_process(false)
 
-## @ace_hidden
+# @ace_hidden
 func save_state() -> Dictionary:
 	# Save-state seam: the Save System walks any node in its persist group (or targeted
 	# by Save/Load Node State) and duck-types these two methods. Plain data only.
@@ -79,7 +75,7 @@ func save_state() -> Dictionary:
 		"repeating": repeating
 	}
 
-## @ace_hidden
+# @ace_hidden
 func load_state(state: Dictionary) -> void:
 	if state.is_empty():
 		return

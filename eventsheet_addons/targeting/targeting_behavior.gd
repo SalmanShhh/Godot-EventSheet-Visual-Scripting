@@ -1,12 +1,12 @@
-## @ace_tags(combat, aim, targeting)
-## @ace_category("Targeting")
-## @ace_version(1.0.0)
+# @ace_tags(combat, aim, targeting)
+# @ace_category("Targeting")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/targeting/icon.svg")
 class_name TargetingBehavior
 extends Node
 ## Lock-on and aim help for a Node2D: hold the nearest hostile in a cone, cycle to the next, let go when it dies or leaves the range, and bend a stick direction toward whatever the player is nearly pointing at. The bend is the accessibility Aim Assist Radius setting, so a zero radius turns the help off from the options screen.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node2D = null
 
@@ -18,11 +18,11 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Targeting Behavior needs a Node2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Target Locked")
+# @ace_trigger
+# @ace_name("On Target Locked")
 signal target_locked(target: Node2D)
-## @ace_trigger
-## @ace_name("On Target Lost")
+# @ace_trigger
+# @ace_name("On Target Lost")
 signal target_lost(why: StringName)
 
 # --- Designer knobs (tune in the Inspector) ---
@@ -59,10 +59,10 @@ var _holding: bool = false
 # row's whole promise is that it keeps what it was pointed at whatever the range says.
 ## Distance in pixels beyond which a held target is let go.
 var _held_reach: float = 400.0
+# @ace_hidden
 ## The group members inside the cone and the reach, ordered left to right by their angle from the
 ## facing. That order is what makes Cycle Target predictable: the next target is the next one
 ## along, not whichever the tree happened to list second.
-## @ace_hidden
 func _ring_of(group: StringName, cone_degrees: float, reach: float) -> Array[Node2D]:
 	var found: Array[Node2D] = []
 	if host == null:
@@ -89,10 +89,10 @@ func _ring_of(group: StringName, cone_degrees: float, reach: float) -> Array[Nod
 			return origin.distance_to(a.global_position) < origin.distance_to(b.global_position)
 		return angle_a < angle_b)
 	return found
+# @ace_hidden
 ## The nearest thing the aim ray is pointing near enough to, inside the accessibility radius.
 ## "Near enough" is the perpendicular distance from the ray, which is what the shipped setting's
 ## own words mean by how far from dead centre a target still counts.
-## @ace_hidden
 func _nearest_under(aim: Vector2) -> Node2D:
 	var radius: float = _aim_assist_radius()
 	if radius <= 0.0 or host == null or aim.is_zero_approx():
@@ -139,14 +139,12 @@ func _process(_delta: float) -> void:
 	if not _view_is_clear(host.global_position, _target.global_position):
 		_drop(&"blocked")
 
-## @ace_action
-## @ace_featured
-## @ace_name("Lock On To Nearest")
-## @ace_category("Targeting")
-## @ace_description("Searches a cone around the host's facing for the closest member of a group inside a range, and holds it. On Target Locked fires when the held target changes; a search that finds nothing leaves the current lock alone, so a row polled every frame does not drop the target on the first frame it goes behind cover. Leave the group empty for the behaviour's own Target Group, and write 0 for the cone or the range to use its own defaults.")
-## @ace_display_template("lock on to the nearest [b]{group}[/b] in a [b]{cone_degrees}[/b]° cone, [b]{max_range}[/b] out")
-## @ace_icon("res://eventsheet_addons/targeting/icon.svg")
-## @ace_codegen_template("$TargetingBehavior.lock_nearest({group}, {cone_degrees}, {max_range})")
+# @ace_action
+# @ace_featured
+# @ace_name("Lock On To Nearest")
+# @ace_description("Searches a cone around the host's facing for the closest member of a group inside a range, and holds it. On Target Locked fires when the held target changes; a search that finds nothing leaves the current lock alone, so a row polled every frame does not drop the target on the first frame it goes behind cover. Leave the group empty for the behaviour's own Target Group, and write 0 for the cone or the range to use its own defaults.")
+# @ace_display_template("lock on to the nearest [b]{group}[/b] in a [b]{cone_degrees}[/b]° cone, [b]{max_range}[/b] out")
+# @ace_codegen_template("$TargetingBehavior.lock_nearest({group}, {cone_degrees}, {max_range})")
 func lock_nearest(group: StringName, cone_degrees: float, max_range: float) -> void:
 	var cone: float = cone_degrees if cone_degrees > 0.0 else lock_cone_degrees
 	var reach: float = max_range if max_range > 0.0 else lock_range
@@ -161,13 +159,11 @@ func lock_nearest(group: StringName, cone_degrees: float, max_range: float) -> v
 	_held_reach = reach
 	_take(best)
 
-## @ace_action
-## @ace_name("Lock On To")
-## @ace_category("Targeting")
-## @ace_description("Holds one node you name, whatever the cone and the range say - the boss the cutscene points at, the enemy the player clicked. It becomes the only entry in the ring, so a Cycle Target after it stays on it until the next search.")
-## @ace_display_template("lock on to [i]{node}[/i]")
-## @ace_icon("res://eventsheet_addons/targeting/icon.svg")
-## @ace_codegen_template("$TargetingBehavior.lock_on_to({node})")
+# @ace_action
+# @ace_name("Lock On To")
+# @ace_description("Holds one node you name, whatever the cone and the range say - the boss the cutscene points at, the enemy the player clicked. It becomes the only entry in the ring, so a Cycle Target after it stays on it until the next search.")
+# @ace_display_template("lock on to [i]{node}[/i]")
+# @ace_codegen_template("$TargetingBehavior.lock_on_to({node})")
 func lock_on_to(node: Node2D) -> void:
 	if node == null:
 		return
@@ -180,14 +176,12 @@ func lock_on_to(node: Node2D) -> void:
 	_held_reach = INF
 	_take(node)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Cycle Target")
-## @ace_category("Targeting")
-## @ace_description("Steps to the next candidate the last Lock On To Nearest found, left to right by angle, and wraps round to the leftmost after the rightmost. Candidates that died since the search are dropped first, so cycling never lands on a corpse. With nothing held it takes the leftmost.")
-## @ace_display_template("cycle to the next target")
-## @ace_icon("res://eventsheet_addons/targeting/icon.svg")
-## @ace_codegen_template("$TargetingBehavior.cycle_target()")
+# @ace_action
+# @ace_featured
+# @ace_name("Cycle Target")
+# @ace_description("Steps to the next candidate the last Lock On To Nearest found, left to right by angle, and wraps round to the leftmost after the rightmost. Candidates that died since the search are dropped first, so cycling never lands on a corpse. With nothing held it takes the leftmost.")
+# @ace_display_template("cycle to the next target")
+# @ace_codegen_template("$TargetingBehavior.cycle_target()")
 func cycle_target() -> void:
 	var living: Array[Node2D] = []
 	for candidate: Node2D in _ring:
@@ -201,62 +195,50 @@ func cycle_target() -> void:
 	var next: int = (_ring.find(_target) + 1) % _ring.size()
 	_take(_ring[next])
 
-## @ace_action
-## @ace_name("Release Lock")
-## @ace_category("Targeting")
-## @ace_description("Lets the held target go on purpose. On Target Lost fires with the reason 'released', so one trigger row cleans the reticle up whether the target died, walked away, ducked behind a wall or was let go.")
-## @ace_display_template("release the lock")
-## @ace_icon("res://eventsheet_addons/targeting/icon.svg")
-## @ace_codegen_template("$TargetingBehavior.release_lock()")
+# @ace_action
+# @ace_name("Release Lock")
+# @ace_description("Lets the held target go on purpose. On Target Lost fires with the reason 'released', so one trigger row cleans the reticle up whether the target died, walked away, ducked behind a wall or was let go.")
+# @ace_display_template("release the lock")
+# @ace_codegen_template("$TargetingBehavior.release_lock()")
 func release_lock() -> void:
 	_drop(&"released")
 
-## @ace_condition
-## @ace_name("Is Locked On")
-## @ace_category("Targeting")
-## @ace_description("True while this behaviour is holding a target that is still alive - the gate for a reticle, a homing shot or a strafe camera.")
-## @ace_display_template("locked on to something")
-## @ace_icon("res://eventsheet_addons/targeting/icon.svg")
-## @ace_codegen_template("$TargetingBehavior.is_locked_on()")
+# @ace_condition
+# @ace_name("Is Locked On")
+# @ace_description("True while this behaviour is holding a target that is still alive - the gate for a reticle, a homing shot or a strafe camera.")
+# @ace_display_template("locked on to something")
+# @ace_codegen_template("$TargetingBehavior.is_locked_on()")
 func is_locked_on() -> bool:
 	return _holding and is_instance_valid(_target)
 
-## @ace_expression
-## @ace_name("Locked Target")
-## @ace_category("Targeting")
-## @ace_description("The node being held, or null when nothing is. Hand it to any row that takes a node: a homing bullet, a Look At, a damage number's parent.")
-## @ace_icon("res://eventsheet_addons/targeting/icon.svg")
-## @ace_codegen_template("$TargetingBehavior.locked_target()")
+# @ace_expression
+# @ace_name("Locked Target")
+# @ace_description("The node being held, or null when nothing is. Hand it to any row that takes a node: a homing bullet, a Look At, a damage number's parent.")
+# @ace_codegen_template("$TargetingBehavior.locked_target()")
 func locked_target() -> Node2D:
 	return _target if is_locked_on() else null
 
-## @ace_expression
-## @ace_name("Locked Target On Screen")
-## @ace_category("Targeting")
-## @ace_description("Where the held target sits on screen right now, camera zoom and scroll included - the position for a reticle living on a CanvasLayer. Vector2.ZERO when nothing is held.")
-## @ace_icon("res://eventsheet_addons/targeting/icon.svg")
-## @ace_codegen_template("$TargetingBehavior.locked_target_on_screen()")
+# @ace_expression
+# @ace_name("Locked Target On Screen")
+# @ace_description("Where the held target sits on screen right now, camera zoom and scroll included - the position for a reticle living on a CanvasLayer. Vector2.ZERO when nothing is held.")
+# @ace_codegen_template("$TargetingBehavior.locked_target_on_screen()")
 func locked_target_on_screen() -> Vector2:
 	return _screen_point(_target.global_position) if is_locked_on() else Vector2.ZERO
 
-## @ace_expression
-## @ace_name("Distance To Target")
-## @ace_category("Targeting")
-## @ace_description("How far the held target is, in pixels. INF when nothing is held, so a row asking whether the target is closer than something is simply false rather than accidentally true.")
-## @ace_icon("res://eventsheet_addons/targeting/icon.svg")
-## @ace_codegen_template("$TargetingBehavior.distance_to_target()")
+# @ace_expression
+# @ace_name("Distance To Target")
+# @ace_description("How far the held target is, in pixels. INF when nothing is held, so a row asking whether the target is closer than something is simply false rather than accidentally true.")
+# @ace_codegen_template("$TargetingBehavior.distance_to_target()")
 func distance_to_target() -> float:
 	if not is_locked_on() or host == null:
 		return INF
 	return host.global_position.distance_to(_target.global_position)
 
-## @ace_expression
-## @ace_featured
-## @ace_name("Assisted Aim")
-## @ace_category("Targeting")
-## @ace_description("The aim direction you hand it, bent toward the nearest target the ray is nearly pointing at, by a strength from 0 (no help) to 1 (dead on). 'Nearly' is the accessibility Aim Assist Radius, measured across the ray, so a zero radius hands the direction straight back and the options screen turns the help off. The length you passed in is kept.")
-## @ace_icon("res://eventsheet_addons/targeting/icon.svg")
-## @ace_codegen_template("$TargetingBehavior.assisted_aim({direction}, {strength})")
+# @ace_expression
+# @ace_featured
+# @ace_name("Assisted Aim")
+# @ace_description("The aim direction you hand it, bent toward the nearest target the ray is nearly pointing at, by a strength from 0 (no help) to 1 (dead on). 'Nearly' is the accessibility Aim Assist Radius, measured across the ray, so a zero radius hands the direction straight back and the options screen turns the help off. The length you passed in is kept.")
+# @ace_codegen_template("$TargetingBehavior.assisted_aim({direction}, {strength})")
 func assisted_aim(direction: Vector2, strength: float) -> Vector2:
 	if direction.is_zero_approx():
 		return direction
@@ -266,43 +248,41 @@ func assisted_aim(direction: Vector2, strength: float) -> Vector2:
 	var toward: Vector2 = (best.global_position - host.global_position).normalized()
 	return direction.normalized().slerp(toward, clampf(strength, 0.0, 1.0)) * direction.length()
 
-## @ace_expression
-## @ace_name("Magnetism")
-## @ace_category("Targeting")
-## @ace_description("The turn rate you hand it, slowed by the behaviour's Magnetism Slowdown while the aim is crossing a target - the drag that makes a stick settle on an enemy instead of sliding past. Unchanged when nothing is under the aim, and unchanged when the Aim Assist Radius is zero.")
-## @ace_icon("res://eventsheet_addons/targeting/icon.svg")
-## @ace_codegen_template("$TargetingBehavior.magnetism({turn_rate})")
+# @ace_expression
+# @ace_name("Magnetism")
+# @ace_description("The turn rate you hand it, slowed by the behaviour's Magnetism Slowdown while the aim is crossing a target - the drag that makes a stick settle on an enemy instead of sliding past. Unchanged when nothing is under the aim, and unchanged when the Aim Assist Radius is zero.")
+# @ace_codegen_template("$TargetingBehavior.magnetism({turn_rate})")
 func magnetism(turn_rate: float) -> float:
 	if host == null or _nearest_under(_facing()) == null:
 		return turn_rate
 	return turn_rate * clampf(magnetism_slowdown, 0.0, 1.0)
 
+# @ace_hidden
 ## The aim-assist dial, read from the one place the accessibility rows write it. Zero is the
 ## honest off switch: no target is ever inside a radius of zero, so every assist row hands back
 ## exactly what it was given and the options screen turns the whole feature off with one slider.
-## @ace_hidden
 func _aim_assist_radius() -> float:
 	return maxf(float(Engine.get_meta("aim_assist_radius", 0.0)), 0.0)
 
+# @ace_hidden
 ## Which way the cone points. In 2D that is the host's own rotation, the same facing the Line Of
 ## Sight behaviour measures its view fan around, so a guard and its lock agree about "in front".
-## @ace_hidden
 func _facing() -> Vector2:
 	return Vector2.RIGHT.rotated(host.rotation) if host != null else Vector2.RIGHT
 
+# @ace_hidden
 ## Everything in a group, as the tree holds it. One seam, because a headless test has no tree and
 ## every row in this pack that searches goes through here.
-## @ace_hidden
 func _group_members(group: StringName) -> Array:
 	if host == null or not host.is_inside_tree():
 		return []
 	var searched: StringName = group if not String(group).is_empty() else target_group
 	return host.get_tree().get_nodes_in_group(searched)
 
+# @ace_hidden
 ## Whether nothing solid stands between two world points. A Line Of Sight behaviour attached to
 ## the same host answers it if there is one, so the two packs share one idea of a wall; otherwise
 ## this casts its own ray on blocker_mask. With sight checking off the answer is always yes.
-## @ace_hidden
 func _view_is_clear(from_point: Vector2, to_point: Vector2) -> bool:
 	if not require_line_of_sight:
 		return true
@@ -317,17 +297,17 @@ func _view_is_clear(from_point: Vector2, to_point: Vector2) -> bool:
 	query.collision_mask = blocker_mask
 	return host.get_world_2d().direct_space_state.intersect_ray(query).is_empty()
 
+# @ace_hidden
 ## Where a world point sits on screen right now - the canvas transform, which is the same
 ## arithmetic the built-in World Point To Screen expression writes.
-## @ace_hidden
 func _screen_point(world_point: Vector2) -> Vector2:
 	if host == null or not host.is_inside_tree():
 		return Vector2.ZERO
 	return host.get_viewport().get_canvas_transform() * world_point
 
+# @ace_hidden
 ## Takes a node as the held target and says so once. Locking on to what is already held is not a
 ## new lock, so a row polled every frame does not fire On Target Locked every frame.
-## @ace_hidden
 func _take(candidate: Node2D) -> void:
 	if candidate == null or candidate == _target:
 		return
@@ -336,10 +316,10 @@ func _take(candidate: Node2D) -> void:
 	set_process(true)
 	target_locked.emit(candidate)
 
+# @ace_hidden
 ## Lets the held target go and says why. Every ending goes through here - a death, a target that
 ## walked out of reach, a wall, and a deliberate Release Lock - so one On Target Lost row cleans
 ## up after all four and the reason word tells them apart.
-## @ace_hidden
 func _drop(why: StringName) -> void:
 	if not _holding:
 		return

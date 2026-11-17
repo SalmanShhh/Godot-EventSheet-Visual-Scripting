@@ -1,27 +1,27 @@
-## @ace_tags(input, qte, rhythm, prompt, glyph)
-## @ace_category("Prompts")
-## @ace_version(1.0.0)
+# @ace_tags(input, qte, rhythm, prompt, glyph)
+# @ace_category("Prompts")
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/prompts/icon.svg")
 class_name PromptsAddon
 extends Node
 ## Quick-time prompts as the Prompts autoload: a control to press with the right glyph for the device in the player's hands, a ring that shrinks while the moment lasts, holds, mashes and sequences, and notes that travel a lane to land on the beat. It grades in the same words the Timed Input rows do. The glyphs are a GlyphSheetResource you own; the prompt and the lane are starter scenes you restyle.
 
+# @ace_trigger
+# @ace_name("On Prompt Hit")
 ## Fires when the player answers a prompt in time, carrying the control it was asking for and how
 ## well it was answered - "perfect" or "good", the same two words the Timed Input module's Window
 ## Grade and Beat Grade already speak, so one hit reaction serves a window, a beat and a prompt.
-## @ace_trigger
-## @ace_name("On Prompt Hit")
 signal prompt_hit(action: String, grade: String)
+# @ace_trigger
+# @ace_name("On Prompt Missed")
 ## Fires when a prompt runs out with nothing pressed, or when a note goes past its beat unanswered,
 ## carrying the control that was missed. The punish, the failed grab, the dropped note.
-## @ace_trigger
-## @ace_name("On Prompt Missed")
 signal prompt_missed(action: String)
+# @ace_trigger
+# @ace_name("On Sequence Finished")
 ## Fires once a sequence ends, carrying whether it was completed: true when every prompt in it was
 ## answered, false on the first miss or a cancel. One trigger for both endings, because a cutscene
 ## branches on the same question either way.
-## @ace_trigger
-## @ace_name("On Sequence Finished")
 signal sequence_finished(completed: bool)
 
 ## Scene each prompt is drawn as; copy the starter to restyle it.
@@ -159,12 +159,12 @@ var _layer: CanvasLayer = null
 ## The node the current prompt is shown at.
 var _at: Node = null
 
+# @ace_hidden
 ## The picture a sheet holds for a control on a device, with the two fallbacks that make a
 ## half-drawn sheet usable: the layout in hand, then the generic pad, then the keyboard. Read by
 ## FIELD NAME rather than by class, so a project that installed this director without the glyph
 ## resource beside it still parses, and a sheet somebody wrote themselves works as long as it spells
 ## the same five names.
-## @ace_hidden
 func glyph_in(sheet: Resource, on_device: String, action: String) -> Texture2D:
 	if sheet == null or action.is_empty():
 		return null
@@ -175,9 +175,9 @@ func glyph_in(sheet: Resource, on_device: String, action: String) -> Texture2D:
 			if found is Texture2D:
 				return found
 	return null
+# @ace_hidden
 ## One copy of the prompt scene, dressed for a control: the glyph for the device in hand, or the
 ## Input Map's own words when the sheet has drawn no picture for it.
-## @ace_hidden
 func _build_prompt(action: String) -> Node:
 	if not ResourceLoader.exists(prompt_scene):
 		if debug_mode:
@@ -200,9 +200,9 @@ func _build_prompt(action: String) -> Node:
 		words.add_theme_font_size_override("font_size",
 			int(round(float(PROMPT_FONT_SIZE) * float(Engine.get_meta("text_size_scale", 1.0)))))
 	return built
+# @ace_hidden
 ## One note on a lane, built out of the lane's own hidden Note child so the art is the lane's rather
 ## than this pack's. A lane with no such child carries no notes, and says so in Debug Mode.
-## @ace_hidden
 func _spawn_note(action: String, lane: Node) -> Node:
 	var template: Node = lane.get_node_or_null("Note")
 	if template == null:
@@ -235,52 +235,44 @@ func _process(delta: float) -> void:
 	if _at_rest():
 		set_process(false)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Prompt")
-## @ace_category("Prompts")
-## @ace_description("Asks the player for a control, for the seconds given, drawn over a node. The glyph is the one for the device in their hands. Answering fires On Prompt Hit with a grade; the seconds running out fires On Prompt Missed.")
-## @ace_display_template("Prompt [b]{action}[/b] for [b]{seconds}[/b] s at [i]{at}[/i]")
-## @ace_param_hint(action input_action)
-## @ace_icon("res://eventsheet_addons/prompts/icon.svg")
-## @ace_codegen_template("Prompts.prompt({action}, {seconds}, {at})")
+# @ace_action
+# @ace_featured
+# @ace_name("Prompt")
+# @ace_description("Asks the player for a control, for the seconds given, drawn over a node. The glyph is the one for the device in their hands. Answering fires On Prompt Hit with a grade; the seconds running out fires On Prompt Missed.")
+# @ace_display_template("Prompt [b]{action}[/b] for [b]{seconds}[/b] s at [i]{at}[/i]")
+# @ace_param_hint(action input_action)
+# @ace_codegen_template("Prompts.prompt({action}, {seconds}, {at})")
 func prompt(action: String, seconds: float, at: Node) -> void:
 	_leave_sequence()
 	_open_prompt(KIND_PRESS, action, seconds, at)
 
-## @ace_action
-## @ace_name("Hold Prompt")
-## @ace_category("Prompts")
-## @ace_description("Asks the player to HOLD a control down for a while, within the seconds given - the winch, the door being forced, the finisher pressed and kept pressed. Letting go resets the hold, because a hold that survived being let go is not a hold.")
-## @ace_display_template("Hold [b]{action}[/b] for [b]{hold}[/b] s within [b]{seconds}[/b] s")
-## @ace_param_hint(action input_action)
-## @ace_icon("res://eventsheet_addons/prompts/icon.svg")
-## @ace_codegen_template("Prompts.hold_prompt({action}, {hold}, {seconds}, {at})")
+# @ace_action
+# @ace_name("Hold Prompt")
+# @ace_description("Asks the player to HOLD a control down for a while, within the seconds given - the winch, the door being forced, the finisher pressed and kept pressed. Letting go resets the hold, because a hold that survived being let go is not a hold.")
+# @ace_display_template("Hold [b]{action}[/b] for [b]{hold}[/b] s within [b]{seconds}[/b] s")
+# @ace_param_hint(action input_action)
+# @ace_codegen_template("Prompts.hold_prompt({action}, {hold}, {seconds}, {at})")
 func hold_prompt(action: String, hold: float, seconds: float, at: Node) -> void:
 	_leave_sequence()
 	_hold_needed = maxf(hold, 0.01)
 	_open_prompt(KIND_HOLD, action, seconds, at)
 
-## @ace_action
-## @ace_name("Mash Prompt")
-## @ace_category("Prompts")
-## @ace_description("Asks the player for a number of presses within the seconds given - breaking free of a grab, cranking a handle, shaking off a swarm. It is the shipped mash rows with a prompt over the top.")
-## @ace_display_template("Mash [b]{action}[/b] x[b]{presses}[/b] in [b]{seconds}[/b] s")
-## @ace_param_hint(action input_action)
-## @ace_icon("res://eventsheet_addons/prompts/icon.svg")
-## @ace_codegen_template("Prompts.mash_prompt({action}, {presses}, {seconds}, {at})")
+# @ace_action
+# @ace_name("Mash Prompt")
+# @ace_description("Asks the player for a number of presses within the seconds given - breaking free of a grab, cranking a handle, shaking off a swarm. It is the shipped mash rows with a prompt over the top.")
+# @ace_display_template("Mash [b]{action}[/b] x[b]{presses}[/b] in [b]{seconds}[/b] s")
+# @ace_param_hint(action input_action)
+# @ace_codegen_template("Prompts.mash_prompt({action}, {presses}, {seconds}, {at})")
 func mash_prompt(action: String, presses: int, seconds: float, at: Node) -> void:
 	_leave_sequence()
 	_mash_needed = maxi(presses, 1)
 	_open_prompt(KIND_MASH, action, seconds, at)
 
-## @ace_action
-## @ace_name("Sequence")
-## @ace_category("Prompts")
-## @ace_description("Asks for several controls one after another, as a comma-separated list, each with the same seconds to answer. On Sequence Finished fires once at the end carrying whether every one of them landed; the first miss ends it.")
-## @ace_display_template("Sequence [b]{actions}[/b], [b]{seconds}[/b] s each")
-## @ace_icon("res://eventsheet_addons/prompts/icon.svg")
-## @ace_codegen_template("Prompts.sequence({actions}, {seconds}, {at})")
+# @ace_action
+# @ace_name("Sequence")
+# @ace_description("Asks for several controls one after another, as a comma-separated list, each with the same seconds to answer. On Sequence Finished fires once at the end carrying whether every one of them landed; the first miss ends it.")
+# @ace_display_template("Sequence [b]{actions}[/b], [b]{seconds}[/b] s each")
+# @ace_codegen_template("Prompts.sequence({actions}, {seconds}, {at})")
 func sequence(actions: String, seconds: float, at: Node) -> void:
 	var wanted: PackedStringArray = PackedStringArray()
 	for part: String in actions.split(","):
@@ -303,12 +295,10 @@ func sequence(actions: String, seconds: float, at: Node) -> void:
 	_in_sequence = true
 	_open_prompt(KIND_PRESS, wanted[0], seconds, at)
 
-## @ace_action
-## @ace_name("Cancel Prompt")
-## @ace_category("Prompts")
-## @ace_description("Takes whatever is being asked off the screen with no grade and no miss - the cutscene was skipped, the enemy died first, the player walked away. A sequence cancelled this way finishes uncompleted.")
-## @ace_icon("res://eventsheet_addons/prompts/icon.svg")
-## @ace_codegen_template("Prompts.cancel_prompt()")
+# @ace_action
+# @ace_name("Cancel Prompt")
+# @ace_description("Takes whatever is being asked off the screen with no grade and no miss - the cutscene was skipped, the enemy died first, the player walked away. A sequence cancelled this way finishes uncompleted.")
+# @ace_codegen_template("Prompts.cancel_prompt()")
 func cancel_prompt() -> void:
 	_open = false
 	_close_prompt()
@@ -317,120 +307,102 @@ func cancel_prompt() -> void:
 	if _in_sequence:
 		_finish_sequence(false)
 
-## @ace_action
-## @ace_featured
-## @ace_name("Prompt On Beat")
-## @ace_category("Prompts")
-## @ace_description("Sends a note down a lane to land on the song's next beat, where pressing the control grades it. With a Music director in the project the moment is the song's own next beat; without one it is the Lead Seconds from now, so a lane works on its own too.")
-## @ace_display_template("Prompt [b]{action}[/b] on the beat in [i]{lane}[/i]")
-## @ace_param_hint(action input_action)
-## @ace_icon("res://eventsheet_addons/prompts/icon.svg")
-## @ace_codegen_template("Prompts.prompt_on_beat({action}, {lane})")
+# @ace_action
+# @ace_featured
+# @ace_name("Prompt On Beat")
+# @ace_description("Sends a note down a lane to land on the song's next beat, where pressing the control grades it. With a Music director in the project the moment is the song's own next beat; without one it is the Lead Seconds from now, so a lane works on its own too.")
+# @ace_display_template("Prompt [b]{action}[/b] on the beat in [i]{lane}[/i]")
+# @ace_param_hint(action input_action)
+# @ace_codegen_template("Prompts.prompt_on_beat({action}, {lane})")
 func prompt_on_beat(action: String, lane: Node) -> void:
 	var at_moment: float = now()
 	add_note(action, beat_moment(at_moment, _music_beat_at(), lead_seconds), lane)
 
-## @ace_action
-## @ace_name("Force Device")
-## @ace_category("Prompts")
-## @ace_description("Shows every glyph for one device from now on, whatever the player last touched - the options screen showing a layout on purpose, the tutorial card printed for a console. "auto" hands it back to the last input event.")
-## @ace_display_template("Force device [b]{device_name}[/b]")
-## @ace_param_options(device_name auto, keyboard, pad, xbox, playstation, nintendo)
-## @ace_icon("res://eventsheet_addons/prompts/icon.svg")
-## @ace_codegen_template("Prompts.force_device("{device_name}")")
+# @ace_action
+# @ace_name("Force Device")
+# @ace_description("Shows every glyph for one device from now on, whatever the player last touched - the options screen showing a layout on purpose, the tutorial card printed for a console. "auto" hands it back to the last input event.")
+# @ace_display_template("Force device [b]{device_name}[/b]")
+# @ace_param_options(device_name auto, keyboard, pad, xbox, playstation, nintendo)
+# @ace_codegen_template("Prompts.force_device("{device_name}")")
 func force_device(device_name: String) -> void:
 	var word: String = device_name.strip_edges().to_lower()
 	_forced_device = "" if word == "auto" else word
 
-## @ace_condition
-## @ace_name("Prompt Is Open")
-## @ace_category("Prompts")
-## @ace_description("True while the player is being asked for something and has not answered or run out yet.")
-## @ace_icon("res://eventsheet_addons/prompts/icon.svg")
-## @ace_codegen_template("Prompts.prompt_is_open()")
+# @ace_condition
+# @ace_name("Prompt Is Open")
+# @ace_description("True while the player is being asked for something and has not answered or run out yet.")
+# @ace_codegen_template("Prompts.prompt_is_open()")
 func prompt_is_open() -> bool:
 	return _open
 
-## @ace_condition
-## @ace_name("Grade Is")
-## @ace_category("Prompts")
-## @ace_description("True when the last prompt to end ended this way - "perfect", "good" or "miss". The same three words a note is graded in, so one branch serves both.")
-## @ace_display_template("Grade is [b]{grade}[/b]")
-## @ace_param_options(grade perfect, good, miss)
-## @ace_icon("res://eventsheet_addons/prompts/icon.svg")
-## @ace_codegen_template("Prompts.grade_is("{grade}")")
+# @ace_condition
+# @ace_name("Grade Is")
+# @ace_description("True when the last prompt to end ended this way - "perfect", "good" or "miss". The same three words a note is graded in, so one branch serves both.")
+# @ace_display_template("Grade is [b]{grade}[/b]")
+# @ace_param_options(grade perfect, good, miss)
+# @ace_codegen_template("Prompts.grade_is("{grade}")")
 func grade_is(grade: String) -> bool:
 	return _last_grade == grade.strip_edges().to_lower()
 
-## @ace_expression
-## @ace_name("Last Grade")
-## @ace_category("Prompts")
-## @ace_description("How the last prompt ended, as a word: "perfect", "good" or "miss". Empty until the first one ends.")
-## @ace_icon("res://eventsheet_addons/prompts/icon.svg")
-## @ace_codegen_template("Prompts.last_grade()")
+# @ace_expression
+# @ace_name("Last Grade")
+# @ace_description("How the last prompt ended, as a word: "perfect", "good" or "miss". Empty until the first one ends.")
+# @ace_codegen_template("Prompts.last_grade()")
 func last_grade() -> String:
 	return _last_grade
 
-## @ace_expression
-## @ace_name("Prompt Time Left")
-## @ace_category("Prompts")
-## @ace_description("Seconds left before the open prompt runs out, and 0 when nothing is open - the fill of a bar drawn somewhere other than on the prompt itself.")
-## @ace_icon("res://eventsheet_addons/prompts/icon.svg")
-## @ace_codegen_template("Prompts.prompt_time_left()")
+# @ace_expression
+# @ace_name("Prompt Time Left")
+# @ace_description("Seconds left before the open prompt runs out, and 0 when nothing is open - the fill of a bar drawn somewhere other than on the prompt itself.")
+# @ace_codegen_template("Prompts.prompt_time_left()")
 func prompt_time_left() -> float:
 	if not _open:
 		return 0.0
 	return maxf(_deadline - now(), 0.0)
 
-## @ace_expression
-## @ace_name("Sequence Progress")
-## @ace_category("Prompts")
-## @ace_description("How far through a sequence the player is, from 0 to 1 - the number a progress bar over a cutscene reads.")
-## @ace_icon("res://eventsheet_addons/prompts/icon.svg")
-## @ace_codegen_template("Prompts.sequence_progress()")
+# @ace_expression
+# @ace_name("Sequence Progress")
+# @ace_description("How far through a sequence the player is, from 0 to 1 - the number a progress bar over a cutscene reads.")
+# @ace_codegen_template("Prompts.sequence_progress()")
 func sequence_progress() -> float:
 	if _queue_total <= 0:
 		return 0.0
 	return float(_queue_done) / float(_queue_total)
 
-## @ace_expression
-## @ace_featured
-## @ace_name("Glyph For")
-## @ace_category("Prompts")
-## @ace_description("The picture that stands for a control on the device in the player's hands, straight from your glyph sheet. Put it in a texture anywhere - a HUD hint, a tutorial card, a rebinding screen - and the whole game follows the pad the player picked up.")
-## @ace_param_hint(action input_action)
-## @ace_icon("res://eventsheet_addons/prompts/icon.svg")
-## @ace_codegen_template("Prompts.glyph_for({action})")
+# @ace_expression
+# @ace_featured
+# @ace_name("Glyph For")
+# @ace_description("The picture that stands for a control on the device in the player's hands, straight from your glyph sheet. Put it in a texture anywhere - a HUD hint, a tutorial card, a rebinding screen - and the whole game follows the pad the player picked up.")
+# @ace_param_hint(action input_action)
+# @ace_codegen_template("Prompts.glyph_for({action})")
 func glyph_for(action: String) -> Texture2D:
 	return glyph_in(glyphs, device(), action)
 
-## @ace_expression
-## @ace_name("Device")
-## @ace_category("Prompts")
-## @ace_description("Which device the glyphs are being drawn for right now: "keyboard", "pad", or one of the three console layouts. It follows the last input event unless Force Device has fixed it.")
-## @ace_icon("res://eventsheet_addons/prompts/icon.svg")
-## @ace_codegen_template("Prompts.device()")
+# @ace_expression
+# @ace_name("Device")
+# @ace_description("Which device the glyphs are being drawn for right now: "keyboard", "pad", or one of the three console layouts. It follows the last input event unless Force Device has fixed it.")
+# @ace_codegen_template("Prompts.device()")
 func device() -> String:
 	return _forced_device if not _forced_device.is_empty() else _device
 
+# @ace_hidden
 ## The engine clock, in seconds, written the way the Timed Input module writes it. It keeps counting
 ## while the game is paused, which is why a prompt opened before a pause runs out during one - the
 ## same caveat the window rows carry, and the reason both can be graded against the same moment.
-## @ace_hidden
 func now() -> float:
 	return Time.get_ticks_msec() / 1000.0
 
+# @ace_hidden
 ## A window in milliseconds as the seconds everything here measures in. Prompts are tuned in
 ## milliseconds because that is the unit a timing window is discussed in; the arithmetic is not.
-## @ace_hidden
 func window_seconds(milliseconds: int) -> float:
 	return maxf(float(milliseconds), 0.0) / 1000.0
 
+# @ace_hidden
 ## How a prompt that was answered in time is graded: by how much of its window was still LEFT. An
 ## answer that came straight away kept nearly all of it and is perfect; one that came at the last
 ## moment kept none and is good. A window of no length at all grades good rather than dividing by
 ## nothing.
-## @ace_hidden
 func timed_grade(at_moment: float, opened_at: float, deadline: float, share: float) -> String:
 	var span: float = deadline - opened_at
 	if span <= 0.0:
@@ -439,10 +411,10 @@ func timed_grade(at_moment: float, opened_at: float, deadline: float, share: flo
 		return GRADE_PERFECT
 	return GRADE_GOOD
 
+# @ace_hidden
 ## How a note is graded: by how far the press was from the moment it was asked for, either side of
 ## it. Inside the perfect window it is perfect, inside the hit window it is good, and beyond that it
 ## is not an answer to this note at all.
-## @ace_hidden
 func beat_grade(pressed_at: float, beat_at: float, perfect: float, hit: float) -> String:
 	var off: float = absf(pressed_at - beat_at)
 	if off <= perfect:
@@ -451,34 +423,34 @@ func beat_grade(pressed_at: float, beat_at: float, perfect: float, hit: float) -
 		return GRADE_GOOD
 	return GRADE_MISS
 
+# @ace_hidden
 ## The moment a note must be hit on. A Music director in the project answers with the song's next
 ## beat, and that moment is already on the engine clock this pack grades against, so a rhythm lane
 ## needs no arithmetic anywhere. With no director - or before the first track starts - the note
 ## lands a lead's worth of time from now, which is what makes the pack work on its own.
-## @ace_hidden
 func beat_moment(at_moment: float, from_music: float, lead: float) -> float:
 	if from_music > at_moment:
 		return from_music
 	return at_moment + maxf(lead, 0.01)
 
+# @ace_hidden
 ## How far along its lane a note has travelled, from 0 where it was spawned to 1 on its moment. It
 ## goes on past 1 nowhere: a note that is late is drawn on the line until it expires.
-## @ace_hidden
 func note_progress(at_moment: float, from: float, at: float) -> float:
 	if at <= from:
 		return 1.0
 	return clampf((at_moment - from) / (at - from), 0.0, 1.0)
 
+# @ace_hidden
 ## Whether a note is past answering: its moment has gone by further than the hit window reaches, so
 ## nothing the player does now could have been an answer to it.
-## @ace_hidden
 func note_expired(at_moment: float, at: float, hit: float) -> bool:
 	return at_moment - at > hit
 
+# @ace_hidden
 ## Which of the notes a press belongs to: the one for that control whose moment is nearest, so two
 ## notes for the same control in quick succession are answered in the order they arrive rather than
 ## in the order they were spawned. -1 when no note is waiting for that control.
-## @ace_hidden
 func nearest_note(action: String, at_moment: float) -> int:
 	var best: int = -1
 	var closest: float = 0.0
@@ -491,20 +463,20 @@ func nearest_note(action: String, at_moment: float) -> int:
 			closest = off
 	return best
 
+# @ace_hidden
 ## How big a flash may be and how long it may take, once the player's no-flashing answer has had its
 ## say. Asked for as a strength and a duration, given back as the pair actually allowed: clamped
 ## small and stretched slow when flashing is off, so the prompt still says it was hit without
 ## strobing anybody.
-## @ace_hidden
 func flash_for(strength: float, seconds: float, quiet: bool) -> Vector2:
 	if quiet:
 		return Vector2(clampf(strength, 0.0, FLASH_CEILING), maxf(seconds, FLASH_FLOOR_SECONDS))
 	return Vector2(maxf(strength, 0.0), maxf(seconds, 0.01))
 
+# @ace_hidden
 ## Which of the five devices a joypad's product name reads as. Godot hands out the pad's own string
 ## and every layout writes its family into it, so the match is a word search rather than a table of
 ## every controller ever made. A name matching none of them is the generic pad.
-## @ace_hidden
 func device_for_name(product_name: String) -> String:
 	var word: String = product_name.to_lower()
 	for layout: String in LAYOUT_WORDS:
@@ -513,10 +485,10 @@ func device_for_name(product_name: String) -> String:
 				return layout
 	return DEVICE_PAD
 
+# @ace_hidden
 ## The Input Map's own words for a control ("Space", "A button") - the same answer the shipped
 ## Prompt For Control row gives, used when no glyph was drawn for this one. A control the project
 ## does not have reads back as its own name, which is what somebody looking at a typo needs to see.
-## @ace_hidden
 func control_text(action: String) -> String:
 	if action.is_empty() or not InputMap.has_action(action):
 		return action
@@ -525,10 +497,10 @@ func control_text(action: String) -> String:
 		return action
 	return events[0].as_text()
 
+# @ace_hidden
 ## One frame of the open prompt: the press, the hold and the mash, then the deadline. Given the
 ## moment and what the controls did rather than reading them itself, which is what lets a whole
 ## prompt be driven and pinned with no input device and no scene tree.
-## @ace_hidden
 func step(at_moment: float, delta: float, just_pressed: bool, held: bool) -> void:
 	if not _open:
 		return
@@ -549,10 +521,10 @@ func step(at_moment: float, delta: float, just_pressed: bool, held: bool) -> voi
 	if at_moment >= _deadline:
 		_miss(at_moment)
 
+# @ace_hidden
 ## One frame of the notes: a press is graded against the nearest note for that control, and a note
 ## whose moment has gone past answering is a miss. A press that is nowhere near any note is left
 ## alone rather than punished, because on a rhythm lane the player is allowed to be early.
-## @ace_hidden
 func step_notes(at_moment: float, pressed_action: String) -> void:
 	if not pressed_action.is_empty():
 		var index: int = nearest_note(pressed_action, at_moment)
@@ -572,9 +544,9 @@ func step_notes(at_moment: float, pressed_action: String) -> void:
 			prompt_missed.emit(missed)
 		late -= 1
 
+# @ace_hidden
 ## Puts a note on a lane. Split from Prompt On Beat so a test can put one on no lane at all and
 ## still ask every question about it - which is the whole of what a note is, the drawing aside.
-## @ace_hidden
 func add_note(action: String, at: float, lane: Node) -> void:
 	var note: Dictionary = {"action": action, "at": at, "from": now(), "lane": lane, "node": null}
 	if lane != null:
@@ -582,9 +554,9 @@ func add_note(action: String, at: float, lane: Node) -> void:
 	_notes.append(note)
 	set_process(true)
 
+# @ace_hidden
 ## Takes a note off the lane, freeing whatever was drawn for it. `hit` is only whether it is worth
 ## flashing on the way out - a note that expired leaves quietly.
-## @ace_hidden
 func _drop_note(index: int, hit: bool) -> void:
 	if index < 0 or index >= _notes.size():
 		return
@@ -596,9 +568,9 @@ func _drop_note(index: int, hit: bool) -> void:
 		else:
 			(node as Node).queue_free()
 
+# @ace_hidden
 ## Opens a prompt of any of the three kinds. One place, so the deadline, the grade and the triggers
 ## cannot drift apart between a press, a hold and a mash.
-## @ace_hidden
 func _open_prompt(kind: String, action: String, seconds: float, at: Node) -> void:
 	_close_prompt()
 	_open = true
@@ -613,9 +585,9 @@ func _open_prompt(kind: String, action: String, seconds: float, at: Node) -> voi
 	_show_prompt(action, at)
 	set_process(true)
 
+# @ace_hidden
 ## A prompt answered in time: the grade is decided once, the trigger carries it, and a sequence
 ## moves on to its next control.
-## @ace_hidden
 func _land(at_moment: float) -> void:
 	_last_grade = timed_grade(at_moment, _opened_at, _deadline, perfect_share)
 	_open = false
@@ -626,9 +598,9 @@ func _land(at_moment: float) -> void:
 	if _in_sequence:
 		_advance_sequence()
 
+# @ace_hidden
 ## A prompt that ran out: the grade is the miss, the trigger carries the control nobody pressed, and
 ## a sequence ends here rather than carrying on without it.
-## @ace_hidden
 func _miss(_at_moment: float) -> void:
 	_last_grade = GRADE_MISS
 	_open = false
@@ -638,9 +610,9 @@ func _miss(_at_moment: float) -> void:
 	if _in_sequence:
 		_finish_sequence(false)
 
+# @ace_hidden
 ## The next control of a sequence, or the end of it. Progress counts what has been ANSWERED, so it
 ## reads 1 on the frame the last one lands rather than on the frame after.
-## @ace_hidden
 func _advance_sequence() -> void:
 	_queue_done += 1
 	if _queue_done >= _queue_total:
@@ -648,37 +620,37 @@ func _advance_sequence() -> void:
 		return
 	_open_prompt(KIND_PRESS, _queue[_queue_done], _queue_seconds, _queue_at)
 
+# @ace_hidden
 ## The end of a sequence, either way. The queue is emptied here so a second sequence cannot inherit
 ## the first one's leftovers.
-## @ace_hidden
 func _finish_sequence(completed: bool) -> void:
 	_in_sequence = false
 	_queue = PackedStringArray()
 	_queue_at = null
 	sequence_finished.emit(completed)
 
+# @ace_hidden
 ## Whether a control went down this frame, asked safely: a control the project does not have is not
 ## an error to be printed once per frame, it is a control nobody can press.
-## @ace_hidden
 func _just_pressed(action: String) -> bool:
 	return not action.is_empty() and InputMap.has_action(action) and Input.is_action_just_pressed(action)
 
+# @ace_hidden
 ## Whether a press counts for the prompt that is open: one that arrived on the frame the prompt opened
 ## does not. The press that OPENED a prompt is still down on that frame - Godot holds "just pressed"
 ## for the whole frame - so without this a prompt opened by a press of its own control lands perfect
 ## at once, and a mash prompt starts with one press already counted.
-## @ace_hidden
 func fresh_press(just_pressed: bool, opened_frame: int, frame: int) -> bool:
 	return just_pressed and frame != opened_frame
 
+# @ace_hidden
 ## Whether a control is being held right now, asked the same safe way.
-## @ace_hidden
 func _held(action: String) -> bool:
 	return not action.is_empty() and InputMap.has_action(action) and Input.is_action_pressed(action)
 
+# @ace_hidden
 ## Which of the notes' controls went down this frame, or nothing. Only the notes' own controls are
 ## polled, so a lane costs the presses it is actually listening for.
-## @ace_hidden
 func _pressed_note_action() -> String:
 	for note: Dictionary in _notes:
 		var action: String = str(note["action"])
@@ -686,10 +658,10 @@ func _pressed_note_action() -> String:
 			return action
 	return ""
 
+# @ace_hidden
 ## Builds the prompt for a control and puts it on the layer. A prompt scene that cannot be loaded
 ## leaves the prompt logic running with nothing drawn, which is the right way round: the grade still
 ## happens, and Debug Mode says why nothing appeared.
-## @ace_hidden
 func _show_prompt(action: String, at: Node) -> void:
 	if _layer == null:
 		return
@@ -700,10 +672,10 @@ func _show_prompt(action: String, at: Node) -> void:
 	_layer.add_child(_node)
 	_place(_node, at)
 
+# @ace_hidden
 ## Where on the screen a prompt is drawn: over the node it was asked for, whether that is a control,
 ## something in the world or something in 3D, and in the middle of the screen when it was asked for
 ## nowhere in particular.
-## @ace_hidden
 func _screen_point(at: Node) -> Vector2:
 	if at is Control:
 		return (at as Control).get_global_rect().get_center()
@@ -718,18 +690,18 @@ func _screen_point(at: Node) -> Vector2:
 			return camera.unproject_position((at as Node3D).global_position)
 	return view.get_visible_rect().size * 0.5
 
+# @ace_hidden
 ## Puts the prompt where it belongs, centred on its point.
-## @ace_hidden
 func _place(node: Node, at: Node) -> void:
 	var box: Control = node as Control
 	if box == null:
 		return
 	box.position = _screen_point(at) - box.size * 0.5
 
+# @ace_hidden
 ## One frame of drawing: the prompt follows whatever it was pinned to, its ring shows the time left,
 ## and every note walks its lane. Nothing here decides anything - it only shows what the rules above
 ## have already decided, which is why none of them needs a scene tree to be tested.
-## @ace_hidden
 func _draw_frame(at_moment: float) -> void:
 	if _open and _node != null:
 		_place(_node, _at)
@@ -741,9 +713,9 @@ func _draw_frame(at_moment: float) -> void:
 	for note: Dictionary in _notes:
 		_walk_note(note, at_moment)
 
+# @ace_hidden
 ## One note, walked from the far end of its lane to the hit line. The lane says where the line is
 ## with a child called HitLine; a lane without one lands its notes at its own left edge.
-## @ace_hidden
 func _walk_note(note: Dictionary, at_moment: float) -> void:
 	var node: Variant = note["node"]
 	var lane: Variant = note["lane"]
@@ -757,9 +729,9 @@ func _walk_note(note: Dictionary, at_moment: float) -> void:
 	travelling.position = Vector2(lerpf(track.size.x, lands_at, walked),
 		(track.size.y - travelling.size.y) * 0.5)
 
+# @ace_hidden
 ## Takes a prompt off the screen with a flash, clamped by the player's no-flashing answer. The node
 ## is handed to the walk that frees it, so nothing here has to remember to free it later.
-## @ace_hidden
 func _flash_out(node: Node) -> void:
 	if node == null:
 		return
@@ -774,31 +746,31 @@ func _flash_out(node: Node) -> void:
 	walk.tween_property(canvas, "modulate", Color(1.0, 1.0, 1.0, 0.0), shape.y)
 	walk.finished.connect(node.queue_free)
 
+# @ace_hidden
 ## Takes the prompt off the screen with nothing said about it - what a miss and a cancel do.
-## @ace_hidden
 func _close_prompt() -> void:
 	if _node != null:
 		_node.queue_free()
 		_node = null
 
+# @ace_hidden
 ## Whether there is nothing left to do: no prompt open and no note on any lane. The director parks
 ## its own frame when this is true, so a game between prompts pays for nothing.
-## @ace_hidden
 func _at_rest() -> bool:
 	return not _open and _notes.is_empty()
 
+# @ace_hidden
 ## Ends a sequence that was still running because a plain prompt has interrupted it. It ends as an
 ## uncompleted one rather than vanishing: a cutscene waiting on the trigger would otherwise wait for
 ## ever, and a silent drop is the hardest kind of bug to find.
-## @ace_hidden
 func _leave_sequence() -> void:
 	if _in_sequence:
 		_finish_sequence(false)
 
+# @ace_hidden
 ## The song's next beat, from a Music director in the project, on the engine clock this pack grades
 ## against. Reached by node path and asked whether it can answer, so a project with no music at all
 ## still runs every row here - it simply falls back to the lead.
-## @ace_hidden
 func _music_beat_at() -> float:
 	var music: Node = get_node_or_null("/root/Music")
 	if music == null or not music.has_method("next_beat_at"):

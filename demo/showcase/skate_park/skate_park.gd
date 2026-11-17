@@ -32,7 +32,7 @@ func _physics_process(_delta: float) -> void:
 	$Hud/HudKit.set_needle("BalanceMeter", $Skater/Skateboard.balance(), 0.6)
 
 
-## @ace_hidden
+# @ace_hidden
 func _on_landed_clean() -> void:
 	if $Skater/Skateboard.spin_turns() >= 0.5:
 		$Skater/Skateboard.add_to_chain("spin", 150.0)
@@ -40,7 +40,7 @@ func _on_landed_clean() -> void:
 	score = int($Skater/Skateboard.banked_score())
 
 
-## @ace_hidden
+# @ace_hidden
 func _on_bailed() -> void:
 	$Skater/Checkpoint.respawn()
 	$Skater.velocity = Vector2.ZERO

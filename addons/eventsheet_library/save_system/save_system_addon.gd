@@ -1,83 +1,83 @@
-## @ace_tags(persistence)
-## @ace_version(1.0.0)
+# @ace_tags(persistence)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/save_system/icon.svg")
 class_name SaveSystemAddon
 extends Node
 ## Slot-based persistence as the SaveSystem autoload: every sheet saves and loads values by name, each slot is its own file, and the location, format, and encryption are set once in the Inspector. Save Game fires On Before Save so every sheet writes its own piece, and Load Game fires On After Load so every sheet reads it back.
 
-## @ace_trigger
-## @ace_name("On Save Written")
-## @ace_category("Save System")
+# @ace_trigger
+# @ace_name("On Save Written")
+# @ace_category("Save System")
 signal save_written(slot_index: int)
-## @ace_trigger
-## @ace_name("On Before Save")
-## @ace_category("Save System")
+# @ace_trigger
+# @ace_name("On Before Save")
+# @ace_category("Save System")
 signal before_save(slot_index: int)
-## @ace_trigger
-## @ace_name("On After Load")
-## @ace_category("Save System")
+# @ace_trigger
+# @ace_name("On After Load")
+# @ace_category("Save System")
 signal after_load(slot_index: int)
+# @ace_trigger
+# @ace_name("On Autosave Due")
+# @ace_category("Save System")
 ## Fires when the autosave clock comes round, INSTEAD of saving - so the conditions on
 ## this event decide whether now is a good moment (mid boss phase, mid scene change,
 ## mid death animation). With nothing connected the pack saves itself on the interval,
 ## exactly as it always did, so an existing project does not change behaviour.
-## @ace_trigger
-## @ace_name("On Autosave Due")
-## @ace_category("Save System")
 signal autosave_due(slot_index: int)
+# @ace_trigger
+# @ace_name("On Save Needs Upgrade")
+# @ace_category("Save System")
 ## Fires inside Load Game when the file on disk was written by an older Save Version,
 ## BEFORE anything reads it - so migration rows (Data Is Older Than Version, Rename
 ## Field, Stamp Data Version) rewrite the record in the gap. Hand it back with Use
 ## Upgraded Save. Nothing connected? Load Game behaves exactly as it does today.
-## @ace_trigger
-## @ace_name("On Save Needs Upgrade")
-## @ace_category("Save System")
 signal save_needs_upgrade(save_data: Dictionary, from_version: int)
+# @ace_trigger
+# @ace_name("On Load Failed")
+# @ace_category("Save System")
 ## Fires when Load Game meets a file it cannot read - a wrong encryption key, a
 ## truncated write from an older build, a hand-edited JSON. The reason is a plain
 ## sentence, ready to drop straight into a label.
-## @ace_trigger
-## @ace_name("On Load Failed")
-## @ace_category("Save System")
 signal load_failed(slot_index: int, reason: String)
+# @ace_trigger
+# @ace_name("On Save Failed")
+# @ace_category("Save System")
 ## Fires when a write is refused or fails - the moment a player needs to hear "your
 ## progress was NOT saved" instead of nothing at all.
-## @ace_trigger
-## @ace_name("On Save Failed")
-## @ace_category("Save System")
 signal save_failed(slot_index: int, reason: String)
+# @ace_trigger
+# @ace_name("On New Run Started")
+# @ace_category("Save System")
 ## Fires when Start New Run has written the fresh slot - where the NG+ banner, the
 ## difficulty curve and the seeded map generation hang, instead of on whichever button
 ## happened to be pressed.
-## @ace_trigger
-## @ace_name("On New Run Started")
-## @ace_category("Save System")
 signal new_run_started(slot_index: int, run_number: int)
+# @ace_trigger
+# @ace_name("On Key Saved")
+# @ace_category("Save System")
 ## Fires when one key's value has landed on disk - Save Value, Save Number and Save Text
 ## all raise it, with the key that was written as the row's own captured value. A key held
 ## back by Never Save This Key never raises it, because it never reached the file.
-## @ace_trigger
-## @ace_name("On Key Saved")
-## @ace_category("Save System")
 signal key_saved(key: String, slot_index: int)
+# @ace_trigger
+# @ace_name("On Key Loaded")
+# @ace_category("Save System")
 ## Fires when Check Save Key finds the key in the slot - the found half of that question,
 ## answered as a row instead of a value somebody has to remember to test.
-## @ace_trigger
-## @ace_name("On Key Loaded")
-## @ace_category("Save System")
 signal key_loaded(key: String, slot_index: int)
+# @ace_trigger
+# @ace_name("On Key Removed")
+# @ace_category("Save System")
 ## Fires when Remove Save Key has taken the key out of the file, and once per key that
 ## Clear Slot Keys emptied out of it.
-## @ace_trigger
-## @ace_name("On Key Removed")
-## @ace_category("Save System")
 signal key_removed(key: String, slot_index: int)
+# @ace_trigger
+# @ace_name("On Save Key Missing")
+# @ace_category("Save System")
 ## Fires when a key was asked for and the slot does not hold it - Check Save Key, or a
 ## Remove Save Key with nothing to remove. This is where a first run seeds its default
 ## once, instead of quietly defaulting forever.
-## @ace_trigger
-## @ace_name("On Save Key Missing")
-## @ace_category("Save System")
 signal save_key_missing(key: String, slot_index: int)
 
 ## Seconds since the last autosave.
@@ -193,12 +193,11 @@ func _process(delta: float) -> void:
 		else:
 			autosave_due.emit(slot)
 
-## @ace_action
-## @ace_name("Save Value")
-## @ace_category("Save System")
-## @ace_description("Writes ANY value (number, text, Vector2, Color, Dictionary…) under the key.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.save_value({key}, {value})")
+# @ace_action
+# @ace_name("Save Value")
+# @ace_category("Save System")
+# @ace_description("Writes ANY value (number, text, Vector2, Color, Dictionary…) under the key.")
+# @ace_codegen_template("SaveSystem.save_value({key}, {value})")
 func save_value(key: String, value: Variant) -> void:
 	var data: Dictionary = _read_all()
 	if not _last_read_ok:
@@ -214,225 +213,202 @@ func save_value(key: String, value: Variant) -> void:
 	if not _never_save.has(key):
 		key_saved.emit(key, slot)
 
-## @ace_expression
-## @ace_name("Load Value")
-## @ace_category("Save System")
-## @ace_description("Reads any value (your default when missing).")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.load_value({key}, {default_value})")
+# @ace_expression
+# @ace_name("Load Value")
+# @ace_category("Save System")
+# @ace_description("Reads any value (your default when missing).")
+# @ace_codegen_template("SaveSystem.load_value({key}, {default_value})")
 func load_value(key: String, default_value: Variant) -> Variant:
 	return _read_all().get(key, default_value)
 
-## @ace_action
-## @ace_name("Save Number")
-## @ace_category("Save System")
-## @ace_description("Writes a number under the key (active slot).")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.save_number({key}, {value})")
+# @ace_action
+# @ace_name("Save Number")
+# @ace_category("Save System")
+# @ace_description("Writes a number under the key (active slot).")
+# @ace_codegen_template("SaveSystem.save_number({key}, {value})")
 func save_number(key: String, value: float) -> void:
 	save_value(key, value)
 
-## @ace_expression
-## @ace_name("Load Number")
-## @ace_category("Save System")
-## @ace_description("Reads a number (0 when missing).")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.load_number({key})")
+# @ace_expression
+# @ace_name("Load Number")
+# @ace_category("Save System")
+# @ace_description("Reads a number (0 when missing).")
+# @ace_codegen_template("SaveSystem.load_number({key})")
 func load_number(key: String) -> float:
 	return float(load_value(key, 0.0))
 
-## @ace_action
-## @ace_name("Save Text")
-## @ace_category("Save System")
-## @ace_description("Writes a string under the key (active slot).")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.save_text({key}, {value})")
+# @ace_action
+# @ace_name("Save Text")
+# @ace_category("Save System")
+# @ace_description("Writes a string under the key (active slot).")
+# @ace_codegen_template("SaveSystem.save_text({key}, {value})")
 func save_text(key: String, value: String) -> void:
 	save_value(key, value)
 
-## @ace_expression
-## @ace_name("Load Text")
-## @ace_category("Save System")
-## @ace_description("Reads a string ("" when missing).")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.load_text({key})")
+# @ace_expression
+# @ace_name("Load Text")
+# @ace_category("Save System")
+# @ace_description("Reads a string ("" when missing).")
+# @ace_codegen_template("SaveSystem.load_text({key})")
 func load_text(key: String) -> String:
 	return str(load_value(key, ""))
 
-## @ace_condition
-## @ace_name("Has Save Key")
-## @ace_category("Save System")
-## @ace_description("Whether the key exists in the active slot.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.has_save_key({key})")
+# @ace_condition
+# @ace_name("Has Save Key")
+# @ace_category("Save System")
+# @ace_description("Whether the key exists in the active slot.")
+# @ace_codegen_template("SaveSystem.has_save_key({key})")
 func has_save_key(key: String) -> bool:
 	return _read_all().has(key)
 
-## @ace_expression
-## @ace_name("Read All")
-## @ace_category("Save System")
-## @ace_description("Reads the whole active slot as one Dictionary (every saved key and value).")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.read_all()")
+# @ace_expression
+# @ace_name("Read All")
+# @ace_category("Save System")
+# @ace_description("Reads the whole active slot as one Dictionary (every saved key and value).")
+# @ace_codegen_template("SaveSystem.read_all()")
 func read_all() -> Dictionary:
 	return _read_all()
 
-## @ace_expression
-## @ace_name("List Save Keys")
-## @ace_category("Save System")
-## @ace_description("The keys stored in the active slot (loop them to read a whole save).")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.save_keys()")
+# @ace_expression
+# @ace_name("List Save Keys")
+# @ace_category("Save System")
+# @ace_description("The keys stored in the active slot (loop them to read a whole save).")
+# @ace_codegen_template("SaveSystem.save_keys()")
 func save_keys() -> Array:
 	return _read_all().keys()
 
-## @ace_expression
-## @ace_name("Read Save File")
-## @ace_category("Save System")
-## @ace_description("Reads ANY save file at a path in the given format (config/json/binary/csv/ini/xml; blank = the active format) and returns its Dictionary.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.read_file({path}, {file_format})")
+# @ace_expression
+# @ace_name("Read Save File")
+# @ace_category("Save System")
+# @ace_description("Reads ANY save file at a path in the given format (config/json/binary/csv/ini/xml; blank = the active format) and returns its Dictionary.")
+# @ace_codegen_template("SaveSystem.read_file({path}, {file_format})")
 func read_file(path: String, file_format: String) -> Dictionary:
 	return _read_path(path, file_format if not file_format.is_empty() else format)
 
-## @ace_expression
-## @ace_name("Save File Format")
-## @ace_category("Save System")
-## @ace_description("Detects the format of the save file at the path (config/json/binary/csv/ini/xml), or "" when it is missing or unrecognised. Feed it to Read Save File.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.save_file_format({path})")
+# @ace_expression
+# @ace_name("Save File Format")
+# @ace_category("Save System")
+# @ace_description("Detects the format of the save file at the path (config/json/binary/csv/ini/xml), or "" when it is missing or unrecognised. Feed it to Read Save File.")
+# @ace_codegen_template("SaveSystem.save_file_format({path})")
 func save_file_format(path: String) -> String:
 	return _detect_format(path)
 
-## @ace_condition
-## @ace_name("Save File Is Format")
-## @ace_category("Save System")
-## @ace_description("Whether the save file at the path is the given format (config/json/binary/csv/ini/xml).")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.save_file_is_format({path}, {expected_format})")
+# @ace_condition
+# @ace_name("Save File Is Format")
+# @ace_category("Save System")
+# @ace_description("Whether the save file at the path is the given format (config/json/binary/csv/ini/xml).")
+# @ace_codegen_template("SaveSystem.save_file_is_format({path}, {expected_format})")
 func save_file_is_format(path: String, expected_format: String) -> bool:
 	return _detect_format(path) == expected_format
 
-## @ace_condition
-## @ace_name("Save Format Is")
-## @ace_category("Save System")
-## @ace_description("Whether the active save format (the Inspector format property) equals the given one.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.save_format_is({expected_format})")
+# @ace_condition
+# @ace_name("Save Format Is")
+# @ace_category("Save System")
+# @ace_description("Whether the active save format (the Inspector format property) equals the given one.")
+# @ace_codegen_template("SaveSystem.save_format_is({expected_format})")
 func save_format_is(expected_format: String) -> bool:
 	return format == expected_format
 
-## @ace_action
-## @ace_name("Delete Slot")
-## @ace_category("Save System")
-## @ace_description("Removes the active slot's save file (and its slot picture, which lives beside it).")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.delete_slot()")
+# @ace_action
+# @ace_name("Delete Slot")
+# @ace_category("Save System")
+# @ace_description("Removes the active slot's save file (and its slot picture, which lives beside it).")
+# @ace_codegen_template("SaveSystem.delete_slot()")
 func delete_slot() -> void:
 	if FileAccess.file_exists(_slot_path()):
 		DirAccess.remove_absolute(_slot_path())
 	if FileAccess.file_exists(_thumbnail_path()):
 		DirAccess.remove_absolute(_thumbnail_path())
 
-## @ace_action
-## @ace_featured
-## @ace_name("Save Game")
-## @ace_category("Save System")
-## @ace_description("Broadcasts On Before Save (every sheet writes its state), snapshots every node in the persist group, stamps the slot card, then fires On Save Written (or On Save Failed).")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.save_game()")
+# @ace_action
+# @ace_featured
+# @ace_name("Save Game")
+# @ace_category("Save System")
+# @ace_description("Broadcasts On Before Save (every sheet writes its state), snapshots every node in the persist group, stamps the slot card, then fires On Save Written (or On Save Failed).")
+# @ace_codegen_template("SaveSystem.save_game()")
 func save_game() -> void:
 	_write_depth += 1
 	_run_save_game()
 	_write_depth -= 1
 
-## @ace_action
-## @ace_featured
-## @ace_name("Load Game")
-## @ace_category("Save System")
-## @ace_description("Reads the slot, gives migration rows their moment (On Save Needs Upgrade) when an older build wrote it, restores every persist-group snapshot, then broadcasts On After Load. A file it cannot read fires On Load Failed instead.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.load_game()")
+# @ace_action
+# @ace_featured
+# @ace_name("Load Game")
+# @ace_category("Save System")
+# @ace_description("Reads the slot, gives migration rows their moment (On Save Needs Upgrade) when an older build wrote it, restores every persist-group snapshot, then broadcasts On After Load. A file it cannot read fires On Load Failed instead.")
+# @ace_codegen_template("SaveSystem.load_game()")
 func load_game() -> void:
 	_load_depth += 1
 	_run_load_game()
 	_load_depth -= 1
 
-## @ace_action
-## @ace_name("Save Node State")
-## @ace_category("Save System")
-## @ace_description("Snapshots a node and its behaviors (any child with save_state) under the key.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.save_node_state({node}, {key})")
+# @ace_action
+# @ace_name("Save Node State")
+# @ace_category("Save System")
+# @ace_description("Snapshots a node and its behaviors (any child with save_state) under the key.")
+# @ace_codegen_template("SaveSystem.save_node_state({node}, {key})")
 func save_node_state(node: Node, key: String) -> void:
 	save_value(key, _collect_node_state(node))
 
-## @ace_action
-## @ace_name("Load Node State")
-## @ace_category("Save System")
-## @ace_description("Restores a node and its behaviors from the key's snapshot.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.load_node_state({node}, {key})")
+# @ace_action
+# @ace_name("Load Node State")
+# @ace_category("Save System")
+# @ace_description("Restores a node and its behaviors from the key's snapshot.")
+# @ace_codegen_template("SaveSystem.load_node_state({node}, {key})")
 func load_node_state(node: Node, key: String) -> void:
 	var states: Variant = load_value(key, {})
 	if states is Dictionary:
 		_apply_node_state(node, states as Dictionary)
 
-## @ace_action
-## @ace_name("Save Group State")
-## @ace_category("Save System")
-## @ace_description("Snapshots every node in the scene-tree group (and their behaviors) under the key.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.save_group_state({group}, {key})")
+# @ace_action
+# @ace_name("Save Group State")
+# @ace_category("Save System")
+# @ace_description("Snapshots every node in the scene-tree group (and their behaviors) under the key.")
+# @ace_codegen_template("SaveSystem.save_group_state({group}, {key})")
 func save_group_state(group: String, key: String) -> void:
 	save_value(key, _collect_group_state(group))
 
-## @ace_action
-## @ace_name("Load Group State")
-## @ace_category("Save System")
-## @ace_description("Restores the group snapshot saved under the key (nodes matched by scene path).")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.load_group_state({key})")
+# @ace_action
+# @ace_name("Load Group State")
+# @ace_category("Save System")
+# @ace_description("Restores the group snapshot saved under the key (nodes matched by scene path).")
+# @ace_codegen_template("SaveSystem.load_group_state({key})")
 func load_group_state(key: String) -> void:
 	var states: Variant = load_value(key, {})
 	if states is Dictionary:
 		_apply_states(states as Dictionary)
 
-## @ace_action
-## @ace_name("Save Singleton State")
-## @ace_category("Save System")
-## @ace_description("Snapshots an autoload addon (Currency Ledger, Upgrades, Prestige...) by its autoload name.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.save_singleton_state({singleton_name}, {key})")
+# @ace_action
+# @ace_name("Save Singleton State")
+# @ace_category("Save System")
+# @ace_description("Snapshots an autoload addon (Currency Ledger, Upgrades, Prestige...) by its autoload name.")
+# @ace_codegen_template("SaveSystem.save_singleton_state({singleton_name}, {key})")
 func save_singleton_state(singleton_name: String, key: String) -> void:
 	save_value(key, _collect_node_state(get_node_or_null("/root/" + singleton_name)))
 
-## @ace_action
-## @ace_name("Load Singleton State")
-## @ace_category("Save System")
-## @ace_description("Restores an autoload addon's snapshot from the key.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.load_singleton_state({singleton_name}, {key})")
+# @ace_action
+# @ace_name("Load Singleton State")
+# @ace_category("Save System")
+# @ace_description("Restores an autoload addon's snapshot from the key.")
+# @ace_codegen_template("SaveSystem.load_singleton_state({singleton_name}, {key})")
 func load_singleton_state(singleton_name: String, key: String) -> void:
 	var states: Variant = load_value(key, {})
 	if states is Dictionary:
 		_apply_node_state(get_node_or_null("/root/" + singleton_name), states as Dictionary)
 
-## @ace_condition
-## @ace_name("Slot Exists")
-## @ace_category("Save System")
-## @ace_description("Whether the slot has a save file.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.slot_exists({slot_index})")
+# @ace_condition
+# @ace_name("Slot Exists")
+# @ace_category("Save System")
+# @ace_description("Whether the slot has a save file.")
+# @ace_codegen_template("SaveSystem.slot_exists({slot_index})")
 func slot_exists(slot_index: int) -> bool:
 	return FileAccess.file_exists(_slot_path(slot_index))
 
-## @ace_expression
-## @ace_name("List Slots")
-## @ace_category("Save System")
-## @ace_description("Slot numbers that have save files (for menus).")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.list_slots()")
+# @ace_expression
+# @ace_name("List Slots")
+# @ace_category("Save System")
+# @ace_description("Slot numbers that have save files (for menus).")
+# @ace_codegen_template("SaveSystem.list_slots()")
 func list_slots() -> Array:
 	var found: Array = []
 	for candidate: int in range(100):
@@ -440,22 +416,20 @@ func list_slots() -> Array:
 			found.append(candidate)
 	return found
 
-## @ace_expression
-## @ace_name("Slot Modified Time")
-## @ace_category("Save System")
-## @ace_description("Unix mtime of the slot's file (0 when missing).")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.slot_modified_time({slot_index})")
+# @ace_expression
+# @ace_name("Slot Modified Time")
+# @ace_category("Save System")
+# @ace_description("Unix mtime of the slot's file (0 when missing).")
+# @ace_codegen_template("SaveSystem.slot_modified_time({slot_index})")
 func slot_modified_time(slot_index: int) -> int:
 	return FileAccess.get_modified_time(_slot_path(slot_index)) if FileAccess.file_exists(_slot_path(slot_index)) else 0
 
-## @ace_action
-## @ace_name("Set Slot Detail")
-## @ace_category("Save System")
-## @ace_description("Writes one line of the active slot's card - the header a load menu reads without ever calling Load Game (chapter, hero name, percent, difficulty...). Playtime rides along automatically.")
-## @ace_display_template("remember [b]{detail_name}[/b] = [b]{value}[/b] on this slot")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.set_slot_detail({detail_name}, {value})")
+# @ace_action
+# @ace_name("Set Slot Detail")
+# @ace_category("Save System")
+# @ace_description("Writes one line of the active slot's card - the header a load menu reads without ever calling Load Game (chapter, hero name, percent, difficulty...). Playtime rides along automatically.")
+# @ace_display_template("remember [b]{detail_name}[/b] = [b]{value}[/b] on this slot")
+# @ace_codegen_template("SaveSystem.set_slot_detail({detail_name}, {value})")
 func set_slot_detail(detail_name: String, value: Variant) -> void:
 	var data: Dictionary = _read_all()
 	if not _last_read_ok:
@@ -468,32 +442,29 @@ func set_slot_detail(detail_name: String, value: Variant) -> void:
 	if not _write_all(data):
 		_fail_save(slot, "slot %d could not be written - is the save folder writable?" % slot)
 
-## @ace_expression
-## @ace_name("Slot Detail")
-## @ace_category("Save System")
-## @ace_description("Reads one card field of any slot straight off disk (your fallback when that slot has no such detail). Nothing is loaded and nothing is applied - safe to call for every tile of a load menu.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.slot_detail({slot_index}, {detail_name}, {fallback})")
+# @ace_expression
+# @ace_name("Slot Detail")
+# @ace_category("Save System")
+# @ace_description("Reads one card field of any slot straight off disk (your fallback when that slot has no such detail). Nothing is loaded and nothing is applied - safe to call for every tile of a load menu.")
+# @ace_codegen_template("SaveSystem.slot_detail({slot_index}, {detail_name}, {fallback})")
 func slot_detail(slot_index: int, detail_name: String, fallback: Variant) -> Variant:
 	var card: Variant = _read_path(_slot_path(slot_index), format).get(CARD_KEY, {})
 	return (card as Dictionary).get(detail_name, fallback) if card is Dictionary else fallback
 
-## @ace_expression
-## @ace_name("Slot Playtime")
-## @ace_category("Save System")
-## @ace_description("Seconds played on that slot, accumulated by this pack and stamped on every save (0 when the slot has none). Feed it to Format Time for a 4h12m tile.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.slot_playtime({slot_index})")
+# @ace_expression
+# @ace_name("Slot Playtime")
+# @ace_category("Save System")
+# @ace_description("Seconds played on that slot, accumulated by this pack and stamped on every save (0 when the slot has none). Feed it to Format Time for a 4h12m tile.")
+# @ace_codegen_template("SaveSystem.slot_playtime({slot_index})")
 func slot_playtime(slot_index: int) -> float:
 	return float(_card_of(_read_path(_slot_path(slot_index), format)).get("playtime", 0.0))
 
-## @ace_action
-## @ace_name("Capture Slot Thumbnail")
-## @ace_category("Save System")
-## @ace_description("Photographs the viewport, shrinks it to tile size and writes it beside the active slot's file, so the picture travels with the save - Copy Slot brings it along, Delete Slot takes it away, and an encryption key covers the picture exactly as it covers the save. Hide your pause menu first.")
-## @ace_display_template("photograph this slot at [b]{width}[/b] x [b]{height}[/b]")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.capture_slot_thumbnail({width}, {height})")
+# @ace_action
+# @ace_name("Capture Slot Thumbnail")
+# @ace_category("Save System")
+# @ace_description("Photographs the viewport, shrinks it to tile size and writes it beside the active slot's file, so the picture travels with the save - Copy Slot brings it along, Delete Slot takes it away, and an encryption key covers the picture exactly as it covers the save. Hide your pause menu first.")
+# @ace_display_template("photograph this slot at [b]{width}[/b] x [b]{height}[/b]")
+# @ace_codegen_template("SaveSystem.capture_slot_thumbnail({width}, {height})")
 func capture_slot_thumbnail(width: int, height: int) -> void:
 	if not is_inside_tree() or get_viewport() == null:
 		# A headless run has nothing to photograph: warn and keep the old picture rather
@@ -524,12 +495,11 @@ func capture_slot_thumbnail(width: int, height: int) -> void:
 		DirAccess.remove_absolute(tmp)
 		push_warning("Save System: the slot picture could not be written - the slot keeps its previous one.")
 
-## @ace_expression
-## @ace_name("Slot Thumbnail")
-## @ace_category("Save System")
-## @ace_description("The picture saved beside that slot, ready to drop into a TextureRect (null when the slot has none). Read off disk, so a load menu never loads a game to draw its tiles.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.slot_thumbnail({slot_index})")
+# @ace_expression
+# @ace_name("Slot Thumbnail")
+# @ace_category("Save System")
+# @ace_description("The picture saved beside that slot, ready to drop into a TextureRect (null when the slot has none). Read off disk, so a load menu never loads a game to draw its tiles.")
+# @ace_codegen_template("SaveSystem.slot_thumbnail({slot_index})")
 func slot_thumbnail(slot_index: int) -> Texture2D:
 	var path: String = _thumbnail_path(slot_index)
 	if not FileAccess.file_exists(path):
@@ -545,13 +515,12 @@ func slot_thumbnail(slot_index: int) -> Texture2D:
 		return null
 	return ImageTexture.create_from_image(picture)
 
-## @ace_action
-## @ace_name("Copy Slot")
-## @ace_category("Save System")
-## @ace_description("Duplicates one slot's save file (and its picture) onto another slot - branching a save as one row. The destination is overwritten.")
-## @ace_display_template("copy slot [b]{from_slot}[/b] onto slot [b]{to_slot}[/b]")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.copy_slot({from_slot}, {to_slot})")
+# @ace_action
+# @ace_name("Copy Slot")
+# @ace_category("Save System")
+# @ace_description("Duplicates one slot's save file (and its picture) onto another slot - branching a save as one row. The destination is overwritten.")
+# @ace_display_template("copy slot [b]{from_slot}[/b] onto slot [b]{to_slot}[/b]")
+# @ace_codegen_template("SaveSystem.copy_slot({from_slot}, {to_slot})")
 func copy_slot(from_slot: int, to_slot: int) -> void:
 	var source: String = _slot_path(from_slot)
 	if not FileAccess.file_exists(source):
@@ -565,86 +534,78 @@ func copy_slot(from_slot: int, to_slot: int) -> void:
 		DirAccess.copy_absolute(_thumbnail_path(from_slot), _thumbnail_path(to_slot))
 	_last_problem = ""
 
-## @ace_expression
-## @ace_name("Slot Path")
-## @ace_category("Save System")
-## @ace_description("Where that slot's file lives (built from the Save Directory and File Pattern properties). Feed it to Read Save File, File Size or Copy File - the paths the pack uses are no longer private.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.slot_path({slot_index})")
+# @ace_expression
+# @ace_name("Slot Path")
+# @ace_category("Save System")
+# @ace_description("Where that slot's file lives (built from the Save Directory and File Pattern properties). Feed it to Read Save File, File Size or Copy File - the paths the pack uses are no longer private.")
+# @ace_codegen_template("SaveSystem.slot_path({slot_index})")
 func slot_path(slot_index: int) -> String:
 	return _slot_path(slot_index)
 
-## @ace_action
-## @ace_name("Delay Autosave By")
-## @ace_category("Save System")
-## @ace_description("Pushes the next autosave out by this many seconds. The beat is deferred, never dropped - use it in the not-now branch of On Autosave Due.")
-## @ace_display_template("put the autosave off for [b]{seconds}[/b] more seconds")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.delay_autosave_by({seconds})")
+# @ace_action
+# @ace_name("Delay Autosave By")
+# @ace_category("Save System")
+# @ace_description("Pushes the next autosave out by this many seconds. The beat is deferred, never dropped - use it in the not-now branch of On Autosave Due.")
+# @ace_display_template("put the autosave off for [b]{seconds}[/b] more seconds")
+# @ace_codegen_template("SaveSystem.delay_autosave_by({seconds})")
 func delay_autosave_by(seconds: float) -> void:
 	# Relative, because the verb promises to DEFER the beat: setting the clock absolutely
 	# would push a mid-interval save out by far more than was asked, and a second, SMALLER
 	# delay would then pull the save nearer than the first one put it.
 	autosave_accumulator -= absf(seconds)
 
-## @ace_action
-## @ace_name("Pause Autosave")
-## @ace_category("Save System")
-## @ace_description("Stops the autosave clock without losing the interval - for a boss fight, a cutscene, or a scene transition. Resume Autosave starts it again.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.pause_autosave()")
+# @ace_action
+# @ace_name("Pause Autosave")
+# @ace_category("Save System")
+# @ace_description("Stops the autosave clock without losing the interval - for a boss fight, a cutscene, or a scene transition. Resume Autosave starts it again.")
+# @ace_codegen_template("SaveSystem.pause_autosave()")
 func pause_autosave() -> void:
 	_autosave_paused = true
 
-## @ace_action
-## @ace_name("Resume Autosave")
-## @ace_category("Save System")
-## @ace_description("Starts the autosave clock again after Pause Autosave, from a fresh interval.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.resume_autosave()")
+# @ace_action
+# @ace_name("Resume Autosave")
+# @ace_category("Save System")
+# @ace_description("Starts the autosave clock again after Pause Autosave, from a fresh interval.")
+# @ace_codegen_template("SaveSystem.resume_autosave()")
 func resume_autosave() -> void:
 	_autosave_paused = false
 	autosave_accumulator = 0.0
 
-## @ace_expression
-## @ace_name("Seconds Until Autosave")
-## @ace_category("Save System")
-## @ace_description("How long until the next autosave beat - for a countdown pip in the corner. 0 when autosave is off or paused.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.seconds_until_autosave()")
+# @ace_expression
+# @ace_name("Seconds Until Autosave")
+# @ace_category("Save System")
+# @ace_description("How long until the next autosave beat - for a countdown pip in the corner. 0 when autosave is off or paused.")
+# @ace_codegen_template("SaveSystem.seconds_until_autosave()")
 func seconds_until_autosave() -> float:
 	if autosave_interval <= 0.0 or _autosave_paused:
 		return 0.0
 	return maxf(autosave_interval - autosave_accumulator, 0.0)
 
-## @ace_condition
-## @ace_name("Autosave Is Paused")
-## @ace_category("Save System")
-## @ace_description("Whether Pause Autosave is currently holding the clock.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.autosave_is_paused()")
+# @ace_condition
+# @ace_name("Autosave Is Paused")
+# @ace_category("Save System")
+# @ace_description("Whether Pause Autosave is currently holding the clock.")
+# @ace_codegen_template("SaveSystem.autosave_is_paused()")
 func autosave_is_paused() -> bool:
 	return _autosave_paused
 
-## @ace_condition
-## @ace_name("Safe To Save Now")
-## @ace_category("Save System")
-## @ace_description("Whether writing the active slot right now would lose nothing: the slot either has no file yet, or its file reads back cleanly. Guard Save Game with it (and read it inside On Autosave Due before you commit to a write).")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.can_save_now()")
+# @ace_condition
+# @ace_name("Safe To Save Now")
+# @ace_category("Save System")
+# @ace_description("Whether writing the active slot right now would lose nothing: the slot either has no file yet, or its file reads back cleanly. Guard Save Game with it (and read it inside On Autosave Due before you commit to a write).")
+# @ace_codegen_template("SaveSystem.can_save_now()")
 func can_save_now() -> bool:
 	if not FileAccess.file_exists(_slot_path()):
 		return true
 	_read_all()
 	return _last_read_ok
 
-## @ace_action
-## @ace_name("Use Upgraded Save")
-## @ace_category("Save System")
-## @ace_description("Writes the record the migration rows just fixed back to the slot, stamped with the current Save Version, and lets Load Game carry on with it. Run it once at the end of On Save Needs Upgrade - the stamp makes the trigger stop firing for that file.")
-## @ace_display_template("use [b]{save_data}[/b] as the save from here on")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.use_upgraded_save({save_data})")
+# @ace_action
+# @ace_name("Use Upgraded Save")
+# @ace_category("Save System")
+# @ace_description("Writes the record the migration rows just fixed back to the slot, stamped with the current Save Version, and lets Load Game carry on with it. Run it once at the end of On Save Needs Upgrade - the stamp makes the trigger stop firing for that file.")
+# @ace_display_template("use [b]{save_data}[/b] as the save from here on")
+# @ace_codegen_template("SaveSystem.use_upgraded_save({save_data})")
 func use_upgraded_save(save_data: Dictionary) -> void:
 	# THE deliberate stamp: an ordinary write leaves an older file's version alone, so this is
 	# the one call that says "this record is the current shape now" and makes the trigger stop
@@ -653,104 +614,94 @@ func use_upgraded_save(save_data: Dictionary) -> void:
 	if not _upgrade_applied:
 		_fail_save(slot, "the upgraded save for slot %d could not be written." % slot)
 
-## @ace_expression
-## @ace_name("Slot Save Version")
-## @ace_category("Save System")
-## @ace_description("Which Save Version wrote that slot's file. A file with no stamp counts as 1, so saves written before you ever bumped the number still answer.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.slot_save_version({slot_index})")
+# @ace_expression
+# @ace_name("Slot Save Version")
+# @ace_category("Save System")
+# @ace_description("Which Save Version wrote that slot's file. A file with no stamp counts as 1, so saves written before you ever bumped the number still answer.")
+# @ace_codegen_template("SaveSystem.slot_save_version({slot_index})")
 func slot_save_version(slot_index: int) -> int:
 	return int(_read_path(_slot_path(slot_index), format).get(VERSION_KEY, 1))
 
-## @ace_condition
-## @ace_name("Slot Is Readable")
-## @ace_category("Save System")
-## @ace_description("Whether that slot's file opens and parses. A slot with NO file reads as false, so pair it with Slot Exists to tell a slot with no save yet apart from a damaged one.")
-## @ace_display_template("slot [b]{slot_index}[/b] can be read")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.slot_is_readable({slot_index})")
+# @ace_condition
+# @ace_name("Slot Is Readable")
+# @ace_category("Save System")
+# @ace_description("Whether that slot's file opens and parses. A slot with NO file reads as false, so pair it with Slot Exists to tell a slot with no save yet apart from a damaged one.")
+# @ace_display_template("slot [b]{slot_index}[/b] can be read")
+# @ace_codegen_template("SaveSystem.slot_is_readable({slot_index})")
 func slot_is_readable(slot_index: int) -> bool:
 	if not FileAccess.file_exists(_slot_path(slot_index)):
 		return false
 	_read_path(_slot_path(slot_index), format)
 	return _last_read_ok
 
-## @ace_expression
-## @ace_name("Last Save Problem")
-## @ace_category("Save System")
-## @ace_description("The last save or load failure as one readable sentence ("" when both worked). Show it in a label, or log it.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.last_save_problem()")
+# @ace_expression
+# @ace_name("Last Save Problem")
+# @ace_category("Save System")
+# @ace_description("The last save or load failure as one readable sentence ("" when both worked). Show it in a label, or log it.")
+# @ace_codegen_template("SaveSystem.last_save_problem()")
 func last_save_problem() -> String:
 	return _last_problem
 
-## @ace_expression
-## @ace_name("Slot Problem")
-## @ace_category("Save System")
-## @ace_description("What is wrong with that slot's file, as one readable sentence ("" when it reads fine or does not exist) - the tooltip for a greyed-out Continue button.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.slot_problem({slot_index})")
+# @ace_expression
+# @ace_name("Slot Problem")
+# @ace_category("Save System")
+# @ace_description("What is wrong with that slot's file, as one readable sentence ("" when it reads fine or does not exist) - the tooltip for a greyed-out Continue button.")
+# @ace_codegen_template("SaveSystem.slot_problem({slot_index})")
 func slot_problem(slot_index: int) -> String:
 	_read_path(_slot_path(slot_index), format)
 	return _last_read_problem
 
-## @ace_action
-## @ace_featured
-## @ace_name("Save All Addons")
-## @ace_category("Save System")
-## @ace_description("Snapshots every autoload that exposes the save_state seam - Currency Ledger, Upgrades, Prestige, Skin Vault, StatForge and anything you wrote - each under its own autoload name. There is no list to maintain: install a pack, register it, and it is in the save.")
-## @ace_display_template("save every addon that saves itself")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.save_all_addons()")
+# @ace_action
+# @ace_featured
+# @ace_name("Save All Addons")
+# @ace_category("Save System")
+# @ace_description("Snapshots every autoload that exposes the save_state seam - Currency Ledger, Upgrades, Prestige, Skin Vault, StatForge and anything you wrote - each under its own autoload name. There is no list to maintain: install a pack, register it, and it is in the save.")
+# @ace_display_template("save every addon that saves itself")
+# @ace_codegen_template("SaveSystem.save_all_addons()")
 func save_all_addons() -> void:
 	save_value(ADDONS_KEY, _collect_addon_states())
 
-## @ace_action
-## @ace_name("Load All Addons")
-## @ace_category("Save System")
-## @ace_description("Restores every autoload snapshot Save All Addons wrote, matched by autoload name. An addon the save knows but this build does not have is reported, never dropped in silence.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.load_all_addons()")
+# @ace_action
+# @ace_name("Load All Addons")
+# @ace_category("Save System")
+# @ace_description("Restores every autoload snapshot Save All Addons wrote, matched by autoload name. An addon the save knows but this build does not have is reported, never dropped in silence.")
+# @ace_codegen_template("SaveSystem.load_all_addons()")
 func load_all_addons() -> void:
 	var states: Variant = load_value(ADDONS_KEY, {})
 	if states is Dictionary and is_inside_tree():
 		_apply_children_states(get_tree().root, states as Dictionary)
 
-## @ace_condition
-## @ace_name("Addon Saves Itself")
-## @ace_category("Save System")
-## @ace_description("Whether that autoload takes part in Save All Addons (it exposes save_state, itself or through a behavior child). Invert it to catch the pack somebody forgot to give a save seam.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.addon_saves_itself({addon_name})")
+# @ace_condition
+# @ace_name("Addon Saves Itself")
+# @ace_category("Save System")
+# @ace_description("Whether that autoload takes part in Save All Addons (it exposes save_state, itself or through a behavior child). Invert it to catch the pack somebody forgot to give a save seam.")
+# @ace_codegen_template("SaveSystem.addon_saves_itself({addon_name})")
 func addon_saves_itself(addon_name: String) -> bool:
 	return _collect_addon_states().has(addon_name)
 
-## @ace_action
-## @ace_name("Never Save This Key")
-## @ace_category("Save System")
-## @ace_description("Keeps this key out of every save from now on - cached node lists, throwaway buffers, totals you recompute. It is dropped on the way to the file whichever row wrote it, and an already-saved copy disappears on the next write.")
-## @ace_display_template("never put [b]{key}[/b] in a save")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.never_save_key({key})")
+# @ace_action
+# @ace_name("Never Save This Key")
+# @ace_category("Save System")
+# @ace_description("Keeps this key out of every save from now on - cached node lists, throwaway buffers, totals you recompute. It is dropped on the way to the file whichever row wrote it, and an already-saved copy disappears on the next write.")
+# @ace_display_template("never put [b]{key}[/b] in a save")
+# @ace_codegen_template("SaveSystem.never_save_key({key})")
 func never_save_key(key: String) -> void:
 	if not _never_save.has(key):
 		_never_save.append(key)
 
-## @ace_expression
-## @ace_name("Save Size")
-## @ace_category("Save System")
-## @ace_description("How many bytes the active slot's file takes on disk (0 when there is none) - the number nobody sees until a player reports a 40MB save.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.save_size()")
+# @ace_expression
+# @ace_name("Save Size")
+# @ace_category("Save System")
+# @ace_description("How many bytes the active slot's file takes on disk (0 when there is none) - the number nobody sees until a player reports a 40MB save.")
+# @ace_codegen_template("SaveSystem.save_size()")
 func save_size() -> int:
 	return FileAccess.get_file_as_bytes(_slot_path()).size() if FileAccess.file_exists(_slot_path()) else 0
 
-## @ace_expression
-## @ace_name("Save Report")
-## @ace_category("Save System")
-## @ace_description("A plain-text breakdown of the active save: total bytes, key count, then the heaviest keys in order. Log it, or show it in a debug overlay when a player reports a save that will not stop growing. The total is the real size of the file on disk; the per-key numbers are relative WEIGHTS (each value written out as text, measured in characters), so they rank the keys against one another rather than adding up to the total.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.save_report()")
+# @ace_expression
+# @ace_name("Save Report")
+# @ace_category("Save System")
+# @ace_description("A plain-text breakdown of the active save: total bytes, key count, then the heaviest keys in order. Log it, or show it in a debug overlay when a player reports a save that will not stop growing. The total is the real size of the file on disk; the per-key numbers are relative WEIGHTS (each value written out as text, measured in characters), so they rank the keys against one another rather than adding up to the total.")
+# @ace_codegen_template("SaveSystem.save_report()")
 func save_report() -> String:
 	var data: Dictionary = _read_all()
 	var lines: PackedStringArray = PackedStringArray(["Save slot %d - %d bytes in %d keys" % [slot, save_size(), data.size()]])
@@ -764,13 +715,12 @@ func save_report() -> String:
 		lines.append("never saved: %s" % ", ".join(_never_save))
 	return "\n".join(lines)
 
-## @ace_action
-## @ace_name("Restore Slot From Backup")
-## @ace_category("Save System")
-## @ace_description("Puts an earlier version of the slot back (1 = the save before this one, 2 = the one before that). The CURRENT file is backed up first, so a restore is never a one-way door. Needs Backup Count above 0.")
-## @ace_display_template("put slot [b]{slot_index}[/b] back to backup [b]{how_many_back}[/b]")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.restore_slot_from_backup({slot_index}, {how_many_back})")
+# @ace_action
+# @ace_name("Restore Slot From Backup")
+# @ace_category("Save System")
+# @ace_description("Puts an earlier version of the slot back (1 = the save before this one, 2 = the one before that). The CURRENT file is backed up first, so a restore is never a one-way door. Needs Backup Count above 0.")
+# @ace_display_template("put slot [b]{slot_index}[/b] back to backup [b]{how_many_back}[/b]")
+# @ace_codegen_template("SaveSystem.restore_slot_from_backup({slot_index}, {how_many_back})")
 func restore_slot_from_backup(slot_index: int, how_many_back: int) -> void:
 	var ring: PackedStringArray = _backups_for(slot_index)
 	if how_many_back < 1 or how_many_back > ring.size():
@@ -813,33 +763,30 @@ func restore_slot_from_backup(slot_index: int, how_many_back: int) -> void:
 		return
 	_last_problem = ""
 
-## @ace_expression
-## @ace_name("Slot Backup Count")
-## @ace_category("Save System")
-## @ace_description("How many earlier versions of that slot are kept right now (0 when backups are off or nothing has been overwritten yet).")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.slot_backup_count({slot_index})")
+# @ace_expression
+# @ace_name("Slot Backup Count")
+# @ace_category("Save System")
+# @ace_description("How many earlier versions of that slot are kept right now (0 when backups are off or nothing has been overwritten yet).")
+# @ace_codegen_template("SaveSystem.slot_backup_count({slot_index})")
 func slot_backup_count(slot_index: int) -> int:
 	return _backups_for(slot_index).size()
 
-## @ace_action
-## @ace_name("Carry Value Into Next Run")
-## @ace_category("Save System")
-## @ace_description("Marks one key to survive Start New Run - unlocked skins, a best time, the settings. Everything not marked is wiped. Marks last for the session, so declare them right before the reset.")
-## @ace_display_template("carry [b]{key}[/b] into the next run")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.carry_value_into_next_run({key})")
+# @ace_action
+# @ace_name("Carry Value Into Next Run")
+# @ace_category("Save System")
+# @ace_description("Marks one key to survive Start New Run - unlocked skins, a best time, the settings. Everything not marked is wiped. Marks last for the session, so declare them right before the reset.")
+# @ace_display_template("carry [b]{key}[/b] into the next run")
+# @ace_codegen_template("SaveSystem.carry_value_into_next_run({key})")
 func carry_value_into_next_run(key: String) -> void:
 	if not _carried.has(key):
 		_carried.append(key)
 
-## @ace_action
-## @ace_name("Start New Run")
-## @ace_category("Save System")
-## @ace_description("Wipes the slot and writes back ONLY the carried keys, its slot card, and a run counter one higher than before, then fires On New Run Started. New Game Plus, a chapter reset, a seasonal wipe, or the Reset Progress button that must keep the settings.")
-## @ace_display_template("start a new run in slot [b]{slot_index}[/b]")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.start_new_run({slot_index})")
+# @ace_action
+# @ace_name("Start New Run")
+# @ace_category("Save System")
+# @ace_description("Wipes the slot and writes back ONLY the carried keys, its slot card, and a run counter one higher than before, then fires On New Run Started. New Game Plus, a chapter reset, a seasonal wipe, or the Reset Progress button that must keep the settings.")
+# @ace_display_template("start a new run in slot [b]{slot_index}[/b]")
+# @ace_codegen_template("SaveSystem.start_new_run({slot_index})")
 func start_new_run(slot_index: int) -> void:
 	var previous: Dictionary = _read_path(_slot_path(slot_index), format)
 	if not _last_read_ok:
@@ -867,22 +814,20 @@ func start_new_run(slot_index: int) -> void:
 	else:
 		_fail_save(slot_index, "slot %d could not be written for the new run." % slot_index)
 
-## @ace_expression
-## @ace_name("Run Number")
-## @ace_category("Save System")
-## @ace_description("1 on a fresh save, 2 after the first New Game Plus, and so on - the number every NG+ banner, difficulty curve and you-have-beaten-this-N-times line is really asking for.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.run_number()")
+# @ace_expression
+# @ace_name("Run Number")
+# @ace_category("Save System")
+# @ace_description("1 on a fresh save, 2 after the first New Game Plus, and so on - the number every NG+ banner, difficulty curve and you-have-beaten-this-N-times line is really asking for.")
+# @ace_codegen_template("SaveSystem.run_number()")
 func run_number() -> int:
 	return int(_read_all().get(RUN_KEY, 1))
 
-## @ace_action
-## @ace_name("Remove Save Key")
-## @ace_category("Save System")
-## @ace_description("Takes one key out of the active slot and rewrites the file, then fires On Key Removed. A key the slot does not hold fires On Save Key Missing instead. Never Save This Key blocks a key forever; this removes the one copy that is already there.")
-## @ace_display_template("forget [b]{key}[/b] from this slot")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.remove_save_key({key})")
+# @ace_action
+# @ace_name("Remove Save Key")
+# @ace_category("Save System")
+# @ace_description("Takes one key out of the active slot and rewrites the file, then fires On Key Removed. A key the slot does not hold fires On Save Key Missing instead. Never Save This Key blocks a key forever; this removes the one copy that is already there.")
+# @ace_display_template("forget [b]{key}[/b] from this slot")
+# @ace_codegen_template("SaveSystem.remove_save_key({key})")
 func remove_save_key(key: String) -> void:
 	var data: Dictionary = _read_all()
 	if not _last_read_ok:
@@ -897,13 +842,12 @@ func remove_save_key(key: String) -> void:
 	else:
 		_fail_save(slot, "%s could not be removed from slot %d - is the save folder writable?" % [key, slot])
 
-## @ace_action
-## @ace_name("Clear Slot Keys")
-## @ace_category("Save System")
-## @ace_description("Empties the active slot of everything the game saved, and fires On Key Removed once per key. The file itself stays, and so do its slot card, its version stamp, its run number and its backups - the reset-profile button that does not cost the player their save file.")
-## @ace_display_template("forget everything this slot saved")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.clear_slot_keys()")
+# @ace_action
+# @ace_name("Clear Slot Keys")
+# @ace_category("Save System")
+# @ace_description("Empties the active slot of everything the game saved, and fires On Key Removed once per key. The file itself stays, and so do its slot card, its version stamp, its run number and its backups - the reset-profile button that does not cost the player their save file.")
+# @ace_display_template("forget everything this slot saved")
+# @ace_codegen_template("SaveSystem.clear_slot_keys()")
 func clear_slot_keys() -> void:
 	var data: Dictionary = _read_all()
 	if not _last_read_ok:
@@ -928,13 +872,12 @@ func clear_slot_keys() -> void:
 	for gone: String in removed:
 		key_removed.emit(gone, slot)
 
-## @ace_action
-## @ace_name("Check Save Key")
-## @ace_category("Save System")
-## @ace_description("Asks the slot whether it holds the key and answers with a row: On Key Loaded when it does, On Save Key Missing when it does not. The row that turns a silent default into a first-run seed.")
-## @ace_display_template("ask whether [b]{key}[/b] is saved")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.check_save_key({key})")
+# @ace_action
+# @ace_name("Check Save Key")
+# @ace_category("Save System")
+# @ace_description("Asks the slot whether it holds the key and answers with a row: On Key Loaded when it does, On Save Key Missing when it does not. The row that turns a silent default into a first-run seed.")
+# @ace_display_template("ask whether [b]{key}[/b] is saved")
+# @ace_codegen_template("SaveSystem.check_save_key({key})")
 func check_save_key(key: String) -> void:
 	var data: Dictionary = _read_all()
 	if not _last_read_ok:
@@ -945,72 +888,65 @@ func check_save_key(key: String) -> void:
 	else:
 		save_key_missing.emit(key, slot)
 
-## @ace_condition
-## @ace_name("Is Saving")
-## @ace_category("Save System")
-## @ace_description("Whether a write is in flight right now - inside On Before Save, a Save All Addons sweep, or an autosave. Guard a second write with it, or hold a quit until it clears.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.is_saving()")
+# @ace_condition
+# @ace_name("Is Saving")
+# @ace_category("Save System")
+# @ace_description("Whether a write is in flight right now - inside On Before Save, a Save All Addons sweep, or an autosave. Guard a second write with it, or hold a quit until it clears.")
+# @ace_codegen_template("SaveSystem.is_saving()")
 func is_saving() -> bool:
 	return _write_depth > 0
 
-## @ace_condition
-## @ace_name("Is Loading")
-## @ace_category("Save System")
-## @ace_description("Whether a load is in flight right now - the read, the migration gap and the On After Load broadcast are all inside it. Rows that must not fight the restore can stand aside while it is true.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.is_loading()")
+# @ace_condition
+# @ace_name("Is Loading")
+# @ace_category("Save System")
+# @ace_description("Whether a load is in flight right now - the read, the migration gap and the On After Load broadcast are all inside it. Rows that must not fight the restore can stand aside while it is true.")
+# @ace_codegen_template("SaveSystem.is_loading()")
 func is_loading() -> bool:
 	return _load_depth > 0
 
-## @ace_condition
-## @ace_name("Save Key Is")
-## @ace_category("Save System")
-## @ace_description("Whether the stored key equals this value, without loading it into a variable first. A key the slot does not hold never equals anything, so a missing key reads as false.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.save_key_is({key}, {value})")
+# @ace_condition
+# @ace_name("Save Key Is")
+# @ace_category("Save System")
+# @ace_description("Whether the stored key equals this value, without loading it into a variable first. A key the slot does not hold never equals anything, so a missing key reads as false.")
+# @ace_codegen_template("SaveSystem.save_key_is({key}, {value})")
 func save_key_is(key: String, value: Variant) -> bool:
 	return _read_all().get(key, null) == value
 
-## @ace_expression
-## @ace_name("Save Key Count")
-## @ace_category("Save System")
-## @ace_description("How many keys the active slot holds - the number a save inspector puts in its header. Counts exactly what List Save Keys lists, the pack's own reserved keys included.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.save_key_count()")
+# @ace_expression
+# @ace_name("Save Key Count")
+# @ace_category("Save System")
+# @ace_description("How many keys the active slot holds - the number a save inspector puts in its header. Counts exactly what List Save Keys lists, the pack's own reserved keys included.")
+# @ace_codegen_template("SaveSystem.save_key_count()")
 func save_key_count() -> int:
 	return _read_all().size()
 
-## @ace_expression
-## @ace_name("Save Key At")
-## @ace_category("Save System")
-## @ace_description("The key at this position in the active slot, for a numbered or paged list ("" when the position is past the end). Loop List Save Keys instead when you just want them all.")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.save_key_at({index})")
+# @ace_expression
+# @ace_name("Save Key At")
+# @ace_category("Save System")
+# @ace_description("The key at this position in the active slot, for a numbered or paged list ("" when the position is past the end). Loop List Save Keys instead when you just want them all.")
+# @ace_codegen_template("SaveSystem.save_key_at({index})")
 func save_key_at(index: int) -> String:
 	var keys: Array = _read_all().keys()
 	return str(keys[index]) if index >= 0 and index < keys.size() else ""
 
-## @ace_action
-## @ace_name("Open Save Folder")
-## @ace_category("Save System")
-## @ace_description("Shows the folder that holds the saves (the Save Directory) in the player's own file manager - Explorer, Finder or Files - so they can back up, share or delete a save. On the web and on phones there is no folder to show, and it does nothing.")
-## @ace_display_template("show the save folder in the player's file manager")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.open_save_folder()")
+# @ace_action
+# @ace_name("Open Save Folder")
+# @ace_category("Save System")
+# @ace_description("Shows the folder that holds the saves (the Save Directory) in the player's own file manager - Explorer, Finder or Files - so they can back up, share or delete a save. On the web and on phones there is no folder to show, and it does nothing.")
+# @ace_display_template("show the save folder in the player's file manager")
+# @ace_codegen_template("SaveSystem.open_save_folder()")
 func open_save_folder() -> void:
 	# The web and phones have no file manager to show a folder in, so the row is a quiet no-op
 	# there rather than an error a player could meet.
 	if can_open_save_folder():
 		OS.shell_show_in_file_manager(ProjectSettings.globalize_path(save_directory))
 
-## @ace_condition
-## @ace_name("Can Open Save Folder")
-## @ace_category("Save System")
-## @ace_description("Whether this platform has a save folder to show: true on Windows, macOS and Linux, false on the web and on phones. Hide the button that opens the folder where it cannot work.")
-## @ace_display_template("the save folder can be shown here")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.can_open_save_folder()")
+# @ace_condition
+# @ace_name("Can Open Save Folder")
+# @ace_category("Save System")
+# @ace_description("Whether this platform has a save folder to show: true on Windows, macOS and Linux, false on the web and on phones. Hide the button that opens the folder where it cannot work.")
+# @ace_display_template("the save folder can be shown here")
+# @ace_codegen_template("SaveSystem.can_open_save_folder()")
 func can_open_save_folder() -> bool:
 	return not (OS.has_feature("web") or OS.has_feature("mobile"))
 
@@ -1471,36 +1407,33 @@ func _apply_states(states: Dictionary) -> void:
 			# or the scene is not loaded yet). Surface it rather than dropping it silently.
 			push_warning("Save System: no node at %s to restore its saved state." % str(path))
 
+# @ace_looping(slot_index)
+# @ace_name("For Each Saved Slot")
+# @ace_category("Save System")
+# @ace_codegen_template("SaveSystem.each_saved_slot()")
 ## Runs this event's actions once per slot that has a save file - the load menu, as
 ## one row. Read the current one as `slot_index`, then fill the tile with Slot Detail
 ## and Slot Playtime (both read straight off disk, nothing is loaded).
-## @ace_looping(slot_index)
-## @ace_name("For Each Saved Slot")
-## @ace_category("Save System")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.each_saved_slot()")
 func each_saved_slot() -> Array:
 	return list_slots()
 
+# @ace_looping(addon_name)
+# @ace_name("For Each Saveable Addon")
+# @ace_category("Save System")
+# @ace_codegen_template("SaveSystem.each_saveable_addon()")
 ## Runs this event's actions once per autoload that saves itself, so a debug panel can
 ## list exactly what the save covers - and, by its absence, what quietly does not. Read
 ## the current one as `addon_name`.
-## @ace_looping(addon_name)
-## @ace_name("For Each Saveable Addon")
-## @ace_category("Save System")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.each_saveable_addon()")
 func each_saveable_addon() -> Array:
 	return _collect_addon_states().keys()
 
+# @ace_looping(backup_path)
+# @ace_name("For Each Backup Of Slot")
+# @ace_category("Save System")
+# @ace_codegen_template("SaveSystem.each_backup_of_slot({slot_index})")
 ## Runs this event's actions once per kept backup of the slot, newest first. Read the
 ## current one as `backup_path` - a real file path, so File Size (bytes) and Read Save
 ## File work on it, and its position in the loop is the "how many back" number.
-## @ace_looping(backup_path)
-## @ace_name("For Each Backup Of Slot")
-## @ace_category("Save System")
-## @ace_icon("res://eventsheet_addons/save_system/icon.svg")
-## @ace_codegen_template("SaveSystem.each_backup_of_slot({slot_index})")
 func each_backup_of_slot(slot_index: int) -> Array:
 	var found: Array = []
 	for backup_path: String in _backups_for(slot_index):

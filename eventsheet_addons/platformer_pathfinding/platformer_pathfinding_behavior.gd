@@ -1,7 +1,7 @@
-## @ace_tags(movement, platformer, ai, pathfinding)
-## @ace_category("Platformer Pathfinding")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_tags(movement, platformer, ai, pathfinding)
+# @ace_category("Platformer Pathfinding")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
 class_name PlatformerPathfinding
 extends Node
@@ -9,7 +9,7 @@ extends Node
 ##
 ## Changes on its parent: global_position, velocity, move_and_slide().
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CharacterBody2D = null
 
@@ -21,62 +21,62 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Platformer Pathfinding needs a CharacterBody2D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Portal Taken")
+# @ace_trigger
+# @ace_name("On Portal Taken")
 signal portal_taken
-## @ace_trigger
-## @ace_name("On Waypoint Stuck")
+# @ace_trigger
+# @ace_name("On Waypoint Stuck")
 signal waypoint_stuck
-## @ace_trigger
-## @ace_name("On Repath")
+# @ace_trigger
+# @ace_name("On Repath")
 signal repathed
-## @ace_trigger
-## @ace_name("On Hazard Entered")
+# @ace_trigger
+# @ace_name("On Hazard Entered")
 signal hazard_entered
-## @ace_trigger
-## @ace_name("On Path Found")
+# @ace_trigger
+# @ace_name("On Path Found")
 signal path_found
-## @ace_trigger
-## @ace_name("On Path Failed")
+# @ace_trigger
+# @ace_name("On Path Failed")
 signal path_failed
-## @ace_trigger
-## @ace_name("On Path Complete")
+# @ace_trigger
+# @ace_name("On Path Complete")
 signal path_complete
-## @ace_trigger
-## @ace_name("On Waypoint Reached")
+# @ace_trigger
+# @ace_name("On Waypoint Reached")
 signal waypoint_reached
-## @ace_trigger
-## @ace_name("On Nav Graph Built")
+# @ace_trigger
+# @ace_name("On Nav Graph Built")
 signal nav_graph_built
+# @ace_trigger
+# @ace_name("On Portal Entered")
 ## Fires when the agent reaches a portal's entrance, BEFORE the portal moves it. Call Pause At
 ## Portal here to play a door animation first; Current Portal Id names the portal.
-## @ace_trigger
-## @ace_name("On Portal Entered")
 signal portal_entered
+# @ace_trigger
+# @ace_name("On Jump Toward Launched")
 ## Fires when Jump Toward actually leaves the ground. Jump Toward Target is the aimed point.
-## @ace_trigger
-## @ace_name("On Jump Toward Launched")
 signal jump_toward_launched
+# @ace_trigger
+# @ace_name("On Patrol End Reached")
 ## Fires each time a patrolling agent reaches one end of its platform, before it turns.
-## @ace_trigger
-## @ace_name("On Patrol End Reached")
 signal patrol_end_reached
+# @ace_trigger
+# @ace_name("On Patrol Dwell Started")
 ## Fires when a patrolling agent starts waiting at an end (not fired for a dwell of 0).
-## @ace_trigger
-## @ace_name("On Patrol Dwell Started")
 signal patrol_dwell_started
+# @ace_trigger
+# @ace_name("On Patrol Dwell Finished")
 ## Fires when the wait at a patrol end is over and the agent turns; Patrol Direction already
 ## reads the new direction inside it.
-## @ace_trigger
-## @ace_name("On Patrol Dwell Finished")
 signal patrol_dwell_finished
+# @ace_trigger
+# @ace_name("On Node Side Reached")
 ## Fires when a Find Path To Node Side route arrives beside the node; Reached Side says which.
-## @ace_trigger
-## @ace_name("On Node Side Reached")
 signal node_side_reached
+# @ace_trigger
+# @ace_name("On Nav Graph Cleared")
 ## Fires when Clear Nav Graph drops the graph and the obstacle map.
-## @ace_trigger
-## @ace_name("On Nav Graph Cleared")
 signal nav_graph_cleared
 
 ## Drive the sibling PlatformerMovement automatically. Off = paths still compute; read Path Move Axis / Path Wants Jump and steer yourself.
@@ -433,9 +433,9 @@ static var _goal_claims: Dictionary = {}
 ## Shared graph, obstacle edits, portals, hazards and platforms for each map tag.
 static var _shared_maps: Dictionary = {}
 
+# @ace_hidden
 ## The cell a world position falls in. Tree-safe: outside a scene tree (tools, tests) the
 ## tilemap's own offset stands in for the global transform.
-## @ace_hidden
 func _world_to_cell(world: Vector2) -> Vector2i:
 	if _tilemap != null:
 		var local: Vector2 = _tilemap.to_local(world) if _tilemap.is_inside_tree() else world - _tilemap.position
@@ -443,9 +443,9 @@ func _world_to_cell(world: Vector2) -> Vector2i:
 	var tile: float = _tile_px()
 	return Vector2i(floori((world.x - _grid_origin.x) / tile), floori((world.y - _grid_origin.y) / tile))
 
+# @ace_hidden
 ## The sibling movement pack, duck-typed: any child of the host with a move_speed and a
 ## jump() (PlatformerMovement, or your own driver with the same surface).
-## @ace_hidden
 func _find_movement() -> Node:
 	if _movement != null and is_instance_valid(_movement):
 		return _movement
@@ -464,21 +464,21 @@ func _find_movement() -> Node:
 				push_warning("[PlatformerPathfinding] The movement pack's gravity_angle is %.0f - pathfinding plans with straight-down gravity (90) and its paths will be wrong under rotated gravity." % float(movement_angle))
 			return _movement
 	return null
+# @ace_hidden
 ## Jump reach in CELLS, rounded up (the graph's standing jump box).
-## @ace_hidden
 func _jump_reach_cells() -> Vector2i:
 	var tile: float = _tile_px()
 	var reach: Vector2 = _jump_reach_px()
 	return Vector2i(maxi(int(ceil(reach.x / tile)), 1), maxi(int(ceil(reach.y / tile)), 1))
+# @ace_hidden
 ## The registered portal with this id, or null.
-## @ace_hidden
 func _portal_by_id(portal_id: int) -> NavPortal:
 	for portal in _portals:
 		if portal.id == portal_id:
 			return portal
 	return null
+# @ace_hidden
 ## The registered platform serving this waypoint (one of its endpoints is near it).
-## @ace_hidden
 func _platform_for_waypoint(target: Vector2) -> NavRide:
 	for ride in _moving_platforms:
 		if not is_instance_valid(ride.node):
@@ -486,7 +486,7 @@ func _platform_for_waypoint(target: Vector2) -> NavRide:
 		if ride.a.distance_to(target) < 96.0 or ride.b.distance_to(target) < 96.0:
 			return ride
 	return null
-## @ace_hidden
+# @ace_hidden
 func _add_edge(from_cell: Vector2i, to_cell: Vector2i, kind: String, cost: float) -> NavEdge:
 	if not _edges.has(from_cell):
 		var fresh: Array[NavEdge] = []
@@ -497,8 +497,8 @@ func _add_edge(from_cell: Vector2i, to_cell: Vector2i, kind: String, cost: float
 	edge.cost = cost
 	(_edges[from_cell] as Array).append(edge)
 	return edge
+# @ace_hidden
 ## The standable node nearest a world position (within max_cells), or Vector2i.MAX.
-## @ace_hidden
 func _nearest_node(world: Vector2, max_cells: int) -> Vector2i:
 	if not _has_grid():
 		return Vector2i.MAX
@@ -514,8 +514,8 @@ func _nearest_node(world: Vector2, max_cells: int) -> Vector2i:
 			best_distance = cell_distance
 			best = cell
 	return best
+# @ace_hidden
 ## The nearest ledge on this agent's platform in a direction (-1 left, 1 right), or MAX.
-## @ace_hidden
 func _nearest_ledge_cell(direction: int) -> Vector2i:
 	if host == null:
 		return Vector2i.MAX
@@ -530,8 +530,8 @@ func _nearest_ledge_cell(direction: int) -> Vector2i:
 			best_gap = gap
 			best = cell
 	return best
+# @ace_hidden
 ## The other live agents on the same map (same grid, same map tag), freed ones pruned.
-## @ace_hidden
 func _other_agents() -> Array[PlatformerPathfinding]:
 	var others: Array[PlatformerPathfinding] = []
 	for agent_id in _agent_ids.keys():
@@ -549,9 +549,9 @@ func _other_agents() -> Array[PlatformerPathfinding]:
 			continue
 		others.append(agent)
 	return others
+# @ace_hidden
 ## Crowd arrivals: claims the goal node, or the nearest unclaimed node walkable from it when
 ## another agent already holds it, so a crowd spreads out instead of stacking on one spot.
-## @ace_hidden
 func _claim_goal(goal: Vector2i) -> Vector2i:
 	_release_claim()
 	var chosen: Vector2i = goal
@@ -761,14 +761,12 @@ func _physics_process(delta: float) -> void:
 	if debug_draw:
 		_refresh_debug()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Build Nav Graph From Tilemap")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Scans a TileMapLayer's physics tiles into the navigation graph: standable cells become nodes, adjacent cells (one step up or down - stairs and tile slopes) become WALK links, and jump arcs / fall drops connect the rest, sized to the sibling PlatformerMovement's real jump. One-way tiles become jump-through platforms an agent can drop through. Call once on ready; Regenerate after level edits. Fires On Nav Graph Built.")
-## @ace_display_template("Build nav graph from [i]{tilemap}[/i]")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.build_nav_graph({tilemap})")
+# @ace_action
+# @ace_featured
+# @ace_name("Build Nav Graph From Tilemap")
+# @ace_description("Scans a TileMapLayer's physics tiles into the navigation graph: standable cells become nodes, adjacent cells (one step up or down - stairs and tile slopes) become WALK links, and jump arcs / fall drops connect the rest, sized to the sibling PlatformerMovement's real jump. One-way tiles become jump-through platforms an agent can drop through. Call once on ready; Regenerate after level edits. Fires On Nav Graph Built.")
+# @ace_display_template("Build nav graph from [i]{tilemap}[/i]")
+# @ace_codegen_template("$PlatformerPathfinding.build_nav_graph({tilemap})")
 func build_nav_graph(tilemap: Node) -> void:
 	_tilemap = tilemap as TileMapLayer
 	_custom_grid = false
@@ -779,12 +777,10 @@ func build_nav_graph(tilemap: Node) -> void:
 		return
 	regenerate_nav_graph()
 
-## @ace_action
-## @ace_name("Regenerate Nav Graph")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Rebuilds the graph from the same map (after runtime tile edits, Set Tile State or Scan Collision Bodies).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.regenerate_nav_graph()")
+# @ace_action
+# @ace_name("Regenerate Nav Graph")
+# @ace_description("Rebuilds the graph from the same map (after runtime tile edits, Set Tile State or Scan Collision Bodies).")
+# @ace_codegen_template("$PlatformerPathfinding.regenerate_nav_graph()")
 func regenerate_nav_graph() -> void:
 	_nodes.clear()
 	_edges.clear()
@@ -882,28 +878,24 @@ func regenerate_nav_graph() -> void:
 	_refresh_graph_overlay()
 	nav_graph_built.emit()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Find Path To")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Routes to a world position and starts moving. Mode "reach" fails (On Path Failed) when the spot itself is unreachable; "nearest" never fails on a cut-off spot - it goes as close as it can get. Fires On Path Found / On Path Failed.")
-## @ace_display_template("Find path to ([b]{x}[/b], [b]{y}[/b]) mode [b]{mode}[/b]")
-## @ace_param_options(mode nearest, reach)
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.find_path_to({x}, {y}, "{mode}")")
+# @ace_action
+# @ace_featured
+# @ace_name("Find Path To")
+# @ace_description("Routes to a world position and starts moving. Mode "reach" fails (On Path Failed) when the spot itself is unreachable; "nearest" never fails on a cut-off spot - it goes as close as it can get. Fires On Path Found / On Path Failed.")
+# @ace_display_template("Find path to ([b]{x}[/b], [b]{y}[/b]) mode [b]{mode}[/b]")
+# @ace_param_options(mode nearest, reach)
+# @ace_codegen_template("$PlatformerPathfinding.find_path_to({x}, {y}, "{mode}")")
 func find_path_to(x: float, y: float, mode: String) -> void:
 	_end_patrol()
 	_side_request = null
 	_exact_final = NAN
 	_route(x, y, mode)
 
-## @ace_action
-## @ace_name("Find Path To Node")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Routes to another node's position AND keeps following it: the route auto-refreshes every Repath Interval once the node has moved Repath Threshold pixels (firing On Repath) - one call chases forever. Stop Pathfinding ends the follow.")
-## @ace_param_options(mode nearest, reach)
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.find_path_to_node({target}, "{mode}")")
+# @ace_action
+# @ace_name("Find Path To Node")
+# @ace_description("Routes to another node's position AND keeps following it: the route auto-refreshes every Repath Interval once the node has moved Repath Threshold pixels (firing On Repath) - one call chases forever. Stop Pathfinding ends the follow.")
+# @ace_param_options(mode nearest, reach)
+# @ace_codegen_template("$PlatformerPathfinding.find_path_to_node({target}, "{mode}")")
 func find_path_to_node(target: Node, mode: String) -> void:
 	if target is Node2D:
 		find_path_to((target as Node2D).global_position.x, (target as Node2D).global_position.y, mode)
@@ -913,12 +905,10 @@ func find_path_to_node(target: Node, mode: String) -> void:
 	else:
 		path_failed.emit()
 
-## @ace_action
-## @ace_name("Stop Pathfinding")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Clears the path (and any patrol, Jump Toward or portal in progress) and releases the movement pack back to the keyboard (ai_controlled off).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.stop_pathfinding()")
+# @ace_action
+# @ace_name("Stop Pathfinding")
+# @ace_description("Clears the path (and any patrol, Jump Toward or portal in progress) and releases the movement pack back to the keyboard (ai_controlled off).")
+# @ace_codegen_template("$PlatformerPathfinding.stop_pathfinding()")
 func stop_pathfinding() -> void:
 	_end_patrol()
 	_side_request = null
@@ -930,12 +920,10 @@ func stop_pathfinding() -> void:
 		_set_movement_processing(true)
 	_finish_path()
 
-## @ace_action
-## @ace_name("Set Auto Control")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("On (default): the behavior drives the sibling PlatformerMovement. Off: paths still compute - read Path Move Axis / Path Wants Jump / Current Waypoint X/Y and drive anything you like.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_auto_control({enabled})")
+# @ace_action
+# @ace_name("Set Auto Control")
+# @ace_description("On (default): the behavior drives the sibling PlatformerMovement. Off: paths still compute - read Path Move Axis / Path Wants Jump / Current Waypoint X/Y and drive anything you like.")
+# @ace_codegen_template("$PlatformerPathfinding.set_auto_control({enabled})")
 func set_auto_control(enabled: bool) -> void:
 	auto_control = enabled
 	if not enabled:
@@ -943,96 +931,76 @@ func set_auto_control(enabled: bool) -> void:
 		if movement != null:
 			movement.set("ai_controlled", false)
 
-## @ace_action
-## @ace_name("Set Ledge Restriction")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Patrol discipline: on, routes may only WALK - no jumps, no portals, and no drops beyond Ledge Leniency, so the agent stays on its platform. Applies from the next Find Path To.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_ledge_restriction({enabled})")
+# @ace_action
+# @ace_name("Set Ledge Restriction")
+# @ace_description("Patrol discipline: on, routes may only WALK - no jumps, no portals, and no drops beyond Ledge Leniency, so the agent stays on its platform. Applies from the next Find Path To.")
+# @ace_codegen_template("$PlatformerPathfinding.set_ledge_restriction({enabled})")
 func set_ledge_restriction(enabled: bool) -> void:
 	ledge_restriction = enabled
 
-## @ace_action
-## @ace_name("Set Ledge Leniency")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("With Ledge Restriction on, drops up to this many pixels are still allowed (a patroller may hop down one step but never off the tower).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_ledge_leniency({pixels})")
+# @ace_action
+# @ace_name("Set Ledge Leniency")
+# @ace_description("With Ledge Restriction on, drops up to this many pixels are still allowed (a patroller may hop down one step but never off the tower).")
+# @ace_codegen_template("$PlatformerPathfinding.set_ledge_leniency({pixels})")
 func set_ledge_leniency(pixels: float) -> void:
 	ledge_leniency = pixels
 
-## @ace_action
-## @ace_name("Set Jump Positioning")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("relaxed (default): leap the moment a jump leg starts. strict: walk onto the exact takeoff spot first - slower but precise on tight arcs.")
-## @ace_param_options(mode relaxed, strict)
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_jump_positioning("{mode}")")
+# @ace_action
+# @ace_name("Set Jump Positioning")
+# @ace_description("relaxed (default): leap the moment a jump leg starts. strict: walk onto the exact takeoff spot first - slower but precise on tight arcs.")
+# @ace_param_options(mode relaxed, strict)
+# @ace_codegen_template("$PlatformerPathfinding.set_jump_positioning("{mode}")")
 func set_jump_positioning(mode: String) -> void:
 	jump_positioning = mode
 
-## @ace_action
-## @ace_name("Set Coyote Time")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Grace window (s) for AI jumps just after running off the takeoff ledge.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_coyote_time({seconds})")
+# @ace_action
+# @ace_name("Set Coyote Time")
+# @ace_description("Grace window (s) for AI jumps just after running off the takeoff ledge.")
+# @ace_codegen_template("$PlatformerPathfinding.set_coyote_time({seconds})")
 func set_coyote_time(seconds: float) -> void:
 	coyote_time = seconds
 
-## @ace_action
-## @ace_name("Set Repath Interval")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("While following a node, how often the route may refresh (chase freshness vs cost).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_repath_interval({seconds})")
+# @ace_action
+# @ace_name("Set Repath Interval")
+# @ace_description("While following a node, how often the route may refresh (chase freshness vs cost).")
+# @ace_codegen_template("$PlatformerPathfinding.set_repath_interval({seconds})")
 func set_repath_interval(seconds: float) -> void:
 	repath_interval = seconds
 
-## @ace_action
-## @ace_name("Set Repath Threshold")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The route only refreshes when the followed node has moved at least this many pixels.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_repath_threshold({pixels})")
+# @ace_action
+# @ace_name("Set Repath Threshold")
+# @ace_description("The route only refreshes when the followed node has moved at least this many pixels.")
+# @ace_codegen_template("$PlatformerPathfinding.set_repath_threshold({pixels})")
 func set_repath_threshold(pixels: float) -> void:
 	repath_threshold = pixels
 
-## @ace_action
-## @ace_name("Set Max Paths Per Tick")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The SHARED budget across every agent: at most this many route computations per physics tick - extras defer a tick (Is Path Pending) instead of spiking the frame. The difference between 20 chasers working and not.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_max_paths_per_tick({count})")
+# @ace_action
+# @ace_name("Set Max Paths Per Tick")
+# @ace_description("The SHARED budget across every agent: at most this many route computations per physics tick - extras defer a tick (Is Path Pending) instead of spiking the frame. The difference between 20 chasers working and not.")
+# @ace_codegen_template("$PlatformerPathfinding.set_max_paths_per_tick({count})")
 func set_max_paths_per_tick(count: int) -> void:
 	_shared_max_paths_per_tick = count
 
-## @ace_action
-## @ace_name("Add Portal")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Links two world positions as an instant PORTAL: an agent whose route uses it walks to the entrance and blinks to the exit (fires On Portal Entered, then On Portal Taken). Bidirectional works both ways. Portals join the graph immediately and survive Regenerate. Add Instant Portal adds a cost and a tag; Add Gradual Portal moves the agent instead of blinking it.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.add_portal({from_x}, {from_y}, {to_x}, {to_y}, {bidirectional})")
+# @ace_action
+# @ace_name("Add Portal")
+# @ace_description("Links two world positions as an instant PORTAL: an agent whose route uses it walks to the entrance and blinks to the exit (fires On Portal Entered, then On Portal Taken). Bidirectional works both ways. Portals join the graph immediately and survive Regenerate. Add Instant Portal adds a cost and a tag; Add Gradual Portal moves the agent instead of blinking it.")
+# @ace_codegen_template("$PlatformerPathfinding.add_portal({from_x}, {from_y}, {to_x}, {to_y}, {bidirectional})")
 func add_portal(from_x: float, from_y: float, to_x: float, to_y: float, bidirectional: bool) -> void:
 	_add_portal_record(Vector2(from_x, from_y), Vector2(to_x, to_y), bidirectional, "instant", 1.0, 0.0, "")
 
-## @ace_action
-## @ace_name("Clear Portals")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Removes every registered portal and elevator stop (takes effect on the next Regenerate Nav Graph).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.clear_portals()")
+# @ace_action
+# @ace_name("Clear Portals")
+# @ace_description("Removes every registered portal and elevator stop (takes effect on the next Regenerate Nav Graph).")
+# @ace_codegen_template("$PlatformerPathfinding.clear_portals()")
 func clear_portals() -> void:
 	_portals.clear()
 	_elevator_stops.clear()
 	regenerate_nav_graph()
 
-## @ace_action
-## @ace_name("Add Hazard")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Marks a world-space rectangle as hazardous. Deadly: routes NEVER pass through it (spikes, lava). Not deadly: routes pay Danger Cost Multiplier to cross, so it is taken only when no clean way exists (fire patches, slow mud). Applies to routing instantly - no rebuild - and On Hazard Entered fires if the agent ends up inside one anyway. Last Hazard Id names it for Remove Hazard.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.add_hazard({x}, {y}, {width}, {height}, {deadly})")
+# @ace_action
+# @ace_name("Add Hazard")
+# @ace_description("Marks a world-space rectangle as hazardous. Deadly: routes NEVER pass through it (spikes, lava). Not deadly: routes pay Danger Cost Multiplier to cross, so it is taken only when no clean way exists (fire patches, slow mud). Applies to routing instantly - no rebuild - and On Hazard Entered fires if the agent ends up inside one anyway. Last Hazard Id names it for Remove Hazard.")
+# @ace_codegen_template("$PlatformerPathfinding.add_hazard({x}, {y}, {width}, {height}, {deadly})")
 func add_hazard(x: float, y: float, width: float, height: float, deadly: bool) -> void:
 	var hazard: NavHazard = NavHazard.new()
 	hazard.id = _next_hazard_id
@@ -1046,21 +1014,17 @@ func add_hazard(x: float, y: float, width: float, height: float, deadly: bool) -
 	# agent starts paying for its tick again the moment one exists.
 	set_physics_process(true)
 
-## @ace_action
-## @ace_name("Clear Hazards")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Removes every hazard of every kind (routing sees the change immediately).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.clear_hazards()")
+# @ace_action
+# @ace_name("Clear Hazards")
+# @ace_description("Removes every hazard of every kind (routing sees the change immediately).")
+# @ace_codegen_template("$PlatformerPathfinding.clear_hazards()")
 func clear_hazards() -> void:
 	_hazards.clear()
 
-## @ace_action
-## @ace_name("Add Moving Platform")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Registers a moving platform (an AnimatableBody2D you animate) by its two travel endpoints: the graph gains a PLATFORM link between them, and an agent routed across it walks to the track, WAITS for the platform, boards, rides, and walks off at the far side. Survives Regenerate. The pack never moves the platform - your sheet animates it between exactly these endpoints.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.add_moving_platform({platform}, {from_x}, {from_y}, {to_x}, {to_y})")
+# @ace_action
+# @ace_name("Add Moving Platform")
+# @ace_description("Registers a moving platform (an AnimatableBody2D you animate) by its two travel endpoints: the graph gains a PLATFORM link between them, and an agent routed across it walks to the track, WAITS for the platform, boards, rides, and walks off at the far side. Survives Regenerate. The pack never moves the platform - your sheet animates it between exactly these endpoints.")
+# @ace_codegen_template("$PlatformerPathfinding.add_moving_platform({platform}, {from_x}, {from_y}, {to_x}, {to_y})")
 func add_moving_platform(platform: Node, from_x: float, from_y: float, to_x: float, to_y: float) -> void:
 	if not (platform is Node2D):
 		return
@@ -1072,33 +1036,27 @@ func add_moving_platform(platform: Node, from_x: float, from_y: float, to_x: flo
 	if not _nodes.is_empty():
 		_apply_moving_platform(ride)
 
-## @ace_action
-## @ace_name("Clear Moving Platforms")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Unregisters every moving platform (takes effect on the next Regenerate Nav Graph).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.clear_moving_platforms()")
+# @ace_action
+# @ace_name("Clear Moving Platforms")
+# @ace_description("Unregisters every moving platform (takes effect on the next Regenerate Nav Graph).")
+# @ace_codegen_template("$PlatformerPathfinding.clear_moving_platforms()")
 func clear_moving_platforms() -> void:
 	_moving_platforms.clear()
 	regenerate_nav_graph()
 
-## @ace_action
-## @ace_name("Set Nav Debug Draw")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Draws the active path as a line in the world (great while tuning a level).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_nav_debug_draw({enabled})")
+# @ace_action
+# @ace_name("Set Nav Debug Draw")
+# @ace_description("Draws the active path as a line in the world (great while tuning a level).")
+# @ace_codegen_template("$PlatformerPathfinding.set_nav_debug_draw({enabled})")
 func set_nav_debug_draw(enabled: bool) -> void:
 	debug_draw = enabled
 	_refresh_debug()
 
-## @ace_action
-## @ace_name("Set Enabled")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Off freezes the agent where it stands with its route, graph and settings kept, and ignores route requests; on resumes exactly where it left off.")
-## @ace_param(state, desc: "On to navigate, off to freeze.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_enabled({state})")
+# @ace_action
+# @ace_name("Set Enabled")
+# @ace_description("Off freezes the agent where it stands with its route, graph and settings kept, and ignores route requests; on resumes exactly where it left off.")
+# @ace_param(state, desc: "On to navigate, off to freeze.")
+# @ace_codegen_template("$PlatformerPathfinding.set_enabled({state})")
 func set_enabled(state: bool) -> void:
 	nav_enabled = state
 	if not state:
@@ -1109,54 +1067,44 @@ func set_enabled(state: bool) -> void:
 	else:
 		_wake()
 
-## @ace_condition
-## @ace_name("Is Enabled")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("True while the behavior is enabled (Set Enabled, or the Nav Enabled property).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.is_enabled()")
+# @ace_condition
+# @ace_name("Is Enabled")
+# @ace_description("True while the behavior is enabled (Set Enabled, or the Nav Enabled property).")
+# @ace_codegen_template("$PlatformerPathfinding.is_enabled()")
 func is_enabled() -> bool:
 	return nav_enabled
 
-## @ace_action
-## @ace_name("Set Path Strategy")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("How routes are picked from now on: balanced, shortest (fewest pixels, long jumps welcome), safest (short hops over long leaps and deep drops), ground_hugging (walks whenever it can), no_falling (never descends by air) or walk_only (never leaves its platform except by portal or moving platform).")
-## @ace_display_template("Pick routes by [b]{strategy}[/b]")
-## @ace_param(strategy, options: balanced|shortest|safest|ground_hugging|no_falling|walk_only, default_word: balanced, desc: "The strategy routes are priced by.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_path_strategy("{strategy}")")
+# @ace_action
+# @ace_name("Set Path Strategy")
+# @ace_description("How routes are picked from now on: balanced, shortest (fewest pixels, long jumps welcome), safest (short hops over long leaps and deep drops), ground_hugging (walks whenever it can), no_falling (never descends by air) or walk_only (never leaves its platform except by portal or moving platform).")
+# @ace_display_template("Pick routes by [b]{strategy}[/b]")
+# @ace_param(strategy, options: balanced|shortest|safest|ground_hugging|no_falling|walk_only, default_word: balanced, desc: "The strategy routes are priced by.")
+# @ace_codegen_template("$PlatformerPathfinding.set_path_strategy("{strategy}")")
 func set_path_strategy(strategy: String) -> void:
 	path_strategy = strategy
 
-## @ace_action
-## @ace_name("Set Max Traversal Drop")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Jumps and falls landing more than this many pixels lower are left out of this agent's routes, so it goes down by slopes, portals and short hops instead (fall damage, heavy units). -1 = no limit.")
-## @ace_param(pixels, desc: "The deepest drop allowed, in pixels (-1 = no limit).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_max_traversal_drop({pixels})")
+# @ace_action
+# @ace_name("Set Max Traversal Drop")
+# @ace_description("Jumps and falls landing more than this many pixels lower are left out of this agent's routes, so it goes down by slopes, portals and short hops instead (fall damage, heavy units). -1 = no limit.")
+# @ace_param(pixels, desc: "The deepest drop allowed, in pixels (-1 = no limit).")
+# @ace_codegen_template("$PlatformerPathfinding.set_max_traversal_drop({pixels})")
 func set_max_traversal_drop(pixels: float) -> void:
 	max_traversal_drop = pixels
 
-## @ace_action
-## @ace_name("Set Drift Repath Distance")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Knocked more than this many pixels off the leg it is walking, the agent re-plans from where it is (fires On Repath), at most once per Repath Interval. 0 = off.")
-## @ace_param(pixels, desc: "How far off its leg the agent may be pushed before it re-plans (0 = off).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_drift_repath_distance({pixels})")
+# @ace_action
+# @ace_name("Set Drift Repath Distance")
+# @ace_description("Knocked more than this many pixels off the leg it is walking, the agent re-plans from where it is (fires On Repath), at most once per Repath Interval. 0 = off.")
+# @ace_param(pixels, desc: "How far off its leg the agent may be pushed before it re-plans (0 = off).")
+# @ace_codegen_template("$PlatformerPathfinding.set_drift_repath_distance({pixels})")
 func set_drift_repath_distance(pixels: float) -> void:
 	drift_repath_distance = pixels
 
-## @ace_action
-## @ace_name("Set Movement Limit")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Overrides a movement limit the graph is built from instead of deriving it from the movement sibling: jump_height, jump_distance (pixels, 0 = derive again) or max_fall (pixels, negative = no limit). Regenerate Nav Graph afterwards.")
-## @ace_param(limit, options: jump_height|jump_distance|max_fall, default_word: jump_height, desc: "Which limit to override.")
-## @ace_param(value, desc: "The new limit in pixels.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_movement_limit("{limit}", {value})")
+# @ace_action
+# @ace_name("Set Movement Limit")
+# @ace_description("Overrides a movement limit the graph is built from instead of deriving it from the movement sibling: jump_height, jump_distance (pixels, 0 = derive again) or max_fall (pixels, negative = no limit). Regenerate Nav Graph afterwards.")
+# @ace_param(limit, options: jump_height|jump_distance|max_fall, default_word: jump_height, desc: "Which limit to override.")
+# @ace_param(value, desc: "The new limit in pixels.")
+# @ace_codegen_template("$PlatformerPathfinding.set_movement_limit("{limit}", {value})")
 func set_movement_limit(limit: String, value: float) -> void:
 	if limit == "jump_height":
 		jump_height_override = value
@@ -1167,15 +1115,13 @@ func set_movement_limit(limit: String, value: float) -> void:
 	else:
 		push_warning("[PlatformerPathfinding] Set Movement Limit: unknown limit '%s' (jump_height, jump_distance, max_fall)." % limit)
 
-## @ace_action
-## @ace_name("Jump Toward")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("A full-strength jump straight at a point with no route at all - a lunge, a pounce, a boss leap. Works from the ground (or mid-air when the movement sibling has a jump left). Ends any route or patrol. Fires On Jump Toward Launched as it leaves the ground.")
-## @ace_display_template("Jump toward ([b]{x}[/b], [b]{y}[/b])")
-## @ace_param(x, desc: "World X to leap toward.")
-## @ace_param(y, desc: "World Y to leap toward.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.jump_toward({x}, {y})")
+# @ace_action
+# @ace_name("Jump Toward")
+# @ace_description("A full-strength jump straight at a point with no route at all - a lunge, a pounce, a boss leap. Works from the ground (or mid-air when the movement sibling has a jump left). Ends any route or patrol. Fires On Jump Toward Launched as it leaves the ground.")
+# @ace_display_template("Jump toward ([b]{x}[/b], [b]{y}[/b])")
+# @ace_param(x, desc: "World X to leap toward.")
+# @ace_param(y, desc: "World Y to leap toward.")
+# @ace_codegen_template("$PlatformerPathfinding.jump_toward({x}, {y})")
 func jump_toward(x: float, y: float) -> void:
 	if not nav_enabled or host == null:
 		return
@@ -1186,14 +1132,12 @@ func jump_toward(x: float, y: float) -> void:
 	_jump_toward_airborne = false
 	_wake()
 
-## @ace_action
-## @ace_name("Teleport To")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Moves the agent to a world position instantly without throwing its route away (the drift re-route skips that tick).")
-## @ace_param(x, desc: "World X.")
-## @ace_param(y, desc: "World Y.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.teleport_to({x}, {y})")
+# @ace_action
+# @ace_name("Teleport To")
+# @ace_description("Moves the agent to a world position instantly without throwing its route away (the drift re-route skips that tick).")
+# @ace_param(x, desc: "World X.")
+# @ace_param(y, desc: "World Y.")
+# @ace_codegen_template("$PlatformerPathfinding.teleport_to({x}, {y})")
 func teleport_to(x: float, y: float) -> void:
 	if host == null:
 		return
@@ -1203,15 +1147,13 @@ func teleport_to(x: float, y: float) -> void:
 	_best_waypoint_distance = INF
 	_stuck_clock = 0.0
 
-## @ace_action
-## @ace_name("Start Patrol")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Patrols the platform the agent stands on: walks to one end, waits Dwell seconds, turns, and repeats. The ends are found from the graph (ledges and walls, slopes and stairs included); Edge Distance keeps it that many pixels back from each end. Any route request ends the patrol.")
-## @ace_display_template("Patrol the platform, waiting [b]{dwell}[/b] s at each end, [b]{edge_distance}[/b] px back from it")
-## @ace_param(dwell, desc: "Seconds to wait at each end (0 = turn straight around).")
-## @ace_param(edge_distance, desc: "Pixels to stay back from each end.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.start_patrol({dwell}, {edge_distance})")
+# @ace_action
+# @ace_name("Start Patrol")
+# @ace_description("Patrols the platform the agent stands on: walks to one end, waits Dwell seconds, turns, and repeats. The ends are found from the graph (ledges and walls, slopes and stairs included); Edge Distance keeps it that many pixels back from each end. Any route request ends the patrol.")
+# @ace_display_template("Patrol the platform, waiting [b]{dwell}[/b] s at each end, [b]{edge_distance}[/b] px back from it")
+# @ace_param(dwell, desc: "Seconds to wait at each end (0 = turn straight around).")
+# @ace_param(edge_distance, desc: "Pixels to stay back from each end.")
+# @ace_codegen_template("$PlatformerPathfinding.start_patrol({dwell}, {edge_distance})")
 func start_patrol(dwell: float, edge_distance: float) -> void:
 	if not nav_enabled or host == null:
 		return
@@ -1237,41 +1179,33 @@ func start_patrol(dwell: float, edge_distance: float) -> void:
 	_patrol_dir = 1 if (_patrol_ends[1] as Vector2).x - host.global_position.x >= host.global_position.x - (_patrol_ends[0] as Vector2).x else -1
 	_patrol_walk()
 
-## @ace_action
-## @ace_name("Stop Patrol")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Ends the patrol; the agent stands where it is.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.stop_patrol()")
+# @ace_action
+# @ace_name("Stop Patrol")
+# @ace_description("Ends the patrol; the agent stands where it is.")
+# @ace_codegen_template("$PlatformerPathfinding.stop_patrol()")
 func stop_patrol() -> void:
 	stop_pathfinding()
 
-## @ace_condition
-## @ace_name("Is Patrolling")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("True while a Start Patrol patrol is running (walking or dwelling).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.is_patrolling()")
+# @ace_condition
+# @ace_name("Is Patrolling")
+# @ace_description("True while a Start Patrol patrol is running (walking or dwelling).")
+# @ace_codegen_template("$PlatformerPathfinding.is_patrolling()")
 func is_patrolling() -> bool:
 	return _patrolling
 
-## @ace_expression
-## @ace_name("Patrol Direction")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("-1 walking left, 1 walking right, 0 while dwelling at an end or not patrolling. Handy for flipping the sprite.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.patrol_direction()")
+# @ace_expression
+# @ace_name("Patrol Direction")
+# @ace_description("-1 walking left, 1 walking right, 0 while dwelling at an end or not patrolling. Handy for flipping the sprite.")
+# @ace_codegen_template("$PlatformerPathfinding.patrol_direction()")
 func patrol_direction() -> int:
 	return _patrol_dir if _patrolling and not _patrol_dwelling else 0
 
-## @ace_action
-## @ace_name("Find Path To Nearest Ledge")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Routes to the nearest edge of the agent's platform in a direction, stopping Distance pixels back from it. Fails (On Path Failed, reason no_ledge) when the platform has no ledge that way.")
-## @ace_param(direction, options: left|right, default_word: left, desc: "Which way to look for the ledge.")
-## @ace_param(distance, desc: "Pixels to stop short of the edge.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.find_path_to_nearest_ledge("{direction}", {distance})")
+# @ace_action
+# @ace_name("Find Path To Nearest Ledge")
+# @ace_description("Routes to the nearest edge of the agent's platform in a direction, stopping Distance pixels back from it. Fails (On Path Failed, reason no_ledge) when the platform has no ledge that way.")
+# @ace_param(direction, options: left|right, default_word: left, desc: "Which way to look for the ledge.")
+# @ace_param(distance, desc: "Pixels to stop short of the edge.")
+# @ace_codegen_template("$PlatformerPathfinding.find_path_to_nearest_ledge("{direction}", {distance})")
 func find_path_to_nearest_ledge(direction: String, distance: float) -> void:
 	_end_patrol()
 	_side_request = null
@@ -1286,15 +1220,13 @@ func find_path_to_nearest_ledge(direction: String, distance: float) -> void:
 	_exact_final = spot.x
 	_route(spot.x, spot.y, "nearest")
 
-## @ace_action
-## @ace_name("Find Path To Node Side")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Routes to a spot BESIDE a node instead of onto it, Distance pixels clear of it: left, right, or any (the nearer side, falling back to the other when it has no ground). Fires On Node Side Reached on arrival there; Reached Side says which side.")
-## @ace_param(target, desc: "The node to stand beside.")
-## @ace_param(side, options: any|left|right, default_word: any, desc: "Which side of it to stand on.")
-## @ace_param(distance, desc: "Gap in pixels between the two (one tile is always kept).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.find_path_to_node_side({target}, "{side}", {distance})")
+# @ace_action
+# @ace_name("Find Path To Node Side")
+# @ace_description("Routes to a spot BESIDE a node instead of onto it, Distance pixels clear of it: left, right, or any (the nearer side, falling back to the other when it has no ground). Fires On Node Side Reached on arrival there; Reached Side says which side.")
+# @ace_param(target, desc: "The node to stand beside.")
+# @ace_param(side, options: any|left|right, default_word: any, desc: "Which side of it to stand on.")
+# @ace_param(distance, desc: "Gap in pixels between the two (one tile is always kept).")
+# @ace_codegen_template("$PlatformerPathfinding.find_path_to_node_side({target}, "{side}", {distance})")
 func find_path_to_node_side(target: Node, side: String, distance: float) -> void:
 	_end_patrol()
 	_reached_side = 0
@@ -1319,95 +1251,75 @@ func find_path_to_node_side(target: Node, side: String, distance: float) -> void
 	_exact_final = spot.x
 	_route(spot.x, spot.y, "nearest")
 
-## @ace_expression
-## @ace_name("Reached Side")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Which side Find Path To Node Side arrived on: -1 left, 1 right, 0 none yet.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.reached_side()")
+# @ace_expression
+# @ace_name("Reached Side")
+# @ace_description("Which side Find Path To Node Side arrived on: -1 left, 1 right, 0 none yet.")
+# @ace_codegen_template("$PlatformerPathfinding.reached_side()")
 func reached_side() -> int:
 	return _reached_side
 
-## @ace_expression
-## @ace_name("Jump Toward Target")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The point the running Jump Toward is aimed at (zero when none is running).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.jump_toward_target()")
+# @ace_expression
+# @ace_name("Jump Toward Target")
+# @ace_description("The point the running Jump Toward is aimed at (zero when none is running).")
+# @ace_codegen_template("$PlatformerPathfinding.jump_toward_target()")
 func jump_toward_target() -> Vector2:
 	return _jump_toward_target if _jump_toward_active else Vector2.ZERO
 
-## @ace_expression
-## @ace_name("Coyote Timer")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Seconds of coyote grace left after running off a ledge (0 on the ground or once it has run out).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.coyote_timer()")
+# @ace_expression
+# @ace_name("Coyote Timer")
+# @ace_description("Seconds of coyote grace left after running off a ledge (0 on the ground or once it has run out).")
+# @ace_codegen_template("$PlatformerPathfinding.coyote_timer()")
 func coyote_timer() -> float:
 	if host == null or host.is_on_floor():
 		return 0.0
 	return maxf(_coyote_window() - _floor_grace, 0.0)
 
-## @ace_expression
-## @ace_name("Estimated Velocity X")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The horizontal speed (px/s) the route is asking for right now - Path Move Axis times the run speed.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.estimated_velocity_x()")
+# @ace_expression
+# @ace_name("Estimated Velocity X")
+# @ace_description("The horizontal speed (px/s) the route is asking for right now - Path Move Axis times the run speed.")
+# @ace_codegen_template("$PlatformerPathfinding.estimated_velocity_x()")
 func estimated_velocity_x() -> float:
 	return _move_axis * _run_speed() if not _path.is_empty() else 0.0
 
-## @ace_expression
-## @ace_name("Path Cost")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The total cost of the active route under the current strategy (0 with no route).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.path_cost()")
+# @ace_expression
+# @ace_name("Path Cost")
+# @ace_description("The total cost of the active route under the current strategy (0 with no route).")
+# @ace_codegen_template("$PlatformerPathfinding.path_cost()")
 func path_cost() -> float:
 	return _path_cost if not _path.is_empty() else 0.0
 
-## @ace_expression
-## @ace_name("Path End")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Where the active route actually ends - in nearest mode this can differ from the asked-for spot.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.path_end()")
+# @ace_expression
+# @ace_name("Path End")
+# @ace_description("Where the active route actually ends - in nearest mode this can differ from the asked-for spot.")
+# @ace_codegen_template("$PlatformerPathfinding.path_end()")
 func path_end() -> Vector2:
 	return _path.back().world if not _path.is_empty() else Vector2.ZERO
 
-## @ace_expression
-## @ace_name("Path Target")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The world position the last route was asked for.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.path_target()")
+# @ace_expression
+# @ace_name("Path Target")
+# @ace_description("The world position the last route was asked for.")
+# @ace_codegen_template("$PlatformerPathfinding.path_target()")
 func path_target() -> Vector2:
 	return _path_goal
 
-## @ace_expression
-## @ace_name("Path Goal Cell")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The grid cell the last route ended on (the asked-for spot snapped to walkable ground).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.path_goal_cell()")
+# @ace_expression
+# @ace_name("Path Goal Cell")
+# @ace_description("The grid cell the last route ended on (the asked-for spot snapped to walkable ground).")
+# @ace_codegen_template("$PlatformerPathfinding.path_goal_cell()")
 func path_goal_cell() -> Vector2i:
 	return _path_goal_cell
 
-## @ace_expression
-## @ace_name("Path Fail Reason")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Why the last route failed: no_graph, no_start_node, no_goal_node, no_path, max_nodes_reached, no_ledge or no_target. Empty after a success.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.path_fail_reason()")
+# @ace_expression
+# @ace_name("Path Fail Reason")
+# @ace_description("Why the last route failed: no_graph, no_start_node, no_goal_node, no_path, max_nodes_reached, no_ledge or no_target. Empty after a success.")
+# @ace_codegen_template("$PlatformerPathfinding.path_fail_reason()")
 func path_fail_reason() -> String:
 	return _fail_reason
 
-## @ace_expression
-## @ace_name("Path Queue Size")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("How many agents are waiting on the shared per-tick route budget right now.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.path_queue_size()")
+# @ace_expression
+# @ace_name("Path Queue Size")
+# @ace_description("How many agents are waiting on the shared per-tick route budget right now.")
+# @ace_codegen_template("$PlatformerPathfinding.path_queue_size()")
 func path_queue_size() -> int:
 	var waiting: int = 0
 	for agent_id in _agent_ids.keys():
@@ -1416,88 +1328,72 @@ func path_queue_size() -> int:
 			waiting += 1
 	return waiting
 
-## @ace_expression
-## @ace_name("Waypoint Position")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The world position of a waypoint of the active route (zero out of range).")
-## @ace_param(index, desc: "Waypoint index, from 0.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.waypoint_position({index})")
+# @ace_expression
+# @ace_name("Waypoint Position")
+# @ace_description("The world position of a waypoint of the active route (zero out of range).")
+# @ace_param(index, desc: "Waypoint index, from 0.")
+# @ace_codegen_template("$PlatformerPathfinding.waypoint_position({index})")
 func waypoint_position(index: int) -> Vector2:
 	return _path[index].world if index >= 0 and index < _path.size() else Vector2.ZERO
 
-## @ace_expression
-## @ace_name("Waypoint Cell")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The grid cell of a waypoint of the active route ((-1, -1) out of range).")
-## @ace_param(index, desc: "Waypoint index, from 0.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.waypoint_cell({index})")
+# @ace_expression
+# @ace_name("Waypoint Cell")
+# @ace_description("The grid cell of a waypoint of the active route ((-1, -1) out of range).")
+# @ace_param(index, desc: "Waypoint index, from 0.")
+# @ace_codegen_template("$PlatformerPathfinding.waypoint_cell({index})")
 func waypoint_cell(index: int) -> Vector2i:
 	return _path[index].cell if index >= 0 and index < _path.size() else Vector2i(-1, -1)
 
-## @ace_expression
-## @ace_name("Waypoint Action")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("How a waypoint is reached: walk, jump, double_jump, coyote_jump, fall, fall_through, portal, portal_gradual or platform (empty out of range).")
-## @ace_param(index, desc: "Waypoint index, from 0.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.waypoint_action({index})")
+# @ace_expression
+# @ace_name("Waypoint Action")
+# @ace_description("How a waypoint is reached: walk, jump, double_jump, coyote_jump, fall, fall_through, portal, portal_gradual or platform (empty out of range).")
+# @ace_param(index, desc: "Waypoint index, from 0.")
+# @ace_codegen_template("$PlatformerPathfinding.waypoint_action({index})")
 func waypoint_action(index: int) -> String:
 	return _path[index].action if index >= 0 and index < _path.size() else ""
 
-## @ace_expression
-## @ace_name("Distance To Waypoint")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Pixels from the agent to its current waypoint (0 with no route).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.distance_to_waypoint()")
+# @ace_expression
+# @ace_name("Distance To Waypoint")
+# @ace_description("Pixels from the agent to its current waypoint (0 with no route).")
+# @ace_codegen_template("$PlatformerPathfinding.distance_to_waypoint()")
 func distance_to_waypoint() -> float:
 	if _path.is_empty() or host == null:
 		return 0.0
 	return host.global_position.distance_to(_path[_path_index].world)
 
-## @ace_expression
-## @ace_name("Angle To Waypoint")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Degrees from the agent to its current waypoint (0 with no route).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.angle_to_waypoint()")
+# @ace_expression
+# @ace_name("Angle To Waypoint")
+# @ace_description("Degrees from the agent to its current waypoint (0 with no route).")
+# @ace_codegen_template("$PlatformerPathfinding.angle_to_waypoint()")
 func angle_to_waypoint() -> float:
 	if _path.is_empty() or host == null:
 		return 0.0
 	return rad_to_deg(host.global_position.angle_to_point(_path[_path_index].world))
 
-## @ace_action
-## @ace_name("Set Crowd Arrivals")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("On: agents routing to the same spot each claim a landing node, so later arrivals stand beside it instead of stacking on one pixel.")
-## @ace_param(enabled, desc: "On to spread arrivals.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_crowd_arrivals({enabled})")
+# @ace_action
+# @ace_name("Set Crowd Arrivals")
+# @ace_description("On: agents routing to the same spot each claim a landing node, so later arrivals stand beside it instead of stacking on one pixel.")
+# @ace_param(enabled, desc: "On to spread arrivals.")
+# @ace_codegen_template("$PlatformerPathfinding.set_crowd_arrivals({enabled})")
 func set_crowd_arrivals(enabled: bool) -> void:
 	crowd_arrivals = enabled
 	if not enabled:
 		_release_claim()
 
-## @ace_action
-## @ace_name("Set Multi Agent Avoidance")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("On: routes pay extra for cells other agents stand on or are about to walk, so a pack fans out over different ways.")
-## @ace_param(enabled, desc: "On to avoid other agents' routes.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_multi_agent_avoidance({enabled})")
+# @ace_action
+# @ace_name("Set Multi Agent Avoidance")
+# @ace_description("On: routes pay extra for cells other agents stand on or are about to walk, so a pack fans out over different ways.")
+# @ace_param(enabled, desc: "On to avoid other agents' routes.")
+# @ace_codegen_template("$PlatformerPathfinding.set_multi_agent_avoidance({enabled})")
 func set_multi_agent_avoidance(enabled: bool) -> void:
 	multi_agent_avoidance = enabled
 
-## @ace_action
-## @ace_name("Set Separation Setting")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Changes an idle separation setting: distance (personal space in pixels, 0 = off), cooldown (seconds of rest after giving up) or give_up_time (seconds of trying before resting).")
-## @ace_param(setting, options: distance|cooldown|give_up_time, default_word: distance, desc: "Which setting to change.")
-## @ace_param(value, desc: "Its new value.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_separation_setting("{setting}", {value})")
+# @ace_action
+# @ace_name("Set Separation Setting")
+# @ace_description("Changes an idle separation setting: distance (personal space in pixels, 0 = off), cooldown (seconds of rest after giving up) or give_up_time (seconds of trying before resting).")
+# @ace_param(setting, options: distance|cooldown|give_up_time, default_word: distance, desc: "Which setting to change.")
+# @ace_param(value, desc: "Its new value.")
+# @ace_codegen_template("$PlatformerPathfinding.set_separation_setting("{setting}", {value})")
 func set_separation_setting(setting: String, value: float) -> void:
 	if setting == "distance":
 		idle_separation = maxf(value, 0.0)
@@ -1511,13 +1407,11 @@ func set_separation_setting(setting: String, value: float) -> void:
 	else:
 		push_warning("[PlatformerPathfinding] Set Separation Setting: unknown setting '%s' (distance, cooldown, give_up_time)." % setting)
 
-## @ace_expression
-## @ace_name("Nearby Agent Count")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("How many other agents on the same map stand within a radius of this one.")
-## @ace_param(radius, desc: "Radius in pixels.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.nearby_agent_count({radius})")
+# @ace_expression
+# @ace_name("Nearby Agent Count")
+# @ace_description("How many other agents on the same map stand within a radius of this one.")
+# @ace_param(radius, desc: "Radius in pixels.")
+# @ace_codegen_template("$PlatformerPathfinding.nearby_agent_count({radius})")
 func nearby_agent_count(radius: float) -> int:
 	if host == null:
 		return 0
@@ -1527,24 +1421,20 @@ func nearby_agent_count(radius: float) -> int:
 			count += 1
 	return count
 
-## @ace_condition
-## @ace_name("Is At Ledge")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("True while the agent stands on the edge node of its platform.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.is_at_ledge()")
+# @ace_condition
+# @ace_name("Is At Ledge")
+# @ace_description("True while the agent stands on the edge node of its platform.")
+# @ace_codegen_template("$PlatformerPathfinding.is_at_ledge()")
 func is_at_ledge() -> bool:
 	if host == null:
 		return false
 	var here: Vector2i = _nearest_node(host.global_position, 1)
 	return here != Vector2i.MAX and _ledge_side(here) != 0
 
-## @ace_condition
-## @ace_name("Is At Island")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("True while the agent stands on a one-node platform.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.is_at_island()")
+# @ace_condition
+# @ace_name("Is At Island")
+# @ace_description("True while the agent stands on a one-node platform.")
+# @ace_codegen_template("$PlatformerPathfinding.is_at_island()")
 func is_at_island() -> bool:
 	if host == null:
 		return false
@@ -1557,26 +1447,22 @@ func is_at_island() -> bool:
 				return false
 	return true
 
-## @ace_condition
-## @ace_name("Is On Same Platform")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("True when the agent could WALK to the node - no jump or fall needed (slopes and stairs count).")
-## @ace_param(target, desc: "The node to test.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.is_on_same_platform({target})")
+# @ace_condition
+# @ace_name("Is On Same Platform")
+# @ace_description("True when the agent could WALK to the node - no jump or fall needed (slopes and stairs count).")
+# @ace_param(target, desc: "The node to test.")
+# @ace_codegen_template("$PlatformerPathfinding.is_on_same_platform({target})")
 func is_on_same_platform(target: Node) -> bool:
 	if not (target is Node2D):
 		return false
 	return is_position_on_same_platform((target as Node2D).global_position.x, (target as Node2D).global_position.y)
 
-## @ace_condition
-## @ace_name("Is Position On Same Platform")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("True when the agent could WALK to a world position - no jump or fall needed.")
-## @ace_param(x, desc: "World X.")
-## @ace_param(y, desc: "World Y.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.is_position_on_same_platform({x}, {y})")
+# @ace_condition
+# @ace_name("Is Position On Same Platform")
+# @ace_description("True when the agent could WALK to a world position - no jump or fall needed.")
+# @ace_param(x, desc: "World X.")
+# @ace_param(y, desc: "World Y.")
+# @ace_codegen_template("$PlatformerPathfinding.is_position_on_same_platform({x}, {y})")
 func is_position_on_same_platform(x: float, y: float) -> bool:
 	if host == null:
 		return false
@@ -1586,25 +1472,21 @@ func is_position_on_same_platform(x: float, y: float) -> bool:
 		return false
 	return _walk_component(here).has(there)
 
-## @ace_expression
-## @ace_name("Nearest Ledge")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The nearest ledge of the agent's platform in a direction (zero when there is none).")
-## @ace_param(direction, options: left|right, default_word: left, desc: "Which way to look.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.nearest_ledge("{direction}")")
+# @ace_expression
+# @ace_name("Nearest Ledge")
+# @ace_description("The nearest ledge of the agent's platform in a direction (zero when there is none).")
+# @ace_param(direction, options: left|right, default_word: left, desc: "Which way to look.")
+# @ace_codegen_template("$PlatformerPathfinding.nearest_ledge("{direction}")")
 func nearest_ledge(direction: String) -> Vector2:
 	var ledge: Vector2i = _nearest_ledge_cell(-1 if direction == "left" else 1)
 	return _cell_world(ledge) if ledge != Vector2i.MAX else Vector2.ZERO
 
-## @ace_expression
-## @ace_name("Node On Platform")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The nearest or furthest node of a group that stands on the agent's own platform (reachable by walking alone), or null - pick a target it can walk to.")
-## @ace_param(group, default_code: "", desc: "The group to search, in quotes.")
-## @ace_param(which, options: nearest|furthest, default_word: nearest, desc: "Nearest or furthest.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.node_on_platform({group}, "{which}")")
+# @ace_expression
+# @ace_name("Node On Platform")
+# @ace_description("The nearest or furthest node of a group that stands on the agent's own platform (reachable by walking alone), or null - pick a target it can walk to.")
+# @ace_param(group, default_code: "", desc: "The group to search, in quotes.")
+# @ace_param(which, options: nearest|furthest, default_word: nearest, desc: "Nearest or furthest.")
+# @ace_codegen_template("$PlatformerPathfinding.node_on_platform({group}, "{which}")")
 func node_on_platform(group: String, which: String) -> Node:
 	if host == null or not is_inside_tree():
 		return null
@@ -1626,15 +1508,13 @@ func node_on_platform(group: String, which: String) -> Node:
 			picked = candidate
 	return picked
 
-## @ace_action
-## @ace_name("Create Obstacle Map")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Starts an empty map with no TileMapLayer: Width x Height cells of Cell Size pixels from the world origin, every cell clear. Fill it with Set Tile State or Scan Collision Bodies, then Regenerate Nav Graph.")
-## @ace_param(width, desc: "Width in cells.")
-## @ace_param(height, desc: "Height in cells.")
-## @ace_param(cell_size, desc: "Cell size in pixels (0 keeps Grid Cell Size).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.create_obstacle_map({width}, {height}, {cell_size})")
+# @ace_action
+# @ace_name("Create Obstacle Map")
+# @ace_description("Starts an empty map with no TileMapLayer: Width x Height cells of Cell Size pixels from the world origin, every cell clear. Fill it with Set Tile State or Scan Collision Bodies, then Regenerate Nav Graph.")
+# @ace_param(width, desc: "Width in cells.")
+# @ace_param(height, desc: "Height in cells.")
+# @ace_param(cell_size, desc: "Cell size in pixels (0 keeps Grid Cell Size).")
+# @ace_codegen_template("$PlatformerPathfinding.create_obstacle_map({width}, {height}, {cell_size})")
 func create_obstacle_map(width: int, height: int, cell_size: float) -> void:
 	_tilemap = null
 	_custom_grid = true
@@ -1647,41 +1527,35 @@ func create_obstacle_map(width: int, height: int, cell_size: float) -> void:
 	_body_states.clear()
 	regenerate_nav_graph()
 
-## @ace_action
-## @ace_name("Set Tile State")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Overrides one cell of the map: solid, clear, jump_thru (a one-way platform), slope_left (rises to the right) or slope_right (rises to the left). Overrides survive Regenerate; call Regenerate Nav Graph after a batch of them.")
-## @ace_param(gx, desc: "Grid X.")
-## @ace_param(gy, desc: "Grid Y.")
-## @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right, default_word: solid, desc: "The cell's new state.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_tile_state({gx}, {gy}, "{state}")")
+# @ace_action
+# @ace_name("Set Tile State")
+# @ace_description("Overrides one cell of the map: solid, clear, jump_thru (a one-way platform), slope_left (rises to the right) or slope_right (rises to the left). Overrides survive Regenerate; call Regenerate Nav Graph after a batch of them.")
+# @ace_param(gx, desc: "Grid X.")
+# @ace_param(gy, desc: "Grid Y.")
+# @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right, default_word: solid, desc: "The cell's new state.")
+# @ace_codegen_template("$PlatformerPathfinding.set_tile_state({gx}, {gy}, "{state}")")
 func set_tile_state(gx: int, gy: int, state: String) -> void:
 	if not ["solid", "clear", "jump_thru", "slope_left", "slope_right"].has(state):
 		push_warning("[PlatformerPathfinding] Set Tile State: unknown state '%s'." % state)
 		return
 	_tile_overrides[Vector2i(gx, gy)] = state
 
-## @ace_action
-## @ace_name("Set Tile State At")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Set Tile State for the cell under a world position.")
-## @ace_param(x, desc: "World X.")
-## @ace_param(y, desc: "World Y.")
-## @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right, default_word: solid, desc: "The cell's new state.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_tile_state_at({x}, {y}, "{state}")")
+# @ace_action
+# @ace_name("Set Tile State At")
+# @ace_description("Set Tile State for the cell under a world position.")
+# @ace_param(x, desc: "World X.")
+# @ace_param(y, desc: "World Y.")
+# @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right, default_word: solid, desc: "The cell's new state.")
+# @ace_codegen_template("$PlatformerPathfinding.set_tile_state_at({x}, {y}, "{state}")")
 func set_tile_state_at(x: float, y: float, state: String) -> void:
 	var cell: Vector2i = _world_to_cell(Vector2(x, y))
 	set_tile_state(cell.x, cell.y, state)
 
-## @ace_action
-## @ace_name("Scan Collision Bodies")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Marks every cell covered by the StaticBody2D shapes under a node as solid (one-way shapes as jump-through) - for levels built from bodies instead of tiles. Needs a grid first (Build Nav Graph From Tilemap or Create Obstacle Map); Regenerate Nav Graph afterwards.")
-## @ace_param(root, desc: "The node whose StaticBody2D descendants are scanned.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.scan_collision_bodies({root})")
+# @ace_action
+# @ace_name("Scan Collision Bodies")
+# @ace_description("Marks every cell covered by the StaticBody2D shapes under a node as solid (one-way shapes as jump-through) - for levels built from bodies instead of tiles. Needs a grid first (Build Nav Graph From Tilemap or Create Obstacle Map); Regenerate Nav Graph afterwards.")
+# @ace_param(root, desc: "The node whose StaticBody2D descendants are scanned.")
+# @ace_codegen_template("$PlatformerPathfinding.scan_collision_bodies({root})")
 func scan_collision_bodies(root: Node) -> void:
 	if not _has_grid():
 		push_warning("[PlatformerPathfinding] Scan Collision Bodies needs a grid first - Build Nav Graph From Tilemap or Create Obstacle Map.")
@@ -1719,12 +1593,10 @@ func scan_collision_bodies(root: Node) -> void:
 						continue
 					_body_states[cell] = "jump_thru" if one_way else "solid"
 
-## @ace_action
-## @ace_name("Clear Nav Graph")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Drops the graph, the obstacle map and every tile override (portals and hazards stay registered), stops the agent and fires On Nav Graph Cleared.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.clear_nav_graph()")
+# @ace_action
+# @ace_name("Clear Nav Graph")
+# @ace_description("Drops the graph, the obstacle map and every tile override (portals and hazards stay registered), stops the agent and fires On Nav Graph Cleared.")
+# @ace_codegen_template("$PlatformerPathfinding.clear_nav_graph()")
 func clear_nav_graph() -> void:
 	stop_pathfinding()
 	_nodes.clear()
@@ -1738,13 +1610,11 @@ func clear_nav_graph() -> void:
 	_refresh_graph_overlay()
 	nav_graph_cleared.emit()
 
-## @ace_action
-## @ace_name("Load Obstacle Map JSON")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Rebuilds the map and graph from a string Obstacle Map JSON produced - a saved or pre-baked level, no TileMapLayer needed.")
-## @ace_param(json, default_code: "", desc: "The JSON text, in quotes or from a variable.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.load_obstacle_map_json({json})")
+# @ace_action
+# @ace_name("Load Obstacle Map JSON")
+# @ace_description("Rebuilds the map and graph from a string Obstacle Map JSON produced - a saved or pre-baked level, no TileMapLayer needed.")
+# @ace_param(json, default_code: "", desc: "The JSON text, in quotes or from a variable.")
+# @ace_codegen_template("$PlatformerPathfinding.load_obstacle_map_json({json})")
 func load_obstacle_map_json(json: String) -> void:
 	var parsed: Variant = JSON.parse_string(json)
 	if not (parsed is Dictionary) or not (parsed as Dictionary).has("cells"):
@@ -1768,12 +1638,10 @@ func load_obstacle_map_json(json: String) -> void:
 		_tile_overrides[Vector2i(int(entry[0]), int(entry[1]))] = str(entry[2])
 	regenerate_nav_graph()
 
-## @ace_expression
-## @ace_name("Obstacle Map JSON")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The current obstacle map (tiles, scanned bodies and overrides) as a JSON string, to save or ship with a level.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.obstacle_map_json()")
+# @ace_expression
+# @ace_name("Obstacle Map JSON")
+# @ace_description("The current obstacle map (tiles, scanned bodies and overrides) as a JSON string, to save or ship with a level.")
+# @ace_codegen_template("$PlatformerPathfinding.obstacle_map_json()")
 func obstacle_map_json() -> String:
 	if not _has_grid():
 		return ""
@@ -1787,12 +1655,10 @@ func obstacle_map_json() -> String:
 	var size: Vector2i = grid_size()
 	return JSON.stringify({"version": OBSTACLE_MAP_VERSION, "cell_size": _tile_px(), "origin": [origin.x, origin.y], "size": [size.x, size.y], "cells": cells})
 
-## @ace_expression
-## @ace_name("Obstacle Map Source")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Where the map comes from: tilemap, custom or none.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.obstacle_map_source()")
+# @ace_expression
+# @ace_name("Obstacle Map Source")
+# @ace_description("Where the map comes from: tilemap, custom or none.")
+# @ace_codegen_template("$PlatformerPathfinding.obstacle_map_source()")
 func obstacle_map_source() -> String:
 	if _custom_grid:
 		return "custom"
@@ -1800,14 +1666,12 @@ func obstacle_map_source() -> String:
 		return "tilemap"
 	return "none"
 
-## @ace_expression
-## @ace_name("Tile State")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("A cell's state: solid, clear, jump_thru, slope_left or slope_right (empty with no map or outside a custom map).")
-## @ace_param(gx, desc: "Grid X.")
-## @ace_param(gy, desc: "Grid Y.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.tile_state({gx}, {gy})")
+# @ace_expression
+# @ace_name("Tile State")
+# @ace_description("A cell's state: solid, clear, jump_thru, slope_left or slope_right (empty with no map or outside a custom map).")
+# @ace_param(gx, desc: "Grid X.")
+# @ace_param(gy, desc: "Grid Y.")
+# @ace_codegen_template("$PlatformerPathfinding.tile_state({gx}, {gy})")
 func tile_state(gx: int, gy: int) -> String:
 	if not _has_grid():
 		return ""
@@ -1816,59 +1680,49 @@ func tile_state(gx: int, gy: int) -> String:
 		return ""
 	return _live_state(cell)
 
-## @ace_condition
-## @ace_name("Tile Has State")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("True when a cell has the given state.")
-## @ace_param(gx, desc: "Grid X.")
-## @ace_param(gy, desc: "Grid Y.")
-## @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right, default_word: solid, desc: "The state to test for.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.tile_has_state({gx}, {gy}, "{state}")")
+# @ace_condition
+# @ace_name("Tile Has State")
+# @ace_description("True when a cell has the given state.")
+# @ace_param(gx, desc: "Grid X.")
+# @ace_param(gy, desc: "Grid Y.")
+# @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right, default_word: solid, desc: "The state to test for.")
+# @ace_codegen_template("$PlatformerPathfinding.tile_has_state({gx}, {gy}, "{state}")")
 func tile_has_state(gx: int, gy: int, state: String) -> bool:
 	return tile_state(gx, gy) == state
 
-## @ace_condition
-## @ace_name("Tile Has State At")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("True when the cell under a world position has the given state.")
-## @ace_param(x, desc: "World X.")
-## @ace_param(y, desc: "World Y.")
-## @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right, default_word: solid, desc: "The state to test for.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.tile_has_state_at({x}, {y}, "{state}")")
+# @ace_condition
+# @ace_name("Tile Has State At")
+# @ace_description("True when the cell under a world position has the given state.")
+# @ace_param(x, desc: "World X.")
+# @ace_param(y, desc: "World Y.")
+# @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right, default_word: solid, desc: "The state to test for.")
+# @ace_codegen_template("$PlatformerPathfinding.tile_has_state_at({x}, {y}, "{state}")")
 func tile_has_state_at(x: float, y: float, state: String) -> bool:
 	var cell: Vector2i = _world_to_cell(Vector2(x, y))
 	return tile_state(cell.x, cell.y) == state
 
-## @ace_expression
-## @ace_name("World To Grid")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The grid cell under a world position.")
-## @ace_param(x, desc: "World X.")
-## @ace_param(y, desc: "World Y.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.world_to_grid({x}, {y})")
+# @ace_expression
+# @ace_name("World To Grid")
+# @ace_description("The grid cell under a world position.")
+# @ace_param(x, desc: "World X.")
+# @ace_param(y, desc: "World Y.")
+# @ace_codegen_template("$PlatformerPathfinding.world_to_grid({x}, {y})")
 func world_to_grid(x: float, y: float) -> Vector2i:
 	return _world_to_cell(Vector2(x, y)) if _has_grid() else Vector2i.ZERO
 
-## @ace_expression
-## @ace_name("Grid To World")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The world position of a cell's centre.")
-## @ace_param(gx, desc: "Grid X.")
-## @ace_param(gy, desc: "Grid Y.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.grid_to_world({gx}, {gy})")
+# @ace_expression
+# @ace_name("Grid To World")
+# @ace_description("The world position of a cell's centre.")
+# @ace_param(gx, desc: "Grid X.")
+# @ace_param(gy, desc: "Grid Y.")
+# @ace_codegen_template("$PlatformerPathfinding.grid_to_world({gx}, {gy})")
 func grid_to_world(gx: int, gy: int) -> Vector2:
 	return _cell_world(Vector2i(gx, gy)) if _has_grid() else Vector2.ZERO
 
-## @ace_expression
-## @ace_name("Grid Size")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The map's size in cells (a tilemap's used area, or a custom map's size).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.grid_size()")
+# @ace_expression
+# @ace_name("Grid Size")
+# @ace_description("The map's size in cells (a tilemap's used area, or a custom map's size).")
+# @ace_codegen_template("$PlatformerPathfinding.grid_size()")
 func grid_size() -> Vector2i:
 	if _custom_grid:
 		return _custom_size
@@ -1876,21 +1730,17 @@ func grid_size() -> Vector2i:
 		return _tilemap.get_used_rect().size
 	return Vector2i.ZERO
 
-## @ace_expression
-## @ace_name("Grid Tile Size")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The map's cell size in pixels (0 with no map).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.grid_tile_size()")
+# @ace_expression
+# @ace_name("Grid Tile Size")
+# @ace_description("The map's cell size in pixels (0 with no map).")
+# @ace_codegen_template("$PlatformerPathfinding.grid_tile_size()")
 func grid_tile_size() -> float:
 	return _tile_px() if _has_grid() else 0.0
 
-## @ace_action
-## @ace_name("Log Graph Stats")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Prints the graph's size to the Output panel: nodes, links by kind, portals, hazards, platforms and the jump reach.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.log_graph_stats()")
+# @ace_action
+# @ace_name("Log Graph Stats")
+# @ace_description("Prints the graph's size to the Output panel: nodes, links by kind, portals, hazards, platforms and the jump reach.")
+# @ace_codegen_template("$PlatformerPathfinding.log_graph_stats()")
 func log_graph_stats() -> void:
 	var counts: Dictionary = {}
 	var total: int = 0
@@ -1900,196 +1750,162 @@ func log_graph_stats() -> void:
 			total += 1
 	print("[PlatformerPathfinding] nodes=%d links=%d %s portals=%d hazards=%d platforms=%d jump_reach=%s cells" % [_nodes.size(), total, str(counts), _portals.size(), _hazards.size(), _moving_platforms.size(), str(_jump_reach_cells())])
 
-## @ace_action
-## @ace_name("Set Debug Draw Graph")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Draws every node and link of the graph in the world, links coloured by kind.")
-## @ace_param(enabled, desc: "On to draw the graph.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_debug_draw_graph({enabled})")
+# @ace_action
+# @ace_name("Set Debug Draw Graph")
+# @ace_description("Draws every node and link of the graph in the world, links coloured by kind.")
+# @ace_param(enabled, desc: "On to draw the graph.")
+# @ace_codegen_template("$PlatformerPathfinding.set_debug_draw_graph({enabled})")
 func set_debug_draw_graph(enabled: bool) -> void:
 	debug_draw_graph = enabled
 	_refresh_graph_overlay()
 
-## @ace_condition
-## @ace_name("Graph Node Exists")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("True when a cell is a standable node of the graph.")
-## @ace_param(gx, desc: "Grid X.")
-## @ace_param(gy, desc: "Grid Y.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.graph_node_exists({gx}, {gy})")
+# @ace_condition
+# @ace_name("Graph Node Exists")
+# @ace_description("True when a cell is a standable node of the graph.")
+# @ace_param(gx, desc: "Grid X.")
+# @ace_param(gy, desc: "Grid Y.")
+# @ace_codegen_template("$PlatformerPathfinding.graph_node_exists({gx}, {gy})")
 func graph_node_exists(gx: int, gy: int) -> bool:
 	return _nodes.has(Vector2i(gx, gy))
 
-## @ace_condition
-## @ace_name("Graph Node Exists At")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("True when the cell under a world position is a standable node.")
-## @ace_param(x, desc: "World X.")
-## @ace_param(y, desc: "World Y.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.graph_node_exists_at({x}, {y})")
+# @ace_condition
+# @ace_name("Graph Node Exists At")
+# @ace_description("True when the cell under a world position is a standable node.")
+# @ace_param(x, desc: "World X.")
+# @ace_param(y, desc: "World Y.")
+# @ace_codegen_template("$PlatformerPathfinding.graph_node_exists_at({x}, {y})")
 func graph_node_exists_at(x: float, y: float) -> bool:
 	return _has_grid() and _nodes.has(_world_to_cell(Vector2(x, y)))
 
-## @ace_condition
-## @ace_name("Is Ledge Node")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("True when a node is the edge of its platform (left, right or both).")
-## @ace_param(gx, desc: "Grid X.")
-## @ace_param(gy, desc: "Grid Y.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.is_ledge_node({gx}, {gy})")
+# @ace_condition
+# @ace_name("Is Ledge Node")
+# @ace_description("True when a node is the edge of its platform (left, right or both).")
+# @ace_param(gx, desc: "Grid X.")
+# @ace_param(gy, desc: "Grid Y.")
+# @ace_codegen_template("$PlatformerPathfinding.is_ledge_node({gx}, {gy})")
 func is_ledge_node(gx: int, gy: int) -> bool:
 	return _ledge_side(Vector2i(gx, gy)) != 0
 
-## @ace_expression
-## @ace_name("Ledge Side")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Which side of a node is a ledge: -1 left, 1 right, 2 both (a one-node island), 0 neither.")
-## @ace_param(gx, desc: "Grid X.")
-## @ace_param(gy, desc: "Grid Y.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.ledge_side({gx}, {gy})")
+# @ace_expression
+# @ace_name("Ledge Side")
+# @ace_description("Which side of a node is a ledge: -1 left, 1 right, 2 both (a one-node island), 0 neither.")
+# @ace_param(gx, desc: "Grid X.")
+# @ace_param(gy, desc: "Grid Y.")
+# @ace_codegen_template("$PlatformerPathfinding.ledge_side({gx}, {gy})")
 func ledge_side(gx: int, gy: int) -> int:
 	return _ledge_side(Vector2i(gx, gy))
 
-## @ace_expression
-## @ace_name("Graph Node Count")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("How many standable nodes the graph has.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.graph_node_count()")
+# @ace_expression
+# @ace_name("Graph Node Count")
+# @ace_description("How many standable nodes the graph has.")
+# @ace_codegen_template("$PlatformerPathfinding.graph_node_count()")
 func graph_node_count() -> int:
 	return _nodes.size()
 
-## @ace_expression
-## @ace_name("Graph Node Cell")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The grid cell of the node at an index ((-1, -1) out of range).")
-## @ace_param(index, desc: "Node index, from 0.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.graph_node_cell({index})")
+# @ace_expression
+# @ace_name("Graph Node Cell")
+# @ace_description("The grid cell of the node at an index ((-1, -1) out of range).")
+# @ace_param(index, desc: "Node index, from 0.")
+# @ace_codegen_template("$PlatformerPathfinding.graph_node_cell({index})")
 func graph_node_cell(index: int) -> Vector2i:
 	if index < 0 or index >= _nodes.size():
 		return Vector2i(-1, -1)
 	return _nodes.keys()[index]
 
-## @ace_expression
-## @ace_name("Graph Node Position")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The world position of the node at an index (zero out of range).")
-## @ace_param(index, desc: "Node index, from 0.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.graph_node_position({index})")
+# @ace_expression
+# @ace_name("Graph Node Position")
+# @ace_description("The world position of the node at an index (zero out of range).")
+# @ace_param(index, desc: "Node index, from 0.")
+# @ace_codegen_template("$PlatformerPathfinding.graph_node_position({index})")
 func graph_node_position(index: int) -> Vector2:
 	if index < 0 or index >= _nodes.size():
 		return Vector2.ZERO
 	return _cell_world(_nodes.keys()[index])
 
-## @ace_expression
-## @ace_name("Graph Node Connection Count")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("How many links leave a node.")
-## @ace_param(gx, desc: "Grid X.")
-## @ace_param(gy, desc: "Grid Y.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.graph_node_connection_count({gx}, {gy})")
+# @ace_expression
+# @ace_name("Graph Node Connection Count")
+# @ace_description("How many links leave a node.")
+# @ace_param(gx, desc: "Grid X.")
+# @ace_param(gy, desc: "Grid Y.")
+# @ace_codegen_template("$PlatformerPathfinding.graph_node_connection_count({gx}, {gy})")
 func graph_node_connection_count(gx: int, gy: int) -> int:
 	return (_edges.get(Vector2i(gx, gy), []) as Array).size()
 
-## @ace_expression
-## @ace_name("Graph Node Connection Kind")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The kind of one link leaving a node (walk, jump, fall, portal...).")
-## @ace_param(gx, desc: "Grid X.")
-## @ace_param(gy, desc: "Grid Y.")
-## @ace_param(index, desc: "Link index, from 0.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.graph_node_connection_kind({gx}, {gy}, {index})")
+# @ace_expression
+# @ace_name("Graph Node Connection Kind")
+# @ace_description("The kind of one link leaving a node (walk, jump, fall, portal...).")
+# @ace_param(gx, desc: "Grid X.")
+# @ace_param(gy, desc: "Grid Y.")
+# @ace_param(index, desc: "Link index, from 0.")
+# @ace_codegen_template("$PlatformerPathfinding.graph_node_connection_kind({gx}, {gy}, {index})")
 func graph_node_connection_kind(gx: int, gy: int, index: int) -> String:
 	var links: Array = _edges.get(Vector2i(gx, gy), [])
 	return (links[index] as NavEdge).kind if index >= 0 and index < links.size() else ""
 
-## @ace_expression
-## @ace_name("Graph Node Connection Cost")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The cost of one link leaving a node, under the current strategy.")
-## @ace_param(gx, desc: "Grid X.")
-## @ace_param(gy, desc: "Grid Y.")
-## @ace_param(index, desc: "Link index, from 0.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.graph_node_connection_cost({gx}, {gy}, {index})")
+# @ace_expression
+# @ace_name("Graph Node Connection Cost")
+# @ace_description("The cost of one link leaving a node, under the current strategy.")
+# @ace_param(gx, desc: "Grid X.")
+# @ace_param(gy, desc: "Grid Y.")
+# @ace_param(index, desc: "Link index, from 0.")
+# @ace_codegen_template("$PlatformerPathfinding.graph_node_connection_cost({gx}, {gy}, {index})")
 func graph_node_connection_cost(gx: int, gy: int, index: int) -> float:
 	var links: Array = _edges.get(Vector2i(gx, gy), [])
 	return _edge_cost(Vector2i(gx, gy), links[index] as NavEdge) if index >= 0 and index < links.size() else 0.0
 
-## @ace_expression
-## @ace_name("Graph Node Connection Target")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The world position one link leaving a node lands on.")
-## @ace_param(gx, desc: "Grid X.")
-## @ace_param(gy, desc: "Grid Y.")
-## @ace_param(index, desc: "Link index, from 0.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.graph_node_connection_target({gx}, {gy}, {index})")
+# @ace_expression
+# @ace_name("Graph Node Connection Target")
+# @ace_description("The world position one link leaving a node lands on.")
+# @ace_param(gx, desc: "Grid X.")
+# @ace_param(gy, desc: "Grid Y.")
+# @ace_param(index, desc: "Link index, from 0.")
+# @ace_codegen_template("$PlatformerPathfinding.graph_node_connection_target({gx}, {gy}, {index})")
 func graph_node_connection_target(gx: int, gy: int, index: int) -> Vector2:
 	var links: Array = _edges.get(Vector2i(gx, gy), [])
 	return _cell_world((links[index] as NavEdge).to) if index >= 0 and index < links.size() else Vector2.ZERO
 
-## @ace_expression
-## @ace_name("Nearest Graph Node")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The world position of the node nearest a point (zero with no graph).")
-## @ace_param(x, desc: "World X.")
-## @ace_param(y, desc: "World Y.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.nearest_graph_node({x}, {y})")
+# @ace_expression
+# @ace_name("Nearest Graph Node")
+# @ace_description("The world position of the node nearest a point (zero with no graph).")
+# @ace_param(x, desc: "World X.")
+# @ace_param(y, desc: "World Y.")
+# @ace_codegen_template("$PlatformerPathfinding.nearest_graph_node({x}, {y})")
 func nearest_graph_node(x: float, y: float) -> Vector2:
 	var cell: Vector2i = _nearest_node(Vector2(x, y), 1000000)
 	return _cell_world(cell) if cell != Vector2i.MAX else Vector2.ZERO
 
-## @ace_expression
-## @ace_name("Nearest Graph Node Cell")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The grid cell of the node nearest a point ((-1, -1) with no graph).")
-## @ace_param(x, desc: "World X.")
-## @ace_param(y, desc: "World Y.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.nearest_graph_node_cell({x}, {y})")
+# @ace_expression
+# @ace_name("Nearest Graph Node Cell")
+# @ace_description("The grid cell of the node nearest a point ((-1, -1) with no graph).")
+# @ace_param(x, desc: "World X.")
+# @ace_param(y, desc: "World Y.")
+# @ace_codegen_template("$PlatformerPathfinding.nearest_graph_node_cell({x}, {y})")
 func nearest_graph_node_cell(x: float, y: float) -> Vector2i:
 	var cell: Vector2i = _nearest_node(Vector2(x, y), 1000000)
 	return cell if cell != Vector2i.MAX else Vector2i(-1, -1)
 
-## @ace_expression
-## @ace_name("Calculated Jump Distance")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The jump distance in pixels the graph is built with (derived or overridden).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.calculated_jump_distance()")
+# @ace_expression
+# @ace_name("Calculated Jump Distance")
+# @ace_description("The jump distance in pixels the graph is built with (derived or overridden).")
+# @ace_codegen_template("$PlatformerPathfinding.calculated_jump_distance()")
 func calculated_jump_distance() -> float:
 	return _jump_reach_px().x
 
-## @ace_expression
-## @ace_name("Calculated Jump Height")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The jump height in pixels the graph is built with (derived or overridden).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.calculated_jump_height()")
+# @ace_expression
+# @ace_name("Calculated Jump Height")
+# @ace_description("The jump height in pixels the graph is built with (derived or overridden).")
+# @ace_codegen_template("$PlatformerPathfinding.calculated_jump_height()")
 func calculated_jump_height() -> float:
 	return _jump_reach_px().y
 
-## @ace_action
-## @ace_name("Add Circle Hazard")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Marks a circle as hazardous - an explosion, a fire burst. Deadly blocks routes; not deadly makes them costly. Last Hazard Id names it.")
-## @ace_param(x, desc: "Centre X.")
-## @ace_param(y, desc: "Centre Y.")
-## @ace_param(radius, desc: "Radius in pixels.")
-## @ace_param(deadly, desc: "Deadly blocks routes; off only makes them costly.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.add_circle_hazard({x}, {y}, {radius}, {deadly})")
+# @ace_action
+# @ace_name("Add Circle Hazard")
+# @ace_description("Marks a circle as hazardous - an explosion, a fire burst. Deadly blocks routes; not deadly makes them costly. Last Hazard Id names it.")
+# @ace_param(x, desc: "Centre X.")
+# @ace_param(y, desc: "Centre Y.")
+# @ace_param(radius, desc: "Radius in pixels.")
+# @ace_param(deadly, desc: "Deadly blocks routes; off only makes them costly.")
+# @ace_codegen_template("$PlatformerPathfinding.add_circle_hazard({x}, {y}, {radius}, {deadly})")
 func add_circle_hazard(x: float, y: float, radius: float, deadly: bool) -> void:
 	var hazard: NavHazard = NavHazard.new()
 	hazard.id = _next_hazard_id
@@ -2102,15 +1918,13 @@ func add_circle_hazard(x: float, y: float, radius: float, deadly: bool) -> void:
 	_next_hazard_id += 1
 	set_physics_process(true)
 
-## @ace_action
-## @ace_name("Add Tracked Hazard")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("A circular hazard that FOLLOWS a node (a patrolling saw, a burning enemy) with no per-frame events, and removes itself when the node is freed. Last Hazard Id names it.")
-## @ace_param(target, desc: "The node the hazard follows.")
-## @ace_param(radius, desc: "Radius in pixels.")
-## @ace_param(deadly, desc: "Deadly blocks routes; off only makes them costly.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.add_tracked_hazard({target}, {radius}, {deadly})")
+# @ace_action
+# @ace_name("Add Tracked Hazard")
+# @ace_description("A circular hazard that FOLLOWS a node (a patrolling saw, a burning enemy) with no per-frame events, and removes itself when the node is freed. Last Hazard Id names it.")
+# @ace_param(target, desc: "The node the hazard follows.")
+# @ace_param(radius, desc: "Radius in pixels.")
+# @ace_param(deadly, desc: "Deadly blocks routes; off only makes them costly.")
+# @ace_codegen_template("$PlatformerPathfinding.add_tracked_hazard({target}, {radius}, {deadly})")
 func add_tracked_hazard(target: Node, radius: float, deadly: bool) -> void:
 	if not (target is Node2D):
 		return
@@ -2125,47 +1939,39 @@ func add_tracked_hazard(target: Node, radius: float, deadly: bool) -> void:
 	_next_hazard_id += 1
 	set_physics_process(true)
 
-## @ace_action
-## @ace_name("Remove Hazard")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Removes one hazard by the id Last Hazard Id gave you.")
-## @ace_param(hazard_id, desc: "The hazard's id.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.remove_hazard({hazard_id})")
+# @ace_action
+# @ace_name("Remove Hazard")
+# @ace_description("Removes one hazard by the id Last Hazard Id gave you.")
+# @ace_param(hazard_id, desc: "The hazard's id.")
+# @ace_codegen_template("$PlatformerPathfinding.remove_hazard({hazard_id})")
 func remove_hazard(hazard_id: int) -> void:
 	for index in range(_hazards.size() - 1, -1, -1):
 		if _hazards[index].id == hazard_id:
 			_hazards.remove_at(index)
 
-## @ace_action
-## @ace_name("Set Hazard Margin")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Surrounds every hazard with a danger buffer this many pixels wide, so routes keep their distance.")
-## @ace_param(pixels, desc: "Buffer width in pixels (0 = none).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_hazard_margin({pixels})")
+# @ace_action
+# @ace_name("Set Hazard Margin")
+# @ace_description("Surrounds every hazard with a danger buffer this many pixels wide, so routes keep their distance.")
+# @ace_param(pixels, desc: "Buffer width in pixels (0 = none).")
+# @ace_codegen_template("$PlatformerPathfinding.set_hazard_margin({pixels})")
 func set_hazard_margin(pixels: float) -> void:
 	hazard_margin = maxf(pixels, 0.0)
 
-## @ace_condition
-## @ace_name("Is Position Hazardous")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("True when a world position is inside any hazard.")
-## @ace_param(x, desc: "World X.")
-## @ace_param(y, desc: "World Y.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.is_position_hazardous({x}, {y})")
+# @ace_condition
+# @ace_name("Is Position Hazardous")
+# @ace_description("True when a world position is inside any hazard.")
+# @ace_param(x, desc: "World X.")
+# @ace_param(y, desc: "World Y.")
+# @ace_codegen_template("$PlatformerPathfinding.is_position_hazardous({x}, {y})")
 func is_position_hazardous(x: float, y: float) -> bool:
 	return _point_in_hazard(Vector2(x, y), false)
 
-## @ace_expression
-## @ace_name("Hazard At")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The hazard level at a world position: 0 clear, 1 danger (or a hazard's margin), 2 deadly.")
-## @ace_param(x, desc: "World X.")
-## @ace_param(y, desc: "World Y.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.hazard_at({x}, {y})")
+# @ace_expression
+# @ace_name("Hazard At")
+# @ace_description("The hazard level at a world position: 0 clear, 1 danger (or a hazard's margin), 2 deadly.")
+# @ace_param(x, desc: "World X.")
+# @ace_param(y, desc: "World Y.")
+# @ace_codegen_template("$PlatformerPathfinding.hazard_at({x}, {y})")
 func hazard_at(x: float, y: float) -> int:
 	var point: Vector2 = Vector2(x, y)
 	var verdict: int = 0
@@ -2178,21 +1984,17 @@ func hazard_at(x: float, y: float) -> int:
 			verdict = 1
 	return verdict
 
-## @ace_expression
-## @ace_name("Hazard Count")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("How many hazards are registered (every kind).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.hazard_count()")
+# @ace_expression
+# @ace_name("Hazard Count")
+# @ace_description("How many hazards are registered (every kind).")
+# @ace_codegen_template("$PlatformerPathfinding.hazard_count()")
 func hazard_count() -> int:
 	return _hazards.size()
 
-## @ace_expression
-## @ace_name("Tracked Hazard Count")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("How many node-following hazards are registered.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.tracked_hazard_count()")
+# @ace_expression
+# @ace_name("Tracked Hazard Count")
+# @ace_description("How many node-following hazards are registered.")
+# @ace_codegen_template("$PlatformerPathfinding.tracked_hazard_count()")
 func tracked_hazard_count() -> int:
 	var count: int = 0
 	for hazard in _hazards:
@@ -2200,60 +2002,52 @@ func tracked_hazard_count() -> int:
 			count += 1
 	return count
 
-## @ace_expression
-## @ace_name("Last Hazard Id")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The id of the most recently added hazard, for Remove Hazard (0 before any).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.last_hazard_id()")
+# @ace_expression
+# @ace_name("Last Hazard Id")
+# @ace_description("The id of the most recently added hazard, for Remove Hazard (0 before any).")
+# @ace_codegen_template("$PlatformerPathfinding.last_hazard_id()")
 func last_hazard_id() -> int:
 	return _last_hazard_id
 
-## @ace_action
-## @ace_name("Add Instant Portal")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("A portal that BLINKS the agent from entrance to exit (a door, a teleporter). Cost 1 is the normal price; raise it to make routes avoid the portal. Tags (comma-separated) group portals for the by-tag actions and expressions. Last Portal Id names it.")
-## @ace_param(from_x, desc: "Entrance X.")
-## @ace_param(from_y, desc: "Entrance Y.")
-## @ace_param(to_x, desc: "Exit X.")
-## @ace_param(to_y, desc: "Exit Y.")
-## @ace_param(bidirectional, desc: "Usable both ways.")
-## @ace_param(cost, desc: "Price multiplier (1 = normal).")
-## @ace_param(tag, default_code: "", desc: "Optional tags, comma-separated, in quotes.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.add_instant_portal({from_x}, {from_y}, {to_x}, {to_y}, {bidirectional}, {cost}, {tag})")
+# @ace_action
+# @ace_name("Add Instant Portal")
+# @ace_description("A portal that BLINKS the agent from entrance to exit (a door, a teleporter). Cost 1 is the normal price; raise it to make routes avoid the portal. Tags (comma-separated) group portals for the by-tag actions and expressions. Last Portal Id names it.")
+# @ace_param(from_x, desc: "Entrance X.")
+# @ace_param(from_y, desc: "Entrance Y.")
+# @ace_param(to_x, desc: "Exit X.")
+# @ace_param(to_y, desc: "Exit Y.")
+# @ace_param(bidirectional, desc: "Usable both ways.")
+# @ace_param(cost, desc: "Price multiplier (1 = normal).")
+# @ace_param(tag, default_code: "", desc: "Optional tags, comma-separated, in quotes.")
+# @ace_codegen_template("$PlatformerPathfinding.add_instant_portal({from_x}, {from_y}, {to_x}, {to_y}, {bidirectional}, {cost}, {tag})")
 func add_instant_portal(from_x: float, from_y: float, to_x: float, to_y: float, bidirectional: bool, cost: float, tag: String) -> void:
 	_add_portal_record(Vector2(from_x, from_y), Vector2(to_x, to_y), bidirectional, "instant", cost, 0.0, tag)
 
-## @ace_action
-## @ace_name("Add Gradual Portal")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("A portal that MOVES the agent from entrance to exit in a straight line at Speed (a ladder, a lift, a zipline), with the movement sibling paused on the way. Cost 1 prices it by its travel time. Last Portal Id names it.")
-## @ace_display_template("Add gradual portal ([b]{from_x}[/b], [b]{from_y}[/b]) to ([b]{to_x}[/b], [b]{to_y}[/b]) at [b]{speed}[/b] px/s")
-## @ace_param(from_x, desc: "Entrance X.")
-## @ace_param(from_y, desc: "Entrance Y.")
-## @ace_param(to_x, desc: "Exit X.")
-## @ace_param(to_y, desc: "Exit Y.")
-## @ace_param(bidirectional, desc: "Usable both ways.")
-## @ace_param(speed, desc: "Travel speed in px/s.")
-## @ace_param(cost, desc: "Price multiplier (1 = priced by travel time).")
-## @ace_param(tag, default_code: "", desc: "Optional tags, comma-separated, in quotes.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.add_gradual_portal({from_x}, {from_y}, {to_x}, {to_y}, {bidirectional}, {speed}, {cost}, {tag})")
+# @ace_action
+# @ace_name("Add Gradual Portal")
+# @ace_description("A portal that MOVES the agent from entrance to exit in a straight line at Speed (a ladder, a lift, a zipline), with the movement sibling paused on the way. Cost 1 prices it by its travel time. Last Portal Id names it.")
+# @ace_display_template("Add gradual portal ([b]{from_x}[/b], [b]{from_y}[/b]) to ([b]{to_x}[/b], [b]{to_y}[/b]) at [b]{speed}[/b] px/s")
+# @ace_param(from_x, desc: "Entrance X.")
+# @ace_param(from_y, desc: "Entrance Y.")
+# @ace_param(to_x, desc: "Exit X.")
+# @ace_param(to_y, desc: "Exit Y.")
+# @ace_param(bidirectional, desc: "Usable both ways.")
+# @ace_param(speed, desc: "Travel speed in px/s.")
+# @ace_param(cost, desc: "Price multiplier (1 = priced by travel time).")
+# @ace_param(tag, default_code: "", desc: "Optional tags, comma-separated, in quotes.")
+# @ace_codegen_template("$PlatformerPathfinding.add_gradual_portal({from_x}, {from_y}, {to_x}, {to_y}, {bidirectional}, {speed}, {cost}, {tag})")
 func add_gradual_portal(from_x: float, from_y: float, to_x: float, to_y: float, bidirectional: bool, speed: float, cost: float, tag: String) -> void:
 	_add_portal_record(Vector2(from_x, from_y), Vector2(to_x, to_y), bidirectional, "gradual", cost, speed, tag)
 
-## @ace_action
-## @ace_name("Add Elevator Stop")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Adds a stop to an elevator group: two-way gradual portals to every other stop of the group are created for you. One group name per elevator.")
-## @ace_param(group, default_code: "", desc: "The elevator's name, in quotes.")
-## @ace_param(x, desc: "Stop X.")
-## @ace_param(y, desc: "Stop Y.")
-## @ace_param(speed, desc: "Travel speed in px/s.")
-## @ace_param(tag, default_code: "", desc: "Optional tags, comma-separated, in quotes.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.add_elevator_stop({group}, {x}, {y}, {speed}, {tag})")
+# @ace_action
+# @ace_name("Add Elevator Stop")
+# @ace_description("Adds a stop to an elevator group: two-way gradual portals to every other stop of the group are created for you. One group name per elevator.")
+# @ace_param(group, default_code: "", desc: "The elevator's name, in quotes.")
+# @ace_param(x, desc: "Stop X.")
+# @ace_param(y, desc: "Stop Y.")
+# @ace_param(speed, desc: "Travel speed in px/s.")
+# @ace_param(tag, default_code: "", desc: "Optional tags, comma-separated, in quotes.")
+# @ace_codegen_template("$PlatformerPathfinding.add_elevator_stop({group}, {x}, {y}, {speed}, {tag})")
 func add_elevator_stop(group: String, x: float, y: float, speed: float, tag: String) -> void:
 	var stop: Vector2 = Vector2(x, y)
 	var stops: Array = _elevator_stops.get(group, [])
@@ -2262,22 +2056,18 @@ func add_elevator_stop(group: String, x: float, y: float, speed: float, tag: Str
 	stops.append(stop)
 	_elevator_stops[group] = stops
 
-## @ace_action
-## @ace_name("Pause At Portal")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Inside On Portal Entered: holds the agent at the entrance so your events can play a door or lift animation first. Then Resume Portal (the portal moves it) or Complete Portal (your events moved it).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.pause_at_portal()")
+# @ace_action
+# @ace_name("Pause At Portal")
+# @ace_description("Inside On Portal Entered: holds the agent at the entrance so your events can play a door or lift animation first. Then Resume Portal (the portal moves it) or Complete Portal (your events moved it).")
+# @ace_codegen_template("$PlatformerPathfinding.pause_at_portal()")
 func pause_at_portal() -> void:
 	if _portal_entering:
 		_portal_paused = true
 
-## @ace_action
-## @ace_name("Resume Portal")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Runs a paused portal's own move: the blink, or the gradual travel.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.resume_portal()")
+# @ace_action
+# @ace_name("Resume Portal")
+# @ace_description("Runs a paused portal's own move: the blink, or the gradual travel.")
+# @ace_codegen_template("$PlatformerPathfinding.resume_portal()")
 func resume_portal() -> void:
 	if not _portal_paused:
 		return
@@ -2285,24 +2075,20 @@ func resume_portal() -> void:
 	if not _path.is_empty():
 		_run_portal(_path[_path_index])
 
-## @ace_action
-## @ace_name("Complete Portal")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Finishes a paused portal WITHOUT its own move (your events already moved the agent), or cuts a gradual portal short where the agent is.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.complete_portal()")
+# @ace_action
+# @ace_name("Complete Portal")
+# @ace_description("Finishes a paused portal WITHOUT its own move (your events already moved the agent), or cuts a gradual portal short where the agent is.")
+# @ace_codegen_template("$PlatformerPathfinding.complete_portal()")
 func complete_portal() -> void:
 	if not _portal_paused and not _portal_traversing:
 		return
 	_finish_portal()
 
-## @ace_action
-## @ace_name("Remove Portal")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Removes one portal by id; its links leave the graph immediately.")
-## @ace_param(portal_id, desc: "The portal's id.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.remove_portal({portal_id})")
+# @ace_action
+# @ace_name("Remove Portal")
+# @ace_description("Removes one portal by id; its links leave the graph immediately.")
+# @ace_param(portal_id, desc: "The portal's id.")
+# @ace_codegen_template("$PlatformerPathfinding.remove_portal({portal_id})")
 func remove_portal(portal_id: int) -> void:
 	for index in range(_portals.size() - 1, -1, -1):
 		if _portals[index].id == portal_id:
@@ -2310,14 +2096,12 @@ func remove_portal(portal_id: int) -> void:
 	_unlink_portal(portal_id)
 	_refresh_graph_overlay()
 
-## @ace_action
-## @ace_name("Remove Portal Near")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Removes the portal whose entrance or exit is nearest a world position.")
-## @ace_param(x, desc: "World X.")
-## @ace_param(y, desc: "World Y.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.remove_portal_near({x}, {y})")
+# @ace_action
+# @ace_name("Remove Portal Near")
+# @ace_description("Removes the portal whose entrance or exit is nearest a world position.")
+# @ace_param(x, desc: "World X.")
+# @ace_param(y, desc: "World Y.")
+# @ace_codegen_template("$PlatformerPathfinding.remove_portal_near({x}, {y})")
 func remove_portal_near(x: float, y: float) -> void:
 	var best_id: int = -1
 	var best_gap: float = INF
@@ -2329,13 +2113,11 @@ func remove_portal_near(x: float, y: float) -> void:
 	if best_id >= 0:
 		remove_portal(best_id)
 
-## @ace_action
-## @ace_name("Remove Portals By Tag")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Removes every portal carrying a tag (an empty tag removes them all).")
-## @ace_param(tag, default_code: "", desc: "The tag, in quotes.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.remove_portals_by_tag({tag})")
+# @ace_action
+# @ace_name("Remove Portals By Tag")
+# @ace_description("Removes every portal carrying a tag (an empty tag removes them all).")
+# @ace_param(tag, default_code: "", desc: "The tag, in quotes.")
+# @ace_codegen_template("$PlatformerPathfinding.remove_portals_by_tag({tag})")
 func remove_portals_by_tag(tag: String) -> void:
 	var doomed: Array = []
 	for portal in _portals:
@@ -2344,71 +2126,61 @@ func remove_portals_by_tag(tag: String) -> void:
 	for portal_id in doomed:
 		remove_portal(portal_id)
 
-## @ace_action
-## @ace_name("Set Portal Cost")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Changes a portal's price multiplier (higher = routes avoid it).")
-## @ace_param(portal_id, desc: "The portal's id.")
-## @ace_param(cost, desc: "Price multiplier (1 = normal).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_portal_cost({portal_id}, {cost})")
+# @ace_action
+# @ace_name("Set Portal Cost")
+# @ace_description("Changes a portal's price multiplier (higher = routes avoid it).")
+# @ace_param(portal_id, desc: "The portal's id.")
+# @ace_param(cost, desc: "Price multiplier (1 = normal).")
+# @ace_codegen_template("$PlatformerPathfinding.set_portal_cost({portal_id}, {cost})")
 func set_portal_cost(portal_id: int, cost: float) -> void:
 	var portal: NavPortal = _portal_by_id(portal_id)
 	if portal != null:
 		portal.cost = cost
 		_relink_portal(portal)
 
-## @ace_action
-## @ace_name("Set Portal Speed")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Changes a gradual portal's travel speed in px/s.")
-## @ace_param(portal_id, desc: "The portal's id.")
-## @ace_param(speed, desc: "Travel speed in px/s.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_portal_speed({portal_id}, {speed})")
+# @ace_action
+# @ace_name("Set Portal Speed")
+# @ace_description("Changes a gradual portal's travel speed in px/s.")
+# @ace_param(portal_id, desc: "The portal's id.")
+# @ace_param(speed, desc: "Travel speed in px/s.")
+# @ace_codegen_template("$PlatformerPathfinding.set_portal_speed({portal_id}, {speed})")
 func set_portal_speed(portal_id: int, speed: float) -> void:
 	var portal: NavPortal = _portal_by_id(portal_id)
 	if portal != null:
 		portal.speed = speed
 		_relink_portal(portal)
 
-## @ace_action
-## @ace_name("Set Portal Tag")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Replaces a portal's tags.")
-## @ace_param(portal_id, desc: "The portal's id.")
-## @ace_param(tag, default_code: "", desc: "The new tags, comma-separated, in quotes.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_portal_tag({portal_id}, {tag})")
+# @ace_action
+# @ace_name("Set Portal Tag")
+# @ace_description("Replaces a portal's tags.")
+# @ace_param(portal_id, desc: "The portal's id.")
+# @ace_param(tag, default_code: "", desc: "The new tags, comma-separated, in quotes.")
+# @ace_codegen_template("$PlatformerPathfinding.set_portal_tag({portal_id}, {tag})")
 func set_portal_tag(portal_id: int, tag: String) -> void:
 	var portal: NavPortal = _portal_by_id(portal_id)
 	if portal != null:
 		portal.tag = tag
 
-## @ace_action
-## @ace_name("Set Portal Ignore Hazards")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("On: routes use the portal even when a hazard covers it.")
-## @ace_param(portal_id, desc: "The portal's id.")
-## @ace_param(ignore, desc: "On to ignore hazards.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_portal_ignore_hazards({portal_id}, {ignore})")
+# @ace_action
+# @ace_name("Set Portal Ignore Hazards")
+# @ace_description("On: routes use the portal even when a hazard covers it.")
+# @ace_param(portal_id, desc: "The portal's id.")
+# @ace_param(ignore, desc: "On to ignore hazards.")
+# @ace_codegen_template("$PlatformerPathfinding.set_portal_ignore_hazards({portal_id}, {ignore})")
 func set_portal_ignore_hazards(portal_id: int, ignore: bool) -> void:
 	var portal: NavPortal = _portal_by_id(portal_id)
 	if portal != null:
 		portal.ignore_hazards = ignore
 
-## @ace_action
-## @ace_name("Set Portal Position")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Moves a portal's entrance and exit, keeping its id, type, cost, speed and tags - call it on a timer to follow a moving door.")
-## @ace_param(portal_id, desc: "The portal's id.")
-## @ace_param(from_x, desc: "Entrance X.")
-## @ace_param(from_y, desc: "Entrance Y.")
-## @ace_param(to_x, desc: "Exit X.")
-## @ace_param(to_y, desc: "Exit Y.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.set_portal_position({portal_id}, {from_x}, {from_y}, {to_x}, {to_y})")
+# @ace_action
+# @ace_name("Set Portal Position")
+# @ace_description("Moves a portal's entrance and exit, keeping its id, type, cost, speed and tags - call it on a timer to follow a moving door.")
+# @ace_param(portal_id, desc: "The portal's id.")
+# @ace_param(from_x, desc: "Entrance X.")
+# @ace_param(from_y, desc: "Entrance Y.")
+# @ace_param(to_x, desc: "Exit X.")
+# @ace_param(to_y, desc: "Exit Y.")
+# @ace_codegen_template("$PlatformerPathfinding.set_portal_position({portal_id}, {from_x}, {from_y}, {to_x}, {to_y})")
 func set_portal_position(portal_id: int, from_x: float, from_y: float, to_x: float, to_y: float) -> void:
 	var portal: NavPortal = _portal_by_id(portal_id)
 	if portal != null:
@@ -2416,60 +2188,48 @@ func set_portal_position(portal_id: int, from_x: float, from_y: float, to_x: flo
 		portal.to = Vector2(to_x, to_y)
 		_relink_portal(portal)
 
-## @ace_condition
-## @ace_name("Is At Portal")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("True while the agent is held at a portal entrance by Pause At Portal.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.is_at_portal()")
+# @ace_condition
+# @ace_name("Is At Portal")
+# @ace_description("True while the agent is held at a portal entrance by Pause At Portal.")
+# @ace_codegen_template("$PlatformerPathfinding.is_at_portal()")
 func is_at_portal() -> bool:
 	return _portal_paused
 
-## @ace_condition
-## @ace_name("Is Traversing Portal")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("True while a gradual portal is moving the agent.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.is_traversing_portal()")
+# @ace_condition
+# @ace_name("Is Traversing Portal")
+# @ace_description("True while a gradual portal is moving the agent.")
+# @ace_codegen_template("$PlatformerPathfinding.is_traversing_portal()")
 func is_traversing_portal() -> bool:
 	return _portal_traversing
 
-## @ace_expression
-## @ace_name("Current Portal Id")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The portal being (or last) taken - read it inside On Portal Entered / On Portal Taken (-1 before any).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.current_portal_id()")
+# @ace_expression
+# @ace_name("Current Portal Id")
+# @ace_description("The portal being (or last) taken - read it inside On Portal Entered / On Portal Taken (-1 before any).")
+# @ace_codegen_template("$PlatformerPathfinding.current_portal_id()")
 func current_portal_id() -> int:
 	return _current_portal.id if _current_portal != null else -1
 
-## @ace_expression
-## @ace_name("Last Portal Id")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The id of the most recently added portal (-1 before any).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.last_portal_id()")
+# @ace_expression
+# @ace_name("Last Portal Id")
+# @ace_description("The id of the most recently added portal (-1 before any).")
+# @ace_codegen_template("$PlatformerPathfinding.last_portal_id()")
 func last_portal_id() -> int:
 	return _last_portal_id
 
-## @ace_expression
-## @ace_name("Portal Count")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("How many portals are registered.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.portal_count()")
+# @ace_expression
+# @ace_name("Portal Count")
+# @ace_description("How many portals are registered.")
+# @ace_codegen_template("$PlatformerPathfinding.portal_count()")
 func portal_count() -> int:
 	return _portals.size()
 
-## @ace_expression
-## @ace_name("Nearest Portal Id")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The portal whose entrance is nearest a point, optionally only those carrying a tag (-1 when none).")
-## @ace_param(x, desc: "World X.")
-## @ace_param(y, desc: "World Y.")
-## @ace_param(tag, default_code: "", desc: "Only portals with this tag (empty = any), in quotes.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.nearest_portal_id({x}, {y}, {tag})")
+# @ace_expression
+# @ace_name("Nearest Portal Id")
+# @ace_description("The portal whose entrance is nearest a point, optionally only those carrying a tag (-1 when none).")
+# @ace_param(x, desc: "World X.")
+# @ace_param(y, desc: "World Y.")
+# @ace_param(tag, default_code: "", desc: "Only portals with this tag (empty = any), in quotes.")
+# @ace_codegen_template("$PlatformerPathfinding.nearest_portal_id({x}, {y}, {tag})")
 func nearest_portal_id(x: float, y: float, tag: String) -> int:
 	var best_id: int = -1
 	var best_gap: float = INF
@@ -2480,15 +2240,13 @@ func nearest_portal_id(x: float, y: float, tag: String) -> int:
 			best_id = portal.id
 	return best_id
 
-## @ace_expression
-## @ace_name("Furthest Portal Id")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The portal whose entrance is furthest from a point, optionally only those carrying a tag (-1 when none).")
-## @ace_param(x, desc: "World X.")
-## @ace_param(y, desc: "World Y.")
-## @ace_param(tag, default_code: "", desc: "Only portals with this tag (empty = any), in quotes.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.furthest_portal_id({x}, {y}, {tag})")
+# @ace_expression
+# @ace_name("Furthest Portal Id")
+# @ace_description("The portal whose entrance is furthest from a point, optionally only those carrying a tag (-1 when none).")
+# @ace_param(x, desc: "World X.")
+# @ace_param(y, desc: "World Y.")
+# @ace_param(tag, default_code: "", desc: "Only portals with this tag (empty = any), in quotes.")
+# @ace_codegen_template("$PlatformerPathfinding.furthest_portal_id({x}, {y}, {tag})")
 func furthest_portal_id(x: float, y: float, tag: String) -> int:
 	var best_id: int = -1
 	var best_gap: float = -1.0
@@ -2499,13 +2257,11 @@ func furthest_portal_id(x: float, y: float, tag: String) -> int:
 			best_id = portal.id
 	return best_id
 
-## @ace_expression
-## @ace_name("Portal Count By Tag")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("How many portals carry a tag.")
-## @ace_param(tag, default_code: "", desc: "The tag, in quotes.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.portal_count_by_tag({tag})")
+# @ace_expression
+# @ace_name("Portal Count By Tag")
+# @ace_description("How many portals carry a tag.")
+# @ace_param(tag, default_code: "", desc: "The tag, in quotes.")
+# @ace_codegen_template("$PlatformerPathfinding.portal_count_by_tag({tag})")
 func portal_count_by_tag(tag: String) -> int:
 	var count: int = 0
 	for portal in _portals:
@@ -2513,14 +2269,12 @@ func portal_count_by_tag(tag: String) -> int:
 			count += 1
 	return count
 
-## @ace_expression
-## @ace_name("Portal Id By Tag")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("The id of the index-th portal carrying a tag (-1 out of range).")
-## @ace_param(tag, default_code: "", desc: "The tag, in quotes.")
-## @ace_param(index, desc: "Index among those portals, from 0.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.portal_id_by_tag({tag}, {index})")
+# @ace_expression
+# @ace_name("Portal Id By Tag")
+# @ace_description("The id of the index-th portal carrying a tag (-1 out of range).")
+# @ace_param(tag, default_code: "", desc: "The tag, in quotes.")
+# @ace_param(index, desc: "Index among those portals, from 0.")
+# @ace_codegen_template("$PlatformerPathfinding.portal_id_by_tag({tag}, {index})")
 func portal_id_by_tag(tag: String, index: int) -> int:
 	var seen: int = 0
 	for portal in _portals:
@@ -2530,71 +2284,59 @@ func portal_id_by_tag(tag: String, index: int) -> int:
 			seen += 1
 	return -1
 
-## @ace_expression
-## @ace_name("Portal Tag")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("A portal's tags (empty when it has none or does not exist).")
-## @ace_param(portal_id, desc: "The portal's id.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.portal_tag({portal_id})")
+# @ace_expression
+# @ace_name("Portal Tag")
+# @ace_description("A portal's tags (empty when it has none or does not exist).")
+# @ace_param(portal_id, desc: "The portal's id.")
+# @ace_codegen_template("$PlatformerPathfinding.portal_tag({portal_id})")
 func portal_tag(portal_id: int) -> String:
 	var portal: NavPortal = _portal_by_id(portal_id)
 	return portal.tag if portal != null else ""
 
-## @ace_expression
-## @ace_name("Portal Type")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("instant or gradual (empty when the portal does not exist).")
-## @ace_param(portal_id, desc: "The portal's id.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.portal_type({portal_id})")
+# @ace_expression
+# @ace_name("Portal Type")
+# @ace_description("instant or gradual (empty when the portal does not exist).")
+# @ace_param(portal_id, desc: "The portal's id.")
+# @ace_codegen_template("$PlatformerPathfinding.portal_type({portal_id})")
 func portal_type(portal_id: int) -> String:
 	var portal: NavPortal = _portal_by_id(portal_id)
 	return portal.type if portal != null else ""
 
-## @ace_expression
-## @ace_name("Portal Exit")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("Where the current portal lets the agent out.")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.portal_exit()")
+# @ace_expression
+# @ace_name("Portal Exit")
+# @ace_description("Where the current portal lets the agent out.")
+# @ace_codegen_template("$PlatformerPathfinding.portal_exit()")
 func portal_exit() -> Vector2:
 	return _current_portal_exit if _current_portal != null else Vector2.ZERO
 
-## @ace_expression
-## @ace_name("Portal Progress")
-## @ace_category("Platformer Pathfinding")
-## @ace_description("0 to 1 along a gradual portal while it moves the agent (0 otherwise).")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.portal_progress()")
+# @ace_expression
+# @ace_name("Portal Progress")
+# @ace_description("0 to 1 along a gradual portal while it moves the agent (0 otherwise).")
+# @ace_codegen_template("$PlatformerPathfinding.portal_progress()")
 func portal_progress() -> float:
 	return _portal_progress if _portal_traversing else 0.0
 
-## @ace_condition
-## @ace_name("Is Path Pending")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.is_path_pending()")
+# @ace_condition
+# @ace_name("Is Path Pending")
+# @ace_codegen_template("$PlatformerPathfinding.is_path_pending()")
 func is_path_pending() -> bool:
 	return _path_pending
 
-## @ace_condition
-## @ace_name("Is In Hazard")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.is_in_hazard()")
+# @ace_condition
+# @ace_name("Is In Hazard")
+# @ace_codegen_template("$PlatformerPathfinding.is_in_hazard()")
 func is_in_hazard() -> bool:
 	return host != null and _point_in_hazard(host.global_position, false)
 
-## @ace_condition
-## @ace_name("Has Path")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.has_path()")
+# @ace_condition
+# @ace_name("Has Path")
+# @ace_codegen_template("$PlatformerPathfinding.has_path()")
 func has_path() -> bool:
 	return not _path.is_empty()
 
-## @ace_condition
-## @ace_name("Path Wants Jump")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.path_wants_jump()")
+# @ace_condition
+# @ace_name("Path Wants Jump")
+# @ace_codegen_template("$PlatformerPathfinding.path_wants_jump()")
 func path_wants_jump() -> bool:
 	if _path.is_empty() or _jumped_this_segment or host == null:
 		return false
@@ -2608,57 +2350,51 @@ func path_wants_jump() -> bool:
 	var target: Vector2 = waypoint.world
 	return waypoint.action == "walk" and target.y < host.global_position.y - 8.0 and absf(target.x - host.global_position.x) < tile * 1.5
 
-## @ace_expression
-## @ace_name("Path Move Axis")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.path_move_axis()")
+# @ace_expression
+# @ace_name("Path Move Axis")
+# @ace_codegen_template("$PlatformerPathfinding.path_move_axis()")
 func path_move_axis() -> float:
 	return _move_axis
 
-## @ace_expression
-## @ace_name("Waypoint Count")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.waypoint_count()")
+# @ace_expression
+# @ace_name("Waypoint Count")
+# @ace_codegen_template("$PlatformerPathfinding.waypoint_count()")
 func waypoint_count() -> int:
 	return _path.size()
 
-## @ace_expression
-## @ace_name("Current Waypoint Index")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.current_waypoint_index()")
+# @ace_expression
+# @ace_name("Current Waypoint Index")
+# @ace_codegen_template("$PlatformerPathfinding.current_waypoint_index()")
 func current_waypoint_index() -> int:
 	return _path_index
 
-## @ace_expression
-## @ace_name("Current Waypoint X")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.current_waypoint_x()")
+# @ace_expression
+# @ace_name("Current Waypoint X")
+# @ace_codegen_template("$PlatformerPathfinding.current_waypoint_x()")
 func current_waypoint_x() -> float:
 	return _path[_path_index].world.x if not _path.is_empty() else 0.0
 
-## @ace_expression
-## @ace_name("Current Waypoint Y")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.current_waypoint_y()")
+# @ace_expression
+# @ace_name("Current Waypoint Y")
+# @ace_codegen_template("$PlatformerPathfinding.current_waypoint_y()")
 func current_waypoint_y() -> float:
 	return _path[_path_index].world.y if not _path.is_empty() else 0.0
 
-## @ace_expression
-## @ace_name("Current Path Action")
-## @ace_icon("res://eventsheet_addons/platformer_pathfinding/icon.svg")
-## @ace_codegen_template("$PlatformerPathfinding.current_path_action()")
+# @ace_expression
+# @ace_name("Current Path Action")
+# @ace_codegen_template("$PlatformerPathfinding.current_path_action()")
 func current_path_action() -> String:
 	return _path[_path_index].action if not _path.is_empty() else ""
 
+# @ace_hidden
 ## The grid's cell size in pixels: the TileMapLayer's tile height, or Grid Cell Size for a
 ## tilemap-less map.
-## @ace_hidden
 func _tile_px() -> float:
 	if _tilemap != null and _tilemap.tile_set != null:
 		return float(_tilemap.tile_set.tile_size.y)
 	return maxf(grid_cell_size, 1.0)
 
-## @ace_hidden
+# @ace_hidden
 func _cell_world(cell: Vector2i) -> Vector2:
 	if _tilemap != null:
 		var local: Vector2 = _tilemap.map_to_local(cell)
@@ -2666,16 +2402,16 @@ func _cell_world(cell: Vector2i) -> Vector2:
 	var tile: float = _tile_px()
 	return _grid_origin + (Vector2(cell) + Vector2(0.5, 0.5)) * tile
 
+# @ace_hidden
 ## True when a grid exists to build on (a TileMapLayer or a custom map).
-## @ace_hidden
 func _has_grid() -> bool:
 	return _tilemap != null or _custom_grid
 
+# @ace_hidden
 ## What one painted tile is to the navigator, read off its collision polygons: no polygon is
 ## clear, all-one-way polygons are a jump-through platform, a top edge that rises by more than a
 ## quarter tile across the cell is a slope ("slope_left" rises to the right, "/"; "slope_right"
 ## rises to the left, "\"), anything else is solid.
-## @ace_hidden
 func _tile_state_of(tile_data: TileData) -> String:
 	if _tilemap.tile_set.get_physics_layers_count() == 0:
 		return ""
@@ -2704,8 +2440,8 @@ func _tile_state_of(tile_data: TileData) -> String:
 		return "slope_right"
 	return "solid"
 
+# @ace_hidden
 ## The live state of one cell: a hand-set override, else a scanned body, else the painted tile.
-## @ace_hidden
 func _live_state(cell: Vector2i) -> String:
 	if _tile_overrides.has(cell):
 		return str(_tile_overrides[cell])
@@ -2719,13 +2455,13 @@ func _live_state(cell: Vector2i) -> String:
 				return painted
 	return "clear"
 
+# @ace_hidden
 ## Whether a state stops a body (solid ground and slopes do; a jump-through platform does not).
-## @ace_hidden
 func _blocks_state(state: String) -> bool:
 	return state == "solid" or state == "slope_left" or state == "slope_right"
 
+# @ace_hidden
 ## The merged obstacle map: painted tiles, then scanned bodies, then the hand-set overrides.
-## @ace_hidden
 func _scan_states() -> void:
 	_states.clear()
 	if _tilemap != null:
@@ -2743,10 +2479,10 @@ func _scan_states() -> void:
 		else:
 			_states[cell] = _tile_overrides[cell]
 
+# @ace_hidden
 ## Joins a map tag's shared map (or leaves the agent its own when the tag is empty): every
 ## container below is the SAME object for every agent on the tag, so one build serves them all.
 ## Returns true when the shared map is already built over this grid.
-## @ace_hidden
 func _bind_shared_map(grid_id: int) -> bool:
 	if map_tag == "":
 		return false
@@ -2767,9 +2503,9 @@ func _bind_shared_map(grid_id: int) -> bool:
 	_elevator_stops = shared.elevators
 	return built
 
+# @ace_hidden
 ## Builds the graph from the first physics TileMapLayer in the running scene when a route is
 ## asked for before any graph exists (Auto Build on).
-## @ace_hidden
 func _auto_build() -> void:
 	if not auto_build or _has_grid() or not is_inside_tree():
 		return
@@ -2782,16 +2518,16 @@ func _auto_build() -> void:
 			build_nav_graph(layer)
 			return
 
+# @ace_hidden
 ## Whether a world point sits in any hazard (deadly_only narrows to deadly ones).
-## @ace_hidden
 func _point_in_hazard(world: Vector2, deadly_only: bool) -> bool:
 	for hazard in _hazards:
 		if (not deadly_only or hazard.deadly) and _hazard_hit(hazard, world, 0.0):
 			return true
 	return false
 
+# @ace_hidden
 ## Whether one hazard covers a point, grown by `margin` pixels.
-## @ace_hidden
 func _hazard_hit(hazard: NavHazard, world: Vector2, margin: float) -> bool:
 	if hazard.kind == "circle":
 		return world.distance_to(hazard.center) <= hazard.radius + margin
@@ -2802,17 +2538,17 @@ func _hazard_hit(hazard: NavHazard, world: Vector2, margin: float) -> bool:
 		return world.distance_to((followed as Node2D).global_position) <= hazard.radius + margin
 	return hazard.rect.grow(margin).has_point(world)
 
+# @ace_hidden
 ## Drops tracked hazards whose node has been freed.
-## @ace_hidden
 func _prune_tracked_hazards() -> void:
 	for index in range(_hazards.size() - 1, -1, -1):
 		var hazard: NavHazard = _hazards[index]
 		if hazard.kind == "tracked" and not is_instance_valid(hazard.node):
 			_hazards.remove_at(index)
 
+# @ace_hidden
 ## Hazard verdict for one link (endpoints + midpoint): 0 = clear, 1 = danger, 2 = deadly.
 ## Hazard Margin grows every hazard into a danger buffer.
-## @ace_hidden
 func _segment_hazard(from_cell: Vector2i, to_cell: Vector2i) -> int:
 	if _hazards.is_empty():
 		return 0
@@ -2827,10 +2563,10 @@ func _segment_hazard(from_cell: Vector2i, to_cell: Vector2i) -> int:
 				verdict = 1
 	return verdict
 
+# @ace_hidden
 ## Says, once, which of the members this behaviour drives are missing from the movement sibling it
 ## found. It probed only a jump() and a move_speed to accept it, so a driver of your own that lacks
 ## the rest would otherwise be ignored without a word.
-## @ace_hidden
 func _check_movement_members(movement: Node) -> void:
 	if _movement_members_checked:
 		return
@@ -2843,10 +2579,10 @@ func _check_movement_members(movement: Node) -> void:
 		push_warning("[PlatformerPathfinding] The movement sibling %s has no %s - the paths and the driving that need %s will not work." % [
 			movement.name, ", ".join(missing), "it" if missing.size() == 1 else "them"])
 
+# @ace_hidden
 ## Jump reach in PIXELS (x = distance, y = height), derived from the movement pack's physics
 ## (the overrides win when set): height = v^2/2g, distance = speed * full air time, both with a
 ## 0.9 safety margin.
-## @ace_hidden
 func _jump_reach_px() -> Vector2:
 	var height_px: float = jump_height_override
 	var distance_px: float = jump_distance_override
@@ -2866,49 +2602,49 @@ func _jump_reach_px() -> Vector2:
 		distance_px = fallback_move_speed * (2.0 * fallback_rise / maxf(fallback_gravity, 1.0)) * 0.9
 	return Vector2(distance_px, height_px)
 
+# @ace_hidden
 ## The run speed the drive moves at (the sibling's when present).
-## @ace_hidden
 func _run_speed() -> float:
 	var movement: Node = _find_movement()
 	if movement != null and movement.get("move_speed") != null:
 		return float(movement.get("move_speed"))
 	return fallback_move_speed
 
+# @ace_hidden
 ## The coyote window an AI jump can really use: this behavior's Coyote Time, capped by the
 ## sibling's own (its jump() refuses a late takeoff past that).
-## @ace_hidden
 func _coyote_window() -> float:
 	var movement: Node = _find_movement()
 	if movement != null and movement.get("coyote_time") != null:
 		return minf(coyote_time, float(movement.get("coyote_time")))
 	return coyote_time
 
+# @ace_hidden
 ## True when the sibling can double jump and Double Jump Links is on.
-## @ace_hidden
 func _double_jump_ready() -> bool:
 	if not double_jump_links:
 		return false
 	var movement: Node = _find_movement()
 	return movement != null and movement.get("max_jumps") != null and int(movement.get("max_jumps")) >= 2
 
+# @ace_hidden
 ## The gravity the drive should reason with (the sibling's when present).
-## @ace_hidden
 func _drive_gravity() -> float:
 	var movement: Node = _find_movement()
 	if movement != null and movement.get("gravity") != null:
 		return maxf(float(movement.get("gravity")), 1.0)
 	return maxf(fallback_gravity, 1.0)
 
+# @ace_hidden
 ## The upward speed still needed to climb to `target` from here (plus a half-tile margin) -
 ## variable jump releases the button once remaining velocity drops to this, so each hop
 ## rises just as far as its arc requires.
-## @ace_hidden
 func _release_velocity_for(target: Vector2) -> float:
 	var rise: float = maxf(host.global_position.y - target.y, 0.0) + 20.0
 	return sqrt(2.0 * _drive_gravity() * rise)
 
+# @ace_hidden
 ## Registers a portal and links it into the built graph; returns its id.
-## @ace_hidden
 func _add_portal_record(from: Vector2, to: Vector2, both: bool, portal_kind: String, cost: float, speed: float, tag: String) -> int:
 	var portal: NavPortal = NavPortal.new()
 	portal.id = _next_portal_id
@@ -2927,10 +2663,10 @@ func _add_portal_record(from: Vector2, to: Vector2, both: bool, portal_kind: Str
 		_refresh_graph_overlay()
 	return _last_portal_id
 
+# @ace_hidden
 ## Injects one portal into the built graph as a link between the standable nodes nearest its
 ## endpoints: "portal" (instant, base cost 2) or "portal_gradual" (cost from its travel time
 ## measured in walking cells). The portal's Cost scales either.
-## @ace_hidden
 func _apply_portal(portal: NavPortal) -> void:
 	var from_node: Vector2i = _nearest_node(portal.from, 2)
 	var to_node: Vector2i = _nearest_node(portal.to, 2)
@@ -2947,8 +2683,8 @@ func _apply_portal(portal: NavPortal) -> void:
 	if portal.both:
 		_add_edge(to_node, from_node, kind, cost).portal_id = portal.id
 
+# @ace_hidden
 ## Removes every link a portal put into the graph.
-## @ace_hidden
 func _unlink_portal(portal_id: int) -> void:
 	for cell in _edges:
 		var kept: Array[NavEdge] = []
@@ -2957,16 +2693,16 @@ func _unlink_portal(portal_id: int) -> void:
 				kept.append(edge)
 		_edges[cell] = kept
 
+# @ace_hidden
 ## Re-links one portal after its position, cost or speed changed.
-## @ace_hidden
 func _relink_portal(portal: NavPortal) -> void:
 	_unlink_portal(portal.id)
 	if not _nodes.is_empty():
 		_apply_portal(portal)
 	_refresh_graph_overlay()
 
+# @ace_hidden
 ## Whether a tag matches a portal's comma-separated tags (an empty tag matches every portal).
-## @ace_hidden
 func _portal_has_tag(portal: NavPortal, tag: String) -> bool:
 	if tag == "":
 		return true
@@ -2975,9 +2711,9 @@ func _portal_has_tag(portal: NavPortal, tag: String) -> bool:
 			return true
 	return false
 
+# @ace_hidden
 ## Injects one moving platform as a slow bidirectional "platform" link between the
 ## standable nodes nearest its two travel endpoints.
-## @ace_hidden
 func _apply_moving_platform(ride: NavRide) -> void:
 	var from_node: Vector2i = _nearest_node(ride.a, 3)
 	var to_node: Vector2i = _nearest_node(ride.b, 3)
@@ -2987,11 +2723,11 @@ func _apply_moving_platform(ride: NavRide) -> void:
 	_add_edge(from_node, to_node, "platform", span * 1.3)
 	_add_edge(to_node, from_node, "platform", span * 1.3)
 
+# @ace_hidden
 ## Steering for a platform leg: wait BESIDE the track (a descending platform must land on
 ## empty space), board when it arrives at the near side, stand centered while it travels,
 ## and walk off once it reaches the far side. Waiting and riding legitimately stall
 ## progress, so the stuck watchdog is held off for the leg.
-## @ace_hidden
 func _platform_move_axis(target: Vector2, default_axis: float) -> float:
 	var ride: NavRide = _platform_for_waypoint(target)
 	if ride == null:
@@ -3018,11 +2754,11 @@ func _platform_move_axis(target: Vector2, default_axis: float) -> float:
 	var wait_dx: float = wait_x - host.global_position.x
 	return clampf(wait_dx / 24.0, -1.0, 1.0) if absf(wait_dx) > 6.0 else 0.0
 
+# @ace_hidden
 ## Steering while a platform leg is still AHEAD in the path: the walk nodes feeding a
 ## boarding point sit inside the track's crush zone, so the agent holds STILL at the wait
 ## spot beside the track and only walks in once the platform is parked at the boarding
 ## side (never strolls under a platform that is about to land on it).
-## @ace_hidden
 func _platform_approach_axis(leg_target: Vector2, default_axis: float) -> float:
 	var ride: NavRide = _platform_for_waypoint(leg_target)
 	if ride == null:
@@ -3038,10 +2774,10 @@ func _platform_approach_axis(leg_target: Vector2, default_axis: float) -> float:
 	var wait_dx: float = wait_x - host.global_position.x
 	return clampf(wait_dx / 24.0, -1.0, 1.0) if absf(wait_dx) > 6.0 else 0.0
 
+# @ace_hidden
 ## True while standing on a registered platform that is BETWEEN its endpoints - the
 ## window where a fresh route would mis-start from a ground node and steer the rider
 ## off the shaft in mid-air.
-## @ace_hidden
 func _riding_moving_platform() -> bool:
 	if host == null or not host.is_on_floor():
 		return false
@@ -3055,7 +2791,7 @@ func _riding_moving_platform() -> bool:
 			return true
 	return false
 
-## @ace_hidden
+# @ace_hidden
 func _advance_waypoint() -> void:
 	_jumped_this_segment = false
 	_jump_released = false
@@ -3075,9 +2811,9 @@ func _advance_waypoint() -> void:
 		if _patrolling and not _patrol_dwelling and _path.is_empty():
 			_on_patrol_end()
 
+# @ace_hidden
 ## Clears the active route and hands the movement sibling back (ai_controlled off) - what Stop
 ## Pathfinding and an arrival both do.
-## @ace_hidden
 func _finish_path() -> void:
 	_path = []
 	_path_index = 0
@@ -3096,24 +2832,24 @@ func _finish_path() -> void:
 	if _debug_line != null and is_instance_valid(_debug_line):
 		_debug_line.clear_points()
 
+# @ace_hidden
 ## Turns physics processing back on for a parked agent (the coyote window starts closed).
-## @ace_hidden
 func _wake() -> void:
 	if not is_physics_processing():
 		_floor_grace = INF
 		set_physics_process(true)
 
+# @ace_hidden
 ## Records why a route failed and fires On Path Failed.
-## @ace_hidden
 func _fail(reason: String) -> void:
 	_fail_reason = reason
 	if debug_log:
 		print("[PlatformerPathfinding] %s: no route (%s)" % [str(host.name) if host != null else "?", reason])
 	path_failed.emit()
 
+# @ace_hidden
 ## The route core every request funnels through: budget, auto build, nearest nodes, crowd
 ## claims, A*, the waypoint list and smoothing. Public verbs add their own intent around it.
-## @ace_hidden
 func _route(x: float, y: float, mode: String) -> void:
 	if not nav_enabled:
 		return
@@ -3203,9 +2939,9 @@ func _route(x: float, y: float, mode: String) -> void:
 		print("[PlatformerPathfinding] %s: route of %d waypoints, cost %.1f" % [str(host.name), _path.size(), _path_cost])
 	path_found.emit()
 
+# @ace_hidden
 ## Drops the walk waypoints in the middle of a straight same-row walk: the agent then walks
 ## the whole stretch in one leg instead of stopping at every cell.
-## @ace_hidden
 func _smooth_path() -> void:
 	var index: int = 1
 	while index < _path.size() - 1:
@@ -3218,9 +2954,9 @@ func _smooth_path() -> void:
 		else:
 			index += 1
 
+# @ace_hidden
 ## Coarse clearance for a jump/fall arc: the cells along the chord, lifted one cell for
 ## the rise, must be free. Coarse on purpose - it favours routing in open layouts.
-## @ace_hidden
 func _arc_clear(from_cell: Vector2i, to_cell: Vector2i, solid: Dictionary) -> bool:
 	if solid.has(from_cell + Vector2i(0, -1)) or solid.has(to_cell + Vector2i(0, -1)):
 		return false
@@ -3230,17 +2966,17 @@ func _arc_clear(from_cell: Vector2i, to_cell: Vector2i, solid: Dictionary) -> bo
 			return false
 	return true
 
+# @ace_hidden
 ## True when a link already joins these two cells.
-## @ace_hidden
 func _has_edge(from_cell: Vector2i, to_cell: Vector2i) -> bool:
 	for edge: NavEdge in (_edges.get(from_cell, []) as Array):
 		if edge.to == to_cell:
 			return true
 	return false
 
+# @ace_hidden
 ## Which side of a node is a LEDGE (no walk link that way and open air beside it): -1 left,
 ## 1 right, 2 both (an island), 0 neither.
-## @ace_hidden
 func _ledge_side(cell: Vector2i) -> int:
 	var left: bool = _is_ledge_toward(cell, -1)
 	var right: bool = _is_ledge_toward(cell, 1)
@@ -3252,7 +2988,7 @@ func _ledge_side(cell: Vector2i) -> int:
 		return 1
 	return 0
 
-## @ace_hidden
+# @ace_hidden
 func _is_ledge_toward(cell: Vector2i, direction: int) -> bool:
 	if not _nodes.has(cell):
 		return false
@@ -3261,9 +2997,9 @@ func _is_ledge_toward(cell: Vector2i, direction: int) -> bool:
 			return false
 	return not _blocks_state(str(_states.get(cell + Vector2i(direction, 0), "")))
 
+# @ace_hidden
 ## Every node reachable from `start` by WALK links only - the platform it stands on, slopes
 ## and stairs included.
-## @ace_hidden
 func _walk_component(start: Vector2i) -> Dictionary:
 	var seen: Dictionary = {start: true}
 	var frontier: Array = [start]
@@ -3275,8 +3011,8 @@ func _walk_component(start: Vector2i) -> Dictionary:
 				frontier.append(edge.to)
 	return seen
 
+# @ace_hidden
 ## Builds the waypoint list behind A*'s cell path, from the links it came through.
-## @ace_hidden
 func _reconstruct(goal: Vector2i, came_from: Dictionary, came_edge: Dictionary) -> Array:
 	var current: Vector2i = goal
 	var cells: Array = [current]
@@ -3289,9 +3025,9 @@ func _reconstruct(goal: Vector2i, came_from: Dictionary, came_edge: Dictionary) 
 	_last_route_edges = edges
 	return cells
 
+# @ace_hidden
 ## A* over the graph's links under the active strategy, filters and hazards. Returns the cell
 ## path or []. With allow_partial a cut-off goal yields the route to the closest node reached.
-## @ace_hidden
 func _astar(start: Vector2i, goal: Vector2i, allow_partial: bool = false) -> Array:
 	_last_route_edges = []
 	_last_search_fail = ""
@@ -3340,19 +3076,19 @@ func _astar(start: Vector2i, goal: Vector2i, allow_partial: bool = false) -> Arr
 		return _reconstruct(closest, came_from, came_edge)
 	return []
 
+# @ace_hidden
 ## Whether a link is a portal set to ignore hazards.
-## @ace_hidden
 func _ignores_hazards(edge: NavEdge) -> bool:
 	if edge.portal_id < 0:
 		return false
 	var portal: NavPortal = _portal_by_id(edge.portal_id)
 	return portal != null and portal.ignore_hazards
 
+# @ace_hidden
 ## A link's cost under the active Path Strategy. Walking, portals and platforms keep their own
 ## cost; airborne links are re-priced: shortest = raw distance plus a landing fee per jump,
 ## safest = long leaps and deep drops cost more the bigger they are, ground_hugging = every
 ## jump and fall carries a heavy fee so walking wins whenever it can.
-## @ace_hidden
 func _edge_cost(from_cell: Vector2i, edge: NavEdge) -> float:
 	var base: float = edge.cost
 	var kind: String = edge.kind
@@ -3372,11 +3108,11 @@ func _edge_cost(from_cell: Vector2i, edge: NavEdge) -> float:
 		return span * 4.0 + 10.0 if is_jump else span * 2.0 + 4.0
 	return base
 
+# @ace_hidden
 ## The router's link filter: deadly hazards block outright; a patrol only walks; with ledge
 ## restriction on, walking is always fine, drops only within the leniency, jumps and portals
 ## never; Walk Only never leaves the ground and the drop limit (No Falling forces it to at
 ## least 0) removes airborne links that land too far down.
-## @ace_hidden
 func _edge_allowed(from_cell: Vector2i, edge: NavEdge) -> bool:
 	if not _ignores_hazards(edge) and _segment_hazard(from_cell, edge.to) == 2:
 		return false
@@ -3399,25 +3135,25 @@ func _edge_allowed(from_cell: Vector2i, edge: NavEdge) -> bool:
 		limit = maxf(limit, 0.0)
 	return not (limit >= 0.0 and drop > limit)
 
+# @ace_hidden
 ## The link kind walking cell A -> B (the first link joining them).
-## @ace_hidden
 func _edge_kind(from_cell: Vector2i, to_cell: Vector2i) -> String:
 	for edge: NavEdge in (_edges.get(from_cell, []) as Array):
 		if edge.to == to_cell:
 			return edge.kind
 	return "walk"
 
+# @ace_hidden
 ## The map identity crowd claims and agent spacing compare: the grid plus the map tag.
-## @ace_hidden
 func _map_key() -> String:
 	return "%d|%s" % [_tilemap.get_instance_id() if _tilemap != null else 0, map_tag]
 
-## @ace_hidden
+# @ace_hidden
 func _register_agent() -> void:
 	_agent_ids[get_instance_id()] = true
 
+# @ace_hidden
 ## Multi-agent avoidance: extra cost on the cells other agents stand on or are about to walk.
-## @ace_hidden
 func _agent_avoidance_costs() -> Dictionary:
 	var costs: Dictionary = {}
 	for agent in _other_agents():
@@ -3431,8 +3167,8 @@ func _agent_avoidance_costs() -> Dictionary:
 			costs[cell] = float(costs.get(cell, 0.0)) + 1.5
 	return costs
 
+# @ace_hidden
 ## Whether another live agent still holds the claim on this goal cell.
-## @ace_hidden
 func _claimed_by_other(cell: Vector2i) -> bool:
 	var key: String = "%s|%s" % [_map_key(), str(cell)]
 	if not _goal_claims.has(key):
@@ -3446,20 +3182,20 @@ func _claimed_by_other(cell: Vector2i) -> bool:
 		return false
 	return true
 
-## @ace_hidden
+# @ace_hidden
 func _release_claim() -> void:
 	if _claimed_key != "" and int(_goal_claims.get(_claimed_key, 0)) == get_instance_id():
 		_goal_claims.erase(_claimed_key)
 	_claimed_key = ""
 
+# @ace_hidden
 ## Whether a body standing at this world point is over walkable ground (ledge-safe nudges).
-## @ace_hidden
 func _standable_at(world: Vector2) -> bool:
 	var cell: Vector2i = _world_to_cell(world)
 	return _nodes.has(cell) or _nodes.has(cell + Vector2i(0, 1)) or _nodes.has(cell + Vector2i(0, -1))
 
+# @ace_hidden
 ## Drives the host with a plain axis while no route is active (an idle separation step).
-## @ace_hidden
 func _drive_axis(axis: float, delta: float) -> void:
 	var movement: Node = _find_movement()
 	if movement != null:
@@ -3470,8 +3206,8 @@ func _drive_axis(axis: float, delta: float) -> void:
 	host.velocity.x = axis * fallback_move_speed
 	host.move_and_slide()
 
+# @ace_hidden
 ## Ends an idle separation step: the movement sibling is handed back exactly as an arrival does.
-## @ace_hidden
 func _stop_separating() -> void:
 	if not _separating:
 		return
@@ -3483,10 +3219,10 @@ func _stop_separating() -> void:
 	elif host != null:
 		host.velocity.x = 0.0
 
+# @ace_hidden
 ## Idle separation: an idle agent closer than Idle Separation to another agent on the same
 ## map steps away from it - never off a ledge or into a wall. It gives up after Separation
 ## Give Up Time and rests for Separation Cooldown. Returns true while it is pushing.
-## @ace_hidden
 func _separate(delta: float) -> bool:
 	if _separation_rest > 0.0:
 		_separation_rest -= delta
@@ -3522,8 +3258,8 @@ func _separate(delta: float) -> bool:
 	_drive_axis(0.6 * float(push) if _standable_at(ahead) else 0.0, delta)
 	return true
 
+# @ace_hidden
 ## Patrol: arrived at one end - fire the hooks, then dwell or turn straight around.
-## @ace_hidden
 func _on_patrol_end() -> void:
 	patrol_end_reached.emit()
 	if not _patrolling:
@@ -3537,21 +3273,21 @@ func _on_patrol_end() -> void:
 	_patrol_dir = -_patrol_dir
 	_patrol_walk()
 
+# @ace_hidden
 ## Routes to the patrol end the agent is facing.
-## @ace_hidden
 func _patrol_walk() -> void:
 	var end: Vector2 = _patrol_ends[1] if _patrol_dir > 0 else _patrol_ends[0]
 	_exact_final = end.x
 	_route(end.x, end.y, "nearest")
 
-## @ace_hidden
+# @ace_hidden
 func _end_patrol() -> void:
 	_patrolling = false
 	_patrol_dwelling = false
 	_patrol_dir = 0
 
+# @ace_hidden
 ## Side-of-node arrival: the agent stands on the requested side at the requested distance.
-## @ace_hidden
 func _check_side_reached(side: NavSideRequest) -> void:
 	if host == null or not is_instance_valid(side.node):
 		return
@@ -3560,16 +3296,16 @@ func _check_side_reached(side: NavSideRequest) -> void:
 		_reached_side = side.side
 		node_side_reached.emit()
 
+# @ace_hidden
 ## Pauses or resumes the sibling movement's own physics (a gradual portal moves the body).
-## @ace_hidden
 func _set_movement_processing(active: bool) -> void:
 	var movement: Node = _find_movement()
 	if movement != null:
 		movement.set_physics_process(active)
 
+# @ace_hidden
 ## A portal waypoint has been reached: fire On Portal Entered, then run the portal unless the
 ## sheet paused it there.
-## @ace_hidden
 func _enter_portal(waypoint: NavWaypoint) -> void:
 	_current_portal = _portal_by_id(waypoint.portal_id)
 	_current_portal_exit = waypoint.world
@@ -3581,9 +3317,9 @@ func _enter_portal(waypoint: NavWaypoint) -> void:
 		return
 	_run_portal(waypoint)
 
+# @ace_hidden
 ## Instant: blink to the exit. Gradual: start the straight-line move at the portal's speed with
 ## the movement sibling paused.
-## @ace_hidden
 func _run_portal(waypoint: NavWaypoint) -> void:
 	if waypoint.action == "portal_gradual":
 		_portal_traversing = true
@@ -3597,8 +3333,8 @@ func _run_portal(waypoint: NavWaypoint) -> void:
 	host.velocity = Vector2.ZERO
 	_finish_portal()
 
+# @ace_hidden
 ## One tick of a gradual portal move.
-## @ace_hidden
 func _step_gradual_portal(delta: float) -> void:
 	var speed: float = maxf(_current_portal.speed if _current_portal != null else 100.0, 1.0)
 	var span: float = _portal_from.distance_to(_portal_to)
@@ -3608,8 +3344,8 @@ func _step_gradual_portal(delta: float) -> void:
 	if _portal_progress >= 1.0:
 		_finish_portal()
 
+# @ace_hidden
 ## The portal is done: the movement sibling resumes, On Portal Taken fires, the route goes on.
-## @ace_hidden
 func _finish_portal() -> void:
 	var was_traversing: bool = _portal_traversing
 	_portal_traversing = false
@@ -3620,8 +3356,8 @@ func _finish_portal() -> void:
 	if not _path.is_empty():
 		_advance_waypoint()
 
+# @ace_hidden
 ## Holds the host still (a paused portal).
-## @ace_hidden
 func _hold_still(delta: float) -> void:
 	_move_axis = 0.0
 	var movement: Node = _find_movement()
@@ -3633,9 +3369,9 @@ func _hold_still(delta: float) -> void:
 	host.velocity.y = minf(host.velocity.y + fallback_gravity * delta, 1000.0)
 	host.move_and_slide()
 
+# @ace_hidden
 ## One tick of Jump Toward: launch at full strength, steer toward the point in the air, and
 ## hand the body back on landing.
-## @ace_hidden
 func _step_jump_toward(delta: float) -> void:
 	var dx: float = _jump_toward_target.x - host.global_position.x
 	_move_axis = clampf(dx / 24.0, -1.0, 1.0) if absf(dx) > 2.0 else 0.0
@@ -3670,12 +3406,12 @@ func _step_jump_toward(delta: float) -> void:
 	host.velocity.x = _move_axis * fallback_move_speed
 	host.move_and_slide()
 
+# @ace_hidden
 ## The distance from a point to the segment a -> b.
-## @ace_hidden
 func _distance_to_segment(point: Vector2, a: Vector2, b: Vector2) -> float:
 	return point.distance_to(Geometry2D.get_closest_point_to_segment(point, a, b))
 
-## @ace_hidden
+# @ace_hidden
 func _refresh_debug() -> void:
 	if not debug_draw:
 		if _debug_line != null and is_instance_valid(_debug_line):
@@ -3694,8 +3430,8 @@ func _refresh_debug() -> void:
 	for index in range(_path_index, _path.size()):
 		_debug_line.add_point(_path[index].world)
 
+# @ace_hidden
 ## Creates, redraws or hides the whole-graph overlay (Debug Draw Graph).
-## @ace_hidden
 func _refresh_graph_overlay() -> void:
 	if not debug_draw_graph:
 		if _debug_graph != null and is_instance_valid(_debug_graph):
@@ -3712,8 +3448,8 @@ func _refresh_graph_overlay() -> void:
 	_debug_graph.visible = true
 	_debug_graph.queue_redraw()
 
+# @ace_hidden
 ## The colour each link kind draws in on the graph overlay.
-## @ace_hidden
 func _kind_color(kind: String) -> Color:
 	match kind:
 		"walk":
@@ -3734,8 +3470,8 @@ func _kind_color(kind: String) -> Color:
 			return Color(1.0, 0.6, 0.2, 0.85)
 	return Color(1.0, 1.0, 1.0, 0.5)
 
+# @ace_hidden
 ## Draws every node as a dot and every link as a line coloured by kind.
-## @ace_hidden
 func _draw_graph_overlay() -> void:
 	if _debug_graph == null:
 		return

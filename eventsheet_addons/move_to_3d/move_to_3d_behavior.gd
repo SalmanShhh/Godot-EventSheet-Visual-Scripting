@@ -1,6 +1,6 @@
-## @ace_category("Move To 3D")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_category("Move To 3D")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @tool
 @icon("res://eventsheet_addons/move_to_3d/icon.svg")
 class_name MoveTo3DBehavior
@@ -9,7 +9,7 @@ extends Node
 ##
 ## Changes on its parent: position.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: Node3D = null
 
@@ -22,12 +22,12 @@ func _enter_tree() -> void:
 		push_warning("Move To3D Behavior needs a Node3D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Preview", "Play") var _preview_start_button: Callable = _preview_start
 
 @warning_ignore("unused_private_class_variable")
-## @ace_hidden
+# @ace_hidden
 ## Plays in the editor. Your scene is not changed.
 @export_tool_button("Stop preview", "Stop") var _preview_stop_button: Callable = _preview_stop
 
@@ -239,11 +239,11 @@ func _preview_repeat(run: int) -> void:
 			return
 		_preview_kick()
 
-## @ace_trigger
-## @ace_name("On Arrived (3D)")
+# @ace_trigger
+# @ace_name("On Arrived (3D)")
 signal arrived
-## @ace_trigger
-## @ace_name("On Path Blocked (3D)")
+# @ace_trigger
+# @ace_name("On Path Blocked (3D)")
 signal path_blocked
 
 ## Units per second the host glides toward each waypoint.
@@ -286,36 +286,30 @@ func _process(delta: float) -> void:
 			set_process(false)
 			arrived.emit()
 
-## @ace_action
-## @ace_name("Move To Position (3D)")
-## @ace_category("Move To 3D")
-## @ace_description("Replaces the queue and glides toward the point.")
-## @ace_icon("res://eventsheet_addons/move_to_3d/icon.svg")
-## @ace_codegen_template("$MoveTo3DBehavior.move_to_position_3d({x}, {y}, {z})")
+# @ace_action
+# @ace_name("Move To Position (3D)")
+# @ace_description("Replaces the queue and glides toward the point.")
+# @ace_codegen_template("$MoveTo3DBehavior.move_to_position_3d({x}, {y}, {z})")
 func move_to_position_3d(x: float, y: float, z: float) -> void:
 	waypoints = [Vector3(x, y, z)]
 	moving = true
 	# There is somewhere to be again, so the per-frame glide is worth paying for.
 	set_process(true)
 
-## @ace_action
-## @ace_name("Add Waypoint (3D)")
-## @ace_category("Move To 3D")
-## @ace_description("Appends a stop to the queue.")
-## @ace_icon("res://eventsheet_addons/move_to_3d/icon.svg")
-## @ace_codegen_template("$MoveTo3DBehavior.add_waypoint_3d({x}, {y}, {z})")
+# @ace_action
+# @ace_name("Add Waypoint (3D)")
+# @ace_description("Appends a stop to the queue.")
+# @ace_codegen_template("$MoveTo3DBehavior.add_waypoint_3d({x}, {y}, {z})")
 func add_waypoint_3d(x: float, y: float, z: float) -> void:
 	waypoints.append(Vector3(x, y, z))
 	moving = true
 	# A stop appended to an empty queue restarts the glide, so the tick has to come back on.
 	set_process(true)
 
-## @ace_action
-## @ace_name("Stop Moving (3D)")
-## @ace_category("Move To 3D")
-## @ace_description("Clears the queue without firing On Arrived.")
-## @ace_icon("res://eventsheet_addons/move_to_3d/icon.svg")
-## @ace_codegen_template("$MoveTo3DBehavior.stop_moving_3d()")
+# @ace_action
+# @ace_name("Stop Moving (3D)")
+# @ace_description("Clears the queue without firing On Arrived.")
+# @ace_codegen_template("$MoveTo3DBehavior.stop_moving_3d()")
 func stop_moving_3d() -> void:
 	moving = false
 	waypoints = []

@@ -25,7 +25,7 @@ func _physics_process(_delta: float) -> void:
 		punch_input = Time.get_ticks_msec() / 1000.0 - 1.0
 		press("punch")
 
-## @ace_hidden
+# @ace_hidden
 func press(button: String) -> void:
 	combo.append(button)
 	combo_timer = 0.5
@@ -40,14 +40,14 @@ func press(button: String) -> void:
 			$AnimationPlayer.play("spin")
 			combo.clear()
 
-## @ace_hidden
+# @ace_hidden
 func try_cancel() -> bool:
 	if $AnimationPlayer.current_animation == "uppercut" and $AnimationPlayer.current_animation_position > 0.3 and $AnimationPlayer.current_animation_position < 0.6:
 		cancels += 1
 		return true
 	return false
 
-## @ace_hidden
+# @ace_hidden
 func _on_hit_frame() -> void:
 	hits += 1
 	Engine.time_scale = 0.1

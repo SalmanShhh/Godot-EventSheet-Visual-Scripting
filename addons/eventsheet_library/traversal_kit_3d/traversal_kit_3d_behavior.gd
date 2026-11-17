@@ -1,7 +1,7 @@
-## @ace_tags(movement, traversal, 3d)
-## @ace_category("Traversal 3D")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_tags(movement, traversal, 3d)
+# @ace_category("Traversal 3D")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
 class_name TraversalKit3D
 extends Node
@@ -9,7 +9,7 @@ extends Node
 ##
 ## Changes on its parent: global_position, velocity.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CharacterBody3D = null
 
@@ -21,20 +21,20 @@ func _enter_tree() -> void:
 	if host == null:
 		push_warning("Traversal Kit3D needs a CharacterBody3D: put it under one, or set Acts on. This one is at " + str(get_path()) + ".")
 
-## @ace_trigger
-## @ace_name("On Ledge Grabbed")
+# @ace_trigger
+# @ace_name("On Ledge Grabbed")
 signal on_ledge_grabbed
-## @ace_trigger
-## @ace_name("On Climbed")
+# @ace_trigger
+# @ace_name("On Climbed")
 signal on_climbed
-## @ace_trigger
-## @ace_name("On Vaulted")
+# @ace_trigger
+# @ace_name("On Vaulted")
 signal on_vaulted
-## @ace_trigger
-## @ace_name("On Entered Water")
+# @ace_trigger
+# @ace_name("On Entered Water")
 signal on_entered_water
-## @ace_trigger
-## @ace_name("On Left Water")
+# @ace_trigger
+# @ace_name("On Left Water")
 signal on_left_water
 
 @export_group("Ledge")
@@ -128,7 +128,7 @@ var _in_water: bool = false
 var _surface_y: float = 0.0
 # The marked-Area lookup shared by ladders and water: the first area in the group the
 # host is standing inside, or null.
-## @ace_hidden
+# @ace_hidden
 func _overlapping(group_name: String) -> Area3D:
 	if host == null or not host.is_inside_tree() or group_name.is_empty():
 		return null
@@ -138,7 +138,7 @@ func _overlapping(group_name: String) -> Area3D:
 			return area
 	return null
 # The host's own collider - the one Crouch shrinks and Stand puts back.
-## @ace_hidden
+# @ace_hidden
 func _own_shape() -> CollisionShape3D:
 	if host == null:
 		return null
@@ -151,34 +151,28 @@ func _own_shape() -> CollisionShape3D:
 func _physics_process(delta: float) -> void:
 	_traverse(delta)
 
-## @ace_condition
-## @ace_name("Is At A Ledge")
-## @ace_category("Traversal 3D")
-## @ace_description("True when the forward probe finds a wall at chest height and the higher probe finds nothing - a lip you could hang from. False while already hanging, and for a moment after a Drop so you do not re-grab the lip you just let go of.")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.is_at_a_ledge()")
+# @ace_condition
+# @ace_name("Is At A Ledge")
+# @ace_description("True when the forward probe finds a wall at chest height and the higher probe finds nothing - a lip you could hang from. False while already hanging, and for a moment after a Drop so you do not re-grab the lip you just let go of.")
+# @ace_codegen_template("$TraversalKit3D.is_at_a_ledge()")
 func is_at_a_ledge() -> bool:
 	if _hanging or _grab_lock > 0.0:
 		return false
 	return _probe(wall_probe_height, probe_distance) and not _probe(grab_height, probe_distance)
 
-## @ace_condition
-## @ace_name("Is Hanging")
-## @ace_category("Traversal 3D")
-## @ace_description("True while the host is hanging from a ledge it grabbed. The kit holds it exactly where it grabbed - gravity cannot pull it off.")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.is_hanging()")
+# @ace_condition
+# @ace_name("Is Hanging")
+# @ace_description("True while the host is hanging from a ledge it grabbed. The kit holds it exactly where it grabbed - gravity cannot pull it off.")
+# @ace_codegen_template("$TraversalKit3D.is_hanging()")
 func is_hanging() -> bool:
 	return _hanging
 
-## @ace_action
-## @ace_featured
-## @ace_name("Grab Ledge")
-## @ace_category("Traversal 3D")
-## @ace_description("Grabs the ledge in front: the host stops dead, holds the lip (a little below it, by Hang Offset) and fires On Ledge Grabbed. Ignored if it is already hanging.")
-## @ace_display_template("[b]Grab[/b] the ledge")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.grab_ledge()")
+# @ace_action
+# @ace_featured
+# @ace_name("Grab Ledge")
+# @ace_description("Grabs the ledge in front: the host stops dead, holds the lip (a little below it, by Hang Offset) and fires On Ledge Grabbed. Ignored if it is already hanging.")
+# @ace_display_template("[b]Grab[/b] the ledge")
+# @ace_codegen_template("$TraversalKit3D.grab_ledge()")
 func grab_ledge() -> void:
 	if host == null or _hanging:
 		return
@@ -188,13 +182,11 @@ func grab_ledge() -> void:
 	host.velocity = Vector3.ZERO
 	on_ledge_grabbed.emit()
 
-## @ace_action
-## @ace_name("Climb Up")
-## @ace_category("Traversal 3D")
-## @ace_description("Leaves the ledge upward. With no duration it lets go and jumps (Climb Jump Velocity) - the quick exit. With a duration it is a mantle: the host is carried up and over the lip in that many seconds, with nothing else able to move it, and On Climbed fires when it lands on top.")
-## @ace_display_template("[b]Climb up[/b] over [b]{duration}[/b] s")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.climb_up({duration})")
+# @ace_action
+# @ace_name("Climb Up")
+# @ace_description("Leaves the ledge upward. With no duration it lets go and jumps (Climb Jump Velocity) - the quick exit. With a duration it is a mantle: the host is carried up and over the lip in that many seconds, with nothing else able to move it, and On Climbed fires when it lands on top.")
+# @ace_display_template("[b]Climb up[/b] over [b]{duration}[/b] s")
+# @ace_codegen_template("$TraversalKit3D.climb_up({duration})")
 func climb_up(duration: float) -> void:
 	if host == null or not _hanging:
 		return
@@ -209,13 +201,11 @@ func climb_up(duration: float) -> void:
 	_move_left = duration
 	_move_kind = "climb"
 
-## @ace_action
-## @ace_name("Drop")
-## @ace_category("Traversal 3D")
-## @ace_description("Lets go of the ledge and falls. The kit ignores the same lip for Regrab Delay seconds afterwards.")
-## @ace_display_template("[b]Drop[/b] from the ledge")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.drop()")
+# @ace_action
+# @ace_name("Drop")
+# @ace_description("Lets go of the ledge and falls. The kit ignores the same lip for Regrab Delay seconds afterwards.")
+# @ace_display_template("[b]Drop[/b] from the ledge")
+# @ace_codegen_template("$TraversalKit3D.drop()")
 func drop() -> void:
 	if not _hanging:
 		return
@@ -224,45 +214,37 @@ func drop() -> void:
 	if host != null:
 		host.velocity = Vector3.ZERO
 
-## @ace_condition
-## @ace_name("Is Wall Sliding")
-## @ace_category("Traversal 3D")
-## @ace_description("True on the frames a Slide Down Wall actually slowed a fall.")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.is_wall_sliding()")
+# @ace_condition
+# @ace_name("Is Wall Sliding")
+# @ace_description("True on the frames a Slide Down Wall actually slowed a fall.")
+# @ace_codegen_template("$TraversalKit3D.is_wall_sliding()")
 func is_wall_sliding() -> bool:
 	return _recent(_wall_slide_frame)
 
-## @ace_condition
-## @ace_name("Is Wall Running")
-## @ace_category("Traversal 3D")
-## @ace_description("True on the frames a Wall Run is carrying the host along a wall (it stops on its own after Wall Run Max Time).")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.is_wall_running()")
+# @ace_condition
+# @ace_name("Is Wall Running")
+# @ace_description("True on the frames a Wall Run is carrying the host along a wall (it stops on its own after Wall Run Max Time).")
+# @ace_codegen_template("$TraversalKit3D.is_wall_running()")
 func is_wall_running() -> bool:
 	return _recent(_wall_run_frame)
 
-## @ace_action
-## @ace_name("Slide Down Wall")
-## @ace_category("Traversal 3D")
-## @ace_description("Caps the fall while the host is pressed against a wall, so it slides instead of dropping. Does nothing when it is not on a wall or is still moving upward.")
-## @ace_display_template("[b]Slide[/b] down the wall at [b]{speed}[/b]")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.slide_down_wall({speed})")
+# @ace_action
+# @ace_name("Slide Down Wall")
+# @ace_description("Caps the fall while the host is pressed against a wall, so it slides instead of dropping. Does nothing when it is not on a wall or is still moving upward.")
+# @ace_display_template("[b]Slide[/b] down the wall at [b]{speed}[/b]")
+# @ace_codegen_template("$TraversalKit3D.slide_down_wall({speed})")
 func slide_down_wall(speed: float) -> void:
 	if host == null or not host.is_on_wall() or host.velocity.y >= 0.0:
 		return
 	host.velocity.y = maxf(host.velocity.y, -absf(speed))
 	_wall_slide_frame = Engine.get_physics_frames()
 
-## @ace_action
-## @ace_featured
-## @ace_name("Wall Jump")
-## @ace_category("Traversal 3D")
-## @ace_description("Jumps AWAY from the wall: the push goes along the wall's own normal, flattened to the floor plane, so the host always leaves the wall it was on, whichever side that was.")
-## @ace_display_template("[b]Wall jump[/b] away (push [b]{push}[/b], up [b]{rise}[/b])")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.wall_jump({push}, {rise})")
+# @ace_action
+# @ace_featured
+# @ace_name("Wall Jump")
+# @ace_description("Jumps AWAY from the wall: the push goes along the wall's own normal, flattened to the floor plane, so the host always leaves the wall it was on, whichever side that was.")
+# @ace_display_template("[b]Wall jump[/b] away (push [b]{push}[/b], up [b]{rise}[/b])")
+# @ace_codegen_template("$TraversalKit3D.wall_jump({push}, {rise})")
 func wall_jump(push: float, rise: float) -> void:
 	if host == null or not host.is_on_wall():
 		return
@@ -275,13 +257,11 @@ func wall_jump(push: float, rise: float) -> void:
 	_facing_dir = away
 	_wall_slide_frame = -10
 
-## @ace_action
-## @ace_name("Wall Run")
-## @ace_category("Traversal 3D")
-## @ace_description("Runs along the wall: gravity is replaced by the percentage you give, so the host barely sinks while it keeps up speed. It needs to be on a wall, off the floor, and moving at least Min Speed - and it gives out after Wall Run Max Time.")
-## @ace_display_template("[b]Wall run[/b] along the wall (gravity [b]{gravity_percent}[/b]%)")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.wall_run({gravity_percent}, {min_speed})")
+# @ace_action
+# @ace_name("Wall Run")
+# @ace_description("Runs along the wall: gravity is replaced by the percentage you give, so the host barely sinks while it keeps up speed. It needs to be on a wall, off the floor, and moving at least Min Speed - and it gives out after Wall Run Max Time.")
+# @ace_display_template("[b]Wall run[/b] along the wall (gravity [b]{gravity_percent}[/b]%)")
+# @ace_codegen_template("$TraversalKit3D.wall_run({gravity_percent}, {min_speed})")
 func wall_run(gravity_percent: float, min_speed: float) -> void:
 	if host == null or host.is_on_floor() or not host.is_on_wall():
 		return
@@ -293,44 +273,36 @@ func wall_run(gravity_percent: float, min_speed: float) -> void:
 	host.velocity.y = -_wall_run_fall
 	_wall_run_frame = Engine.get_physics_frames()
 
-## @ace_condition
-## @ace_name("Is On Ladder")
-## @ace_category("Traversal 3D")
-## @ace_description("True while the host is standing inside an Area3D marked with the ladder group.")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.is_on_ladder()")
+# @ace_condition
+# @ace_name("Is On Ladder")
+# @ace_description("True while the host is standing inside an Area3D marked with the ladder group.")
+# @ace_codegen_template("$TraversalKit3D.is_on_ladder()")
 func is_on_ladder() -> bool:
 	return _overlapping(ladder_group) != null
 
-## @ace_action
-## @ace_name("Climb Ladder")
-## @ace_category("Traversal 3D")
-## @ace_description("Drives the host up or down the ladder at this speed, from the up/down controls (or the AI axis). It writes the vertical speed outright, so gravity is off for as long as you keep calling it.")
-## @ace_display_template("[b]Climb[/b] the ladder at [b]{speed}[/b]")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.climb_ladder({speed})")
+# @ace_action
+# @ace_name("Climb Ladder")
+# @ace_description("Drives the host up or down the ladder at this speed, from the up/down controls (or the AI axis). It writes the vertical speed outright, so gravity is off for as long as you keep calling it.")
+# @ace_display_template("[b]Climb[/b] the ladder at [b]{speed}[/b]")
+# @ace_codegen_template("$TraversalKit3D.climb_ladder({speed})")
 func climb_ladder(speed: float) -> void:
 	if host == null or _overlapping(ladder_group) == null:
 		return
 	var axis: float = ai_climb_axis if ai_controlled else Input.get_axis(&"ui_down", &"ui_up")
 	host.velocity = Vector3(host.velocity.x, axis * speed, host.velocity.z)
 
-## @ace_condition
-## @ace_name("Is At A Vaultable Obstacle")
-## @ace_category("Traversal 3D")
-## @ace_description("True when the forward probe finds something at knee height and nothing at chest height - a low obstacle you could throw yourself over.")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.is_at_vaultable()")
+# @ace_condition
+# @ace_name("Is At A Vaultable Obstacle")
+# @ace_description("True when the forward probe finds something at knee height and nothing at chest height - a low obstacle you could throw yourself over.")
+# @ace_codegen_template("$TraversalKit3D.is_at_vaultable()")
 func is_at_vaultable() -> bool:
 	return _probe(vault_probe_height, probe_distance) and not _probe(vault_clear_height, probe_distance)
 
-## @ace_action
-## @ace_name("Vault Over")
-## @ace_category("Traversal 3D")
-## @ace_description("Carries the host forward over the obstacle in this many seconds. Nothing else moves it while the vault runs, and On Vaulted fires on the far side.")
-## @ace_display_template("[b]Vault over[/b] in [b]{duration}[/b] s")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.vault_over({duration})")
+# @ace_action
+# @ace_name("Vault Over")
+# @ace_description("Carries the host forward over the obstacle in this many seconds. Nothing else moves it while the vault runs, and On Vaulted fires on the far side.")
+# @ace_display_template("[b]Vault over[/b] in [b]{duration}[/b] s")
+# @ace_codegen_template("$TraversalKit3D.vault_over({duration})")
 func vault_over(duration: float) -> void:
 	if host == null or _move_left > 0.0:
 		return
@@ -341,22 +313,18 @@ func vault_over(duration: float) -> void:
 	_move_kind = "vault"
 	host.velocity = Vector3.ZERO
 
-## @ace_condition
-## @ace_name("Is Crouching")
-## @ace_category("Traversal 3D")
-## @ace_description("True while the host is crouched (its collider is the short one).")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.is_crouching()")
+# @ace_condition
+# @ace_name("Is Crouching")
+# @ace_description("True while the host is crouched (its collider is the short one).")
+# @ace_codegen_template("$TraversalKit3D.is_crouching()")
 func is_crouching() -> bool:
 	return _crouching
 
-## @ace_action
-## @ace_name("Crouch")
-## @ace_category("Traversal 3D")
-## @ace_description("Crouches: the host's first collision shape is swapped for a copy scaled to Crouch Scale, kept standing on the same feet. The original is put back by Stand, so the shape in your scene is never edited.")
-## @ace_display_template("[b]Crouch[/b]")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.crouch()")
+# @ace_action
+# @ace_name("Crouch")
+# @ace_description("Crouches: the host's first collision shape is swapped for a copy scaled to Crouch Scale, kept standing on the same feet. The original is put back by Stand, so the shape in your scene is never edited.")
+# @ace_display_template("[b]Crouch[/b]")
+# @ace_codegen_template("$TraversalKit3D.crouch()")
 func crouch() -> void:
 	if host == null or _crouching:
 		return
@@ -380,13 +348,11 @@ func crouch() -> void:
 		_crouch_shape.position = _crouch_original_position - Vector3(0.0, shed * 0.5, 0.0)
 	_crouch_shape.shape = shrunk
 
-## @ace_action
-## @ace_name("Stand")
-## @ace_category("Traversal 3D")
-## @ace_description("Stands back up and puts the original collision shape back exactly as it was.")
-## @ace_display_template("[b]Stand[/b] up")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.stand()")
+# @ace_action
+# @ace_name("Stand")
+# @ace_description("Stands back up and puts the original collision shape back exactly as it was.")
+# @ace_display_template("[b]Stand[/b] up")
+# @ace_codegen_template("$TraversalKit3D.stand()")
 func stand() -> void:
 	if not _crouching:
 		return
@@ -396,21 +362,17 @@ func stand() -> void:
 		_crouch_shape.position = _crouch_original_position
 	_crouch_original = null
 
-## @ace_condition
-## @ace_name("Is In Water")
-## @ace_category("Traversal 3D")
-## @ace_description("True while the host is inside an Area3D marked with the water group.")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.is_in_water()")
+# @ace_condition
+# @ace_name("Is In Water")
+# @ace_description("True while the host is inside an Area3D marked with the water group.")
+# @ace_codegen_template("$TraversalKit3D.is_in_water()")
 func is_in_water() -> bool:
 	return _in_water
 
-## @ace_condition
-## @ace_name("Is Above The Surface")
-## @ace_category("Traversal 3D")
-## @ace_description("True when the host's own point is above the water line of the area it is in - the test that lets a swimmer breathe, climb out, or hold at the top. Always true out of water.")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.is_above_the_surface()")
+# @ace_condition
+# @ace_name("Is Above The Surface")
+# @ace_description("True when the host's own point is above the water line of the area it is in - the test that lets a swimmer breathe, climb out, or hold at the top. Always true out of water.")
+# @ace_codegen_template("$TraversalKit3D.is_above_the_surface()")
 func is_above_the_surface() -> bool:
 	if host == null:
 		return false
@@ -418,14 +380,12 @@ func is_above_the_surface() -> bool:
 		return true
 	return host.global_position.y >= _surface_y
 
-## @ace_action
-## @ace_featured
-## @ace_name("Swim")
-## @ace_category("Traversal 3D")
-## @ace_description("Swimming instead of falling: only this percentage of the kit's gravity still pulls, and the host sheds this percentage of its speed every physics frame (10 is the classic 0.9 damping). Call it every frame while in water.")
-## @ace_display_template("[b]Swim[/b] (gravity [b]{gravity_percent}[/b]%, drag [b]{drag}[/b]%)")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.swim({gravity_percent}, {drag})")
+# @ace_action
+# @ace_featured
+# @ace_name("Swim")
+# @ace_description("Swimming instead of falling: only this percentage of the kit's gravity still pulls, and the host sheds this percentage of its speed every physics frame (10 is the classic 0.9 damping). Call it every frame while in water.")
+# @ace_display_template("[b]Swim[/b] (gravity [b]{gravity_percent}[/b]%, drag [b]{drag}[/b]%)")
+# @ace_codegen_template("$TraversalKit3D.swim({gravity_percent}, {drag})")
 func swim(gravity_percent: float, drag: float) -> void:
 	if host == null:
 		return
@@ -433,31 +393,27 @@ func swim(gravity_percent: float, drag: float) -> void:
 	host.velocity.y -= gravity * (clampf(gravity_percent, 0.0, 100.0) / 100.0) * step
 	host.velocity *= maxf(0.0, 1.0 - clampf(drag, 0.0, 100.0) / 100.0)
 
-## @ace_action
-## @ace_name("Float")
-## @ace_category("Traversal 3D")
-## @ace_description("Buoyancy: pushes the host upward in proportion to how deep under the surface it is, so it bobs up and settles at the water line instead of sinking. Call it every frame together with Swim.")
-## @ace_display_template("[b]Float[/b] with buoyancy [b]{buoyancy}[/b]")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.float_in_water({buoyancy})")
+# @ace_action
+# @ace_name("Float")
+# @ace_description("Buoyancy: pushes the host upward in proportion to how deep under the surface it is, so it bobs up and settles at the water line instead of sinking. Call it every frame together with Swim.")
+# @ace_display_template("[b]Float[/b] with buoyancy [b]{buoyancy}[/b]")
+# @ace_codegen_template("$TraversalKit3D.float_in_water({buoyancy})")
 func float_in_water(buoyancy: float) -> void:
 	if host == null or not _in_water:
 		return
 	var step: float = host.get_physics_process_delta_time()
 	host.velocity.y += buoyancy * maxf(_surface_y - host.global_position.y, 0.0) * step
 
-## @ace_expression
-## @ace_name("Water Depth")
-## @ace_category("Traversal 3D")
-## @ace_description("How far below the water line the host is, in metres (0 out of water or at the surface).")
-## @ace_icon("res://eventsheet_addons/traversal_kit_3d/icon.svg")
-## @ace_codegen_template("$TraversalKit3D.water_depth()")
+# @ace_expression
+# @ace_name("Water Depth")
+# @ace_description("How far below the water line the host is, in metres (0 out of water or at the surface).")
+# @ace_codegen_template("$TraversalKit3D.water_depth()")
 func water_depth() -> float:
 	if host == null or not _in_water:
 		return 0.0
 	return maxf(_surface_y - host.global_position.y, 0.0)
 
-## @ace_hidden
+# @ace_hidden
 func _forward() -> Vector3:
 	# Which way the body is facing on the floor plane: the way it is moving, or the way it
 	# is turned when it is standing still.
@@ -469,7 +425,7 @@ func _forward() -> Vector3:
 	turned.y = 0.0
 	return turned.normalized() if turned.length_squared() > 0.001 else Vector3.FORWARD
 
-## @ace_hidden
+# @ace_hidden
 func _feet_offset() -> float:
 	# Where the host's feet are, measured from its own point: half the height of its first
 	# collider, so every height below means what it says whatever size the body is.
@@ -484,7 +440,7 @@ func _feet_offset() -> float:
 		return holder.position.y - (holder.shape as SphereShape3D).radius
 	return holder.position.y
 
-## @ace_hidden
+# @ace_hidden
 func _probe(height: float, reach: float) -> bool:
 	# One forward ray at a height above the feet. The two-probe ledge test is two of these:
 	# the low one must hit and the high one must not.
@@ -496,7 +452,7 @@ func _probe(height: float, reach: float) -> bool:
 	query.exclude = [host.get_rid()]
 	return not space.intersect_ray(query).is_empty()
 
-## @ace_hidden
+# @ace_hidden
 func _surface_of(area: Area3D) -> float:
 	# The water line: the top face of the marked area's first collision shape, so Is Above
 	# The Surface and Float have something to measure against.
@@ -516,12 +472,12 @@ func _surface_of(area: Area3D) -> float:
 		return centre
 	return area.global_position.y
 
-## @ace_hidden
+# @ace_hidden
 func _recent(stamp: int) -> bool:
 	# True for the frame a stamped move happened on and the one after it.
 	return stamp >= 0 and Engine.get_physics_frames() - stamp <= 1
 
-## @ace_hidden
+# @ace_hidden
 func _track_water() -> void:
 	# Water bookkeeping: entering and leaving a marked area fire the two triggers, and the
 	# surface is measured once on the way in.
@@ -534,7 +490,7 @@ func _track_water() -> void:
 		_in_water = false
 		on_left_water.emit()
 
-## @ace_hidden
+# @ace_hidden
 func _traverse(delta: float) -> void:
 	# The per-frame keeper: facing, the timed climb/vault, the hang hold, the wall-run
 	# budget and the water watch. Every verb above is called FROM the sheet; this only

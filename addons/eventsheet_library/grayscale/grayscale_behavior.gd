@@ -1,7 +1,7 @@
-## @ace_tags(effects, shader, ui, visual)
-## @ace_category("Grayscale")
-## @ace_expose_all(node)
-## @ace_version(1.0.0)
+# @ace_tags(effects, shader, ui, visual)
+# @ace_category("Grayscale")
+# @ace_expose_all(node)
+# @ace_version(1.0.0)
 @icon("res://eventsheet_addons/grayscale/icon.svg")
 class_name GrayscaleBehavior
 extends Node
@@ -9,7 +9,7 @@ extends Node
 ##
 ## Changes on its parent: material.
 
-## @ace_hidden
+# @ace_hidden
 ## The node this behavior acts on. Empty: its parent.
 @export var acts_on: CanvasItem = null
 
@@ -124,40 +124,36 @@ func _dial(dial: String, when_unset: float) -> float:
 	var held: Variant = used.get_shader_parameter(dial)
 	return when_unset if held == null else float(held)
 
+# @ace_action
+# @ace_featured
+# @ace_name("Grayscale")
+# @ace_display_template("Grayscale to [b]{amount}[/b] over [b]{seconds}[/b] s")
+# @ace_codegen_template("$GrayscaleBehavior.grayscale({amount}, {seconds})")
 ## Drains the host's colour to the given amount over the given time. 1 is fully grey; a half
 ## reads as faded rather than as dead, which is what a disabled-but-still-there control wants.
-## @ace_action
-## @ace_featured
-## @ace_name("Grayscale")
-## @ace_display_template("Grayscale to [b]{amount}[/b] over [b]{seconds}[/b] s")
-## @ace_icon("res://eventsheet_addons/grayscale/icon.svg")
-## @ace_codegen_template("$GrayscaleBehavior.grayscale({amount}, {seconds})")
 func grayscale(amount: float = 1.0, seconds: float = 0.25) -> void:
 	_walk_dial(GREY_DIAL, clampf(amount, 0.0, 1.0), maxf(seconds, 0.0))
 
+# @ace_action
+# @ace_name("Recolour")
+# @ace_display_template("Recolour over [b]{seconds}[/b] s")
+# @ace_codegen_template("$GrayscaleBehavior.recolour({seconds})")
 ## Brings the colour back over the given time.
-## @ace_action
-## @ace_name("Recolour")
-## @ace_display_template("Recolour over [b]{seconds}[/b] s")
-## @ace_icon("res://eventsheet_addons/grayscale/icon.svg")
-## @ace_codegen_template("$GrayscaleBehavior.recolour({seconds})")
 func recolour(seconds: float = 0.25) -> void:
 	_walk_dial(GREY_DIAL, 0.0, maxf(seconds, 0.0))
 
+# @ace_condition
+# @ace_name("Is Gray")
+# @ace_codegen_template("$GrayscaleBehavior.is_gray()")
 ## True once more than half the colour has gone - the question a sheet asks about a unit that
 ## has been taken out of play.
-## @ace_condition
-## @ace_name("Is Gray")
-## @ace_icon("res://eventsheet_addons/grayscale/icon.svg")
-## @ace_codegen_template("$GrayscaleBehavior.is_gray()")
 func is_gray() -> bool:
 	return _dial(GREY_DIAL, 0.0) > 0.5
 
+# @ace_expression
+# @ace_name("Grayness")
+# @ace_codegen_template("$GrayscaleBehavior.grayness()")
 ## How much colour has been drained, 0 to 1.
-## @ace_expression
-## @ace_name("Grayness")
-## @ace_icon("res://eventsheet_addons/grayscale/icon.svg")
-## @ace_codegen_template("$GrayscaleBehavior.grayness()")
 func grayness() -> float:
 	return _dial(GREY_DIAL, 0.0)
 
