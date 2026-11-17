@@ -98,8 +98,9 @@ static func small_print(field: Dictionary, label_width: float, open_help: Callab
 	line.add_child(gap)
 	var name_label: Label = Label.new()
 	name_label.text = godot
-	name_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(9))
-	name_label.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+	# The size and the fade of the card's own description, so it reads as comfortably in both themes.
+	name_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	name_label.modulate = Color(1.0, 1.0, 1.0, 0.6)
 	name_label.mouse_filter = Control.MOUSE_FILTER_PASS
 	name_label.tooltip_text = EventSheetL10n.translate("Godot's name for this. The ? opens its page in Godot's help.")
 	var mono: Font = EventSheetPopupUI.editor_font("doc_source")
@@ -110,8 +111,8 @@ static func small_print(field: Dictionary, label_width: float, open_help: Callab
 	help.text = "?"
 	help.flat = true
 	help.focus_mode = Control.FOCUS_NONE
-	help.add_theme_font_size_override("font_size", EventSheetPalette.scaled(9))
-	help.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+	help.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	help.modulate = Color(1.0, 1.0, 1.0, 0.6)
 	help.tooltip_text = EventSheetL10n.translate("Open this in Godot's help.")
 	help.pressed.connect(func() -> void: open_help.call(godot))
 	line.add_child(help)
@@ -159,9 +160,19 @@ static func as_row(card: Dictionary, player: String = "$JuicePlayer") -> String:
 static func show_text(host: Node, title: String, note: String, text: String) -> Window:
 	if DisplayServer.has_feature(DisplayServer.FEATURE_CLIPBOARD):
 		DisplayServer.clipboard_set(text)
-	var made: Dictionary = EventSheetPopupUI.panel_window(title, Vector2i(620, 280), host)
-	var window: Window = made["window"] as Window
-	var box: VBoxContainer = made["box"] as VBoxContainer
+	# The window's own title bar says what it is, so nothing inside repeats it as a heading.
+	var window: Window = Window.new()
+	window.title = title
+	window.size = Vector2i(620, 280)
+	var box: VBoxContainer = VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var card: Control = EventSheetPopupUI.panel_section(box)
+	card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	window.add_child(EventSheetPopupUI.window_body(card))
+	host.add_child(window)
 	box.add_child(EventSheetPopupUI.hint_label(EventSheetL10n.translate(note), 560.0))
 	box.add_child(EventSheetPopupUI.code_card(text, 540.0))
 	window.close_requested.connect(window.queue_free)
@@ -212,14 +223,77 @@ static func _node(card: Dictionary, key: String, player: Node) -> String:
 		var picked: Node = player.get_node_or_null(path)
 		if picked != null:
 			reached = str(player.get_parent().get_path_to(picked))
-	if reached == ".":
+	return _written(reached)
+
+
+## How GDScript writes a path to a node: `self` for the object itself, `$Name` for a name that needs no quotes.
+static func _written(reached: String) -> String:
+	if reached == "." or reached.is_empty():
 		return "self"
 	var simple: bool = true
 	for index: int in range(reached.length()):
 		var letter: String = reached.substr(index, 1)
-		if not (letter == "_" or (letter >= "a" and letter <= "z") or (letter >= "A" and letter <= "Z") or (index > 0 and letter >= "0" and letter <= "9")):
+		var digit: bool = letter >= "0" and letter <= "9"
+		if not (letter == "_" or (letter >= "a" and letter <= "z") or (letter >= "A" and letter <= "Z") or (index > 0 and (digit or letter == "/"))):
 			simple = false
 	return "$%s" % reached if simple else "$\"%s\"" % reached
+
+
+## The code that reaches a node that really exists in the scene, from the object the player is under. Empty when the
+## player is not in a scene or the node is not under that object, so the caller keeps the plain name it always wrote.
+static func _reaching(player: Node, found: Node) -> String:
+	if player == null or found == null or player.get_parent() == null:
+		return ""
+	var host: Node = player.get_parent()
+	if found != host and not host.is_ancestor_of(found):
+		return ""
+	return _written(str(host.get_path_to(found)))
+
+
+## The node a card's key names, or null when it names none or there is no player to look from.
+static func _picked(card: Dictionary, key: String, player: Node) -> Node:
+	var stored: Variant = card.get(key, NodePath())
+	var path: NodePath = stored if stored is NodePath else NodePath(str(stored))
+	if player == null or path.is_empty():
+		return null
+	return player.get_node_or_null(path)
+
+
+## The Spring node a Spring card moves its value with, written as the object's script would reach it.
+static func _spring_name(card: Dictionary, player: Node) -> String:
+	if player == null or player.get_parent() == null:
+		return "$SpringBehavior"
+	var target: Node = _picked(card, "node", player)
+	if target == null:
+		target = player.get_parent()
+	var pack: GDScript = load(str(load("res://addons/eventsheet/editor/inspector/juice_player_names.gd").call("pack_path"))) as GDScript
+	var spring: Node = pack.call("spring_of", target) as Node if pack != null else null
+	var reached: String = _reaching(player, spring)
+	return reached if not reached.is_empty() else "$SpringBehavior"
+
+
+## The other Juice Player a card names, or the plain stand-in name when there is no scene to read it from. A card that
+## names none acts on this player when `own` says so.
+static func _player_name(card: Dictionary, player: Node, own: bool) -> String:
+	var named: Node = _picked(card, "player", player)
+	if named == null and own and player != null:
+		named = player
+	var reached: String = _reaching(player, named)
+	return reached if not reached.is_empty() else "$OtherPlayer"
+
+
+## The WorldEnvironment a Scene Look card changes: the one it names, else the first the player's scene has.
+static func _world_name(card: Dictionary, player: Node) -> String:
+	var named: String = _node(card, "node", player)
+	if named != "self":
+		return named
+	if player != null and player.get_parent() != null:
+		var root: Node = player.owner if player.owner != null else player.get_parent()
+		var found: Array[Node] = root.find_children("*", "WorldEnvironment", true, false)
+		var reached: String = _reaching(player, found[0] if not found.is_empty() else null)
+		if not reached.is_empty():
+			return reached
+	return "$WorldEnvironment"
 
 
 ## The same effect as a card, written by hand in plain GDScript, or an empty text for a card that has no short
@@ -252,7 +326,13 @@ static func as_gdscript(card: Dictionary, player: Node = null) -> String:
 		"vibrate":
 			return "Input.start_joy_vibration(0, %s, %s, %s)" % [_n(card.get("weak", 0.5)), _n(card.get("strong", 0.5)), seconds]
 		"pause_player":
-			return "# Pauses another Juice Player: its walk holds still until it is resumed.\n$OtherPlayer.pause_feedbacks()"
+			var who: String = _player_name(card, player, true)
+			match str(card.get("mode", "pause")):
+				"resume":
+					return "# Resumes another Juice Player where it held.\n%s.resume_feedbacks()" % who
+				"toggle":
+					return "# Pauses another Juice Player, or resumes it if it was paused.\n%s.toggle_juice_paused()" % who
+			return "# Pauses another Juice Player: its walk holds still until it is resumed.\n%s.pause_feedbacks()" % who
 		"tween_property":
 			var property: String = str(card.get("effect", "rotation"))
 			return "var tween := create_tween()\ntween.tween_property(%s, \"%s\", %s, %s)" % [target, property, _value(card.get("to", card.get("amount", 1.0))), seconds]
@@ -261,7 +341,7 @@ static func as_gdscript(card: Dictionary, player: Node = null) -> String:
 		"call_method":
 			return "%s.call(\"%s\")" % [target, str(card.get("method", "my_method"))]
 		"play_player":
-			return "$OtherPlayer.play(%s)" % _n(card.get("amount", 1.0))
+			return "%s.play(%s)" % [_player_name(card, player, false), _n(card.get("amount", 1.0))]
 		"particles":
 			var declared: String = "var particles: GPUParticles2D = %s\n" % target
 			if str(card.get("do", "restart")) == "restart":
@@ -355,7 +435,7 @@ static func as_gdscript(card: Dictionary, player: Node = null) -> String:
 			return out
 		"scene_look":
 			var property: String = str(card.get("property", "glow_intensity"))
-			return "var world: WorldEnvironment = %s\nvar environment: Environment = world.environment\nvar before = environment.%s\nvar tween := create_tween()\ntween.tween_property(environment, \"%s\", %s, %s)\ntween.tween_property(environment, \"%s\", before, %s)" % [target if target != "self" else "$WorldEnvironment", property, property, _n(card.get("to", 2.0)), seconds, property, _n(card.get("back_seconds", 0.3))]
+			return "var world: WorldEnvironment = %s\nvar environment: Environment = world.environment\nvar before = environment.%s\nvar tween := create_tween()\ntween.tween_property(environment, \"%s\", %s, %s)\ntween.tween_property(environment, \"%s\", before, %s)" % [_world_name(card, player), property, property, _n(card.get("to", 2.0)), seconds, property, _n(card.get("back_seconds", 0.3))]
 		"bus_effect":
 			var how: String = str(card.get("how", "muffle"))
 			var bus: String = str(card.get("bus", "Master"))
@@ -366,7 +446,7 @@ static func as_gdscript(card: Dictionary, player: Node = null) -> String:
 			return "# The bus must already carry a %s.\nvar bus := AudioServer.get_bus_index(\"%s\")\nvar effect: %s\nfor slot in AudioServer.get_bus_effect_count(bus):\n\tif AudioServer.get_bus_effect(bus, slot) is %s:\n\t\teffect = AudioServer.get_bus_effect(bus, slot)\neffect.%s = %s\nawait get_tree().create_timer(%s).timeout\neffect.%s = %s" % [entry[0], bus, entry[0], entry[0], entry[1], _n(card.get("to", 400.0)), seconds, entry[1], entry[2]]
 		"spring":
 			var property: String = str(card.get("property", "scale"))
-			return "# Needs a Spring node under this node; it settles the value back to rest.\n$SpringBehavior.bump_property(\"%s\", %s)" % [property, _value(card.get("kick", 3.0))]
+			return "# Needs a Spring node under this node; it settles the value back to rest.\n%s.bump_property(\"%s\", %s)" % [_spring_name(card, player), property, _value(card.get("kick", 3.0))]
 		"slow_object":
 			return "for node in find_children(\"*\", \"AnimationPlayer\", true, false):\n\tnode.speed_scale = %s\nawait get_tree().create_timer(%s).timeout\nfor node in find_children(\"*\", \"AnimationPlayer\", true, false):\n\tnode.speed_scale = 1.0" % [_n(card.get("speed", 0.3)), seconds]
 		"animation_parameter":
