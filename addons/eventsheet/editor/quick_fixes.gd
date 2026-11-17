@@ -201,6 +201,11 @@ const OFFERED := {
 	"migration-sheet": [
 		{"id": "apply_migrations", "label": "Apply per sheet…"},
 	],
+	# Older spellings. The chip OPENS the Tidy window for the sheet in front of the reader and stops there:
+	# the window lists every line it would change, and Apply is the only place anything is written.
+	"older-spellings": [
+		{"id": "tidy_script", "label": "Tidy this script…"},
+	],
 	# A merge that brought the same baked local in from two branches. One click, one token, one undo
 	# step: the row that was already there keeps the name it had and the row that arrived gets a name
 	# of its own, so the file parses again without anybody choosing between two people's work.
@@ -415,6 +420,8 @@ static func apply(fix_id: String, finding: Dictionary, context: Dictionary) -> D
 			return _open_migrate_dialog(str(finding.get("path", "")), dock)
 		"remint_token":
 			return _remint_token(subject, str(finding.get("path", "")), dock)
+		"tidy_script":
+			return _open_tidy_dialog(str(finding.get("path", "")), dock)
 	return {"ok": false, "message": "No fix named %s." % fix_id}
 
 
@@ -461,6 +468,20 @@ static func _open_migrate_dialog(sheet_path: String, dock: Variant) -> Dictionar
 		return {"ok": false, "message": "%s is still opening - it reads as code until its rows have been lifted. Try again once it has finished." % sheet_path.get_file()}
 	dock.call("open_migrate_dialog")
 	return {"ok": true, "message": "The receipt lists every row that would be rewritten before anything changes."}
+
+
+## Opens the Tidy window for the sheet in front of the reader, and NOTHING ELSE. Like the migrate chip it
+## only ever reaches the open sheet: this note comes off a text scan of the whole project, so the file it
+## names is usually not the one on screen, and double-clicking the line is what opens it.
+static func _open_tidy_dialog(sheet_path: String, dock: Variant) -> Dictionary:
+	var elsewhere: String = "Open %s and choose Sheet > Tidy This Script - double-clicking this line opens it." % sheet_path.get_file()
+	if dock == null or not dock.has_method("open_tidy_dialog") or not _is_the_open_sheet(dock, sheet_path):
+		return {"ok": false, "message": elsewhere}
+	var sheet: EventSheetResource = dock.get("_current_sheet") as EventSheetResource
+	if sheet == null or sheet.read_only:
+		return {"ok": false, "message": "%s is still opening - it reads as code until its rows have been lifted. Try again once it has finished." % sheet_path.get_file()}
+	dock.call("open_tidy_dialog")
+	return {"ok": true, "message": "The window lists every line that would change before anything is written."}
 
 
 ## Swaps every plain Log row of the sheet in front of the reader for the debug-builds-only one, in
