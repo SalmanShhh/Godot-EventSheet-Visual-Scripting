@@ -126,7 +126,14 @@ static func script_pack_section(script_path: String) -> PackedStringArray:
 	lines.append("### %s (`%s`)" % [class_match.get_string(1) if class_match != null else script_path.get_file(), script_path])
 	var doc_match: RegExMatch = RegEx.create_from_string("\\A((?:##[^\\n]*\\n)+)").search(source)
 	if doc_match != null:
-		lines.append(_flatten_doc_comment(doc_match.get_string(1)))
+		# When the run holds prose, the words in it (`@ace_version`) are not part of what the class says about
+		# itself, whichever side of the prose they sit on. A run that is only words is left as it is.
+		var prose: PackedStringArray = PackedStringArray()
+		for doc_line: String in doc_match.get_string(1).split("\n"):
+			if not doc_line.strip_edges().begins_with("## @ace_"):
+				prose.append(doc_line)
+		var held: String = "\n".join(prose) if not "".join(prose).strip_edges().is_empty() else doc_match.get_string(1)
+		lines.append(_flatten_doc_comment(held))
 	lines.append_array(rendered)
 	return lines
 

@@ -541,7 +541,7 @@ Node script extending `CharacterBody2D`.
 - **Decal Count**
 
 ### DemoHealthAddon (`res://eventsheet_addons/demo_health_addon.gd`)
-Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ and their annotated members become project-wide ACEs automatically - no manifest, no JSON, no per-sheet setup. Provider name comes from class_name, this comment is the addon description, and @ace_* annotations customize each ACE. @ace_version(1.0.0)
+Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ and their annotated members become project-wide ACEs automatically - no manifest, no JSON, no per-sheet setup. Provider name comes from class_name, this comment is the addon description, and @ace_* annotations customize each ACE.
 
 #### Triggers
 - **On Healed** (`amount: int`) - Fires after health is restored.
