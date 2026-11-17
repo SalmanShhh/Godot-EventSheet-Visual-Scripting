@@ -32,6 +32,7 @@ static func ask(owner: Node, resource: Resource, done: Callable) -> void:
 		done.call("")
 		dialog.queue_free())
 	dialog.popup_file_dialog()
+	EventSheetWindowPlacement.keep_on_screen(dialog)
 
 
 ## Writes `resource` to `path`, gives the file a uid when it has none, and answers the uid text ("" when the
