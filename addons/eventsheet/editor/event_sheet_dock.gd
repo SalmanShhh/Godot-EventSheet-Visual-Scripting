@@ -5263,6 +5263,8 @@ func _preview_languages() -> PackedStringArray:
 # ── Sheet backups - the save-time ring (core in EventSheetBackups) ────────────────────
 var _backups_window: Window = null
 var _backups_list: ItemList = null
+var _backups_put_back_row: HBoxContainer = null
+var _backups_put_back_line: Label = null
 
 
 func _open_sheet_backups() -> void:
@@ -5273,7 +5275,7 @@ func _open_sheet_backups() -> void:
 	if _backups_window == null:
 		_backups_window = Window.new()
 		_backups_window.title = "Sheet Backups"
-		_backups_window.size = Vector2i(460, 360)
+		_backups_window.size = Vector2i(EventSheetPalette.scaled(720), EventSheetPalette.scaled(440))
 		_backups_window.close_requested.connect(func() -> void: _backups_window.hide())
 		var box: VBoxContainer = VBoxContainer.new()
 		_backups_list = ItemList.new()
@@ -5286,14 +5288,24 @@ func _open_sheet_backups() -> void:
 		restore_button.text = EventSheetL10n.translate("Restore into editor (unsaved - Save to keep)")
 		restore_button.pressed.connect(_on_restore_backup_pressed)
 		box.add_child(restore_button)
+		# The way back from the last Replace in Project: what it restores, and the button. Shown only
+		# while there is something to put back.
+		_backups_put_back_row = HBoxContainer.new()
+		_backups_put_back_line = EventSheetPopupUI.hint_label("")
+		_backups_put_back_line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_backups_put_back_row.add_child(_backups_put_back_line)
 		var put_back_button: Button = Button.new()
 		put_back_button.text = EventSheetL10n.translate("Put them all back")
 		put_back_button.tooltip_text = EventSheetL10n.translate("Puts every file the last Replace in Project wrote back as it was.")
+		put_back_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		put_back_button.pressed.connect(func() -> void:
-			_set_status(load("res://addons/eventsheet/editor/dock/project_replace.gd").put_back_newest()))
-		box.add_child(put_back_button)
+			_set_status(load("res://addons/eventsheet/editor/dock/project_replace.gd").put_back_newest())
+			_refresh_backups_put_back())
+		_backups_put_back_row.add_child(put_back_button)
+		box.add_child(_backups_put_back_row)
 		_backups_window.add_child(EventSheetPopupUI.window_body(box))
 		add_child(_backups_window)
+	_refresh_backups_put_back()
 	_backups_list.clear()
 	for backup_path: String in EventSheetBackups.list_backups(_current_sheet_path):
 		var stamp: String = Time.get_datetime_string_from_unix_time(int(FileAccess.get_modified_time(backup_path))).replace("T", " ")
@@ -5303,6 +5315,13 @@ func _open_sheet_backups() -> void:
 		_backups_list.add_item("(no backups yet - they appear from the second save on)")
 		_backups_list.set_item_disabled(0, true)
 	EventSheetWindowPlacement.popup_centered(_backups_window)
+
+
+## Says what Put them all back would restore (how many files, and when), or hides the row when nothing is kept.
+func _refresh_backups_put_back() -> void:
+	var line: String = load("res://addons/eventsheet/editor/dock/project_replace.gd").newest_set_line()
+	_backups_put_back_row.visible = not line.is_empty()
+	_backups_put_back_line.text = line
 
 
 func _on_restore_backup_pressed() -> void:

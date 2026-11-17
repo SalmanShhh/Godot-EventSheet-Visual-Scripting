@@ -11225,3 +11225,8 @@ The steps below write the catalog files at once. Ctrl+Z does not take them back.
 Load Juice Player file,Juice Player ファイルを読み込む
 Move %s under %s,%s を %s の下へ移動
 Attach event sheet to %s,イベントシートを %s にアタッチ
+%s was brought to the front for it.,そのために %s を前面に出しました。
+Find and replace in the project,プロジェクト内を検索して置換
+A .gd file with none of the plugin's markers is listed here even if it is a sheet. Tick a file to change it.,プラグインの印がない .gd ファイルは、シートであってもここに並びます。変更するファイルにチェックを入れてください。
+today,今日
+"Put them all back restores %d file(s) the last Replace in Project wrote, %s.",「すべて元に戻す」は、直前のプロジェクト内置換が書き込んだ %d 個のファイルを復元します（%s）。

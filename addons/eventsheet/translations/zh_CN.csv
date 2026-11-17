@@ -11225,3 +11225,8 @@ The steps below write the catalog files at once. Ctrl+Z does not take them back.
 Load Juice Player file,加载 Juice Player 文件
 Move %s under %s,把 %s 移到 %s 下面
 Attach event sheet to %s,把事件表挂到 %s
+%s was brought to the front for it.,为此已将 %s 切换到前台。
+Find and replace in the project,在项目中查找和替换
+A .gd file with none of the plugin's markers is listed here even if it is a sheet. Tick a file to change it.,没有插件标记的 .gd 文件即使是工作表也会列在这里。勾选文件即可更改它。
+today,今天
+"Put them all back restores %d file(s) the last Replace in Project wrote, %s.",“全部恢复”会还原上次项目内替换写入的 %d 个文件（%s）。

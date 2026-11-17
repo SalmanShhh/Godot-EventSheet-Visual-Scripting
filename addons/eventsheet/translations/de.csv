@@ -11225,3 +11225,8 @@ The steps below write the catalog files at once. Ctrl+Z does not take them back.
 Load Juice Player file,Juice-Player-Datei laden
 Move %s under %s,%s unter %s verschieben
 Attach event sheet to %s,Event-Sheet an %s anhängen
+%s was brought to the front for it.,%s wurde dafür nach vorn geholt.
+Find and replace in the project,Im Projekt suchen und ersetzen
+A .gd file with none of the plugin's markers is listed here even if it is a sheet. Tick a file to change it.,"Eine .gd-Datei ohne die Markierungen des Plugins steht hier, auch wenn sie ein Blatt ist. Hake eine Datei an, um sie zu ändern."
+today,heute
+"Put them all back restores %d file(s) the last Replace in Project wrote, %s.","Alle zurücksetzen stellt %d Datei(en) wieder her, die das letzte Ersetzen im Projekt geschrieben hat, %s."

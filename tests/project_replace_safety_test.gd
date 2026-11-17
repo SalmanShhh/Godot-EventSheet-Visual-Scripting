@@ -16,7 +16,8 @@ static func run() -> bool:
 		["a .tres file is a sheet", module.kind_of("res://a.tres", "", {}), "sheet"],
 		["a hand-written .gd is a script", module.kind_of("res://a.gd", by_hand, {}), "script"],
 		["a .gd carrying the plugin's header is a sheet", module.kind_of("res://a.gd", marked, {}), "sheet"],
-		["a .gd open in a tab is a sheet", module.kind_of("res://open_one.gd", by_hand, open_paths), "sheet"],
+		["a hand-written .gd open in a tab stays a script", module.kind_of("res://open_one.gd", by_hand, open_paths), "script"],
+		["a marked .gd open in a tab is a sheet", module.kind_of("res://open_one.gd", marked, open_paths), "sheet"],
 		["a behaviour pack is a pack", module.kind_of("res://eventsheet_addons/x/x.gd", by_hand, {}), "pack"],
 		["sheets start ticked", module.default_ticked("sheet"), true],
 		["scripts start unticked", module.default_ticked("script"), false],
@@ -110,6 +111,45 @@ static func run() -> bool:
 		["and says the new word", (reloaded.events[0] as CommentRow).text, "speed of the walker"],
 	]) and passed
 	module.discard_set(str(sheet_outcome["id"]))
+
+	# A hand-written script that is merely open in a tab stays a script, unticked; ticking it still
+	# sends the change through that tab (the entry says it is open).
+	var open_script: String = SUPPORT.own_path("open_script.gd")
+	_write(open_script, by_hand)
+	var open_entries: Array[Dictionary] = module.plan([{"path": open_script, "preview": "var pace: int = 1",
+		"uid": "", "line": 0, "event": 1}], "pace", "speed", {open_script: true})
+	passed = SUPPORT.pins(TEST_NAME, [
+		["an open hand-written script is listed as a script", open_entries[0]["kind"], "script"],
+		["and knows it is open in a tab", open_entries[0]["open"], true],
+		["and is not selected by the defaults", module.selected(open_entries, {}).size(), 0],
+		["ticking it selects it", module.selected(open_entries, {open_script: true}).size(), 1],
+	]) and passed
+
+	# What Put them all back will restore, said in words: how many files, and when.
+	var wording_path: String = SUPPORT.own_path("wording.gd")
+	_write(wording_path, marked)
+	var wording_entries: Array[Dictionary] = module.plan([{"path": wording_path, "preview": "var pace: int = 1",
+		"uid": "", "line": 4, "event": 0}], "pace", "speed", {})
+	var wording_outcome: Dictionary = module.apply_closed(module.selected(wording_entries, {}), "pace", "speed", rows)
+	var told_back: String = module.newest_set_line()
+	passed = SUPPORT.pins(TEST_NAME, [
+		["the line names how many files it puts back", told_back.contains("1 file(s)"), true],
+		["and the time they were written", told_back.contains(str(wording_outcome["id"]).substr(9, 2) + ":" + str(wording_outcome["id"]).substr(11, 2)), true],
+	]) and passed
+
+	# The window says what it lists (scripts as well as sheets), and opens wide enough for a real line.
+	var host: Control = Control.new()
+	var finder: EventSheetProjectFind = EventSheetProjectFind.new(host)
+	finder._build_project_find()
+	var results: Tree = finder._project_find_results
+	passed = SUPPORT.pins(TEST_NAME, [
+		["the window is not titled for sheets alone", finder._project_find_window.title, "Find and replace in the project"],
+		["the first column is File, not Sheet", results.get_column_title(0), "File"],
+		["the window opens at least a real project line wide", finder._wanted_size().x >= 1000, true],
+		["and can be made smaller than it opens", finder._project_find_window.min_size.x < finder._wanted_size().x, true],
+		["the way back is hidden while nothing is kept", finder._project_put_back_row.visible == (not module.newest_set_line().is_empty()), true],
+	]) and passed
+	host.free()
 	return passed
 
 

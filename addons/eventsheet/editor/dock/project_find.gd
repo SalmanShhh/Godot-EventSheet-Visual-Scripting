@@ -12,6 +12,17 @@ extends RefCounted
 ## Where the behaviour packs live - read by Find, never rewritten by a project-wide replace or rename.
 const PACK_ROOT: String = "res://eventsheet_addons/"
 
+## The least the window can be made, and the size it first opens at: wide enough for a real project line
+## and the line column. The reader's own size, once changed, is kept and used from then on.
+const MIN_WIDTH: int = 760
+const MIN_HEIGHT: int = 520
+const DEFAULT_WIDTH: int = 1120
+const DEFAULT_HEIGHT: int = 720
+const SIZE_SECTION: String = "eventsheets"
+const SIZE_KEY: String = "replace_window_size"
+## Headless twin of the editor's metadata store, so the remembered size is testable without an editor.
+static var _size_memory: Array = []
+
 var _dock: Control = null
 
 
@@ -27,6 +38,8 @@ var _project_find_count: Label = null
 var _project_find_strip: EventSheetPopupUI.HelpStrip = null
 var _project_find_this_row: Label = null
 var _project_put_back: Button = null
+var _project_put_back_row: HBoxContainer = null
+var _project_put_back_line: Label = null
 ## What the last Find would replace: one entry per file (the plan in project_replace.gd), and the
 ## ticks the reader changed since. A file not in `_ticks` follows its kind's default.
 var _plan: Array[Dictionary] = []
@@ -39,17 +52,39 @@ func open(initial_query: String = "") -> void:
 		_build_project_find()
 	if not initial_query.is_empty():
 		_project_find_edit.text = initial_query
-	EventSheetPopupUI.popup_fitted(_project_find_window)
+	EventSheetPopupUI.popup_fitted(_project_find_window, _wanted_size())
+	_refresh_put_back()
 	_project_find_edit.grab_focus()
 	if not initial_query.is_empty():
 		_run_project_find()
 
 
+## The size the window opens at: what the reader last left it at, else the default, never under the least.
+func _wanted_size() -> Vector2i:
+	var stored: Variant = _size_memory
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		stored = EditorInterface.get_editor_settings().get_project_metadata(SIZE_SECTION, SIZE_KEY, [])
+	var wanted: Vector2i = Vector2i(EventSheetPalette.scaled(DEFAULT_WIDTH), EventSheetPalette.scaled(DEFAULT_HEIGHT))
+	if stored is Array and (stored as Array).size() == 2:
+		wanted = Vector2i(int((stored as Array)[0]), int((stored as Array)[1]))
+	return wanted.max(Vector2i(EventSheetPalette.scaled(MIN_WIDTH), EventSheetPalette.scaled(MIN_HEIGHT)))
+
+
+## Keeps the size the reader left the window at, for the next time it opens.
+func _remember_size() -> void:
+	if _project_find_window == null or _project_find_window.visible:
+		return
+	var kept: Array = [_project_find_window.size.x, _project_find_window.size.y]
+	_size_memory = kept
+	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		EditorInterface.get_editor_settings().set_project_metadata(SIZE_SECTION, SIZE_KEY, kept)
+
+
 ## Builds the window without showing it, so a test can drive it headless.
 func _build_project_find() -> void:
 	var parts: Dictionary = EventSheetPopupUI.action_window(
-		EventSheetL10n.translate("Find and replace in every sheet"), EventSheetL10n.translate("Replace in Project"),
-		EventSheetL10n.translate("Close"), Vector2i(640, 640), _dock)
+		EventSheetL10n.translate("Find and replace in the project"), EventSheetL10n.translate("Replace in Project"),
+		EventSheetL10n.translate("Close"), Vector2i(MIN_WIDTH, MIN_HEIGHT), _dock)
 	_project_find_window = parts["window"]
 	_project_find_window.confirmed.connect(_run_project_replace)
 	# What the main button cannot take back, said beside it.
@@ -72,8 +107,26 @@ func _build_project_find() -> void:
 	_project_replace_edit = LineEdit.new()
 	form.add_child(EventSheetPopupUI.form_row(EventSheetL10n.translate("Replace with"), _project_replace_edit))
 	box.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("Find and replace"), form))
-	_project_find_results = EventSheetPopupUI.table(PackedStringArray([EventSheetL10n.translate("Sheet"),
-		EventSheetL10n.translate("Event"), EventSheetL10n.translate("Match")]), 300.0, {1: 64.0})
+	_project_find_results = EventSheetPopupUI.table(PackedStringArray([EventSheetL10n.translate("File"),
+		EventSheetL10n.translate("Where"), EventSheetL10n.translate("Match")]), 300.0, {1: 96.0})
+	# The file column and the match column share what the fixed one leaves, the match the larger part.
+	_project_find_results.set_column_expand_ratio(0, 2)
+	_project_find_results.set_column_expand_ratio(2, 5)
+	# After a replace the way back sits right under the form: what it restores, and the button.
+	_project_put_back_row = HBoxContainer.new()
+	_project_put_back_row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(10.0)))
+	_project_put_back_line = EventSheetPopupUI.hint_label("")
+	_project_put_back_line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_project_put_back_row.add_child(_project_put_back_line)
+	_project_put_back = Button.new()
+	_project_put_back.text = EventSheetL10n.translate("Put them all back")
+	_project_put_back.tooltip_text = EventSheetL10n.translate("Puts every file the last Replace in Project wrote back as it was.")
+	_project_put_back.pressed.connect(put_back_last)
+	_project_put_back.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_project_put_back_row.add_child(_project_put_back)
+	box.add_child(_project_put_back_row)
+	_refresh_put_back()
+	_project_find_window.visibility_changed.connect(_remember_size)
 	_project_find_results.item_edited.connect(_on_tick_edited)
 	_project_find_results.item_selected.connect(_on_project_find_selected)
 	_project_find_results.item_activated.connect(_on_project_find_activated)
@@ -81,12 +134,15 @@ func _build_project_find() -> void:
 	_project_find_count = results["count"]
 	_project_find_strip = results["strip"]
 	_project_find_this_row = results["this_row"]
-	_project_put_back = Button.new()
-	_project_put_back.text = EventSheetL10n.translate("Put them all back")
-	_project_put_back.tooltip_text = EventSheetL10n.translate("Puts every file the last Replace in Project wrote back as it was.")
-	_project_put_back.pressed.connect(put_back_last)
-	_project_put_back.visible = not _replace_module().list_sets().is_empty()
-	box.add_child(_project_put_back)
+
+
+## Shows the way back with what it restores (how many files, and when), or hides it when there is none.
+func _refresh_put_back() -> void:
+	if _project_put_back_row == null:
+		return
+	var line: String = _replace_module().newest_set_line()
+	_project_put_back_row.visible = not line.is_empty()
+	_project_put_back_line.text = line
 
 
 ## Every .tres EventSheetResource under res:// (skips .godot and addons internals). `.tres` ONLY: a
@@ -433,6 +489,16 @@ func _fill_results() -> void:
 			group_item.set_checked(0, _group_ticked(kind))
 		group_item.set_text(0, str(titles[kind]) % files.size())
 		group_item.set_metadata(0, {"group": kind})
+		# The group names its own count in full: the rest of the row is empty, so the words run on into it.
+		group_item.set_expand_right(0, true)
+		group_item.set_tooltip_text(0, group_item.get_text(0))
+		if kind == module.KIND_SCRIPT:
+			var hint_item: TreeItem = _project_find_results.create_item(group_item)
+			hint_item.set_text(0, EventSheetL10n.translate("A .gd file with none of the plugin's markers is listed here even if it is a sheet. Tick a file to change it."))
+			hint_item.set_expand_right(0, true)
+			hint_item.set_selectable(0, false)
+			hint_item.set_custom_color(0, EventSheetPopupUI.text_color() * Color(1.0, 1.0, 1.0, 0.74))
+			hint_item.set_metadata(0, {})
 		for index: int in range(mini(files.size(), module.MAX_FILES_SHOWN)):
 			_add_file_item(group_item, files[index])
 		if files.size() > module.MAX_FILES_SHOWN:
@@ -457,12 +523,16 @@ func _add_file_item(group_item: TreeItem, entry: Dictionary) -> void:
 	if bool(entry["open"]):
 		places += " - " + EventSheetL10n.translate("open in a tab")
 	item.set_text(2, places)
+	item.set_tooltip_text(2, places)
 	item.set_metadata(0, {"file": str(entry["path"]), "kind": kind})
 	var replaced: bool = not _project_replace_edit.text.is_empty()
 	for line: Dictionary in entry["lines"]:
 		var line_item: TreeItem = _project_find_results.create_item(item)
 		line_item.set_text(1, str(line["where"]))
-		line_item.set_text(2, ("%s => %s" % [line["before"], line["after"]]) if replaced else str(line["before"]))
+		var shown: String = ("%s => %s" % [line["before"], line["after"]]) if replaced else str(line["before"])
+		line_item.set_text(2, shown)
+		line_item.set_tooltip_text(2, shown)
+		line_item.set_tooltip_text(1, str(line["where"]))
 		line_item.set_metadata(0, line["match"])
 	if int(entry["more"]) > 0:
 		var more_item: TreeItem = _project_find_results.create_item(item)
@@ -584,7 +654,7 @@ func _run_project_replace() -> void:
 			tabs += 1
 	_ticks = {}
 	_run_project_find()
-	_project_put_back.visible = not module.list_sets().is_empty()
+	_refresh_put_back()
 	var failed: PackedStringArray = outcome["failed"]
 	var skipped: PackedStringArray = outcome["skipped"]
 	var written: Array = outcome["written"]
@@ -628,7 +698,6 @@ func _replace_in_open_tab(path: String, needle: String, replacement: String) -> 
 func put_back_last() -> void:
 	var module: GDScript = _replace_module()
 	_dock._set_status(module.put_back_newest())
-	if _project_put_back != null:
-		_project_put_back.visible = not module.list_sets().is_empty()
+	_refresh_put_back()
 	if _project_find_edit != null and not _project_find_edit.text.is_empty():
 		_run_project_find()
