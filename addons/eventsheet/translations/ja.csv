@@ -11011,3 +11011,22 @@ This curve has changes that are not saved to its file yet. The game plays the sa
 Flip,切り替え
 Pause Or Resume A Juice Player,Juice Player を一時停止または再開
 "Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on until it is resumed.",ほかの Juice Player、またはこの Juice Player を一時停止・再開・切り替えします。たとえば、ドアが開いている間だけ止まるループするアラームに使えます。一時停止したリストは、再開するまで今のカードで止まります。
+Arc,円弧
+Pie,扇形
+Rounded rectangle,角丸四角形
+Polygon,多角形
+Start angle,開始角度
+End angle,終了角度
+Corners,角
+"radius %s, %s°",半径 %s、%s°
+"%s sides, radius %s",%s 辺、半径 %s
+"Radius is 0, so this arc draws nothing.",半径が 0 なので、この円弧は何も描かれません。
+"Radius is 0, so this pie draws nothing.",半径が 0 なので、この扇形は何も描かれません。
+"The start and the end are the same angle, so this arc draws nothing.",開始と終了が同じ角度なので、この円弧は何も描かれません。
+"The start and the end are the same angle, so this pie draws nothing.",開始と終了が同じ角度なので、この扇形は何も描かれません。
+"Width is 0, so this rounded rectangle draws nothing.",幅が 0 なので、この角丸四角形は何も描かれません。
+"Height is 0, so this rounded rectangle draws nothing.",高さが 0 なので、この角丸四角形は何も描かれません。
+"The corners are larger than half the shorter side, so they are drawn at half of it.",角が短い辺の半分より大きいので、その半分で描かれます。
+"Radius is 0, so this polygon draws nothing.",半径が 0 なので、この多角形は何も描かれません。
+"A polygon needs at least 3 sides, so this one is drawn with 3.",多角形には少なくとも 3 辺が必要なので、3 辺で描かれます。
+"A polygon is drawn with 32 sides at most, so this one is drawn with 32.",多角形は最大 32 辺で描かれるので、32 辺で描かれます。

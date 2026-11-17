@@ -11011,3 +11011,22 @@ This curve has changes that are not saved to its file yet. The game plays the sa
 Flip,Basculer
 Pause Or Resume A Juice Player,Mettre en pause ou reprendre un Juice Player
 "Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on until it is resumed.","Met en pause, reprend ou bascule un autre Juice Player, ou celui-ci : une alarme en boucle qui s'arrête tant qu'une porte est ouverte. Une liste en pause reste sur la carte en cours jusqu'à la reprise."
+Arc,Arc
+Pie,Secteur
+Rounded rectangle,Rectangle arrondi
+Polygon,Polygone
+Start angle,Angle de début
+End angle,Angle de fin
+Corners,Coins
+"radius %s, %s°","rayon %s, %s°"
+"%s sides, radius %s","%s côtés, rayon %s"
+"Radius is 0, so this arc draws nothing.","Le rayon est 0, donc cet arc ne dessine rien."
+"Radius is 0, so this pie draws nothing.","Le rayon est 0, donc ce secteur ne dessine rien."
+"The start and the end are the same angle, so this arc draws nothing.","Le début et la fin sont au même angle, donc cet arc ne dessine rien."
+"The start and the end are the same angle, so this pie draws nothing.","Le début et la fin sont au même angle, donc ce secteur ne dessine rien."
+"Width is 0, so this rounded rectangle draws nothing.","La largeur est 0, donc ce rectangle arrondi ne dessine rien."
+"Height is 0, so this rounded rectangle draws nothing.","La hauteur est 0, donc ce rectangle arrondi ne dessine rien."
+"The corners are larger than half the shorter side, so they are drawn at half of it.","Les coins dépassent la moitié du côté le plus court, ils sont donc dessinés à cette moitié."
+"Radius is 0, so this polygon draws nothing.","Le rayon est 0, donc ce polygone ne dessine rien."
+"A polygon needs at least 3 sides, so this one is drawn with 3.","Un polygone a besoin d'au moins 3 côtés, celui-ci est donc dessiné avec 3."
+"A polygon is drawn with 32 sides at most, so this one is drawn with 32.","Un polygone est dessiné avec 32 côtés au plus, celui-ci est donc dessiné avec 32."

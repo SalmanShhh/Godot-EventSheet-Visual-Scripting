@@ -447,6 +447,20 @@ func prefab(prefab_res: Resource, x: float, y: float, scale_factor: float, rotat
 					_push({"kind": "prefab_line", "a": to_canvas(at), "b": to_canvas(to_point), "width": thickness, "color": tint, "look": look})
 				else:
 					line(at.x, at.y, to_point.x, to_point.y, maxf(p3 * scale_by, 1.0), tint)
+			"arc", "pie", "rounded_rect", "regular_polygon":
+				# Drawn from the one outline the stamp node draws (DrawingPrefabResource.shape_outline), moved by the
+				# prefab's scale and spin like every point above. A step that draws nothing answers an empty outline.
+				var outline: PackedVector2Array = DrawingPrefabResource.shape_outline(entry)
+				var is_arc: bool = str(entry["kind"]) == "arc"
+				if outline.size() > (1 if is_arc else 2):
+					var moved: PackedVector2Array = PackedVector2Array()
+					for point: Vector2 in outline:
+						moved.append(to_canvas(origin + (point * scale_by).rotated(spin)))
+					if is_arc:
+						var arc_width: float = maxf(float(entry["thickness"]), 1.0) if str(entry["scale_mode"]) == "fixed" else maxf(float(entry["thickness"]) * scale_by, 1.0)
+						_push({"kind": "polyline", "points": moved, "width": arc_width, "color": tint})
+					else:
+						_push({"kind": "polygon", "points": moved, "color": tint})
 			"cone":
 				cone(at.x, at.y, p1 + rotation_deg, p2, p3 * scale_by, tint)
 			"stamp":

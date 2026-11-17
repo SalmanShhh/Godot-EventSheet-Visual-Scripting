@@ -11011,3 +11011,22 @@ This curve has changes that are not saved to its file yet. The game plays the sa
 Flip,Переключить
 Pause Or Resume A Juice Player,Поставить Juice Player на паузу или продолжить
 "Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on until it is resumed.","Ставит на паузу, продолжает или переключает другой Juice Player либо этот: например, зацикленная сигнализация, которая замирает, пока открыта дверь. Список на паузе стоит на текущей карточке, пока его не продолжат."
+Arc,Дуга
+Pie,Сектор
+Rounded rectangle,Скруглённый прямоугольник
+Polygon,Многоугольник
+Start angle,Начальный угол
+End angle,Конечный угол
+Corners,Углы
+"radius %s, %s°","радиус %s, %s°"
+"%s sides, radius %s","сторон: %s, радиус %s"
+"Radius is 0, so this arc draws nothing.","Радиус равен 0, поэтому эта дуга ничего не рисует."
+"Radius is 0, so this pie draws nothing.","Радиус равен 0, поэтому этот сектор ничего не рисует."
+"The start and the end are the same angle, so this arc draws nothing.","Начало и конец находятся под одним углом, поэтому эта дуга ничего не рисует."
+"The start and the end are the same angle, so this pie draws nothing.","Начало и конец находятся под одним углом, поэтому этот сектор ничего не рисует."
+"Width is 0, so this rounded rectangle draws nothing.","Ширина равна 0, поэтому этот скруглённый прямоугольник ничего не рисует."
+"Height is 0, so this rounded rectangle draws nothing.","Высота равна 0, поэтому этот скруглённый прямоугольник ничего не рисует."
+"The corners are larger than half the shorter side, so they are drawn at half of it.","Углы больше половины короткой стороны, поэтому рисуются с этой половиной."
+"Radius is 0, so this polygon draws nothing.","Радиус равен 0, поэтому этот многоугольник ничего не рисует."
+"A polygon needs at least 3 sides, so this one is drawn with 3.","Многоугольнику нужно не меньше 3 сторон, поэтому этот рисуется с 3."
+"A polygon is drawn with 32 sides at most, so this one is drawn with 32.","Многоугольник рисуется не более чем с 32 сторонами, поэтому этот рисуется с 32."

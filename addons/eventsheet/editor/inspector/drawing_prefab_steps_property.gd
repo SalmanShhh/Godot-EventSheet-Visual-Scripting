@@ -113,7 +113,7 @@ class ShapeStepsEditor:
 	signal table_requested
 
 
-	const KINDS: Array[String] = ["circle", "ring", "rect", "line", "cone", "stamp"]
+	const KINDS: Array[String] = ["circle", "ring", "rect", "line", "cone", "stamp", "arc", "pie", "rounded_rect", "regular_polygon"]
 	const SHAPE_TILE_PATH: String = "res://addons/eventsheet/editor/inspector/drawing_prefab_shape_tile.gd"
 	## Per-shape fields, in display order. `key` is the frozen storage slot (p1/p2/p3/texture); `label` is
 	## the human title shown beside it; `drawer` names the editor, in the same words an export marker uses.
@@ -125,9 +125,13 @@ class ShapeStepsEditor:
 		"line": [{"key": "p1", "label": "End X", "suffix": "px"}, {"key": "p2", "label": "End Y", "suffix": "px"}, {"key": "p3", "label": "Thickness", "drawer": "unit:kinds=px|world|screen,store=px"}],
 		"cone": [{"key": "p1", "label": "Facing", "suffix": "°"}, {"key": "p2", "label": "FOV", "suffix": "°"}, {"key": "p3", "label": "Radius", "suffix": "px"}],
 		"stamp": [{"key": "texture", "label": "Texture", "drawer": "resource:Texture2D"}, {"key": "p1", "label": "Scale", "suffix": "x"}, {"key": "p2", "label": "Spin", "suffix": "°"}],
+		"arc": [{"key": "p1", "label": "Radius", "suffix": "px"}, {"key": "p2", "label": "Start angle", "suffix": "°"}, {"key": "p3", "label": "End angle", "suffix": "°"}, {"key": "thickness", "label": "Thickness", "drawer": "unit:kinds=px|world|screen,store=px", "unset": 2.0}],
+		"pie": [{"key": "p1", "label": "Radius", "suffix": "px"}, {"key": "p2", "label": "Start angle", "suffix": "°"}, {"key": "p3", "label": "End angle", "suffix": "°"}],
+		"rounded_rect": [{"key": "p1", "label": "Width", "suffix": "px"}, {"key": "p2", "label": "Height", "suffix": "px"}, {"key": "p3", "label": "Corners", "suffix": "px"}],
+		"regular_polygon": [{"key": "p1", "label": "Radius", "suffix": "px"}, {"key": "p2", "label": "Sides", "drawer": "int"}, {"key": "p3", "label": "Angle", "suffix": "°"}],
 	}
 	## The word each shape's card says under its fields, where the shape has one worth saying.
-	const HELP_LINE_KINDS: Array[String] = ["rect", "stamp"]
+	const HELP_LINE_KINDS: Array[String] = ["rect", "stamp", "rounded_rect"]
 	## The fold a line's own look sits in, and the keys that make it open on its own when one differs.
 	const LOOK_FOLD: String = "Line look"
 	## Which shapes have a stroke with two ends, and so a Caps row - and which have a length a dash
@@ -136,9 +140,9 @@ class ShapeStepsEditor:
 	const CAPPED_KINDS: Array[String] = ["line"]
 	const DASHABLE_KINDS: Array[String] = ["line"]
 	## And which have a THICKNESS for the scale rule to be about. A stamp is scaled by its own Scale
-	## field, a disc has no stroke at all, and a ring's outline is drawn at the thickness it says
-	## whatever the scale rule (no renderer reads one for a ring), so only a line is asked.
-	const THICKNESS_KINDS: Array[String] = ["line"]
+	## field, a disc has no stroke at all, a ring's outline is drawn at the thickness it says
+	## whatever the scale rule (no renderer reads one for a ring), so only a line and an arc are asked.
+	const THICKNESS_KINDS: Array[String] = ["line", "arc"]
 	## What a freshly ADDED step of each shape starts as, in storage order. Every slot is seeded so the
 	## Dictionary shape matches what the rasterizer and the round-trip expect the moment it is added -
 	## and only then: loading a step never writes one of these.
@@ -149,6 +153,10 @@ class ShapeStepsEditor:
 		"line": {"p1": 24.0, "p2": 0.0, "p3": 2.0},
 		"cone": {"p1": 0.0, "p2": 60.0, "p3": 32.0},
 		"stamp": {"p1": 1.0, "p2": 0.0, "p3": 0.0},
+		"arc": {"p1": 16.0, "p2": -90.0, "p3": 180.0, "thickness": 3.0},
+		"pie": {"p1": 16.0, "p2": -90.0, "p3": 90.0},
+		"rounded_rect": {"p1": 32.0, "p2": 20.0, "p3": 6.0},
+		"regular_polygon": {"p1": 16.0, "p2": 6.0, "p3": -90.0},
 	}
 	## What the optional keys start as on a newly added step - each one the behaviour the step had
 	## before the key existed, so a step added today and a step added a year ago draw the same
@@ -170,6 +178,10 @@ class ShapeStepsEditor:
 		"line": "A stroke from the offset to the end point, of the given thickness - with ends you pick and a dash pattern you can turn on.",
 		"cone": "A filled wedge: which way it faces, how wide it opens, and how far it reaches.",
 		"stamp": "A texture drawn at the offset, scaled and spun.",
+		"arc": "An outlined part of a circle: its radius, where it starts and ends, and how thick it is.",
+		"pie": "A filled slice of a circle between two angles.",
+		"rounded_rect": "A filled rectangle with round corners, drawn right and down from the offset.",
+		"regular_polygon": "A filled shape of equal sides around the offset: a triangle, a hexagon.",
 	}
 
 
@@ -231,6 +243,14 @@ class ShapeStepsEditor:
 				return EventSheetL10n.translate("Cone")
 			"stamp":
 				return EventSheetL10n.translate("Stamp")
+			"arc":
+				return EventSheetL10n.translate("Arc")
+			"pie":
+				return EventSheetL10n.translate("Pie")
+			"rounded_rect":
+				return EventSheetL10n.translate("Rounded rectangle")
+			"regular_polygon":
+				return EventSheetL10n.translate("Polygon")
 		return kind.capitalize()
 
 
@@ -267,6 +287,12 @@ class ShapeStepsEditor:
 				return EventSheetL10n.translate("%s px long") % _num(length)
 			"cone":
 				return EventSheetL10n.translate("%s° wide") % _num(p2)
+			"arc", "pie":
+				return EventSheetL10n.translate("radius %s, %s°") % [_num(p1), _num(minf(absf(float(card.get("p3", 0.0)) - p2), 360.0))]
+			"rounded_rect":
+				return EventSheetL10n.translate("%s x %s") % [_num(p1), _num(p2)]
+			"regular_polygon":
+				return EventSheetL10n.translate("%s sides, radius %s") % [_num(clampf(roundf(p2), 3.0, 32.0)), _num(p1)]
 			"stamp":
 				var text: String = str(card.get("texture", "")).strip_edges()
 				if text.is_empty():
@@ -312,6 +338,26 @@ class ShapeStepsEditor:
 					return EventSheetL10n.translate("FOV is 0, so this cone draws nothing.")
 				if p3 <= 0.0:
 					return EventSheetL10n.translate("Radius is 0, so this cone draws nothing.")
+			"arc", "pie":
+				var shape_word: String = "arc" if str(card.get("kind", "")) == "arc" else "pie"
+				if p1 <= 0.0:
+					return EventSheetL10n.translate("Radius is 0, so this arc draws nothing.") if shape_word == "arc" else EventSheetL10n.translate("Radius is 0, so this pie draws nothing.")
+				if absf(p3 - p2) < 0.03:
+					return EventSheetL10n.translate("The start and the end are the same angle, so this arc draws nothing.") if shape_word == "arc" else EventSheetL10n.translate("The start and the end are the same angle, so this pie draws nothing.")
+			"rounded_rect":
+				if p1 <= 0.0:
+					return EventSheetL10n.translate("Width is 0, so this rounded rectangle draws nothing.")
+				if p2 <= 0.0:
+					return EventSheetL10n.translate("Height is 0, so this rounded rectangle draws nothing.")
+				if p3 > minf(p1, p2) * 0.5 + 0.001:
+					return EventSheetL10n.translate("The corners are larger than half the shorter side, so they are drawn at half of it.")
+			"regular_polygon":
+				if p1 <= 0.0:
+					return EventSheetL10n.translate("Radius is 0, so this polygon draws nothing.")
+				if roundf(p2) < 3.0:
+					return EventSheetL10n.translate("A polygon needs at least 3 sides, so this one is drawn with 3.")
+				if roundf(p2) > 32.0:
+					return EventSheetL10n.translate("A polygon is drawn with 32 sides at most, so this one is drawn with 32.")
 			"stamp":
 				if str(card.get("texture", "")).strip_edges().is_empty():
 					return EventSheetL10n.translate("No texture yet, so this shape draws nothing.")
@@ -395,7 +441,7 @@ class ShapeStepsEditor:
 	## colour does.
 	static func help_line(card: Dictionary) -> String:
 		match str(card.get("kind", "")):
-			"rect":
+			"rect", "rounded_rect":
 				return EventSheetL10n.translate("Drawn right and down from the offset.")
 			"stamp":
 				return EventSheetL10n.translate("The colour tints the texture.")
@@ -456,7 +502,7 @@ class ShapeStepsView:
 	signal view_switched(table: bool)
 
 	## The columns the table has always had for this list.
-	const TABLE_COLUMNS: String = "kind=enum(circle|ring|rect|line|cone|stamp),x=float,y=float,p1=float,p2=float,p3=float,color=color,texture=String"
+	const TABLE_COLUMNS: String = "kind=enum(circle|ring|rect|line|cone|stamp|arc|pie|rounded_rect|regular_polygon),x=float,y=float,p1=float,p2=float,p3=float,color=color,texture=String"
 
 	## The view each object was last left in, by instance id, for as long as the editor runs.
 	static var _left_as_table: Dictionary = {}

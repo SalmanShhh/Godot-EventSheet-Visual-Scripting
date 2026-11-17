@@ -205,7 +205,7 @@ mode the ribbon smears onto the texture as it moves: instant tire marks.
 ### 5. Drawing prefabs - author once, stamp everywhere
 
 Create a **DrawingPrefabResource** (.tres), fill its ordered list of steps in the Inspector (one
-card per shape) - kind (circle / ring / rect / line / cone / stamp), an x/y offset, per-kind
+card per shape) - kind (circle / ring / rect / line / cone / stamp / arc / pie / rounded rectangle / regular polygon), an x/y offset, per-kind
 p1/p2/p3 numbers, and a color - and replay it anywhere:
 
 ```
@@ -234,6 +234,9 @@ of them are measured from the prefab's origin:
   60,0 crosses the origin and is 120 long. `p3` is its thickness.
 - **Cone** is a wedge at the offset: `p1` which way it faces, `p2` how wide it opens (degrees), `p3` how far it reaches.
 - **Stamp** is a texture centred on the offset: `p1` scales it, and `p2` is its **Spin** in degrees, turning it about its centre.
+- **Arc** and **Pie** are centred on the offset: `p1` is the radius, `p2` the angle it starts at and `p3` the angle it ends at, in degrees, 0 pointing right and growing clockwise on the screen. The sweep runs from the start to the end, an end below the start sweeps back, and a sweep is held to one full turn. A pie is the filled slice; an arc is only the outline, and takes its thickness from the optional `thickness` key (a step without it is 2 px), with the same **Follows scale** choice a line has. Switching a step between Arc and Pie keeps the angles.
+- **Rounded rectangle** is drawn from the offset as its top-left corner, like a Rectangle, right and down by `p1` (width) and `p2` (height), with its corners rounded by `p3`. A corner larger than half the shorter side is drawn at half of it.
+- **Regular polygon** is centred on the offset: `p1` is the radius from the centre to a corner, `p2` the number of sides (3 to 32; it is stored as a number and rounded) and `p3` the angle of the first corner in degrees. At -90 the first corner points up.
 
 Every picture of a prefab - Draw Prefab in a game, the DrawingPrefabStamp node in the viewport and in a
 game, the Inspector picture, the FileSystem thumbnail and the 3D billboard - draws these the same way.
@@ -249,11 +252,11 @@ it survives a move; a path typed by an older version still loads and saves as it
 **Line look** fold (end caps, **Follows scale**, **Dashed** and the dash settings, the dash tied to
 its gap with the "=" beside them), open by itself when the line is not plain. The first and last
 cards carry two quiet captions, "Drawn first, underneath" and "Drawn last, on top". **Add shape**
-opens one flat list of the six shapes, each with its picture; typing narrows it, Enter adds the
+opens one flat list of the ten shapes, each with its picture; typing narrows it, Enter adds the
 highlighted one, and the new card goes last and opens. Reordering is described just below.
 A shape that would draw nothing (a stamp with no texture or one that does not load, a size of
-0, a line with no length) says so in one quiet amber line, and a step whose shape is none of the six
-shows as an Unknown shape card and is kept as it is. **Open as a table** under the list shows the same
+0, a line with no length, an arc or pie whose start and end are the same angle) says so in one quiet amber line, and a step whose shape is none of the ten
+shows as an Unknown shape card and is kept as it is. An older copy of the Drawing Canvas, Drawing Prefab Stamp and Drawing Prefab Resource packs in a project does not know the four newest shapes and draws nothing for them; add the three packs again from the behaviour library to draw them in a game. **Open as a table** under the list shows the same
 list as a table for bulk edits, and the table's **Show as cards** link comes back; nothing about the
 choice is saved in the file.
 
@@ -283,14 +286,14 @@ Dragging in the picture does nothing. A selection is a view: nothing is written 
 The eight stored keys - `kind`, `x`, `y`, `p1`, `p2`, `p3`, `color`, `texture` - mean exactly what
 they always did, so a prefab saved before the card existed opens, edits and saves as the same file.
 Beside them a step may carry optional keys the card writes: `scale_mode`, `caps`, and the dash set
-(`dashed`, `dash_size`, `dash_spacing`, `dash_offset`, `dash_style`). A step carrying none of them
+(`dashed`, `dash_size`, `dash_spacing`, `dash_offset`, `dash_style`), and an arc's `thickness`. A step carrying none of them
 draws exactly what it always drew. A thickness is read
 in whichever unit its own dropdown is showing (px, world, screen) and is always STORED in pixels, so
 switching the view never moves a stored value.
 
 **Every field on the card changes the picture.** Draw Prefab, the stamp node and the off-thread
 thumbnail all draw what a step says, and one normaliser feeds them - so the card offers a field only
-when a draw call reads it: a line's ends, its dashes, the scale rule (a line's only: it says whether
+when a draw call reads it: a line's ends, its dashes, the scale rule (a line's and an arc's: it says whether
 the thickness grows with the prefab's scale or holds its own width) and one colour. Draw Prefab draws
 a line's end caps, dashes and scale rule the way the stamp node does; a line that carries none of
 those keys draws the plain line it always did. There is deliberately no per-step blend and no second colour: a draw call has no blend

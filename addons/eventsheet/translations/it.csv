@@ -11011,3 +11011,22 @@ This curve has changes that are not saved to its file yet. The game plays the sa
 Flip,Alterna
 Pause Or Resume A Juice Player,Metti in pausa o riprendi un Juice Player
 "Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on until it is resumed.","Mette in pausa, riprende o alterna un altro Juice Player, o questo: un allarme in ciclo che si ferma finché una porta è aperta. Una lista in pausa resta sulla carta corrente finché non viene ripresa."
+Arc,Arco
+Pie,Spicchio
+Rounded rectangle,Rettangolo arrotondato
+Polygon,Poligono
+Start angle,Angolo iniziale
+End angle,Angolo finale
+Corners,Angoli
+"radius %s, %s°","raggio %s, %s°"
+"%s sides, radius %s","%s lati, raggio %s"
+"Radius is 0, so this arc draws nothing.","Il raggio è 0, quindi questo arco non disegna nulla."
+"Radius is 0, so this pie draws nothing.","Il raggio è 0, quindi questo spicchio non disegna nulla."
+"The start and the end are the same angle, so this arc draws nothing.","L'inizio e la fine hanno lo stesso angolo, quindi questo arco non disegna nulla."
+"The start and the end are the same angle, so this pie draws nothing.","L'inizio e la fine hanno lo stesso angolo, quindi questo spicchio non disegna nulla."
+"Width is 0, so this rounded rectangle draws nothing.","La larghezza è 0, quindi questo rettangolo arrotondato non disegna nulla."
+"Height is 0, so this rounded rectangle draws nothing.","L'altezza è 0, quindi questo rettangolo arrotondato non disegna nulla."
+"The corners are larger than half the shorter side, so they are drawn at half of it.","Gli angoli sono più grandi della metà del lato più corto, quindi vengono disegnati con quella metà."
+"Radius is 0, so this polygon draws nothing.","Il raggio è 0, quindi questo poligono non disegna nulla."
+"A polygon needs at least 3 sides, so this one is drawn with 3.","Un poligono ha bisogno di almeno 3 lati, quindi questo è disegnato con 3."
+"A polygon is drawn with 32 sides at most, so this one is drawn with 32.","Un poligono è disegnato con al massimo 32 lati, quindi questo è disegnato con 32."

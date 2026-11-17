@@ -46,7 +46,7 @@ static func shape_image(kind: String, color: Color, side: int, on_light: bool) -
 	# A pale shape on a light ground wears a faint dark edge a little wider than itself.
 	var edge: bool = on_light and color.get_luminance() > 0.55
 	var edge_colour: Color = Color(0.1, 0.1, 0.12, 0.45)
-	var ink: Color = color if kind in ["circle", "ring", "rect", "line", "cone", "stamp"] else Color(0.5, 0.5, 0.55, 1.0)
+	var ink: Color = color if kind in ["circle", "ring", "rect", "line", "cone", "stamp", "arc", "pie", "rounded_rect", "regular_polygon"] else Color(0.5, 0.5, 0.55, 1.0)
 	for y: int in range(side):
 		for x: int in range(side):
 			var point: Vector2 = Vector2(float(x) + 0.5 - half, float(y) + 0.5 - half)
@@ -86,6 +86,18 @@ static func _distance(kind: String, point: Vector2, half: float) -> float:
 			var quarter: float = reach * 0.5
 			var extent: Vector2 = Vector2(quarter - 0.3, quarter - 0.3)
 			return minf(_box(point - Vector2(-quarter, -quarter), extent), _box(point - Vector2(quarter, quarter), extent))
+		"arc":
+			# A ring with one quarter taken out (the lower right), so it reads as a part of a circle where the ring
+			# beside it reads as the whole.
+			return maxf(absf(point.length() - (reach - 1.0)) - 1.0, -_quarter(point, 1.0, 1.0))
+		"pie":
+			# A disc with one quarter taken out (the upper right), apex at the centre: a pie chart, where the cone's
+			# wedge has its apex at the left edge.
+			return maxf(point.length() - reach, -_quarter(point, 1.0, -1.0))
+		"rounded_rect":
+			return _box(point, Vector2(reach, reach * 0.68) - Vector2(3.0, 3.0)) - 3.0
+		"regular_polygon":
+			return _hexagon(point, reach * 0.866)
 	# Unknown: a hollow square, so the line says "something is here that is not a shape".
 	return absf(_box(point, Vector2(reach, reach)) + 0.8) - 0.8
 
@@ -93,6 +105,21 @@ static func _distance(kind: String, point: Vector2, half: float) -> float:
 static func _box(point: Vector2, extent: Vector2) -> float:
 	var d: Vector2 = point.abs() - extent
 	return Vector2(maxf(d.x, 0.0), maxf(d.y, 0.0)).length() + minf(maxf(d.x, d.y), 0.0)
+
+
+## The signed distance to the quarter plane where x has the sign `across` and y has the sign `down`: negative inside.
+static func _quarter(point: Vector2, across: float, down: float) -> float:
+	var d: Vector2 = Vector2(-point.x * across, -point.y * down)
+	return Vector2(maxf(d.x, 0.0), maxf(d.y, 0.0)).length() + minf(maxf(d.x, d.y), 0.0)
+
+
+## A hexagon with a point at the top, `apothem` from its centre to the middle of a side.
+static func _hexagon(point: Vector2, apothem: float) -> float:
+	var k: Vector2 = Vector2(-0.866025404, 0.5)
+	var q: Vector2 = Vector2(absf(point.y), absf(point.x))
+	q -= 2.0 * minf(k.dot(q), 0.0) * k
+	q -= Vector2(clampf(q.x, -0.577350269 * apothem, 0.577350269 * apothem), apothem)
+	return q.length() * signf(q.y)
 
 
 static func _segment(point: Vector2, a: Vector2, b: Vector2) -> float:

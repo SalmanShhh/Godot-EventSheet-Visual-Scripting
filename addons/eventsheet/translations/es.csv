@@ -11011,3 +11011,22 @@ This curve has changes that are not saved to its file yet. The game plays the sa
 Flip,Alternar
 Pause Or Resume A Juice Player,Pausar o reanudar un Juice Player
 "Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on until it is resumed.","Pausa, reanuda o alterna otro Juice Player, o este: una alarma en bucle que se detiene mientras una puerta está abierta. Una lista en pausa se queda en la tarjeta actual hasta que se reanuda."
+Arc,Arco
+Pie,Sector
+Rounded rectangle,Rectángulo redondeado
+Polygon,Polígono
+Start angle,Ángulo inicial
+End angle,Ángulo final
+Corners,Esquinas
+"radius %s, %s°","radio %s, %s°"
+"%s sides, radius %s","%s lados, radio %s"
+"Radius is 0, so this arc draws nothing.","El radio es 0, así que este arco no dibuja nada."
+"Radius is 0, so this pie draws nothing.","El radio es 0, así que este sector no dibuja nada."
+"The start and the end are the same angle, so this arc draws nothing.","El inicio y el final tienen el mismo ángulo, así que este arco no dibuja nada."
+"The start and the end are the same angle, so this pie draws nothing.","El inicio y el final tienen el mismo ángulo, así que este sector no dibuja nada."
+"Width is 0, so this rounded rectangle draws nothing.","El ancho es 0, así que este rectángulo redondeado no dibuja nada."
+"Height is 0, so this rounded rectangle draws nothing.","El alto es 0, así que este rectángulo redondeado no dibuja nada."
+"The corners are larger than half the shorter side, so they are drawn at half of it.","Las esquinas son mayores que la mitad del lado más corto, así que se dibujan con esa mitad."
+"Radius is 0, so this polygon draws nothing.","El radio es 0, así que este polígono no dibuja nada."
+"A polygon needs at least 3 sides, so this one is drawn with 3.","Un polígono necesita al menos 3 lados, así que este se dibuja con 3."
+"A polygon is drawn with 32 sides at most, so this one is drawn with 32.","Un polígono se dibuja con 32 lados como máximo, así que este se dibuja con 32."

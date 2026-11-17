@@ -4,6 +4,14 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: a Drawing Prefab draws arcs, pies, rounded rectangles and regular polygons
+
+The shape list of a Drawing Prefab has four more kinds: Arc, Pie, Rounded rectangle and Polygon (the stored words are `arc`, `pie`, `rounded_rect` and `regular_polygon`, and they stay). Each has its own icon on the card line, in the step's colour, a size in its own words ("radius 16, 270°", "32 x 20, corners 6", "6 sides, radius 16"), and named fields with their units on the open card: an arc and a pie take a radius and the angles they start and end at (the sweep runs from the start to the end, and an end below the start sweeps back), a rounded rectangle takes a width, a height and a corner size and is drawn right and down from the offset like a Rectangle, and a polygon takes a radius, a number of sides (3 to 32) and the angle of its first corner. An arc also has a Thickness, and the "Follows scale" tick a Line has under the same quiet "Line look" fold. A shape added by typing in "Add shape" draws something at once, a size that draws nothing (a radius of 0, a start equal to its end, no width) is said in a quiet amber line, and a corner larger than half the shorter side, or a polygon with fewer than 3 or more than 32 sides, is drawn at the nearest size that works and says so. Clicking a new shape in the picture selects its card, as for the other six.
+
+The stamp node, Draw Prefab and the Inspector picture draw the four from the same rules (`DrawingPrefabResource.shape_outline`): the stamp node and Draw Prefab produced the same pixels for all four in every scale and spin that was tried. Nothing saved changes: a prefab that holds none of the four saves byte for byte as before, the eight stored keys mean what they did, and an arc's thickness is one new optional `thickness` key (absent means 2 px, so no file needs it).
+
+An older copy of the Drawing Canvas, Drawing Prefab Stamp and Drawing Prefab Resource packs in a project does not know the new kinds and draws nothing for them, without an error. Add the three packs again from the behaviour library to draw the new shapes in a game.
+
 ### Fixed: a shape set to "fixed on screen" keeps its weight when the camera zooms
 
 A 4 px line set to "fixed on screen" was drawn 8 px wide under a Camera2D at zoom 2, and 2 px wide at zoom 0.5, because the width followed the shape's own scale and ignored the camera. It now follows the scale the shape is actually shown at, so the line is 4 px at every zoom, in a running game and in the editor's 2D view when you zoom it. A fixed shape checks that scale once a frame to redraw when it changes; a shape set to "with the node" stays parked as before. Shapes in a project made before this fix pick it up when the Vector Shapes pack is added again from the library.

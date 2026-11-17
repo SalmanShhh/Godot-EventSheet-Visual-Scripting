@@ -52,6 +52,14 @@ static func _step_bounds(entry: Dictionary) -> Rect2:
 		"cone":
 			var cr: float = maxf(absf(p3), 1.0)
 			return Rect2(at.x - cr, at.y - cr, cr * 2.0, cr * 2.0)
+		"arc", "pie", "regular_polygon":
+			# The whole circle the shape sits on, so the box does not move while its angles are being typed.
+			var reach: float = maxf(absf(p1), 1.0)
+			if str(entry.get("kind", "")) == "arc":
+				reach += maxf(float(entry.get("thickness", 2.0)), 1.0) * 0.5
+			return Rect2(at.x - reach, at.y - reach, reach * 2.0, reach * 2.0)
+		"rounded_rect":
+			return Rect2(at, Vector2(p1, p2)).abs()
 		"stamp":
 			# The box of the stamp's texture at its scale, turned by its Spin. A stamp with no texture
 			# that loads draws nothing, so it only holds its place.
@@ -158,6 +166,24 @@ static func _covers(entry: Dictionary, local: Vector2, tolerance: float) -> bool
 			if apex_offset.length() <= tolerance:
 				return true
 			return absf(wrapf(apex_offset.angle() - deg_to_rad(p1), -PI, PI)) <= deg_to_rad(maxf(p2, 1.0)) * 0.5
+		"arc":
+			if p1 <= 0.0 or not _in_sweep(local - at, p2, p3):
+				return false
+			return absf(local.distance_to(at) - p1) <= maxf(float(entry.get("thickness", 2.0)), tolerance) * 0.5 + tolerance
+		"pie":
+			if p1 <= 0.0:
+				return false
+			var reach: float = local.distance_to(at)
+			return reach <= p1 + tolerance and (reach <= tolerance or _in_sweep(local - at, p2, p3))
+		"rounded_rect":
+			var body: Rect2 = Rect2(at, Vector2(p1, p2)).abs()
+			if body.size.x <= 0.0 or body.size.y <= 0.0:
+				return false
+			var round_by: float = clampf(p3, 0.0, minf(body.size.x, body.size.y) * 0.5)
+			var gap: Vector2 = (local - body.get_center()).abs() - (body.size * 0.5 - Vector2(round_by, round_by))
+			return Vector2(maxf(gap.x, 0.0), maxf(gap.y, 0.0)).length() + minf(maxf(gap.x, gap.y), 0.0) - round_by <= tolerance
+		"regular_polygon":
+			return p1 > 0.0 and _polygon_distance(local - at, p1, p2, p3) <= tolerance
 		"stamp":
 			var texture: Texture2D = _stamp_texture(entry)
 			if texture == null:
@@ -200,6 +226,14 @@ static func _rasterize_step(img: Image, entry: Dictionary, scale: float, center_
 			_fill_stroke(img, at, to_px, maxf(p3 * scale, float(_SUPERSAMPLE)), tint, entry, scale)
 		"cone":
 			_fill_cone(img, at, maxf(p3, 0.5) * scale, p1, p2, tint)
+		"arc":
+			_fill_arc(img, at, p1 * scale, maxf(float(entry.get("thickness", 2.0)) * scale, float(_SUPERSAMPLE)), p2, p3, tint)
+		"pie":
+			_fill_pie(img, at, p1 * scale, p2, p3, tint)
+		"rounded_rect":
+			_fill_rounded_rect(img, Rect2(at, Vector2(p1, p2) * scale).abs(), p3 * scale, tint)
+		"regular_polygon":
+			_fill_polygon(img, at, p1 * scale, p2, p3, tint)
 		"stamp":
 			var texture: Texture2D = _stamp_texture(entry)
 			if texture != null:
@@ -342,4 +376,92 @@ static func _fill_cone(img: Image, center: Vector2, radius: float, facing_deg: f
 		for x: int in range(box.position.x, box.position.x + box.size.x):
 			var d: Vector2 = Vector2(x + 0.5, y + 0.5) - center
 			if d.length() <= r and absf(wrapf(d.angle() - facing, -PI, PI)) <= half_fov:
+				_blend(img, x, y, c)
+
+
+## Whether a point (measured from the centre) lies inside the sweep that runs from one angle to another, in degrees. The
+## sweep goes from the start to the end - backwards when the end is below the start - and is held to one full turn: the
+## rule the pack's own outline uses, so the picture and the game agree.
+static func _in_sweep(offset: Vector2, start_deg: float, end_deg: float) -> bool:
+	var start: float = deg_to_rad(start_deg)
+	var sweep: float = clampf(deg_to_rad(end_deg) - start, -TAU, TAU)
+	if absf(sweep) < 0.0005:
+		return false
+	if absf(sweep) >= TAU - 0.0005:
+		return true
+	return fposmod(offset.angle() - minf(start, start + sweep), TAU) <= absf(sweep)
+
+
+## The number of sides a polygon step is drawn with: rounded, and held to 3 at least and 32 at most.
+static func _sides_of(sides: float) -> int:
+	return clampi(roundi(sides), 3, 32)
+
+
+## Whether a point (measured from the centre) is inside a regular polygon: its angle puts it in front of one side, and
+## that side is the apothem away.
+static func _in_polygon(offset: Vector2, radius: float, sides: float, angle_deg: float) -> bool:
+	var count: int = _sides_of(sides)
+	var around: float = fposmod(offset.angle() - deg_to_rad(angle_deg), TAU / float(count)) - PI / float(count)
+	return offset.length() * cos(around) <= radius * cos(PI / float(count))
+
+
+## How far a point (measured from the centre) is outside a regular polygon: 0 inside it.
+static func _polygon_distance(offset: Vector2, radius: float, sides: float, angle_deg: float) -> float:
+	if _in_polygon(offset, radius, sides, angle_deg):
+		return 0.0
+	var count: int = _sides_of(sides)
+	var best: float = INF
+	for corner: int in count:
+		var from: Vector2 = Vector2.from_angle(deg_to_rad(angle_deg) + TAU * float(corner) / float(count)) * radius
+		var to: Vector2 = Vector2.from_angle(deg_to_rad(angle_deg) + TAU * float(corner + 1) / float(count)) * radius
+		best = minf(best, offset.distance_to(Geometry2D.get_closest_point_to_segment(offset, from, to)))
+	return best
+
+
+static func _fill_arc(img: Image, center: Vector2, radius: float, width: float, start_deg: float, end_deg: float, c: Color) -> void:
+	if radius <= 0.0:
+		return
+	var half: float = maxf(width, 1.0) * 0.5
+	var box: Rect2i = _px_bounds(img, Rect2(center - Vector2(radius + half, radius + half), Vector2(radius + half, radius + half) * 2.0))
+	for y: int in range(box.position.y, box.position.y + box.size.y):
+		for x: int in range(box.position.x, box.position.x + box.size.x):
+			var d: Vector2 = Vector2(x + 0.5, y + 0.5) - center
+			if absf(d.length() - radius) <= half and _in_sweep(d, start_deg, end_deg):
+				_blend(img, x, y, c)
+
+
+static func _fill_pie(img: Image, center: Vector2, radius: float, start_deg: float, end_deg: float, c: Color) -> void:
+	if radius <= 0.0:
+		return
+	var box: Rect2i = _px_bounds(img, Rect2(center - Vector2(radius, radius), Vector2(radius, radius) * 2.0))
+	for y: int in range(box.position.y, box.position.y + box.size.y):
+		for x: int in range(box.position.x, box.position.x + box.size.x):
+			var d: Vector2 = Vector2(x + 0.5, y + 0.5) - center
+			if d.length() <= radius and _in_sweep(d, start_deg, end_deg):
+				_blend(img, x, y, c)
+
+
+## A rectangle with round corners: a pixel is in when its distance to the box with the corners cut is not past zero. The
+## corner is held to half the shorter side, the rule the pack's outline uses.
+static func _fill_rounded_rect(img: Image, r: Rect2, corner: float, c: Color) -> void:
+	if r.size.x <= 0.0 or r.size.y <= 0.0:
+		return
+	var round_by: float = clampf(corner, 0.0, minf(r.size.x, r.size.y) * 0.5)
+	var half: Vector2 = r.size * 0.5
+	var middle: Vector2 = r.get_center()
+	var box: Rect2i = _px_bounds(img, r)
+	for y: int in range(box.position.y, box.position.y + box.size.y):
+		for x: int in range(box.position.x, box.position.x + box.size.x):
+			var q: Vector2 = (Vector2(x + 0.5, y + 0.5) - middle).abs() - (half - Vector2(round_by, round_by))
+			if Vector2(maxf(q.x, 0.0), maxf(q.y, 0.0)).length() + minf(maxf(q.x, q.y), 0.0) - round_by <= 0.0:
+				_blend(img, x, y, c)
+
+
+static func _fill_polygon(img: Image, center: Vector2, radius: float, sides: float, angle_deg: float, c: Color) -> void:
+	if radius <= 0.0:
+		return
+	var box: Rect2i = _px_bounds(img, Rect2(center - Vector2(radius, radius), Vector2(radius, radius) * 2.0))
+	for y: int in range(box.position.y, box.position.y + box.size.y):
+		for x: int in range(box.position.x, box.position.x + box.size.x):
+			if _in_polygon(Vector2(x + 0.5, y + 0.5) - center, radius, sides, angle_deg):
 				_blend(img, x, y, c)

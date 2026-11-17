@@ -70,6 +70,20 @@ static func draw_prefab_steps(canvas: CanvasItem, prefab_res: Resource, origin: 
 					var angle: float = deg_to_rad(p1 - p2 * 0.5 + p2 * float(i) / 24.0)
 					points.append(at + Vector2.from_angle(angle) * maxf(p3, 0.5))
 				canvas.draw_colored_polygon(points, tint)
+			"arc":
+				# An arc, a pie, a rounded rectangle and a regular polygon are drawn from one outline, the same one
+				# Draw Prefab draws, so the stamp and the canvas show the very same shape. A step that draws nothing
+				# answers an empty outline.
+				var arc_points: PackedVector2Array = DrawingPrefabResource.shape_outline(entry)
+				if arc_points.size() > 1:
+					var arc_width: float = maxf(float(entry.get("thickness", 2.0)), 1.0)
+					if str(entry.get("scale_mode", "uniform")) == "fixed":
+						arc_width /= maxf(scale_by, 0.001)
+					canvas.draw_polyline(arc_points, tint, arc_width)
+			"pie", "rounded_rect", "regular_polygon":
+				var shape_points: PackedVector2Array = DrawingPrefabResource.shape_outline(entry)
+				if shape_points.size() > 2:
+					canvas.draw_colored_polygon(shape_points, tint)
 			"stamp":
 				var texture: Texture2D = entry["tex"]
 				if texture != null:

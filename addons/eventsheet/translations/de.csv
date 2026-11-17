@@ -11011,3 +11011,22 @@ This curve has changes that are not saved to its file yet. The game plays the sa
 Flip,Umschalten
 Pause Or Resume A Juice Player,Juice Player pausieren oder fortsetzen
 "Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on until it is resumed.","Pausiert, setzt fort oder schaltet einen anderen Juice Player um, oder diesen: ein Dauer-Alarm, der anhält, solange eine Tür offen ist. Eine pausierte Liste bleibt bei der aktuellen Karte stehen, bis sie fortgesetzt wird."
+Arc,Bogen
+Pie,Tortenstück
+Rounded rectangle,Abgerundetes Rechteck
+Polygon,Vieleck
+Start angle,Startwinkel
+End angle,Endwinkel
+Corners,Ecken
+"radius %s, %s°","Radius %s, %s°"
+"%s sides, radius %s","%s Seiten, Radius %s"
+"Radius is 0, so this arc draws nothing.","Der Radius ist 0, daher zeichnet dieser Bogen nichts."
+"Radius is 0, so this pie draws nothing.","Der Radius ist 0, daher zeichnet dieses Tortenstück nichts."
+"The start and the end are the same angle, so this arc draws nothing.","Start und Ende liegen im selben Winkel, daher zeichnet dieser Bogen nichts."
+"The start and the end are the same angle, so this pie draws nothing.","Start und Ende liegen im selben Winkel, daher zeichnet dieses Tortenstück nichts."
+"Width is 0, so this rounded rectangle draws nothing.","Die Breite ist 0, daher zeichnet dieses abgerundete Rechteck nichts."
+"Height is 0, so this rounded rectangle draws nothing.","Die Höhe ist 0, daher zeichnet dieses abgerundete Rechteck nichts."
+"The corners are larger than half the shorter side, so they are drawn at half of it.","Die Ecken sind größer als die halbe kürzere Seite, daher werden sie mit dieser Hälfte gezeichnet."
+"Radius is 0, so this polygon draws nothing.","Der Radius ist 0, daher zeichnet dieses Vieleck nichts."
+"A polygon needs at least 3 sides, so this one is drawn with 3.","Ein Vieleck braucht mindestens 3 Seiten, daher wird dieses mit 3 gezeichnet."
+"A polygon is drawn with 32 sides at most, so this one is drawn with 32.","Ein Vieleck wird mit höchstens 32 Seiten gezeichnet, daher wird dieses mit 32 gezeichnet."

@@ -7,7 +7,7 @@ extends Resource
 ## A label for your own reference (the canvas does not read it).
 @export var prefab_name: String = "marker"
 ## The shapes drawn top to bottom: kind, offset and size values for each.
-@export_custom(PROPERTY_HINT_NONE, "eventsheet:table:kind=enum(circle|ring|rect|line|cone|stamp),x=float,y=float,p1=float,p2=float,p3=float,color=color,texture=String") var steps: Array = []
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:table:kind=enum(circle|ring|rect|line|cone|stamp|arc|pie|rounded_rect|regular_polygon),x=float,y=float,p1=float,p2=float,p3=float,color=color,texture=String") var steps: Array = []
 
 # Runtime only (not
 # exported, so never serialized). Read ONLY on the main thread (the draw paths); the off-thread
@@ -50,6 +50,60 @@ static func line_span(entry: Dictionary) -> PackedVector2Array:
 		Vector2(float(entry.get("x", 0.0)), float(entry.get("y", 0.0))),
 		Vector2(float(entry.get("p1", 0.0)), float(entry.get("p2", 0.0))),
 	])
+
+## The outline of a step drawn as a polygon or a stroke - an arc, a pie, a rounded rectangle or a regular
+## polygon - as points in the prefab's own space. The stamp node, Draw Prefab and the Inspector picture
+## all draw these four from the same rules, so a shape is one picture wherever it is seen. An arc is the
+## points of its stroke (a polyline); the other three are closed shapes (a polygon). A step that would
+## draw nothing (no radius, no sweep, no width, no size) answers an empty list. Works on a raw step and
+## on a compiled entry alike.
+##
+##   arc, pie           p1 radius, p2 start angle, p3 end angle (degrees, 0 = right, growing clockwise on
+##                      screen). The sweep runs from the start to the end, backwards when the end is below
+##                      the start, and is held to one full turn.
+##   rounded_rect       p1 width, p2 height, p3 corner radius, placed right and down from the offset like
+##                      a Rectangle; corners larger than half the short side are held to half of it.
+##   regular_polygon    p1 radius (centre to corner), p2 sides (3 to 32), p3 angle of the first corner.
+## @ace_hidden
+static func shape_outline(entry: Dictionary) -> PackedVector2Array:
+	var out: PackedVector2Array = PackedVector2Array()
+	var at: Vector2 = Vector2(float(entry.get("x", 0.0)), float(entry.get("y", 0.0)))
+	var p1: float = float(entry.get("p1", 0.0))
+	var p2: float = float(entry.get("p2", 0.0))
+	var p3: float = float(entry.get("p3", 0.0))
+	var kind: String = str(entry.get("kind", ""))
+	match kind:
+		"arc", "pie":
+			var start: float = deg_to_rad(p2)
+			var sweep: float = clampf(deg_to_rad(p3) - start, -TAU, TAU)
+			if p1 <= 0.0 or absf(sweep) < 0.0005:
+				return out
+			var segments: int = maxi(ceili(absf(sweep) / TAU * 48.0), 2)
+			if kind == "pie":
+				out.append(at)
+			# A pie turned all the way round would end on the point it began at: it keeps one of the two.
+			var rim: int = segments if kind == "pie" and absf(sweep) >= TAU - 0.0005 else segments + 1
+			for step: int in rim:
+				out.append(at + Vector2.from_angle(start + sweep * float(step) / float(segments)) * p1)
+		"rounded_rect":
+			var box: Rect2 = Rect2(at, Vector2(p1, p2)).abs()
+			if box.size.x <= 0.0 or box.size.y <= 0.0:
+				return out
+			var radius: float = clampf(p3, 0.0, minf(box.size.x, box.size.y) * 0.5)
+			if radius < 0.01:
+				return PackedVector2Array([box.position, Vector2(box.end.x, box.position.y), box.end, Vector2(box.position.x, box.end.y)])
+			var inner: Rect2 = box.grow(-radius)
+			var centres: Array[Vector2] = [inner.end, Vector2(inner.position.x, inner.end.y), inner.position, Vector2(inner.end.x, inner.position.y)]
+			for quadrant: int in 4:
+				for step: int in 7:
+					out.append(centres[quadrant] + Vector2.from_angle(PI * 0.5 * (float(quadrant) + float(step) / 6.0)) * radius)
+		"regular_polygon":
+			var sides: int = clampi(roundi(p2), 3, 32)
+			if p1 <= 0.0:
+				return out
+			for corner: int in sides:
+				out.append(at + Vector2.from_angle(deg_to_rad(p3) + TAU * float(corner) / float(sides)) * p1)
+	return out
 
 ## One line step's stroke: its ends, and its dash pattern when it has one. A step that says
 ## neither draws the single plain line it always drew, so an older prefab is untouched.
@@ -111,7 +165,7 @@ static func draw_leaning_dash(canvas: CanvasItem, from: Vector2, direction: Vect
 ##
 ## The eight stored keys (kind, x, y, p1, p2, p3, color, texture) mean exactly what they always
 ## did. Beside them a step may carry the optional look keys the Inspector card writes - the ends
-## of a line, its dash pattern, and whether its thickness follows the stamp's scale - and a step
+## of a line, its dash pattern, an arc's thickness, and whether a stroke's thickness follows the stamp's scale - and a step
 ## that carries none of them compiles to the values it always drew with.
 static func compile_steps(raw: Array) -> Array:
 	var out: Array = []
@@ -136,6 +190,7 @@ static func compile_steps(raw: Array) -> Array:
 			"tex": tex,
 			"caps": str(entry.get("caps", "none")),
 			"scale_mode": str(entry.get("scale_mode", "uniform")),
+			"thickness": float(entry.get("thickness", 2.0)),
 			"dashed": bool(entry.get("dashed", false)),
 			"dash_size": float(entry.get("dash_size", 8.0)),
 			"dash_spacing": float(entry.get("dash_spacing", 6.0)),

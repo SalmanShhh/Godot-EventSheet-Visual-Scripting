@@ -11011,3 +11011,22 @@ This curve has changes that are not saved to its file yet. The game plays the sa
 Flip,전환
 Pause Or Resume A Juice Player,Juice Player 일시정지 또는 재개
 "Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on until it is resumed.",다른 Juice Player 또는 이 Juice Player를 일시정지하거나 재개하거나 전환합니다. 문이 열려 있는 동안 멈춰 있는 반복 경보처럼 쓸 수 있습니다. 일시정지된 목록은 재개할 때까지 현재 카드에서 멈춰 있습니다.
+Arc,호
+Pie,부채꼴
+Rounded rectangle,둥근 사각형
+Polygon,다각형
+Start angle,시작 각도
+End angle,끝 각도
+Corners,모서리
+"radius %s, %s°","반지름 %s, %s°"
+"%s sides, radius %s","%s변, 반지름 %s"
+"Radius is 0, so this arc draws nothing.",반지름이 0이라 이 호는 아무것도 그리지 않습니다.
+"Radius is 0, so this pie draws nothing.",반지름이 0이라 이 부채꼴은 아무것도 그리지 않습니다.
+"The start and the end are the same angle, so this arc draws nothing.",시작과 끝이 같은 각도라 이 호는 아무것도 그리지 않습니다.
+"The start and the end are the same angle, so this pie draws nothing.",시작과 끝이 같은 각도라 이 부채꼴은 아무것도 그리지 않습니다.
+"Width is 0, so this rounded rectangle draws nothing.",너비가 0이라 이 둥근 사각형은 아무것도 그리지 않습니다.
+"Height is 0, so this rounded rectangle draws nothing.",높이가 0이라 이 둥근 사각형은 아무것도 그리지 않습니다.
+"The corners are larger than half the shorter side, so they are drawn at half of it.",모서리가 짧은 변의 절반보다 커서 그 절반으로 그려집니다.
+"Radius is 0, so this polygon draws nothing.",반지름이 0이라 이 다각형은 아무것도 그리지 않습니다.
+"A polygon needs at least 3 sides, so this one is drawn with 3.",다각형에는 변이 3개 이상 필요해서 3개로 그려집니다.
+"A polygon is drawn with 32 sides at most, so this one is drawn with 32.",다각형은 변이 최대 32개까지 그려져서 32개로 그려집니다.

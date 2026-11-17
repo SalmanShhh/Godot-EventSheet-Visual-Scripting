@@ -11011,3 +11011,22 @@ This curve has changes that are not saved to its file yet. The game plays the sa
 Flip,切换
 Pause Or Resume A Juice Player,暂停或继续 Juice Player
 "Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on until it is resumed.",暂停、继续或切换另一个 Juice Player，或者当前这个：比如门开着时暂停的循环警报。暂停的列表会停在当前卡片上，直到继续。
+Arc,圆弧
+Pie,扇形
+Rounded rectangle,圆角矩形
+Polygon,多边形
+Start angle,起始角度
+End angle,结束角度
+Corners,圆角
+"radius %s, %s°",半径 %s，%s°
+"%s sides, radius %s",%s 条边，半径 %s
+"Radius is 0, so this arc draws nothing.",半径为 0，所以这段圆弧不会绘制任何内容。
+"Radius is 0, so this pie draws nothing.",半径为 0，所以这个扇形不会绘制任何内容。
+"The start and the end are the same angle, so this arc draws nothing.",起点和终点角度相同，所以这段圆弧不会绘制任何内容。
+"The start and the end are the same angle, so this pie draws nothing.",起点和终点角度相同，所以这个扇形不会绘制任何内容。
+"Width is 0, so this rounded rectangle draws nothing.",宽度为 0，所以这个圆角矩形不会绘制任何内容。
+"Height is 0, so this rounded rectangle draws nothing.",高度为 0，所以这个圆角矩形不会绘制任何内容。
+"The corners are larger than half the shorter side, so they are drawn at half of it.",圆角大于短边的一半，所以按短边的一半绘制。
+"Radius is 0, so this polygon draws nothing.",半径为 0，所以这个多边形不会绘制任何内容。
+"A polygon needs at least 3 sides, so this one is drawn with 3.",多边形至少需要 3 条边，所以这个按 3 条边绘制。
+"A polygon is drawn with 32 sides at most, so this one is drawn with 32.",多边形最多按 32 条边绘制，所以这个按 32 条边绘制。

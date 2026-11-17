@@ -1,4 +1,4 @@
-# Godot EventSheets - "Add shape": a flat box of the six kinds, each with its tile, typing narrows it,
+# Godot EventSheets - "Add shape": a flat box of the ten kinds, each with its tile, typing narrows it,
 # Enter adds the highlighted one, and the new card goes last and opens.
 @tool
 class_name DrawingPrefabAddShapeTest
@@ -40,11 +40,11 @@ static func run() -> bool:
 			all_have_tiles = false
 	var rows: Array = [
 		["the add button says Add shape", str(editor.call("add_button_text")).ends_with("Add shape"), true],
-		["the box is one flat list of the six kinds, no headings", _words(tree), "Circle,Ring,Rectangle,Line,Cone,Stamp"],
-		["each leaf stores the stored word", ",".join(kinds), "circle,ring,rect,line,cone,stamp"],
+		["the box is one flat list of the ten kinds, no headings", _words(tree), "Circle,Ring,Rectangle,Line,Cone,Stamp,Arc,Pie,Rounded rectangle,Polygon"],
+		["each leaf stores the stored word", ",".join(kinds), "circle,ring,rect,line,cone,stamp,arc,pie,rounded_rect,regular_polygon"],
 		["every kind wears its tile", all_have_tiles, true],
-		["the six lines never scroll, so no scrollbar is drawn", tree.scroll_vertical_enabled, false],
-		["and the box is tall enough for all six whole lines and its own margins", tree.custom_minimum_size.y >= float(tree.get_item_area_rect(tree.get_root().get_first_child()).size.y) * 6.0 + tree.get_theme_stylebox("panel").get_minimum_size().y, true],
+		["the ten lines never scroll, so no scrollbar is drawn", tree.scroll_vertical_enabled, false],
+		["and the box is tall enough for all ten whole lines and its own margins", tree.custom_minimum_size.y >= float(tree.get_item_area_rect(tree.get_root().get_first_child()).size.y) * 10.0 + tree.get_theme_stylebox("panel").get_minimum_size().y, true],
 	]
 	var filter: LineEdit = editor.call("add_box_filter")
 	filter.text = "ri"
@@ -52,7 +52,7 @@ static func run() -> bool:
 	rows.append(["typing narrows the list", _words(tree), "Ring"])
 	filter.text = "rect"
 	editor.call("refill_add_box")
-	rows.append(["by the plain name too", _words(tree), "Rectangle"])
+	rows.append(["by the plain name too", _words(tree), "Rectangle,Rounded rectangle"])
 	rows.append(["the first match is highlighted so Enter has something to add", tree.get_selected() != null, true])
 	editor.call("add_highlighted_or_first")
 	var steps: Array = editor.get_steps()
