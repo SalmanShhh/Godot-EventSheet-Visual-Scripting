@@ -12,6 +12,7 @@
 @tool
 extends RefCounted
 
+const SHIPPED := preload("res://addons/eventforge/shipped_pack_folders.gd")
 const PACK_ROOT: String = "res://eventsheet_addons"
 const SECTION_ROOT: String = "res://addons/eventsheet/icons/sections"
 const FLAG_OFF: String = "editor/convert_colors_with_editor_theme=false"
@@ -20,15 +21,18 @@ const SCALE_OFF: String = "editor/scale_with_editor_scale=false"
 const SCALE_ON: String = "editor/scale_with_editor_scale=true"
 
 
-## The icons of the packs this project holds: each pack folder's icon.svg and icon_3d.svg.
-static func pack_icon_paths() -> PackedStringArray:
+## The icons of the shipped packs this project holds: each shipped pack folder's icon.svg and icon_3d.svg.
+## A folder under eventsheet_addons/ the plugin does not ship is the user's own pack and is never touched.
+static func pack_icon_paths(root: String = PACK_ROOT) -> PackedStringArray:
 	var out: PackedStringArray = PackedStringArray()
 	# A project with no behaviours yet has no such folder: nothing to look after, and nothing to print.
-	if not DirAccess.dir_exists_absolute(PACK_ROOT):
+	if not DirAccess.dir_exists_absolute(root):
 		return out
-	for folder: String in DirAccess.get_directories_at(PACK_ROOT):
+	for folder: String in DirAccess.get_directories_at(root):
+		if not SHIPPED.FOLDERS.has(folder):
+			continue
 		for file_name: String in ["icon.svg", "icon_3d.svg"]:
-			var path: String = "%s/%s/%s" % [PACK_ROOT, folder, file_name]
+			var path: String = "%s/%s/%s" % [root, folder, file_name]
 			if FileAccess.file_exists(path):
 				out.append(path)
 	return out

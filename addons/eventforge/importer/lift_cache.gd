@@ -273,6 +273,9 @@ static func forget_code_stamp() -> void:
 
 
 static func _collect_scripts(folder: String, into: PackedStringArray) -> void:
+	# A project with no behaviours has no eventsheet_addons/: nothing to stamp, and nothing to print.
+	if not DirAccess.dir_exists_absolute(folder):
+		return
 	for file: String in DirAccess.get_files_at(folder):
 		if file.get_extension() == "gd":
 			into.append(folder.path_join(file))

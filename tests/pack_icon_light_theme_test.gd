@@ -17,6 +17,7 @@ const IMPORTS := preload("res://addons/eventforge/editor/pack_icon_imports.gd")
 const STYLE := preload("res://tools/icon_style.gd")
 const SHIPPED := preload("res://addons/eventforge/shipped_pack_folders.gd")
 const LIBRARY := preload("res://addons/eventsheet/ace/pack_library.gd")
+const LIFT_CACHE := preload("res://addons/eventforge/importer/lift_cache.gd")
 const FLOW := preload("res://addons/eventsheet/editor/dock/behaviour_library_flow.gd")
 
 
@@ -58,7 +59,25 @@ static func run() -> bool:
 		["and the neutral grey, as a stroke too", EventSheetBehaviourLibraryWindow.inked_for_theme("<path stroke=\"#e0e0e0\"/>", true), "<path stroke=\"#5a5a5a\"/>"],
 		["a headless run is never light", EventSheetBehaviourLibraryWindow.editor_is_light(), false],
 	]) and ok
-	return _shipped_sidecars() and _library_copy() and ok
+	return _only_shipped_folders() and _shipped_sidecars() and _library_copy() and ok
+
+
+## The plugin looks after the icons of the packs it ships and no others, and a project with no
+## eventsheet_addons/ folder is silent (a missing folder is not an error to print).
+static func _only_shipped_folders() -> bool:
+	var root: String = SUPPORT.own_path("packs")
+	for folder: String in ["big_number", "my_own_pack"]:
+		DirAccess.make_dir_recursive_absolute(root + "/" + folder)
+		_write(root + "/%s/icon.svg" % folder, "<svg/>")
+	var scripts: PackedStringArray = PackedStringArray()
+	LIFT_CACHE._collect_scripts(SUPPORT.own_path("no_such_folder"), scripts)
+	var untouched: String = FileAccess.get_file_as_string(root + "/my_own_pack/icon.svg")
+	return SUPPORT.pins(NAME, [
+		["a shipped pack's icon is looked after, a user's own pack's is not", IMPORTS.pack_icon_paths(root), PackedStringArray([root + "/big_number/icon.svg"])],
+		["a missing packs folder gives nothing", IMPORTS.pack_icon_paths(SUPPORT.own_path("no_such_folder")), PackedStringArray()],
+		["a missing folder has no scripts to stamp", scripts, PackedStringArray()],
+		["a user's own pack is left as it was", untouched, "<svg/>"],
+	])
 
 
 ## Every icon a fresh install opens has its import on disk, asking for the editor's colours: the packs'
