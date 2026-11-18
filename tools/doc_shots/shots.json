@@ -8329,7 +8329,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "df7135ba3c67f4ac9976380fea0fd04219d49c2bd7c9b81f116615f57ac68745"
+				"png": "4d9b2f1bc0eda73235329c0419fd3d8df49012e2b8dc1b27939f559691eb09fd"
 			},
 			"name": "welcome-documentation-link",
 			"steps": [
@@ -9178,7 +9178,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "7e81e8a27247dcc2d35b5674a4b79086584ac9803568ea021bea1b743eb3ab60"
+				"png": "4e24c286b5ddd2ec4b8a364c7c36de08f16c1c38e53bd0d49e1dd89e37a40e3c"
 			},
 			"name": "save-studio-save-slots",
 			"steps": [
@@ -9241,7 +9241,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "d9726f10400f2944c9c4f92e14d07527f67459bd01ae98a05df4060a6a81cf8c"
+				"png": "daa0d75c4671cf0e0cbefcf3b35b246d477a8efca5fdba378199f44c2e4eeca7"
 			},
 			"name": "save-studio-look-inside",
 			"steps": [
@@ -9300,7 +9300,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "747691c9a18a44fbdf1cc98eeca50e463c037ed0fbae7473c38cbae1d5892a85"
+				"png": "740dfbc4206712f28029072092bb1f0fb78dad156ff5923732ed089afa202d78"
 			},
 			"name": "save-studio-player-settings",
 			"steps": [
@@ -9359,7 +9359,6 @@
 					"frames": 40.0,
 					"provider": "Core",
 					"values": {
-						"delta": "0.016",
 						"speed": "240"
 					}
 				},
@@ -9385,7 +9384,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "bdf16d502b20885a0b21f9339e7534466bc6ac4a875d458e9f1ae21ccece66f2",
+				"png": "cb4decf10d938df2a4beae1ea4739c338ba0741cc61497b5bfb1da1441ec5d97",
 				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"layout": "horizontal",
