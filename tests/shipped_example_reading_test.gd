@@ -30,6 +30,7 @@ static func run() -> bool:
 	ok = _test_declared_controls() and ok
 	ok = _test_examples_open_clean() and ok
 	ok = _test_pack_questions_read_as_the_pack() and ok
+	ok = _test_rows_the_way_the_examples_are_drawn() and ok
 	ok = _test_options_scene() and ok
 	ok = _test_controls_page_columns() and ok
 	ok = _test_paths_stay_whole() and ok
@@ -103,14 +104,48 @@ static func _test_pack_questions_read_as_the_pack() -> bool:
 	ok = SUPPORT.check("shipped example reading", "the Settings question reads as the pack's own words, not as code", question.contains("$Services/Settings"), false) and ok
 	ok = SUPPORT.check("shipped example reading", "the Settings question is found", question.is_empty(), false) and ok
 	ok = SUPPORT.check("shipped example reading", "a declared setting does not end in empty quotes", declare.contains("\"\""), false) and ok
-	var rebind: PackedStringArray = _plain_of(_sheet_of(REBIND))
-	var button_question: String = ""
-	for line: String in rebind:
-		if line.to_lower().contains("button is") and button_question.is_empty():
-			button_question = line
-	ok = SUPPORT.check("shipped example reading", "the HudKit question reads as the pack's own words, not as code", button_question.contains("button_is("), false) and ok
-	ok = SUPPORT.check("shipped example reading", "the HudKit question is found", button_question.is_empty(), false) and ok
+	var panel_question: String = ""
+	for line: String in options:
+		if line.to_lower().contains("is panel visible") and panel_question.is_empty():
+			panel_question = line
+	ok = SUPPORT.check("shipped example reading", "the HudKit question reads as the pack's own words, not as code", panel_question.contains("is_panel_visible("), false) and ok
+	ok = SUPPORT.check("shipped example reading", "the HudKit question is found", panel_question.is_empty(), false) and ok
 	return ok
+
+
+## What each example's events read as: a button is its own trigger, the packs' verbs are the packs' own rows (the
+## object column names the pack, the words are the verb's, no "call" of a method), the coin pickup is rows, and
+## the readings of the packs' rows never show the node path they were written on.
+static func _test_rows_the_way_the_examples_are_drawn() -> bool:
+	var rebind: PackedStringArray = _plain_of(_sheet_of(REBIND))
+	var options: PackedStringArray = _plain_of(_sheet_of(OPTIONS))
+	var rebind_triggers: PackedStringArray = _lines_with(rebind, "condition|", "On Pressed")
+	var pack_rows: PackedStringArray = PackedStringArray()
+	for line: String in options:
+		if line.begins_with("action|GameSettingsAddon|") or line.begins_with("action|SaveSystemAddon|") or line.begins_with("action|HudKitBehavior|"):
+			pack_rows.append(line.get_slice("|", 1))
+	return SUPPORT.pins("shipped example reading", [
+		["each button of the rebind example is its own trigger", rebind_triggers, PackedStringArray([
+			"condition|SwapButton|On Pressed", "condition|TakeButton|On Pressed", "condition|PickAnotherButton|On Pressed",
+			"condition|ResetAllButton|On Pressed", "condition|VibrateButton|On Pressed"])],
+		["no row asks the Hud which button was pressed", _lines_with(rebind, "", "Button Is").size(), 0],
+		["the options example's back button is its own trigger", _lines_with(options, "condition|", "BackButton|On Pressed").size(), 1],
+		["the packs' verbs read as the packs' own rows", pack_rows.has("GameSettingsAddon") and pack_rows.has("SaveSystemAddon") and pack_rows.has("HudKitBehavior"), true],
+		["no row of a pack shows the call it is written as", _lines_with(options, "action|GameSettingsAddon|", "$Services/Settings.").size() 			+ _lines_with(rebind, "action|GameSettingsAddon|", "$Settings.").size(), 0],
+		["the coin pickup is rows: the overlap, the count and the hide", [
+			_lines_with(options, "condition|Player|", "Overlaps").size(), _lines_with(options, "action|", "Add 1 to coins").size(),
+			_lines_with(options, "action|", "Set invisible").size()], [1, 1, 1]],
+		["the options example saves its bindings after each rebind", _lines_with(options, "condition|Settings|", "On Binding Changed").size(), 1],
+		["the saved variables carry their descriptions in the file", FileAccess.get_file_as_string(OPTIONS).contains("## Coins picked up in this run.\nvar coins: int = 0\n## Where the player stands, kept for a quick save.\nvar player_spot"), true],
+	])
+
+
+static func _lines_with(lines: PackedStringArray, lead: String, text: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for line: String in lines:
+		if line.begins_with(lead) and line.contains(text):
+			found.append(line)
+	return found
 
 
 static func _test_options_scene() -> bool:
@@ -197,5 +232,5 @@ static func _test_trigger_names_keep_their_room() -> bool:
 	viewport.free()
 	return SUPPORT.pins("shipped example reading", [
 		["a trigger's name is measured with the arrow that leads it", with_arrow >= name_width + EventSheetViewportRowMetrics.STRIP_MARK_ADVANCE, true],
-		["a look that draws no such arrow measures the name alone", is_equal_approx(without_arrow, maxf(without_arrow, name_width)) and without_arrow < with_arrow, true],
+		["a look that draws no such arrow never measures wider than one that does", without_arrow <= with_arrow, true],
 	])

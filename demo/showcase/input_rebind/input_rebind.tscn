@@ -40,6 +40,39 @@ theme_override_font_sizes/font_size = 13
 text = "Click a key to change it. Esc cancels. Your choice is kept when you close the game."
 horizontal_alignment = 1
 
+[node name="ControlsHeader" type="HBoxContainer" parent="Column"]
+layout_mode = 2
+
+[node name="ControlHeader" type="Label" parent="Column/ControlsHeader"]
+modulate = Color(1, 1, 1, 0.6)
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+text = "control"
+
+[node name="KeyboardHeader" type="Label" parent="Column/ControlsHeader"]
+modulate = Color(1, 1, 1, 0.6)
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+text = "keyboard"
+horizontal_alignment = 1
+
+[node name="PadHeader" type="Label" parent="Column/ControlsHeader"]
+modulate = Color(1, 1, 1, 0.6)
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+text = "pad"
+horizontal_alignment = 1
+
+[node name="ResetGap" type="Control" parent="Column/ControlsHeader"]
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+
 [node name="Controls" type="VBoxContainer" parent="Column"]
 layout_mode = 2
 theme_override_constants/separation = 6
@@ -84,15 +117,15 @@ horizontal_alignment = 1
 [node name="TestLabel" type="Label" parent="Column"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
-text = "Press jump or dash to try them."
+text = "Press jump or dash to try them"
 horizontal_alignment = 1
 
 [node name="GamepadLabel" type="Label" parent="Column"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
-text = "No gamepad connected - plug one in"
+text = "Pad: none connected"
 horizontal_alignment = 1
 
 [node name="VibrateButton" type="Button" parent="Column"]
 layout_mode = 2
-text = "Test Gamepad Vibration"
+text = "Vibrate"

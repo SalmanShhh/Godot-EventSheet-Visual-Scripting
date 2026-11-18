@@ -2131,6 +2131,8 @@ func _helper(sheet: EventSheetResource, function_name: String, description: Stri
 		var param: ACEParam = ACEParam.new()
 		param.id = str(spec[0])
 		param.type_name = str(spec[1])
+		if spec.size() > 2:
+			param.gdscript_default = str(spec[2])
 		fn.params.append(param)
 	fn.events = [_raw("\n".join(PackedStringArray(body)))]
 	sheet.functions.append(fn)
@@ -2142,9 +2144,12 @@ func _helper(sheet: EventSheetResource, function_name: String, description: Stri
 const DEFINE_CONTROL_BODY: Array = [
 	"var key: InputEventKey = InputEventKey.new()",
 	"key.physical_keycode = key_code as Key",
-	"var button: InputEventJoypadButton = InputEventJoypadButton.new()",
-	"button.button_index = pad_button as JoyButton",
-	"ProjectSettings.set_setting(\"input/\" + action_name, {\"deadzone\": 0.2, \"events\": [key, button]})",
+	"var events: Array = [key]",
+	"if pad_button >= 0:",
+	"	var button: InputEventJoypadButton = InputEventJoypadButton.new()",
+	"	button.button_index = pad_button as JoyButton",
+	"	events.append(button)",
+	"ProjectSettings.set_setting(\"input/\" + action_name, {\"deadzone\": 0.2, \"events\": events})",
 ]
 
 
@@ -2175,12 +2180,12 @@ func _build_input_rebind() -> bool:
 	sheet.emit_live_values = false
 	sheet.class_description = "[b]Input Rebind[/b] - a rebinding screen on the Game Settings rows. Click a key, press another, and a clash asks Swap, Take it anyway or Pick another key; Esc cancels; the keyboard and pad columns are kept side by side; and Save Bindings keeps the choice for the next launch (user://settings.cfg, section [bindings]). In your own project the Game Settings pack is the Settings autoload, so the rows read Settings.save_bindings(); here the same pack is a child node named Settings, so they read $Settings.save_bindings(). The two demo controls are declared the way Project Settings declares them, so Reset works exactly as in a real project, and project.godot is left alone."
 
-	_helper(sheet, "define_control", "Declares one control the way Project Settings does (a key and a pad button) and rebuilds the Input Map from the settings, so Reset goes back to these.",
-		[["action_name", "String"], ["key_code", "int"], ["pad_button", "int"]], DEFINE_CONTROL_BODY)
-	_helper(sheet, "gamepad_words", "How many gamepads are connected and what the first one is called.", [], [
+	_helper(sheet, "define_control", "Declares one control the way Project Settings does (a key and, if given, a pad button) and rebuilds the Input Map from the settings, so Reset goes back to these.",
+		[["action_name", "String"], ["key_code", "int"], ["pad_button", "int", "-1"]], DEFINE_CONTROL_BODY)
+	_helper(sheet, "gamepad_words", "The Pad line: the first connected gamepad's name.", [], [
 		"var pads: Array = Input.get_connected_joypads()",
 		"var pad_name: String = Input.get_joy_name(pads[0])",
-		"return \"%d gamepad(s) - %s\" % [pads.size(), pad_name]",
+		"return \"Pad: %s\" % pad_name",
 	], TYPE_STRING)
 	_helper(sheet, "define_demo_controls", "Jump is Space and pad A, Dash is C and pad X.", [], [
 		"define_control(\"demo_jump\", KEY_SPACE, JOY_BUTTON_A)",
@@ -2194,21 +2199,20 @@ func _build_input_rebind() -> bool:
 	on_ready.actions.append(_raw("define_demo_controls()"))
 	on_ready.actions.append(_settings_call("load_bindings"))
 	on_ready.actions.append(_settings_call("build_controls_page", {"container": "$Column/Controls"}))
-	on_ready.actions.append(_hud_call("set_text", {"control_name": "\"StatusLabel\"", "text": "\"Click a key to change it. Esc cancels.\""}))
 	sheet.events.append(on_ready)
 
 	var changed: EventRow = _signal_row("Settings", "binding_changed", "action: String")
 	changed.actions.append(_settings_call("save_bindings"))
-	changed.actions.append(_hud_call("set_text", {"control_name": "\"StatusLabel\"", "text": "\"%s changed - saved for next time.\" % action.capitalize()"}))
+	changed.actions.append(_hud_call("set_text", {"control_name": "\"StatusLabel\"", "text": "action + \" is now \" + $Settings.key_binding_of(action)"}))
 	sheet.events.append(changed)
 
 	var clash: EventRow = _signal_row("Settings", "binding_conflict", "action: String, taken_by: String")
 	clash.actions.append(_hud_call("show_panel", {"panel_name": "\"ConflictPanel\""}))
-	clash.actions.append(_hud_call("set_text", {"control_name": "\"ConflictLabel\"", "text": "\"%s is already used by %s.\" % [$Settings.pending_binding_words(), taken_by.capitalize()]"}))
+	clash.actions.append(_hud_call("set_text", {"control_name": "\"ConflictLabel\"", "text": "$Settings.pending_binding_words() + \" is already used by \" + taken_by"}))
 	sheet.events.append(clash)
 
 	for answer: Array in [["SwapButton", "swap_the_binding"], ["TakeButton", "take_the_binding_anyway"], ["PickAnotherButton", "pick_another_key"]]:
-		var answered: EventRow = _button_row(str(answer[0]))
+		var answered: EventRow = _signal_row("Column/ConflictPanel/Box/Answers/%s" % answer[0], "pressed")
 		answered.actions.append(_settings_call(str(answer[1])))
 		answered.actions.append(_hud_call("hide_panel", {"panel_name": "\"ConflictPanel\""}))
 		sheet.events.append(answered)
@@ -2218,20 +2222,26 @@ func _build_input_rebind() -> bool:
 	cancelled.actions.append(_hud_call("set_text", {"control_name": "\"StatusLabel\"", "text": "\"Kept the old key.\""}))
 	sheet.events.append(cancelled)
 
-	var reset_all: EventRow = _button_row("ResetAllButton")
+	var reset_all: EventRow = _signal_row("Column/ResetAllButton", "pressed")
 	reset_all.actions.append(_settings_call("reset_all_bindings"))
 	reset_all.actions.append(_settings_call("save_bindings"))
-	reset_all.actions.append(_hud_call("set_text", {"control_name": "\"StatusLabel\"", "text": "\"Every control is back to its first key.\""}))
 	sheet.events.append(reset_all)
 
+	var tried: EventRow = EventRow.new()
+	tried.trigger_provider_id = "Core"
+	tried.trigger_id = "OnProcess"
 	for control: Array in [["demo_jump", "Jump!"], ["demo_dash", "Dash!"]]:
-		var tried: EventRow = EventRow.new()
-		tried.trigger_provider_id = "Core"
-		tried.trigger_id = "OnProcess"
-		tried.conditions.append(_condition("Core", "IsActionJustPressed", _ace_template("IsActionJustPressed"), {"action": "\"%s\"" % control[0]}))
-		tried.actions.append(_hud_call("show_toast", {"text": "\"%s\"" % control[1]}))
-		sheet.events.append(tried)
+		var pressed: EventRow = EventRow.new()
+		pressed.conditions.append(_condition("Core", "IsActionJustPressed", _ace_template("IsActionJustPressed"), {"action": "\"%s\"" % control[0]}))
+		pressed.actions.append(_hud_call("show_toast", {"text": "\"%s\"" % control[1]}))
+		tried.sub_events.append(pressed)
+	sheet.events.append(tried)
 
+	var vibrate: EventRow = _signal_row("Column/VibrateButton", "pressed")
+	vibrate.actions.append(_action("Core", "GamepadVibrateFor", _ace_template("GamepadVibrateFor"), {"device": "0", "weak": "0.5", "strong": "0.5", "seconds": "0.4"}))
+	sheet.events.append(vibrate)
+
+	# The pair that tells a player with a pad plugged in so; without it the label would say "none" for ever.
 	var pad_here: EventRow = EventRow.new()
 	pad_here.trigger_provider_id = "Core"
 	pad_here.trigger_id = "OnProcess"
@@ -2242,13 +2252,8 @@ func _build_input_rebind() -> bool:
 	pad_none.trigger_provider_id = "Core"
 	pad_none.trigger_id = "OnProcess"
 	pad_none.else_mode = EventRow.ElseMode.ELSE
-	pad_none.actions.append(_hud_call("set_text", {"control_name": "\"GamepadLabel\"", "text": "\"No gamepad connected - plug one in\""}))
+	pad_none.actions.append(_hud_call("set_text", {"control_name": "\"GamepadLabel\"", "text": "\"Pad: none connected\""}))
 	sheet.events.append(pad_none)
-
-	var vibrate: EventRow = _button_row("VibrateButton")
-	vibrate.actions.append(_action("Core", "GamepadVibrateFor", _ace_template("GamepadVibrateFor"), {"device": "0", "weak": "0.5", "strong": "0.5", "seconds": "0.4"}))
-	vibrate.actions.append(_hud_call("set_text", {"control_name": "\"StatusLabel\"", "text": "\"Vibrating gamepad 0 (if one is connected).\""}))
-	sheet.events.append(vibrate)
 
 	if not _compile(sheet, "res://demo/showcase/input_rebind/input_rebind.tres", "res://demo/showcase/input_rebind/input_rebind.gd"):
 		return false
@@ -2270,6 +2275,7 @@ func _build_input_rebind() -> bool:
 	root.add_child(column)
 	column.add_child(_label("TitleLabel", "REBIND THE CONTROLS", 26))
 	column.add_child(_label("InfoLabel", "Click a key to change it. Esc cancels. Your choice is kept when you close the game.", 13))
+	column.add_child(_controls_header())
 	var controls: VBoxContainer = VBoxContainer.new()
 	controls.name = "Controls"
 	controls.add_theme_constant_override("separation", 6)
@@ -2291,11 +2297,30 @@ func _build_input_rebind() -> bool:
 	column.add_child(conflict)
 	column.add_child(_button("ResetAllButton", "Reset every binding"))
 	column.add_child(_label("StatusLabel", "", 15))
-	column.add_child(_label("TestLabel", "Press jump or dash to try them.", 13))
-	column.add_child(_label("GamepadLabel", "No gamepad connected - plug one in", 13))
-	column.add_child(_button("VibrateButton", "Test Gamepad Vibration"))
+	column.add_child(_label("TestLabel", "Press jump or dash to try them", 13))
+	column.add_child(_label("GamepadLabel", "Pad: none connected", 13))
+	column.add_child(_button("VibrateButton", "Vibrate"))
 	_own_deep(column, root)
 	return _save_scene(root, "res://demo/showcase/input_rebind/input_rebind.tscn")
+
+
+## The line above a generated Controls page: what each column of it holds. The columns take the widths the
+## page's own rows take (a name 150 wide, two buttons 130 wide, a Reset 70 wide) so the three words stand
+## over the three things.
+func _controls_header() -> HBoxContainer:
+	var header: HBoxContainer = HBoxContainer.new()
+	header.name = "ControlsHeader"
+	for column: Array in [["ControlHeader", "control", 150.0, false], ["KeyboardHeader", "keyboard", 130.0, true], ["PadHeader", "pad", 130.0, true]]:
+		var label: Label = _label(str(column[0]), str(column[1]), 13, bool(column[3]))
+		label.custom_minimum_size.x = float(column[2])
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		label.modulate = Color(1, 1, 1, 0.6)
+		header.add_child(label)
+	var gap: Control = Control.new()
+	gap.name = "ResetGap"
+	gap.custom_minimum_size.x = 70.0
+	header.add_child(gap)
+	return header
 
 
 ## The saving example: options, controls and a quick save, each kept in the file Save Studio's Player
@@ -2310,41 +2335,27 @@ func _build_options_and_quick_save() -> bool:
 	sheet.custom_class_name = "OptionsAndQuickSaveDemo"
 	sheet.emit_live_values = false
 	sheet.variables = {
-		"coins": {"type": "int", "default": 0, "exported": false,
-			"attributes": {"tooltip": "Coins picked up in this run.", "save": "manual"}},
-		"player_spot": {"type": "Vector2", "default": Vector2(200, 300), "exported": false,
-			"attributes": {"tooltip": "Where the player stands.", "save": "manual"}},
-		"picked_coins": {"type": "Array", "default": [], "exported": false,
-			"attributes": {"tooltip": "Names of the coins already picked up.", "save": "manual"}},
+		"coins": {"type": "int", "default": 0, "exported": false, "description": "Coins picked up in this run.",
+			"attributes": {"save": "manual"}},
+		"player_spot": {"type": "Vector2", "default": Vector2(200, 300), "exported": false, "description": "Where the player stands, kept for a quick save.",
+			"attributes": {"save": "manual"}},
+		"picked_coins": {"type": "Array", "default": [], "exported": false, "description": "Names of the coins already picked up, so a coin stays gone after a quick load.",
+			"attributes": {"save": "manual"}},
 	}
-	sheet.class_description = "[b]Options and Quick Save[/b] - three kinds of thing a game keeps, each in its own file. Master volume and fullscreen are options (Settings, user://settings.cfg); the controls, F5 and F9 among them, are saved bindings (the same file, section [bindings]); and coins, player_spot and picked_coins are the game itself, set to Manually in Save Studio, Saving your game, What gets saved, so F5 (Save Game) writes them to user://save_0.cfg and F9 (Load Game) brings them back. Tab opens the options. In your own project the Game Settings and Save System packs are the Settings and SaveSystem autoloads, so the rows read Settings.save_all_settings() and SaveSystem.save_game(); here they sit under a plain Services node, standing in for the autoloads, so they read $Services/Settings. and $Services/SaveSystem. They are not children of the saved object on purpose: Save Game snapshots the behaviours that sit directly on a saved node, and the options are kept in their own file."
+	sheet.class_description = "[b]Options and Quick Save[/b] - three kinds of thing a game keeps, each in its own file. Master volume and fullscreen are options (Settings, user://settings.cfg); the controls, F5 and F9 among them, are saved bindings (the same file, section [bindings]); and coins, player_spot and picked_coins are the game itself, set to Manually in Save Studio, Saving your game, What gets saved, so F5 (Save Game) writes them to user://save_0.cfg and F9 (Load Game) brings them back. picked_coins is there so a coin you picked up stays gone after a relaunch and a load: without it the player would load onto a coin that had come back and pick it up twice. Tab opens the options. In your own project the Game Settings and Save System packs are the Settings and SaveSystem autoloads, so the rows read Settings.save_all_settings() and SaveSystem.save_game(); here they sit under a plain Services node, standing in for the autoloads, so they read $Services/Settings. and $Services/SaveSystem. They are not children of the saved object on purpose: Save Game snapshots the behaviours that sit directly on a saved node, and the options are kept in their own file."
 
-	_helper(sheet, "define_control", "Declares one control the way Project Settings does (a key and a pad button) and rebuilds the Input Map from the settings, so Reset goes back to these.",
-		[["action_name", "String"], ["key_code", "int"], ["pad_button", "int"]], DEFINE_CONTROL_BODY)
-	_helper(sheet, "define_controls", "Quick save is F5, quick load is F9 and Tab opens the options, each with a pad button too.", [], [
-		"define_control(\"quick_save\", KEY_F5, JOY_BUTTON_BACK)",
-		"define_control(\"quick_load\", KEY_F9, JOY_BUTTON_START)",
-		"define_control(\"open_options\", KEY_TAB, JOY_BUTTON_Y)",
+	_helper(sheet, "define_control", "Declares one control the way Project Settings does (a key and, if given, a pad button) and rebuilds the Input Map from the settings, so Reset goes back to these.",
+		[["action_name", "String"], ["key_code", "int"], ["pad_button", "int", "-1"]], DEFINE_CONTROL_BODY)
+	_helper(sheet, "define_controls", "Jump is Space and pad A; quick save is F5 and quick load is F9, with no pad button.", [], [
+		"define_control(\"jump\", KEY_SPACE, JOY_BUTTON_A)",
+		"define_control(\"quick_save\", KEY_F5)",
+		"define_control(\"quick_load\", KEY_F9)",
 		"InputMap.load_from_project_settings()",
 	])
-	_helper(sheet, "refresh_hints", "Writes the strip along the bottom from the live bindings, so a rebound key is what it says, and notes when there is no quick save to load yet.", [], [
-		"var load_hint: String = \"%s Quick load\" % $Services/Settings.key_binding_of(\"quick_load\")",
-		"if not $Services/SaveSystem.slot_exists(0):",
-		"\tload_hint += \" (no quick save yet)\"",
-		"$HudKit.set_text(\"HintLabel\", \"%s Quick save   |   %s   |   %s Options\" % [$Services/Settings.key_binding_of(\"quick_save\"), load_hint, $Services/Settings.key_binding_of(\"open_options\")])",
-	])
-	_helper(sheet, "collect_coins", "Picks up every coin the player stands on: counts it and hides it.", [], [
-		"for child: Node in $GameScreen/Coins.get_children():",
-		"\tvar coin: ColorRect = child as ColorRect",
-		"\tif coin.visible and $GameScreen/Player.position.distance_to(coin.position) < 30.0:",
-		"\t\tcoin.visible = false",
-		"\t\tcoins += 1",
-		"\t\tpicked_coins.append(str(coin.name))",
-		"\t\t$HudKit.set_text(\"CoinsLabel\", \"Coins: %d\" % coins)",
-	])
+
 	_helper(sheet, "hide_picked_coins", "Hides the coins the save says were already picked up, so a loaded game does not offer them again.", [], [
 		"for child: Node in $GameScreen/Coins.get_children():",
-		"\t(child as ColorRect).visible = not picked_coins.has(str(child.name))",
+		"\t(child as CanvasItem).visible = not picked_coins.has(str(child.name))",
 	])
 
 	var on_ready: EventRow = EventRow.new()
@@ -2355,18 +2366,26 @@ func _build_options_and_quick_save() -> bool:
 	on_ready.actions.append(_raw("define_controls()"))
 	on_ready.actions.append(_settings_call("load_all_settings"))
 	on_ready.actions.append(_settings_call("load_bindings"))
+	on_ready.actions.append(_settings_call("apply_all_settings"))
 	on_ready.actions.append(_settings_call("bind_control", {"control": "$OptionsPanel/Box/VolumeRow/master_volume", "setting_name": "\"master_volume\""}))
 	on_ready.actions.append(_settings_call("bind_control", {"control": "$OptionsPanel/Box/fullscreen", "setting_name": "\"fullscreen\""}))
 	on_ready.actions.append(_settings_call("build_controls_page", {"container": "$OptionsPanel/Box/Controls"}))
-	on_ready.actions.append(_settings_call("apply_all_settings"))
-	on_ready.actions.append(_raw("refresh_hints()"))
+	var has_save: EventRow = EventRow.new()
+	has_save.conditions.append(_condition("SaveSystemAddon", "method:slot_exists", "$%s.slot_exists({slot_index})" % _save_system_path, {"slot_index": "0"}))
+	has_save.actions.append(_hud_call("set_text", {"control_name": "\"QuickLoadHint\"", "text": "$Services/Settings.key_binding_of(\"quick_load\") + \" Quick load\""}))
+	var no_save: EventRow = EventRow.new()
+	no_save.else_mode = EventRow.ElseMode.ELSE
+	no_save.actions.append(_hud_call("set_text", {"control_name": "\"QuickLoadHint\"", "text": "$Services/Settings.key_binding_of(\"quick_load\") + \" Quick load (no quick save yet)\""}))
+	on_ready.sub_events.append(has_save)
+	on_ready.sub_events.append(no_save)
 	sheet.events.append(on_ready)
 
-	var volume: EventRow = _signal_row("Services/Settings", "setting_changed", "setting_name: String, value: Variant")
+	var changed: EventRow = _signal_row("Services/Settings", "setting_changed", "setting_name: String, value: Variant")
+	var volume: EventRow = EventRow.new()
 	volume.conditions.append(_condition("GameSettingsAddon", "method:changed_setting_is", "$Services/Settings.changed_setting_is({setting_name})", {"setting_name": "\"master_volume\""}))
-	volume.actions.append(_action("Core", "OptionsSetMasterPercent", _ace_template("OptionsSetMasterPercent"), {"percent": "float(value)"}))
-	sheet.events.append(volume)
-	var screen: EventRow = _signal_row("Services/Settings", "setting_changed", "setting_name: String, value: Variant")
+	volume.actions.append(_action("Core", "OptionsSetMasterPercent", _ace_template("OptionsSetMasterPercent"), {"percent": "value"}))
+	volume.actions.append(_hud_call("set_text", {"control_name": "\"VolumeValue\"", "text": "str(int(value))"}))
+	var screen: EventRow = EventRow.new()
 	screen.conditions.append(_condition("GameSettingsAddon", "method:changed_setting_is", "$Services/Settings.changed_setting_is({setting_name})", {"setting_name": "\"fullscreen\""}))
 	var screen_on: EventRow = EventRow.new()
 	screen_on.conditions.append(_condition("Core", "ExpressionIsTrue", "{expr}", {"expr": "value"}))
@@ -2376,27 +2395,32 @@ func _build_options_and_quick_save() -> bool:
 	screen_off.actions.append(_action("Core", "WindowGoWindowed", _ace_template("WindowGoWindowed"), {}))
 	screen.sub_events.append(screen_on)
 	screen.sub_events.append(screen_off)
-	sheet.events.append(screen)
+	changed.sub_events.append(volume)
+	changed.sub_events.append(screen)
+	sheet.events.append(changed)
 
 	var rebound: EventRow = _signal_row("Services/Settings", "binding_changed", "action: String")
-	rebound.actions.append(_raw("refresh_hints()"))
+	rebound.actions.append(_settings_call("save_bindings"))
+	rebound.actions.append(_hud_call("set_text", {"control_name": "\"QuickLoadHint\"", "text": "$Services/Settings.key_binding_of(\"quick_load\") + \" Quick load\""}))
 	sheet.events.append(rebound)
 
-	var back: EventRow = _button_row("BackButton")
+	var back: EventRow = _signal_row("OptionsPanel/Box/BackButton", "pressed")
 	back.actions.append(_settings_call("save_all_settings"))
 	back.actions.append(_settings_call("save_bindings"))
-	back.actions.append(_hud_call("hide_panel", {"panel_name": "\"OptionsPanel\""}))
+	back.actions.append(_hud_call("switch_screen", {"panel_name": "\"GameScreen\""}))
 	sheet.events.append(back)
 
+	var keys: EventRow = EventRow.new()
+	keys.trigger_provider_id = "Core"
+	keys.trigger_id = "OnInput"
 	for pressed: Array in [["quick_save", _node_call("SaveSystemAddon", _save_system_path, "save_game")],
 			["quick_load", _node_call("SaveSystemAddon", _save_system_path, "load_game")],
-			["open_options", _hud_call("show_panel", {"panel_name": "\"OptionsPanel\""})]]:
+			["ui_focus_next", _hud_call("switch_screen", {"panel_name": "\"OptionsPanel\""})]]:
 		var key_row: EventRow = EventRow.new()
-		key_row.trigger_provider_id = "Core"
-		key_row.trigger_id = "OnInput"
 		key_row.conditions.append(_condition("Core", "EventIsActionPressed", _ace_template("EventIsActionPressed"), {"action": "\"%s\"" % pressed[0]}))
 		key_row.actions.append(pressed[1])
-		sheet.events.append(key_row)
+		keys.sub_events.append(key_row)
+	sheet.events.append(keys)
 
 	var before_save: EventRow = _signal_row("Services/SaveSystem", "before_save", "slot_index: int")
 	before_save.actions.append(_action("Core", "SetVar", "{var_name} = {value}", {"var_name": "player_spot", "value": "$GameScreen/Player.position"}))
@@ -2404,12 +2428,12 @@ func _build_options_and_quick_save() -> bool:
 	var after_load: EventRow = _signal_row("Services/SaveSystem", "after_load", "slot_index: int")
 	after_load.actions.append(_raw("$GameScreen/Player.position = player_spot"))
 	after_load.actions.append(_raw("hide_picked_coins()"))
-	after_load.actions.append(_hud_call("set_text", {"control_name": "\"CoinsLabel\"", "text": "\"Coins: %d\" % coins"}))
-	after_load.actions.append(_hud_call("show_toast", {"text": "\"Loaded (slot %d)\" % slot_index"}))
+	after_load.actions.append(_hud_call("set_text", {"control_name": "\"CoinsLabel\"", "text": "\"Coins: \" + str(coins)"}))
+	after_load.actions.append(_hud_call("show_toast", {"text": "\"Loaded\""}))
 	sheet.events.append(after_load)
 	var written: EventRow = _signal_row("Services/SaveSystem", "save_written", "slot_index: int")
-	written.actions.append(_hud_call("show_toast", {"text": "\"Saved (slot %d)\" % slot_index"}))
-	written.actions.append(_raw("refresh_hints()"))
+	written.actions.append(_hud_call("show_toast", {"text": "\"Saved (slot 0)\""}))
+	written.actions.append(_hud_call("set_text", {"control_name": "\"QuickLoadHint\"", "text": "$Services/Settings.key_binding_of(\"quick_load\") + \" Quick load\""}))
 	sheet.events.append(written)
 	var failed: EventRow = _signal_row("Services/SaveSystem", "load_failed", "slot_index: int, reason: String")
 	failed.actions.append(_hud_call("show_toast", {"text": "reason"}))
@@ -2418,8 +2442,18 @@ func _build_options_and_quick_save() -> bool:
 	var tick: EventRow = EventRow.new()
 	tick.trigger_provider_id = "Core"
 	tick.trigger_id = "OnProcess"
-	tick.actions.append(_raw("if not $OptionsPanel.visible:\n\t$GameScreen/Player.position += Input.get_vector(\"ui_left\", \"ui_right\", \"ui_up\", \"ui_down\") * 240.0 * delta\n\tcollect_coins()"))
+	# The player stands still while the options are open: the arrow keys move a slider there, not the player.
+	var moving: EventRow = EventRow.new()
+	moving.conditions.append(_condition("HudKitBehavior", "method:is_panel_visible", "$HudKit.is_panel_visible({panel_name})", {"panel_name": "\"GameScreen\""}))
+	moving.actions.append(_raw("$GameScreen/Player.position += Input.get_vector(\"ui_left\", \"ui_right\", \"ui_up\", \"ui_down\") * 240.0 * delta"))
+	tick.sub_events.append(moving)
 	sheet.events.append(tick)
+
+	var pickup: EventRow = EventRow.new()
+	pickup.trigger_provider_id = "Core"
+	pickup.trigger_id = "OnProcess"
+	pickup.actions.append(_raw("for coin: Node in get_tree().get_nodes_in_group(\"coins\"):\n\tif coin.visible and $GameScreen/Player.overlaps_area(coin):\n\t\tcoins += 1\n\t\tpicked_coins.append(str(coin.name))\n\t\tcoin.hide()\n\t\t$HudKit.set_text(\"CoinsLabel\", \"Coins: \" + str(coins))"))
+	sheet.events.append(pickup)
 
 	if not _compile(sheet, "res://demo/showcase/options_and_quick_save/options_and_quick_save.tres", "res://demo/showcase/options_and_quick_save/options_and_quick_save.gd"):
 		return false
@@ -2455,24 +2489,22 @@ func _build_options_and_quick_save() -> bool:
 	var coins_holder: Control = Control.new()
 	coins_holder.name = "Coins"
 	for spot: Vector2 in [Vector2(480, 300), Vector2(700, 420), Vector2(860, 220)]:
-		var coin: ColorRect = ColorRect.new()
-		coin.name = "Coin%d" % (coins_holder.get_child_count() + 1)
-		coin.color = Color(0.95, 0.78, 0.18)
-		coin.size = Vector2(22, 22)
+		var coin: Area2D = _area_square("Coin%d" % (coins_holder.get_child_count() + 1), Vector2(22, 22), Color(0.95, 0.78, 0.18))
 		coin.position = spot
+		coin.add_to_group("coins", true)
 		coins_holder.add_child(coin)
 	game.add_child(coins_holder)
-	var player: ColorRect = ColorRect.new()
-	player.name = "Player"
-	player.color = Color(0.35, 0.65, 0.95)
-	player.size = Vector2(28, 28)
+	var player: Area2D = _area_square("Player", Vector2(28, 28), Color(0.35, 0.65, 0.95))
 	player.position = Vector2(200, 300)
 	game.add_child(player)
-	# The key hints stand at the foot of the play area, so a fullscreen window keeps them with the game
-	# instead of at the bottom edge of the screen.
-	var hints: Label = _label("HintLabel", "", 15)
-	hints.position = Vector2(0, 604)
-	hints.size = Vector2(1152, 28)
+	# The key hints stand at the foot of the play area, one line each, so a fullscreen window keeps them
+	# with the game instead of at the bottom edge of the screen.
+	var hints: VBoxContainer = VBoxContainer.new()
+	hints.name = "Hints"
+	hints.position = Vector2(24, 540)
+	hints.add_child(_label("QuickSaveHint", "F5 Quick save", 15, false))
+	hints.add_child(_label("QuickLoadHint", "", 15, false))
+	hints.add_child(_label("OptionsHint", "Tab Options", 15, false))
 	game.add_child(hints)
 	root.add_child(game)
 	var options: PanelContainer = PanelContainer.new()
@@ -2495,7 +2527,7 @@ func _build_options_and_quick_save() -> bool:
 	options_box.name = "Box"
 	options_box.add_theme_constant_override("separation", 8)
 	options.add_child(options_box)
-	options_box.add_child(_label("OptionsTitle", "OPTIONS", 24))
+	options_box.add_child(_label("OptionsTitle", "Options", 24))
 	var volume_row: HBoxContainer = HBoxContainer.new()
 	volume_row.name = "VolumeRow"
 	var volume_label: Label = _label("VolumeLabel", "Master volume", 16, false)
@@ -2509,12 +2541,16 @@ func _build_options_and_quick_save() -> bool:
 	volume_slider.value = 80.0
 	volume_slider.custom_minimum_size = Vector2(220, 0)
 	volume_row.add_child(volume_slider)
+	var volume_value: Label = _label("VolumeValue", "80", 16, false)
+	volume_value.custom_minimum_size.x = 36.0
+	volume_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	volume_row.add_child(volume_value)
 	options_box.add_child(volume_row)
 	var fullscreen_box: CheckBox = CheckBox.new()
 	fullscreen_box.name = "fullscreen"
 	fullscreen_box.text = "Fullscreen"
 	options_box.add_child(fullscreen_box)
-	options_box.add_child(_label("ControlsTitle", "Controls", 18))
+	options_box.add_child(_controls_header())
 	var controls: VBoxContainer = VBoxContainer.new()
 	controls.name = "Controls"
 	controls.add_theme_constant_override("separation", 6)
@@ -2526,6 +2562,26 @@ func _build_options_and_quick_save() -> bool:
 	_settings_path = "Settings"
 	_save_system_path = "SaveSystem"
 	return _save_scene(root, "res://demo/showcase/options_and_quick_save/options_and_quick_save.tscn")
+
+
+## A coloured square that can overlap another: an Area2D holding a rectangle shape and the picture of it, so
+## "Player is overlapping Coin" is the engine's own overlap and not a distance worked out by hand.
+func _area_square(node_name: String, extent: Vector2, colour: Color) -> Area2D:
+	var area: Area2D = Area2D.new()
+	area.name = node_name
+	var shape: CollisionShape2D = CollisionShape2D.new()
+	shape.name = "Shape"
+	var rectangle: RectangleShape2D = RectangleShape2D.new()
+	rectangle.size = extent
+	shape.shape = rectangle
+	shape.position = extent / 2.0
+	area.add_child(shape)
+	var picture: ColorRect = ColorRect.new()
+	picture.name = "Picture"
+	picture.color = colour
+	picture.size = extent
+	area.add_child(picture)
+	return area
 
 
 # ── 14. Path Chase - Platformer Pathfinding driving Platformer Movement ──────

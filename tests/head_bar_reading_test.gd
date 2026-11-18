@@ -49,7 +49,7 @@ static func _one_bar_for_a_showcase() -> bool:
 	var head: Array = _head_rows(SHOWCASE)
 	return SUPPORT.pins(P, [
 		["input_rebind head bar", _words_of(head[0]),
-			"◆ InputRebindDemo Custom node · extends Control 16 events · 2 behaviours"],
+			"◆ InputRebindDemo Custom node · extends Control 18 events · 2 behaviours"],
 		["the head bar is the sheet's", _stable_uid(head[0]), "sheet_head_bar"],
 		["the head bar folds nothing", head[0].children.size(), 0],
 		["the head bar is a bar, not a group", head[0].row_type, EventRowData.RowType.SECTION],
