@@ -1060,8 +1060,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "2a0ffe3e47e50cb6a721c0c8f5c3e29d91f0eaaed7e4c303547a74bf05761857",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"png": "06f34c8ca6f87324196ec2c2dc866e1109ccf7777f9e2e49fb2bdbe9df6a5bc1",
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"name": "opened-script-event-numbers",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1138,8 +1138,8 @@
 				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "d431bdedbb9b2f3a5a27b0bea3900779ed27f10c19ce1b3bd50cd31bb3849ed4",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"png": "0d1a5dc788e7a14715c3d7023ef0d3f070f4618ab10756573287ef1550f707f3",
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"height": 84.0,
 			"name": "resting-toolbar",
@@ -1158,7 +1158,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "fd8bab11d088e7a18c4bab0d979adf764778497b9f22f3814632caffb6dd3483",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"name": "resting-toolbar-icons",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1190,7 +1190,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "9b9598c75aa53020970eec978230906ddf750bcec8877fc499f68aa3cd73f5d5",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"name": "resting-toolbar-expanded",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1216,8 +1216,8 @@
 				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "9d08612ac1f19050a5457e9d4981854774a9d336f0725727e0b60ff30ae7cd04",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"png": "ef022c6b520698b362fc6a706cb19b563acf23d5f45b882011c8fcb0c9c4a834",
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"name": "resting-toolbar-menu",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1243,8 +1243,8 @@
 				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "793040b2774862a09855b0ad63fde73e3cdef4dc1335ef9cd091029a16921315",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"png": "6ef3fa1727035da999f2bcf9e39a15b10ff4d715452e13c3243cad910e0ad7da",
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"name": "add-cascade-keys",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1271,8 +1271,8 @@
 				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "07827f0aad6b1c717defa891757c24a26052d5fd9a2a895a8974bc965cca7e65",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"png": "4ae760bebf6dcc0acb6fe68d2752d9e94ae28d54b154d204e06d2128e2cdfb7f",
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"name": "view-sheet-theme-menu",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1298,8 +1298,8 @@
 				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "bc6bb2f8bb0f78dfc8322d620c69c888d8e7e70bc9665fae1f9d1eb761ab4dbe",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"png": "da2aa242c126951395a1dabf2422b2c3fc47d055fe365afbd29108561661571b",
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"name": "look-sheet-1-menu",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1340,8 +1340,8 @@
 				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "a5dc953a9091517172110636f78b811e31a02825015fccb56cc615c15906e874",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"png": "2d84c38624e4399c7494d713a057d5380319301e7991c07819ad45fc1cbbc789",
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"name": "resting-toolbar-note",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1369,8 +1369,8 @@
 				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "01756ca05a8392ceab31b466607069e374469187a5ae9fe1a5200420a6143859",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"png": "363ffb2ffb0cebf3a1259ce2353fcf072a7814a4e5d49f3157e54d571a73f78a",
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"name": "play-button-dropdown",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1398,8 +1398,8 @@
 				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "5c64cf2e213899bedb9d2af8be95c146770d2e7c32aaefd3b44dc0b14e4b9285",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"png": "f4cc5e43ccf2beb019263f7b785abd2fc448b5f3fa8216b0268c012ef50c270f",
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"name": "play-button-stop",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1431,7 +1431,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "b76d3cf9ce4c4080aed837fe1ccc392fa161dc43526fae699d6cbe973d032759",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"name": "beginner-toolbar",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1517,8 +1517,8 @@
 				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "d68b236e103fd283d8e01b5ca6bd03ca6d6881426137d304a502f7a6d47f0ce9",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"png": "ef6a1df56f74d2599868c75e2ac0dacbe836a1d794cc08d7ec30d6d0a7f4e6aa",
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"name": "refactor-row-menu",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1536,8 +1536,8 @@
 				"godot": "4.7-stable (official)",
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "72559b61e18904b3e43e20de4a29da5f1c24c680a7064aa0b803590dd99a6b79",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"png": "d0034168bc4bad67047b50a27f6d7425199333f0577f0646f0cb201e02448ac6",
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"icons": [
 				"sections"
@@ -1591,8 +1591,8 @@
 				"godot": "4.7-stable (official)",
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "64462218b81c6cf3a128219e7961189ddb20387c7d4d8fe6bd36a553a55fd174",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"png": "51f1b91b0d58c0ad1dc41a3b8cf0d912df2f8d505877c863a0c5f549defc4be9",
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"icons": [
 				"sections"
@@ -1646,8 +1646,8 @@
 				"godot": "4.7-stable (official)",
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "72559b61e18904b3e43e20de4a29da5f1c24c680a7064aa0b803590dd99a6b79",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"png": "d0034168bc4bad67047b50a27f6d7425199333f0577f0646f0cb201e02448ac6",
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"icons": [
 				"sections"
@@ -1702,7 +1702,7 @@
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "e940309e0007709bd984255cc43edce76b6cea59e7e1bd8d2981d00324f4a35b",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"icons": [
 				"sections"
@@ -1818,7 +1818,7 @@
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "aa3e1f15389616c0cc20034b42268eda7864f317e2ab799890ec87c05eea1a95",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"icons": [
 				"sections"
@@ -1927,8 +1927,8 @@
 				"godot": "4.7-stable (official)",
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "3cc471131d45a31bd19f8dcef56c873a8ca4a2aaf2203dba084954863a8046db",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"png": "f66c59e7909f2c3fed38ec3b5e7232a31fae9320a43bd2c1d2c374bc2d468633",
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"icons": [
 				"sections"
@@ -1992,7 +1992,7 @@
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "a651737d2f3e4b3d7025f231dbb1cfe2fe4e4596f882261c09597180805c5e1c",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"icons": [
 				"sections"
@@ -2047,7 +2047,7 @@
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "1ad3e47ccc9345d0fd7915b358853f5bd6369a8c81a3409d40a6d1c7f4163c0f",
-				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"icons": [
 				"sections"
