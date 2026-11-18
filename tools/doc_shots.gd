@@ -33,7 +33,7 @@
 #   hover_span {row, word}              close_scene                       picker_collapse {text}  rename_file {from, to}
 #   report_files {paths}
 #   doctor_page {page, select, nth, width, height}   the Project Doctor window drawn with the findings one staged page
-#                                       holds (tools/doc_shots/doctor_pages.gd: migration, reading, collisions, scene_trust,
+#                                       holds (tools/doc_shots/doctor_pages.gd.txt: migration, reading, collisions, scene_trust,
 #                                       watch, tidiness); `select` picks a finding row so its fixes show; doctor_release puts back
 #                                       what the collisions page set
 #   popup_size {width, height, frame}   the top window at an exact size (`frame` counts the title bar in the height)
@@ -720,7 +720,7 @@ func _step(step: Dictionary) -> bool:
 				panel._build()
 			panel._doctor_window.size = Vector2i(int(step.get("width", 1120)), int(step.get("height", 720)))
 			EventSheetWindowPlacement.popup_centered(panel._doctor_window)
-			var staged_findings: Array = load("res://tools/doc_shots/doctor_pages.gd").findings(str(step["page"]))
+			var staged_findings: Array = _doctor_pages().call("findings", str(step["page"]))
 			panel._draw_page(staged_findings)
 			await _w(20)
 			if step.has("select"):
@@ -731,7 +731,7 @@ func _step(step: Dictionary) -> bool:
 				panel._doctor_tree.set_selected(chosen, 3)
 				await _w(20)
 		"doctor_release":
-			load("res://tools/doc_shots/doctor_pages.gd").release_collisions()
+			_doctor_pages().call("release_collisions")
 		"popup_size":
 			# The top window at an exact size, so a picture keeps the frame it always had.
 			var sized: Window = null
@@ -757,6 +757,15 @@ func _step(step: Dictionary) -> bool:
 			_log("unknown step %s" % step["do"])
 			return false
 	return true
+
+
+## The staged Doctor pages, compiled from their text file at run time. They live in a `.txt` so the editor's
+## own self-reading sample of project scripts is never shifted by a file that exists only to take pictures.
+func _doctor_pages() -> GDScript:
+	var pages: GDScript = GDScript.new()
+	pages.source_code = FileAccess.get_file_as_string("res://tools/doc_shots/doctor_pages.gd.txt")
+	pages.reload()
+	return pages
 
 
 func _find_tree_item(from: TreeItem, text: String, nth: int) -> TreeItem:
