@@ -369,7 +369,7 @@ The line the author wrote is stored on the row, so saving writes their file back
 that cannot keep that promise fails the pack build by name rather than shipping. The full form, its
 fragment words and the three rules it is held to are in the Custom ACEs guide.
 
-![The same hand-written file read twice: as generic calls, and as the pack's own verbs once it teaches its spellings](images/pack-taught-spellings.png)
+![A hand-written file whose calls into a pack read as the pack's own verbs (Start flickering, Stop flickering) because the pack teaches its spellings, while a call nobody taught stays a plain call row](images/pack-taught-spellings.png)
 
 **If the lines are your project's own**, the Doctor's Reading ledger is the input: the shape at the
 top of it is the one that would pay first, and the three lines it opens are the real code that

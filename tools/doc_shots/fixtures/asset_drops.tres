@@ -1,0 +1,80 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/custom_block_row.gd" id="1_2wav8"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="2_jnuqd"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_eqkd6"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_xjnvn"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_ssx62"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_brdhx"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="7_frttw"]
+
+[sub_resource type="Resource" id="Resource_l1duc"]
+script = ExtResource("1_2wav8")
+kind_id = "preload"
+fields = {
+"name": "Slime",
+"path": "res://tools/doc_shots/fixtures/slime.tres"
+}
+
+[sub_resource type="Resource" id="Resource_4kt3u"]
+script = ExtResource("2_jnuqd")
+ace_id = "SpawnSceneAt"
+params = {
+"path": "\"res://tools/doc_shots/fixtures/empty_stage.tscn\"",
+"position": "Vector2(0, 0)"
+}
+folds_literals = true
+codegen_template = "var __spawn_29b7d32e = load({path}).instantiate()
+__spawn_29b7d32e.position = {position}
+add_child(__spawn_29b7d32e)"
+
+[sub_resource type="Resource" id="Resource_45g7k"]
+script = ExtResource("2_jnuqd")
+ace_id = "PlaySound"
+params = {
+"path": "\"res://tools/doc_shots/fixtures/sfx/jump.wav\""
+}
+folds_literals = true
+codegen_template = "var __sfx_adbafaaa = AudioStreamPlayer.new()
+__sfx_adbafaaa.stream = load({path})
+if __sfx_adbafaaa.stream == null:
+	__sfx_adbafaaa.queue_free()
+else:
+	__sfx_adbafaaa.bus = {bus}
+	__sfx_adbafaaa.volume_db = {volume_db}
+	add_child(__sfx_adbafaaa)
+	set_meta(\"__last_sfx\", __sfx_adbafaaa)
+	__sfx_adbafaaa.finished.connect(__sfx_adbafaaa.queue_free)
+	__sfx_adbafaaa.play()"
+
+[sub_resource type="Resource" id="Resource_i76s8"]
+script = ExtResource("1_2wav8")
+kind_id = "preload"
+fields = {
+"name": "Hero",
+"path": "res://art/hero.png"
+}
+
+[sub_resource type="Resource" id="Resource_7dcuc"]
+script = ExtResource("2_jnuqd")
+ace_id = "JsonLoadFile"
+params = {
+"path": "\"res://tests/fixtures/foreign_event_sheet.json\"",
+"var_name": "data"
+}
+folds_literals = true
+codegen_template = "{var_name} = JSON.parse_string(FileAccess.get_file_as_string({path}))"
+
+[sub_resource type="Resource" id="Resource_3tann"]
+script = ExtResource("6_brdhx")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_4kt3u"), SubResource("Resource_45g7k"), SubResource("Resource_i76s8"), SubResource("Resource_7dcuc")])
+event_uid = "7082b6"
+
+[resource]
+script = ExtResource("7_frttw")
+host_class = "Node2D"
+addon_tags = PackedStringArray()
+addon_requires = PackedStringArray()
+events = Array[Resource]([SubResource("Resource_l1duc"), SubResource("Resource_3tann")])

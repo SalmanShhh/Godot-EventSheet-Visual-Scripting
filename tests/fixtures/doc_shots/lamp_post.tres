@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="1_q8q70"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="2_l0ab5"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="3_drp8u"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="4_tivff"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="5_5lb6t"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="6_c55et"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="7_s7cdx"]
+
+[sub_resource type="Resource" id="Resource_kttey"]
+script = ExtResource("1_q8q70")
+provider_id = "LightFlicker"
+ace_id = "FlickerLight"
+params = {
+"amount": "0.4",
+"light": "$Lamp"
+}
+codegen_template = "flicker({light}, {amount})"
+display_text = "Flicker {light} by {amount}"
+
+[sub_resource type="Resource" id="Resource_xy7t4"]
+script = ExtResource("5_5lb6t")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_kttey")])
+event_uid = "5d6bd5"
+
+[sub_resource type="Resource" id="Resource_o78vs"]
+script = ExtResource("6_c55et")
+code = "$Lamp.visible = true"
+
+[sub_resource type="Resource" id="Resource_4vonh"]
+script = ExtResource("5_5lb6t")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_o78vs")])
+event_uid = "6950fd"
+
+[resource]
+script = ExtResource("7_s7cdx")
+host_class = "Node2D"
+addon_tags = PackedStringArray()
+addon_requires = PackedStringArray()
+events = Array[Resource]([SubResource("Resource_xy7t4"), SubResource("Resource_4vonh")])

@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="1_2ihog"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="2_aosg4"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_3ubnh"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_foai0"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_ggg4v"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_ujq62"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="7_ti31w"]
+
+[sub_resource type="Resource" id="Resource_gn2iq"]
+script = ExtResource("1_2ihog")
+ace_id = "StopAudio"
+params = {
+"target": "$Alarm"
+}
+codegen_template = "{target.}stop()"
+display_text = "Stop sound"
+
+[sub_resource type="Resource" id="Resource_ihwla"]
+script = ExtResource("2_aosg4")
+code = "$Lamp.visible = true"
+
+[sub_resource type="Resource" id="Resource_o7xpu"]
+script = ExtResource("6_ujq62")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_gn2iq"), SubResource("Resource_ihwla")])
+event_uid = "e80ca2"
+
+[resource]
+script = ExtResource("7_ti31w")
+host_class = "Node2D"
+addon_tags = PackedStringArray()
+addon_requires = PackedStringArray()
+events = Array[Resource]([SubResource("Resource_o7xpu")])

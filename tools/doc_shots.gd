@@ -28,7 +28,12 @@
 #   push_key {key, mods, times}         menu_open {button, path}          view_rows {from, to, width, height}
 #   fold {text, open}                   right_click_row {text}   click_row {text, x}            click_control {class, text}
 #   new_from_template {id}              project_setting {name, value} (in memory only)   lane_ratio {value}   play_scene {path}   stop_scene   hover_sheet {x, y}   dump_controls
-#   (menu_open also takes activate: true to press the last item; a shot may list `cleanup` steps and `parts` with a `layout`)
+#   static_call {script, method, args}  copy_to_user {from, to}          delete_user {path}      api {method, args}
+#   params_dialog {provider, ace, values}   type_text {text}              drag_divider {dx}       end_drag
+#   hover_span {row, word}              close_scene                       picker_collapse {text}  rename_file {from, to}
+#   report_files {paths}
+#   (menu_open also takes activate: true to press the last item; a shot may list `cleanup` steps and `parts` with a `layout`;
+#   `keep_mouse: true` leaves the pointer where a step put it - otherwise it is parked in a corner before every capture)
 #
 # THE CROPS: `window` (the whole editor), `main_screen`, `sheet` (the sheet canvas), `rows` (the rows named
 # by view_rows), `inspector`, `popup` (the top window exactly, title bar in and nothing outside it),
@@ -152,6 +157,8 @@ func _take(shot: Dictionary) -> void:
 			EventSheets._dock._set_status("")
 		for step: Dictionary in _steps_of(part):
 			ok = await _step(step) and ok
+		if not bool(part.get("keep_mouse", false)) and not (str(part.get("crop", "")) in ["menus", "submenu", "popup"]):
+			await _park_mouse()
 		await _w(8)
 		_quiet_carets()
 		await _w(4)
@@ -349,6 +356,92 @@ func _step(step: Dictionary) -> bool:
 			await _w(10)
 		"project_setting":
 			ProjectSettings.set_setting(str(step["name"]), step["value"])
+		"static_call":
+			# A static function of a script, for a cache a picture's setting would otherwise find stale.
+			(load(str(step["script"])) as GDScript).callv(str(step["method"]), step.get("args", []))
+		"copy_to_user":
+			# A file a picture needs that must not sit in the project (a script with real errors would
+			# break every import), put in the user folder for the shot and removed again by `delete_user`.
+			var text: String = FileAccess.get_file_as_string(str(step["from"]))
+			var copy: FileAccess = FileAccess.open(str(step["to"]), FileAccess.WRITE)
+			copy.store_string(text)
+			copy.close()
+		"delete_user":
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(str(step["path"])))
+		"drag_divider":
+			# The Conditions | Actions boundary taken in hand and moved `dx` pixels, and NOT let go (a picture of
+			# the guide line the drag draws); `end_drag` lets go.
+			var lanes_view: EventSheetViewport = dock._viewport
+			var boundary_x: float = lanes_view.get_lane_divider_x(lanes_view._get_logical_canvas_width())
+			lanes_view.begin_column_header_drag({"kind": "lane_divider", "boundary_x": boundary_x})
+			lanes_view.drag_column_header_to(boundary_x + float(step.get("dx", 60.0)))
+			await _w(12)
+		"end_drag":
+			dock._viewport.end_column_header_drag()
+			await _w(6)
+		"hover_span":
+			# The pointer resting on one word of a row: the row holding `row`, the first span reading `word`.
+			var hover_view: EventSheetViewport = dock._viewport
+			var hover_row: int = _find_row(hover_view, step["row"])
+			if hover_row < 0:
+				_log("no row to hover: %s" % step["row"])
+				return false
+			var hover_data: EventRowData = hover_view.get_row_data(hover_row)
+			for span_index: int in hover_data.spans.size():
+				if hover_data.spans[span_index].text == str(step["word"]):
+					hover_view._set_hover_state(hover_row, span_index)
+					hover_view.queue_redraw()
+					break
+			await _w(12)
+		"close_scene":
+			EditorInterface.close_scene()
+			await _w(20)
+		"rename_file":
+			# A file renamed the way the FileSystem dock renames one: on disk, the editor told to rescan, and
+			# the dock's own moved-files signal sent, which is what the plugin listens to.
+			DirAccess.rename_absolute(ProjectSettings.globalize_path(str(step["from"])), ProjectSettings.globalize_path(str(step["to"])))
+			EditorInterface.get_resource_filesystem().scan()
+			EditorInterface.get_file_system_dock().files_moved.emit(str(step["from"]), str(step["to"]))
+			await _w(30)
+		"report_files":
+			for path: Variant in step["paths"]:
+				_log("file %s exists=%s" % [path, FileAccess.file_exists(str(path))])
+		"picker_collapse":
+			# One section of the Add window's list folded shut (a section named by its heading).
+			var picker_tree: Tree = dock._ace_picker._objects_tree
+			var section: TreeItem = picker_tree.get_root().get_first_child() if picker_tree.get_root() != null else null
+			while section != null:
+				if section.get_text(0) == str(step["text"]):
+					section.collapsed = true
+				section = section.get_next()
+			await _w(10)
+		"api":
+			# One of the public EventSheets calls (open_docs and the like), the way a plugin would make it.
+			load("res://addons/eventsheet/api/eventsheets.gd").callv(str(step["method"]), step.get("args", []))
+			await _w(int(step.get("frames", 40)))
+		"params_dialog":
+			# The parameters window of one verb, opened the way the picker opens it, with the values given.
+			var definition: ACEDefinition = dock._ace_registry.find_definition(str(step["provider"]), str(step["ace"]))
+			if definition == null:
+				_log("no verb %s/%s" % [step["provider"], step["ace"]])
+				return false
+			var context: Dictionary = (step.get("context", {}) as Dictionary).duplicate()
+			context["from_picker"] = true
+			dock._ace_params.open_with_values(definition, context, step.get("values", {}))
+			await _w(int(step.get("frames", 40)))
+		"type_text":
+			# What a person types into the focused field, set at once (the field's own change signal fires).
+			var focused: Control = root.gui_get_focus_owner()
+			if focused is LineEdit:
+				(focused as LineEdit).text = str(step["text"])
+				(focused as LineEdit).text_changed.emit(str(step["text"]))
+			elif focused is TextEdit:
+				(focused as TextEdit).text = str(step["text"])
+				(focused as TextEdit).text_changed.emit()
+			else:
+				_log("nothing focused to type into")
+				return false
+			await _w(int(step.get("frames", 20)))
 		"play_scene":
 			EditorInterface.play_custom_scene(str(step["path"]))
 			await _w(int(step.get("frames", 150)))
@@ -657,6 +750,24 @@ func _click_control(class_name_: String, text: String) -> bool:
 		return true
 	_log("no control %s %s" % [class_name_, text])
 	return false
+
+
+## The pointer a step left over the canvas would light a row or a chip in the picture, and where it stopped
+## differs from shot to shot, so it is put over the empty part of the Scene dock before every capture: the
+## pointer leaves the sheet (so no row or chip stays lit) and lands on a panel that holds nothing at that spot.
+func _park_mouse() -> void:
+	var at: Vector2 = Vector2(150, 440)
+	var motion: InputEventMouseMotion = InputEventMouseMotion.new()
+	motion.position = at
+	motion.global_position = at
+	root.push_input(motion)
+	await _w(6)
+	# A pointer that leaves the canvas does not always tell it so: the row or chip it last lit (and its drag
+	# grip) is let go of here.
+	if EventSheets._dock != null and EventSheets._dock._viewport != null:
+		EventSheets._dock._viewport._set_hover_state(-1, -1)
+		EventSheets._dock._viewport.queue_redraw()
+		await _w(4)
 
 
 ## The text caret blinks, and which half of the blink a capture lands on would differ from run to run.

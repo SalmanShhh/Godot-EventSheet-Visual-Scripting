@@ -299,7 +299,7 @@ new_enemy.global_position = ($SpawnBox as Node3D).to_global(Vector3(randf() - 0.
   both dimensions. The 3D row exists so the 3D page offers it; the reading of that line stays the 2D
   row's, so an opened file never has two rows arguing over one spelling.
 
-![A wave spawned inside a box, and a flanker on a ring around the player](../images/scenes-spawn-3d.png)
+![Two events on a 3D sheet: an every-tick event gated on the spawners group gaining its first member, whose sub-events ask whether SpawnBox is a CollisionShape3D and spawn inside it, or else elsewhere](../images/scenes-spawn-3d.png)
 
 **There is no 3D Random Place Off Screen Edge, on purpose.** In 2D a screen edge is a rectangle in
 the same plane the game is played in, which is why that row can be one honest expression. In 3D

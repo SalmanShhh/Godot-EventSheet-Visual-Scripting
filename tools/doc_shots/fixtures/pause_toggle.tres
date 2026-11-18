@@ -1,0 +1,109 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="1_55ova"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="2_2cv7g"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="3_5pkwv"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="4_h5ilm"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="5_b4rmf"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="6_65h2k"]
+
+[sub_resource type="Resource" id="Resource_6w10a"]
+script = ExtResource("1_55ova")
+ace_id = "AddLayoutOnTop"
+params = {
+"layout_name": "\"PauseMenu\"",
+"path": "\"res://tools/doc_shots/fixtures/empty_stage.tscn\""
+}
+folds_literals = true
+codegen_template = "var __layout_lift_probe: Node = get_tree().root.get_node_or_null({layout_name})
+if __layout_lift_probe == null:
+	__layout_lift_probe = (load({path}) as PackedScene).instantiate()
+	__layout_lift_probe.name = {layout_name}
+	get_tree().root.add_child(__layout_lift_probe)"
+
+[sub_resource type="Resource" id="Resource_s2x03"]
+script = ExtResource("1_55ova")
+ace_id = "PauseGame"
+folds_literals = true
+codegen_template = "get_tree().paused = true"
+
+[sub_resource type="Resource" id="Resource_5aob8"]
+script = ExtResource("2_2cv7g")
+ace_id = "IsActionJustPressed"
+params = {
+"action": "\"ui_cancel\""
+}
+plain_negation = true
+folds_literals = true
+codegen_template = "Input.is_action_just_pressed(&{action})"
+
+[sub_resource type="Resource" id="Resource_7ocyh"]
+script = ExtResource("2_2cv7g")
+ace_id = "LayoutIsOnTop"
+params = {
+"layout_name": "\"PauseMenu\""
+}
+negated = true
+plain_negation = true
+folds_literals = true
+codegen_template = "get_tree().root.get_node_or_null({layout_name}) != null"
+
+[sub_resource type="Resource" id="Resource_0p0fu"]
+script = ExtResource("5_b4rmf")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+conditions = Array[ExtResource("2_2cv7g")]([SubResource("Resource_5aob8"), SubResource("Resource_7ocyh")])
+actions = Array[Resource]([SubResource("Resource_6w10a"), SubResource("Resource_s2x03")])
+event_uid = "bd34d8"
+
+[sub_resource type="Resource" id="Resource_1sint"]
+script = ExtResource("1_55ova")
+ace_id = "RemoveLayoutOnTop"
+params = {
+"layout_name": "\"PauseMenu\""
+}
+folds_literals = true
+codegen_template = "var __layout_lift_probe: Node = get_tree().root.get_node_or_null({layout_name})
+if __layout_lift_probe != null:
+	get_tree().root.remove_child(__layout_lift_probe)
+	__layout_lift_probe.queue_free()"
+
+[sub_resource type="Resource" id="Resource_gytn5"]
+script = ExtResource("1_55ova")
+ace_id = "UnpauseGame"
+folds_literals = true
+codegen_template = "get_tree().paused = false"
+
+[sub_resource type="Resource" id="Resource_qkr00"]
+script = ExtResource("2_2cv7g")
+ace_id = "IsActionJustPressed"
+params = {
+"action": "\"ui_cancel\""
+}
+plain_negation = true
+folds_literals = true
+codegen_template = "Input.is_action_just_pressed(&{action})"
+
+[sub_resource type="Resource" id="Resource_80lw1"]
+script = ExtResource("2_2cv7g")
+ace_id = "LayoutIsOnTop"
+params = {
+"layout_name": "\"PauseMenu\""
+}
+plain_negation = true
+folds_literals = true
+codegen_template = "get_tree().root.get_node_or_null({layout_name}) != null"
+
+[sub_resource type="Resource" id="Resource_h4jod"]
+script = ExtResource("5_b4rmf")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+conditions = Array[ExtResource("2_2cv7g")]([SubResource("Resource_qkr00"), SubResource("Resource_80lw1")])
+actions = Array[Resource]([SubResource("Resource_1sint"), SubResource("Resource_gytn5")])
+event_uid = "fa3645"
+
+[resource]
+script = ExtResource("6_65h2k")
+addon_tags = PackedStringArray()
+addon_requires = PackedStringArray()
+events = Array[Resource]([SubResource("Resource_0p0fu"), SubResource("Resource_h4jod")])

@@ -7,7 +7,7 @@ behaves. Hovering any row always shows the exact GDScript behind it.
 
 ![Several styles at once: the identity bars, a state-machine reading with diamond badges, and sentence rows](images/code-patterns-lifted-machine.png)
 
-![The Timeline block and the pattern rows: beats as condition/action child rows, sentences in the action lane](images/pattern-verbs.png)
+![The patterns as rows: an On ready chain with two Waits, Every 2 to 5 seconds, Toggle, Move toward, turn toward, wrap, bob and within distance](images/pattern-verbs.png)
 
 ## The icon legend
 
@@ -56,8 +56,6 @@ number is what a bookmark, the Find bar and a Doctor finding all print.
 ## Identity bars - what this sheet IS
 
 ![The head at rest: the enum as one sentence, with the sheet head's bands above it](images/prelude-blocks-closed.png)
-
-![The same head opened: one row per enum value with its number, under the sheet head's bands](images/prelude-blocks-open.png)
 
 Three definition blocks wear the accent band, a left accent edge, and half again the height of
 a content row, so they can never be mistaken for one:

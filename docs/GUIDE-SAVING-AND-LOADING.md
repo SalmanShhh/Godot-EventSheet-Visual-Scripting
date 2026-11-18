@@ -174,7 +174,7 @@ The other four are about content that came from outside the game rather than abo
 
 The guard is never behind your back. Opened as a sheet, a guarded read reads as the question and its two answers, with the exact line of code echoed beside each row:
 
-![An event sheet showing a guarded read as a file-exists condition with its else branch, a make-directory row, and the write under it, each with its emitted line echoed on the right](images/file-guarded-read.png)
+![A sheet that reads a save file only when it exists: Set data to text of file user://save.dat under the condition that the file exists, a make directory row under Else, then the write as plain rows](images/file-guarded-read.png)
 
 **Write Text File (in a folder)** covers the other half of the same lesson: Godot will not create a folder on the way to opening a file, so a write into `user://runs/latest.txt` fails until something makes `runs`. The row carries the choice - make the folder first, or the folder is already there - and the `make_dir_recursive_absolute` line it adds is emitted above the write and shown on the row, never behind your back.
 

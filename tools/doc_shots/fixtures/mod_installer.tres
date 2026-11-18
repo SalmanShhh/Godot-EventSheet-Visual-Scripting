@@ -1,0 +1,123 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="1_nlfq0"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="2_oxnk1"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="3_6u74j"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="4_kcsdk"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="5_4dad4"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="6_p57bm"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="7_x701i"]
+
+[sub_resource type="Resource" id="Resource_rwk1y"]
+script = ExtResource("1_nlfq0")
+code = "## Unpacks the mod archive the player dropped in the user folder and shows how far it got."
+
+[sub_resource type="Resource" id="Resource_dj4jw"]
+script = ExtResource("2_oxnk1")
+ace_id = "UnpackZipIntoFolder"
+params = {
+"archive": "\"user://pack.zip\"",
+"folder": "\"user://mods\""
+}
+folds_literals = true
+codegen_template = "var __reader_lift_probe := ZIPReader.new()
+if __reader_lift_probe.open({archive}) == OK:
+	DirAccess.make_dir_recursive_absolute({folder})
+	var __root_lift_probe := ProjectSettings.globalize_path({folder}).simplify_path().trim_suffix(\"/\") + \"/\"
+	var __total_lift_probe := 0
+	for __listed_lift_probe: String in __reader_lift_probe.get_files():
+		if not __listed_lift_probe.ends_with(\"/\"):
+			__total_lift_probe += 1
+	var __written_lift_probe := 0
+	var __bytes_lift_probe := 0
+	var __skipped_lift_probe := 0
+	var __refused_lift_probe := \"\"
+	for __entry_lift_probe: String in __reader_lift_probe.get_files():
+		if __entry_lift_probe.ends_with(\"/\"):
+			continue
+		var __into_lift_probe := ({folder}).path_join(__entry_lift_probe)
+		if not ProjectSettings.globalize_path(__into_lift_probe).simplify_path().begins_with(__root_lift_probe):
+			__refused_lift_probe = __entry_lift_probe
+			break
+		var __data_lift_probe := __reader_lift_probe.read_file(__entry_lift_probe)
+		if __data_lift_probe.is_empty():
+			__skipped_lift_probe += 1
+			continue
+		DirAccess.make_dir_recursive_absolute(__into_lift_probe.get_base_dir())
+		var __file_lift_probe := FileAccess.open(__into_lift_probe, FileAccess.WRITE)
+		if __file_lift_probe:
+			__file_lift_probe.store_buffer(__data_lift_probe)
+			__file_lift_probe.close()
+			__written_lift_probe += 1
+			__bytes_lift_probe += __data_lift_probe.size()
+			_on_unpack_progress(__written_lift_probe, __bytes_lift_probe, __total_lift_probe)
+		else:
+			__skipped_lift_probe += 1
+	__reader_lift_probe.close()
+	if __refused_lift_probe.is_empty():
+		_on_unpack_finished(__written_lift_probe, __bytes_lift_probe, __skipped_lift_probe)
+	else:
+		_on_unpack_refused(__refused_lift_probe, \"it points outside the folder it is being unpacked into\")"
+
+[sub_resource type="Resource" id="Resource_d2lcc"]
+script = ExtResource("6_p57bm")
+trigger_provider_id = "Core"
+trigger_id = "OnEnterTree"
+actions = Array[Resource]([SubResource("Resource_dj4jw")])
+event_uid = "5d2e79"
+
+[sub_resource type="Resource" id="Resource_8o5vj"]
+script = ExtResource("2_oxnk1")
+ace_id = "SetProperty"
+params = {
+"property": "value",
+"target": "$ProgressBar",
+"value": "float(entries) / float(total) * 100.0"
+}
+folds_literals = true
+codegen_template = "{target}.{property} = {value}"
+
+[sub_resource type="Resource" id="Resource_17q8q"]
+script = ExtResource("6_p57bm")
+trigger_provider_id = "Core"
+trigger_id = "OnUnpackProgress"
+actions = Array[Resource]([SubResource("Resource_8o5vj")])
+event_uid = "995f49"
+
+[sub_resource type="Resource" id="Resource_3ysgn"]
+script = ExtResource("2_oxnk1")
+ace_id = "Print"
+params = {
+"value": "\"Refused \" + entry + \": \" + reason"
+}
+folds_literals = true
+codegen_template = "print({value})"
+
+[sub_resource type="Resource" id="Resource_8vif7"]
+script = ExtResource("6_p57bm")
+trigger_provider_id = "Core"
+trigger_id = "OnUnpackRefused"
+actions = Array[Resource]([SubResource("Resource_3ysgn")])
+event_uid = "a1359a"
+
+[sub_resource type="Resource" id="Resource_bffch"]
+script = ExtResource("2_oxnk1")
+ace_id = "Print"
+params = {
+"value": "\"Unpacked \" + str(entries) + \" files\""
+}
+folds_literals = true
+codegen_template = "print({value})"
+
+[sub_resource type="Resource" id="Resource_wd0lf"]
+script = ExtResource("6_p57bm")
+trigger_provider_id = "Core"
+trigger_id = "OnUnpackFinished"
+actions = Array[Resource]([SubResource("Resource_bffch")])
+event_uid = "60bd29"
+
+[resource]
+script = ExtResource("7_x701i")
+addon_tags = PackedStringArray()
+addon_requires = PackedStringArray()
+events = Array[Resource]([SubResource("Resource_rwk1y"), SubResource("Resource_d2lcc"), SubResource("Resource_17q8q"), SubResource("Resource_8vif7"), SubResource("Resource_wd0lf")])

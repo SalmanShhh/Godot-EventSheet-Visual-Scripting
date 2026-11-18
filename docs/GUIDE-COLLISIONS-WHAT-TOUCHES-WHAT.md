@@ -114,9 +114,9 @@ names of everything else in the project whose own mask covers one of this object
 other end of the asymmetry, worked out for you. *Monitoring* is said only for an Area, because it is
 the Area's own switch. The band lists what fits and counts the rest, its code echo is the lines of
 the scene file it came from and nothing else, and its control selects the node in the scene. A sheet
-whose node does not collide grows no band at all.
+whose node does not collide grows no band at all. The default look keeps scene facts like these in the hover card of the sheet's name; the Classic Sheet theme draws each one as a band, as pictured below.
 
-![The collisions band at the top of a sheet, reading sees Doors, seen by Doors, monitoring on](images/collisions-head-band.png)
+![The collisions band at the top of a sheet drawn in the Classic Sheet theme, reading sees Doors, seen by Doors, monitoring on](images/collisions-head-band.png)
 
 ## The touch, with a filter on it
 

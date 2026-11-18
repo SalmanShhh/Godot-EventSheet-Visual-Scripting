@@ -62,7 +62,7 @@ changed under you. None of that is allowed to shout.
 card. A row with something to answer wears the **quiet amber row state** and nothing else, and the
 sheet's head grows at most **one counting line**. That is the whole of what a sheet says about itself.
 
-![An event sheet whose head band reads migration, 1 row asks you, with a Migrate link beside it; the first event's row wears the quiet amber state and carries no icon or inline text, and the help strip at the foot reads LightFlicker no longer has this verb, the row still reads Flicker $Lamp by 0.4 and still compiles, with See what replaced it and Keep as code beside it](images/migration-amber-row.png)
+![An event sheet whose head band reads migration, 1 row asks you; the first event's row wears the quiet amber state and carries no icon or inline text](images/migration-amber-row.png)
 
 The words live in two places, and only two:
 
@@ -118,11 +118,11 @@ Some properties of that worth knowing before you write one:
 badge, because it is not wrong. Select it and one muted line appears on the help strip - *newer
 spelling: Go To State* - with no door beside it.
 
-![An event sheet whose head band reads migration, 1 row has a newer spelling, with a Migrate link; the selected action row Go to state "chasing" looks exactly like the ordinary row under it, and the help strip at the foot carries one muted line reading newer spelling: Go To State](images/successor-row-strip.png)
+![An event sheet whose head band reads migration, 1 row has a newer spelling; the selected action row Stop sound looks exactly like the ordinary row beside it, and the help strip under the sheet carries one muted line naming the newer spelling, Stop](images/successor-row-strip.png)
 
 The head band is the other half, and it is derived from the rows rather than stored anywhere:
 
-![A sheet head whose bands read class_name Sentry, extends CharacterBody2D, and one counting line - migration, 3 rows have a newer spelling, since 0.14.0 - with Migrate beside it; the four events underneath carry no mark of any kind](images/migration-head-band.png)
+![A sheet head whose identity bar reads Sentry, extends CharacterBody2D, and one counting line - migration, 3 rows have a newer spelling, since 0.14.0](images/migration-head-band.png)
 
 The *since* half comes from one project-level line, `eventsheets/project/vocabulary_version` in
 Project Settings, remembering which vocabulary this project's sheets were last edited under. It is

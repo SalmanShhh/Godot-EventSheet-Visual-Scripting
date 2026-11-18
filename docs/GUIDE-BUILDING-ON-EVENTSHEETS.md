@@ -730,7 +730,7 @@ EventSheets.on_sheet_saved(func(payload: Dictionary) -> void:
 
 ### 17. Teach the canvas to accept your own asset type
 
-![The rows the built-in drop handlers build: a scene spawn, a sound, an image texture, a JSON load and a resource preload](images/asset-drop.png)
+![The rows the built-in drop handlers build: a scene spawn, a sound, a JSON load and a resource preload](images/asset-drop.png)
 
 **Scenario:** your studio authors dialogue as `.dlg` files. Dropping one on a sheet should build the row a writer would have added by hand, not make them go looking through the picker.
 

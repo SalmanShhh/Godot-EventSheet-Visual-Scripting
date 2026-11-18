@@ -321,7 +321,7 @@ Right-click an opening fence for the region's own verbs: **Rename Region…** (a
 
 ### 5. Preloads that designers manage
 
-![A const preload and a dynamic load reading variable-style - name, path and a mode pill - beside a real variable row](images/preload-row.png)
+![A const preload and a dynamic load reading variable-style, name and file as a chip, beside a real variable row](images/preload-row.png)
 
 **Scenario:** the sound designer swaps audio files without touching code.
 

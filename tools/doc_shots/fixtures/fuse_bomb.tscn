@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tools/doc_shots/fixtures/fuse_bomb.gd" id="1_root"]
+[ext_resource type="Script" path="res://tools/doc_shots/fixtures/fuse_spark.gd" id="2_part"]
+
+[node name="FuseBomb" type="Node2D"]
+script = ExtResource("1_root")
+
+[node name="Spark" type="Node2D" parent="."]
+script = ExtResource("2_part")

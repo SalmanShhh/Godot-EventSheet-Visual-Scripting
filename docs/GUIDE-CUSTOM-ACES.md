@@ -322,7 +322,7 @@ Two more ways to skip typing the dialect from memory:
 
 ### Annotations: refine the automatic mapping
 
-![An @ace_looping condition applied as a pick filter: the loop lane on the left and the per-item actions under it](images/looping-condition.png)
+![A for loop over a pack's looping method read as a loop row: For each buff_id in $StatForge.each_buff() on the left and the per-item Print buff_id under it](images/looping-condition.png)
 
 Put `##` doc-comment lines with `@ace_*` directives directly above a member to override what
 reflection chooses. Annotations are case-sensitive and the content can be parenthesized or
@@ -368,7 +368,7 @@ and opening that file reads it the way every unclaimed method call reads: "call 
 flicker". That is honest, and it is the floor. `@ace_lift_example` raises it - you say which lines
 your verbs are written as, and those rows become your verbs, with your names and your parameters.
 
-![The same hand-written file read twice: as generic calls, and as the pack's own verbs once it teaches its spellings](images/pack-taught-spellings.png)
+![A hand-written file whose calls into a pack read as the pack's own verbs (Start flickering, Stop flickering) because the pack teaches its spellings, while a call nobody taught stays a plain call row](images/pack-taught-spellings.png)
 
 Write the example as a line, not as a pattern. The value spans are marked `[[name: text]]`, or
 `[[name|fragment: text]]` to say which kind of value it is (`node`, `name`, `literal`, `word`,

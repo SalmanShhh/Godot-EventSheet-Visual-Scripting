@@ -109,7 +109,7 @@ transition nested one level deeper with its own condition lane - so piling on mo
 exactly the code's own indentation: the tick event is `_physics_process`, each state sub-event
 is a `match` branch one tab in, each transition the `if` one tab deeper.
 
-![A state machine as a consumer writes it: one tick event, states as sub-events, transitions nested deeper](images/code-patterns-state-machine.png)
+![A state machine as a consumer writes it: one tick event whose match reads as the states, with the transitions nested deeper](images/code-patterns-state-machine.png)
 
 And the door swings both ways: a hand-written `enum` + `match` machine OPENS in this shape.
 The `match` lifts into structured cases (byte-exact, like every lift), and the whole machine reads
@@ -230,7 +230,7 @@ member of a group to a handler in one action. Declaring your own signal on a she
 
 Ten more spellings of everyday game code, shipped the same way:
 
-![The second wave live: a Timeline with its beats as condition/action rows, Every 2 to 5 seconds, smooth damping, aiming, wrap, bob, toggle and a distance check](images/pattern-verbs.png)
+![The patterns as rows: an On ready chain with two Waits, Every 2 to 5 seconds, Toggle, Move toward, turn toward, wrap, bob and within distance](images/pattern-verbs.png)
 
 - **Move Toward (smooth)** (Variables) - the frame-rate-INDEPENDENT damping (`1 - exp(-k*dt)`)
   compiled for you; works on numbers, vectors and colors. Change the speed in Godot's own Debugger > Remote to
@@ -248,7 +248,7 @@ Ten more spellings of everyday game code, shipped the same way:
   Add Step on the block; each beat is a condition/action row (the WHEN left, the WHAT right)
   and the compiled form is the await-chain you would have written.
 
-![The Object Pool in use: Create Pool on ready, Spawn on a random cadence, Despawn on screen exited](images/pattern-pool.png)
+![An object pool written by hand and read as rows: Instantiate when the pool is empty, Set visible and add child on the way out, and Return to pool on the way back](images/pattern-pool.png)
 
 ## The third wave - game feel and directors
 
@@ -280,7 +280,7 @@ Ten more spellings of everyday game code, shipped the same way:
 
 ## The fourth wave - goals, places, and firsts
 
-![The fourth wave: a quest advancing, checkpoints, interaction focus, a phase cycle, the metric distance and Only Once Ever](images/pattern-wave4.png)
+![Checkpoints, interaction focus, a distance measured in tiles, Only Once Ever and a quest advancing, as rows](images/pattern-wave4.png)
 
 - **The Quest pack** - quests as `.tres` data assets (objectives, chains, reward notes,
   authored in the Inspector): `Start Quest`, `Advance Objective "gems"`, triggers for
@@ -553,7 +553,7 @@ Everything above is about writing a pattern from the picker. The other direction
 supported: open a hand-written `.gd` file as a sheet and the reading recognises the shapes it
 knows, then says so.
 
-![An opened cooldown script: the event that counts the number down is read as the Cooldown pattern, and the head bar says 1 pattern, 1 adoptable](images/pattern-chip.png)
+![An opened cooldown script with the event that counts the number down selected: the help strip under the sheet names the Cooldown pattern and carries an Open in the Manual door](images/pattern-chip.png)
 
 An event that IS a pattern is named for it, but never inside the row: a row holds its object, its
 words and its parameters, so the lanes line up from event to event. Only the event that OWNS the

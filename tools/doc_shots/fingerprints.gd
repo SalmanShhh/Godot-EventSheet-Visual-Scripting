@@ -60,7 +60,14 @@ static func of_shot(shot: Dictionary, png_path: String) -> Dictionary:
 static func reading(sources: PackedStringArray) -> String:
 	var text: String = ""
 	for path: String in sources:
-		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
+		var sheet: EventSheetResource = null
+		match path.get_extension():
+			"tres":
+				sheet = load(path) as EventSheetResource
+			"tscn":
+				sheet = EventSheetSceneSheet.build(path)
+			_:
+				sheet = EventSheetGDScriptImporter.new().import_external(path)
 		if sheet == null:
 			text += "%s: does not open as a sheet\n" % path
 			continue

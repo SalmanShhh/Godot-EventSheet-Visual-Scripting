@@ -1,0 +1,128 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="1_3ygf3"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="2_au2ig"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="3_va657"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="4_b7b1l"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="5_chvo6"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="6_eiijg"]
+
+[sub_resource type="Resource" id="Resource_ur6b4"]
+script = ExtResource("1_3ygf3")
+ace_id = "RenderSceneToImage"
+params = {
+"height": "288",
+"save_path": "\"res://tools/doc_shots/empty_stage.png\"",
+"scene_path": "\"res://tools/doc_shots/fixtures/empty_stage.tscn\"",
+"width": "512"
+}
+codegen_template = "var __shot_r1: PackedScene = (load({scene_path}) as PackedScene) if ResourceLoader.exists({scene_path}) else null
+if DisplayServer.get_name() == \"headless\":
+	push_warning(\"[Render Scene To Image] This run has no display - rendering needs a windowed editor, so nothing was written to %s.\" % {save_path})
+elif __shot_r1 == null:
+	push_warning(\"[Render Scene To Image] No scene at %s - nothing rendered.\" % {scene_path})
+else:
+	var __shot_view_r1 := SubViewport.new()
+	__shot_view_r1.size = Vector2i(int({width}), int({height}))
+	__shot_view_r1.transparent_bg = true
+	__shot_view_r1.own_world_3d = true
+	__shot_view_r1.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	EditorInterface.get_base_control().add_child(__shot_view_r1)
+	__shot_view_r1.add_child(__shot_r1.instantiate())
+	await __shot_view_r1.get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	__shot_view_r1.get_texture().get_image().save_png({save_path})
+	__shot_view_r1.queue_free()"
+
+[sub_resource type="Resource" id="Resource_a787g"]
+script = ExtResource("1_3ygf3")
+ace_id = "PreviewTableRolls"
+params = {
+"rolls": "1000",
+"save_path": "\"\"",
+"seed": "12345",
+"table": "\"res://tools/doc_shots/fixtures/slime.tres\""
+}
+codegen_template = "var __tbl_r2: Variant = {table}
+var __tbl_from_r2: String = str(__tbl_r2) if __tbl_r2 is String else \"\"
+if __tbl_r2 is String:
+	__tbl_r2 = load(__tbl_r2) if ResourceLoader.exists(__tbl_r2) else null
+var __tbl_src_r2: Variant = (__tbl_r2 as Object).get(\"entries\") if __tbl_r2 is Object else __tbl_r2
+var __tbl_rows_r2: Array = []
+if __tbl_src_r2 is Dictionary:
+	for __tbl_key_r2: Variant in (__tbl_src_r2 as Dictionary):
+		__tbl_rows_r2.append([str(__tbl_key_r2), maxf(float((__tbl_src_r2 as Dictionary)[__tbl_key_r2]), 0.0)])
+elif __tbl_src_r2 is Array:
+	for __tbl_entry_r2: Variant in (__tbl_src_r2 as Array):
+		var __tbl_dict_r2: Dictionary = __tbl_entry_r2 if __tbl_entry_r2 is Dictionary else Dictionary()
+		var __tbl_name_r2: String = str(__tbl_dict_r2.get(\"value\", __tbl_dict_r2.get(\"item\", __tbl_dict_r2.get(\"id\", \"entry %d\" % __tbl_rows_r2.size()))))
+		__tbl_rows_r2.append([__tbl_name_r2, maxf(float(__tbl_dict_r2.get(\"weight\", 0.0)), 0.0)])
+var __tbl_total_r2: float = 0.0
+for __tbl_row_r2: Array in __tbl_rows_r2:
+	__tbl_total_r2 += float(__tbl_row_r2[1])
+var __tbl_out_r2: PackedStringArray = PackedStringArray()
+__tbl_out_r2.append(\"Table roll preview - %d rolls, seed %d\" % [maxi(int({rolls}), 0), int({seed})])
+if __tbl_total_r2 <= 0.0:
+	if __tbl_r2 == null and not __tbl_from_r2.is_empty():
+		__tbl_out_r2.append(\"(no table at %s - nothing to roll)\" % __tbl_from_r2)
+	else:
+		__tbl_out_r2.append(\"(no entry has a weight above zero - nothing to roll)\")
+else:
+	var __tbl_rng_r2 := RandomNumberGenerator.new()
+	__tbl_rng_r2.seed = int({seed})
+	var __tbl_hits_r2: PackedInt32Array = PackedInt32Array()
+	__tbl_hits_r2.resize(__tbl_rows_r2.size())
+	for __tbl_i_r2: int in maxi(int({rolls}), 0):
+		var __tbl_pick_r2: float = __tbl_rng_r2.randf() * __tbl_total_r2
+		var __tbl_walk_r2: float = 0.0
+		for __tbl_j_r2: int in __tbl_rows_r2.size():
+			__tbl_walk_r2 += float((__tbl_rows_r2[__tbl_j_r2] as Array)[1])
+			if __tbl_pick_r2 < __tbl_walk_r2:
+				__tbl_hits_r2[__tbl_j_r2] += 1
+				break
+	__tbl_out_r2.append(\"entry | rolled | expected | delta\")
+	for __tbl_k_r2: int in __tbl_rows_r2.size():
+		var __tbl_got_r2: float = 100.0 * float(__tbl_hits_r2[__tbl_k_r2]) / float(maxi(int({rolls}), 1))
+		var __tbl_want_r2: float = 100.0 * float((__tbl_rows_r2[__tbl_k_r2] as Array)[1]) / __tbl_total_r2
+		__tbl_out_r2.append(\"%s | %.2f%% | %.2f%% | %+.2f%%\" % [str((__tbl_rows_r2[__tbl_k_r2] as Array)[0]), __tbl_got_r2, __tbl_want_r2, __tbl_got_r2 - __tbl_want_r2])
+print(\"\\n\".join(__tbl_out_r2))
+if not str({save_path}).is_empty():
+	var __tbl_file_r2 := FileAccess.open({save_path}, FileAccess.WRITE)
+	if __tbl_file_r2 != null:
+		__tbl_file_r2.store_string(\"\\n\".join(__tbl_out_r2) + \"\\n\")
+		__tbl_file_r2.close()"
+
+[sub_resource type="Resource" id="Resource_ywma7"]
+script = ExtResource("5_chvo6")
+trigger_provider_id = "Core"
+trigger_id = "OnEditorRun"
+actions = Array[Resource]([SubResource("Resource_ur6b4"), SubResource("Resource_a787g")])
+event_uid = "edd71a"
+
+[sub_resource type="Resource" id="Resource_45afh"]
+script = ExtResource("1_3ygf3")
+ace_id = "WriteVersionStamp"
+params = {
+"path": "\"res://build_stamp.cfg\"",
+"version": "ProjectSettings.get_setting(\"application/config/version\", \"0.0.0\")"
+}
+codegen_template = "var __stamp_r3 := ConfigFile.new()
+__stamp_r3.set_value(\"build\", \"version\", {version})
+__stamp_r3.set_value(\"build\", \"stamped_at\", Time.get_datetime_string_from_system(true))
+var __stamp_err_r3 := __stamp_r3.save({path})
+if __stamp_err_r3 != OK:
+	push_warning(\"[Write Version Stamp] Could not write %s (%s) - the build carries no stamp.\" % [{path}, error_string(__stamp_err_r3)])"
+
+[sub_resource type="Resource" id="Resource_0cpes"]
+script = ExtResource("5_chvo6")
+trigger_provider_id = "Core"
+trigger_id = "OnProjectExport"
+actions = Array[Resource]([SubResource("Resource_45afh")])
+event_uid = "3580e7"
+
+[resource]
+script = ExtResource("6_eiijg")
+tool_mode = true
+addon_tags = PackedStringArray()
+addon_requires = PackedStringArray()
+events = Array[Resource]([SubResource("Resource_ywma7"), SubResource("Resource_0cpes")])

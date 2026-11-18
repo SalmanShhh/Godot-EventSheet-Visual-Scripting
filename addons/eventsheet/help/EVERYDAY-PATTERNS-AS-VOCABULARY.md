@@ -15,7 +15,7 @@ that says what it means, compiling to the exact GDScript an experienced develope
 written - visible on hover, byte-for-byte in your project, still running if you delete the
 plugin. The abstraction is vocabulary, never a black box.
 
-![The patterns as rows](images/pattern-verbs.png)
+![The patterns as rows: an On ready chain with two Waits, Every 2 to 5 seconds, Toggle, Move toward, turn toward, wrap, bob and within distance](images/pattern-verbs.png)
 
 ## What the beginner skips (and the expert keeps)
 

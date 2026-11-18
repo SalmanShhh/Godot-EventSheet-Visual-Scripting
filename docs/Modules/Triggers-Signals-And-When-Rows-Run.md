@@ -120,7 +120,7 @@ func _on_node_joined_group(node: Node) -> void:
 		add_marker_for(node)
 ```
 
-![A minimap kept in step: a join adds a marker and wires the node, a departure removes it](../images/scenes-group-arrivals.png)
+![Two events on a minimap sheet: a node joining the minimap group adds a marker and, one row down, wires its tree-exiting signal; a node leaving it removes that marker](../images/scenes-group-arrivals.png)
 
 Four things are worth knowing before you reach for them, and none of them is hidden:
 

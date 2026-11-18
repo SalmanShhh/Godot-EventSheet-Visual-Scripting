@@ -120,7 +120,7 @@ A description belongs to a thing you declared. A comment belongs to a place in t
 
 The sheet adopts that rule whole. There is no "publish this comment" field: the marker the row writes **is** the setting, so the row and the line in the file can never disagree about which one it is.
 
-![Two comment rows on one sheet: a documentation row at full strength with a paragraph mark and its `##` echo at the right edge, and private rows dimmed with their `#` echoes](images/comment-kinds.png)
+![Comments in one sheet: a documentation note over a variable that shows beside it as the variable's description, and documentation and private notes between the rows of an event, each with the speech-bubble badge](images/comment-kinds.png)
 
 **Authoring is one checkbox.** Right-click a comment row, **Edit Comment…**, and tick **Shows in the manual**. Ticked writes `##`; unticked writes `#`. The row restyles as you confirm, and the echo at its right edge shows the line it now really writes. Type either spelling into the `.gd` yourself and it opens as the matching row, byte for byte - two spellings, one row kind.
 

@@ -147,7 +147,7 @@ operand: `"user://runs/" + slot + ".txt"` followed by a bare `.get_base_dir()` a
 was never created. Every row here that asks a method of a slot brackets the slot first, so the
 question is asked of the whole answer however the answer was written.
 
-![A parameters dialog for Read Text File (or a fallback): the Path field, the If missing field holding "{}", and the ships-as line showing the whole conditional expression the row compiles to](images/file-guarded-read.png)
+![A sheet that reads a save file only when it exists: Set data to text of file user://save.dat under the condition that the file exists, a make directory row under Else, then the write as plain rows](images/file-guarded-read.png)
 
 That is the rule the whole file vocabulary is written to: **an emitted guard is shown, never
 performed behind your back.** A prelude that makes a folder, a check that a file is there, the
@@ -219,7 +219,9 @@ writes is the one that says `read and written`. A row that starts a watch reads
 `watching user://mods every 2.0 s`, because a folder read once and a folder read every two seconds
 for the rest of the session are not the same thing to say about a sheet.
 
-![A sheet head with a files band listing res://data/items.csv - read, user://scores.csv - written and user://run.log - read, each with the engine call echoed beside it, then the line saying this sheet asks the player for a file](images/files-band.png)
+![A sheet head in the Classic Sheet theme with a files band listing res://data/items.csv - read and user://scores.csv - written, each with the engine call echoed beside it](images/files-band.png)
+
+*Pictured in the Classic Sheet theme, which draws a sheet's file facts as bands; the default look says them in the hover card of the sheet's name.*
 
 ## The drop and the ask
 
@@ -330,7 +332,9 @@ line that starts it. It has no fix button on purpose: where a watch was meant to
 closing, the menu leaving, the download finishing - is yours to say, and a guess would put **Stop
 Watching** somewhere the sheet never meant it.
 
-![Two events in a sheet called ModFolder, under a head whose files band reads watching user://mods every 2.0 s with watch_folder("user://mods", 2.0) echoed beside it: On Enter Tree with FolderWatcher Watch folder "user://mods" 2, and a second On Enter Tree with FolderWatcher Stop watching](images/folder-watcher.png)
+![Two events in a sheet called mod_folder, under a head (Classic Sheet theme) whose files band reads watching user://mods every 2 s with watch_folder("user://mods", 2) echoed beside it: On enter tree starts the watch and On exit tree stops it](images/folder-watcher.png)
+
+*Pictured in the Classic Sheet theme, which draws a sheet's file facts as bands; the default look says them in the hover card of the sheet's name.*
 
 The pack's own page - [Folder Watcher](Addons/Folder-Watcher.md) - has the sixteen worked cases, the
 Inspector properties and the mistakes that bite.
@@ -383,7 +387,7 @@ func _on_unpack_finished(entries: int, bytes: int, skipped: int) -> void:
 	print(bytes)
 ```
 
-![A sheet called ModInstaller under a head whose files bands read user://pack.zip - read and user://mods - written, the ZIPReader line echoed beside each: On Enter Tree unpacks "user://pack.zip" into folder "user://mods", and On Unpack Progress sets a bar value to entries divided by total, with the refused and finished events below](images/archive-unpack.png)
+![A mod installer sheet: On enter tree unpacks user://pack.zip into user://mods, then On Unpack Progress sets a progress bar and On Unpack Refused and On Unpack Finished print](images/archive-unpack.png)
 
 ## The name the player typed
 

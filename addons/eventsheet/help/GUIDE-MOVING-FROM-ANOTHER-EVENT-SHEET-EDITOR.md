@@ -427,7 +427,7 @@ i18n (Godot translations).
   The important difference to notice: what C3 calls an *object type* is here a **node with
   a behavior attached, or an autoload** - the dialog is quietly teaching you Godot's own API.
 
-  ![The picker's object page: Browse every row, then a Your classes section listing the project's own classes, each with its icon.](images/object-first-add.png)
+  ![The picker's front page: the project's classes folded away, the functions of this script, System, then every pack and autoload as its own card with its icon](images/object-first-add.png)
 - **Event numbers live in the margin**, flat and sequential through groups and sub-events,
   computed from the sheet - collapsing or filtering never renumbers, so "check event 34" in a
   forum reply stays meaningful. Jump to one with **Go to event** (Ctrl+G) or Godot's Command Palette (Ctrl+Shift+P).
@@ -552,7 +552,7 @@ i18n (Godot translations).
   (`A` prefers actions), and every suggestion names the next parameter your sentence has
   not filled yet ("⚡ Heal · amount…") so you always know what the next word will do.
 
-  <img src="images/ghost-row-chips.png" alt="The Ghost Row popup twice: freshly opened with suggestion chips (Play Sound, Set Variable, Make Shuffle Bag, Set Seed) under the query field, and after typing 'heal' with the ranked list showing each Heal candidate naming its next unfilled parameter - amount, target." width="640">
+  <img src="images/ghost-row-chips.png" alt="The Ghost Row popup, freshly opened under the selected row: the query field with its example words and, under it, one chip for each verb this project uses most" width="640">
 - **Repeated values are one pick, not a retype.** Parameter fields remember the last five
   values you committed for that exact row-and-parameter across the whole project, offered
   from a small dropdown on the field's row - the third time an action needs `"jump"` or
@@ -564,7 +564,7 @@ i18n (Godot translations).
   Clicking one of those parent names scrolls to that group's own head, so getting back out is the
   same gesture as reading where you are.
 
-  <img src="images/group-breadcrumb.png" alt="Scrolled deep inside a sheet: the slim Gameplay - Combat breadcrumb strip pinned above the rows, with events 8 and 9 visible beneath it." width="560">
+  <img src="images/group-breadcrumb.png" alt="Scrolled deep inside a sheet: the slim Gameplay - Combat breadcrumb strip pinned above the rows, with events 9 and 10 visible beneath it." width="560">
 - **View > Compact Rows** tightens row padding for jam-speed scanning - text stays the same
   size, only the air shrinks - and toggling it off restores the roomier default. The choice
   is remembered per project.
@@ -592,7 +592,7 @@ i18n (Godot translations).
 
 ## 9. Habits to Relearn (the Godot Way Is Better Here)
 
-![The Set Property rows an Inspector property drag builds, with the value the property has right now already filled in](images/property-drop.png)
+![The rows an Inspector property drag builds, with the value the property has right now already filled in](images/property-drop.png)
 
 - **There is no runtime**: your sheet *is* GDScript after compiling. Read the generated
   script in the GDScript panel - selection highlights both ways. Performance equals

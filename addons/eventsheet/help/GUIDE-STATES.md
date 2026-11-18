@@ -58,7 +58,7 @@ States are declared once, on the **states** band of the sheet head - the same pl
 are declared one level up. A sheet that has none offers **states** in the `+ add` row under the head
 stack; a sheet that has them shows them and opens the same dialog when you click it.
 
-![An enemy's sheet head with a states band reading Patrol · Chase · Stagger - starts in Patrol, and under it four events using the states vocabulary: Is in PATROL with Go to CHASE beside it, the timed question Is in STAGGER for over 1.0s, and the two triggers that answer the moment of a change](images/object-states.png)
+![An enemy's sheet head with a state row reading PATROL (default), CHASE, STAGGER, and under it five events: Is PATROL, the timed question Is STAGGER for over 1 s, was CHASE, and the two triggers that answer the moment of a change](images/object-states.png)
 
 **Declare states…** asks the two questions a state machine really has, and no third one:
 

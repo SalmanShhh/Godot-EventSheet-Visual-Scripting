@@ -75,7 +75,7 @@ That is the whole loop: edit rows, save, File > Run, read the Output panel. Ever
 
 ### Run it from the sheet - the tool's own head bar
 
-![An editor plugin sheet: the identity bar carries Runs in the editor, Run now, Reload, Output and Enable plugin.](images/editor-tool-bar.png)
+![An editor plugin sheet: the identity bar carries Run now, Reload, Output and Enable plugin, and the events below read On Plugin Enabled adding the Tools menu item and On Plugin Disabled removing it](images/editor-tool-bar.png)
 
 You do not have to leave the sheet to run a tool. A tool sheet's head bar carries its own buttons, and they are the whole loop:
 
@@ -105,7 +105,7 @@ The two import/export types compile to a plain named function the editor calls (
 
 ## 4. The vocabulary - Editor Tools ACEs
 
-![The three tool-authoring rows: render a scene to a file, preview a table's odds, and stamp or strip on project export](images/tooldev-editor-verbs.png)
+![The three tool-authoring rows: render a scene to a file, preview a table's odds, and stamp the version on project export](images/tooldev-editor-verbs.png)
 
 Open the picker inside an On Editor Run event and the **Editor Tools** category has the everyday editor-automation vocabulary. They compile to the exact plain Godot the editor exposes - `EditorInterface`, `ResourceSaver`, `DirAccess`, `Engine`, plus `SubViewport` / `RenderingServer` for Render Scene To Image, `RandomNumberGenerator` for Preview Table Rolls and `ConfigFile` for Write Version Stamp - with zero plugin references, so the generated script works in any Godot project.
 

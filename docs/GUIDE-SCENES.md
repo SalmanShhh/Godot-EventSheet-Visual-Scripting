@@ -263,7 +263,7 @@ Vector3:
 | Random Place Inside Sphere | An evenly spread point through a ball | `({ball} as Node3D).to_global(… * pow(randf(), 1.0 / 3.0))` |
 | Random Place Around (3D) | A point on a ring around a node, on the ground plane | `{node}.global_position + Vector3.FORWARD.rotated(Vector3.UP, randf() * TAU) * {radius}` |
 
-![Two events on a 3D sheet: an every-tick event, gated on the spawners group gaining its first member, whose sub-events ask whether SpawnBox is a CollisionShape3D and spawn a copy of Enemy at a random place inside it, with an Else spawning at a random place inside a CSG box; and an On Timeout event spawning a flanker on a ring around the player](images/scenes-spawn-3d.png)
+![Two events on a 3D sheet: an every-tick event gated on the spawners group gaining its first member, whose sub-events ask whether SpawnBox is a CollisionShape3D and spawn inside it, or else elsewhere](images/scenes-spawn-3d.png)
 
 Three things are worth knowing, and all three are visible in the emitted line:
 
@@ -325,7 +325,7 @@ func _on_node_left_group(node: Node) -> void:
 		remove_marker_for(node)
 ```
 
-![Two events on a minimap sheet: a node joining the minimap group adds a marker and wires the node, a node leaving it removes that marker, each with its Is In Group condition drawn as an ordinary row under the trigger](images/scenes-group-arrivals.png)
+![Two events on a minimap sheet: a node joining the minimap group adds a marker and, one row down, wires its tree-exiting signal; a node leaving it removes that marker](images/scenes-group-arrivals.png)
 
 Three things are stated rather than hidden, and the help strip says all three while the Group field
 has focus:

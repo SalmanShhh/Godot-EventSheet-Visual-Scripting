@@ -35,7 +35,7 @@ row shown here comes with the code it compiles to, so you can check.
 
 ## The variable sentence
 
-![Six variable rows in the one sentence, each washed lilac with an x badge and its own declaration echoed at the right edge: Instance whole number hp = 100 beside var hp: int = 100, a labelled Movement folder strip holding Instance number speed = 200 with a sliders mark beside @export var speed: float = 200.0 and jump_force under it, then Instance boolean alive = true, Constant whole number MAX_HP = 100 beside const MAX_HP: int = 100, Static whole number spawned = 0 reading shared by every Player, and inside event 1 a Local number dealt = 0](images/variable-sentence-head.png)
+![Variable rows in the one sentence: hp, a Movement group holding speed and jump_force, alive, a constant MAX_HP, a static spawned and a local dealt in the event below](images/variable-sentence-head.png)
 
 Every variable reads the same way wherever it appears - a sheet you authored, a `.gd` you opened, a
 behaviour pack, the Manual:
@@ -630,7 +630,9 @@ law - four paths are named and the rest are counted (`and 2 more path(s)`), beca
 than the sheet is not a head. Nothing is scanned for it: the rows are already in memory when the
 sheet opens.
 
-![The head of a sheet called ScoreBoard, one band per line: class_name ScoreBoard, extends Node with a change link, the ## description, then four files bands - res://data/items.csv - read beside the table-read line it came from, user://scores.csv - written beside its FileAccess.open call, user://run.log - read, and asks the player to pick a file beside FileDialog.popup_centered() - with a muted + add: icon @tool row under them](images/files-band.png)
+![A sheet head in the Classic Sheet theme with a files band listing res://data/items.csv - read and user://scores.csv - written, each with the engine call echoed beside it](images/files-band.png)
+
+*Pictured in the Classic Sheet theme, which draws a sheet's file facts as bands; the default look says them in the hover card of the sheet's name.*
 
 **A new sheet's bands ask their questions.** The name band reads `Untitled · name it`, the extends
 band `Node · choose what it extends`, and an `attach to a node` prompt row sits under them. Each

@@ -1,0 +1,179 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="1_v8xk1"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="2_voiko"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="3_pntcv"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="4_pxwe3"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="5_5lv3w"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_group.gd" id="6_nyr2c"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="7_2vifc"]
+
+[sub_resource type="Resource" id="Resource_ct560"]
+script = ExtResource("1_v8xk1")
+ace_id = "Print"
+params = {
+"value": "\"round starts\""
+}
+codegen_template = "print({value})"
+
+[sub_resource type="Resource" id="Resource_jt0fm"]
+script = ExtResource("5_5lv3w")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_ct560")])
+event_uid = "85609a"
+
+[sub_resource type="Resource" id="Resource_g2ufw"]
+script = ExtResource("1_v8xk1")
+ace_id = "Print"
+params = {
+"value": "\"combat 1\""
+}
+codegen_template = "print({value})"
+
+[sub_resource type="Resource" id="Resource_y0mox"]
+script = ExtResource("5_5lv3w")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_g2ufw")])
+event_uid = "9eaf1e"
+
+[sub_resource type="Resource" id="Resource_3oprp"]
+script = ExtResource("1_v8xk1")
+ace_id = "Print"
+params = {
+"value": "\"combat 2\""
+}
+codegen_template = "print({value})"
+
+[sub_resource type="Resource" id="Resource_lyyfl"]
+script = ExtResource("5_5lv3w")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_3oprp")])
+event_uid = "3b5dc8"
+
+[sub_resource type="Resource" id="Resource_7sb37"]
+script = ExtResource("1_v8xk1")
+ace_id = "Print"
+params = {
+"value": "\"combat 3\""
+}
+codegen_template = "print({value})"
+
+[sub_resource type="Resource" id="Resource_m1du1"]
+script = ExtResource("5_5lv3w")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_7sb37")])
+event_uid = "71dcdd"
+
+[sub_resource type="Resource" id="Resource_t8khb"]
+script = ExtResource("1_v8xk1")
+ace_id = "Print"
+params = {
+"value": "\"combat 4\""
+}
+codegen_template = "print({value})"
+
+[sub_resource type="Resource" id="Resource_bqjtp"]
+script = ExtResource("5_5lv3w")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_t8khb")])
+event_uid = "a213d6"
+
+[sub_resource type="Resource" id="Resource_l1qqb"]
+script = ExtResource("1_v8xk1")
+ace_id = "Print"
+params = {
+"value": "\"combat 5\""
+}
+codegen_template = "print({value})"
+
+[sub_resource type="Resource" id="Resource_4ss4e"]
+script = ExtResource("5_5lv3w")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_l1qqb")])
+event_uid = "1a274c"
+
+[sub_resource type="Resource" id="Resource_os18t"]
+script = ExtResource("1_v8xk1")
+ace_id = "Print"
+params = {
+"value": "\"combat 6\""
+}
+codegen_template = "print({value})"
+
+[sub_resource type="Resource" id="Resource_q87tq"]
+script = ExtResource("5_5lv3w")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_os18t")])
+event_uid = "2364d9"
+
+[sub_resource type="Resource" id="Resource_s8f6p"]
+script = ExtResource("1_v8xk1")
+ace_id = "Print"
+params = {
+"value": "\"combat 7\""
+}
+codegen_template = "print({value})"
+
+[sub_resource type="Resource" id="Resource_7dm7b"]
+script = ExtResource("5_5lv3w")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_s8f6p")])
+event_uid = "e4230d"
+
+[sub_resource type="Resource" id="Resource_lyvi4"]
+script = ExtResource("1_v8xk1")
+ace_id = "Print"
+params = {
+"value": "\"combat 8\""
+}
+codegen_template = "print({value})"
+
+[sub_resource type="Resource" id="Resource_vcb3q"]
+script = ExtResource("5_5lv3w")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_lyvi4")])
+event_uid = "b80cc0"
+
+[sub_resource type="Resource" id="Resource_0bv8j"]
+script = ExtResource("1_v8xk1")
+ace_id = "Print"
+params = {
+"value": "\"combat 9\""
+}
+codegen_template = "print({value})"
+
+[sub_resource type="Resource" id="Resource_mqi27"]
+script = ExtResource("5_5lv3w")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_0bv8j")])
+event_uid = "500f1b"
+
+[sub_resource type="Resource" id="Resource_autod"]
+script = ExtResource("6_nyr2c")
+name = "Combat"
+group_name = "Combat"
+events = Array[Resource]([SubResource("Resource_y0mox"), SubResource("Resource_lyyfl"), SubResource("Resource_m1du1"), SubResource("Resource_bqjtp"), SubResource("Resource_4ss4e"), SubResource("Resource_q87tq"), SubResource("Resource_7dm7b"), SubResource("Resource_vcb3q"), SubResource("Resource_mqi27")])
+group_uid = "g_combat"
+
+[sub_resource type="Resource" id="Resource_4dlcs"]
+script = ExtResource("6_nyr2c")
+name = "Gameplay"
+group_name = "Gameplay"
+events = Array[Resource]([SubResource("Resource_jt0fm"), SubResource("Resource_autod")])
+group_uid = "g_play"
+
+[resource]
+script = ExtResource("7_2vifc")
+addon_tags = PackedStringArray()
+addon_requires = PackedStringArray()
+events = Array[Resource]([SubResource("Resource_4dlcs")])

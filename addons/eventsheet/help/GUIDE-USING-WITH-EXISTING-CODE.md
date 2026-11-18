@@ -622,7 +622,7 @@ That is the order this section is in.
 
 #### Variables - one sentence each
 
-![Six variable rows in the one sentence, each washed lilac with an x badge and its own declaration echoed at the right edge: Instance whole number hp = 100 beside var hp: int = 100, a labelled Movement folder strip holding Instance number speed = 200 with a sliders mark beside @export var speed: float = 200.0 and jump_force under it, then Instance boolean alive = true, Constant whole number MAX_HP = 100 beside const MAX_HP: int = 100, Static whole number spawned = 0 reading shared by every Player, and inside event 1 a Local number dealt = 0](images/variable-sentence-head.png)
+![Variable rows in the one sentence: hp, a Movement group holding speed and jump_force, alive, a constant MAX_HP, a static spawned and a local dealt in the event below](images/variable-sentence-head.png)
 
 - **Every variable reads as one sentence - `<scope> <type> <name> = <value>`.** The scope word leads:
   `Instance number speed = 200`, `Instance boolean alive = true`, `Constant number MAX_HP = 100`,
@@ -808,7 +808,7 @@ pivot turns.
   the question the sheet already publishes. Nothing about the file changes: it saves back byte for
   byte, and double-click still opens the exact GDScript.
 
-  ![A third-person controller opened as an event sheet: the five-line camera-basis run collapsed into one Move relative to the camera row with a 4-line mark, the gravity line reading Fall at 30, and move_and_slide reading Move and slide along what it hits](images/reading-camera-relative-movement.png)
+  ![A third-person controller opened as an event sheet: the five-line camera-basis run collapsed into one Move relative to the camera row with a 4-line mark, and the gravity line reading Fall at 30](images/reading-camera-relative-movement.png)
 - **Orbiting reads as orbiting, in both spellings.** `global_position = moon.global_position +
   Vector3(cos(angle), 0, sin(angle)) * radius` reads `Orbit moon at radius radius angle angle (on the
   ground plane)` - the plane named after the axis the circle is drawn flat against. A `rotate_y` on a
@@ -916,7 +916,7 @@ pivot turns.
   that matters. Nothing is written to the file for any of this: a blank event compiles into
   `_process(delta)` and re-reads as a blank event, byte for byte.
 
-  ![Three events: a blank one whose condition lane holds only "+ Add condition" and whose action sets a label every tick, a physics one reading a muted "every physics tick", and an every-tick event carrying a condition, which keeps its full "On process" words and its tempo badge](images/blank-events.png)
+  ![Three events: a blank one whose condition lane holds only + Add condition and whose action sets a label every tick, an every-tick event carrying a condition that keeps its full On process words, and a physics one](images/blank-events.png)
 
   You can author one too. Press **E** and the Add event dialog's first entry is already selected -
   **(none - runs every tick)** - so Enter makes the blank event and **A** fills its actions. Under a
@@ -969,7 +969,7 @@ pivot turns.
 
   ![An `_unhandled_input` read as one trigger event per branch: Mouse - On mouse moved with Mouse - mouse is captured under it, and Keyboard - On Escape pressed](images/opened-pack-input-triggers.png)
 
-  ![A script the engine refuses to compile, opened as a sheet: the head bar says "3 errors - the game will not run this script" in red, two events wear a red margin mark, and the rest still reads normally](images/opened-script-structure5.png)
+  ![A script the engine refuses to compile, opened as a sheet: the head bar and two events wear a red margin mark, the status bar counts the problem, and the rest still reads normally](images/opened-script-structure5.png)
 - **A trigger-shaped poll at the top of a tick handler IS the trigger.** This is how a beginner
   writes input in Godot: `if Input.is_action_just_pressed("jump"):` inside `_process`. In an event
   sheet the same thing is a top-level trigger, so the row reads `⌨  Keyboard ▸ On "jump" pressed`
@@ -1044,14 +1044,12 @@ pivot turns.
 to the function it names, the same jump the Outline panel makes.
 
   ![Rows reading functions as values: menu - Set open sheet to f Open Sheet In Workspace, System - Call Refresh after edit (at end of frame), a condition reading on done is set with System - Call on done result, and two Local value rows reading rows each one's name and rows those where ready](images/functions-as-values.png)
-- **A typed receiver is named by what it IS.** When the file declared a receiver's class, the object
-  column says that class in words with the plugin prefix dropped - a `var registry:
+- **A typed receiver is named by what it IS.** With Humanized Names on (View, Sheet display), when the file declared a receiver's class, the object column says that class in words with the plugin prefix dropped - a `var registry:
   EventSheetACERegistry` reads **ACE registry**, a `var find_bar: EventSheetFindBar` reads **Find
   bar** - with the variable's own name muted beside it. The variable name says which one; the class
-  says what it is, and for someone reading a plugin the second is the half they need first. Turn
-  Familiar Words off and the class reads exactly as the file declares it.
+  says what it is, and for someone reading a plugin the second is the half they need first. Turn Humanized Names off and the class reads exactly as the file declares it.
 
-  ![A Variables block declaring registry and find_bar, and below it a Functions On Refresh row whose object column reads ACE registry with the muted variable name beside it](images/typed-object-labels.png)
+  ![A Variables block declaring registry and find_bar, and below it a Functions On Refresh row whose object column reads ACE registry with the muted variable name beside it, with Humanized Names on](images/typed-object-labels.png)
 - **A plain script is an object.** Its name band names it (`class_name`, else the file) with its
   class icon, and its head bar adds the fact no line of the file carries - the root node of the
   scene that runs it, when the script declares no class of its own; its engine properties read under
@@ -1165,7 +1163,7 @@ to the function it names, the same jump the Outline panel makes.
   so the step is the row and the chain calls in front of it are muted notes on it - `repeat 3 times`
   or `repeat forever` from `set_loops`, `(at the same time)` from `set_parallel`.
 
-  ![A tween chain read as Tween actions, and a head whose Variables folder carries the accessor events](images/opened-script-tween-and-head-accessors.png)
+  ![A tween chain read as Tween actions, and a variable whose set and get accessors read as events under it](images/opened-script-tween-and-head-accessors.png)
 
 - **A Timer node reads as the Timer behavior.** `$Timer.stop()` reads `Stop timer "Timer"`,
   `$Timer.start(2.0)` reads `Start timer "Timer" for 2 seconds (once)` - whether the line is still
@@ -1684,11 +1682,11 @@ IMPORTER matches - so a picker row for one of the general spellings would re-fil
 every project as a pin, whatever the reading's own gates said. The other four modes are authored by
 attaching the Pin pack.
 
-![A hand-written pin file opened as a sheet: the head bar reads Pins, what this object rides and can let go of, listing anchor, hitch, lead, Player's hand, Track's path and ground, with one line each saying pinned to anchor (rope), pinned to hitch (bar), pinned to lead (soft and angle), pinned to Player's hand (position), pinned to Track's path (position) and pinned to ground (x only and y only)](images/opened-script-pin-modes.png)
+![A hand-written pin file opened as a sheet: the head's Pins group opened, reading what this object rides and can let go of (anchor, hitch, lead, Player's hand, Track's path and ground), with one line each saying pinned to anchor (rope), pinned to hitch (bar), pinned to lead (soft and angle), pinned to Player's hand (position), pinned to Track's path (position) and pinned to ground (x only and y only)](images/opened-script-pin-modes.png)
 
-![The same file's tick event: nine action rows reading Pin to anchor (rope, max length Rope Length), Pin to hitch (bar, length Bar Length), Pin to lead softly (speed Follow Speed), Pin to lead (angle), Pin to Player's hand (offset pin_offset), Pin to Track's path position, Pin X position to ground, Pin Y position to ground and Pin size to anchor](images/opened-script-pin-rows.png)
+![The same file's tick event: nine action rows reading Pin to anchor (rope, max length rope_length), Pin to hitch (bar, length bar_length), Pin to lead softly (speed follow_speed), Pin to lead (angle), Pin to Player's hand (offset pin_offset), Pin to Track's path position, Pin X position to ground, Pin Y position to ground and Pin size to anchor](images/opened-script-pin-rows.png)
 
-An object that pins reports it on its head bar too, under **Pins**: `pinned to anchor (rope)`, in
+An object that pins reports it on its head bar too, under **Pins**, a group that opens to one line per pin: `pinned to anchor (rope)`, in
 the same mode words the pack's own knob uses. That bar is derived from the file's pin lines through
 the same gates, so it can never announce a pin the canvas does not show.
 
@@ -2052,9 +2050,9 @@ events around it.
   step - and the sheet's own Wait is the one everybody means by "wait". The Doctor says the same
   thing in words, once per script, so the finding and the note can never disagree.
 
-  ![A rigid body opened as an event sheet: the mass, gravity scale, friction and elasticity set under On enter tree, the pushes and the spin under On hit, and a blocking wait marked as one](images/opened-script-physics.png)
+  ![A rigid body opened as an event sheet: the mass, gravity scale, friction and elasticity set under On enter tree, the pushes and the spin under On function _on_hit, and a blocking wait marked as one](images/opened-script-physics.png)
 
-  ![A controller script read as an event sheet: a scene loaded in the background with its finished-loading condition, the movement math as Apply gravity / Accelerate / Limit speed / Move, the collision switches, a navigation agent's Find path to and Has arrived, and the multiplayer messages sent to everyone and to the host](images/opened-script-systems.png)
+  ![A controller script read as an event sheet: a scene loaded in the background, the movement math as Apply gravity / Limit speed / Move, the collision switches, a navigation agent's Find path to and Has arrived, and the multiplayer messages sent to everyone and to the host](images/opened-script-systems.png)
 
 ### The objects of an opened file - what they are, and where you find them
 
@@ -2201,7 +2199,7 @@ is instantiated to answer a question.
   project-wide index of `.connect` lines, `emit` sites and `.tscn` `[connection]` rows, built once per
   session, so a note never costs a scan.
 
-<img src="images/objects-rail.png" alt="The Object bar: a filter box, an open USED IN THIS SHEET section listing Player, Sprite2D and Health with per-object row counts, and a collapsed GLOBALS AND FAMILIES section." width="420">
+<img src="images/objects-rail.png" alt="The Objects panel beside the sheet: a filter box and the objects the sheet's rows use, each with its icon" width="420">
 
 The Object bar's **INPUT** section and the **Input** head bar, on a script that reads four controls -
 three the project has, and one it does not. The Input bar itself says nothing about the missing one:
@@ -2223,7 +2221,7 @@ nodes) and the rows that script reads as beneath it. Signals the Godot editor wi
 read as triggers here too - including on a script sitting on a CHILD node, which on its own has no way
 of knowing what wired it.
 
-<img src="images/scene-as-a-sheet.png" alt="A scene opened as one sheet: a scene bar reading opened_scene_level.tscn a Node2D 3 scripts, then the Level object bar with the root script's rows under it, then the Player object bar with its own head and state folder." width="720">
+<img src="images/scene-as-a-sheet.png" alt="A scene opened as one sheet: a scene bar reading opened_scene_level.tscn a Node2D 3 scripts, then the Level object bar with the root script's rows under it, then the Player and HUD object bars with their own rows." width="720">
 
 The scene view is read-only for good. A scene is many files at once and the `.tscn` is not one of
 them, so nothing is ever written back to it and there is no "Edit Events" to unlock: double-click an
@@ -2266,11 +2264,9 @@ Two kinds of block are no longer shown as code at all, because neither one is lo
 
 <img src="images/decl-row-canvas.png" alt="A function body whose dictionary lifted to a Declare waves action: a header of three chips reading Declare, waves, Dictionary - 3 entries, then calm = 3, busy = 8 and swarm = 20 as single-cell rows, followed by ordinary Set variable and Print actions." width="720">
 
-<img src="images/decl-top-canvas.png" alt="The plugin's own semantic analyzer opened as a sheet: Declare KNOWN_ANNOTATIONS - const Dictionary, 31 entries, with every annotation token as its own editable row." width="720">
+<img src="images/decl-top-canvas.png" alt="The plugin's own semantic analyzer opened as a sheet: the const KNOWN_ANNOTATIONS row reading 37 entries, and the function under it opening with a Declare row of 13 entries, each entry on its own row" width="720">
 
-<img src="images/block-views-before.png" alt="Before: a function body showing a GDScript badge over two comment lines, a System action for the opening line of a dictionary, and the dictionary entries stranded in a separate code block." width="720">
-
-<img src="images/block-views-after.png" alt="After: the same body with the comments shown as plain notes, the dictionary declaration and each of its three entries on their own action rows, and the remaining statements as Set variable and Print action rows." width="720">
+<img src="images/block-views-after.png" alt="The function body with the comments shown as plain notes, the dictionary declaration and each of its three entries on their own action rows, and the remaining statements as Set variable and Print action rows." width="720">
 
 Both keep the file byte-for-byte identical when you save it untouched: comment notes are a pure view over
 an unchanged block, and splitting a literal into per-entry rows is safe because consecutive code rows
@@ -2586,7 +2582,7 @@ only: the file is untouched and it still re-emits byte for byte.
 On real code the effect compounds. Here is the plugin's own semantic analyzer, whose annotation table is
 31 entries long:
 
-<img src="images/block-views-real-file.png" alt="A real source file opened as a sheet: the head's band stack, a one-row collapsed const KNOWN_ANNOTATIONS table reading 31 entries, and a function whose body is an Expression verb row with condition and action rows." width="720">
+<img src="images/block-views-real-file.png" alt="A real source file opened as a sheet: the head with its read-only mark and Edit anyway button, a one-row collapsed const KNOWN_ANNOTATIONS table reading 37 entries, and a function whose body opens with a Declare row of 13 entries" width="720">
 
 ---
 
@@ -2661,11 +2657,10 @@ under it as sub-events - and a `return` inside it is the Answer the funnel asked
 ![An undo-funnel edit read as one step: Local boolean changed = Dock, Edit sheet undoably "Apply Cell Edit", with the steps below it reading mode = "new_condition_event", Call Append Condition Entry, Answer true, and Answer false at the end](images/opened-script-undo-step.png)
 
 **A class that is all static is a shared store.** Nothing of it is ever made, so each `static var` is
-one value for the whole editor rather than one per copy, and a `const` whose own comment says it is
-frozen wears that promise. The three report levels read as three different acts: **Warn**, **Report
+one value for the whole editor rather than one per copy. The three report levels read as three different acts: **Warn**, **Report
 error** and **Log error**:
 
-![A static registry read as an event sheet: the head bar says shared store, nothing of its own is ever made; PATTERN_IDS is a constant list of text marked frozen; _claims and _stated are Shared tables, one for the whole editor; the rows read Warn, Stop event and Report error](images/opened-script-shared-store.png)
+![A static registry opened as a sheet: the head says it runs in the editor, PATTERN_IDS is a constant list of text, _claims and _stated are Dictionary variables, and the rows read Warn, Stop event and Report error](images/opened-script-shared-store.png)
 
 **A vocabulary module publishes Define rows.** Every row a module registers reads the way a pack
 author reads their own verbs - the kind, the name, the id, the category, the inputs, and the line it
@@ -2696,7 +2691,7 @@ that sheet; click a line to run the Find that explains it. Drag the boxes into a
 suits your project - it is remembered - and note that the graph itself is derived every time it
 opens, so nothing about it is stored in your project.
 
-<img src="images/sheet-map.png" alt="The Sheet map window: globals, sheets and scenes as boxes in three columns, joined by call, signal, include and layout lines." width="720">
+<img src="images/sheet-map.png" alt="The Sheet map window: sheets, scenes and globals as boxes joined by call, signal, include and layout lines, with the legend and the counts under it." width="720">
 
 Every edit you make to a sheet is an undo step on **Godot's own History dock**, in the name the
 edit gave itself - "Add Group", "Extract to Function", "Move Variable Up". Ctrl+Z walks them, and

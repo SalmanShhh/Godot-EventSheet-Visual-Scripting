@@ -59,7 +59,7 @@ and the writes guard the file handle, so a bad path cannot null-dereference.
   the `store_csv_line` loop, the seek-to-end append and both halves of the Ask branch are lifted from
   a `.gd` you typed yourself, and the file saves back byte for byte.
 
-![A sheet called ScoreBoard opened from a hand-written .gd, with the head's files band reading user://scores.csv - written, user://run.log - written and res://data/items.csv - read, each with its emitted line echoed beside it. Below it one On Enter Tree event holds two actions: ScoreBoard write table items to "user://scores.csv" - the first line names the columns, and System append "the run ended" to file "user://run.log"](../images/files-runs-reopened.png)
+![A sheet opened from a hand-written .gd: the one On enter tree event that reads the table, writes it back out and appends a line to the log](../images/files-runs-reopened.png)
 
 ## Why writes belong under `user://`
 
@@ -194,7 +194,7 @@ an event for each of them or the script does not compile.
 | On Unpack Refused | Runs when the guard stopped an unpack, with the entry and the reason | `func _on_unpack_refused(entry: String, reason: String) -> void:` |
 | On Unpack Finished | Runs when an unpack reached the last entry with nothing refused | `func _on_unpack_finished(entries: int, bytes: int, skipped: int) -> void:` |
 
-![A sheet called ModInstaller under a head whose files bands read user://pack.zip - read and user://mods - written, the ZIPReader line echoed beside each: On Enter Tree unpacks "user://pack.zip" into folder "user://mods", and On Unpack Progress sets a bar value to entries divided by total, with the refused and finished events below](../images/archive-unpack.png)
+![A mod installer sheet: On enter tree unpacks user://pack.zip into user://mods, then On Unpack Progress sets a progress bar and On Unpack Refused and On Unpack Finished print](../images/archive-unpack.png)
 
 ### Files: the name a player typed
 
@@ -297,7 +297,9 @@ Its words, in the shapes they take:
 - **On A File Appeared**, **On A File Changed** and **On A File Removed** are the three events one
   look can raise, each handing back the whole path.
 
-![Two events in a sheet called ModFolder, under a head whose files band reads watching user://mods every 2.0 s with watch_folder("user://mods", 2.0) echoed beside it: On Enter Tree with FolderWatcher Watch folder "user://mods" 2, and a second On Enter Tree with FolderWatcher Stop watching](../images/folder-watcher.png)
+![Two events in a sheet called mod_folder, under a head (Classic Sheet theme) whose files band reads watching user://mods every 2 s with watch_folder("user://mods", 2) echoed beside it: On enter tree starts the watch and On exit tree stops it](../images/folder-watcher.png)
+
+*Pictured in the Classic Sheet theme, which draws a sheet's file facts as bands; the default look says them in the hover card of the sheet's name.*
 
 **One look costs one directory read**, plus one modified-time question per file that passes the name
 filter. Between looks it costs nothing, and a stopped watcher costs nothing at all - the tick is

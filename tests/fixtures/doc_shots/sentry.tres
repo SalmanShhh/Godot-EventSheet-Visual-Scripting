@@ -1,0 +1,78 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="1_1kvrc"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_condition.gd" id="2_01o0m"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/local_variable.gd" id="3_77r4g"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/pick_filter.gd" id="4_pm327"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="5_lejg4"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/raw_code_row.gd" id="6_iv837"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="7_ow35i"]
+
+[sub_resource type="Resource" id="Resource_ryeat"]
+script = ExtResource("1_1kvrc")
+ace_id = "PlayAudio"
+params = {
+"from_position": "0.5",
+"target": "$Alarm"
+}
+codegen_template = "{target.}play({from_position})"
+display_text = "Play sound"
+
+[sub_resource type="Resource" id="Resource_frirp"]
+script = ExtResource("5_lejg4")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_ryeat")])
+event_uid = "be56b5"
+
+[sub_resource type="Resource" id="Resource_v1ovu"]
+script = ExtResource("1_1kvrc")
+ace_id = "StopAudio"
+params = {
+"target": "$Alarm"
+}
+codegen_template = "{target.}stop()"
+display_text = "Stop sound"
+
+[sub_resource type="Resource" id="Resource_o06yl"]
+script = ExtResource("5_lejg4")
+trigger_provider_id = "Core"
+trigger_id = "OnProcess"
+actions = Array[Resource]([SubResource("Resource_v1ovu")])
+event_uid = "6603b8"
+
+[sub_resource type="Resource" id="Resource_3af2o"]
+script = ExtResource("1_1kvrc")
+ace_id = "PlayAudio"
+params = {
+"from_position": "0.0",
+"target": "$Alarm"
+}
+codegen_template = "{target.}play({from_position})"
+display_text = "Play sound"
+
+[sub_resource type="Resource" id="Resource_tbbs7"]
+script = ExtResource("5_lejg4")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_3af2o")])
+event_uid = "daf311"
+
+[sub_resource type="Resource" id="Resource_8bg6n"]
+script = ExtResource("6_iv837")
+code = "$Light.visible = false"
+
+[sub_resource type="Resource" id="Resource_6mle8"]
+script = ExtResource("5_lejg4")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_8bg6n")])
+event_uid = "d763dc"
+
+[resource]
+script = ExtResource("7_ow35i")
+host_class = "CharacterBody2D"
+custom_class_name = "Sentry"
+addon_tags = PackedStringArray()
+addon_requires = PackedStringArray()
+events = Array[Resource]([SubResource("Resource_frirp"), SubResource("Resource_o06yl"), SubResource("Resource_tbbs7"), SubResource("Resource_6mle8")])
