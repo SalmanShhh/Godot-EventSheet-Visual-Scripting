@@ -31,6 +31,10 @@ Keyboard > Save bindings writes `user://bindings.cfg` and Settings > Save Bindin
 ### Fixed: a sheet whose Save choices are all Manually no longer makes Godot warn
 
 The block written for Manual-only choices declared a private member nothing reads. It now carries `@warning_ignore("unused_private_class_variable")`; a file written before that line still opens as its choices and saves back exactly as it was.
+### Changed: the Project Doctor builds fewer canvases and reads the behaviour library lines, not files
+
+A finding names an event by the number the margin draws, which the Doctor read off a throwaway canvas that reads every row of the sheet (about a fifth of a second for a small file, and about two seconds the first time, while the canvas code loads). Only a sheet holding a group, a value written `a if c else b`, an else arm, a lambda handed to connect, a file included, or a row it does not recognise can be numbered differently by a canvas, so every other sheet is now numbered as the sheet counts its own events, and the tidiness checks ask for the numbers only when they have a pair or a switched-off event to name. The class index of the behaviour library read all five megabytes of it in one frame; it now reads each script only as far as its `class_name`. On a project of 2,000 scripts the first run's longest frame went from about 2 seconds to about half a second, and the frames over 100 ms from 25-28 to 14-15. The findings are the same.
+
 ### Fixed: a 3D file's velocity rows read under the file's own name
 
 Set Velocity X and Add To Velocity are filed under CharacterBody2D and have no 3D twin, so in a script that extends a 3D class their rows read "CharacterBody2D" beside a Move and slide row that read the script's own name. Where a verb filed under a 2D class writes a line that is as true of the 3D host (it names nothing 2D and starts with a member the host has), the row now reads under the host's own name. A 2D file and a plain Node keep what they showed, and the line written is the same.
