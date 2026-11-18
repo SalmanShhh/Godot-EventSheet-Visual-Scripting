@@ -161,13 +161,23 @@ static func _triggers(width: float) -> bool:
 	var over: int = 0
 	var left_out: int = 0
 	var outside: int = 0
+	var overlap: int = 0
 	for index: int in range(view.get_flat_rows().size()):
 		var row_data: EventRowData = view._row_at(index)
 		if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
 			continue
 		var action_left: float = _action_left(row_data)
+		var cell_top: float = INF
+		var cell_bottom: float = -INF
+		for span: EventSheetSemanticSpan in row_data.spans:
+			if str((span.metadata as Dictionary).get("kind", "")) == "trigger" and span.rect.size.x > 0.0:
+				cell_top = span.rect.position.y
+				cell_bottom = span.rect.end.y
 		for span: EventSheetSemanticSpan in row_data.spans:
 			var kind: String = str((span.metadata as Dictionary).get("kind", ""))
+			# A chip under its cell starts below the cell's own words, never inside them.
+			if kind == "trigger_payload" and span.rect.size.x > 0.0 and span.rect.position.y > cell_top + 1.0 					and span.rect.position.y < cell_bottom - 0.5:
+				overlap += 1
 			if kind == "trigger" and (span.text.begins_with("On leaving") or span.text.begins_with("On entering")):
 				seen += 1
 				if not _words_whole(view, span):
@@ -183,6 +193,7 @@ static func _triggers(width: float) -> bool:
 	ok = SUPPORT.check(P, "at %d px a state's name is never broken inside a word" % int(width), broken, 0) and ok
 	ok = SUPPORT.check(P, "at %d px no payload chip reaches into the action lane" % int(width), over, 0) and ok
 	ok = SUPPORT.check(P, "at %d px every value the trigger hands over is drawn, inside its row" % int(width), [left_out, outside], [0, 0]) and ok
+	ok = SUPPORT.check(P, "at %d px a chip under its cell does not stand inside the cell" % int(width), overlap, 0) and ok
 	made[0].free()
 	return ok
 
@@ -242,3 +253,4 @@ static func _undo_step(width: float) -> bool:
 	ok = SUPPORT.check(P, "at %d px the cue is one line, never a column of letters" % int(width), [tall, wrapped], [0, 0]) and ok
 	made[0].free()
 	return ok
+

@@ -508,6 +508,10 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				span_visual_lines = maxi(int(act_line_counts.get(wrap_line, 1)), 1)
 			elif span_lane != "action" and not bool(metadata.get("badge", false)) and EventSheetViewportRowMetrics.FILL_CONDITION_KINDS.has(str(metadata.get("kind", ""))):
 				span_visual_lines = maxi(int(cond_line_counts.get(wrap_line, 1)), 1)
+				# The line the chips stand on under the cell is the line's, not the cell's: the cell is
+				# only as tall as its own words, so its label and its underline stay beside them.
+				if stacked_chip_x.has(wrap_line):
+					span_visual_lines = maxi(span_visual_lines - 1, 1)
 		if span_visual_lines > 1:
 			metadata["comment_line_height"] = line_height
 			if (metadata.get("bbcode_segments", []) as Array).is_empty():
