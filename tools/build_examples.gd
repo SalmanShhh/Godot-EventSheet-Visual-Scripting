@@ -69,6 +69,7 @@ func _init() -> void:
 	all_ok = _build_uhtn_planning() and all_ok
 	all_ok = _build_fps_arena() and all_ok
 	all_ok = _build_input_rebind() and all_ok
+	all_ok = _build_options_and_quick_save() and all_ok
 	all_ok = _build_path_chase() and all_ok
 	all_ok = _build_platformer_pathfinding() and all_ok
 	all_ok = _build_top_down_shooter() and all_ok
@@ -2058,196 +2059,434 @@ func _build_fps_arena() -> bool:
 # ── 13. Input Rebind - a working rebind screen from the input vocabulary ─────
 
 
-## A playable options-menu slice: two actions (jump/dash) with live binding labels, a
-## click-then-press-anything rebind flow that accepts KEYBOARD, MOUSE, or GAMEPAD input
-## (InputMap.action_add_event takes the captured event verbatim), a demo-defaults reset, and a
-## gamepad panel (count + product name every frame, test vibration). The actions are created at
-## RUNTIME (Add Input Action) so the demo never touches project.godot. UI is one HUD Kit
-## behavior: labels update by NAME, every Button reports through On Button Pressed - zero
-## connected signals in the scene.
+## One pack function called on a child node of the showcase, as the row a reader drops from the picker
+## writes it. The pack's own spelling is the autoload (Settings., SaveSystem.); a showcase reaches the same
+## functions through a child node of that name, because this builder writes showcases and never project
+## settings - the class description of each showcase says so. The template is the call with one slot per
+## parameter, in the order the pack declares them.
+func _node_call(provider: String, node: String, method: String, params: Dictionary = {}) -> ACEAction:
+	var slots: PackedStringArray = PackedStringArray()
+	for key: String in params.keys():
+		slots.append("{%s}" % key)
+	return _action(provider, "method:" + method, "$%s.%s(%s)" % [node, method, ", ".join(slots)], params)
+
+
+const GAME_SETTINGS := "res://eventsheet_addons/game_settings/game_settings_addon.gd"
+const SAVE_SYSTEM := "res://eventsheet_addons/save_system/save_system_addon.gd"
+
+
+## A Game Settings row on the child node named Settings.
+func _settings_call(method: String, params: Dictionary = {}) -> ACEAction:
+	return _node_call("GameSettingsAddon", "Settings", method, params)
+
+
+## A HUD Kit row on the child node named HudKit.
+func _hud_call(method: String, params: Dictionary = {}) -> ACEAction:
+	return _node_call("HudKitBehavior", "HudKit", method, params)
+
+
+## A trigger row for one signal of a child node: the pack's own "On ..." trigger.
+func _signal_row(node: String, signal_name: String, args: String = "") -> EventRow:
+	var row: EventRow = EventRow.new()
+	row.trigger_provider_id = "Core"
+	row.trigger_id = "signal:" + signal_name
+	row.trigger_args = args
+	row.trigger_source_path = node
+	row.connect_short = true
+	return row
+
+
+## A trigger row for one named button: the HUD Kit reports every button press, and the row asks which one.
+func _button_row(button_name: String) -> EventRow:
+	var row: EventRow = _signal_row("HudKit", "on_button_pressed")
+	row.conditions.append(_condition("HudKitBehavior", "method:button_is", "$HudKit.button_is({button_name})", {"button_name": "\"%s\"" % button_name}))
+	return row
+
+
+## A helper function with a plain-code body, described for the picker's hover.
+func _helper(sheet: EventSheetResource, function_name: String, description: String, params: Array, body: Array, return_type: int = TYPE_NIL) -> void:
+	var fn: EventFunction = EventFunction.new()
+	fn.function_name = function_name
+	if return_type != TYPE_NIL:
+		fn.return_type = return_type
+	fn.enabled = true
+	fn.description = description
+	for spec: Array in params:
+		var param: ACEParam = ACEParam.new()
+		param.id = str(spec[0])
+		param.type_name = str(spec[1])
+		fn.params.append(param)
+	fn.events = [_raw("\n".join(PackedStringArray(body)))]
+	sheet.functions.append(fn)
+
+
+## A control the way Project Settings declares one - a setting named input/<name> holding its events - then
+## the Input Map is rebuilt from the settings. That is what makes Reset One Binding and Reset Every Binding
+## work exactly as they do in a real project, and nothing is written to project.godot.
+const DEFINE_CONTROL_BODY: Array = [
+	"var key: InputEventKey = InputEventKey.new()",
+	"key.physical_keycode = key_code as Key",
+	"var button: InputEventJoypadButton = InputEventJoypadButton.new()",
+	"button.button_index = pad_button as JoyButton",
+	"ProjectSettings.set_setting(\"input/\" + action_name, {\"deadzone\": 0.2, \"events\": [key, button]})",
+]
+
+
+func _label(node_name: String, text: String, size: int = 16, centred: bool = true) -> Label:
+	var label: Label = Label.new()
+	label.name = node_name
+	label.text = text
+	label.add_theme_font_size_override("font_size", size)
+	if centred:
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	return label
+
+
+func _button(node_name: String, text: String) -> Button:
+	var button: Button = Button.new()
+	button.name = node_name
+	button.text = text
+	return button
+
+
+## The rebind example: the Game Settings rows do the listening, the clash answers, the saving and the
+## reset; the sheet only says what the screen does with each answer. Rows throughout - the only code is the
+## function that declares the two demo controls the way Project Settings would.
 func _build_input_rebind() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Control"
 	sheet.custom_class_name = "InputRebindDemo"
 	sheet.emit_live_values = false
-	sheet.variables = {
-		"rebinding_action": {"type": "String", "default": "", "exported": false}
-	}
-	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
-	sheet.class_description = "[b]Input Rebind[/b] - a working rebind screen built from the Input/InputMap/Gamepad vocabulary: click Rebind, then press ANY key, mouse button, or gamepad button (the captured event binds verbatim). Binding labels read InputMap.action_get_events(...).as_text() - the Action Binding As Text pattern. Actions are created at runtime, so the demo leaves your project's Input Map alone."
+	sheet.class_description = "[b]Input Rebind[/b] - a rebinding screen on the Game Settings rows. Click a key, press another, and a clash asks Swap, Take it anyway or Pick another key; Esc cancels; the keyboard and pad columns are kept side by side; and Save Bindings keeps the choice for the next launch (user://settings.cfg, section [bindings]). In your own project the Game Settings pack is the Settings autoload, so the rows read Settings.save_bindings(); here the same pack is a child node named Settings, so they read $Settings.save_bindings(). The two demo controls are declared the way Project Settings declares them, so Reset works exactly as in a real project, and project.godot is left alone."
+
+	_helper(sheet, "define_control", "Declares one control the way Project Settings does (a key and a pad button) and rebuilds the Input Map from the settings, so Reset goes back to these.",
+		[["action_name", "String"], ["key_code", "int"], ["pad_button", "int"]], DEFINE_CONTROL_BODY)
+	_helper(sheet, "gamepad_words", "How many gamepads are connected and what the first one is called.", [], [
+		"var pads: Array = Input.get_connected_joypads()",
+		"var pad_name: String = Input.get_joy_name(pads[0])",
+		"return \"%d gamepad(s) - %s\" % [pads.size(), pad_name]",
+	], TYPE_STRING)
+	_helper(sheet, "define_demo_controls", "Jump is Space and pad A, Dash is C and pad X.", [], [
+		"define_control(\"demo_jump\", KEY_SPACE, JOY_BUTTON_A)",
+		"define_control(\"demo_dash\", KEY_C, JOY_BUTTON_X)",
+		"InputMap.load_from_project_settings()",
+	])
 
 	var on_ready: EventRow = EventRow.new()
 	on_ready.trigger_provider_id = "Core"
 	on_ready.trigger_id = "OnReady"
-	var on_ready_body: RawCodeRow = RawCodeRow.new()
-	on_ready_body.code = "\n".join(PackedStringArray([
-		"setup_default_bindings()",
-		"$HudKit.on_button_pressed.connect(handle_button)",
-		"$HudKit.set_text(\"StatusLabel\", \"Click a Rebind button, then press any input.\")"
-	]))
-	on_ready.actions.append(on_ready_body)
+	on_ready.actions.append(_raw("define_demo_controls()"))
+	on_ready.actions.append(_settings_call("load_bindings"))
+	on_ready.actions.append(_settings_call("build_controls_page", {"container": "$Column/Controls"}))
+	on_ready.actions.append(_hud_call("set_text", {"control_name": "\"StatusLabel\"", "text": "\"Click a key to change it. Esc cancels.\""}))
 	sheet.events.append(on_ready)
 
-	# The capture step: while a rebind is armed, the FIRST pressed input of any device becomes
-	# the action's whole binding. _input sees the event raw, before any UI eats it.
-	var on_input: EventRow = EventRow.new()
-	on_input.trigger_provider_id = "Core"
-	on_input.trigger_id = "OnInput"
-	var on_input_body: RawCodeRow = RawCodeRow.new()
-	on_input_body.code = "\n".join(PackedStringArray([
-		"if rebinding_action == \"\":",
-		"\treturn",
-		"if (event is InputEventKey and event.pressed) or (event is InputEventMouseButton and event.pressed) or (event is InputEventJoypadButton and event.pressed):",
-		"\tInputMap.action_erase_events(rebinding_action)",
-		"\tInputMap.action_add_event(rebinding_action, event)",
-		"\t$HudKit.set_text(\"StatusLabel\", \"%s bound to %s\" % [rebinding_action.capitalize(), event.as_text()])",
-		"\trebinding_action = \"\"",
-		"\trefresh_binding_labels()"
-	]))
-	on_input.actions.append(on_input_body)
-	sheet.events.append(on_input)
+	var changed: EventRow = _signal_row("Settings", "binding_changed", "action: String")
+	changed.actions.append(_settings_call("save_bindings"))
+	changed.actions.append(_hud_call("set_text", {"control_name": "\"StatusLabel\"", "text": "\"%s changed - saved for next time.\" % action.capitalize()"}))
+	sheet.events.append(changed)
 
-	# Live feedback: test the actions wherever they are bound now + the gamepad panel.
-	var tick: EventRow = EventRow.new()
-	tick.trigger_provider_id = "Core"
-	tick.trigger_id = "OnProcess"
-	var tick_body: RawCodeRow = RawCodeRow.new()
-	tick_body.code = "\n".join(PackedStringArray([
-		"if Input.is_action_just_pressed(\"demo_jump\"):",
-		"\t$HudKit.show_toast(\"Jump!\")",
-		"if Input.is_action_just_pressed(\"demo_dash\"):",
-		"\t$HudKit.show_toast(\"Dash!\")",
-		"var pads: Array = Input.get_connected_joypads()",
-		"if pads.is_empty():",
-		"\t$HudKit.set_text(\"GamepadLabel\", \"No gamepad connected - plug one in\")",
-		"else:",
-		"\t$HudKit.set_text(\"GamepadLabel\", \"%d gamepad(s) - %s\" % [pads.size(), Input.get_joy_name(pads[0])])"
-	]))
-	tick.actions.append(tick_body)
-	sheet.events.append(tick)
+	var clash: EventRow = _signal_row("Settings", "binding_conflict", "action: String, taken_by: String")
+	clash.actions.append(_hud_call("show_panel", {"panel_name": "\"ConflictPanel\""}))
+	clash.actions.append(_hud_call("set_text", {"control_name": "\"ConflictLabel\"", "text": "\"%s is already used by %s.\" % [$Settings.pending_binding_words(), taken_by.capitalize()]"}))
+	sheet.events.append(clash)
 
-	var handle_fn: EventFunction = EventFunction.new()
-	handle_fn.function_name = "handle_button"
-	handle_fn.enabled = true
-	handle_fn.description = "Routes every button by name: arm a rebind, reset the defaults, or buzz the gamepad."
-	handle_fn.events = [_raw("\n".join(PackedStringArray([
-		"var pressed_button: String = $HudKit.last_button_name_value()",
-		"match pressed_button:",
-		"\t\"RebindJumpButton\":",
-		"\t\trebinding_action = \"demo_jump\"",
-		"\t\t$HudKit.set_text(\"StatusLabel\", \"Press any key, mouse or gamepad button to bind Jump…\")",
-		"\t\"RebindDashButton\":",
-		"\t\trebinding_action = \"demo_dash\"",
-		"\t\t$HudKit.set_text(\"StatusLabel\", \"Press any key, mouse or gamepad button to bind Dash…\")",
-		"\t\"ResetButton\":",
-		"\t\tsetup_default_bindings()",
-		"\t\t$HudKit.set_text(\"StatusLabel\", \"Bindings restored to the demo defaults.\")",
-		"\t\"VibrateButton\":",
-		"\t\tInput.start_joy_vibration(0, 0.5, 0.5, 0.4)",
-		"\t\t$HudKit.set_text(\"StatusLabel\", \"Vibrating gamepad 0 (if one is connected).\")"
-	])))]
-	sheet.functions.append(handle_fn)
+	for answer: Array in [["SwapButton", "swap_the_binding"], ["TakeButton", "take_the_binding_anyway"], ["PickAnotherButton", "pick_another_key"]]:
+		var answered: EventRow = _button_row(str(answer[0]))
+		answered.actions.append(_settings_call(str(answer[1])))
+		answered.actions.append(_hud_call("hide_panel", {"panel_name": "\"ConflictPanel\""}))
+		sheet.events.append(answered)
 
-	# Demo-defaults (NOT Restore Default Bindings: these actions live only at runtime, so
-	# InputMap.load_from_project_settings() would erase them instead of resetting them).
-	var setup_fn: EventFunction = EventFunction.new()
-	setup_fn.function_name = "setup_default_bindings"
-	setup_fn.enabled = true
-	setup_fn.description = "Creates the demo actions if missing and binds Jump=Space, Dash=C."
-	setup_fn.events = [_raw("\n".join(PackedStringArray([
-		"if not InputMap.has_action(\"demo_jump\"):",
-		"\tInputMap.add_action(\"demo_jump\")",
-		"if not InputMap.has_action(\"demo_dash\"):",
-		"\tInputMap.add_action(\"demo_dash\")",
-		"InputMap.action_erase_events(\"demo_jump\")",
-		"var jump_key: InputEventKey = InputEventKey.new()",
-		"jump_key.physical_keycode = KEY_SPACE",
-		"InputMap.action_add_event(\"demo_jump\", jump_key)",
-		"InputMap.action_erase_events(\"demo_dash\")",
-		"var dash_key: InputEventKey = InputEventKey.new()",
-		"dash_key.physical_keycode = KEY_C",
-		"InputMap.action_add_event(\"demo_dash\", dash_key)",
-		"refresh_binding_labels()"
-	])))]
-	sheet.functions.append(setup_fn)
+	var cancelled: EventRow = _signal_row("Settings", "binding_cancelled", "action: String")
+	cancelled.actions.append(_hud_call("hide_panel", {"panel_name": "\"ConflictPanel\""}))
+	cancelled.actions.append(_hud_call("set_text", {"control_name": "\"StatusLabel\"", "text": "\"Kept the old key.\""}))
+	sheet.events.append(cancelled)
 
-	var refresh_fn: EventFunction = EventFunction.new()
-	refresh_fn.function_name = "refresh_binding_labels"
-	refresh_fn.enabled = true
-	refresh_fn.description = "Prints each action's current binding as readable text next to its row."
-	refresh_fn.events = [_raw("\n".join(PackedStringArray([
-		"$HudKit.set_text(\"JumpLabel\", \"Jump: %s\" % binding_text(\"demo_jump\"))",
-		"$HudKit.set_text(\"DashLabel\", \"Dash: %s\" % binding_text(\"demo_dash\"))"
-	])))]
-	sheet.functions.append(refresh_fn)
+	var reset_all: EventRow = _button_row("ResetAllButton")
+	reset_all.actions.append(_settings_call("reset_all_bindings"))
+	reset_all.actions.append(_settings_call("save_bindings"))
+	reset_all.actions.append(_hud_call("set_text", {"control_name": "\"StatusLabel\"", "text": "\"Every control is back to its first key.\""}))
+	sheet.events.append(reset_all)
 
-	var binding_fn: EventFunction = EventFunction.new()
-	binding_fn.function_name = "binding_text"
-	binding_fn.enabled = true
-	binding_fn.return_type = TYPE_STRING
-	binding_fn.description = "An action's first binding as readable text (the Action Binding As Text pattern)."
-	var binding_param: ACEParam = ACEParam.new()
-	binding_param.id = "action_name"
-	binding_param.type_name = "String"
-	binding_fn.params.append(binding_param)
-	binding_fn.events = [_raw("\n".join(PackedStringArray([
-		"var events: Array = InputMap.action_get_events(action_name)",
-		"return events[0].as_text() if not events.is_empty() else \"unbound\""
-	])))]
-	sheet.functions.append(binding_fn)
+	for control: Array in [["demo_jump", "Jump!"], ["demo_dash", "Dash!"]]:
+		var tried: EventRow = EventRow.new()
+		tried.trigger_provider_id = "Core"
+		tried.trigger_id = "OnProcess"
+		tried.conditions.append(_condition("Core", "IsActionJustPressed", _ace_template("IsActionJustPressed"), {"action": "\"%s\"" % control[0]}))
+		tried.actions.append(_hud_call("show_toast", {"text": "\"%s\"" % control[1]}))
+		sheet.events.append(tried)
+
+	var pad_here: EventRow = EventRow.new()
+	pad_here.trigger_provider_id = "Core"
+	pad_here.trigger_id = "OnProcess"
+	pad_here.conditions.append(_condition("Core", "GamepadHasAny", _ace_template("GamepadHasAny"), {}))
+	pad_here.actions.append(_hud_call("set_text", {"control_name": "\"GamepadLabel\"", "text": "gamepad_words()"}))
+	sheet.events.append(pad_here)
+	var pad_none: EventRow = EventRow.new()
+	pad_none.trigger_provider_id = "Core"
+	pad_none.trigger_id = "OnProcess"
+	pad_none.else_mode = EventRow.ElseMode.ELSE
+	pad_none.actions.append(_hud_call("set_text", {"control_name": "\"GamepadLabel\"", "text": "\"No gamepad connected - plug one in\""}))
+	sheet.events.append(pad_none)
+
+	var vibrate: EventRow = _button_row("VibrateButton")
+	vibrate.actions.append(_action("Core", "GamepadVibrateFor", _ace_template("GamepadVibrateFor"), {"device": "0", "weak": "0.5", "strong": "0.5", "seconds": "0.4"}))
+	vibrate.actions.append(_hud_call("set_text", {"control_name": "\"StatusLabel\"", "text": "\"Vibrating gamepad 0 (if one is connected).\""}))
+	sheet.events.append(vibrate)
 
 	if not _compile(sheet, "res://demo/showcase/input_rebind/input_rebind.tres", "res://demo/showcase/input_rebind/input_rebind.gd"):
 		return false
 	_respace_functions("res://demo/showcase/input_rebind/input_rebind.gd")
 
-	# The scene: one centred column of named labels/buttons + the HudKit behavior.
 	var root: Control = Control.new()
 	root.name = "InputRebindDemo"
 	root.size = Vector2(1152, 648)
 	root.set_script(load("res://demo/showcase/input_rebind/input_rebind.gd"))
-	_attach_behavior(root, "HudKit", "res://eventsheet_addons/hud_kit/hud_kit_behavior.gd", root)
+	_attach_behavior(root, "HudKit", HUD_KIT, root)
+	_attach_behavior(root, "Settings", GAME_SETTINGS, root)
 	var column: VBoxContainer = VBoxContainer.new()
 	column.name = "Column"
 	column.set_anchors_preset(Control.PRESET_CENTER)
-	column.offset_left = -220.0
-	column.offset_right = 220.0
-	column.offset_top = -180.0
-	column.add_theme_constant_override("separation", 12)
+	column.offset_left = -300.0
+	column.offset_right = 300.0
+	column.offset_top = -270.0
+	column.add_theme_constant_override("separation", 8)
 	root.add_child(column)
-	var title: Label = Label.new()
-	title.name = "TitleLabel"
-	title.text = "INPUT REBINDING + GAMEPAD"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 26)
-	column.add_child(title)
-	var info: Label = Label.new()
-	info.name = "InfoLabel"
-	info.text = "Click Rebind, then press any key, mouse button, or gamepad button.\nTest with your bindings: Jump toasts, Dash toasts."
-	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	info.add_theme_font_size_override("font_size", 13)
-	column.add_child(info)
-	column.add_child(_binding_row("JumpLabel", "Jump: Space", "RebindJumpButton"))
-	column.add_child(_binding_row("DashLabel", "Dash: C", "RebindDashButton"))
-	var reset_button: Button = Button.new()
-	reset_button.name = "ResetButton"
-	reset_button.text = "Restore Demo Defaults"
-	column.add_child(reset_button)
-	var status: Label = Label.new()
-	status.name = "StatusLabel"
-	status.text = ""
-	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(status)
-	var gamepad: Label = Label.new()
-	gamepad.name = "GamepadLabel"
-	gamepad.text = "No gamepad connected - plug one in"
-	gamepad.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(gamepad)
-	var vibrate_button: Button = Button.new()
-	vibrate_button.name = "VibrateButton"
-	vibrate_button.text = "Test Gamepad Vibration"
-	column.add_child(vibrate_button)
+	column.add_child(_label("TitleLabel", "REBIND THE CONTROLS", 26))
+	column.add_child(_label("InfoLabel", "Click a key to change it. Esc cancels. Your choice is kept when you close the game.", 13))
+	var controls: VBoxContainer = VBoxContainer.new()
+	controls.name = "Controls"
+	controls.add_theme_constant_override("separation", 6)
+	column.add_child(controls)
+	var conflict: PanelContainer = PanelContainer.new()
+	conflict.name = "ConflictPanel"
+	conflict.visible = false
+	var conflict_box: VBoxContainer = VBoxContainer.new()
+	conflict_box.name = "Box"
+	conflict.add_child(conflict_box)
+	conflict_box.add_child(_label("ConflictLabel", "", 15))
+	var answers: HBoxContainer = HBoxContainer.new()
+	answers.name = "Answers"
+	answers.alignment = BoxContainer.ALIGNMENT_CENTER
+	answers.add_child(_button("SwapButton", "Swap"))
+	answers.add_child(_button("TakeButton", "Take it anyway"))
+	answers.add_child(_button("PickAnotherButton", "Pick another key"))
+	conflict_box.add_child(answers)
+	column.add_child(conflict)
+	column.add_child(_button("ResetAllButton", "Reset every binding"))
+	column.add_child(_label("StatusLabel", "", 15))
+	column.add_child(_label("TestLabel", "Press jump or dash to try them.", 13))
+	column.add_child(_label("GamepadLabel", "No gamepad connected - plug one in", 13))
+	column.add_child(_button("VibrateButton", "Test Gamepad Vibration"))
 	_own_deep(column, root)
 	return _save_scene(root, "res://demo/showcase/input_rebind/input_rebind.tscn")
+
+
+## The saving example: options, controls and a quick save, each kept in the file Save Studio's Player
+## settings tab names. Master volume and fullscreen are declared settings (user://settings.cfg); the
+## controls, F5 and F9 among them, are saved bindings; coins and player_spot have their Save choice set to
+## Manually, so only Save Game writes them and only Load Game brings them back (user://save_0.cfg).
+func _build_options_and_quick_save() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Control"
+	sheet.custom_class_name = "OptionsAndQuickSaveDemo"
+	sheet.emit_live_values = false
+	sheet.variables = {
+		"coins": {"type": "int", "default": 0, "exported": false,
+			"attributes": {"tooltip": "Coins picked up in this run.", "save": "manual"}},
+		"player_spot": {"type": "Vector2", "default": Vector2(200, 300), "exported": false,
+			"attributes": {"tooltip": "Where the player stands.", "save": "manual"}},
+		"picked_coins": {"type": "Array", "default": [], "exported": false,
+			"attributes": {"tooltip": "Names of the coins already picked up.", "save": "manual"}},
+	}
+	sheet.class_description = "[b]Options and Quick Save[/b] - three kinds of thing a game keeps, each in its own file. Master volume and fullscreen are options (Settings, user://settings.cfg); the controls, F5 and F9 among them, are saved bindings (the same file, section [bindings]); and coins, player_spot and picked_coins are the game itself, set to Manually in Save Studio, Saving your game, What gets saved, so F5 (Save Game) writes them to user://save_0.cfg and F9 (Load Game) brings them back. Tab opens the options. In your own project the Game Settings and Save System packs are the Settings and SaveSystem autoloads, so the rows read Settings.save_all_settings() and SaveSystem.save_game(); here they are child nodes of the same names, so they read $Settings. and $SaveSystem."
+
+	_helper(sheet, "define_control", "Declares one control the way Project Settings does (a key and a pad button) and rebuilds the Input Map from the settings, so Reset goes back to these.",
+		[["action_name", "String"], ["key_code", "int"], ["pad_button", "int"]], DEFINE_CONTROL_BODY)
+	_helper(sheet, "define_controls", "Quick save is F5, quick load is F9 and Tab opens the options, each with a pad button too.", [], [
+		"define_control(\"quick_save\", KEY_F5, JOY_BUTTON_BACK)",
+		"define_control(\"quick_load\", KEY_F9, JOY_BUTTON_START)",
+		"define_control(\"open_options\", KEY_TAB, JOY_BUTTON_Y)",
+		"InputMap.load_from_project_settings()",
+	])
+	_helper(sheet, "refresh_hints", "Writes the strip along the bottom from the live bindings, so a rebound key is what it says, and notes when there is no quick save to load yet.", [], [
+		"var load_hint: String = \"%s Quick load\" % $Settings.key_binding_of(\"quick_load\")",
+		"if not $SaveSystem.slot_exists(0):",
+		"\tload_hint += \" (no quick save yet)\"",
+		"$HudKit.set_text(\"HintLabel\", \"%s Quick save   |   %s   |   %s Options\" % [$Settings.key_binding_of(\"quick_save\"), load_hint, $Settings.key_binding_of(\"open_options\")])",
+	])
+	_helper(sheet, "collect_coins", "Picks up every coin the player stands on: counts it and hides it.", [], [
+		"for child: Node in $GameScreen/Coins.get_children():",
+		"\tvar coin: ColorRect = child as ColorRect",
+		"\tif coin.visible and $GameScreen/Player.position.distance_to(coin.position) < 30.0:",
+		"\t\tcoin.visible = false",
+		"\t\tcoins += 1",
+		"\t\tpicked_coins.append(str(coin.name))",
+		"\t\t$HudKit.set_text(\"CoinsLabel\", \"Coins: %d\" % coins)",
+	])
+	_helper(sheet, "hide_picked_coins", "Hides the coins the save says were already picked up, so a loaded game does not offer them again.", [], [
+		"for child: Node in $GameScreen/Coins.get_children():",
+		"\t(child as ColorRect).visible = not picked_coins.has(str(child.name))",
+	])
+
+	var on_ready: EventRow = EventRow.new()
+	on_ready.trigger_provider_id = "Core"
+	on_ready.trigger_id = "OnReady"
+	on_ready.actions.append(_settings_call("declare_setting", {"setting_name": "\"master_volume\"", "default_value": "80", "kind": "\"percent\"", "choices": "\"\"", "page": "\"\"", "label": "\"\""}))
+	on_ready.actions.append(_settings_call("declare_setting", {"setting_name": "\"fullscreen\"", "default_value": "false", "kind": "\"toggle\"", "choices": "\"\"", "page": "\"\"", "label": "\"\""}))
+	on_ready.actions.append(_raw("define_controls()"))
+	on_ready.actions.append(_settings_call("load_all_settings"))
+	on_ready.actions.append(_settings_call("load_bindings"))
+	on_ready.actions.append(_settings_call("bind_control", {"control": "$OptionsPanel/Box/VolumeRow/master_volume", "setting_name": "\"master_volume\""}))
+	on_ready.actions.append(_settings_call("bind_control", {"control": "$OptionsPanel/Box/fullscreen", "setting_name": "\"fullscreen\""}))
+	on_ready.actions.append(_settings_call("build_controls_page", {"container": "$OptionsPanel/Box/Controls"}))
+	on_ready.actions.append(_settings_call("apply_all_settings"))
+	on_ready.actions.append(_raw("refresh_hints()"))
+	sheet.events.append(on_ready)
+
+	var volume: EventRow = _signal_row("Settings", "setting_changed", "setting_name: String, value: Variant")
+	volume.conditions.append(_condition("GameSettingsAddon", "method:changed_setting_is", "$Settings.changed_setting_is({setting_name})", {"setting_name": "\"master_volume\""}))
+	volume.actions.append(_action("Core", "OptionsSetMasterPercent", _ace_template("OptionsSetMasterPercent"), {"percent": "float(value)"}))
+	sheet.events.append(volume)
+	var screen: EventRow = _signal_row("Settings", "setting_changed", "setting_name: String, value: Variant")
+	screen.conditions.append(_condition("GameSettingsAddon", "method:changed_setting_is", "$Settings.changed_setting_is({setting_name})", {"setting_name": "\"fullscreen\""}))
+	var screen_on: EventRow = EventRow.new()
+	screen_on.conditions.append(_condition("Core", "ExpressionIsTrue", "{expr}", {"expr": "value"}))
+	screen_on.actions.append(_action("Core", "WindowGoFullscreen", _ace_template("WindowGoFullscreen"), {}))
+	var screen_off: EventRow = EventRow.new()
+	screen_off.else_mode = EventRow.ElseMode.ELSE
+	screen_off.actions.append(_action("Core", "WindowGoWindowed", _ace_template("WindowGoWindowed"), {}))
+	screen.sub_events.append(screen_on)
+	screen.sub_events.append(screen_off)
+	sheet.events.append(screen)
+
+	var rebound: EventRow = _signal_row("Settings", "binding_changed", "action: String")
+	rebound.actions.append(_raw("refresh_hints()"))
+	sheet.events.append(rebound)
+
+	var back: EventRow = _button_row("BackButton")
+	back.actions.append(_settings_call("save_all_settings"))
+	back.actions.append(_settings_call("save_bindings"))
+	back.actions.append(_hud_call("hide_panel", {"panel_name": "\"OptionsPanel\""}))
+	sheet.events.append(back)
+
+	for pressed: Array in [["quick_save", _node_call("SaveSystemAddon", "SaveSystem", "save_game")],
+			["quick_load", _node_call("SaveSystemAddon", "SaveSystem", "load_game")],
+			["open_options", _hud_call("show_panel", {"panel_name": "\"OptionsPanel\""})]]:
+		var key_row: EventRow = EventRow.new()
+		key_row.trigger_provider_id = "Core"
+		key_row.trigger_id = "OnInput"
+		key_row.conditions.append(_condition("Core", "EventIsActionPressed", _ace_template("EventIsActionPressed"), {"action": "\"%s\"" % pressed[0]}))
+		key_row.actions.append(pressed[1])
+		sheet.events.append(key_row)
+
+	var before_save: EventRow = _signal_row("SaveSystem", "before_save", "slot_index: int")
+	before_save.actions.append(_action("Core", "SetVar", "{var_name} = {value}", {"var_name": "player_spot", "value": "$GameScreen/Player.position"}))
+	sheet.events.append(before_save)
+	var after_load: EventRow = _signal_row("SaveSystem", "after_load", "slot_index: int")
+	after_load.actions.append(_raw("$GameScreen/Player.position = player_spot"))
+	after_load.actions.append(_raw("hide_picked_coins()"))
+	after_load.actions.append(_hud_call("set_text", {"control_name": "\"CoinsLabel\"", "text": "\"Coins: %d\" % coins"}))
+	after_load.actions.append(_hud_call("show_toast", {"text": "\"Loaded (slot %d)\" % slot_index"}))
+	sheet.events.append(after_load)
+	var written: EventRow = _signal_row("SaveSystem", "save_written", "slot_index: int")
+	written.actions.append(_hud_call("show_toast", {"text": "\"Saved (slot %d)\" % slot_index"}))
+	written.actions.append(_raw("refresh_hints()"))
+	sheet.events.append(written)
+	var failed: EventRow = _signal_row("SaveSystem", "load_failed", "slot_index: int, reason: String")
+	failed.actions.append(_hud_call("show_toast", {"text": "reason"}))
+	sheet.events.append(failed)
+
+	var tick: EventRow = EventRow.new()
+	tick.trigger_provider_id = "Core"
+	tick.trigger_id = "OnProcess"
+	tick.actions.append(_raw("if not $OptionsPanel.visible:\n\t$GameScreen/Player.position += Input.get_vector(\"ui_left\", \"ui_right\", \"ui_up\", \"ui_down\") * 240.0 * delta\n\tcollect_coins()"))
+	sheet.events.append(tick)
+
+	if not _compile(sheet, "res://demo/showcase/options_and_quick_save/options_and_quick_save.tres", "res://demo/showcase/options_and_quick_save/options_and_quick_save.gd"):
+		return false
+	_respace_functions("res://demo/showcase/options_and_quick_save/options_and_quick_save.gd")
+
+	var root: Control = Control.new()
+	root.name = "OptionsAndQuickSaveDemo"
+	root.size = Vector2(1152, 648)
+	root.set_script(load("res://demo/showcase/options_and_quick_save/options_and_quick_save.gd"))
+	_attach_behavior(root, "HudKit", HUD_KIT, root)
+	_attach_behavior(root, "Settings", GAME_SETTINGS, root)
+	_attach_behavior(root, "SaveSystem", SAVE_SYSTEM, root)
+	var game: Control = Control.new()
+	game.name = "GameScreen"
+	game.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	game.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var heading: Label = _label("TitleLabel", "COLLECT THE COINS", 26)
+	heading.position = Vector2(24, 18)
+	game.add_child(heading)
+	var coin_count: Label = _label("CoinsLabel", "Coins: 0", 20, false)
+	coin_count.position = Vector2(24, 64)
+	game.add_child(coin_count)
+	var coins_holder: Control = Control.new()
+	coins_holder.name = "Coins"
+	for spot: Vector2 in [Vector2(480, 300), Vector2(700, 420), Vector2(860, 220)]:
+		var coin: ColorRect = ColorRect.new()
+		coin.name = "Coin%d" % (coins_holder.get_child_count() + 1)
+		coin.color = Color(0.95, 0.78, 0.18)
+		coin.size = Vector2(22, 22)
+		coin.position = spot
+		coins_holder.add_child(coin)
+	game.add_child(coins_holder)
+	var player: ColorRect = ColorRect.new()
+	player.name = "Player"
+	player.color = Color(0.35, 0.65, 0.95)
+	player.size = Vector2(28, 28)
+	player.position = Vector2(200, 300)
+	game.add_child(player)
+	root.add_child(game)
+	var hints: Label = _label("HintLabel", "", 15)
+	hints.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	hints.offset_top = -40.0
+	root.add_child(hints)
+	var options: PanelContainer = PanelContainer.new()
+	options.name = "OptionsPanel"
+	options.visible = false
+	options.set_anchors_preset(Control.PRESET_CENTER)
+	options.offset_left = -280.0
+	options.offset_right = 280.0
+	options.offset_top = -250.0
+	options.offset_bottom = 250.0
+	var options_box: VBoxContainer = VBoxContainer.new()
+	options_box.name = "Box"
+	options_box.add_theme_constant_override("separation", 8)
+	options.add_child(options_box)
+	options_box.add_child(_label("OptionsTitle", "OPTIONS", 24))
+	var volume_row: HBoxContainer = HBoxContainer.new()
+	volume_row.name = "VolumeRow"
+	var volume_label: Label = _label("VolumeLabel", "Master volume", 16, false)
+	volume_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	volume_row.add_child(volume_label)
+	var volume_slider: HSlider = HSlider.new()
+	volume_slider.name = "master_volume"
+	volume_slider.min_value = 0.0
+	volume_slider.max_value = 100.0
+	volume_slider.step = 1.0
+	volume_slider.value = 80.0
+	volume_slider.custom_minimum_size = Vector2(220, 0)
+	volume_row.add_child(volume_slider)
+	options_box.add_child(volume_row)
+	var fullscreen_box: CheckBox = CheckBox.new()
+	fullscreen_box.name = "fullscreen"
+	fullscreen_box.text = "Fullscreen"
+	options_box.add_child(fullscreen_box)
+	options_box.add_child(_label("ControlsTitle", "Controls", 18))
+	var controls: VBoxContainer = VBoxContainer.new()
+	controls.name = "Controls"
+	controls.add_theme_constant_override("separation", 6)
+	options_box.add_child(controls)
+	options_box.add_child(_button("BackButton", "Back"))
+	root.add_child(options)
+	_own_deep(game, root)
+	_own_deep(hints, root)
+	_own_deep(options, root)
+	return _save_scene(root, "res://demo/showcase/options_and_quick_save/options_and_quick_save.tscn")
 
 
 # ── 14. Path Chase - Platformer Pathfinding driving Platformer Movement ──────
@@ -2526,24 +2765,6 @@ func _chase_actor(actor_name: String, world_position: Vector2, tint: Color) -> C
 	visual.size = Vector2(22.0, 28.0)
 	actor.add_child(visual)
 	return actor
-
-
-## One rebind row: the live binding label on the left, the named Rebind button on the right.
-func _binding_row(label_name: String, label_text: String, button_name: String) -> HBoxContainer:
-	var row: HBoxContainer = HBoxContainer.new()
-	row.name = label_name + "Row"
-	row.add_theme_constant_override("separation", 14)
-	var label: Label = Label.new()
-	label.name = label_name
-	label.text = label_text
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	label.add_theme_font_size_override("font_size", 18)
-	row.add_child(label)
-	var button: Button = Button.new()
-	button.name = button_name
-	button.text = "Rebind"
-	row.add_child(button)
-	return row
 
 
 # ── Platformer Pathfinding (the plain chaser) ──────────────────────

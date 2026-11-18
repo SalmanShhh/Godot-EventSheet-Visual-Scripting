@@ -28,6 +28,7 @@ const SUPPORT := preload("res://tests/support.gd")
 const P := "head_bar_reading_test"
 
 const SHOWCASE := "res://demo/showcase/input_rebind/input_rebind.gd"
+const SAVING_SHOWCASE := "res://demo/showcase/options_and_quick_save/options_and_quick_save.gd"
 const PACK := "res://eventsheet_addons/flash/flash_behavior.gd"
 const CAROUSEL := "res://demo/showcase/carousel/showcase_carousel.gd"
 
@@ -48,13 +49,13 @@ static func _one_bar_for_a_showcase() -> bool:
 	var head: Array = _head_rows(SHOWCASE)
 	return SUPPORT.pins(P, [
 		["input_rebind head bar", _words_of(head[0]),
-			"◆ InputRebindDemo Custom node · extends Control 1 variable · 16 events · 1 behaviour"],
+			"◆ InputRebindDemo Custom node · extends Control 16 events · 2 behaviours"],
 		["the head bar is the sheet's", _stable_uid(head[0]), "sheet_head_bar"],
 		["the head bar folds nothing", head[0].children.size(), 0],
 		["the head bar is a bar, not a group", head[0].row_type, EventRowData.RowType.SECTION],
 		["the head bar is 30 px in every look", head[0].fixed_height, 30.0],
-		["the variable stays a row of its own, under the bar",
-			(head[1] as EventRowData).source_resource is LocalVariable, true],
+		["a saving showcase's variable stays a row of its own, under the bar",
+			_head_rows(SAVING_SHOWCASE).slice(1, 5).any(func(row: Variant) -> bool: return (row as EventRowData).source_resource is LocalVariable), true],
 	])
 
 
@@ -75,9 +76,9 @@ static func _the_prose_stays_where_the_file_has_it() -> bool:
 	var rows: Array = _head_rows(SHOWCASE)
 	return SUPPORT.pins(P, [
 		["input_rebind description bands", _uids_matching(SHOWCASE, "sheet_head_description"), ""],
-		["input_rebind's closing paragraph is no row", _rows_saying(SHOWCASE, "a working rebind screen"), 0],
+		["input_rebind's closing paragraph is no row", _rows_saying(SHOWCASE, "a rebinding screen on the Game Settings rows"), 0],
 		["it is the name card's description, said once",
-			str((_card_of(rows[0], "name").get("lines", []) as Array)).contains("a working rebind screen"), true],
+			str((_card_of(rows[0], "name").get("lines", []) as Array)).contains("a rebinding screen on the Game Settings rows"), true],
 		["flash's ## line is no row", _uids_matching(PACK, "sheet_head_description"), ""],
 		["flash's ## line is the name card's", (_card_of(_head_rows(PACK)[0], "name").get("lines", []) as Array)
 			.size(), 1],
@@ -87,7 +88,11 @@ static func _the_prose_stays_where_the_file_has_it() -> bool:
 ## A control the project's Input Map has not got: nothing at all in the sheet, the amber state on
 ## the head bar, and the sentence the help strip reads out of it.
 static func _the_input_finding_is_quiet() -> bool:
-	var head: Array = _head_rows(SHOWCASE)
+	var probe: String = SUPPORT.own_path("unknown_control_probe.gd")
+	var written: FileAccess = FileAccess.open(probe, FileAccess.WRITE)
+	written.store_string("class_name UnknownControlProbe\nextends Node2D\n\n\nfunc _process(_delta: float) -> void:\n\tif Input.is_action_just_pressed(\"demo_jump\"):\n\t\tpass\n")
+	written.close()
+	var head: Array = _head_rows(probe)
 	return SUPPORT.pins(P, [
 		["the head bar wears the finding", head[0].attention_note.get_slice("\n", 0),
 			"\"demo_jump\" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling."],

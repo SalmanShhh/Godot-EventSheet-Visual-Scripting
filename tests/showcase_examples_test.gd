@@ -48,16 +48,37 @@ static func run() -> bool:
 	# Input Rebind - the rebind screen built from the Input/InputMap/Gamepad vocabulary.
 	passed = _check_sheet("input_rebind", "res://demo/showcase/input_rebind/input_rebind.gd", [
 		"class_name InputRebindDemo",
-		"InputMap.action_erase_events(rebinding_action)",
-		"InputMap.action_add_event(rebinding_action, event)",
-		"Input.is_action_just_pressed(\"demo_jump\")",
-		"Input.get_joy_name(pads[0])",
+		"$Settings.build_controls_page($Column/Controls)",
+		"$Settings.load_bindings()",
+		"$Settings.save_bindings()",
+		"func _on_settings_binding_conflict(_action: String, taken_by: String) -> void:",
+		"func _on_settings_binding_cancelled(_action: String) -> void:",
+		"$Settings.swap_the_binding()",
+		"$Settings.take_the_binding_anyway()",
+		"$Settings.pick_another_key()",
+		"Input.is_action_just_pressed(&\"demo_jump\")",
 		"Input.start_joy_vibration(0, 0.5, 0.5, 0.4)",
-		"func binding_text(action_name: String) -> String:",
-		"return events[0].as_text() if not events.is_empty() else \"unbound\"",
+		"func define_control(action_name: String, key_code: int, pad_button: int) -> void:",
+		"InputMap.load_from_project_settings()",
 	]) and passed
-	passed = _check_scene("input_rebind scene wires HudKit + the rebind rows",
-		"res://demo/showcase/input_rebind/input_rebind.tscn", ["HudKit", "JumpLabel", "RebindJumpButton", "DashLabel", "RebindDashButton", "ResetButton", "GamepadLabel", "VibrateButton"]) and passed
+	passed = _check_scene("input_rebind scene wires HudKit, the Settings pack, the controls page and the clash panel",
+		"res://demo/showcase/input_rebind/input_rebind.tscn", ["HudKit", "Settings", "Controls", "ConflictPanel", "SwapButton", "TakeButton", "PickAnotherButton", "ResetAllButton", "StatusLabel", "TestLabel", "GamepadLabel", "VibrateButton"]) and passed
+	# Options and Quick Save - options, controls and F5 / F9, each kept in its own file.
+	passed = _check_sheet("options_and_quick_save", "res://demo/showcase/options_and_quick_save/options_and_quick_save.gd", [
+		"class_name OptionsAndQuickSaveDemo",
+		"$Settings.declare_setting(\"master_volume\", 80, \"percent\", \"\", \"\", \"\")",
+		"$Settings.load_all_settings()",
+		"$Settings.save_all_settings()",
+		"$Settings.bind_control($OptionsPanel/Box/VolumeRow/master_volume, \"master_volume\")",
+		"event.is_action_pressed(&\"quick_save\")",
+		"$SaveSystem.save_game()",
+		"$SaveSystem.load_game()",
+		"func _on_savesystem_before_save(_slot_index: int) -> void:",
+		"func save_state() -> Dictionary:",
+		"\"player_spot\": player_spot",
+	]) and passed
+	passed = _check_scene("options_and_quick_save scene wires the packs, the player, the coins and the options page",
+		"res://demo/showcase/options_and_quick_save/options_and_quick_save.tscn", ["HudKit", "Settings", "SaveSystem", "Player", "Coins", "CoinsLabel", "HintLabel", "OptionsPanel", "master_volume", "fullscreen", "Controls", "BackButton"]) and passed
 
 	# Path Chase - Platformer Pathfinding driving Platformer Movement through the ai seam.
 	passed = _check_sheet("path_chase", "res://demo/showcase/path_chase/path_chase.gd", [

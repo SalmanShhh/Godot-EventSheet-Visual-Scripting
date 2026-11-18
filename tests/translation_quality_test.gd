@@ -563,6 +563,7 @@ static func _test_doctor_gate() -> bool:
 			"res://demo/showcase/hierarchy_playground/hierarchy_playground.gd",
 			"res://demo/showcase/input_rebind/input_rebind.gd",
 			"res://demo/showcase/menu_starter/menu_starter.gd",
+			"res://demo/showcase/options_and_quick_save/options_and_quick_save.gd",
 			"res://demo/showcase/platformer_shooter/platformer_shooter.gd",
 			"res://demo/showcase/raycast_lab/raycast_lab.gd",
 			"res://demo/showcase/raycast_lab_3d/raycast_lab_3d.gd",

@@ -1,0 +1,145 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/showcase/options_and_quick_save/options_and_quick_save.gd" id="1_l4a04"]
+[ext_resource type="Script" path="res://eventsheet_addons/hud_kit/hud_kit_behavior.gd" id="2_4513x"]
+[ext_resource type="Script" path="res://eventsheet_addons/game_settings/game_settings_addon.gd" id="3_gte6g"]
+[ext_resource type="Script" path="res://eventsheet_addons/save_system/save_system_addon.gd" id="4_ejq0b"]
+
+[node name="OptionsAndQuickSaveDemo" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+script = ExtResource("1_l4a04")
+
+[node name="HudKit" type="Node" parent="."]
+script = ExtResource("2_4513x")
+
+[node name="Settings" type="Node" parent="."]
+script = ExtResource("3_gte6g")
+
+[node name="SaveSystem" type="Node" parent="."]
+script = ExtResource("4_ejq0b")
+
+[node name="GameScreen" type="Control" parent="."]
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="TitleLabel" type="Label" parent="GameScreen"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 18.0
+offset_right = 24.0
+offset_bottom = 18.0
+theme_override_font_sizes/font_size = 26
+text = "COLLECT THE COINS"
+horizontal_alignment = 1
+
+[node name="CoinsLabel" type="Label" parent="GameScreen"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 64.0
+offset_right = 24.0
+offset_bottom = 64.0
+theme_override_font_sizes/font_size = 20
+text = "Coins: 0"
+
+[node name="Coins" type="Control" parent="GameScreen"]
+anchors_preset = 0
+
+[node name="Coin1" type="ColorRect" parent="GameScreen/Coins"]
+layout_mode = 0
+offset_left = 480.0
+offset_top = 300.0
+offset_right = 502.0
+offset_bottom = 322.0
+color = Color(0.95, 0.78, 0.18, 1)
+
+[node name="Coin2" type="ColorRect" parent="GameScreen/Coins"]
+layout_mode = 0
+offset_left = 700.0
+offset_top = 420.0
+offset_right = 722.0
+offset_bottom = 442.0
+color = Color(0.95, 0.78, 0.18, 1)
+
+[node name="Coin3" type="ColorRect" parent="GameScreen/Coins"]
+layout_mode = 0
+offset_left = 860.0
+offset_top = 220.0
+offset_right = 882.0
+offset_bottom = 242.0
+color = Color(0.95, 0.78, 0.18, 1)
+
+[node name="Player" type="ColorRect" parent="GameScreen"]
+layout_mode = 0
+offset_left = 200.0
+offset_top = 300.0
+offset_right = 228.0
+offset_bottom = 328.0
+color = Color(0.35, 0.65, 0.95, 1)
+
+[node name="HintLabel" type="Label" parent="."]
+layout_mode = 0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -40.0
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 1
+
+[node name="OptionsPanel" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -250.0
+offset_right = 280.0
+offset_bottom = 250.0
+
+[node name="Box" type="VBoxContainer" parent="OptionsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="OptionsTitle" type="Label" parent="OptionsPanel/Box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "OPTIONS"
+horizontal_alignment = 1
+
+[node name="VolumeRow" type="HBoxContainer" parent="OptionsPanel/Box"]
+layout_mode = 2
+
+[node name="VolumeLabel" type="Label" parent="OptionsPanel/Box/VolumeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+text = "Master volume"
+
+[node name="master_volume" type="HSlider" parent="OptionsPanel/Box/VolumeRow"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+value = 80.0
+
+[node name="fullscreen" type="CheckBox" parent="OptionsPanel/Box"]
+layout_mode = 2
+text = "Fullscreen"
+
+[node name="ControlsTitle" type="Label" parent="OptionsPanel/Box"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Controls"
+horizontal_alignment = 1
+
+[node name="Controls" type="VBoxContainer" parent="OptionsPanel/Box"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BackButton" type="Button" parent="OptionsPanel/Box"]
+layout_mode = 2
+text = "Back"
