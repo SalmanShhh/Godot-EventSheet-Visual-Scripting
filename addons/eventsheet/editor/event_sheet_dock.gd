@@ -7602,9 +7602,26 @@ func _mark_dirty(message: String) -> void:
 		_live_edit_bar.apply()
 
 
+## A notice that says where things stand and nothing failed: it stays at full strength until the next
+## message replaces it, in the amber the sheet already uses for "look at this" (the flagged count, the
+## unsaved dot), with no red and no warning sign. For the one sentence a reader must still be able to read
+## a minute later, such as a file that is gone while its edits are still here.
+func _set_status_notice(text: String) -> void:
+	if _status_label == null:
+		return
+	if _status_fade_tween != null:
+		_status_fade_tween.kill()
+		_status_fade_tween = null
+	_status_label.text = text
+	_status_label.tooltip_text = text
+	load(READABLE_INK_PATH).paint_label(_status_label, EventSheetActiveTheme.chrome().object_bar_warning_color)
+
+
 func _set_status(text: String, is_error: bool = false) -> void:
 	if _status_label == null:
 		return
+	# A notice painted a font colour of its own; every other message goes back to the ordinary one.
+	_status_label.remove_theme_color_override("font_color")
 	# A leading ⚠ marks errors textually (not just by colour - colour-blind-safe and more salient so
 	# a "won't compile / save failed" isn't missed). The full text is on the tooltip since the status
 	# bar truncates long messages.

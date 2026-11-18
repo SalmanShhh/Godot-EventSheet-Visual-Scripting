@@ -185,7 +185,7 @@ func _note_left_behind_script(old_path: String, new_path: String) -> void:
 	var old_script: String = old_path.get_basename() + "_generated.gd"
 	var new_script: String = new_path.get_basename() + "_generated.gd"
 	if FileAccess.file_exists(old_script) and not FileAccess.file_exists(new_script):
-		_dock._set_status(EventSheetL10n.translate("The sheet was renamed but its script %s was not. Rename the script too, or scenes keep running the old one.") % old_script.get_file(), true)
+		_dock._set_status_notice(EventSheetL10n.translate("The sheet was renamed but its script %s was not. Rename the script too, or scenes keep running the old one.") % old_script.get_file())
 
 
 # ── Delete ───────────────────────────────────────────────────────────────────
@@ -263,7 +263,7 @@ func _remove(gone: Callable) -> int:
 	_rebuild_views(rescued_tabs)
 	_dock._persist_session()
 	if rescued > 0:
-		_dock._set_status(EventSheetL10n.translate("%s is gone, but your unsaved changes are still here. Save As keeps them in a new file.") % rescued_name, true)
+		_dock._set_status_notice(EventSheetL10n.translate("%s is gone, but your unsaved changes are still here. Save As keeps them in a new file.") % rescued_name)
 	elif closed == 1:
 		_dock._set_status(EventSheetL10n.translate("A sheet's file was deleted, so its tab was closed."))
 	else:

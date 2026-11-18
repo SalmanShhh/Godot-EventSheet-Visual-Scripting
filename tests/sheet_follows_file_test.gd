@@ -38,6 +38,7 @@ static func run() -> bool:
 	passed = _backup_ring_follows() and passed
 	passed = _known_sheets_funnel_tells_the_dock() and passed
 	passed = _save_after_the_file_vanished() and passed
+	passed = _gone_file_notice_is_a_quiet_amber_that_stays() and passed
 	return passed
 
 
@@ -297,3 +298,34 @@ static func _save_after_the_file_vanished() -> bool:
 	])
 	editor.free()
 	return passed
+
+
+## The sentence that says a file is gone but the edits are still here is a notice, not a failure: no red,
+## no warning sign in front of it, its own amber font colour, and it never fades. The next ordinary
+## message takes the ordinary colour back.
+static func _gone_file_notice_is_a_quiet_amber_that_stays() -> bool:
+	var editor: EventSheetEditor = _editor()
+	var path: String = SUPPORT.own_path("follow_notice/notice_probe.gd")
+	_open_script_sheet(editor, path, true)
+	DirAccess.remove_absolute(path)
+	editor.follow_file_event("removed", path)
+	var label: Label = editor._status_label
+	var said: String = label.text if label != null else "(no status label)"
+	var painted: bool = label != null and label.has_theme_color_override("font_color")
+	var faded: bool = editor._status_fade_tween != null
+	var alpha: float = label.modulate.a if label != null else 0.0
+	var tint: Color = label.modulate if label != null else Color.BLACK
+	editor._set_status("Saved.")
+	var ordinary_again: bool = label != null and not label.has_theme_color_override("font_color")
+	_drop_ring(path)
+	editor.free()
+	return SUPPORT.pins(TEST_NAME, [
+		["the sentence says what is gone and what is kept", said.begins_with("notice_probe.gd is gone, but your unsaved changes are still here."), true],
+		["no warning sign leads it", said.begins_with("⚠"), false],
+		["it has a font colour of its own", painted, true],
+		["it is not the error red", tint == EventSheetActiveTheme.chrome().status_error_color, false],
+		["it is at full strength", alpha, 1.0],
+		["nothing is set to fade it", faded, false],
+		["the next ordinary message takes the ordinary colour back", ordinary_again, true],
+	])
+
