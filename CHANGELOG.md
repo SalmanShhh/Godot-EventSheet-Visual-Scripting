@@ -4,6 +4,18 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the two example sheets open with no problems and read as the packs they use
+
+A sheet that makes a control itself (an Input Map add, a Project Settings write, or a call of a function of the same sheet that does one of them) is no longer told the control is missing, on the row or in the Doctor, and the Input bar says "made by this sheet" beside it. A question that is one call on a pack's node (`$Settings.changed_setting_is("master_volume")`, `$HudKit.button_is("BackButton")`) now reads as that pack's row, and optional empty text arguments at the end of a call are no longer drawn as a run of empty quotes.
+
+### Fixed: the options example's slot holds only the game, and its window behaves
+
+The Settings and SaveSystem nodes sit under a plain Services node, standing in for the autoloads, so Save Game no longer snapshots the Settings values into the slot. The options panel is opaque, and the play area of both examples is held in the middle of the window instead of the top-left corner when the window is larger or fullscreen.
+
+### Fixed: the Controls page lines up
+
+Every row of the page the Game Settings pack builds holds its label, keyboard and pad columns at one width whatever the key is called, and a long pad name shows its first words with the whole in a tooltip. The Save Studio keeps a file path whole on one line.
+
 ### Added: an example for rebinding the controls and an example for saving options, controls and a quick save
 
 **Input Rebind** is rebuilt on the Game Settings rows. Click a key, press another, and a clash asks Swap, Take it anyway or Pick another key; Esc cancels; the keyboard and pad columns are kept side by side; the choice is saved with Save Bindings and loaded with Load Bindings, so it survives closing the game. **Options and Quick Save** (the 31st showcase) keeps volume and fullscreen as declared settings, the controls on a page built from the Input Map, and F5 / F9 as rebindable quick save and quick load, with on-screen hints that read the live key. Its coins, player_spot and picked_coins have their Save choice set to Manually, so Save Studio reads *only at your Save Game / Load Game*. In a showcase the Game Settings and Save System packs are child nodes named Settings and SaveSystem, so the rows read `$Settings.` where your project's autoloads read `Settings.`.

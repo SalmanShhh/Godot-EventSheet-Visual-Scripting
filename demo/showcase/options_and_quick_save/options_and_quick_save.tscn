@@ -5,26 +5,45 @@
 [ext_resource type="Script" path="res://eventsheet_addons/game_settings/game_settings_addon.gd" id="3_gte6g"]
 [ext_resource type="Script" path="res://eventsheet_addons/save_system/save_system_addon.gd" id="4_ejq0b"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mwuvs"]
+content_margin_left = 18.0
+content_margin_top = 18.0
+content_margin_right = 18.0
+content_margin_bottom = 18.0
+bg_color = Color(0.16, 0.17, 0.2, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
 [node name="OptionsAndQuickSaveDemo" type="Control"]
 layout_mode = 3
 anchors_preset = 0
-offset_right = 1152.0
-offset_bottom = 648.0
+anchor_right = 1.0
+anchor_bottom = 1.0
 script = ExtResource("1_l4a04")
 
 [node name="HudKit" type="Node" parent="."]
 script = ExtResource("2_4513x")
 
-[node name="Settings" type="Node" parent="."]
+[node name="Services" type="Node" parent="."]
+
+[node name="Settings" type="Node" parent="Services"]
 script = ExtResource("3_gte6g")
 
-[node name="SaveSystem" type="Node" parent="."]
+[node name="SaveSystem" type="Node" parent="Services"]
 script = ExtResource("4_ejq0b")
 
 [node name="GameScreen" type="Control" parent="."]
 anchors_preset = 0
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -576.0
+offset_top = -324.0
+offset_right = 576.0
+offset_bottom = 324.0
 mouse_filter = 2
 
 [node name="TitleLabel" type="Label" parent="GameScreen"]
@@ -98,9 +117,10 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -280.0
-offset_top = -250.0
+offset_top = -170.0
 offset_right = 280.0
-offset_bottom = 250.0
+offset_bottom = 170.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_mwuvs")
 
 [node name="Box" type="VBoxContainer" parent="OptionsPanel"]
 layout_mode = 2

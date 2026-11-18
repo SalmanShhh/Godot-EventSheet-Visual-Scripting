@@ -167,9 +167,7 @@ The **Options and Quick Save** showcase (`demo/showcase/options_and_quick_save/`
 
 Now open this window on the showcase's sheet. **What gets saved** reads *coins, player_spot, picked_coins only at your Save Game / Load Game*: all three are set to **Manually**, which is why F5 and F9 do all the work. **Save slots** lists `save_0.cfg`, and **Look inside a save** shows `coins 2` and the `player_spot`. **Player settings** names the other two files.
 
-One thing to know when you look inside the slot: it also lists `Settings/values/master_volume` and `fullscreen`. In the showcase the Game Settings pack is a child node of the saved object, and Save Game also snapshots the behaviours that sit on a saved node. In your own project the pack is an autoload, not a child of a saved node, so the slot holds only what you chose.
-
-The quick save keys are ordinary controls (`quick_save` and `quick_load`), so the player can rebind them on the controls page, and the strip along the bottom reads the live binding. In your own project the packs are the `Settings` and `SaveSystem` autoloads, so the rows read `Settings.save_all_settings()` and `SaveSystem.save_game()`; in the showcase they are child nodes of the same names, so the rows read `$Settings.` and `$SaveSystem.`.
+The quick save keys are ordinary controls (`quick_save` and `quick_load`), so the player can rebind them on the controls page, and the strip along the bottom reads the live binding. In your own project the packs are the `Settings` and `SaveSystem` autoloads, so the rows read `Settings.save_all_settings()` and `SaveSystem.save_game()`; in the showcase they sit under a plain `Services` node, standing in for the autoloads, so the rows read `$Services/Settings.` and `$Services/SaveSystem.`.
 
 ## 9. Doing it from code
 

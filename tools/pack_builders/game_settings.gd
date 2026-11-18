@@ -991,17 +991,24 @@ static func _append_rebinding(sheet: EventSheetResource) -> void:
 			"\trow.name = \"%s_row\" % action",
 			"\tvar label: Label = Label.new()",
 			"\tlabel.text = _words_of(action)",
+			"\tlabel.custom_minimum_size.x = 150.0",
+			"\tlabel.clip_text = true",
 			"\tlabel.size_flags_horizontal = Control.SIZE_EXPAND_FILL",
 			"\trow.add_child(label)",
 			"\tfor device: String in [\"keyboard\", \"pad\"]:",
 			"\t\tvar button: Button = Button.new()",
 			"\t\tbutton.name = \"%s_%s\" % [action, device]",
+			"\t\t# The same width on every row: the text never sets it, so the columns line up down the page.",
+			"\t\tbutton.custom_minimum_size.x = 130.0",
+			"\t\tbutton.clip_text = true",
+			"\t\tbutton.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS",
 			"\t\tbutton.size_flags_horizontal = Control.SIZE_EXPAND_FILL",
 			"\t\tbutton.pressed.connect(listen_for_binding.bind(action, device))",
 			"\t\trow.add_child(button)",
 			"\tvar reset: Button = Button.new()",
 			"\treset.name = \"%s_reset\" % action",
 			"\treset.text = \"Reset\"",
+			"\treset.custom_minimum_size.x = 70.0",
 			"\treset.pressed.connect(reset_binding.bind(action))",
 			"\trow.add_child(reset)",
 			"\tcontainer.add_child(row)",
@@ -1026,7 +1033,10 @@ static func _append_rebinding(sheet: EventSheetResource) -> void:
 		"\t\t\tif button == null:",
 		"\t\t\t\tcontinue",
 		"\t\t\tvar words: String = key_binding_of(action) if device == \"keyboard\" else pad_binding_of(action)",
-		"\t\t\tbutton.text = words if not words.is_empty() else \"none\""
+		"\t\t\t# The engine's reading of a pad button names every console's word for it; the button shows the",
+		"\t\t\t# first part and keeps the whole in its tooltip, so the column stays one width.",
+		"\t\t\tbutton.text = words.get_slice(\" (\", 0) if not words.is_empty() else \"none\"",
+		"\t\t\tbutton.tooltip_text = words"
 	]))
 	sheet.events.append(page_refresh)
 

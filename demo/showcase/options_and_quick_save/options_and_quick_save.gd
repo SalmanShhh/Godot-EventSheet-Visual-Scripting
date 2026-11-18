@@ -1,6 +1,6 @@
 class_name OptionsAndQuickSaveDemo
 extends Control
-## [b]Options and Quick Save[/b] - three kinds of thing a game keeps, each in its own file. Master volume and fullscreen are options (Settings, user://settings.cfg); the controls, F5 and F9 among them, are saved bindings (the same file, section [bindings]); and coins, player_spot and picked_coins are the game itself, set to Manually in Save Studio, Saving your game, What gets saved, so F5 (Save Game) writes them to user://save_0.cfg and F9 (Load Game) brings them back. Tab opens the options. In your own project the Game Settings and Save System packs are the Settings and SaveSystem autoloads, so the rows read Settings.save_all_settings() and SaveSystem.save_game(); here they are child nodes of the same names, so they read $Settings. and $SaveSystem.
+## [b]Options and Quick Save[/b] - three kinds of thing a game keeps, each in its own file. Master volume and fullscreen are options (Settings, user://settings.cfg); the controls, F5 and F9 among them, are saved bindings (the same file, section [bindings]); and coins, player_spot and picked_coins are the game itself, set to Manually in Save Studio, Saving your game, What gets saved, so F5 (Save Game) writes them to user://save_0.cfg and F9 (Load Game) brings them back. Tab opens the options. In your own project the Game Settings and Save System packs are the Settings and SaveSystem autoloads, so the rows read Settings.save_all_settings() and SaveSystem.save_game(); here they sit under a plain Services node, standing in for the autoloads, so they read $Services/Settings. and $Services/SaveSystem. They are not children of the saved object on purpose: Save Game snapshots the behaviours that sit directly on a saved node, and the options are kept in their own file.
 
 var coins: int = 0
 var player_spot: Vector2 = Vector2(200.0, 300.0)
@@ -8,72 +8,72 @@ var picked_coins: Array = []
 
 
 func _ready() -> void:
-	$Settings.setting_changed.connect(_on_settings_setting_changed)
-	$Settings.binding_changed.connect(_on_settings_binding_changed)
+	$Services/Settings.setting_changed.connect(_on_services_settings_1184_setting_changed)
+	$Services/Settings.binding_changed.connect(_on_services_settings_1184_binding_changed)
 	$HudKit.on_button_pressed.connect(_on_hudkit_on_button_pressed)
-	$SaveSystem.before_save.connect(_on_savesystem_before_save)
-	$SaveSystem.after_load.connect(_on_savesystem_after_load)
-	$SaveSystem.save_written.connect(_on_savesystem_save_written)
-	$SaveSystem.load_failed.connect(_on_savesystem_load_failed)
-	$Settings.declare_setting("master_volume", 80, "percent", "", "", "")
-	$Settings.declare_setting("fullscreen", false, "toggle", "", "", "")
+	$Services/SaveSystem.before_save.connect(_on_services_savesystem_2896_before_save)
+	$Services/SaveSystem.after_load.connect(_on_services_savesystem_2896_after_load)
+	$Services/SaveSystem.save_written.connect(_on_services_savesystem_2896_save_written)
+	$Services/SaveSystem.load_failed.connect(_on_services_savesystem_2896_load_failed)
+	$Services/Settings.declare_setting("master_volume", 80, "percent")
+	$Services/Settings.declare_setting("fullscreen", false, "toggle")
 	define_controls()
-	$Settings.load_all_settings()
-	$Settings.load_bindings()
-	$Settings.bind_control($OptionsPanel/Box/VolumeRow/master_volume, "master_volume")
-	$Settings.bind_control($OptionsPanel/Box/fullscreen, "fullscreen")
-	$Settings.build_controls_page($OptionsPanel/Box/Controls)
-	$Settings.apply_all_settings()
+	$Services/Settings.load_all_settings()
+	$Services/Settings.load_bindings()
+	$Services/Settings.bind_control($OptionsPanel/Box/VolumeRow/master_volume, "master_volume")
+	$Services/Settings.bind_control($OptionsPanel/Box/fullscreen, "fullscreen")
+	$Services/Settings.build_controls_page($OptionsPanel/Box/Controls)
+	$Services/Settings.apply_all_settings()
 	refresh_hints()
 
 
-func _on_settings_setting_changed(_setting_name: String, value: Variant) -> void:
-	if $Settings.changed_setting_is("master_volume"):
+func _on_services_settings_1184_setting_changed(_setting_name: String, value: Variant) -> void:
+	if $Services/Settings.changed_setting_is("master_volume"):
 		AudioServer.set_bus_volume_db(0, linear_to_db(clampf(float(value) / 100.0, 0.0, 1.0)))
-	if $Settings.changed_setting_is("fullscreen"):
+	if $Services/Settings.changed_setting_is("fullscreen"):
 		if value:
 			get_window().mode = Window.MODE_FULLSCREEN
 		else:
 			get_window().mode = Window.MODE_WINDOWED
 
 
-func _on_settings_binding_changed(_action: String) -> void:
+func _on_services_settings_1184_binding_changed(_action: String) -> void:
 	refresh_hints()
 
 
 func _on_hudkit_on_button_pressed() -> void:
 	if $HudKit.button_is("BackButton"):
-		$Settings.save_all_settings()
-		$Settings.save_bindings()
+		$Services/Settings.save_all_settings()
+		$Services/Settings.save_bindings()
 		$HudKit.hide_panel("OptionsPanel")
 
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"quick_save"):
-		$SaveSystem.save_game()
+		$Services/SaveSystem.save_game()
 	if event.is_action_pressed(&"quick_load"):
-		$SaveSystem.load_game()
+		$Services/SaveSystem.load_game()
 	if event.is_action_pressed(&"open_options"):
 		$HudKit.show_panel("OptionsPanel")
 
 
-func _on_savesystem_before_save(_slot_index: int) -> void:
+func _on_services_savesystem_2896_before_save(_slot_index: int) -> void:
 	player_spot = $GameScreen/Player.position
 
 
-func _on_savesystem_after_load(slot_index: int) -> void:
+func _on_services_savesystem_2896_after_load(slot_index: int) -> void:
 	$GameScreen/Player.position = player_spot
 	hide_picked_coins()
 	$HudKit.set_text("CoinsLabel", "Coins: %d" % coins)
 	$HudKit.show_toast("Loaded (slot %d)" % slot_index)
 
 
-func _on_savesystem_save_written(slot_index: int) -> void:
+func _on_services_savesystem_2896_save_written(slot_index: int) -> void:
 	$HudKit.show_toast("Saved (slot %d)" % slot_index)
 	refresh_hints()
 
 
-func _on_savesystem_load_failed(_slot_index: int, reason: String) -> void:
+func _on_services_savesystem_2896_load_failed(_slot_index: int, reason: String) -> void:
 	$HudKit.show_toast(reason)
 
 
@@ -102,10 +102,10 @@ func define_controls() -> void:
 
 # @ace_hidden
 func refresh_hints() -> void:
-	var load_hint: String = "%s Quick load" % $Settings.key_binding_of("quick_load")
-	if not $SaveSystem.slot_exists(0):
+	var load_hint: String = "%s Quick load" % $Services/Settings.key_binding_of("quick_load")
+	if not $Services/SaveSystem.slot_exists(0):
 		load_hint += " (no quick save yet)"
-	$HudKit.set_text("HintLabel", "%s Quick save   |   %s   |   %s Options" % [$Settings.key_binding_of("quick_save"), load_hint, $Settings.key_binding_of("open_options")])
+	$HudKit.set_text("HintLabel", "%s Quick save   |   %s   |   %s Options" % [$Services/Settings.key_binding_of("quick_save"), load_hint, $Services/Settings.key_binding_of("open_options")])
 
 
 # @ace_hidden

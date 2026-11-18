@@ -2085,7 +2085,14 @@ const SAVE_SYSTEM := "res://eventsheet_addons/save_system/save_system_addon.gd"
 
 ## A Game Settings row on the child node named Settings.
 func _settings_call(method: String, params: Dictionary = {}) -> ACEAction:
-	return _node_call("GameSettingsAddon", "Settings", method, params)
+	return _node_call("GameSettingsAddon", _settings_path, method, params)
+
+
+## Where the Settings and SaveSystem nodes sit in the scene being built, as the path the rows write after
+## the `$`. A showcase that saves a game keeps them under a plain Services node, the way a real project
+## keeps them as autoloads beside the scene rather than on the saved object.
+var _settings_path: String = "Settings"
+var _save_system_path: String = "SaveSystem"
 
 
 ## A HUD Kit row on the child node named HudKit.
@@ -2248,7 +2255,7 @@ func _build_input_rebind() -> bool:
 
 	var root: Control = Control.new()
 	root.name = "InputRebindDemo"
-	root.size = Vector2(1152, 648)
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.set_script(load("res://demo/showcase/input_rebind/input_rebind.gd"))
 	_attach_behavior(root, "HudKit", HUD_KIT, root)
 	_attach_behavior(root, "Settings", GAME_SETTINGS, root)
@@ -2295,6 +2302,8 @@ func _build_input_rebind() -> bool:
 ## controls, F5 and F9 among them, are saved bindings; coins and player_spot have their Save choice set to
 ## Manually, so only Save Game writes them and only Load Game brings them back (user://save_0.cfg).
 func _build_options_and_quick_save() -> bool:
+	_settings_path = "Services/Settings"
+	_save_system_path = "Services/SaveSystem"
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.host_class = "Control"
 	sheet.custom_class_name = "OptionsAndQuickSaveDemo"
@@ -2307,7 +2316,7 @@ func _build_options_and_quick_save() -> bool:
 		"picked_coins": {"type": "Array", "default": [], "exported": false,
 			"attributes": {"tooltip": "Names of the coins already picked up.", "save": "manual"}},
 	}
-	sheet.class_description = "[b]Options and Quick Save[/b] - three kinds of thing a game keeps, each in its own file. Master volume and fullscreen are options (Settings, user://settings.cfg); the controls, F5 and F9 among them, are saved bindings (the same file, section [bindings]); and coins, player_spot and picked_coins are the game itself, set to Manually in Save Studio, Saving your game, What gets saved, so F5 (Save Game) writes them to user://save_0.cfg and F9 (Load Game) brings them back. Tab opens the options. In your own project the Game Settings and Save System packs are the Settings and SaveSystem autoloads, so the rows read Settings.save_all_settings() and SaveSystem.save_game(); here they are child nodes of the same names, so they read $Settings. and $SaveSystem."
+	sheet.class_description = "[b]Options and Quick Save[/b] - three kinds of thing a game keeps, each in its own file. Master volume and fullscreen are options (Settings, user://settings.cfg); the controls, F5 and F9 among them, are saved bindings (the same file, section [bindings]); and coins, player_spot and picked_coins are the game itself, set to Manually in Save Studio, Saving your game, What gets saved, so F5 (Save Game) writes them to user://save_0.cfg and F9 (Load Game) brings them back. Tab opens the options. In your own project the Game Settings and Save System packs are the Settings and SaveSystem autoloads, so the rows read Settings.save_all_settings() and SaveSystem.save_game(); here they sit under a plain Services node, standing in for the autoloads, so they read $Services/Settings. and $Services/SaveSystem. They are not children of the saved object on purpose: Save Game snapshots the behaviours that sit directly on a saved node, and the options are kept in their own file."
 
 	_helper(sheet, "define_control", "Declares one control the way Project Settings does (a key and a pad button) and rebuilds the Input Map from the settings, so Reset goes back to these.",
 		[["action_name", "String"], ["key_code", "int"], ["pad_button", "int"]], DEFINE_CONTROL_BODY)
@@ -2318,10 +2327,10 @@ func _build_options_and_quick_save() -> bool:
 		"InputMap.load_from_project_settings()",
 	])
 	_helper(sheet, "refresh_hints", "Writes the strip along the bottom from the live bindings, so a rebound key is what it says, and notes when there is no quick save to load yet.", [], [
-		"var load_hint: String = \"%s Quick load\" % $Settings.key_binding_of(\"quick_load\")",
-		"if not $SaveSystem.slot_exists(0):",
+		"var load_hint: String = \"%s Quick load\" % $Services/Settings.key_binding_of(\"quick_load\")",
+		"if not $Services/SaveSystem.slot_exists(0):",
 		"\tload_hint += \" (no quick save yet)\"",
-		"$HudKit.set_text(\"HintLabel\", \"%s Quick save   |   %s   |   %s Options\" % [$Settings.key_binding_of(\"quick_save\"), load_hint, $Settings.key_binding_of(\"open_options\")])",
+		"$HudKit.set_text(\"HintLabel\", \"%s Quick save   |   %s   |   %s Options\" % [$Services/Settings.key_binding_of(\"quick_save\"), load_hint, $Services/Settings.key_binding_of(\"open_options\")])",
 	])
 	_helper(sheet, "collect_coins", "Picks up every coin the player stands on: counts it and hides it.", [], [
 		"for child: Node in $GameScreen/Coins.get_children():",
@@ -2340,8 +2349,8 @@ func _build_options_and_quick_save() -> bool:
 	var on_ready: EventRow = EventRow.new()
 	on_ready.trigger_provider_id = "Core"
 	on_ready.trigger_id = "OnReady"
-	on_ready.actions.append(_settings_call("declare_setting", {"setting_name": "\"master_volume\"", "default_value": "80", "kind": "\"percent\"", "choices": "\"\"", "page": "\"\"", "label": "\"\""}))
-	on_ready.actions.append(_settings_call("declare_setting", {"setting_name": "\"fullscreen\"", "default_value": "false", "kind": "\"toggle\"", "choices": "\"\"", "page": "\"\"", "label": "\"\""}))
+	on_ready.actions.append(_settings_call("declare_setting", {"setting_name": "\"master_volume\"", "default_value": "80", "kind": "\"percent\""}))
+	on_ready.actions.append(_settings_call("declare_setting", {"setting_name": "\"fullscreen\"", "default_value": "false", "kind": "\"toggle\""}))
 	on_ready.actions.append(_raw("define_controls()"))
 	on_ready.actions.append(_settings_call("load_all_settings"))
 	on_ready.actions.append(_settings_call("load_bindings"))
@@ -2352,12 +2361,12 @@ func _build_options_and_quick_save() -> bool:
 	on_ready.actions.append(_raw("refresh_hints()"))
 	sheet.events.append(on_ready)
 
-	var volume: EventRow = _signal_row("Settings", "setting_changed", "setting_name: String, value: Variant")
-	volume.conditions.append(_condition("GameSettingsAddon", "method:changed_setting_is", "$Settings.changed_setting_is({setting_name})", {"setting_name": "\"master_volume\""}))
+	var volume: EventRow = _signal_row("Services/Settings", "setting_changed", "setting_name: String, value: Variant")
+	volume.conditions.append(_condition("GameSettingsAddon", "method:changed_setting_is", "$Services/Settings.changed_setting_is({setting_name})", {"setting_name": "\"master_volume\""}))
 	volume.actions.append(_action("Core", "OptionsSetMasterPercent", _ace_template("OptionsSetMasterPercent"), {"percent": "float(value)"}))
 	sheet.events.append(volume)
-	var screen: EventRow = _signal_row("Settings", "setting_changed", "setting_name: String, value: Variant")
-	screen.conditions.append(_condition("GameSettingsAddon", "method:changed_setting_is", "$Settings.changed_setting_is({setting_name})", {"setting_name": "\"fullscreen\""}))
+	var screen: EventRow = _signal_row("Services/Settings", "setting_changed", "setting_name: String, value: Variant")
+	screen.conditions.append(_condition("GameSettingsAddon", "method:changed_setting_is", "$Services/Settings.changed_setting_is({setting_name})", {"setting_name": "\"fullscreen\""}))
 	var screen_on: EventRow = EventRow.new()
 	screen_on.conditions.append(_condition("Core", "ExpressionIsTrue", "{expr}", {"expr": "value"}))
 	screen_on.actions.append(_action("Core", "WindowGoFullscreen", _ace_template("WindowGoFullscreen"), {}))
@@ -2368,7 +2377,7 @@ func _build_options_and_quick_save() -> bool:
 	screen.sub_events.append(screen_off)
 	sheet.events.append(screen)
 
-	var rebound: EventRow = _signal_row("Settings", "binding_changed", "action: String")
+	var rebound: EventRow = _signal_row("Services/Settings", "binding_changed", "action: String")
 	rebound.actions.append(_raw("refresh_hints()"))
 	sheet.events.append(rebound)
 
@@ -2378,8 +2387,8 @@ func _build_options_and_quick_save() -> bool:
 	back.actions.append(_hud_call("hide_panel", {"panel_name": "\"OptionsPanel\""}))
 	sheet.events.append(back)
 
-	for pressed: Array in [["quick_save", _node_call("SaveSystemAddon", "SaveSystem", "save_game")],
-			["quick_load", _node_call("SaveSystemAddon", "SaveSystem", "load_game")],
+	for pressed: Array in [["quick_save", _node_call("SaveSystemAddon", _save_system_path, "save_game")],
+			["quick_load", _node_call("SaveSystemAddon", _save_system_path, "load_game")],
 			["open_options", _hud_call("show_panel", {"panel_name": "\"OptionsPanel\""})]]:
 		var key_row: EventRow = EventRow.new()
 		key_row.trigger_provider_id = "Core"
@@ -2388,20 +2397,20 @@ func _build_options_and_quick_save() -> bool:
 		key_row.actions.append(pressed[1])
 		sheet.events.append(key_row)
 
-	var before_save: EventRow = _signal_row("SaveSystem", "before_save", "slot_index: int")
+	var before_save: EventRow = _signal_row("Services/SaveSystem", "before_save", "slot_index: int")
 	before_save.actions.append(_action("Core", "SetVar", "{var_name} = {value}", {"var_name": "player_spot", "value": "$GameScreen/Player.position"}))
 	sheet.events.append(before_save)
-	var after_load: EventRow = _signal_row("SaveSystem", "after_load", "slot_index: int")
+	var after_load: EventRow = _signal_row("Services/SaveSystem", "after_load", "slot_index: int")
 	after_load.actions.append(_raw("$GameScreen/Player.position = player_spot"))
 	after_load.actions.append(_raw("hide_picked_coins()"))
 	after_load.actions.append(_hud_call("set_text", {"control_name": "\"CoinsLabel\"", "text": "\"Coins: %d\" % coins"}))
 	after_load.actions.append(_hud_call("show_toast", {"text": "\"Loaded (slot %d)\" % slot_index"}))
 	sheet.events.append(after_load)
-	var written: EventRow = _signal_row("SaveSystem", "save_written", "slot_index: int")
+	var written: EventRow = _signal_row("Services/SaveSystem", "save_written", "slot_index: int")
 	written.actions.append(_hud_call("show_toast", {"text": "\"Saved (slot %d)\" % slot_index"}))
 	written.actions.append(_raw("refresh_hints()"))
 	sheet.events.append(written)
-	var failed: EventRow = _signal_row("SaveSystem", "load_failed", "slot_index: int, reason: String")
+	var failed: EventRow = _signal_row("Services/SaveSystem", "load_failed", "slot_index: int, reason: String")
 	failed.actions.append(_hud_call("show_toast", {"text": "reason"}))
 	sheet.events.append(failed)
 
@@ -2417,14 +2426,24 @@ func _build_options_and_quick_save() -> bool:
 
 	var root: Control = Control.new()
 	root.name = "OptionsAndQuickSaveDemo"
-	root.size = Vector2(1152, 648)
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.set_script(load("res://demo/showcase/options_and_quick_save/options_and_quick_save.gd"))
 	_attach_behavior(root, "HudKit", HUD_KIT, root)
-	_attach_behavior(root, "Settings", GAME_SETTINGS, root)
-	_attach_behavior(root, "SaveSystem", SAVE_SYSTEM, root)
+	var services: Node = Node.new()
+	services.name = "Services"
+	root.add_child(services)
+	services.owner = root
+	_attach_behavior(services, "Settings", GAME_SETTINGS, root)
+	_attach_behavior(services, "SaveSystem", SAVE_SYSTEM, root)
 	var game: Control = Control.new()
 	game.name = "GameScreen"
-	game.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# The play area is a fixed 1152 x 648 picture held in the middle of whatever window the game runs in,
+	# so a fullscreen window shows it centred rather than pinned to the top-left corner.
+	game.set_anchors_preset(Control.PRESET_CENTER)
+	game.offset_left = -576.0
+	game.offset_right = 576.0
+	game.offset_top = -324.0
+	game.offset_bottom = 324.0
 	game.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var heading: Label = _label("TitleLabel", "COLLECT THE COINS", 26)
 	heading.position = Vector2(24, 18)
@@ -2459,8 +2478,14 @@ func _build_options_and_quick_save() -> bool:
 	options.set_anchors_preset(Control.PRESET_CENTER)
 	options.offset_left = -280.0
 	options.offset_right = 280.0
-	options.offset_top = -250.0
-	options.offset_bottom = 250.0
+	options.offset_top = -170.0
+	options.offset_bottom = 170.0
+	# Opaque, so the coins behind the panel do not show through it.
+	var options_back: StyleBoxFlat = StyleBoxFlat.new()
+	options_back.bg_color = Color(0.16, 0.17, 0.2, 1.0)
+	options_back.set_content_margin_all(18.0)
+	options_back.set_corner_radius_all(6)
+	options.add_theme_stylebox_override("panel", options_back)
 	var options_box: VBoxContainer = VBoxContainer.new()
 	options_box.name = "Box"
 	options_box.add_theme_constant_override("separation", 8)
@@ -2494,6 +2519,8 @@ func _build_options_and_quick_save() -> bool:
 	_own_deep(game, root)
 	_own_deep(hints, root)
 	_own_deep(options, root)
+	_settings_path = "Settings"
+	_save_system_path = "SaveSystem"
 	return _save_scene(root, "res://demo/showcase/options_and_quick_save/options_and_quick_save.tscn")
 
 

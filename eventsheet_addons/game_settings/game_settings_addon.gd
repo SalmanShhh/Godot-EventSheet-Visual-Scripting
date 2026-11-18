@@ -793,17 +793,24 @@ func build_controls_page(container: Node) -> void:
 		row.name = "%s_row" % action
 		var label: Label = Label.new()
 		label.text = _words_of(action)
+		label.custom_minimum_size.x = 150.0
+		label.clip_text = true
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(label)
 		for device: String in ["keyboard", "pad"]:
 			var button: Button = Button.new()
 			button.name = "%s_%s" % [action, device]
+			# The same width on every row: the text never sets it, so the columns line up down the page.
+			button.custom_minimum_size.x = 130.0
+			button.clip_text = true
+			button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			button.pressed.connect(listen_for_binding.bind(action, device))
 			row.add_child(button)
 		var reset: Button = Button.new()
 		reset.name = "%s_reset" % action
 		reset.text = "Reset"
+		reset.custom_minimum_size.x = 70.0
 		reset.pressed.connect(reset_binding.bind(action))
 		row.add_child(reset)
 		container.add_child(row)
@@ -1108,7 +1115,10 @@ func _show_bindings(container: Node) -> void:
 			if button == null:
 				continue
 			var words: String = key_binding_of(action) if device == "keyboard" else pad_binding_of(action)
-			button.text = words if not words.is_empty() else "none"
+			# The engine's reading of a pad button names every console's word for it; the button shows the
+			# first part and keeps the whole in its tooltip, so the column stays one width.
+			button.text = words.get_slice(" (", 0) if not words.is_empty() else "none"
+			button.tooltip_text = words
 
 func _difficulty_word(difficulty: Resource, path: String) -> String:
 	# The word one difficulty file goes by: its own if it named itself, otherwise its file name
