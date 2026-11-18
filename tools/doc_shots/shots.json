@@ -181,6 +181,10 @@
 		"docs/images/rich-param-cells.png",
 		"docs/images/row-doors-project.png",
 		"docs/images/row-doors.png",
+		"docs/images/save-studio-file-and-format.png",
+		"docs/images/save-studio-look-inside.png",
+		"docs/images/save-studio-player-settings.png",
+		"docs/images/save-studio-save-slots.png",
 		"docs/images/save-studio-what-gets-saved.png",
 		"docs/images/save-studio.png",
 		"docs/images/scene-as-a-sheet.png",
@@ -559,8 +563,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "b17ca63759874cd167cdd4345767c09f457f207b3fa373264fd51f81f807e89a",
-				"reading": "ac14d4684ed7c3140fa85b7c42604778a2a2c19de2759be9c8fb95b7cbedb49a"
+				"png": "f3540858fd95934059f1137c216c00b8068a99bd8d4a18802fd2339fbf7321cc",
+				"reading": "6fdf0e71d1ccce833108f8190ee87ffca2af0c400622446ae56120391010ef60"
 			},
 			"layout": "vertical",
 			"name": "editor-plugin-reading",
@@ -840,7 +844,7 @@
 					"button": "@open",
 					"do": "menu_open",
 					"path": [
-						"Editor Tool\u00c3\u00a2\u00e2\u201a\u00ac\u00c2\u00a6"
+						"Editor Tool…"
 					]
 				}
 			],
@@ -851,13 +855,13 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "96e84d9a1a8169ee9653d5037eadff3daf287bcb40aca7f71fc8b30ba6fd23b6",
-				"reading": "5b43de21ceb51f3f113b400397d44d68eff537abb5e7ac67be22d3c1b4a21ae5"
+				"png": "afadf151f89dd6d147a05e5b19b9e1daa5094e99d15b81fa6c7237cc2106111f",
+				"reading": "0254b71d4a17c18795d03b20e8d0d5e6a72f9e79b133f8dfd76d970d625ad8e8"
 			},
 			"name": "opened-pack-head-open",
 			"rows": [
 				"AI Driver",
-				"coyote_time \u00c3\u00a2\u00c5\u00a1\u00e2\u201e\u00a2"
+				"coyote_time"
 			],
 			"source": "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd",
 			"target": "docs/images/opened-pack-head-open.png"
@@ -867,8 +871,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "625bb37db3d506e92f2db0214cbc6ddfcd0eb1aebc76170b031c9a4244caeea8",
-				"reading": "5b43de21ceb51f3f113b400397d44d68eff537abb5e7ac67be22d3c1b4a21ae5"
+				"png": "037228c0ab96a8b2f46c8e802b4db72872659ad83f330b1e89a1db085f2c610f",
+				"reading": "0254b71d4a17c18795d03b20e8d0d5e6a72f9e79b133f8dfd76d970d625ad8e8"
 			},
 			"name": "opened-pack-head",
 			"rows": [
@@ -883,8 +887,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "1980e9daa13d88880e05b8c51671a28ca1a0d9ca33a9b2edd80996f6fe1674b8",
-				"reading": "5b43de21ceb51f3f113b400397d44d68eff537abb5e7ac67be22d3c1b4a21ae5"
+				"png": "50f6fe5e5e258493ec8ec476a27e98b07964ebf73f867819321b8dd489f32489",
+				"reading": "0254b71d4a17c18795d03b20e8d0d5e6a72f9e79b133f8dfd76d970d625ad8e8"
 			},
 			"name": "opened-pack-input-triggers",
 			"rows": [
@@ -911,8 +915,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "699934d2655cb791dcd769173f3c10efa0fdc4db5b6a82a8e5e28a4874c30c14",
-				"reading": "5b43de21ceb51f3f113b400397d44d68eff537abb5e7ac67be22d3c1b4a21ae5"
+				"png": "dd3e80721afc3e10880d0da83343b2ae8770a49167d16f8a9f02a8dbf84ca399",
+				"reading": "0254b71d4a17c18795d03b20e8d0d5e6a72f9e79b133f8dfd76d970d625ad8e8"
 			},
 			"layout": "vertical",
 			"name": "opened-pack-lenses",
@@ -953,8 +957,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "8917af5c6ad3d241bca739ec1fea380fdebe5bfff64b24b6a0e46649a8dbd59e",
-				"reading": "5b43de21ceb51f3f113b400397d44d68eff537abb5e7ac67be22d3c1b4a21ae5"
+				"png": "80eb3041c51768bafca9198413bba8d5e1340a26af4584bd18eb3ed8dd7e9498",
+				"reading": "0254b71d4a17c18795d03b20e8d0d5e6a72f9e79b133f8dfd76d970d625ad8e8"
 			},
 			"name": "opened-pack-sentences",
 			"rows": [
@@ -969,8 +973,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "7a2d39ad593f27dc78793ac8de43d003f233eea57241053c7b9bda915f117b75",
-				"reading": "5b43de21ceb51f3f113b400397d44d68eff537abb5e7ac67be22d3c1b4a21ae5"
+				"png": "c37a6ef21a9b7486d4f8270a746e025359e6ad30812714a8c3e08f28374e3141",
+				"reading": "0254b71d4a17c18795d03b20e8d0d5e6a72f9e79b133f8dfd76d970d625ad8e8"
 			},
 			"name": "opened-pack-verbs",
 			"rows": [
@@ -985,8 +989,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "539492fa2a9aa76b5eb74d96a9c69db7a86d5129ffa988263ba8adc9bad1fe3b",
-				"reading": "a8ee5c705f1671f72acad4c3594ab375b6941e64ff9b5552fbf2a71775f0838b"
+				"png": "7c99ae89cd82d99c0b9a6f9cb7054b4d540a96039747ef22bc56d2401e759342",
+				"reading": "fd303851b1290b7e08d30495e1b2371b07fbb41d00467eef3243a2d6bea6141b"
 			},
 			"name": "opened-script-3d-words",
 			"rows": [
@@ -1166,14 +1170,14 @@
 				{
 					"class": "Button",
 					"do": "click_control",
-					"text": "\u00c3\u201a\u00c2\u00bb"
+					"text": "»"
 				}
 			],
 			"cleanup": [
 				{
 					"class": "Button",
 					"do": "click_control",
-					"text": "\u00c3\u201a\u00c2\u00ab"
+					"text": "«"
 				}
 			],
 			"crop": "strip",
@@ -1307,12 +1311,12 @@
 				{
 					"class": "Button",
 					"do": "click_control",
-					"text": "\u00c3\u201a\u00c2\u00bb"
+					"text": "»"
 				},
 				{
 					"class": "Button",
 					"do": "click_control",
-					"text": "\u00c3\u201a\u00c2\u00ab"
+					"text": "«"
 				},
 				{
 					"args": [
@@ -1407,14 +1411,14 @@
 				{
 					"class": "Button",
 					"do": "click_control",
-					"text": "\u00c3\u201a\u00c2\u00bb"
+					"text": "»"
 				}
 			],
 			"cleanup": [
 				{
 					"class": "Button",
 					"do": "click_control",
-					"text": "\u00c3\u201a\u00c2\u00ab"
+					"text": "«"
 				}
 			],
 			"crop": "strip",
@@ -1472,8 +1476,8 @@
 				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "e75100560fba4351fb3ae14d80ab167b2ea22bd02ff70a05383228d94e22fe9a",
-				"reading": "ac14d4684ed7c3140fa85b7c42604778a2a2c19de2759be9c8fb95b7cbedb49a"
+				"png": "88df0095393290f543f434ab6dcdd303e43027031216b90b468f2d857e53a29c",
+				"reading": "6fdf0e71d1ccce833108f8190ee87ffca2af0c400622446ae56120391010ef60"
 			},
 			"name": "this-editor-plugin-bar",
 			"rows": [
