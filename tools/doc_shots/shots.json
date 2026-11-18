@@ -9944,7 +9944,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "8d2b306424b8799eb7ea638d95704aafdeda79ca29e63b4032468d38fc84fae8",
-				"reading": "1e48b2f03646403acb971d96a936255dd2411f8c4d0369c319330b0deb9a45f0"
+				"reading": "b42b949e0a0b342bf193acc78e873d0c0a326b48218a20947b4b15a68b027bc4"
 			},
 			"name": "toolbar-moment-segment",
 			"source": "res://tools/doc_shots/fixtures/juice_hit.gd",
