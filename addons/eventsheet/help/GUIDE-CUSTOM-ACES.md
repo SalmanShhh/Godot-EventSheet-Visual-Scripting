@@ -20,7 +20,7 @@ parameter widgets (a colour swatch, an input-action dropdown), a description, or
 that is more than a single call. See [Using EventSheets with your existing
 code](GUIDE-USING-WITH-EXISTING-CODE.md) for the zero-setup route.
 
-![The ACE Studio: Name, Doc comment and Inspector button rows, three cards headlining Action / Condition / Expression with a plain-language line each, a live picker preview of the published function with its Ships-as GDScript signature, and a plain Publish-to-the-picker checkbox.](images/ace-studio.png)
+![The New Function window: its row band, a Function card with Name, Doc comment and Inspector button, a What kind is it? card holding the Kind dropdown and Other sheets can use this, a live picker preview of the published function, and a help strip whose IN CODE line shows the GDScript signature.](images/ace-studio.png)
 
 ## Table of Contents
 
@@ -887,7 +887,7 @@ needed explaining.
 | `property_reference` | Autocomplete of the host's public properties | A property name. |
 | `enum:EnumName` | Dropdown of that sheet enum's members | A sheet enum member. |
 
-![The Add Child (existing node) parameter dialog with the Child field's picker open, listing the nodes of the scene currently open in the editor: self first, then the scene-unique %Score, then $Player, $UI and $UI/Score](images/scene-node-param-picker.png)
+![The Add Child (existing node) parameters window with the Child field's picker open, listing the nodes of the scene currently open in the editor: self first, then the scene-unique %HealthBar and %ScoreLabel](images/scene-node-param-picker.png)
 
 Factory helpers cover the common dropdowns, so nobody re-types them: `F.COMPARISON_OPTIONS` is the
 canonical labeled operator list (`==` reads "=  equal to", `>=` reads "≥  at least", with the GDScript

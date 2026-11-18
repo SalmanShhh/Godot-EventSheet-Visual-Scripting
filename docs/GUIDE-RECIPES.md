@@ -101,7 +101,7 @@ variable* `health`, amount `10`. Add an event: condition `health <= 0` → actio
 
 ## 6. Debugging 101
 
-![The event trace pulse at three intensities: just fired, mid-fade, and almost gone](images/live-pulse.png)
+![The event trace pulse at three intensities: an event that just fired, one mid-fade, and one almost gone](images/live-pulse.png)
 
 **One window, two tabs.** **View ▸ Debugger** opens what Godot's own Debugger does not have:
 **Watch** (any expression over the sheet's variables, such as `health <= 0` or `score + lives`,

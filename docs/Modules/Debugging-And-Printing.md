@@ -47,9 +47,8 @@ that chooses the stream, so one action covers Message, Warning, Error and Rich t
 - **The As dropdown shows a friendly label and inserts a call.** Choosing "Warning" in a Log row does not
   insert the word "warning" anywhere - it inserts `push_warning`. The four options are Message
   (`print`), Warning (`push_warning`), Error (`push_error`) and Rich text (BBCode) (`print_rich`).
-- **Picking Rich text switches the Message field to a BBCode editor.** Select text in the field and hit
-  B / I / U / S to wrap it in tags. That behaviour is bound to the As dropdown, so it appears the moment
-  you choose Rich text and goes away again when you do not.
+- **Print Rich (BBCode) gives its Value field a BBCode editor.** Select text in the field and hit
+  B / I / U / S to wrap it in tags; the rendered text shows live under the box. Log's **As: Rich text** only changes how the row is drawn on the canvas (the tags render as the effect), so its Message field stays a plain box.
 - **The Log action carries a marker comment.** Its emitted line ends in `  # @ace:Core.ConsoleLog`. That
   marker is inert at runtime and exists so the row reopens as **Log** rather than as the specific action
   its call shape matches. Without it, a `push_warning("x")` line would be indistinguishable from a Push
@@ -67,7 +66,7 @@ that chooses the stream, so one action covers Message, Warning, Error and Rich t
 
 ![Print Rich draws its BBCode as the effect in the row; a plain Print keeps the tags verbatim](../images/rich-param-cells.png)
 
-![The Message field as a BBCode editor: the B, I, U and S toolbar with the rendered preview live under it](../images/bbcode-param.png)
+![Print Rich's Value field as a BBCode editor: the B, I, U, S and Color buttons above it and the rendered preview live under it](../images/bbcode-param.png)
 
 | Name | What it does | Ships as |
 |------|--------------|----------|
@@ -613,7 +612,7 @@ exactly like the sheet you wrote:
 
 ![The sheet with the lens off](../images/hit-counts-off.png)
 
-Tick **View > Row Hit Counts** and the same sheet grows a count in the **left margin only**. The
+Tick **View > Sheet display > Row Hit Counts** and the same sheet grows a count in the **left margin only**. The
 cells are untouched; compare them line for line with the picture above:
 
 ![The same sheet with Row Hit Counts on](../images/hit-counts-on.png)

@@ -172,7 +172,7 @@ written inside an event's action flow. **The comment itself is untouched**: door
 read the sheet in the editor and nowhere else, and the file still holds exactly the `#` or `##` line
 it always did - which is what the echo at the right edge of the row is showing.
 
-![A comment row with three doors and one plain word](images/comment-doors.png)
+![Two comment rows with three doors - PATROL, begin_chase and begin_chase again, underlined - and one plain word, retreat, that matches nothing the project has](images/comment-doors.png)
 
 A **region** is a `#region` / `#endregion` fence pair, and it reads as what it is in the script
 editor - a fold mark. The opening fence wears a dashed `#` badge, its name in bold, its description

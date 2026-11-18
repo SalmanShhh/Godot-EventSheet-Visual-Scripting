@@ -1,16 +1,16 @@
 # Using the ACE Studio to Author a Function
 
-In an event sheet, a **function** is a reusable block of rows you define once and call anywhere. The ACE Studio is the in-editor dialog that lets you author one of these without ever meeting the words `func` or `return type`, while still producing plain, readable GDScript underneath. Its title is **"New Function"** (and "Edit Function - <name>" when you reopen it on an existing function), and it turns the low-level idea of "add a function" into plain-language cards, a live preview of how your function will look to other people, and an honest **"Ships as"** line that shows the exact GDScript signature your function generates.
+In an event sheet, a **function** is a reusable block of rows you define once and call anywhere. The ACE Studio is the in-editor dialog that lets you author one of these without ever meeting the words `func` or `return type`, while still producing plain, readable GDScript underneath. Its title is **"New Function"** (and "Edit Function - <name>" when you reopen it on an existing function), and it turns the low-level idea of "add a function" into a plain-language Kind choice, a live preview of how your function will look to other people, and an honest **"IN CODE"** line that shows the exact GDScript signature your function generates.
 
 The word **ACE** is the plugin's name for the three things a sheet's picker can offer you: an **Action** (does something), a **Condition** (a yes/no test), and an **Expression** (returns a value). The ACE Studio lets you write your function as any one of these, and optionally **publish** it so that every other sheet in your project can pick it. Everything you build here compiles to a plain GDScript function - the ACE Studio is a friendly front end, not a runtime layer that sits under your game.
 
-![The ACE Studio: Name, Doc comment and Inspector button rows, three cards headlining Action / Condition / Expression with a plain-language line each, a live picker preview of the published function with its Ships-as GDScript signature, and a plain Publish-to-the-picker checkbox.](images/ace-studio.png)
+![The New Function window: its row band, a Function card with Name, Doc comment and Inspector button, a What kind is it? card holding the Kind dropdown and Other sheets can use this, a live picker preview of the published function, and a help strip whose IN CODE line shows the GDScript signature.](images/ace-studio.png)
 
 ## Table of Contents
 
 1. [Opening the ACE Studio](#1-opening-the-ace-studio)
 2. [Choosing Action, Condition or Expression](#2-choosing-action-condition-or-expression)
-3. [The Live Preview and the Ships-as Line](#3-the-live-preview-and-the-ships-as-line)
+3. [The Live Preview and the IN CODE Line](#3-the-live-preview-and-the-in-code-line)
 4. [Parameters Live on the Function's Row](#4-parameters-live-on-the-functions-row)
 5. [Publishing to the Picker](#5-publishing-to-the-picker)
 6. [After You Create the Function](#6-after-you-create-the-function)
@@ -27,7 +27,7 @@ There are several ways to open the ACE Studio to author a brand-new function:
 - The **Add** menu in the event sheet dock has a **"Function..."** entry.
 - There is an **add-function button** in the sheet itself.
 - It is reachable from Godot's **Command Palette** (Ctrl+Shift+P), where every EventSheets command is listed.
-- **Right-click empty canvas ▸ New Function** offers a submenu: **Function** (a plain, unpublished helper), or **Action** / **Condition** / **Expression** - the last three open the dialog with that kind's card already picked and **Other sheets can use this** already ticked, so "I want a new Action" is one gesture.
+- **Right-click empty canvas ▸ New Function** offers a submenu: **Function** (a plain, unpublished helper), or **Action** / **Condition** / **Expression** - the last three open the dialog with that Kind already picked and **Other sheets can use this** already ticked, so "I want a new Action" is one gesture.
 
 They all open the same **"New Function"** dialog, ready for a new function.
 
@@ -43,13 +43,13 @@ The first fields you fill in describe the function itself.
 - **Doc comment** (optional) - Godot's own documentation for the function, written above it as `##` lines. It shows up in the editor's built-in help and when hovering the row. BBCode like `[b]bold[/b]` is allowed.
 - **Inspector button** (optional) - name a label here and the function also becomes a one-click button on the node's Inspector panel, handy for editor chores. Leave it empty (the usual case) and no button appears.
 
-Next comes **"Action, Condition, or Expression?"** - three cards, each headlining the ACE kind with a plain-language line and examples underneath. Click one:
+Next comes the **"What kind is it?"** card. Its **Kind** dropdown has one entry per ACE kind, each with a plain-language line after it. Pick one:
 
 - **Action** - *Does something.* Examples: Take Damage, Heal, Knock Back. An Action is a setter and returns nothing. (Its glyph is a play triangle.)
 - **Condition** - *Is it true?* Examples: Is Dead, Is Full Health. A Condition answers yes or no. (Its glyph is a question mark.)
 - **Expression** - *A value.* Examples: Health %, Remaining Shields. An Expression is a getter and returns a value. (Its glyph is `fx`.)
 
-The card you pick quietly sets the return type behind the scenes: nothing for an Action, yes/no for a Condition, and the value type you choose for an Expression. You never have to type a return type yourself.
+The kind you pick quietly sets the return type behind the scenes: nothing for an Action, yes/no for a Condition, and the value type you choose for an Expression. You never have to type a return type yourself.
 
 When - and only when - you pick **"A value"**, a second dropdown appears: **"What kind of value?"** It decides what type your Expression returns. The options are:
 
@@ -65,17 +65,17 @@ If you pick an Action or a Condition, this dropdown stays hidden, because their 
 
 ---
 
-## 3. The Live Preview and the Ships-as Line
+## 3. The Live Preview and the IN CODE Line
 
-![A filled-in ACE Studio: a Take Damage function with its doc comment, the three kind cards with Action selected, the live preview showing the Action badge and the Ships-as line reading func take_damage() -> void, and the Publish-to-the-picker checkbox ticked](images/ace-studio-example.png)
+![The New Function window filled in for Take Damage: the name and its code name, a doc comment, Kind set to Action, Other sheets can use this ticked, the preview card with the Action badge, and the IN CODE line reading func take_damage() -> void.](images/ace-studio-example.png)
 
 The card labelled **"This is what other people will see"** appears once **Other sheets can use this** is ticked - it is about what OTHER sheets will meet, so it stays out of the way while you are writing a private helper - and it updates on every keystroke. It is there so you can shape a clear, picker-ready action, condition or expression before you commit. It shows:
 
 - A mock picker entry with a **role badge** (Action, Condition, or Expression), the **display name**, a **chip for each parameter the function has**, and a **category chip**.
 - A one-line summary that reads like a real picker row, for example `Combat > Take Damage  amount`.
-- A **"SHIPS AS"** line showing the exact generated signature. A brand-new function has no parameters yet (you add those from its row afterwards - see section 4), so it reads `func take_damage() -> void`; reopen a function that already has an `amount` parameter and the same line reads `func take_damage(amount: float) -> void`.
+- An **"IN CODE"** line in the help strip showing the exact generated signature. A brand-new function has no parameters yet (you add those from its row afterwards - see section 4), so it reads `func take_damage() -> void`; reopen a function that already has an `amount` parameter and the same line reads `func take_damage(amount: float) -> void`.
 
-The "Ships as" line is built from the compiler's own formatters - the same code that emits your final GDScript. That means the signature in the preview can never disagree with the code that actually ships. It is the honest bridge for anyone who wants to see the real function that will be generated, and it is the fastest way to hand a function to a programmer teammate: they can read exactly what the call will look like in code.
+The IN CODE line is built from the compiler's own formatters - the same code that emits your final GDScript. That means the signature in the preview can never disagree with the code that actually ships. It is the honest bridge for anyone who wants to see the real function that will be generated, and it is the fastest way to hand a function to a programmer teammate: they can read exactly what the call will look like in code.
 
 ---
 
@@ -108,13 +108,13 @@ Once published, the function appears in **every** sheet's picker as the kind you
 
 Only publish the functions you actually mean to reuse. One that is only useful inside a single sheet is better left unpublished, so the picker stays clean and full of genuinely reusable choices.
 
-The dialog's live preview shows the one function you are editing; the left rail's collapsible
-**Picker preview** panel (under the Anatomy panel) keeps the same promise for the WHOLE
+The dialog's live preview shows the one function you are editing; the side panel's
+**Picker preview** tab (it shows while the Add window is open) keeps the same promise for the WHOLE
 sheet - every published action, condition and expression, every trigger, and every exported
 knob rendered as the picker will show it, live from the unsaved sheet. Rename one, move its
 category, or toggle featured, and its picker face updates there immediately.
 
-<img src="images/picker-preview-panel.png" alt="The Picker preview panel expanded on the Health pack: 44 entries, each with its action pill, the featured star on Take Damage and Heal, the parameter list in parentheses, and the Health category chip." width="300">
+<img src="images/picker-preview-panel.png" alt="The side panel's Picker preview tab, open beside the Add window on the Health pack: each published entry with its kind pill, the featured star on Take Damage and Heal, the parameter list in parentheses, and the Health category chip." width="300">
 
 ---
 
@@ -125,7 +125,7 @@ When you press **"Create Function"** (or **"Save Changes"** in edit mode), a few
 - The new function appears among the sheet's functions as a **Define block**. You author its **body** as ordinary event rows underneath the block - the same conditions and actions you use anywhere else - and add its parameters from the row's cells (section 4). If the function should only act in certain situations, put a condition on its first body row - an **Expression Is True** condition reading `host.enabled`, say - and the whole body runs only when that holds. That is an ordinary event row, visible and editable on the canvas, not a hidden dialog setting.
 - You call it from anywhere with the **Call Function** action.
 - If you published it, it shows up in **every sheet's picker** as an Action, Condition, or Expression, matching the preview.
-- Everything compiles to a **plain GDScript function**. The ACE Studio is a friendly front end, not a hidden runtime; the "Ships as" line is the bridge for a programmer who wants to see the real signature.
+- Everything compiles to a **plain GDScript function**. The ACE Studio is a friendly front end, not a hidden runtime; the IN CODE line is the bridge for a programmer who wants to see the real signature.
 
 Before the dialog will confirm, it checks that the **name is a valid identifier** and does **not collide** with an existing function or variable on the sheet. When something is wrong, the dialog shows a short problem message and stays open so you can fix it. (The trailing-default rule for parameters is checked where parameters are actually authored - the Edit Parameter dialog - not here.)
 
@@ -150,9 +150,9 @@ The window lists every row the script gives sheets as a plain sentence with a ti
 
 1. **A Take Damage action shared across enemies.** Author `Take Damage` as an Action, add an `amount` parameter from its row, publish it under Combat, and every enemy sheet can pick it. One definition, consistent damage handling everywhere.
 
-2. **An Is Dead condition read from many sheets.** Author `Is Dead` as a Condition (the "Is it true?" card) that checks whether health has reached zero. Publish it, and any sheet - the enemy, the HUD, the score system - can test `Is Dead` without duplicating the check.
+2. **An Is Dead condition read from many sheets.** Author `Is Dead` as a Condition (the "Is it true?" kind) that checks whether health has reached zero. Publish it, and any sheet - the enemy, the HUD, the score system - can test `Is Dead` without duplicating the check.
 
-3. **A Health % expression for a HUD bar.** Pick the "A value" card and choose **a number** (float). The expression returns current health divided by max health, times one hundred. A HUD sheet reads `Health %` straight into a progress bar's value.
+3. **A Health % expression for a HUD bar.** Pick the "A value" kind and choose **a number** (float). The expression returns current health divided by max health, times one hundred. A HUD sheet reads `Health %` straight into a progress bar's value.
 
 4. **A guarded function that only runs while a behaviour is enabled.** Put an **Expression Is True** condition reading `host.enabled` on the first row of the function's body. The rest of the body runs only when the host is switched on, so a disabled behaviour quietly does nothing instead of misfiring.
 
@@ -164,9 +164,9 @@ The window lists every row the script gives sheets as a plain sentence with a ti
 
 8. **Editing an existing function by double-clicking its Define block.** You shipped `Take Damage` last week and now want it to also play a hurt sound. Double-click its Define block, the dialog reopens as "Edit Function - take_damage", adjust its kind or publishing, press "Save Changes", then extend the body rows - and tweak any parameter straight from its cell on the row.
 
-9. **A Condition that keeps a designer out of GDScript.** A designer needs an `Is Full Health` test but does not write code. They pick the "Is it true?" card, describe it, and the ACE Studio produces a real boolean function without them ever typing `func` or `return`.
+9. **A Condition that keeps a designer out of GDScript.** A designer needs an `Is Full Health` test but does not write code. They pick the "Is it true?" kind, describe it, and the ACE Studio produces a real boolean function without them ever typing `func` or `return`.
 
-10. **Checking the Ships-as line to hand a function to a programmer.** Before asking a programmer teammate to wire something up, read the "SHIPS AS" line, for example `func take_damage(amount: float) -> void`. Because it comes from the compiler's own formatters, it is exactly the function that will be generated, so the programmer knows the precise call to make.
+10. **Checking the IN CODE line to hand a function to a programmer.** Before asking a programmer teammate to wire something up, read the IN CODE line, for example `func take_damage(amount: float) -> void`. Because it comes from the compiler's own formatters, it is exactly the function that will be generated, so the programmer knows the precise call to make.
 
 11. **A Remaining Shields expression for enemy AI.** Pick "A value" and choose **a whole number** (int). The expression returns how many shield charges are left. An AI sheet reads `Remaining Shields` as an Expression to decide whether to press an attack.
 
@@ -182,6 +182,6 @@ The window lists every row the script gives sheets as a plain sentence with a ti
 - **The value-type dropdown only shows for "A value".** If you do not see a "What kind of value?" dropdown, you have picked an Action or a Condition, whose return types are already decided. Only the Expression card reveals it.
 - **Publish only the functions meant to be reused.** Every published function appears in every sheet's picker. Leave one-off helpers unpublished so the picker stays full of genuinely shared vocabulary.
 - **Gating lives in the body, not in the dialog.** A function that should only act sometimes gets a condition row at the top of its body. That is an ordinary event row - visible, editable, and undoable - not a setting buried in a dialog.
-- **The Ships-as line always matches the real output.** It is generated from the same formatters the compiler uses, so trust it. If the "SHIPS AS" signature looks wrong, the fix is to change the function's kind, name, or parameters - not to work around it in code later.
+- **The IN CODE line always matches the real output.** It is generated from the same formatters the compiler uses, so trust it. If the IN CODE signature looks wrong, the fix is to change the function's kind, name, or parameters - not to work around it in code later.
 - **Write a real Description.** The description is what other people read in the picker. A one-line "what it does" saves everyone from guessing, especially for published functions.
 - **A function here is just a GDScript function.** Nothing here is magic. If you ever want to read or extend the generated code directly, it is plain, typed GDScript with the exact signature the preview showed you.

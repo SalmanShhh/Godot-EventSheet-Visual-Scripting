@@ -162,7 +162,7 @@ Once you are typing a path, there are exactly two places to type it, and the dif
 
 `res://` is a folder while you are in the editor and a packed archive afterwards, so a write there works every time you test it and silently does nothing in an exported build. Every path field in the Files vocabulary says which of the two you are in, under the box, as you type; the Parameters strip adds where `user://` really lives on each desktop platform, and the **Open The Player's Data Folder** action opens that folder on the player's machine while the game runs.
 
-![A parameters dialog with two path fields, each carrying a muted line under it naming the place that path is in, and a help strip explaining both places](images/file-place-field.png)
+![The Write Text File parameters window: the Path field holding "user://save.dat" with a muted lead under it naming the place the path is in, and a help strip explaining both places, user:// and res://](images/file-place-field.png)
 
 The Doctor's **Files** section runs seven checks over your project. Three of them are about a path that will not work, and each carries a one-click fix that shows you the before and the after and lands as a single undo step:
 

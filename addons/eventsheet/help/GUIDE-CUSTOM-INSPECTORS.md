@@ -385,7 +385,7 @@ EventSheets.unregister_toggle_icon_provider("shapes_dash")
 
 **Sheet ▸ Inspector Designer…** shows every Inspector-visible variable of the sheet as ONE live view - decor, grouping, and widgets, exactly as Godot will show them, with the plain-language sentence under each. It is the "what does my whole Inspector look like?" answer the per-variable dialogs cannot give - and you edit from it too: **✎** opens that variable in the Variable dialog (the Designer refreshes when you confirm), and **▲** moves a sheet variable up in the Inspector as one undo step. The list is in the order the file declares them - the same order the compiler emits, so what you see here is what Godot will show.
 
-<img src="images/inspector-designer.png" alt="The Inspector Designer over the EnemyStats resource: the Combat section with its min-max damage slider, curve, loot grid and health bar, the Identity section with the required portrait warning and swatches, and the Spawning info note - each with a one-line plain-language description." width="620">
+<img src="images/inspector-designer.png" alt="The Inspector Designer over the EnemyStats resource: the Combat section with its min-max damage slider, curve, loot grid and health bar, the Identity section with the required portrait warning and swatches, and the Spawning info note - each with a one-line plain-language description, and a Shape this field panel beside the list for the field you pick." width="620">
 
 ## 4c. Decor that belongs to the object: the preview card and viewport handles
 
@@ -461,7 +461,7 @@ This round-trips **structured**: reopen the `.gd` and the tick is still checked.
 
 ### Multiline (String)
 
-A big multi-line text box instead of a single line. Tick **"Multiline"** on a `String`.
+A big multi-line text box instead of a single line. On a `String`, pick the **Big text box** Inspector look.
 
 ```gdscript
 @export_multiline var intro_text: String = "Welcome..."
@@ -469,9 +469,9 @@ A big multi-line text box instead of a single line. Tick **"Multiline"** on a `S
 
 ### Placeholder (String)
 
-Grey hint text shown while a `String` field is empty, so a designer knows what to type. Fill the **"Placeholder"** field on a `String`.
+Grey hint text shown while a `String` field is empty, so a designer knows what to type. On a `String`, pick the **Hint inside the box** Inspector look and type the hint.
 
-![A String variable with a Placeholder and the Multiline tick](images/export-string-options.png)
+![A String variable with the Inspector look Hint inside the box and its hint text, Enter your name](images/export-string-options.png)
 
 ```gdscript
 @export_placeholder("Enter your name") var player_name: String = ""
@@ -499,15 +499,15 @@ Round-trips **structured** (the choices come back into the Details field). Use i
 
 ### No alpha (Color)
 
-A solid RGB swatch with the alpha slider hidden, for colours that should never be transparent. Tick **"No alpha"** on a `Color`.
+A solid RGB swatch with the alpha slider hidden, for colours that should never be transparent. On a `Color`, pick the **Solid colour, no alpha** Inspector look.
 
-![The No alpha tick on a Color variable](images/color-no-alpha.png)
+![A Color variable with the Inspector look Solid colour, no alpha chosen](images/color-no-alpha.png)
 
 ```gdscript
 @export_color_no_alpha var team_colour: Color = Color(1, 1, 1, 1)
 ```
 
-This one round-trips **structured**: reopen the `.gd` and the "No alpha" tick is still checked, so you can untick it later. Note that "No alpha" and the swatch-row drawer are mutually exclusive on emit (pick the **Solid colour, no alpha** look to use No alpha).
+This one round-trips **structured**: reopen the `.gd` and the Solid colour, no alpha look is still picked, so you can change it later. Note that "No alpha" and the swatch-row drawer are mutually exclusive on emit (pick the **Solid colour, no alpha** look to use No alpha).
 
 ### Section header and Info note (decor)
 
@@ -534,7 +534,7 @@ Editor-only, like all decor: an inert comment without the plugin. See it live in
 
 The **Project Doctor** enforces it project-wide: every scene node and saved resource using the script is scanned, and any that leaves a required (and empty-by-default) property unset gets a warning naming the exact file and property - so a required field can't slip through in a scene nobody opened.
 
-<img src="images/enemy-stats-preview.png" alt="Three fields of the EnemyStats Custom Resource showcase: a required portrait slot with the red warning, the Combat min-max damage range under its accent header, and the spawn gap with its shared-resource info note." width="440">
+<img src="images/enemy-stats-preview.png" alt="Godot's Inspector on the EnemyStats example resource: the Combat group with its min-max damage range, curve, loot table and health bar, the Identity group with a required portrait slot showing the red warning under it, and the Spawning group with its spawn gap and the shared-resource info note." width="440">
 
 ### Read-only
 

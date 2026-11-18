@@ -136,7 +136,7 @@ no tool marker.
 The counting line is a door. Press **Migrate…** and you get a receipt - and that dialog is the *only*
 place a migration happens. Not on open, not on save, not automatically, and not from a report.
 
-![The Migrate dialog: a lead line reading 2 row(s) would be rewritten in one step you can undo, and 1 are left exactly as they are; a What will be rewritten card showing each row's sentence today beside the sentence it would read and, indented under it, the line it writes today beside the line it would write; a Left exactly as they are card giving one row its reason; and Migrate These Rows beside Cancel](images/migration-migrate-dialog.png)
+![The Migrate window: a lead line reading 3 rows would be rewritten in one step you can undo, and a What will be rewritten card showing each row's sentence today beside the sentence it would read and, indented under it, the line it writes today beside the line it would write; Migrate These Rows beside Cancel](images/migration-migrate-dialog.png)
 
 **The receipt is drawn in both languages a row has.** Every row that would be rewritten is shown
 twice: the sentence it reads today beside the sentence it would read, and the line it writes today
@@ -359,7 +359,7 @@ somebody else does.
 A function's own head row offers **Rename…**, and the first thing the dialog draws is not a text field
 with an OK button. It is the list.
 
-![The Rename dialog: a New name field holding ring_alarm, a line reading Called by enemy.gd and traps.gd - 6 rows in 2 other files, this rewrites the 2 rows in this sheet and leaves those exactly as they are; a What will be rewritten card listing sound_alarm to ring_alarm twice; and a second card headed Named and left exactly as they are, listing enemy.gd - 4 rows and traps.gd - 2 rows](images/rename-receipt.png)
+![The Rename dialog: a New name field holding ring_alarm, a line reading Called by enemy.gd and traps.gd - 6 rows in 2 other files, this rewrites the 2 rows in this sheet and leaves those exactly as they are; a What will be rewritten card listing sound_alarm to ring_alarm twice; and a second card headed Named and left exactly as they are (the index answers by name, so a file listed there may be calling something else), listing enemy.gd - 4 rows and traps.gd - 2 rows](images/rename-receipt.png)
 
 Two cards, and the second one is the interesting half. **Every other file that calls the name is
 named, counted, and left exactly as it is**, under a heading that says why: the callers index answers

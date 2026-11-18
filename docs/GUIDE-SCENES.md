@@ -551,7 +551,7 @@ you name. Four rows and one expression are the whole vocabulary: **Make A View**
 **Set View Zoom**, **Stop View**, and **View Texture Of** for the places a frame cannot reach - a
 material's albedo, a shader parameter, a theme icon.
 
-![One event on the canvas: On enter tree, then Make a view named "minimap" following $Player at zoom 0.25, then Show view "minimap" in $HUD/MinimapFrame](images/second-view-rows.png)
+![One event on the canvas: On enter tree, then Second View: Make a view "minimap" following $Player at zoom 0.25, then Second View: Show view in "minimap" and $HUD/MinimapFrame](images/second-view-rows.png)
 
 ![A 2D level of coloured blocks seen close up, with a small yellow player square in the middle, and in the top right corner a bordered panel showing the same level from much further back with the yellow marker in it](images/second-view-running.png)
 

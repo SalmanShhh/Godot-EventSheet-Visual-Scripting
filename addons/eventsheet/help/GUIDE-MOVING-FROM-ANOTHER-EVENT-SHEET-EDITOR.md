@@ -373,11 +373,12 @@ i18n (Godot translations).
   ![The editor with the strip at rest and the status bar along its foot reading: The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back.](images/resting-toolbar-note.png)
 - **Adding happens in the sheet, not on the strip.** The canvas carries the two links you already
   reach for: a muted **Add event** in its top-left corner and a **+ Add…** in its top-right, on
-  every sheet, pinned to the corners so scrolling never takes them away. "Add event" is the E key;
+  every sheet whose theme keeps the workspace bands (Classic Sheet does; the default Match Editor theme
+  folds them away and leaves Add event to the toolbar and the E key), pinned to the corners so scrolling never takes them away. "Add event" is the E key;
   "+ Add…" is the same menu a right-click on empty space opens. The trailing "+ Add event…" rows,
   the Ghost Row, double-click on empty space and the Quick add field all still add too.
 
-  ![A sheet with the Add event link in its top-left corner and the + Add… link in its top-right](images/sheet-corner-links.png)
+  ![A sheet in the Classic Sheet theme with the Add event link in its top-left corner and the + Add… link in its top-right](images/sheet-corner-links.png)
 
   The whole Add menu lives inside the **☰ Menu** beside Sheet, Edit, View and Tools, and it teaches
   the keys: Event (E), Condition (C), Action (A), Group (G; it reads Section by default and Group with the Familiar preset), Comment (Q), Global Variable (V) and
@@ -497,7 +498,7 @@ i18n (Godot translations).
 - **View > Outline** is the sheet's method list - groups, `#region` fences, and published
   functions as a click-to-jump tree.
 
-  ![View then Outline: regions, nested groups and published functions as one click-to-jump tree](images/outline-panel.png)
+  ![View then Outline: the file's regions and published functions as one click-to-jump tree, with a Filter field above it and Go to Row and Close below](images/outline-panel.png)
 - **View > Arrange by** reads the same sheet four ways: **File order** (the untouched one),
   **Object**, **Trigger** or **Group**. The events are re-grouped under one header each - `Player`
   / `Enemy` / `HUD`, or `On ready` / `On physics process` / `On hit` - and they stay editable

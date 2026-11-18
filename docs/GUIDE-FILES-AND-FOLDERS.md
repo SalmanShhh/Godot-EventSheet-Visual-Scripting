@@ -195,7 +195,7 @@ func _ready() -> void:
 	print(items.size())
 ```
 
-![An event sheet row reading Set items to table of res://data/items.csv - the first line names the columns, with the engine's own reader echoed beside it](images/engine-table-read.png)
+![The Table Of File parameters window: the File field holding "res://data/items.csv" with a muted lead saying res:// is the game's own files, a Separator picker reading Comma, a First line picker reading The first line names the columns, and the IN CODE strip showing the engine's own reader](images/engine-table-read.png)
 
 **That lambda is several statements, and it opens back as one sentence.** A `.gd` file holding the
 run above opens as the **Set** it was authored as, with the whole read in the value slot a reader

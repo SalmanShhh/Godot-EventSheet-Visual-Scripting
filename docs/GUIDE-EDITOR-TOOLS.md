@@ -782,7 +782,7 @@ Press **Compare** and you get two columns. On the left, rows of the open sheet t
 
 ### 10.2 Loose Ends… - what you left unfinished
 
-![Loose Ends: TODO notes, disabled rows, unfinished events, breakpoints and uncalled verbs, indexed](images/tools-loose-ends.png)
+![The Loose Ends window: a list of what is unfinished in the sheet - TODO notes, functions nothing calls and the other kinds of loose end, each with where it is](images/tools-loose-ends.png)
 
 **Tools > Loose Ends…** indexes the states your sheet already carries and never advertises:
 

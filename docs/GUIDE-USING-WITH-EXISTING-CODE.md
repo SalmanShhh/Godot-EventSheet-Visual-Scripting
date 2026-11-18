@@ -291,7 +291,7 @@ GlobalUtils.ping(self)
 
 ## 4. React to a Signal Your Existing Code Emits
 
-![The Connect Signal to Event Sheet dialog: a searchable list of the node's own script signals and its native ones](images/connect-signal-dialog.png)
+![The Connect a signal window for DoorGate: the event it will add, a searchable list of the node's script and native signals, and the handler line it writes](images/connect-signal-dialog.png)
 
 Triggers are how a sheet *reacts*. To react to your own code, use the signal triggers - they connect by
 name, with no need for the emitter to know anything about EventSheets.
@@ -941,14 +941,15 @@ pivot turns.
   body's first step reads beside it on the right, the rest of the body hangs under it as sub-events,
   and Collapse takes the whole function back to that one row. No word on the row says whether it is an
   Action, Condition or Expression: the name's hover card says its kind, what it hands back and its
-  flags. Click it for the **ACE properties** popup - kind, category, inputs (with
-  their types), what it gives back, description, whether it is featured, its icon, the exact line it
-  inserts, and the function behind it - with Edit..., Open guide and Show in code. Unpublished helpers are
+  flags. Click it and Godot's Inspector edits the function: its name, description, what it returns,
+  whether it is listed in Add Action, its category and its parameters. (A file you opened read-only shows
+  the **ACE properties** popup instead - kind, category, inputs, what it gives back, description, the exact
+  line it inserts and the function behind it - because there is nothing to edit.) Unpublished helpers are
   the same blocks with their doc as the right-hand caption, gathered under a closed **Helpers** folder.
 
   ![A pack's published functions read as events: On function is_wall_riding, can_stand_up and wall_normal_x, each with Return in the action lane under the Function object.](images/opened-pack-verbs.png)
 
-  ![The ACE properties popup for one published function: its kind, category, inputs with their types, what it gives back, its description, its icon, the exact line it inserts and the function behind it](images/ace-properties-popup.png)
+  ![Godot's Inspector editing one published function of the FPS Controller pack: its name, description, what it returns, whether it is listed in Add Action, its category and its parameters](images/ace-properties-popup.png)
 
   The picker knows about them too. Open **Add Event** on a `.gd` you opened as a sheet and its first
   page is **ƒ Functions - this script**, listing the file's own functions with the kind each one
@@ -2176,7 +2177,7 @@ is instantiated to answer a question.
   applies through the same operation the dock already owns, and the audit re-runs immediately, so
   the finding's disappearance is proven rather than assumed.
 
-<img src="images/words-settings.png" alt="The Words page: a table headed what it names, with Familiar Words on, off, listing an inheritance set as Family or Base class, a scene as Layout or Scene, _process as On process, an attached pack as Behavior, a Godot group as Family (group) or Group, Array slash Dictionary as list slash table, queue_free as Destroy and the reader as Manual, above a live preview of one event and a Reset to defaults button." width="560">
+<img src="images/words-settings.png" alt="The Words page: a preset row for the whole vocabulary, then a scrolling table headed what it names, with Familiar Words on and off - an inheritance set as Family or Base class, a scene as Layout or Scene, _process as Every tick or On process, an attached pack as Behavior, a Godot group as Family (group) or Group - above a live preview of one event and a Reset to defaults button." width="560">
 
 - **The Scene dock and the sheet share one selection.** Pick a node in the Scene dock and its entry
   lights up on the Object bar, with the status line offering `Filter events to Enemy` - an offer,
@@ -2458,7 +2459,7 @@ open and two things change, both of them inside the sheet:
   `3.2 of 6` right after the cell. The left-hand number is the very quantity that row compares, not a
   second clock kept by the editor.
 
-![An enemy's sheet while the game runs: the states band reads Patrol · Chase · Stagger - starts in Patrol with current: Chase · 3.2 s after it, the state variable row carries now CHASE, and the row Is in STAGGER for over 6s shows 3.2 of 6 beside it](images/state-play-mode.png)
+![An enemy's sheet while the game runs: the state row reads PATROL (default) · CHASE · STAGGER with the state the game is in, Chase · 3.2 s, lit in the band, and the row Is in STAGGER for over 1 s shows 3.2 of 1 beside it](images/state-play-mode.png)
 
 **Four things are worth knowing about it, because each one is a promise:**
 

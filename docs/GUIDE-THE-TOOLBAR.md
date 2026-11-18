@@ -146,9 +146,9 @@ All four are still plain buttons on the expanded strip, relabelled by the very s
 The strip used to front four Add buttons. They are one chevron away now, because the strip was
 never where a reader looks when they want another event: they look at the sheet. So the canvas
 carries the two doors itself, pinned to its visible corners so scrolling a long sheet never takes
-them away.
+them away. A theme that folds the workspace bands away (the default Match Editor theme does) draws neither link and leaves both doors to the toolbar, the E key and the right-click on empty space; the picture below is the Classic Sheet theme.
 
-![A sheet with a muted Add event link in its top-left corner and a + Add... link in its top-right](images/sheet-corner-links.png)
+![A sheet in the Classic Sheet theme with a muted Add event link in its top-left corner and a + Add... link in its top-right](images/sheet-corner-links.png)
 
 - **Add event** (top left) runs exactly what the `E` key runs.
 - **+ Add...** (top right) opens exactly the menu a right-click on empty space opens.

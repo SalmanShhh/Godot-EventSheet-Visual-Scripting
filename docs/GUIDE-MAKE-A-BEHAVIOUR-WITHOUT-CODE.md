@@ -101,9 +101,9 @@ Inside the loop body, **Current Loop Item** is the iterator; **Break Loop** / **
 
 ## 8. Reusable Logic - Functions
 
-Add a **Function** (a name and which kind it is). The dialog is the **ACE Studio**: three plain-language cards replace return-type jargon, a live preview shows exactly what other people will see in the picker, and the "Ships as:" strip shows the GDScript signature it compiles to. Its parameters are added afterwards from the Define block's own cells, not in the dialog. The "Using the ACE Studio" guide walks through it field by field.
+Add a **Function** (a name and which kind it is). The dialog is the **ACE Studio**: a plain-language Kind choice replaces return-type jargon, a live preview shows exactly what other people will see in the picker, and the "IN CODE" line shows the GDScript signature it compiles to. Its parameters are added afterwards from the Define block's own cells, not in the dialog. The "Using the ACE Studio" guide walks through it field by field.
 
-<img src="images/ace-studio.png" alt="The ACE Studio: Name, Doc comment and Inspector button rows, three cards headlining Action / Condition / Expression with a plain-language line each, a live picker preview of the published function with its Ships-as GDScript signature, and a plain Publish-to-the-picker checkbox." width="580">
+<img src="images/ace-studio.png" alt="The New Function window: its row band, a Function card with Name, Doc comment and Inspector button, a What kind is it? card holding the Kind dropdown and Other sheets can use this, a live picker preview of the published function, and a help strip whose IN CODE line shows the GDScript signature." width="580">
 
 - **Does something** (returns nothing) → an **Action** (e.g. `jump()`, `start_timer(seconds)`)
 - **Is it true?** (returns a bool) → a **Condition** (e.g. `is_in_state(name)`)
@@ -121,7 +121,7 @@ Functions appear in the order the file declares them - after the sheet's own eve
 
 <img src="images/anatomy-panel.png" alt="The Anatomy tab of the side panel showing a behaviour sheet as organs: its variables by scope, then Triggers, Actions, Conditions and Expressions with their counts" width="340">
 
-Below the Anatomy panel, the collapsible **Picker preview** answers the question the census
+Beside the Anatomy tab, the side panel's **Picker preview** tab (it appears while the Add window is open) answers the question the census
 cannot: *how will my vocabulary actually read in the picker?* It renders every published entry
 live from the unsaved sheet - kind badge, display name, the featured star, the parameter
 list, the category - so a rename or a category change shows its picker face immediately,
@@ -129,7 +129,7 @@ before you save. Exported variables appear once each, labelled with the get / se
 subtract rows they will publish, and a not-yet-lifted `# @ace_*` shell previews under its
 declared name too.
 
-<img src="images/picker-preview-panel.png" alt="The Picker preview panel expanded on the Health pack: 44 entries, each with its action pill, the featured star on Take Damage and Heal, the parameter list in parentheses, and the Health category chip." width="300">
+<img src="images/picker-preview-panel.png" alt="The side panel's Picker preview tab, open beside the Add window on the Health pack: each published entry with its kind pill, the featured star on Take Damage and Heal, the parameter list in parentheses, and the Health category chip." width="300">
 
 **When you ship an update, use Sheet > Publish New Version…** instead of hand-editing the
 `@ace_version` annotation. Pick Patch / Minor / Major, type a one-line change note, and the
@@ -138,7 +138,7 @@ place, records the note as a doc comment directly beneath it (the file accumulat
 changelog), backs the script up first, and re-imports so the banner chip reads the new
 version at once. A pack with no version yet starts at 1.0.0 and bumps from there.
 
-<img src="images/publish-version-dialog.png" alt="The Publish New Version dialog: a Bump dropdown reading Patch - fixes, no new verbs, a one-line Change note field, the live 1.0.0 to 1.0.1 preview, and Publish / Cancel buttons." width="420">
+<img src="images/publish-version-dialog.png" alt="The Publish New Version dialog: a Bump dropdown reading Patch - fixes, no new actions, a one-line Change note field, the live 1.0.0 to 1.0.1 preview, a Reading check card, and Publish / Cancel buttons." width="420">
 
 ---
 

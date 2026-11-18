@@ -50,7 +50,7 @@ Section [Regenerate before you commit](#regenerate-before-you-commit) covers the
 
 ![The Manual in a dock-width column beside a sheet, its prose still wrapping at the reading measure](images/doc-dock-beside-sheet.png)
 
-![The Manual searched: ranked results grouped by page, beside the open page with every hit wrapped](images/doc-search-results.png)
+![The Manual searched for jump: a flat list of ranked results, each row tagged with what it is, beside the open page with every hit highlighted](images/doc-search-results.png)
 
 ![The same page after an in-page anchor jump, landed on the section heading the link named](images/doc-guide-anchor.png)
 
@@ -64,7 +64,7 @@ The other is **reference**, and nobody writes it:
 | System reference | one page per picker category, listing every condition, action and expression the builtin vocabulary files under it |
 | Behavior reference | one page per behavior pack, listing the same for that pack |
 
-![The Manual docked in a narrow column: the search box, a breadcrumb reading Manual then the page, back and forward arrows, Recent and a bookmark star, the icon legend page with its table of marks, and the footer reading Manual v0.17.0, shipped with the plugin, offline](images/manual-docked.png)
+![The Manual docked in a narrow column: the search box, a breadcrumb reading Manual then the page, back and forward arrows, Recent and a bookmark star, the icon legend page with its table of marks, and the footer reading Manual v0.20.0, shipped with the plugin, offline](images/manual-docked.png)
 
 That matters when you write a guide, in three ways:
 
@@ -127,7 +127,7 @@ The Parameters dialog carries the same **Learn more** link at the foot, on the r
 An entry also answers backwards: it says where **your** project already uses the verb, and lists the
 rows. Clicking one opens that sheet at that event.
 
-![The foot of the same page: an In your project card reading Used 3 times in your project - open one, with three rows naming the file and line of each use](images/row-doors-project.png)
+![The foot of the same page: an In your project card saying how many times the project uses the entry, with a row naming the file and line of each use](images/row-doors-project.png)
 
 The walk is made fresh every time the entry is drawn and stored nowhere - a cached count is a count
 that is wrong the moment somebody adds a row. Sheets there is a model of (the tabs you have open,
@@ -161,7 +161,7 @@ order, so a reader's eye learns where to land once:
 
 **Properties · Conditions · Actions · Expressions · Triggers**
 
-![A behavior reference page in the fixed shape: the breadcrumb reads Manual, Behavior reference, Health; under the title and its lead line a Properties table lists destroy on death false, invulnerable false and max health 100.0, and a Conditions table follows with a diamond mark in front of every condition](images/manual-reference-shape.png)
+![A behavior reference page in the fixed shape: the breadcrumb reads Manual, Behavior reference, Health; under the title and its lead line a Properties table lists the behavior's knobs with their defaults (acts on, armour 0.0, assist seconds 8.0, crit chance 0.0, crit multiplier 2.0, destroy on death false, invulnerable false and more), and a Conditions table follows with a diamond mark in front of every condition](images/manual-reference-shape.png)
 
 Each is one table of `Mark | Name | Parameters | What it does`, where the mark is the sheet's own
 glyph for that kind (`◆` condition, `➜` action, `ƒ` expression, `⟳` trigger). Properties are a
@@ -171,7 +171,7 @@ when at least one row on the page has something to say in it.
 
 ### Tutorials
 
-![Manual, Tutorials: the tree lists Tutorials, What the marks on a sheet mean, Coming from another event-sheet editor and What's new; the page lists five tutorials, each with a lead line, a time estimate and a Start button](images/manual-tutorials.png)
+![Manual, Tutorials: a page that says the tutorials are done rather than read, then lists each one with a lead line, a time estimate and a Start button](images/manual-tutorials.png)
 
 ![One tutorial step card: the page is titled Your first event, a small-caps line reads YOUR FIRST EVENT, step 1 of 6, the step itself sits in a quote card, a line says the named control stays highlighted in the toolbar, and Back, Skip and Next sit on one row above the page foot](images/manual-tutorial-step.png)
 
@@ -194,7 +194,7 @@ CHANGELOG itself does not ship with the plugin), so **editing the CHANGELOG mean
 bundle**, exactly as editing a guide does. A reader who has not opened the page since the plugin's
 version changed sees a dot on the Manual entry.
 
-![Manual, What's new: a chapter strip above the page reads UNRELEASED and 0.17.0, the page says what changed in the build you have installed, and the unreleased release notes are rendered under a foldable Unreleased chapter](images/manual-whats-new.png)
+![Manual, What's new: a chapter strip above the page reads UNRELEASED and 0.20.0, the page says what changed in the build you have installed, and the unreleased release notes are rendered under a foldable Unreleased chapter](images/manual-whats-new.png)
 
 ### Writing the Manual in another language
 
@@ -416,7 +416,7 @@ next.
 
 ## Worked examples that draw themselves - the figure fences
 
-![A bare figure: its caption, the live rows underneath, and the Insert and Try it buttons](images/doc-figure.png)
+![A bare figure: its caption, the live rows underneath, and the Add these events and Copy buttons](images/doc-figure.png)
 
 ![A shipped guide whose worked examples render as live, insertable rows in the reader's own theme](images/doc-guide-figure.png)
 

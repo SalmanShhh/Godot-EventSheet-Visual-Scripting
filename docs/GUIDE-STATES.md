@@ -60,18 +60,18 @@ stack; a sheet that has them shows them and opens the same dialog when you click
 
 ![An enemy's sheet head with a state row reading PATROL (default), CHASE, STAGGER, and under it five events: Is PATROL, the timed question Is STAGGER for over 1 s, was CHASE, and the two triggers that answer the moment of a change](images/object-states.png)
 
-**Declare states…** asks the two questions a state machine really has, and no third one:
+**Declare states…** opens the **States of state** window, and it asks the two questions a state machine really has, and no third one:
 
-| Field | What it means |
+| Part of the window | What it means |
 | --- | --- |
-| **States** | The names this one object can be in, separated by anything you like - commas, middots, plain spaces. `Patrol Chase Stagger` and `Patrol, Chase, Stagger` mean the same thing; the field is not a syntax to learn |
-| **Starts in** | The state the object opens in. It is also the one state that needs no row going to it |
+| **What it is for** | One line saying what this state tracks ("What the player is doing: standing, running or in the air"). It is only a note for whoever reads the sheet next |
+| **States** | One row per state: its name (`PATROL`), a short sentence for **What this state is**, a **default** radio, and a count of how many rows already use it. The arrows reorder the list and the cross removes a state. **+ Add a state** adds a row |
+| **default** | The state the object opens in. It is also the one state that needs no row going to it |
 
-![The Declare states dialog: a States field holding Patrol, Chase, Stagger, a Starts in dropdown showing Patrol, and a help strip at the foot saying what the sheet will read as and the enum and variable lines it will write](images/object-states-dialog.png)
+![The States of state window: a What it is for line, the states PATROL, CHASE and STAGGER each with its sentence, a default radio with PATROL chosen and the number of rows that use it, + Add a state, and the enum and variable lines it will write underneath](images/object-states-dialog.png)
 
-The strip at the foot of the dialog shows both halves of the answer as you type: what the head will
-read as (`Patrol · Chase · Stagger - starts in Patrol`) and the code it stands for
-(`enum State { PATROL, CHASE, STAGGER } · var state: State = State.PATROL`).
+The code box at the foot of the window shows what the answer stands for as you edit it
+(`enum State { PATROL, CHASE, STAGGER }` and `var state: State = State.PATROL`), and **Apply** writes it.
 
 Pressing OK writes **five ordinary declarations** onto the sheet, as rows:
 
@@ -330,7 +330,7 @@ Once the states are on the head, the sheet is also where you watch them. Run the
 open and three things happen, all of them inside the sheet - there is no overlay on the running
 game's viewport and no window in front of it:
 
-![An enemy's sheet while the game runs: the states band reads Patrol · Chase · Stagger - starts in Patrol with current: Chase · 3.2 s after it, the state variable row carries now CHASE, and the row Is in STAGGER for over 6s shows 3.2 of 6 beside it](images/state-play-mode.png)
+![An enemy's sheet while the game runs: the state row reads PATROL (default) · CHASE · STAGGER with the state the game is in, Chase · 3.2 s, lit in the band, and the row Is in STAGGER for over 1 s shows 3.2 of 1 beside it](images/state-play-mode.png)
 
 - **The band carries the state the game is actually in.** `Patrol · Chase · Stagger - starts in Patrol`
   gains `current: Chase · 3.2 s` after it - after it, not instead of it, so the band still reads as
