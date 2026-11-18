@@ -245,10 +245,11 @@ static func _parse_nodes_of_scene(scene_path: String) -> Array:
 				"instance_path": instance_path_in(line, resource_paths),
 				"script_path": "",
 				"groups": string_array_attribute(line, "groups"),
-				# The scene-unique mark - `%HealthBar` - which the editor writes as a BARE flag on the
-				# node's own header rather than as one of the property lines under it. Read here
-				# because this is the project's one reader of scene text, and because every family
-				# that wants to know whether a node has a name of its own asks the same question.
+				# The scene-unique mark - `%HealthBar` - which an older editor wrote as a BARE flag on the
+				# node's own header and the current one writes as a property line under it (read below,
+				# with the other properties). Read here because this is the project's one reader of scene
+				# text, and because every family that wants to know whether a node has a name of its own
+				# asks the same question.
 				"unique": flag_attribute(line, "unique_name_in_owner"),
 				"properties": {}
 			}
@@ -267,6 +268,10 @@ static func _parse_nodes_of_scene(scene_path: String) -> Array:
 		var key: String = line.substr(0, assignment).strip_edges()
 		var value: String = line.substr(assignment + 3).strip_edges()
 		(current["properties"] as Dictionary)[key] = value
+		# The mark as the editor writes it today: a property line under the node's header. The bare flag
+		# on the header (read above) is how older scenes spell it, and both are the same mark.
+		if key == "unique_name_in_owner" and value == "true":
+			current["unique"] = true
 		if key == "script" and value.begins_with("ExtResource("):
 			current["script_path"] = str(resource_paths.get(value.get_slice("\"", 1), ""))
 	return nodes

@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/fixtures/unique_names_current.gd" id="1_cur"]
+
+[node name="Panel" type="Control" unique_id=1972518281]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_cur")
+
+[node name="Bar" type="ProgressBar" parent="." unique_id=2064772554]
+unique_name_in_owner = true
+layout_mode = 0
+
+[node name="Plain" type="Label" parent="." unique_id=1048576]
+layout_mode = 0

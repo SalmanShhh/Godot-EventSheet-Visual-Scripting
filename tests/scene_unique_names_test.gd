@@ -34,15 +34,34 @@ const HUD_SCRIPT: String = "res://tests/fixtures/unique_names_hud.gd"
 ## reported before, because the first scene in order simply won.
 const DISAGREE_SCRIPT: String = "res://tests/fixtures/unique_names_disagree.gd"
 
+## A scene saved by the current editor, which writes the mark as a property line under the node's
+## header (`unique_name_in_owner = true`) instead of the bare flag older scenes carry on the header.
+const CURRENT_SCRIPT: String = "res://tests/fixtures/unique_names_current.gd"
+
 
 static func run() -> bool:
 	var ok: bool = true
 	ok = _test_the_index() and ok
+	ok = _test_the_current_spelling() and ok
 	ok = _test_the_picker_section() and ok
 	ok = _test_the_offered_vocabulary() and ok
 	ok = _test_the_lift() and ok
 	ok = _test_the_round_trip() and ok
 	ok = _test_the_door() and ok
+	return ok
+
+
+## THE CURRENT SPELLING. A scene the editor saves today marks a node with a property line below its
+## header, so a reader that only looked at the header found no `%names` in any scene saved that way.
+static func _test_the_current_spelling() -> bool:
+	EventSheetSceneLights.clear_cache()
+	EventSheetSceneConnections.clear_cache()
+	var read: Array[String] = []
+	for node: Dictionary in EventSheetSceneUniqueNames.for_script(CURRENT_SCRIPT):
+		read.append("%s %s %s" % [str(node["reference"]), str(node["class"]), str(node["path"])])
+	var ok: bool = _check("a mark written as a property line is a %name, and the unmarked sibling is not",
+		read, ["%Bar ProgressBar Bar"])
+	ok = _check("so the picker offers it", _picker_labels(CURRENT_SCRIPT), ["%Bar   ProgressBar"]) and ok
 	return ok
 
 
