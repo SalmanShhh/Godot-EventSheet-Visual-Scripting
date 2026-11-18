@@ -24,7 +24,9 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 const P := "lazy_row_heights_test"
 const SAMPLE_PACK: String = "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd"
-const CANVAS: Vector2 = Vector2(520.0, 700.0)
+## The canvas floor: a narrower canvas takes it on its first frame, and a cell that wraps (a function head
+## among them) is measured at the width the canvas has, so the rows must be settled at the width they keep.
+const CANVAS: Vector2 = Vector2(640.0, 700.0)
 
 
 static func run() -> bool:

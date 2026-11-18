@@ -418,7 +418,12 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 					span.rect = Rect2()
 					metadata["no_room"] = true
 					continue
-				wraps_wide = bool(metadata.get("wraps_when_wide", false)) and span_width > max_condition_right - span_x + 0.5
+				if bool(metadata.get("wraps_when_wide", false)):
+					var head_room: float = maxf(max_condition_right - span_x, _viewport.MIN_SPAN_WIDTH)
+					wraps_wide = _viewport._row_metrics_helper._fill_cell_line_count(span, metadata, head_room + 2.0, font, font_size,
+						_viewport._row_metrics_helper.object_column_override(metadata, condition_text_start_x, span_x)) > 1
+					if wraps_wide:
+						span_width = head_room
 				span_width = max(min(span_width, max_condition_right - span_x), _viewport.MIN_SPAN_WIDTH)
 				if stacked_chip_x.has(int(metadata.get("line_index", 0))) and EventSheetViewportRowMetrics.STACKED_CHIP_KINDS.has(chip_kind):
 					stacked_chip_x[int(metadata.get("line_index", 0))] = span_x + span_width + 2.0 + _viewport._get_span_gap(span)

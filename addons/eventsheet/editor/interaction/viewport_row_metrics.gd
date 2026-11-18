@@ -419,8 +419,14 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 				else:
 					var chip_width: float = maxf(minf(measured, max_condition_right - text_start), _viewport.MIN_SPAN_WIDTH)
 					# A function head's words that are wider than the lane wrap inside it like any other cell.
-					if bool(metadata.get("wraps_when_wide", false)) and measured > max_condition_right - text_start + 0.5:
-						cond_count[line] = maxi(int(cond_count.get(line, 1)), _fill_cell_line_count(span, metadata, chip_width + 2.0, font, font_size, object_column_override(metadata, condition_text_start_x, text_start)))
+					# Asked of the words and the column they stand in, not of the measured width, which moves with the
+					# column the layout stamps on the span and would make the height and the drawing disagree.
+					if bool(metadata.get("wraps_when_wide", false)):
+						var head_lines: int = _fill_cell_line_count(span, metadata,
+							maxf(max_condition_right - text_start, _viewport.MIN_SPAN_WIDTH) + 2.0, font, font_size,
+							object_column_override(metadata, condition_text_start_x, text_start))
+						if head_lines > 1:
+							cond_count[line] = maxi(int(cond_count.get(line, 1)), head_lines)
 					cond_text_x[line] = text_start + chip_width + 2.0 + _viewport._get_span_gap(span)
 	var cond_top: Dictionary = {}
 	var act_top: Dictionary = {}
