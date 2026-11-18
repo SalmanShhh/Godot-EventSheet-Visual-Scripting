@@ -27,6 +27,10 @@ signal binding_changed(action: String)
 # @ace_category("Settings")
 signal binding_conflict(action: String, taken_by: String)
 # @ace_trigger
+# @ace_name("On Binding Cancelled")
+# @ace_category("Settings")
+signal binding_cancelled(action: String)
+# @ace_trigger
 # @ace_name("On Difficulty Changed")
 # @ace_category("Settings")
 signal difficulty_changed(difficulty: String)
@@ -35,10 +39,13 @@ signal difficulty_changed(difficulty: String)
 # @ace_category("Settings")
 signal assist_changed(assist_name: String, on: bool)
 
+## File every save and load uses (default user://settings.cfg). An autoload has no Inspector: keep the node in a scene, or set it in code before Load All Settings.
+@export var settings_file: String = "user://settings.cfg"
+
 # Where settings live on disk: the same FILE the built-in Save Setting action writes to, in a
 # section named "settings". That action takes its section as a parameter (and offers "audio"),
 # so point it at "settings" if you want values saved that way picked up here.
-## File in the user folder where settings are saved.
+## File in the user folder where settings are saved by default.
 const SETTINGS_FILE: String = "user://settings.cfg"
 ## Section of the settings file that holds the setting values.
 const SETTINGS_SECTION: String = "settings"
@@ -216,11 +223,11 @@ func reset_settings_to_defaults() -> void:
 
 # @ace_action
 # @ace_name("Load All Settings")
-# @ace_description("Reads saved values out of user://settings.cfg (the settings section) for every declared setting. The built-in Save Setting action writes the same file but takes its section as a parameter, so values saved that way are picked up when that row names the settings section. A setting with nothing saved keeps its default. Nothing is applied yet: follow it with Apply All Settings.")
+# @ace_description("Reads saved values out of the settings file (settings_file, user://settings.cfg unless you changed it; the settings section) for every declared setting. The built-in Save Setting action writes the same file but takes its section as a parameter, so values saved that way are picked up when that row names the settings section. A setting with nothing saved keeps its default. Nothing is applied yet: follow it with Apply All Settings.")
 # @ace_codegen_template("Settings.load_all_settings()")
 func load_all_settings() -> void:
 	var config: ConfigFile = ConfigFile.new()
-	if config.load(SETTINGS_FILE) != OK:
+	if config.load(settings_file) != OK:
 		return
 	for setting_name: String in _declared:
 		if config.has_section_key(SETTINGS_SECTION, setting_name):
@@ -228,14 +235,14 @@ func load_all_settings() -> void:
 
 # @ace_action
 # @ace_name("Save All Settings")
-# @ace_description("Writes every declared setting's current value into user://settings.cfg (the settings section), keeping anything else already in the file. Call it when the player closes the options screen. Settings live outside your save slots on purpose, so starting a new run never resets the volume.")
+# @ace_description("Writes every declared setting's current value into the settings file (settings_file; the settings section), keeping anything else already in the file. Call it when the player closes the options screen. Settings live outside your save slots on purpose, so starting a new run never resets the volume.")
 # @ace_codegen_template("Settings.save_all_settings()")
 func save_all_settings() -> void:
 	var config: ConfigFile = ConfigFile.new()
-	config.load(SETTINGS_FILE)
+	config.load(settings_file)
 	for setting_name: String in _declared:
 		config.set_value(SETTINGS_SECTION, setting_name, setting_value(setting_name))
-	config.save(SETTINGS_FILE)
+	config.save(settings_file)
 
 # @ace_condition
 # @ace_name("Changed Setting Is")
@@ -648,7 +655,7 @@ func pending_binding_words() -> String:
 
 # @ace_action
 # @ace_name("Listen For A New Binding")
-# @ace_description("Waits for the player to press a key, a mouse button or a pad button, and gives it to this control. A free key is bound straight away and On Binding Changed fires; a key something else already answers to fires On Binding Conflict instead and waits for one of the three answers. Only presses on the device you name are taken, so listening for a pad button is not ended by someone resting on the keyboard.")
+# @ace_description("Waits for the player to press a key, a mouse button or a pad button, and gives it to this control. A free key is bound straight away and On Binding Changed fires; a key something else already answers to fires On Binding Conflict instead and waits for one of the three answers. Only presses on the device you name are taken, so listening for a pad button is not ended by someone resting on the keyboard. Escape stops the listening and fires On Binding Cancelled, and a plain left click is left to the page so Swap, Reset and the other binding buttons still work.")
 # @ace_display_template("Listen for a new [b]{device}[/b] binding for [b]{action}[/b]")
 # @ace_param_hint(action input_action)
 # @ace_param_options(device keyboard=Keyboard or mouse, pad=Gamepad)
@@ -711,12 +718,15 @@ func pick_another_key() -> void:
 
 # @ace_action
 # @ace_name("Stop Listening For A Binding")
-# @ace_description("Stops waiting for a key and leaves every binding as it was. The Escape key of a rebinding row.")
+# @ace_description("Stops waiting for a key and leaves every binding as it was, then fires On Binding Cancelled with the control that was waiting. The Escape key does this by itself while a row is listening (Escape cannot be bound, for that reason), and a row can call it for a Cancel button of its own.")
 # @ace_codegen_template("Settings.cancel_listening()")
 func cancel_listening() -> void:
+	var cancelled_action: String = _listening_action
 	_listening_action = ""
 	_listening_device = ""
 	_pending_event = null
+	if not cancelled_action.is_empty():
+		binding_cancelled.emit(cancelled_action)
 
 # @ace_action
 # @ace_name("Reset One Binding")
@@ -743,22 +753,22 @@ func reset_all_bindings() -> void:
 
 # @ace_action
 # @ace_name("Save Bindings")
-# @ace_description("Writes every control's current bindings into the same user://settings.cfg the settings live in, under a section of their own. Call it when the player closes the options screen, beside Save All Settings.")
+# @ace_description("Writes every control's current bindings into the same file the settings live in (settings_file, user://settings.cfg unless you changed it), under a section of their own. Call it when the player closes the options screen, beside Save All Settings. The Keyboard object's Save bindings row writes user://bindings.cfg instead; use one pair or the other.")
 # @ace_codegen_template("Settings.save_bindings()")
 func save_bindings() -> void:
 	var config: ConfigFile = ConfigFile.new()
-	config.load(SETTINGS_FILE)
+	config.load(settings_file)
 	for action: String in project_actions():
 		config.set_value(BINDINGS_SECTION, action, InputMap.action_get_events(action))
-	config.save(SETTINGS_FILE)
+	config.save(settings_file)
 
 # @ace_action
 # @ace_name("Load Bindings")
-# @ace_description("Reads saved bindings back out of user://settings.cfg and puts them into the Input Map. Call it at boot beside Load All Settings. A control with nothing saved keeps the binding your project ships with, so an action added since the player last saved is bound the way you designed it.")
+# @ace_description("Reads saved bindings back out of the settings file (settings_file) and puts them into the Input Map. Call it at boot beside Load All Settings. A control with nothing saved keeps the binding your project ships with, so an action added since the player last saved is bound the way you designed it.")
 # @ace_codegen_template("Settings.load_bindings()")
 func load_bindings() -> void:
 	var config: ConfigFile = ConfigFile.new()
-	if config.load(SETTINGS_FILE) != OK or not config.has_section(BINDINGS_SECTION):
+	if config.load(settings_file) != OK or not config.has_section(BINDINGS_SECTION):
 		return
 	for action: String in config.get_section_keys(BINDINGS_SECTION):
 		if not InputMap.has_action(action):
@@ -1015,13 +1025,24 @@ func _focusable_controls(container: Node) -> Array:
 		found.append_array(_focusable_controls(child))
 	return found
 
-func _unhandled_input(event: InputEvent) -> void:
-	# The key or button a player pressed while a row was listening. Unhandled input is the right
-	# place for it: a button press that reached a control belongs to that control, and the key the
-	# player means for the binding is the one nothing else wanted.
-	if _listening_action.is_empty() or _pending_event != null:
+func _input(event: InputEvent) -> void:
+	# The key or button a player pressed while a row was listening. It is taken in _input, ahead of
+	# every control, and the press is marked handled: Space and a pad's A are also ui_accept, so a press
+	# left for the controls would press the button that started the listening all over again, and a
+	# click would reach whatever lay under it. A key matching ui_cancel (Escape) cancels instead of
+	# binding, so Escape itself cannot be bound while listening. A plain left click is never captured: it
+	# is how the page is operated, so the player can still click Swap, Reset or another binding.
+	if _listening_action.is_empty():
 		return
-	if not _is_binding_event(event) or not event.is_pressed():
+	if event is InputEventKey and event.is_pressed() and not event.is_echo() and InputMap.event_is_action(event, "ui_cancel"):
+		get_viewport().set_input_as_handled()
+		cancel_listening()
+		return
+	if _pending_event != null:
+		return
+	if not _is_binding_event(event) or not event.is_pressed() or event.is_echo():
+		return
+	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
 		return
 	if _device_of(event) != _listening_device:
 		return

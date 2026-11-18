@@ -30,6 +30,10 @@ static func build() -> bool:
 	sheet.class_description = "Settings that declare themselves, as the Settings autoload: Declare Setting names one once (default, kind, choices), Set Setting changes it, and On Setting Changed fires with the name and the new value so every reaction is an ordinary event. Apply All Settings replays them all at boot, so the game and the options screen take the same path."
 	sheet.addon_category = "Settings"
 	sheet.addon_tags = PackedStringArray(["settings", "options", "accessibility", "audio"])
+	sheet.variables = {
+		"settings_file": {"type": "String", "default": "user://settings.cfg", "exported": true,
+			"attributes": {"tooltip": "File every save and load uses (default user://settings.cfg). An autoload has no Inspector: keep the node in a scene, or set it in code before Load All Settings."}}
+	}
 	var about: CommentRow = CommentRow.new()
 	about.text = "Game Settings: register as the Settings autoload. Declare each setting once at startup, Load All Settings, then Apply All Settings - every reaction lives under On Setting Changed, branched by Changed Setting Is. Values persist in user://settings.cfg, section \"settings\" - the same file the built-in Save Setting writes to, so point that action at the \"settings\" section if you want the two to share values. This pack is an event sheet - extend it by editing it."
 	sheet.events.append(about)
@@ -49,7 +53,7 @@ static func build() -> bool:
 		"# Where settings live on disk: the same FILE the built-in Save Setting action writes to, in a",
 		"# section named \"settings\". That action takes its section as a parameter (and offers \"audio\"),",
 		"# so point it at \"settings\" if you want values saved that way picked up here.",
-		"## File in the user folder where settings are saved.",
+		"## File in the user folder where settings are saved by default.",
 		"const SETTINGS_FILE: String = \"user://settings.cfg\"",
 		"## Section of the settings file that holds the setting values.",
 		"const SETTINGS_SECTION: String = \"settings\"",
@@ -120,25 +124,25 @@ static func build() -> bool:
 
 	# --- Persistence (the same user://settings.cfg the built-in Save Setting writes) ---
 	Lib.append_function(sheet, "load_all_settings", "Load All Settings", "Settings",
-		"Reads saved values out of user://settings.cfg (the settings section) for every declared setting. The built-in Save Setting action writes the same file but takes its section as a parameter, so values saved that way are picked up when that row names the settings section. A setting with nothing saved keeps its default. Nothing is applied yet: follow it with Apply All Settings.",
+		"Reads saved values out of the settings file (settings_file, user://settings.cfg unless you changed it; the settings section) for every declared setting. The built-in Save Setting action writes the same file but takes its section as a parameter, so values saved that way are picked up when that row names the settings section. A setting with nothing saved keeps its default. Nothing is applied yet: follow it with Apply All Settings.",
 		[],
 		"\n".join(PackedStringArray([
 			"var config: ConfigFile = ConfigFile.new()",
-			"if config.load(SETTINGS_FILE) != OK:",
+			"if config.load(settings_file) != OK:",
 			"\treturn",
 			"for setting_name: String in _declared:",
 			"\tif config.has_section_key(SETTINGS_SECTION, setting_name):",
 			"\t\t_values[setting_name] = config.get_value(SETTINGS_SECTION, setting_name)"
 		])))
 	Lib.append_function(sheet, "save_all_settings", "Save All Settings", "Settings",
-		"Writes every declared setting's current value into user://settings.cfg (the settings section), keeping anything else already in the file. Call it when the player closes the options screen. Settings live outside your save slots on purpose, so starting a new run never resets the volume.",
+		"Writes every declared setting's current value into the settings file (settings_file; the settings section), keeping anything else already in the file. Call it when the player closes the options screen. Settings live outside your save slots on purpose, so starting a new run never resets the volume.",
 		[],
 		"\n".join(PackedStringArray([
 			"var config: ConfigFile = ConfigFile.new()",
-			"config.load(SETTINGS_FILE)",
+			"config.load(settings_file)",
 			"for setting_name: String in _declared:",
 			"\tconfig.set_value(SETTINGS_SECTION, setting_name, setting_value(setting_name))",
-			"config.save(SETTINGS_FILE)"
+			"config.save(settings_file)"
 		])))
 
 	# --- Conditions ---
@@ -719,13 +723,24 @@ static func _append_rebinding(sheet: EventSheetResource) -> void:
 		"## The input event captured for a rebind, waiting to be confirmed.",
 		"var _pending_event: InputEvent = null",
 		"",
-		"# The key or button a player pressed while a row was listening. Unhandled input is the right",
-		"# place for it: a button press that reached a control belongs to that control, and the key the",
-		"# player means for the binding is the one nothing else wanted.",
-		"func _unhandled_input(event: InputEvent) -> void:",
-		"\tif _listening_action.is_empty() or _pending_event != null:",
+		"# The key or button a player pressed while a row was listening. It is taken in _input, ahead of",
+		"# every control, and the press is marked handled: Space and a pad's A are also ui_accept, so a press",
+		"# left for the controls would press the button that started the listening all over again, and a",
+		"# click would reach whatever lay under it. A key matching ui_cancel (Escape) cancels instead of",
+		"# binding, so Escape itself cannot be bound while listening. A plain left click is never captured: it",
+		"# is how the page is operated, so the player can still click Swap, Reset or another binding.",
+		"func _input(event: InputEvent) -> void:",
+		"\tif _listening_action.is_empty():",
 		"\t\treturn",
-		"\tif not _is_binding_event(event) or not event.is_pressed():",
+		"\tif event is InputEventKey and event.is_pressed() and not event.is_echo() and InputMap.event_is_action(event, \"ui_cancel\"):",
+		"\t\tget_viewport().set_input_as_handled()",
+		"\t\tcancel_listening()",
+		"\t\treturn",
+		"\tif _pending_event != null:",
+		"\t\treturn",
+		"\tif not _is_binding_event(event) or not event.is_pressed() or event.is_echo():",
+		"\t\treturn",
+		"\tif event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:",
 		"\t\treturn",
 		"\tif _device_of(event) != _listening_device:",
 		"\t\treturn",
@@ -804,6 +819,13 @@ static func _append_rebinding(sheet: EventSheetResource) -> void:
 	conflict.ace_name = "On Binding Conflict"
 	conflict.ace_category = "Settings"
 	sheet.events.append(conflict)
+	var cancelled: SignalRow = SignalRow.new()
+	cancelled.signal_name = "binding_cancelled"
+	cancelled.params = PackedStringArray(["action: String"])
+	cancelled.trigger = true
+	cancelled.ace_name = "On Binding Cancelled"
+	cancelled.ace_category = "Settings"
+	sheet.events.append(cancelled)
 
 	Lib.number(sheet, "project_actions", "Project Actions", "Settings",
 		"Every control your project declares in its Input Map, leaving out the engine's own ui_ actions. This is the list a Controls page is built from, read live - an action added to the project last week is simply there, with no page to edit.",
@@ -851,7 +873,7 @@ static func _append_rebinding(sheet: EventSheetResource) -> void:
 		"return _event_words(_pending_event)", TYPE_STRING)
 
 	Lib.append_function(sheet, "listen_for_binding", "Listen For A New Binding", "Settings",
-		"Waits for the player to press a key, a mouse button or a pad button, and gives it to this control. A free key is bound straight away and On Binding Changed fires; a key something else already answers to fires On Binding Conflict instead and waits for one of the three answers. Only presses on the device you name are taken, so listening for a pad button is not ended by someone resting on the keyboard.",
+		"Waits for the player to press a key, a mouse button or a pad button, and gives it to this control. A free key is bound straight away and On Binding Changed fires; a key something else already answers to fires On Binding Conflict instead and waits for one of the three answers. Only presses on the device you name are taken, so listening for a pad button is not ended by someone resting on the keyboard. Escape stops the listening and fires On Binding Cancelled, and a plain left click is left to the page so Swap, Reset and the other binding buttons still work.",
 		[["action", "String"], ["device", "String"]],
 		"\n".join(PackedStringArray([
 			"if not InputMap.has_action(action):",
@@ -905,12 +927,15 @@ static func _append_rebinding(sheet: EventSheetResource) -> void:
 		[],
 		"_pending_event = null")
 	Lib.append_function(sheet, "cancel_listening", "Stop Listening For A Binding", "Settings",
-		"Stops waiting for a key and leaves every binding as it was. The Escape key of a rebinding row.",
+		"Stops waiting for a key and leaves every binding as it was, then fires On Binding Cancelled with the control that was waiting. The Escape key does this by itself while a row is listening (Escape cannot be bound, for that reason), and a row can call it for a Cancel button of its own.",
 		[],
 		"\n".join(PackedStringArray([
+			"var cancelled_action: String = _listening_action",
 			"_listening_action = \"\"",
 			"_listening_device = \"\"",
-			"_pending_event = null"
+			"_pending_event = null",
+			"if not cancelled_action.is_empty():",
+			"\tbinding_cancelled.emit(cancelled_action)"
 		])))
 	Lib.append_function(sheet, "reset_binding", "Reset One Binding", "Settings",
 		"Puts one control back to the bindings your project ships with, on every device, and fires On Binding Changed. The originals come from the Input Map in Project Settings, so this is a reset to what you designed rather than to what was last saved.",
@@ -929,21 +954,21 @@ static func _append_rebinding(sheet: EventSheetResource) -> void:
 		[],
 		"for action: String in project_actions():\n\treset_binding(action)")
 	Lib.append_function(sheet, "save_bindings", "Save Bindings", "Settings",
-		"Writes every control's current bindings into the same user://settings.cfg the settings live in, under a section of their own. Call it when the player closes the options screen, beside Save All Settings.",
+		"Writes every control's current bindings into the same file the settings live in (settings_file, user://settings.cfg unless you changed it), under a section of their own. Call it when the player closes the options screen, beside Save All Settings. The Keyboard object's Save bindings row writes user://bindings.cfg instead; use one pair or the other.",
 		[],
 		"\n".join(PackedStringArray([
 			"var config: ConfigFile = ConfigFile.new()",
-			"config.load(SETTINGS_FILE)",
+			"config.load(settings_file)",
 			"for action: String in project_actions():",
 			"\tconfig.set_value(BINDINGS_SECTION, action, InputMap.action_get_events(action))",
-			"config.save(SETTINGS_FILE)"
+			"config.save(settings_file)"
 		])))
 	Lib.append_function(sheet, "load_bindings", "Load Bindings", "Settings",
-		"Reads saved bindings back out of user://settings.cfg and puts them into the Input Map. Call it at boot beside Load All Settings. A control with nothing saved keeps the binding your project ships with, so an action added since the player last saved is bound the way you designed it.",
+		"Reads saved bindings back out of the settings file (settings_file) and puts them into the Input Map. Call it at boot beside Load All Settings. A control with nothing saved keeps the binding your project ships with, so an action added since the player last saved is bound the way you designed it.",
 		[],
 		"\n".join(PackedStringArray([
 			"var config: ConfigFile = ConfigFile.new()",
-			"if config.load(SETTINGS_FILE) != OK or not config.has_section(BINDINGS_SECTION):",
+			"if config.load(settings_file) != OK or not config.has_section(BINDINGS_SECTION):",
 			"\treturn",
 			"for action: String in config.get_section_keys(BINDINGS_SECTION):",
 			"\tif not InputMap.has_action(action):",
