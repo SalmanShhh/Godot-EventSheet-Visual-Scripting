@@ -45,6 +45,34 @@ static func run() -> bool:
 	all_passed = _check("unnamed sets are numbered rather than dropped",
 		_set_names(unnamed_sets), "1|2") and all_passed
 
+	# ---- the palette the documentation picture opens names its sets and its roles ----
+	# A palette whose asset carries no names draws under the bare numbers 1, 2, 3 (the pin above), so the
+	# picture of the window must open an asset that does name them.
+	var doc_palette: String = "res://tools/doc_shots/fixtures/colour_safe_palette.tres"
+	all_passed = _check("the documentation palette names its three sets",
+		_set_names(dialog.palette_sets_at(doc_palette)), "Default|Deuteranopia|Tritanopia") and all_passed
+	all_passed = _check("the documentation palette names its four roles",
+		"|".join(dialog.palette_role_names_at(doc_palette)), "Danger|Safe|Neutral|Highlight") and all_passed
+
+	# ---- the editor reads a script that does not run there through a placeholder ----
+	# A placeholder keeps only a value whose type is its default's, and `= []` on a packed array is an Array
+	# default, so the names a palette saved came back empty in the editor and every set was numbered. The
+	# asset's own line is read instead; this pins that reading (the placeholder itself exists only in the editor).
+	var saved_text: String = "[resource]
+set_names = PackedStringArray(\"A\", \"B\")
+role_names = PackedStringArray()
+"
+	all_passed = _check("a packed array a placeholder lost is read from the file's own line",
+		EventSheetDataTable._saved_value(saved_text, "set_names", TYPE_PACKED_STRING_ARRAY, []),
+		PackedStringArray(["A", "B"])) and all_passed
+	all_passed = _check("a line holding another type is not taken",
+		EventSheetDataTable._saved_value(saved_text, "set_names", TYPE_PACKED_INT32_ARRAY, []), []) and all_passed
+	all_passed = _check("a field the file has no line for keeps what it had",
+		EventSheetDataTable._saved_value(saved_text, "other", TYPE_PACKED_STRING_ARRAY, []), []) and all_passed
+	all_passed = _check("the packed types are told from the rest",
+		[EventSheetDataTable._is_packed_type(TYPE_PACKED_STRING_ARRAY), EventSheetDataTable._is_packed_type(TYPE_ARRAY),
+		EventSheetDataTable._is_packed_type(TYPE_PACKED_VECTOR4_ARRAY)], [true, false, true]) and all_passed
+
 	# ---- nothing on disk degrades to no strip at all ----
 	all_passed = _check("a path with no asset behind it reads as no sets",
 		dialog.palette_sets_at("res://x29_no_such_palette.tres").size(), 0) and all_passed

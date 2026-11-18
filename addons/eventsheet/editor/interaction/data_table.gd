@@ -135,10 +135,38 @@ static func asset_row(path: String) -> Dictionary:
 	if resource == null:
 		return {}
 	var values: Dictionary = {}
+	# A script that does not run in the editor (not a @tool script) is read through a placeholder, and a
+	# placeholder only keeps a value whose type is the one its default has. A packed array declared
+	# `= []` has an Array default, so what the asset saved for it comes back empty.
+	var placeholder: bool = resource.get_script() is Script and not (resource.get_script() as Script).can_instantiate()
+	var text: String = ""
 	for entry: Variant in columns_of(resource):
 		var column: Dictionary = entry
-		values[str(column.get("name", ""))] = resource.get(str(column.get("name", "")))
+		var field: String = str(column.get("name", ""))
+		var value: Variant = resource.get(field)
+		if placeholder and _is_packed_type(int(column.get("type", TYPE_NIL))) and typeof(value) != int(column.get("type", TYPE_NIL)):
+			if text.is_empty():
+				text = FileAccess.get_file_as_string(path)
+			value = _saved_value(text, field, int(column.get("type", TYPE_NIL)), value)
+		values[field] = value
 	return {"path": path, "name": path.get_file().get_basename(), "values": values}
+
+
+## Whether a variant type is one of the packed arrays.
+static func _is_packed_type(type: int) -> bool:
+	return type >= TYPE_PACKED_BYTE_ARRAY and type <= TYPE_PACKED_VECTOR4_ARRAY
+
+
+## What a text asset saved for one field, read from its own line (`field = PackedStringArray("a", "b")`),
+## or `fallback` when the file has no such line, is not text, or the line is not a value of that type.
+static func _saved_value(text: String, field: String, type: int, fallback: Variant) -> Variant:
+	var prefix: String = "%s = " % field
+	for line: String in text.split("\n"):
+		if line.begins_with(prefix):
+			var parsed: Variant = str_to_var(line.trim_prefix(prefix).strip_edges())
+			if typeof(parsed) == type:
+				return parsed
+	return fallback
 
 
 ## A whole folder as a grid: the shared columns once, then one row per asset. {} when the folder is
