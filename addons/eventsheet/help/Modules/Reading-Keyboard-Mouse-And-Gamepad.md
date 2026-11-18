@@ -16,8 +16,7 @@ device's raw state: sticks and triggers on the Gamepad object's own -100 to 100 
 (**Compare Axis**, **Axis Of Gamepad**, **Button Of Gamepad**), gamepads by number
 (**On Gamepad Button Pressed** with the device index read as the gamepad number, **Has Gamepads**,
 **Vibrate Gamepad For**), fingers and gestures (**On Drag**, **On Pinch**, **On Pan**,
-**On Double-Click** with their payloads), a whole controls screen (**Wait For The Next Key Or
-Button**, **Clear The Bindings Of**, **Bind Control To**, **Reset All Bindings**, **Set Deadzone
+**On Double-Click** with their payloads), a whole controls screen (**Wait For The Next Press**, **Clear The Bindings Of**, **Bind Control To**, **Reset All Bindings**, **Set Deadzone
 Of**, **Save Bindings** / **Load Bindings** - the guide *Let Players Rebind the Controls* strings
 them together), simulated input (**Simulate Control Pressed** / **Released**, **Simulate Input**,
 **Stop This Input Here**), the pointer (**Request Pointer Lock**, **Set Cursor Visible** /

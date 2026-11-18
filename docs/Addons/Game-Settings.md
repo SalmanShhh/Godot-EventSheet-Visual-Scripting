@@ -108,8 +108,8 @@ draw them:
 | Set Setting | Setting Name, Value | Changes a declared setting and fires On Setting Changed. Setting the value it already holds does nothing; an undeclared name is refused with a warning. |
 | Apply All Settings | - | Re-fires On Setting Changed for every declared setting, with the value in force now. |
 | Reset Settings To Defaults | - | Forgets every set or loaded value and re-applies them all. |
-| Load All Settings | - | Reads saved values for every declared setting out of `user://settings.cfg`. Applies nothing yet. |
-| Save All Settings | - | Writes every declared setting's current value into `user://settings.cfg`. |
+| Load All Settings | - | Reads saved values for every declared setting out of the settings file (`user://settings.cfg` unless `settings_file` says another). Applies nothing yet. |
+| Save All Settings | - | Writes every declared setting's current value into the settings file (`user://settings.cfg` unless `settings_file` says another). |
 | Apply Quality | Preset | Writes every value one quality preset stands for, as ordinary Set Setting changes. Takes a preset file or a path to one; the field lists `res://eventsheet_settings/quality/`. |
 | Apply Quality One Step | Step | Moves to the preset one step lighter (-1) or heavier (+1) and applies it. Stops at the ends rather than wrapping. |
 | Bind To Setting | Control, Setting Name | Ties one control to one setting, both ways: it shows the value at once, moving it writes the setting, and anything else changing the setting moves it back. |
@@ -123,10 +123,10 @@ draw them:
 | Take The Binding Anyway | - | The first answer to a conflict: this action takes the key, and the one that had it is left without it. |
 | Swap The Binding | - | The second answer: the two actions trade keys on that device, so nobody is left without one. |
 | Pick Another Key | - | The third answer: forget the key that was taken and go on listening. |
-| Stop Listening For A Binding | - | Stops waiting and leaves every binding as it was. |
+| Stop Listening For A Binding | - | Stops waiting and leaves every binding as it was, then fires On Binding Cancelled. Escape does this by itself while a row is listening. |
 | Reset One Binding | Action | Puts one action back to the bindings your project ships with, on every device. |
 | Reset Every Binding | - | The same for every action - the page-level Reset All. |
-| Save Bindings | - | Writes every action's bindings into `user://settings.cfg`, in the section `bindings`. |
+| Save Bindings | - | Writes every action's bindings into the settings file (`user://settings.cfg` unless `settings_file` says another), in the section `bindings`. The Keyboard object's Save bindings row writes `user://bindings.cfg` instead. |
 | Load Bindings | - | Reads them back into the Input Map. An action with nothing saved keeps the binding you designed. |
 | Use Difficulty | Difficulty | Puts one difficulty in force: a difficulty file, a path to one, or the word it goes by. Its factors become the ones Difficulty Factor answers from. Naming nothing clears it. |
 | Use The Difficulty A Setting Names | Setting Name | Puts in force whichever difficulty a declared setting names - its value being a path or the word one goes by. The row that makes the difficulty an ordinary setting. |
@@ -183,6 +183,7 @@ draw them:
 | On Settings Reverted | - | The way back was taken: by Go Back, or by the countdown running out. |
 | On Binding Changed | `action` | An action's bindings changed - rebound, swapped, taken from, or reset. |
 | On Binding Conflict | `action`, `taken_by` | The key a player pressed already belongs to another action. Nothing has changed yet. |
+| On Binding Cancelled | `action` | A row stopped listening without changing anything: the player pressed Escape (the key `ui_cancel` is bound to), or Stop Listening For A Binding ran. |
 | On Difficulty Changed | `difficulty` | A difficulty was put in force, or cleared. The payload is the word it goes by, blank when it was cleared. |
 | On Assist Changed | `assist_name`, `on` | A declared assist was switched on or off. It fires beside On Setting Changed, never instead of it. |
 
@@ -204,7 +205,42 @@ values with everything else if you want settings inside a slot too. Only the val
 declarations belong to your game's code, so a build that added a setting keeps its new default.
 
 Rebindings live in the same file, in the section `bindings` - **Save Bindings** and **Load Bindings**
-put them there and take them back, so one save covers the volume and the jump key together.
+put them there and take them back, so one save covers the volume and the jump key together. The Keyboard
+object's own **Save bindings** row keeps the controls in `user://bindings.cfg` instead; use one pair or the
+other.
+
+### Pointing the pack at another file: settings_file
+
+The file is a property of the node, `settings_file`, and it defaults to `user://settings.cfg`, so a project
+that never touches it behaves exactly as before. Every save and load in the pack reads it, and so do the
+Save Studio's Player settings cards. Two ways to set it:
+
+- **Keep the node in a scene** (Save Studio ▸ File and format ▸ *Keep them in a scene* does the same for the
+  Save System) and edit `settings_file` in the Inspector.
+- **Set it in code before Load All Settings**, for example `Settings.settings_file = "user://my_game.cfg"`.
+  A script added as an autoload has no Inspector, so this is the way when the pack is a bare autoload.
+
+The pack loads the file first and rewrites only its own sections (`settings`, `bindings`), so a section a
+teammate's code keeps in the same file survives. A teammate's code that writes a fresh ConfigFile to the same
+path without loading it first would wipe those sections, which is the reason to give the pack a file of its
+own in a project that already has one.
+
+## A controls page, step by step
+
+The **Input Rebind** showcase (`demo/showcase/input_rebind/`) is this section as a playable screen, and
+**Options and Quick Save** (`demo/showcase/options_and_quick_save/`) puts the same options and controls
+beside a quick save. In a showcase the pack is a child node named `Settings`; in your project it is the
+autoload, so the rows write `Settings.` where the showcases write `$Settings.`.
+
+While a row is listening the pack takes the next key, mouse button or pad button before any control sees it,
+and marks it handled. Two things follow:
+
+- **Space, Enter and a pad's A do not press the button that started the listening again.** They are
+  `ui_accept`, and a press left for the controls would re-arm the row.
+- **Escape cancels.** The key `ui_cancel` is bound to stops the listening, changes nothing and fires
+  **On Binding Cancelled**; that key cannot itself be bound while listening. A plain left click is never
+  captured, so the player can still press Swap, Take it anyway or another binding button. A pad's B button
+  is an ordinary binding.
 
 ## The options screen
 

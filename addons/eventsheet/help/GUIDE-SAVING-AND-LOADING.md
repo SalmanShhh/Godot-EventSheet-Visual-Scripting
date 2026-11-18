@@ -139,11 +139,15 @@ Beyond reading one key at a time with Load Value, three helpers read a save in b
 
 ### Save Studio
 
-Save Studio is a tool window you open from the editor's Tools menu. It has three tabs (for a full walkthrough, see the "Using the Save Studio" guide):
+Save Studio is a tool window you open from the editor's Tools menu (it is titled "Saving your game"). It has five tabs (for a full walkthrough, see the "Using the Save Studio" guide):
 
 1. **What gets saved** gives every variable of the open sheet one Save choice: Never, Auto, Load only, Save only or Manually. Auto loads when the object enters the game and saves when it leaves; Manually is only at your Save Game / Load Game. The choice writes the `save_state` and `load_state` pair into the sheet's script for you, so the object joins the seam without any boilerplate.
-2. **Format Preview** lets you pick an addon and a format and see exactly what its save file will look like on disk, before you commit to anything.
-3. **Save Slots** browses the real `user://` save files in your project, shows their contents, and exports them to disk in any format, optionally converting the format on the way out.
+2. **File and format** holds the Save System node's own settings (file format, file name, folder, encryption key, backups to keep, autosave interval) with a preview of the chosen format, and a button that keeps the node in a scene.
+3. **Save slots** lists the real `user://` slot files, opens the save folder and copies a slot out.
+4. **Look inside a save** reads one slot, or one node's save, in plain words, with the file as Godot writes it.
+5. **Player settings** shows the files that live apart from the slots - options, key bindings, graphics - and the rows that write them, so a new game never resets the volume or the controls.
+
+The **Options and Quick Save** showcase puts all three kinds of save on one screen: options, controls and a quick save on F5 with a quick load on F9.
 
 ### Where a file goes: user:// and res://
 

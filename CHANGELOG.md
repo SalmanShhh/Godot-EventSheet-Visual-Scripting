@@ -4,6 +4,34 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added: an example for rebinding the controls and an example for saving options, controls and a quick save
+
+**Input Rebind** is rebuilt on the Game Settings rows. Click a key, press another, and a clash asks Swap, Take it anyway or Pick another key; Esc cancels; the keyboard and pad columns are kept side by side; the choice is saved with Save Bindings and loaded with Load Bindings, so it survives closing the game. **Options and Quick Save** (the 31st showcase) keeps volume and fullscreen as declared settings, the controls on a page built from the Input Map, and F5 / F9 as rebindable quick save and quick load, with on-screen hints that read the live key. Its coins, player_spot and picked_coins have their Save choice set to Manually, so Save Studio reads *only at your Save Game / Load Game*. In a showcase the Game Settings and Save System packs are child nodes named Settings and SaveSystem, so the rows read `$Settings.` where your project's autoloads read `Settings.`.
+
+### Added: Wait For The Next Press, and On Binding Cancelled
+
+The Keyboard object gets **Wait For The Next Press**: it waits for a key, a mouse button or a pad button press, ignores mouse movement and letting go, and marks the press handled. **Wait For The Next Key Or Button** woke on every input, mouse movement included, so it is deprecated; sheets that use it keep compiling. The Game Settings pack gets the trigger **On Binding Cancelled** (a new signal, `binding_cancelled(action)`), which fires when a row stops listening without a change. The Keyboard **Save bindings** and **Load bindings** rows now say they use `user://bindings.cfg`, and the Settings **Save Bindings** row says it writes `user://settings.cfg` instead.
+
+### Fixed: rebinding with Space, Enter or a pad's A, and cancelling with Escape
+
+The Game Settings capture listened after the controls had used the key, so Space, Enter and a pad's A (all `ui_accept`) bound the key and then pressed the focused Rebind button again, leaving the page stuck on "press a key", and Escape was bound as a key. The pack now takes the press first and marks it handled, and the key `ui_cancel` is bound to cancels the listening. A plain left click is left to the page so Swap, Reset and the other binding buttons still work; other mouse buttons can be bound.
+
+### Added: the Game Settings pack takes its file from `settings_file`
+
+An exported `settings_file` property (default `user://settings.cfg`, so nothing changes for a project that leaves it) is read by every save and load in the pack and named by the Save Studio's cards. Keep the node in a scene to edit it in the Inspector, or set it in code before Load All Settings when the pack is an autoload, which has no Inspector. A project that already keeps its own `user://settings.cfg` can give the pack another file.
+
+### Added: the Doctor notes a Settings global that is not the Game Settings pack
+
+When a global named Settings loads something else while a script uses the pack's rows, one quiet note says so and suggests another name for your own global.
+
+### Changed: the Save Studio's Key bindings card names both places
+
+Keyboard > Save bindings writes `user://bindings.cfg` and Settings > Save Bindings keeps them in `user://settings.cfg` under `[bindings]`; the card says both, with each path read from the code that writes it. The Using the Save Studio guide is rewritten to the five real tabs, with new pictures and a Try it on the new showcase; the rebind guide gains the ready-made way and a section on joining an existing project.
+
+### Fixed: a sheet whose Save choices are all Manually no longer makes Godot warn
+
+The block written for Manual-only choices declared a private member nothing reads. It now carries `@warning_ignore("unused_private_class_variable")`; a file written before that line still opens as its choices and saves back exactly as it was.
+
 ### Changed: editing a Juice card no longer reads the project
 
 Each time a list of Juice cards was drawn or changed, the Inspector read the project's whole class list again to find the cards you wrote yourself, which costs more the bigger the project is (about 5 ms on a project of two thousand classes, on every delete, duplicate or paste). It now reads them once and keeps them until a script file is added, removed or saved. The strip under the list, which says how long the beat lasts, also works its lines out only when the list or the Loop tick actually changed, instead of twice for every edit. Deleting, duplicating or pasting a card in a list of 200 takes about 5 ms less of the editor's time, and a field edit reads no file at all.

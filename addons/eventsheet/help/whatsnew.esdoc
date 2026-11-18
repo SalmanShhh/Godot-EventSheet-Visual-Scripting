@@ -6,9 +6,162 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Added: an example for rebinding the controls and an example for saving options, controls and a quick save
+
+**Input Rebind** is rebuilt on the Game Settings rows. Click a key, press another, and a clash asks Swap, Take it anyway or Pick another key; Esc cancels; the keyboard and pad columns are kept side by side; the choice is saved with Save Bindings and loaded with Load Bindings, so it survives closing the game. **Options and Quick Save** (the 31st showcase) keeps volume and fullscreen as declared settings, the controls on a page built from the Input Map, and F5 / F9 as rebindable quick save and quick load, with on-screen hints that read the live key. Its coins, player_spot and picked_coins have their Save choice set to Manually, so Save Studio reads *only at your Save Game / Load Game*. In a showcase the Game Settings and Save System packs are child nodes named Settings and SaveSystem, so the rows read `$Settings.` where your project's autoloads read `Settings.`.
+
+### Added: Wait For The Next Press, and On Binding Cancelled
+
+The Keyboard object gets **Wait For The Next Press**: it waits for a key, a mouse button or a pad button press, ignores mouse movement and letting go, and marks the press handled. **Wait For The Next Key Or Button** woke on every input, mouse movement included, so it is deprecated; sheets that use it keep compiling. The Game Settings pack gets the trigger **On Binding Cancelled** (a new signal, `binding_cancelled(action)`), which fires when a row stops listening without a change. The Keyboard **Save bindings** and **Load bindings** rows now say they use `user://bindings.cfg`, and the Settings **Save Bindings** row says it writes `user://settings.cfg` instead.
+
+### Fixed: rebinding with Space, Enter or a pad's A, and cancelling with Escape
+
+The Game Settings capture listened after the controls had used the key, so Space, Enter and a pad's A (all `ui_accept`) bound the key and then pressed the focused Rebind button again, leaving the page stuck on \"press a key\", and Escape was bound as a key. The pack now takes the press first and marks it handled, and the key `ui_cancel` is bound to cancels the listening. A plain left click is left to the page so Swap, Reset and the other binding buttons still work; other mouse buttons can be bound.
+
+### Added: the Game Settings pack takes its file from `settings_file`
+
+An exported `settings_file` property (default `user://settings.cfg`, so nothing changes for a project that leaves it) is read by every save and load in the pack and named by the Save Studio's cards. Keep the node in a scene to edit it in the Inspector, or set it in code before Load All Settings when the pack is an autoload, which has no Inspector. A project that already keeps its own `user://settings.cfg` can give the pack another file.
+
+### Added: the Doctor notes a Settings global that is not the Game Settings pack
+
+When a global named Settings loads something else while a script uses the pack's rows, one quiet note says so and suggests another name for your own global.
+
+### Changed: the Save Studio's Key bindings card names both places
+
+Keyboard > Save bindings writes `user://bindings.cfg` and Settings > Save Bindings keeps them in `user://settings.cfg` under `[bindings]`; the card says both, with each path read from the code that writes it. The Using the Save Studio guide is rewritten to the five real tabs, with new pictures and a Try it on the new showcase; the rebind guide gains the ready-made way and a section on joining an existing project.
+
+### Fixed: a sheet whose Save choices are all Manually no longer makes Godot warn
+
+The block written for Manual-only choices declared a private member nothing reads. It now carries `@warning_ignore(\"unused_private_class_variable\")`; a file written before that line still opens as its choices and saves back exactly as it was.
+
+### Changed: editing a Juice card no longer reads the project
+
+Each time a list of Juice cards was drawn or changed, the Inspector read the project's whole class list again to find the cards you wrote yourself, which costs more the bigger the project is (about 5 ms on a project of two thousand classes, on every delete, duplicate or paste). It now reads them once and keeps them until a script file is added, removed or saved. The strip under the list, which says how long the beat lasts, also works its lines out only when the list or the Loop tick actually changed, instead of twice for every edit. Deleting, duplicating or pasting a card in a list of 200 takes about 5 ms less of the editor's time, and a field edit reads no file at all.
+
+### Changed: the Drawing Prefab picture draws rings, arcs and see-through colours faster
+
+A ring, or an arc that goes right round, now writes the stretches of each row that lie surely inside it in one go and skips the middle of its hole, instead of asking every pixel. A see-through colour laid over pixels that are all one colour is blended once and written across. The picture is the same pixel for pixel (thirty random drawings of rings, arcs, pies and cones are compared against the slow way). Two hundred big rings take about a tenth of the time. Pies, cones and an arc that goes only part of the way round still ask every pixel.
+
+### Fixed: the Start window keeps each word whole
+
+At its narrowest size the Start window could break a word between two letters (\"Nothin\" and \"g\"). A name or a kind now wraps at a space only, each name column keeps room for its longest word, and a column no longer widens for its text. A single word still wider than a column at the narrowest window is cut off at the column's edge, with the whole name in the row's tooltip.
+
+### Fixed: a Juice Player whose script is marked `@tool` keeps the cards you edit
+
+When a Juice Player's script runs as a tool script, the list of cards is a typed list that refuses an ordinary one. A card removed, added, moved, duplicated, pasted or edited in the Inspector was announced and then quietly refused by the node, so the list drew the old cards again a frame later and the scene saved the old cards. The Inspector now hands the node a list of the type it holds, so every edit sticks and Ctrl+Z and Ctrl+Y take it back and put it back. A Juice Player on a plain script, which is what the shipped one is, was never affected.
+
+### Changed: eleven more behaviour icons are redrawn with one large, simple shape each
+
+Ability Set, State Machine, Skill Tree, Eight Direction, Physics Car, Prestige, Rotate, Hit Flash, Light Pulse, Combo Box and Fade were still hard to read at 16 pixels after the first redraw. Each is now one silhouette with fewer, larger parts and a gap of at least a pixel between them: two sparkles, three linked states, a sideways tree, a body with eight pips, a car with floating wheels, a rising arrow, a block with a turning arrow, a framed sprite with flash ticks, a bulb with glow bars, key-arrow-key, and a bar breaking into squares. File names and `@icon` paths are unchanged.
+
+### Fixed: a behaviour added from the library arrives with its icon already set to follow the editor's colours
+
+The behaviour library now carries the small import file that sits beside each pack icon, and adding a pack copies it in with the icon. Before, a pack added from the library was first imported with the icon's colours as drawn, and the editor turned the recolouring on a moment later and imported the icon a second time while the add was still running, which could print \"reimport\" errors and leave the add waiting. Now the first import is the right one on a light and on a dark editor and nothing is imported twice. The add also waits until the icon is really imported, not only until its import file exists. A project with no behaviours yet no longer prints a \"Couldn't open directory\" error when the editor starts (the icon check and the importer's cache stamp both stay silent when `eventsheet_addons/` is missing), and the icon check looks only at the packs the plugin ships, never at a pack you wrote yourself.
+
+### Fixed: the Project Doctor no longer freezes the editor on a big project
+
+On a project of two thousand scripts the check took five minutes with the editor frozen and printed two thousand warnings into Godot's Output. It now runs a few milliseconds at a time with a frame between, shows how far it is, has a Cancel that works, and fills its window as findings come in; the whole check takes a few seconds, and nothing is printed into Output. Only a file that starts with the compiler's banner is checked as a sheet: the plain scripts you wrote are read by the checks that make sense for any script, and counted in one line instead of reported one by one. The window opens wide enough to read, remembers the size you leave it at, and shows the selected finding whole under the list. The command-line tool prints the same lines and the same verdict.
+
+### Fixed: Save Studio no longer re-points a SaveSystem global you already had
+
+If the project already has a global named SaveSystem that loads something else, \"Keep them in a scene\" says so and offers another name or Cancel; it never replaces it. Adding the global, and the theme chosen with \"Use For Every Sheet\", are now one Ctrl+Z step in Godot, and renaming a global onto a name that is taken is refused with the reason.
+
+### Fixed: text saved as csv, ini or xml keeps its line breaks
+
+A text with a line break in it came back without the break from csv, ini and xml saves. Line breaks, tabs, quotes, backslashes, the format's own delimiters, unicode and control characters now come back as they went in, as do keys with an equals sign or a leading bracket. Files written by the earlier code still read.
+
+### Fixed: closing one scene asks only about that scene's sheets
+
+Godot names the scene when one scene tab is closed, and the plugin used to list every unsaved sheet whichever scene it was. It now names the sheets attached to that scene, and still lists all of them when the editor quits.
+
+### Fixed: no red errors at start in a project with no packs
+
+A project with no eventsheet_addons folder no longer prints \"Couldn't open directory\" when the editor starts.
+
+### Fixed: the restored session opens each file once, and keeps the tab you are on
+
+A file open in several tabs came back as that many tabs. Each file is now saved and restored once, a session with a very long list of tabs brings back the first twenty (and the one you were on), and a sheet you open yourself while the tabs are coming back is not switched away from.
+
+### Fixed: pooled nodes no longer collide while they wait, and keep their idle tick when woken
+
+A node parked by the Object Pool is now disabled, so it takes no part in physics, and a node whose own behaviour had parked its tick wakes as it was left.
+
+### Fixed: Wait For Event gives up on game time and keeps a second waiter's state
+
+The give-up time stops while the game is paused and follows the time scale, and a second Wait For Event on a channel no longer clears the first one's state.
+
+### Fixed: a trauma Shake card of 0 seconds writes a Show as GDScript snippet that does something, and puts the camera back where it was
+
+### Fixed: the platformer route finder takes its next node from a heap
+
+A large map cost the square of its size; the routes are the same.
+
+### Fixed: the Start window cut its names while the window had room
+
+The Learn column showed \"Your first ev...\" and \"5 mi\", the This editor column one cut line, and the Recent column stood nearly empty. Each column now measures its own words in the language in use: the kind column is as wide as its widest kind, a long name wraps onto a second line, an empty column gives its room away, the template list gets a larger share, and the window opens a little wider. A smaller window narrows the columns evenly and every row keeps a tooltip with the whole of its name and kind.
+
+### Changed: a large Drawing Prefab's picture is drawn several times faster
+
+The picture at the top of a prefab's Inspector is cut into bands that are drawn at once, each shape visits only the pixels it can cover (a long slanted line no longer walks its whole bounding box), and an opaque disc, rectangle, rounded rectangle, polygon or line is written a row at a time. A change starts its picture at once instead of waiting for the next frame. The picture is exactly the one drawn before, pixel for pixel: the suite draws random shapes both ways and compares them, and a spread of prefabs was compared across the old and new code.
+
+### Changed: taking a card out of, or putting one into, a long list touches only that card
+
+Deleting a card from the middle of a Drawing Prefab of 500 shapes drew all the 499 that were left (about 680 ms), and so did an insert, a paste, a duplicate and the undo or redo of any of them. A card that stays now keeps its controls: they are renumbered, and the line beside its title is written again only where the list works it out from the cards around it (a Juice Hold waits for the cards above it). The Juice Player's list is the same drawer and gains the same. A list drawn in bands (Juice cards that start together) keeps its bands when every band keeps its cards; a change that would join, split or add a band draws the list whole, as before. What the list shows, what is saved and every undo step are unchanged. A table view nobody is looking at is no longer rebuilt on each undo, and the Juice strip under a list asks how long the beat lasts once per edit instead of twice.
+
+### Changed: thirty-two weak behaviour and section icons are redrawn so each reads at 16 pixels
+
+A survey of every behaviour and section icon found thirty-two that were a smudge at the size the Scene dock, the Add box and the picker draw them, said nothing about what the behaviour does, or looked like another icon (some like one of Godot's own with a different meaning). They are redrawn on the pixel grid in Godot's style, worst first: Ability Set (a list of sparkles), Skateboard (a deck with wheels), World-space UI (a panel standing on a floor), Encounter (a timeline of staggered spawns), State Machine (round states joined by arrows), Rotate (a square inside a turning arrow), Big Number (1K), Quality Preset (a dial), Second View (a picture inside a picture), Prestige (a star in a restart arrow), Systems (blocks feeding one block), Skin Vault (a shirt with a keyhole), and twenty more including Spring, Light Pulse, Combo Box, Physics Car, Hit Flash, Event Bus, Eight Direction and the Variables, Behavior, Helpers, Input Event, Sequencer and Object State sections. Prestige no longer matches Godot's Favorites star, Systems its Filter funnel, or Skin Vault its Lock. Icon paths and file names are unchanged, so no sheet, scene or emitted script changes.
+
+### Added: a test keeps every icon legible and distinct
+
+The suite now measures every behaviour and section icon at 16 pixels: enough lit pixels, little blur, three-to-one contrast on the light editor, and no two icons nearer than a set distance (a behaviour and its 3D twin, and a section named after a behaviour, are the named exceptions). A weak or duplicate icon fails the suite.
+
+### Fixed: Replace in Project opens wide enough to read, calls things by their real names, and shows the way back
+
+The window now opens wide (and can be resized; it remembers the size you leave it at), so a group's label, the line column and the match are no longer cut while the screen has room, and a cut line still shows in full in its tooltip. It is titled \"Find and replace in the project\" and its first column is \"File\", because it lists scripts as well as sheets. A hand-written script that happens to be open in a tab is no longer counted as a sheet: it stays under \"Scripts you wrote\", unticked, and ticking it still changes it through that tab's Ctrl+Z. Whether a file is a sheet or a script is read from the banner the compiler writes at the top of every sheet, never from an open tab or from a script's annotations (a hand-written script with `@ace_` annotations stays a script); a sheet saved as a `.gd` without that banner is listed with the scripts, with a short hint. After a replace, \"Put them all back\" sits under the form and in Sheet Backups, with how many files it restores and when they were written.
+
+### Fixed: Doctor \"Move it under\" works on a scene open in another tab
+
+The scene is brought to the front and the move is made there as one Ctrl+Z step, keeping its unsaved changes, instead of asking you to switch tabs and press again.
+
+### Changed: the first open of the editor no longer compiles the scene reader
+
+Drawing an ordinary sheet only asks whether it came from a scene, and that answer is read off the sheet's own marks. Those reads now live in a small file of their own, so the scene reader, with the importer pieces only it names, loads when a scene is opened instead of on the first sheet of a session. The set of scripts the first open compiles went from 171,085 to 156,597 lines (315 to 284 files); its budget is now that figure plus 1,500 lines, so the next overrun shows while it is small. The first open's wall time did not measurably change (the importer is still needed to read the first sheet).
+
 ### Added: a Chromatic Shake card splits the screen's colours apart along a direction
 
 The Juice Player has a new Screen card, Chromatic Shake, for the colour-offset trick: the red and the blue of the screen are pulled apart, one each way, for a moment on a hit, a dash or a landing, then close again. Its fields are Amount in pixels, Seconds, Ends (closes steadily, or holds then snaps shut), Direction (wanders, or along an angle) and, for an angle, the Angle in degrees. A new card starts at 12 pixels over 0.3 seconds, closing steadily and wandering, which is the classic hit. A small picture under the fields draws the split at the chosen amount and direction, with one sentence saying how far the colours part and when they are back together. The card plays through the Juice node's own Chromatic Shake row, so the no-flashing choice and the reduced-effects dial apply as they do to the row, and the player's strength scales the Amount; beside a Juice 3D node it plays over the 3D view. Stop, Restore, Skip To End and a player leaving the scene put the colours together at once. When no Juice node sits beside the player, a quiet amber line says so. The card menu's Show as GDScript writes the same effect by hand with a small screen shader. The Add box finds the card by chromatic, aberration, rgb, split and glitch. Cards saved before this one play exactly as they did.
+### Fixed: Replace in Project lists what it will change, leaves your own scripts alone by default, and can be put back whole
+
+The Find in Project window now shows the places a replace would change, file by file with a tick on each, and splits them into event sheets and scripts you wrote by hand. Sheets start ticked and scripts start unticked, so pressing the button with the defaults never rewrites a comment or a string in your own code. The count line gives sheets and scripts separately, and the list shows a bounded number of files and lines so a project of thousands of scripts stays smooth. A sheet open in a tab changes through that tab's own undo step (Ctrl+Z in the tab takes it back) instead of being rewritten behind its back. A file whose new text would not parse, or a sheet that would not reopen as exactly what is written, is left as it was and counted. Every file it writes is kept in a set of its own beside the sheet backups, and Put them all back, in the window and in Sheet Backups, restores exactly that set (a file you changed since is left alone).
+
+### Fixed: attaching, moving and Input Map changes are one Ctrl+Z step in Godot
+
+Tools > Attach to Selected Node, the Scene dock's Attach Event Sheet, the Doctor's Move it under, and adding a control to the Input Map (from the Doctor or the picker) each put one step on Godot's own undo, so Ctrl+Z takes them back. The Doctor's Move it under no longer reloads the open scene from disk: it moves the node in the scene as it is, so unsaved changes to the scene stay. When the scene is closed it asks first and keeps the old file in Sheet Backups. The Juice Player's Load from file is a step too.
+
+### Fixed: Export Addon, Restore, Save Moment, the grid and chunk files, and Include ask before they overwrite
+
+Each asks first, in two plain sentences, and keeps the old file in Sheet Backups. Restore from Sheet Backups also keeps your unsaved edits there before replacing them. The docs site export removes only the four files it writes at the top of its folder, so pages, stylesheets and scripts of your own that sit there are kept.
+
+### Added: quiet notes on the actions Ctrl+Z cannot take back
+
+Changing a behaviour's class name shows how far the rename reaches, Save Studio says its fields are saved into the scene at once, the translation steps say they write the catalogs at once, the docs chores say they replace what they wrote last time, Include and Resolve Conflict say where the old version is kept, a new global sheet says Ctrl+Z removes the variable and not the global, and the Vocabulary Doc item says it replaces the file. All new words are in the nine translation files.
+
+### Fixed: reordering shapes in a very large Drawing Prefab keeps up
+
+At 200 shapes a held Alt+Down walked a card about once a second, because every card of the list was drawn again for each step and the picture at the top was drawn on the main thread, twice. A move now draws again only the cards that changed place, adding a shape draws one card, removing the last one draws none, and the picture is asked for rather than waited on: any number of edits in one frame make one picture, drawn on a worker thread from its own copy of the steps, so the list answers at once and the picture follows a moment later. The picture, what is saved and the undo steps are exactly what they were (the same drawing function makes the same pixels).
+
+### Fixed: the Scene dock's \"Preview its behaviours\" finds behaviours at any depth
+
+Right-clicking a node used to offer Preview only for behaviours that were its direct children. It now finds the behaviours anywhere below the node that act on it or on a node under it (a behaviour's host is its parent, or the node it is pointed at), so a behaviour sitting inside a holder node two levels down shows the entry and plays. A behaviour that acts on something outside the node is left out, and so is the inside of an instanced scene unless its children are opened up. The walk looks at no more than 600 nodes below the one you clicked, nearest first, so the menu stays instant in a very large scene (about half a millisecond over 2,000 nodes).
+
+### Changed: a denial placed now is written `if not level_over:`
+
+A condition you place on the sheet and invert now writes `if not level_over:` instead of `if not (level_over):` whenever what it denies is one plain name, member, call or index (`a`, `a.b`, `a.b()`, `a[b]`). Anything with an operator, `in`, `is`, `as`, `and`, `or`, an `if ... else`, a lambda or an `await` keeps its brackets, and an inverted comparison still writes the opposite comparison. Scripts and rows written before keep their bytes: opening one and saving it changes nothing, whichever spelling it uses, and a line written `if not x:` by hand still reads the way it always did. Tidy This Script offers the short form for an older row when the result reads back identically. The Boomer Level showcase adopted it (one line).
+
+### Fixed: the Boomer Level and FPS Arena showcases describe themselves the way the others do, and the Carousel's 3D corner is fully in view
+
+Both showcases now open with the bold title the start page reads, so their cards take their line from the showcase and the two hand-written copies are gone; a test now fails for any listed showcase with no line to show. In the Carousel the small 3D corner sat against the top-right edge and its grey cube was hard to see on the grey ground: it now keeps a margin from the edges and the cube has a warm colour.
 
 ### Added: a spawn row's Scene field offers the scenes the sheet already holds, the Variable window has a Scene door, and the Doctor notes an empty scene slot
 

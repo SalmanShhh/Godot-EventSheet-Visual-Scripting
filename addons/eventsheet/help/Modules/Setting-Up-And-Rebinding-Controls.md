@@ -12,10 +12,10 @@ those.
 Everything here compiles to plain Godot (`Input`, `InputMap`) with zero plugin references.
 
 A whole controls screen is written end to end in the guide **Let Players Rebind the Controls**, using the
-Controls vocabulary's story version of these rows: **Wait For The Next Key Or Button**,
+Controls vocabulary's story version of these rows: **Wait For The Next Press** (it replaces Wait For The Next Key Or Button, which woke on mouse movement),
 **Clear The Bindings Of**, **Bind Control To**, **Key Name**, **Reset All Bindings**, **Has Action**,
 **Set Deadzone Of**, and the pair every first rebind screen forgets - **Save Bindings** and
-**Load Bindings**, which write and read a plain settings file under `user://` so a remap survives the
+**Load Bindings**, which write and read `user://bindings.cfg` so a remap survives the
 player closing the game. The Doctor reports a script that rebinds and never saves.
 
 The Input Map is also readable from the sheet now: open any script and the Object bar's **INPUT** section
