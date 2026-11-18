@@ -565,7 +565,7 @@ row you can edit or delete afterwards.
 word there; the sentence and the door live in the Doctor's inbox and in the help strip under the
 selected row, which is where you are already looking when you want them.
 
-![The Project Doctor inbox with one line under Warnings (1), marked new since you last looked. The check reads Files untrusted scene load, the file is mod_loader.gd, and the finding begins mod_loader.gd builds a scene from a file the game did not ship with, and a scene file can name a SCRIPT. Below the list is one chip reading Fix: Ask whether it is data first](images/scenes-trust-inbox.png)
+![The Project Doctor inbox with one line under Warnings (1), marked new since you last looked. The check reads Files untrusted scene load, the file is mod_loader.gd, and the finding begins mod_loader.gd builds a scene from a file the game did not ship with, and a scene file can name a SCRIPT. Under the selected line is one fix row reading Fix: Ask whether it is data first](images/scenes-trust-inbox.png)
 
 ## Where the save system starts
 

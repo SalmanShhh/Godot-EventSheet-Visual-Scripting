@@ -8,7 +8,7 @@ The reason it works is one design rule: **a sheet compiles to plain, idiomatic G
 dependency on the plugin.** Delete EventForge and your generated `.gd` files still run. So a sheet and your
 existing code are just GDScript talking to GDScript - there's no runtime bridge to wire up.
 
-![A sheet whose rows call plain GDScript: typed variables, event rows that call methods and functions, and a sheet-built function callable from any other script in the project](previews/editor-event-sheet.png)
+![A game sheet opened from a script: typed variables with their descriptions above numbered event rows, each with its condition on the left and its actions on the right](previews/editor-event-sheet.png)
 
 ## Table of Contents
 
@@ -2811,7 +2811,7 @@ notes, all advisory, never a build break:
 | `identical-events` | Two events read identically - same trigger, same conditions, same actions, same parameters. Comments and breakpoints are ignored; two rows that *do* the same thing are the finding however they are annotated. |
 | `repeated-literal` | The same number or quoted string is typed three times or more. |
 
-<img src="images/doctor-tidiness-findings.png" alt="The Project Doctor window showing eight tidiness notes on one sheet: an unread local variable, an uncalled function, an unfired trigger, an attached behavior no event uses, an event switched off for a long time, two pairs of identical events, and a literal appearing three times. Re-run checks and Fix selected buttons sit below." width="680">
+<img src="images/doctor-tidiness-findings.png" alt="The Project Doctor window showing eight tidiness notes on one sheet, all under Notes (8): two Identical events lines, a Long disabled event, a Repeated literal that appears three times, an Uncalled function, an Unfired trigger, an Unread local and an Unused behavior, each naming the sheet. Re-run Checks, Mark All as Read, Close and Open buttons sit below." width="680">
 
 The last one repairs itself. Select it and a quick-fix chip appears: **⚡ Extract 400 to a
 variable**. One click gives the value a name and points every parameter that spelled it at the name

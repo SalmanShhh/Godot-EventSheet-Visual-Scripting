@@ -470,7 +470,7 @@ whatever it already asks, as an ordinary condition row you can edit or delete af
 there. The sentence and the door live in the Doctor's inbox and in the help strip under the selected
 row, which is where you are already looking when you want them:
 
-![The Project Doctor inbox with one line under Warnings, marked new since you last looked: the check reads Files untrusted scene load, names the file, and the finding says the file builds a scene the game did not ship with and that a scene file can name a script, with one chip beside it offering to ask whether it is data first](images/scenes-trust-inbox.png)
+![The Project Doctor inbox with one line under Warnings, marked new since you last looked: the check reads Files untrusted scene load, names the file, and the finding says the file builds a scene the game did not ship with and that a scene file can name a script, with one fix row under it offering to ask whether it is data first](images/scenes-trust-inbox.png)
 
 The wider rule this is one case of: **user content is data, never code.** A picture arrives as a
 texture, text as text, a table as rows and columns. A scene file is the one file a game writes that

@@ -2,7 +2,7 @@
 
 Short, concrete walkthroughs that each build one real thing - a platformer character, a health system, an auto-attacking shooter with game feel - and show the exact GDScript it compiles to. Each recipe assumes the plugin is enabled and you've opened the **EventSheet** tab. New to the vocabulary? Keep the [glossary](REFERENCE-GLOSSARY.md) open. Coming from Construct 3? The [migration guide](GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md) maps every concept.
 
-![A game sheet in the editor: typed variables with their descriptions above two-lane condition and action rows, an object and an icon beside every word, and a sheet-built function called from other rows](previews/editor-event-sheet.png)
+![A game sheet in the editor: typed variables with their descriptions above two-lane condition and action rows, and an object and an icon beside every word](previews/editor-event-sheet.png)
 
 ## Table of Contents
 
@@ -49,7 +49,7 @@ Short, concrete walkthroughs that each build one real thing - a platformer chara
 
 ## 2. The Golden Loop
 
-![The starting sheet: genuinely empty, with the getting-started heading, its clickable shortcuts and a tip](images/blank-start.png)
+![A new sheet before anything is added: just its head row, Untitled, a Script extending Node, and the + Add event link under it](images/blank-start.png)
 
 Every recipe below rides the same loop: **New sheet (a `.gd`) → set the host class → add events (pick
 Conditions + Actions) → save → set the `.gd` as your node's script → Run.** A sheet *is* just

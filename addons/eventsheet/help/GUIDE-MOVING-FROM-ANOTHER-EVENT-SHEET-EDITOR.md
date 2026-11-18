@@ -2,7 +2,7 @@
 
 A working map from C3 concepts and vocabulary to their Godot EventSheets equivalents: what each C3 term becomes here, which behaviors have bundled twins, and the one habit worth relearning (reacting instead of polling). The golden rule underneath every table: **everything compiles to plain GDScript** - when a table doesn't cover something, the GDScript way *is* the EventSheets way (drop a GDScript block in the event flow, or write the expression directly - **ƒx** fields are plain GDScript).
 
-![The ACE picker with live search that understands C3 phrases like "every tick", favorites and recents rails, and a plain-language description of the selected action with the GDScript it ships as](previews/editor-ace-picker.png)
+![The Add Action picker with live search typed as take damage, the Favorites and Recent rails on the left, the matching entries grouped by category, and a description of the selected action with the GDScript it ships as](previews/editor-ace-picker.png)
 
 ## Table of Contents
 
@@ -535,7 +535,7 @@ i18n (Godot translations).
   Sheets and how they last went, and how much of it nothing uses. Every line opens the panel it
   came from.
 
-  <img src="images/sheet-health-card.png" alt="The health card for player.gd: reads as events 100% with 4 patterns and 2 adoptable, Doctor 0 errors and 2 notes, 3 Test Sheets with the last run green, and 1 unused thing." width="450">
+  <img src="images/sheet-health-card.png" alt="The health card for player.gd: reads as events 100%, Doctor 0 errors and 0 notes, 3 Test Sheets with the last run green, and 2 unused things." width="450">
 - **Your open tabs come back**: the session (tabs + active sheet) restores on editor
   restart, like C3 reopening your workspace.
 - Double-click empty space to add an event; right-click for context actions.

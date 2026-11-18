@@ -293,7 +293,7 @@ file reads like*.
 Two sections of the triage inbox, and every finding in them describes a row that is correct and
 never runs.
 
-![The Doctor's Collisions section listing a trigger nothing can reach, a node with no shape and an Area with monitoring off, with the three doors underneath](images/collisions-doctor-report.png)
+![The Doctor's Collisions section: three warnings, an Area with monitoring off, a node with no shape and a trigger nothing can reach, and a note counting the scripts waiting on a touch; the selected warning shows its three doors underneath, a Fix chip and two Learn more links](images/collisions-doctor-report.png)
 
 **Doctor ▸ Collisions** is the four silent failures:
 

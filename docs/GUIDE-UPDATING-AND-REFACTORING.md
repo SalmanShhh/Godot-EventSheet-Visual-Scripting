@@ -17,12 +17,13 @@ to them until you press something.**
 5. [A worked migration, before and after](#a-worked-migration-before-and-after)
 6. [The whole project at once](#the-whole-project-at-once)
 7. [Renaming, in both directions](#renaming-in-both-directions)
-8. [Taking a pack's new version](#taking-a-packs-new-version)
-9. [The honest exit: keep it as code](#the-honest-exit-keep-it-as-code)
-10. [What a merge leaves behind](#what-a-merge-leaves-behind)
-11. [The contracts, as one command](#the-contracts-as-one-command)
-12. [Working on this as a team](#working-on-this-as-a-team)
-13. [Tips and common mistakes](#tips-and-common-mistakes)
+8. [Replacing a word everywhere](#replacing-a-word-everywhere)
+9. [Taking a pack's new version](#taking-a-packs-new-version)
+10. [The honest exit: keep it as code](#the-honest-exit-keep-it-as-code)
+11. [What a merge leaves behind](#what-a-merge-leaves-behind)
+12. [The contracts, as one command](#the-contracts-as-one-command)
+13. [Working on this as a team](#working-on-this-as-a-team)
+14. [Tips and common mistakes](#tips-and-common-mistakes)
 
 ## Three promises, and what they cost
 
@@ -295,7 +296,7 @@ two doors.
 cleanly, 1 ask you* - which double-clicks through to the sheet, plus one line per row whose verb the
 vocabulary no longer has at all.
 
-![The Doctor's triage inbox showing a Migration verb gone warning naming options_screen.tres, three notes under it - two per-sheet lines reading options_screen.tres, 3 rows migrate cleanly, 1 ask you and title_screen.tres, 2 rows migrate cleanly, 0 ask you - and a summary line, with a Fix chip reading Apply per sheet at the foot](images/migration-doctor-inbox.png)
+![The Doctor's triage inbox showing a Migration verb gone warning naming options_screen.tres, three notes under it - two per-sheet lines reading options_screen.tres, 3 rows migrate cleanly, 1 ask you and title_screen.tres, 2 rows migrate cleanly, 0 ask you - and a summary line, with a Fix row reading Apply per sheet under the selected sheet line](images/migration-doctor-inbox.png)
 
 The one chip on a per-sheet line is **Apply per sheet…**, and it opens that sheet's own receipt.
 **Nothing applies from the report.** A report that rewrote files from a list nobody was looking at
@@ -436,6 +437,47 @@ survives every reparent, so a row written on `%HealthBar` only breaks if somebod
 itself - and `$UI/Bars/HealthBar` breaks the moment anybody moves it. The parameter's help strip
 offers **Make %HealthBar unique** where you are standing.
 
+## Replacing a word everywhere
+
+A rename in one sheet is a few clicks. A word that is written in forty files is a different job, and
+**Tools > Find in Project...** is built for it. The window is called **Find and replace in the
+project**: type the word in **Find**, type what it should become in **Replace with**, and press
+**Find** (or Enter). Every sheet and every script in the project is searched, and the answer is a
+list. Nothing has changed yet.
+
+![The Find and replace in the project window with coin_purse found and wallet typed to replace it: the Event sheets group ticked with two files, the Scripts you wrote group not ticked with one file, each place showing the old text, an arrow and the new text](images/replace-in-project.png)
+
+The list has three groups:
+
+- **Event sheets** are your own sheets. Each file has a tick, and the group starts ticked.
+- **Scripts you wrote** are hand-written GDScript. They start unticked, so pressing the button with
+  the defaults never rewrites a comment or a string in your own code. Tick a file to include it. A
+  `.gd` file that is a sheet but is missing the first line the plugin writes into every sheet it
+  saves is listed here too, with a short hint saying so.
+- **Behaviour packs** are shown so you know the word is there. They are never changed.
+
+Each file says how many places it has, and each place says where it is. Once **Replace with** holds
+something, every place shows `before => after`, so you read the whole change before you make it. The
+line above the list counts sheets and scripts separately, and a project with thousands of scripts
+still gets a list the window can hold: it shows a bounded number of files and lines and says how many
+more there are, and the tick on a group covers all of its files, shown or not.
+
+**Replace in Project** writes the change, and it is careful about how:
+
+- A file that is closed is saved at once, with a backup of the old text in **Sheet Backups**.
+- A sheet that is open in a tab changes through that tab, as one undo step, so **Ctrl+Z** in the tab
+  takes it back.
+- A file whose new text would not parse, or a sheet that would not reopen as exactly what was
+  written, is left as it was and counted in the message at the end.
+
+Afterwards a **Put them all back** button appears under the form (and in Sheet Backups), saying how
+many files it will restore and when they were written. It puts back exactly the files that replace
+wrote. A file you changed since then is left alone. Find ignores capital letters but a replace does
+not: a place that differs from your word only in case is listed and not changed.
+
+The window opens wide enough to read a real line, can be resized, and remembers the size you leave it
+at.
+
 ## Taking a pack's new version
 
 A pack is a folder of ordinary scripts under `eventsheet_addons/`, **copied into your project** on
@@ -542,7 +584,7 @@ ordinary undoable sheet edit in the sheet's own history, and nothing is ever rew
 
 ### The file the merge did not finish with
 
-![A sheet head banner naming the merge marker lines in the open file, with the file shown read-only underneath and nothing lifted into rows](images/merge-guards.png)
+![A sheet head banner naming the merge marker lines in the open file, with a Show the conflicts button, and the file shown read-only underneath as verbatim Script blocks with nothing lifted into rows](images/merge-guards.png)
 
 A file holding merge markers **opens read-only, and totally**: nothing is lifted into rows, Save is
 refused, the unlock is gone, and the head banner names the marker lines. This is the one banner this

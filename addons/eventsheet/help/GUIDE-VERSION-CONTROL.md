@@ -90,7 +90,7 @@ way every source conflict does - `<<<<<<<`, `=======`, `>>>>>>>`. A file in that
 GDScript, so EventSheets does not try to read it as one sheet: **it opens read-only**, with nothing
 lifted into rows, Save off, and a banner at the head naming the exact lines the markers are on.
 
-![A .gd still holding merge markers, open read-only: the head banner names the marker lines and says the merge is finished in the tool it was started in, the file shows as verbatim Script blocks, and below it the Project Doctor's inbox row for two rows declaring the same baked local, with its one Re-mint chip](images/merge-guards.png)
+![A .gd still holding merge markers, open read-only: the head banner names the marker lines, says the merge is finished in the tool it was started in and offers Show the conflicts, and the file shows as verbatim Script blocks](images/merge-guards.png)
 
 There is no "open anyway". Finishing a merge means choosing between two people's work with the whole
 history in view, and the tool that has that view is the one the merge was started in - the banner
@@ -162,7 +162,7 @@ shipped behavior could take over, what the Doctor says about it, which Test Shee
 they last went, and how much of it nothing uses. Every line clicks through to the panel it came
 from, so a health card is a starting point for the work rather than a score.
 
-<img src="images/sheet-health-card.png" alt="The health card for player.gd: reads as events 100% with 4 patterns and 2 adoptable, Doctor 0 errors and 2 notes, tests 3 Test Sheets with the last run green, and unused 1 thing." width="450">
+<img src="images/sheet-health-card.png" alt="The health card for player.gd: reads as events 100%, Doctor 0 errors and 0 notes, tests 3 Test Sheets with the last run green, and unused 2 things." width="450">
 
 ---
 
@@ -353,6 +353,8 @@ only when the result opens again as the same sheet, saves back byte for byte and
 cannot be read back is left as it is and counted in the window. The result is an ordinary diff in
 review, the lines the window listed and nothing else. For scripts nobody has open, the same engine runs
 from a command line: `tools/tidy_scripts.gd -- <file or folder> [--write]`.
+
+![The Tidy this script window over a small provider script: a line saying 8 lines would be rewritten in one step you can undo, and under What will be rewritten the list of before => after lines, each two-hash annotation such as ## @ace_action turning into one hash, with Apply and Cancel below](images/tidy-this-script.png)
 
 The Doctor says when a script could use it: a note, never a warning, one per script.
 

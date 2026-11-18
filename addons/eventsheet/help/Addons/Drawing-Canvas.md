@@ -241,6 +241,8 @@ of them are measured from the prefab's origin:
 Every picture of a prefab - Draw Prefab in a game, the DrawingPrefabStamp node in the viewport and in a
 game, the Inspector picture, the FileSystem thumbnail and the 3D billboard - draws these the same way.
 
+![A Drawing Prefab in the Inspector: a preview of the target marker above its list of eight shape cards, two rings, two lines and four circles, each with its picture, its plain name and a summary such as radius 46, 5 px thick, with the captions Drawn first, underneath and Drawn last, on top, and the Add shape button under the list](../images/drawing-prefab-cards.png)
+
 **The step card.** Each step in the Inspector is a card. Folded, its line shows a small picture of the
 shape in the step's own colour, the shape's plain name (a `rect` step reads Rectangle) and a quiet
 summary in that shape's words: `radius 46, 5 px thick`, `24 x 16`, a line's true length (`120 px

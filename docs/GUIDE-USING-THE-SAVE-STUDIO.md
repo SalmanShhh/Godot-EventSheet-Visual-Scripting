@@ -4,7 +4,7 @@ Working on a game's save files usually means running the game, saving, hunting f
 
 This guide walks through each tab in order, shows the matching code API for people who want to script it, and finishes with a playable example, concrete use cases and a list of common pitfalls. For the bigger picture of how saving works across a whole project - the persist group, the lifecycle triggers, targeted versus whole-game saving - see the "Saving and Loading Your Game" guide, which is the companion to this one.
 
-![The Save Studio's What gets saved tab: the Player sheet's variables, each with a Save dropdown, the sentence that sums up what is saved, the legend of the five choices and the Where it is kept table](images/save-studio.png)
+![The Save Studio's What gets saved tab: the open sheet's variables, each with a Save dropdown, the sentence that sums up what is saved, the legend of the five choices and the Where it is kept table](images/save-studio.png)
 
 ## Table of Contents
 

@@ -24,7 +24,7 @@ before you write. Read this once; after that the gates will tell you when you sl
 
 ## Where docs live, and where they show up
 
-![The Welcome window's documentation link, which opens the guide in a browser at the installed version's tag](images/welcome-documentation-link.png)
+![The foot of the Manual: two small icon buttons under the guide list, Open online, which opens the page you are reading in your browser at the version you installed, and Source, which opens the project's repository, beside the helpful-page question and the text size buttons](images/welcome-documentation-link.png)
 
 Every guide is a Markdown file under `docs/`. The same file is read in three places, and you write
 it once:
@@ -32,11 +32,14 @@ it once:
 - **On GitHub**, at full fidelity - images, tables, everything.
 - **Inside the Godot editor, in the Manual** - Menu > Manual..., F1, the `?` prefix in the
   command palette, or the Manual dock. The editor draws the Markdown natively: headings on
-  a real typographic scale, tables, code blocks, links that stay in the editor. Images are not
-  drawn (they show as an alt-text card with a "See this picture online" button), so write alt text
-  as if it will be read.
+  a real typographic scale, tables, code blocks, links that stay in the editor. A picture in
+  `docs/images/` ships inside the plugin and is drawn in the page. A picture the plugin does not
+  carry (one in `docs/previews/`, or at a web address) shows as an alt-text card with a "See this
+  picture online" button, so write alt text as if it will be read.
 - **From a shipped plugin**, in the browser: `EventSheets.open_online_doc(path)` opens the page
   pinned to the exact installed version, and every "Open the <Pack> guide" button goes through it.
+  In the Manual itself, the **Open online** icon under the guide list does the same for the page
+  you are reading.
 
 The editor reader does not read `docs/` directly. A build tool copies the guides into
 `addons/eventsheet/help/` and writes a manifest, and the suite fails if that bundle is stale.

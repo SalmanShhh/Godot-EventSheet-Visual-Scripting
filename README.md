@@ -11,10 +11,10 @@ Godot EventSheets (engine codename *EventForge*, the prefix on internal class na
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="docs/previews/editor-hero-light.png">
-  <img alt="The EventSheet workspace inside the Godot editor at a comfortable zoom: a small player.gd opened as a sheet, with its two variables, speed and health, above three short numbered events - print Spawned on ready, move while the right action is held, and subtract 10 health when an enemy body enters the hitbox - the Scene dock on the left and the Inspector on the right." src="docs/previews/editor-hero.png">
+  <img alt="The EventSheet workspace inside the Godot editor at a comfortable zoom: a small player.gd opened as a sheet, with its two variables, speed and health, above three short numbered events - print Spawned on ready, move while the right action is held, and subtract 10 health when an enemy body enters the hitbox - the Scene dock on the left and the Inspector on the right showing its two exported variables." src="docs/previews/editor-hero.png">
 </picture>
 
-It is a real Godot workspace, beside 2D / 3D / Script, and it opens an ordinary `.gd` as events: the sheet above *is* `boomer_level.gd`. Behaviours attach as child nodes and expose their knobs in the Inspector like any other node.
+It is a real Godot workspace, beside 2D / 3D / Script, and it opens an ordinary `.gd` as events: the sheet above *is* the small `player.gd` in `demo/readme_example/`. Behaviours attach as child nodes and expose their knobs in the Inspector like any other node.
 
 ## What it compiles to
 
@@ -52,7 +52,7 @@ Delete the plugin and this script still runs. The reverse works too: **open *any
 
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="docs/previews/editor-generated-code-light.png">
-  <img alt="The same player sheet with the Generated GDScript panel open beside it in the Godot editor: the three event rows on the left, the fifteen lines of typed GDScript they compile to on the right - extends CharacterBody2D, two @export vars, _ready, _process and _on_hitbox_body_entered - captioned as read-only and refreshed live as you edit." src="docs/previews/editor-generated-code.png">
+  <img alt="The same player sheet with the Generated GDScript panel open beside it in the Godot editor: the three event rows on the left, the typed GDScript they compile to on the right - extends CharacterBody2D, two @export vars, _ready, _process and _on_hitbox_body_entered - captioned as read-only and refreshed live as you edit." src="docs/previews/editor-generated-code.png">
 </picture>
 
 ## Quick start

@@ -9,6 +9,8 @@ This editor uses Godot-native resources instead of runtime CSS. The goal is stil
 
 ![The same sheet under the bundled Dracula theme - background, event lanes, region tint, group chrome, and accent all come from one swappable token package](images/theme-dracula.png)
 
+![The same kind of sheet under the default Match Editor look in a light Godot editor: the lanes, the head band and the accents take the editor's own light colours, so nothing needs choosing for a light editor](images/theming-lead-light.png)
+
 Current additions on top of the model below:
 
 - **View ▸ Sheet theme** lists "Match Editor (default)" plus the bundled presets and every theme
