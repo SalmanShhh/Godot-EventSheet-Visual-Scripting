@@ -381,12 +381,16 @@ static func _flatten(rows: Array) -> Array:
 	return out
 
 
-## "provider_id/ace_id" -> true for the whole builtin vocabulary. Built from the same descriptors
-## the editor drops rows from, which is what makes a rename break this test.
+## "provider_id/ace_id" -> true for the whole builtin vocabulary and the shipped packs' taught verbs. Built from
+## the same descriptors the editor drops rows from, which is what makes a rename break this test.
 static func _registry_ids() -> Dictionary:
 	var ids: Dictionary = {}
 	for descriptor: ACEDescriptor in ACERegistry.get_all_descriptors():
 		ids["%s/%s" % [descriptor.provider_id, descriptor.ace_id]] = true
+	# The verbs a shipped pack teaches the reader the lines of: a fence that calls `Settings.load_all_settings()`
+	# is drawn as that pack's own row, which is a verb of the pack and not of the builtin vocabulary.
+	for entry: Dictionary in EventForgePackSpellings.entries():
+		ids["%s/%s" % [str(entry.get("provider", "")), str(entry.get("ace_id", ""))]] = true
 	return ids
 
 

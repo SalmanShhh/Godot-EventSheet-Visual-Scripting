@@ -11264,4 +11264,4 @@ The open sheet follows %s to its new place.,열려 있는 시트가 %s의 새 �
 Opened the issue form in your browser. Nothing is sent until you press Submit there.,이슈 양식을 브라우저에서 열었습니다. 거기서 제출을 누르기 전에는 아무것도 전송되지 않습니다.
 The script %s followed its sheet to its new place.,스크립트 %s가 시트의 새 위치를 따라갔습니다.
 "The open sheet follows %s to its new place, and its script %s goes with it.","열려 있는 시트가 %s의 새 위치를 따라가고, 스크립트 %s도 함께 옮겨집니다."
-the Load bindings row of the same pair,
+the Load bindings row of the same pair,같은 쌍의 바인딩 불러오기 행

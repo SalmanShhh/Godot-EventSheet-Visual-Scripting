@@ -11264,4 +11264,4 @@ The open sheet follows %s to its new place.,已打开的表单会跟随 %s 到�
 Opened the issue form in your browser. Nothing is sent until you press Submit there.,已在浏览器中打开问题表单。在那里点击提交之前不会发送任何内容。
 The script %s followed its sheet to its new place.,脚本 %s 已跟随它的表单到新位置。
 "The open sheet follows %s to its new place, and its script %s goes with it.",已打开的表单会跟随 %s 到新位置，它的脚本 %s 也会一起移动。
-the Load bindings row of the same pair,
+the Load bindings row of the same pair,同一对中的“加载按键绑定”行
