@@ -2716,7 +2716,7 @@ static func settings_global_message(held: String, held_source: String, pack_sour
 			missing = true
 	if not used or not missing:
 		return ""
-	return EventSheetL10n.translate("The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.") % held
+	return EventSheetL10n.translate("There is already a global named %s that loads %s, and it is not replaced.") % ["Settings", held]
 
 ## Sounds played with nothing for a player who cannot hear them to read. OPT IN: a project
 ## that has not decided to caption its audio would get one note per script for a decision it has not

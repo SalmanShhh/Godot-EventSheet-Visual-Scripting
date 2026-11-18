@@ -20,6 +20,8 @@ const GAME_SETTINGS_SCRIPT: String = "res://eventsheet_addons/game_settings/game
 ## The built-in bindings rows, whose BINDINGS_FILE names the file Save Bindings writes.
 const BINDINGS_MODULE: String = "res://addons/eventforge/registration/modules/controls_aces.gd"
 const SAVE_AUTOLOAD: String = "SaveSystem"
+## Where the Save System keeps the snapshot of every node in its persist group, keyed by node path.
+const PERSIST_KEY: String = "__persist"
 ## Where "Keep them in a scene" puts the Save System node when the autoload is a bare script.
 const SETTINGS_SCENE: String = "res://save_system.tscn"
 const AUTOLOAD_GUARD_PATH: String = "res://addons/eventsheet/editor/dock/autoload_guard.gd"
@@ -712,11 +714,22 @@ static func file_text(bytes: PackedByteArray) -> String:
 
 
 ## A save's values as [name, value in plain words] rows. Nested snapshots read as paths
-## ("Health/current"); a node's own part ("." in a snapshot) reads under no name at all.
+## ("Health/current"); a node's own part ("." in a snapshot) reads under no name at all. The scene-tree
+## snapshot a Save choice writes (stored under __persist, keyed by each node's path) reads as the variable
+## names themselves ("coins"), with the node's name in front only when more than one node is saved.
 static func plain_rows(data: Dictionary, prefix: String = "") -> Array:
 	var rows: Array = []
 	for key: Variant in data:
 		var value: Variant = data[key]
+		if prefix.is_empty() and str(key) == PERSIST_KEY and value is Dictionary:
+			var nodes: Dictionary = value
+			for node_path: Variant in nodes:
+				var states: Variant = nodes[node_path]
+				if not (states is Dictionary):
+					continue
+				var node_name: String = str(node_path).get_file() if nodes.size() > 1 else ""
+				rows.append_array(plain_rows(states, node_name if node_name.is_empty() else node_name + "/"))
+			continue
 		var name: String = prefix if str(key) == "." else prefix + str(key)
 		if value is Dictionary and not (value as Dictionary).is_empty():
 			rows.append_array(plain_rows(value, name if name.is_empty() or str(key) == "." else name + "/"))
@@ -725,17 +738,21 @@ static func plain_rows(data: Dictionary, prefix: String = "") -> Array:
 	return rows
 
 
-## One saved value, said plainly: a position as "x 120, y 64", a list by its length, a flag as yes/no.
+## One saved value, said plainly: a position as "Vector2(120, 64)", a list by its length, a flag as yes/no.
 static func plain_words(value: Variant) -> String:
 	match typeof(value):
 		TYPE_BOOL:
 			return EventSheetL10n.translate("yes") if value else EventSheetL10n.translate("no")
 		TYPE_FLOAT:
 			return _number(value)
-		TYPE_VECTOR2, TYPE_VECTOR2I:
-			return "x %s, y %s" % [_number(value.x), _number(value.y)]
-		TYPE_VECTOR3, TYPE_VECTOR3I:
-			return "x %s, y %s, z %s" % [_number(value.x), _number(value.y), _number(value.z)]
+		TYPE_VECTOR2:
+			return "Vector2(%s, %s)" % [_number(value.x), _number(value.y)]
+		TYPE_VECTOR2I:
+			return "Vector2i(%s, %s)" % [_number(value.x), _number(value.y)]
+		TYPE_VECTOR3:
+			return "Vector3(%s, %s, %s)" % [_number(value.x), _number(value.y), _number(value.z)]
+		TYPE_VECTOR3I:
+			return "Vector3i(%s, %s, %s)" % [_number(value.x), _number(value.y), _number(value.z)]
 		TYPE_ARRAY, TYPE_PACKED_STRING_ARRAY, TYPE_PACKED_INT32_ARRAY, TYPE_PACKED_FLOAT32_ARRAY:
 			return EventSheetL10n.translate("a list of %d") % value.size()
 		TYPE_DICTIONARY:
@@ -745,7 +762,7 @@ static func plain_words(value: Variant) -> String:
 
 ## A number without a trailing ".0" when it is whole: 120, not 120.0.
 static func _number(value: float) -> String:
-	return str(int(value)) if is_equal_approx(value, roundf(value)) and absf(value) < 1e15 else str(value)
+	return str(int(value)) if is_equal_approx(value, roundf(value)) and absf(value) < 1e15 else str(snappedf(value, 0.01))
 
 
 # ── Player settings: the files that live apart from the save slots ──────────────────
@@ -813,10 +830,10 @@ static func settings_files() -> Array:
 			settings.encode_to_text().strip_edges(), EventSheetL10n.translate("Save All Settings, Save Setting"),
 			EventSheetL10n.translate("Load All Settings"), EventSheetL10n.translate("Kept as it is")],
 		[EventSheetL10n.translate("Key bindings"), bindings_file,
-			EventSheetL10n.translate("Which key or button does each action in the Input Map.") + " " + bindings_words,
+			bindings_words,
 			# A key is stored as its whole object, every field spelled out; its class says enough here.
 			bindings.encode_to_text().get_slice(",", 0) + ", …)]", EventSheetL10n.translate("Keyboard > Save bindings, or Settings > Save Bindings"),
-			EventSheetL10n.translate("The Load bindings row of the same pair"), EventSheetL10n.translate("Kept as it is"),
+			EventSheetL10n.translate("the Load bindings row of the same pair"), EventSheetL10n.translate("Kept as it is"),
 			"%s [%s]" % [settings_file, bindings_section]],
 	]
 

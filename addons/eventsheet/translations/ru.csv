@@ -11264,3 +11264,4 @@ The open sheet follows %s to its new place.,Открытый лист следу
 Opened the issue form in your browser. Nothing is sent until you press Submit there.,"Форма обращения открыта в браузере. Ничего не отправляется, пока вы не нажмёте «Отправить» там."
 The script %s followed its sheet to its new place.,Скрипт %s последовал за своим листом на новое место.
 "The open sheet follows %s to its new place, and its script %s goes with it.","Открытый лист следует за файлом %s на новое место, а его скрипт %s идёт вместе с ним."
+the Load bindings row of the same pair,

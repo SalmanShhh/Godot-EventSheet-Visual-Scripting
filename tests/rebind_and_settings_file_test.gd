@@ -30,6 +30,13 @@ static func _pack_text(pack_source: String) -> bool:
 		["no save or load names the constant any more", pack_source.contains("config.load(SETTINGS_FILE)") or pack_source.contains("config.save(SETTINGS_FILE)"), false],
 		["the constant stays as the documented default", pack_source.contains("const SETTINGS_FILE: String = \"user://settings.cfg\""), true],
 		["the property is described", pack_source.contains("## File every save and load uses"), true],
+		["a left click is captured unless it lands on a button", pack_source.contains("MOUSE_BUTTON_LEFT and get_viewport().gui_get_hovered_control() is BaseButton:"), true],
+		["Settings Save Bindings names the Keyboard row's file", pack_source.contains("The Keyboard row of the same name writes user://bindings.cfg instead."), true],
+		["the pack teaches the reader the lines it is called by, on the child node, under Services and as the global", [
+			EventForgePackSpellings.match_line("$Settings.load_bindings()").get("ace_id", ""),
+			EventForgePackSpellings.match_line("$Services/Settings.load_bindings()").get("ace_id", ""),
+			EventForgePackSpellings.match_line("Settings.load_bindings()").get("ace_id", "")],
+			["method:load_bindings", "method:load_bindings", "method:load_bindings"]],
 	])
 
 
@@ -45,7 +52,8 @@ static func _row_pins() -> bool:
 		["the old row's template is untouched", old.codegen_template if old != null else "", "var {name} = await get_window().window_input"],
 		["the new row waits for a press, not a release or a mouse move", fresh.codegen_template.contains("{name}.is_pressed()") and fresh.codegen_template.contains("InputEventJoypadButton") and not fresh.codegen_template.contains("InputEventMouseMotion"), true],
 		["and marks the press handled", fresh.codegen_template.ends_with("get_viewport().set_input_as_handled()"), true],
-		["Save bindings names its file", save_row.description.contains("user://bindings.cfg") and save_row.description.contains("user://settings.cfg"), true],
+		["Save bindings says which file it writes and which one the Settings row keeps", save_row.description,
+			"Writes every control's bindings to user://bindings.cfg (or the file you name), so a rebind survives a restart. The Settings row of the same name keeps them in user://settings.cfg."],
 		["Load bindings names its file", load_row.description.contains("user://bindings.cfg"), true],
 	])
 
@@ -140,7 +148,8 @@ static func _doctor_note(pack_source: String) -> bool:
 	var note: String = EventSheetProjectDoctor.settings_global_message("res://own/settings.gd", other, pack_source, uses_pack)
 	return SUPPORT.pins(NAME, [
 		["another script behind Settings, with the pack's rows in use, is noted", note.contains("res://own/settings.gd"), true],
-		["in two short sentences", note.count(". ") + 1, 2],
+		["the words the plugin uses for any global that is not replaced", note,
+			"There is already a global named Settings that loads res://own/settings.gd, and it is not replaced."],
 		["the pack itself is quiet", EventSheetProjectDoctor.settings_global_message(PACK_PATH, pack_source, pack_source, uses_pack), ""],
 		["a global that answers every call is quiet", EventSheetProjectDoctor.settings_global_message("res://own/settings.gd", answering, pack_source, uses_pack), ""],
 		["a script that never uses the rows is quiet", EventSheetProjectDoctor.settings_global_message("res://own/settings.gd", other, pack_source, "var x = 1\n"), ""],

@@ -11264,3 +11264,4 @@ The open sheet follows %s to its new place.,開いているシートは %s の�
 Opened the issue form in your browser. Nothing is sent until you press Submit there.,問題報告フォームをブラウザで開きました。そこで送信を押すまで何も送られません。
 The script %s followed its sheet to its new place.,スクリプト %s はシートの新しい場所に追従しました。
 "The open sheet follows %s to its new place, and its script %s goes with it.",開いているシートは %s の新しい場所に追従し、スクリプト %s も一緒に移ります。
+the Load bindings row of the same pair,

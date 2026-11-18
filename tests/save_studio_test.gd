@@ -98,7 +98,11 @@ static func _copy_and_plain_words() -> bool:
 		["holding the same values", copied, {"coins": 42, "position": Vector2(120, 64)}],
 		["a save reads in plain words", EventSheetSaveStudio.plain_rows(snapshot), [
 			PackedStringArray(["health", "3"]), PackedStringArray(["Timer/left", "1.5"]),
-			PackedStringArray(["pos", "x 120, y 64"]), PackedStringArray(["flag", "yes"]), PackedStringArray(["bag", "a list of 2"])]],
+			PackedStringArray(["pos", "Vector2(120, 64)"]), PackedStringArray(["flag", "yes"]), PackedStringArray(["bag", "a list of 2"])]],
+		["a Save choice's snapshot reads as the variable names, in the form the sheet shows them", EventSheetSaveStudio.plain_rows({"__persist": {"/root/Game": {".": {"coins": 2, "player_spot": Vector2(342, 188)}}}}), [
+			PackedStringArray(["coins", "2"]), PackedStringArray(["player_spot", "Vector2(342, 188)"])]],
+		["with the node's name in front when more than one node is saved", EventSheetSaveStudio.plain_rows({"__persist": {"/root/A": {".": {"x": 1}}, "/root/B": {".": {"x": 2}}}}), [
+			PackedStringArray(["A/x", "1"]), PackedStringArray(["B/x", "2"])]],
 		["a binary file shows its head in hex", EventSheetSaveStudio.file_text(PackedByteArray([71, 0, 1])),
 			"Binary file, 3 bytes (not text). First bytes:\n470001"],
 	])
