@@ -370,9 +370,17 @@ func _save_resource(resource: Resource, path: String) -> bool:
 ## the byte round-trip the showcase test pins still holds.
 func _respace_functions(path: String) -> bool:
 	var emitted: String = FileAccess.get_file_as_string(path)
+	# The block a variable's Save choice writes is read back byte for byte against what the compiler
+	# writes, so it keeps the compiler's spacing and only what comes before it is re-spaced.
+	var block_at: int = emitted.rfind("\n\n" + load("res://addons/eventforge/compiler/save_choices.gd").DOC + "\n")
+	var block: String = ""
+	if block_at >= 0:
+		block = emitted.substr(block_at)
+		emitted = emitted.substr(0, block_at)
 	emitted = emitted.replace("\n\nfunc ", "\n\n\nfunc ")
 	emitted = emitted.replace("\n\n## @ace_hidden\nfunc ", "\n\n\n## @ace_hidden\nfunc ")
 	emitted = emitted.replace("\n\n# @ace_hidden\nfunc ", "\n\n\n# @ace_hidden\nfunc ")
+	emitted += block
 	return _write_text(path, emitted)
 
 

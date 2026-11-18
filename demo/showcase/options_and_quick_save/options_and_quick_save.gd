@@ -128,11 +128,9 @@ func hide_picked_coins() -> void:
 @warning_ignore("unused_private_class_variable")
 @onready var __ef_save_boot: bool = _ef_load_saved()
 
-
 func _ef_load_saved() -> bool:
 	add_to_group("persist")
 	return true
-
 
 func save_state() -> Dictionary:
 	return {
@@ -140,7 +138,6 @@ func save_state() -> Dictionary:
 		"player_spot": player_spot,
 		"picked_coins": picked_coins.duplicate(true)
 	}
-
 
 func load_state(state: Dictionary) -> void:
 	if state.is_empty():

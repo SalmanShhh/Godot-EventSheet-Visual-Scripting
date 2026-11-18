@@ -17,6 +17,7 @@ static func run() -> bool:
 	ok = _cancel_signal() and ok
 	ok = _studio_card() and ok
 	ok = _doctor_note(pack_source) and ok
+	ok = _saving_showcase_reads_back() and ok
 	return ok
 
 
@@ -115,6 +116,20 @@ static func _studio_card() -> bool:
 		["and the Settings pack's file and section", card[7], "user://settings.cfg [bindings]"],
 		["and says both in words", str(card[2]).contains("user://bindings.cfg") and str(card[2]).contains("user://settings.cfg") and str(card[2]).contains("[bindings]"), true],
 		["the other two cards stay as they were", [cards.size(), cards[1].size(), cards[0].size()], [3, 7, 7]],
+	])
+
+
+## The saving showcase opens with its three variables set to Manually, and the block that writes that choice is
+## not shown as a variable of its own: a file the importer cannot read back byte for byte would show Never.
+static func _saving_showcase_reads_back() -> bool:
+	var save_choices: GDScript = load("res://addons/eventforge/compiler/save_choices.gd")
+	var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external("res://demo/showcase/options_and_quick_save/options_and_quick_save.gd")
+	var choices: Dictionary = {}
+	for entry: Variant in sheet.events:
+		if entry is LocalVariable:
+			choices[(entry as LocalVariable).name] = save_choices.choice_of((entry as LocalVariable).attributes)
+	return SUPPORT.pins(NAME, [
+		["the saving showcase reads back its three Manual choices", choices, {"coins": "manual", "player_spot": "manual", "picked_coins": "manual"}],
 	])
 
 
