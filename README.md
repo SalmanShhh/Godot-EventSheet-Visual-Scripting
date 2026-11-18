@@ -5,7 +5,7 @@
 The point is **speed-to-game**: whether you've never written code, want logic to pour out faster, or you're mid-jam - events get you from idea to *playing it* in minutes, and keep up when the project balloons to thousands of events.
 
 > [!NOTE]
-> **Early.** Every feature ships with tests (over 1,000 test files gated in CI, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
+> **Early.** Every feature ships with tests (over 1,200 test files gated in CI, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
 
 Godot EventSheets (engine codename *EventForge*, the prefix on internal class names) brings the C3 event-sheet workflow into the Godot editor: a fast visual editor where events read like sentences, and a compiler that turns every sheet into **typed, idiomatic GDScript** - no runtime interpreter, no plugin dependency in your exported game, and **zero performance difference from hand-written code** (a tested contract).
 
@@ -79,7 +79,7 @@ Everything else is in the **[documentation index](docs/README.md)** and inside t
 
 - **It is a bridge, not a wall.** Complex logic eventually pulls you toward GDScript, by design.
 - **2D-first.** The 3D vocabularies are real, but deeper 3D still reaches for expressions.
-- **The first sheet tab of a session is slow** on a large project (about 17 to 22 s on our test machine). After that, editing is smooth.
+- **The first sheet tab of a session is slow** on a large project (about 17 to 25 s on our test machine). After that, editing is smooth.
 - **Experimental.** A large CI suite stands in for mileage it has not earned yet.
 
 ## Feature tour
@@ -87,7 +87,7 @@ Everything else is in the **[documentation index](docs/README.md)** and inside t
 - **The editor** - two-lane event rows, groups, regions, comments, drag and drop, full undo; Find and Replace, find all references, a Go to window (Ctrl+P) with every command on Godot's own Command Palette, themes that follow Godot's light and dark editor.
 - **The language** - events, sub-events, Else, loops and picking, typed functions, enums, signals, `match`, `await`, and a Custom Block API for your own row kinds.
 - **Any script opens as a sheet** - handlers as triggers, input branches as events, signal wiring as triggers; every reading is gated by saving back the same bytes.
-- **2,302 native ACEs** (108 triggers) across scenes, spawning, tweens, audio, cameras, lights, shaders, collisions, raycasts, files, multiplayer, UI, particles, tilemaps and input.
+- **2,332 native ACEs** (111 triggers) across scenes, spawning, tweens, audio, cameras, lights, shaders, collisions, raycasts, files, multiplayer, UI, particles, tilemaps and input.
 - **140 behavior packs**, all authored as event sheets: movement, AI, combat, narrative, drawing, lighting, shaders. See [docs/Addons/](docs/Addons/README.md).
 - **Your own code is vocabulary** - the picker lists your classes and autoloads as actions, conditions and expressions with zero setup.
 - **Mistakes caught as you type** - type checking with Godot's own analyzer, autocomplete that follows the code, and checks for the errors Godot only reports when the game runs.
@@ -106,20 +106,24 @@ The latest tagged release is **`v0.20.0` - "Feel Native"** ([release notes](http
 
 ### In the works for the next release
 
-**Already on `main`** (81 commits since the tag, CI green, each in the [CHANGELOG](CHANGELOG.md)):
+**Already on `main`** (over 800 commits since the tag, CI green, each in the [CHANGELOG](CHANGELOG.md)):
 
 - **Godot's words by default.** On ready, On process, scene, group, Queue free, Instantiate; the other editors' words are an opt-in Familiar preset and still work as search.
 - **Behaviours are added through Godot's own Create Node window** and a Behaviour library, and the ones you tune by eye have a Preview button that never changes your saved scene.
 - **The everyday object rows**, a correct on-screen check, and Godot groups in place of marks.
 - **Fewer panels.** The plugin panels that repeated Godot's own docks are gone, and a Doctor check warns when a behaviour sits under the wrong kind of node (with an optional "Acts on").
 - **More of your code opens as rows**, plus stacks, queues and lists of instances, Godot's own drawing calls as actions, and your own functions editing like events.
+- **Saving never costs you a script.** A sheet saved as a resource writes its script beside it, and the plugin now writes over a script only when it can prove it wrote that script for the same sheet; one you wrote, or one another sheet made, is left exactly as it was and one sentence says what to do. The same rule holds for `EventSheets.compile()`, the export pass and the MCP compile tool.
+- **Renaming a file keeps your work.** Rename, move or delete a sheet's file in Godot's FileSystem dock and the open tab follows it with its unsaved edits, its compiled script goes with it, a sheet deleted behind unsaved edits keeps them (a copy goes into the backups), and what the editor remembered about it follows too: folds, locks, the look you chose, the sheets it includes. Your own scripts are never rewritten; the editor tells you how many still name the old path.
+- **Safer rewrites.** Replace in Project lists what it will change, leaves your own scripts alone by default and can be put back whole; Sheet > Tidy This Script shows every line before it writes an older script the way the editor writes it today.
+- **Two new examples** (rebind the controls, save options and a quick save), a Juice Player that plays over a 3D view, and a bug form, a documentation form and a Report an Issue link that fill in your plugin and Godot versions for you.
 
 **Designed, next in line:**
 
 - **Building at run time** - spawn and keep hold of what you made, add nodes and behaviours, turn behaviours on and off, and build prefabs from parts.
 - **Custom inspectors made and improved as event sheets.**
 
-**Measured** on our test machine: enabling the plugin takes **310 to 450 ms**; the first sheet tab of a session **17 to 22 s** (about 30 s at `v0.18.0`).
+**Measured** on our test machine: enabling the plugin takes **310 to 460 ms**; the first sheet tab of a session **17 to 25 s** (about 30 s at `v0.18.0`).
 
 **Quality** - the full test suite and CI run on every push; byte-exact round-trips guard your files; generated code never depends on the plugin. **Verified on Godot 4.7 stable.**
 
