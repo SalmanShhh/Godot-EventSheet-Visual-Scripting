@@ -13,14 +13,14 @@ script = ExtResource("1_2wav8")
 kind_id = "preload"
 fields = {
 "name": "Slime",
-"path": "res://tools/doc_shots/fixtures/slime.tres"
+"path": "res://data/slime.tres"
 }
 
 [sub_resource type="Resource" id="Resource_4kt3u"]
 script = ExtResource("2_jnuqd")
 ace_id = "SpawnSceneAt"
 params = {
-"path": "\"res://tools/doc_shots/fixtures/empty_stage.tscn\"",
+"path": "\"res://scenes/enemy.tscn\"",
 "position": "Vector2(0, 0)"
 }
 folds_literals = true
@@ -32,7 +32,7 @@ add_child(__spawn_29b7d32e)"
 script = ExtResource("2_jnuqd")
 ace_id = "PlaySound"
 params = {
-"path": "\"res://tools/doc_shots/fixtures/sfx/jump.wav\""
+"path": "\"res://sfx/jump.wav\""
 }
 folds_literals = true
 codegen_template = "var __sfx_adbafaaa = AudioStreamPlayer.new()
@@ -59,7 +59,7 @@ fields = {
 script = ExtResource("2_jnuqd")
 ace_id = "JsonLoadFile"
 params = {
-"path": "\"res://tests/fixtures/foreign_event_sheet.json\"",
+"path": "\"res://data/waves.json\"",
 "var_name": "data"
 }
 folds_literals = true

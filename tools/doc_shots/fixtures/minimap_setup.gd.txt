@@ -1,0 +1,6 @@
+extends Node2D
+
+
+func _enter_tree() -> void:
+	SecondView.make_a_view("minimap", $Player, 0.25)
+	SecondView.show_view_in("minimap", $HUD/MinimapFrame)

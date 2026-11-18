@@ -1,0 +1,9 @@
+extends Node2D
+
+
+func _on_stepped() -> void:
+	$Guard.sound_alarm()
+
+
+func _on_sprung() -> void:
+	$Guard.sound_alarm()

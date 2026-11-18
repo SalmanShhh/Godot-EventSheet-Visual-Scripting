@@ -1,0 +1,15 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/bound_to/bound_to_behavior.gd" id="1_bound"]
+
+[node name="Ship" type="Node2D"]
+position = Vector2(220, 150)
+
+[node name="Body" type="Polygon2D" parent="."]
+color = Color(0.227, 0.651, 0.878, 1)
+polygon = PackedVector2Array(30, 0, -20, 18, -8, 0, -20, -18)
+
+[node name="BoundToBehavior" type="Node" parent="."]
+script = ExtResource("1_bound")
+half_width = 40.0
+half_height = 40.0

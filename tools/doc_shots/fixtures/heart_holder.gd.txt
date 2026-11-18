@@ -1,0 +1,4 @@
+extends Node2D
+
+## Lives left.
+@export_custom(PROPERTY_HINT_NONE, "eventsheet:heart_row") var lives: int = 3

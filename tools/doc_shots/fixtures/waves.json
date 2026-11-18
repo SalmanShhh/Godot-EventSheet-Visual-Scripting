@@ -1,0 +1,6 @@
+{
+	"waves": [
+		{"enemies": 3, "delay": 1.5},
+		{"enemies": 5, "delay": 1.0}
+	]
+}

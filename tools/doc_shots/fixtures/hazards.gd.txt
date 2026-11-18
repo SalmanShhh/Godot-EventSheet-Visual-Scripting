@@ -1,0 +1,17 @@
+extends CharacterBody2D
+
+var hp: int = 100
+
+
+func _physics_process(_delta: float) -> void:
+	if position.y > 900.0:
+		hp -= 10
+		modulate = Color.RED
+		velocity = Vector2.ZERO
+	if is_on_wall():
+		hp -= 10
+		modulate = Color.RED
+		velocity = Vector2.ZERO
+	if is_on_ceiling():
+		hp -= 10
+		modulate = Color.RED

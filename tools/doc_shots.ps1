@@ -17,6 +17,7 @@
 #   -Fingerprint  afterwards write the fingerprint of what each picture shows into the list
 #   -Light     the light theme (the settings template differs in one line)
 #   -MaxOthers how many other Godot processes may run beside it (default 4: two Godots)
+#   -IgnoreSuites  do not wait for a test suite another checkout is running (a picture run is counted in frames, not seconds)
 #
 # A run needs about two minutes for the editor to start and settle, then seconds per picture.
 param(
@@ -29,7 +30,8 @@ param(
 	[string]$List = "tools/doc_shots/shots.json",
 	[string]$Sandbox = (Join-Path ([System.IO.Path]::GetTempPath()) "eventforge_doc_shots"),
 	[int]$LimitMinutes = 40,
-	[int]$MaxOthers = 4
+	[int]$MaxOthers = 4,
+	[switch]$IgnoreSuites
 )
 
 $ErrorActionPreference = "Stop"
@@ -60,6 +62,7 @@ $deadline = (Get-Date).AddMinutes($LimitMinutes)
 while ($true) {
 	$others = @(Get-CimInstance Win32_Process -Filter "Name like 'Godot%'")
 	$suite = @($others | Where-Object { $_.CommandLine -match 'run_tests|run_perf' }).Count
+	if ($IgnoreSuites) { $suite = 0 }
 	if ($others.Count -le $MaxOthers -and $suite -eq 0) { break }
 	if ((Get-Date) -gt $deadline) { Write-Output "gave up waiting for a quiet machine"; exit 9 }
 	Start-Sleep -Seconds 10

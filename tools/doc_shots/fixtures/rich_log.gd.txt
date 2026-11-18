@@ -1,0 +1,6 @@
+extends Node
+
+
+func _ready() -> void:
+	print_rich("[b]Boss[/b] is [color=red]enraged[/color]")
+	print("[b]Boss[/b] is [color=red]enraged[/color]")

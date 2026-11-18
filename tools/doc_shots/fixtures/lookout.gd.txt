@@ -1,0 +1,11 @@
+extends Node
+
+enum State { PATROL, CHASE, GAVE_UP }
+
+var state: State = State.PATROL
+
+
+func begin_chase() -> void:
+	# PATROL is where it starts and begin_chase takes over; retreat matches nothing, so it stays prose.
+	state = State.CHASE
+	# begin_chase does the rest

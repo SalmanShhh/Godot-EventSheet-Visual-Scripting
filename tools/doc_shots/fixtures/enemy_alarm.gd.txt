@@ -1,0 +1,17 @@
+extends Node2D
+
+
+func _on_hit() -> void:
+	$Guard.sound_alarm()
+
+
+func _on_seen() -> void:
+	$Guard.sound_alarm()
+
+
+func _on_lost() -> void:
+	$Guard.sound_alarm()
+
+
+func _on_dead() -> void:
+	$Guard.sound_alarm()

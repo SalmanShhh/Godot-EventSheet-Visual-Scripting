@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tools/doc_shots/fixtures/heart_holder.gd" id="1_holder"]
+
+[node name="HeartHolder" type="Node2D"]
+script = ExtResource("1_holder")

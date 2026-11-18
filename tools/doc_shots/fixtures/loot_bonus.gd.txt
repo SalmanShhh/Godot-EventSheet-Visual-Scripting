@@ -1,0 +1,16 @@
+extends Node
+
+# TODO: balance this drop rate
+var hp: int = 100
+
+
+func _ready() -> void:
+	pass
+
+
+func reset_combo() -> void:
+	hp = 100
+
+
+func add_bonus() -> void:
+	hp += 5

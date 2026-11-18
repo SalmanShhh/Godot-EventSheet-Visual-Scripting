@@ -1,0 +1,18 @@
+extends Node2D
+
+
+func _ready() -> void:
+	sound_alarm()
+
+
+func _process(_delta: float) -> void:
+	sound_alarm()
+	open_gate()
+
+
+func sound_alarm() -> void:
+	print("alarm")
+
+
+func open_gate() -> void:
+	print("gate")

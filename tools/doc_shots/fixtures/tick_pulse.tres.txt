@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="1_act"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="2_row"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="3_sheet"]
+
+[sub_resource type="Resource" id="Act_1"]
+script = ExtResource("1_act")
+ace_id = "Print"
+params = {
+"value": "\"firing right now\""
+}
+codegen_template = "print({value})"
+
+[sub_resource type="Resource" id="Row_1"]
+script = ExtResource("2_row")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Act_1")])
+event_uid = "a1f001"
+
+[sub_resource type="Resource" id="Act_2"]
+script = ExtResource("1_act")
+ace_id = "Print"
+params = {
+"value": "\"fired a moment ago\""
+}
+codegen_template = "print({value})"
+
+[sub_resource type="Resource" id="Row_2"]
+script = ExtResource("2_row")
+trigger_provider_id = "Core"
+trigger_id = "OnBodyEntered"
+actions = Array[Resource]([SubResource("Act_2")])
+event_uid = "b2e002"
+
+[sub_resource type="Resource" id="Act_3"]
+script = ExtResource("1_act")
+ace_id = "Print"
+params = {
+"value": "\"almost faded\""
+}
+codegen_template = "print({value})"
+
+[sub_resource type="Resource" id="Row_3"]
+script = ExtResource("2_row")
+trigger_provider_id = "Core"
+trigger_id = "OnBodyExited"
+actions = Array[Resource]([SubResource("Act_3")])
+event_uid = "c3d003"
+
+[resource]
+script = ExtResource("3_sheet")
+host_class = "Node2D"
+events = Array[Resource]([SubResource("Row_1"), SubResource("Row_2"), SubResource("Row_3")])

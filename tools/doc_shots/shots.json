@@ -3,6 +3,7 @@
 		"docs/images/combo-fighter-showcase.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
 		"docs/images/draw-lab-paste.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
 		"docs/images/hierarchy-playground.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
+		"docs/images/look-sheet-7-text.png": "the picture is Godot's own script editor with the file open, and which files the editor lists beside it and how far its list is scrolled differ from one run to the next (two runs wrote different bytes), so it cannot be byte-stable; the old picture stays and the guide text beside it is still true",
 		"docs/images/menu-starter.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
 		"docs/images/mirror-and-flip-showcase.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
 		"docs/images/open-progress-strip.png": "the strip exists only while a file is being read (dock/open_progress.gd), so the picture is a race against the machine: how many rows are painted when the frame is taken changes with the machine's speed and load, and no wait or step can fix a frame count, so it cannot be byte-stable; the old picture stays and the guide text it illustrates is still true",
@@ -17,119 +18,31 @@
 		"docs/images/traversal-course.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken"
 	},
 	"pending": [
-		"docs/images/ace-properties-popup.png",
-		"docs/images/ace-studio-example.png",
-		"docs/images/ace-studio.png",
-		"docs/images/ask-box-proposal.png",
-		"docs/images/ask-field.png",
-		"docs/images/batch-param-edit.png",
-		"docs/images/bbcode-param.png",
-		"docs/images/behavior-gizmo.png",
 		"docs/images/blank-start.png",
-		"docs/images/bookmarks-panel.png",
 		"docs/images/collisions-doctor-report.png",
-		"docs/images/color-no-alpha.png",
-		"docs/images/comment-doors.png",
-		"docs/images/conflict-view.png",
-		"docs/images/connect-signal-dialog.png",
-		"docs/images/data-class-add-field.png",
-		"docs/images/doc-ace-reference.png",
-		"docs/images/doc-dock-beside-sheet.png",
-		"docs/images/doc-explain-panel.png",
-		"docs/images/doc-figure-tune-marks.png",
-		"docs/images/doc-figure.png",
-		"docs/images/doc-guide-anchor.png",
-		"docs/images/doc-guide-figure.png",
-		"docs/images/doc-guide-page.png",
-		"docs/images/doc-learning-paths.png",
-		"docs/images/doc-search-results.png",
-		"docs/images/docs-housekeeping.png",
 		"docs/images/doctor-reading-page.png",
 		"docs/images/doctor-tidiness-findings.png",
 		"docs/images/duplicate-as-variant.png",
-		"docs/images/enemy-stats-preview.png",
-		"docs/images/events-overlay-badge.png",
-		"docs/images/export-string-options.png",
-		"docs/images/feature-tag-nudge.png",
-		"docs/images/feature-tags.png",
-		"docs/images/file-place-field.png",
-		"docs/images/friendly-runtime-error.png",
-		"docs/images/group-reference-param.png",
-		"docs/images/hit-counts-off-margin.png",
-		"docs/images/hit-counts-off.png",
-		"docs/images/hit-counts-on-margin.png",
-		"docs/images/hit-counts-on.png",
 		"docs/images/hover-inspector-preview.png",
-		"docs/images/import-event-sheet-wizard.png",
-		"docs/images/inspector-designer.png",
-		"docs/images/inspector-drawers.png",
-		"docs/images/juice-player-inspector.png",
-		"docs/images/live-pulse.png",
-		"docs/images/look-sheet-2-dialog.png",
-		"docs/images/look-sheet-3-opened.png",
-		"docs/images/look-sheet-5-variable.png",
-		"docs/images/look-sheet-6-inspector.png",
-		"docs/images/look-sheet-7-text.png",
-		"docs/images/look-sheet-8-doors.png",
-		"docs/images/manual-docked.png",
-		"docs/images/manual-reference-page.png",
-		"docs/images/manual-reference-shape.png",
-		"docs/images/manual-search-hint.png",
-		"docs/images/manual-search.png",
-		"docs/images/manual-tutorial-step.png",
-		"docs/images/manual-tutorials.png",
-		"docs/images/manual-whats-new.png",
 		"docs/images/merge-guards.png",
 		"docs/images/migration-doctor-inbox.png",
-		"docs/images/migration-keep-as-code.png",
-		"docs/images/migration-migrate-dialog.png",
 		"docs/images/number-scrubbing.png",
-		"docs/images/object-states-dialog.png",
-		"docs/images/opened-script-canvas-dialog.png",
-		"docs/images/outline-panel.png",
 		"docs/images/palette-param-swatches.png",
-		"docs/images/pattern-adopt-dialog.png",
-		"docs/images/pattern-manual-page.png",
 		"docs/images/project-view.png",
-		"docs/images/publish-version-dialog.png",
-		"docs/images/published-verb-rows.png",
 		"docs/images/reading-dialog-hierarchy-and-function-chips.png",
 		"docs/images/rename-outside-row.png",
-		"docs/images/rename-receipt.png",
-		"docs/images/replace-autocomplete.png",
-		"docs/images/replace-object.png",
-		"docs/images/rich-param-cells.png",
-		"docs/images/row-doors-project.png",
-		"docs/images/row-doors.png",
 		"docs/images/save-studio-file-and-format.png",
 		"docs/images/save-studio-look-inside.png",
 		"docs/images/save-studio-player-settings.png",
 		"docs/images/save-studio-save-slots.png",
 		"docs/images/save-studio-what-gets-saved.png",
 		"docs/images/save-studio.png",
-		"docs/images/scene-node-param-picker.png",
-		"docs/images/scenes-save-place-lead.png",
 		"docs/images/scenes-trust-inbox.png",
-		"docs/images/seam-change-type.png",
-		"docs/images/secret-object-drop-offer.png",
-		"docs/images/shared-sheet-new.png",
 		"docs/images/sheet-health-card.png",
 		"docs/images/snippet-blanks.png",
-		"docs/images/state-play-mode.png",
-		"docs/images/state-trail.png",
-		"docs/images/theme-editor-new-groups.png",
-		"docs/images/theme-editor-token-rows.png",
-		"docs/images/toolbar-moment-segment.png",
-		"docs/images/tools-compare-with.png",
-		"docs/images/tools-find-repeated-rows.png",
-		"docs/images/tools-loose-ends.png",
 		"docs/images/tools-run-tests.png",
-		"docs/images/translation-globe.png",
-		"docs/images/variable-dialog.png",
 		"docs/images/watch-never-stops.png",
 		"docs/images/welcome-documentation-link.png",
-		"docs/images/why-didnt-fire.png",
-		"docs/images/words-settings.png",
 		"docs/previews/editor-ace-picker.png",
 		"docs/previews/editor-event-sheet.png",
 		"docs/previews/editor-generated-code-light.png",
@@ -138,15 +51,11 @@
 		"docs/previews/editor-hero.png",
 		"docs/previews/editor-type-check-light.png",
 		"docs/previews/editor-type-check.png",
-		"docs/images/second-view-rows.png",
 		"docs/images/interop-convert-menu.png",
 		"docs/images/unique-names-picker-section.png",
 		"docs/images/local-variable-uses-highlight.png",
-		"docs/images/cell-navigation.png",
 		"docs/images/picker-preview-panel.png",
-		"docs/images/engine-table-read.png",
-		"docs/images/sheet-corner-links.png",
-		"docs/images/pack-recipe-rows.png"
+		"docs/images/toolbar-moment-segment.png"
 	],
 	"settle_frames": 150.0,
 	"shots": [
@@ -986,7 +895,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "06f34c8ca6f87324196ec2c2dc866e1109ccf7777f9e2e49fb2bdbe9df6a5bc1",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "opened-script-event-numbers",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1064,7 +973,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "0d1a5dc788e7a14715c3d7023ef0d3f070f4618ab10756573287ef1550f707f3",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"height": 84.0,
 			"name": "resting-toolbar",
@@ -1083,7 +992,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "fd8bab11d088e7a18c4bab0d979adf764778497b9f22f3814632caffb6dd3483",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "resting-toolbar-icons",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1115,7 +1024,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "9b9598c75aa53020970eec978230906ddf750bcec8877fc499f68aa3cd73f5d5",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "resting-toolbar-expanded",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1142,7 +1051,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "ef022c6b520698b362fc6a706cb19b563acf23d5f45b882011c8fcb0c9c4a834",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "resting-toolbar-menu",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1169,7 +1078,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "6ef3fa1727035da999f2bcf9e39a15b10ff4d715452e13c3243cad910e0ad7da",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "add-cascade-keys",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1197,7 +1106,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "4ae760bebf6dcc0acb6fe68d2752d9e94ae28d54b154d204e06d2128e2cdfb7f",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "view-sheet-theme-menu",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1224,7 +1133,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "da2aa242c126951395a1dabf2422b2c3fc47d055fe365afbd29108561661571b",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "look-sheet-1-menu",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1266,7 +1175,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "2d84c38624e4399c7494d713a057d5380319301e7991c07819ad45fc1cbbc789",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "resting-toolbar-note",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1295,7 +1204,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "363ffb2ffb0cebf3a1259ce2353fcf072a7814a4e5d49f3157e54d571a73f78a",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "play-button-dropdown",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1324,7 +1233,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "f4cc5e43ccf2beb019263f7b785abd2fc448b5f3fa8216b0268c012ef50c270f",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "play-button-stop",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1356,7 +1265,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "b76d3cf9ce4c4080aed837fe1ccc392fa161dc43526fae699d6cbe973d032759",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "beginner-toolbar",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1443,7 +1352,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "ef6a1df56f74d2599868c75e2ac0dacbe836a1d794cc08d7ec30d6d0a7f4e6aa",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "refactor-row-menu",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -1462,7 +1371,7 @@
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "fb36905be896b0e40618a80b4175714ea3699046ac66a94da34adc971441a8c6",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"icons": [
 				"sections"
@@ -1517,7 +1426,7 @@
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "51f1b91b0d58c0ad1dc41a3b8cf0d912df2f8d505877c863a0c5f549defc4be9",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"icons": [
 				"sections"
@@ -1572,7 +1481,7 @@
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "d0034168bc4bad67047b50a27f6d7425199333f0577f0646f0cb201e02448ac6",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"icons": [
 				"sections"
@@ -1627,7 +1536,7 @@
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "007d136176ebeb82c41350d5e9ec0ea5755039fa1de6c8922144bc63c6989b44",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"icons": [
 				"sections"
@@ -1751,7 +1660,7 @@
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "aa3e1f15389616c0cc20034b42268eda7864f317e2ab799890ec87c05eea1a95",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"icons": [
 				"sections"
@@ -1861,7 +1770,7 @@
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "f66c59e7909f2c3fed38ec3b5e7232a31fae9320a43bd2c1d2c374bc2d468633",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"icons": [
 				"sections"
@@ -1925,7 +1834,7 @@
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "a651737d2f3e4b3d7025f231dbb1cfe2fe4e4596f882261c09597180805c5e1c",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"icons": [
 				"sections"
@@ -1980,7 +1889,7 @@
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "1ad3e47ccc9345d0fd7915b358853f5bd6369a8c81a3409d40a6d1c7f4163c0f",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"icons": [
 				"sections"
@@ -2999,8 +2908,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "17954c5d2a23e7daab8c32b0169e1a06d8965f66194f96dfa6d2dd5d975a9a8e",
-				"reading": "e9f688b549517e6d7cdc3f2412325284dd685e76802546a4556212a1de8b8855"
+				"png": "ab83478f89e395faa7a5234ec20c6f871dc657fe44f50ad9010c93f2e33c6b8f",
+				"reading": "4d912108e0e3e7e2159cfe1db3c63651e7bfc3b12f3f2b3746b5bd2258258a27"
 			},
 			"name": "asset-drop",
 			"rows": [
@@ -3008,6 +2917,24 @@
 				"@last"
 			],
 			"source": "res://tools/doc_shots/fixtures/asset_drops.tres",
+			"stage": [
+				{
+					"from": "res://tools/doc_shots/fixtures/slime.tres",
+					"to": "res://data/slime.tres"
+				},
+				{
+					"from": "res://tools/doc_shots/fixtures/empty_stage.tscn",
+					"to": "res://scenes/enemy.tscn"
+				},
+				{
+					"from": "res://tools/doc_shots/fixtures/sfx/jump.wav",
+					"to": "res://sfx/jump.wav"
+				},
+				{
+					"from": "res://tools/doc_shots/fixtures/waves.json",
+					"to": "res://data/waves.json"
+				}
+			],
 			"target": "docs/images/asset-drop.png"
 		},
 		{
@@ -3647,7 +3574,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "59fc4967e7bfadf952cb8323bb089339f4bf8d8c7eb2279e5abea7d86e4e3103",
-				"reading": "47dc50de1b0e10c24271fdee70402f716b98fce0e8228caaf89c8806a0080f1f"
+				"reading": "fa33b099375bcb364718404b225c37f144044e62b2295d85b9761f07a18f0a4d"
 			},
 			"name": "object-states",
 			"rows": [
@@ -3790,7 +3717,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "ccef168bbcd993bf3ed03d00a9cc63724ac69ef850959adfd49c475ca72b5450",
+				"png": "57e2da1669435a1fa5c3eaec7662a8701d0da608e8339ef7ae42ac7b02cc882e",
 				"reading": "5d8d6559598876f9618f3ed711720df1620957c25bf065a9321fdbb61b753445"
 			},
 			"name": "scenes-group-arrivals",
@@ -3799,7 +3726,11 @@
 				"@last"
 			],
 			"source": "res://tools/doc_shots/fixtures/minimap_tracker.gd",
-			"target": "docs/images/scenes-group-arrivals.png"
+			"target": "docs/images/scenes-group-arrivals.png",
+			"window": [
+				1900.0,
+				900.0
+			]
 		},
 		{
 			"batch": "sheets3",
@@ -4189,21 +4120,21 @@
 			"before": [
 				{
 					"args": [
-						false
+						{
+							"panel_open": true,
+							"panel_tab": "objects",
+							"rail_width": 380.0
+						}
 					],
 					"do": "dock_path_call",
-					"path": "_rail_panels.set_rail_tucked"
-				},
-				{
-					"args": [
-						"objects"
-					],
-					"do": "dock_path_call",
-					"path": "_rail_panels.set_active_tab"
+					"path": "_rail_panels.apply_state"
 				},
 				{
 					"do": "wait",
 					"frames": 30.0
+				},
+				{
+					"do": "expand_trees"
 				}
 			],
 			"cleanup": [
@@ -4219,17 +4150,17 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "92f275552365fe09a00b2898ce471b0144dc1648ed2bf6135f34403be56f68a9",
-				"reading": "a1d53dbd84387fe1f01ff8244837a25263d52a2f49fdbaff12b24d34ab26c4d2"
+				"png": "ac72e558437a2a070d35246e574dfbe6ce9df91c30b72201f12c793a8187cdc4",
+				"reading": "24ff38dfa98643b22fa4df0d860f0c4f6400f478903f7be81f394bebe754d513"
 			},
 			"name": "objects-rail",
 			"rect": [
 				288.0,
 				160.0,
-				232.0,
+				386.0,
 				660.0
 			],
-			"source": "res://tools/doc_shots/fixtures/hurt_flash.gd",
+			"source": "res://demo/showcase/platformer_shooter/platformer_shooter.gd",
 			"target": "docs/images/objects-rail.png"
 		},
 		{
@@ -4237,17 +4168,14 @@
 			"before": [
 				{
 					"args": [
-						false
+						{
+							"panel_open": true,
+							"panel_tab": "anatomy",
+							"rail_width": 430.0
+						}
 					],
 					"do": "dock_path_call",
-					"path": "_rail_panels.set_rail_tucked"
-				},
-				{
-					"args": [
-						"anatomy"
-					],
-					"do": "dock_path_call",
-					"path": "_rail_panels.set_active_tab"
+					"path": "_rail_panels.apply_state"
 				},
 				{
 					"do": "wait",
@@ -4267,14 +4195,14 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "eccecd4d1aff15fa219eb60e13e47bf9ec401475c9fded196392b27c3539cc30",
+				"png": "54f24c7444695a349f809063548bf7109bc2112bcceb9831c8c3cf46405198c7",
 				"reading": "66933d191d9275895f5253ff987e85cd7c2084df430807ef5383d625fe2f2fcd"
 			},
 			"name": "anatomy-panel",
 			"rect": [
 				288.0,
 				160.0,
-				232.0,
+				436.0,
 				660.0
 			],
 			"source": "res://eventsheet_addons/health/health_behavior.gd",
@@ -4299,7 +4227,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "05d58affc05a9e6388f934753dc91c3b49b1822df54f9502e8c83999d486caf4",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "sheet-map",
 			"source": "res://tools/doc_shots/fixtures/player.gd",
@@ -4360,7 +4288,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "c70b9d9859ba8a4ae238eda0718dce6a5f2c68a2580c8597ec4026852deb3ef8",
-				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"keep_mouse": true,
 			"name": "ghost-row-chips",
@@ -4388,6 +4316,3765 @@
 			],
 			"source": "res://tools/doc_shots/fixtures/sheet_menu.gd",
 			"target": "docs/images/menu-reading-rows.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"do": "dock_path_call",
+					"path": "_preview_glue._on_preview_edit_requested"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"args": [
+						"action",
+						true
+					],
+					"do": "dock_path_call",
+					"frames": 30.0,
+					"path": "_function_dialog_glue._open_function_dialog_new"
+				},
+				{
+					"do": "type_text",
+					"text": "Take Damage"
+				},
+				{
+					"args": [
+						"text",
+						"Takes [b]amount[/b] off this node's health."
+					],
+					"do": "dock_path_call",
+					"frames": 10.0,
+					"path": "_function_dialog_glue._function_dialog._doc_comment_edit.set"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "da6f31affa1b4d410c4540d337b86fc2059028d472f272882f743883117e5cd4",
+				"reading": "5bb1392d5385a73e0af3a5f8dd8cad8ba96e7f4ae02e742c0dc7d9f771933aec"
+			},
+			"name": "ace-studio-example",
+			"source": "res://tools/doc_shots/fixtures/status_hud.gd",
+			"target": "docs/images/ace-studio-example.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"do": "dock_path_call",
+					"path": "_preview_glue._on_preview_edit_requested"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"args": [
+						"",
+						true
+					],
+					"do": "dock_path_call",
+					"frames": 30.0,
+					"path": "_function_dialog_glue._open_function_dialog_new"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "7185ba5ab44d6a9fb24dd6501fe5e79948cd4aa7434a2f65388424dbafeb1bee",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "ace-studio",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/ace-studio.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"do": "project_setting",
+					"name": "eventsheets/ask/mode",
+					"value": "a local model"
+				},
+				{
+					"do": "project_setting",
+					"name": "eventsheets/ask/endpoint",
+					"value": "http://localhost:11434/v1/chat/completions"
+				},
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Ask…"
+					]
+				},
+				{
+					"do": "type_text",
+					"text": "when the player presses jump and is on the floor, jump and play the jump sound"
+				},
+				{
+					"do": "ask_reply",
+					"reply": "{\"rows\":[{\"object\":\"Player\",\"ace_id\":\"Core::IsActionJustPressed\",\"params\":{\"action\":\"\\\"jump\\\"\"}},{\"object\":\"Player\",\"ace_id\":\"Core::SetVelocityY\",\"params\":{\"y\":\"-400\"}},{\"object\":\"Player\",\"ace_id\":\"Core::PlaySound\",\"params\":{\"path\":\"\\\"res://sfx/jump.wav\\\"\"}},{\"object\":\"Player\",\"ace_id\":\"Core::IsGrounded\",\"params\":{}}]}"
+				}
+			],
+			"cleanup": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "project_setting",
+					"name": "eventsheets/ask/mode",
+					"value": "off"
+				},
+				{
+					"do": "project_setting",
+					"name": "eventsheets/ask/endpoint",
+					"value": ""
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "c649b6485ca27689aca08b2895061be02129e24cedd55600fadc1cea7ae94c63",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "ask-box-proposal",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/ask-box-proposal.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"args": [],
+					"do": "dock_path_call",
+					"frames": 4.0,
+					"path": "_quick_add_edit.grab_focus"
+				},
+				{
+					"do": "type_text",
+					"frames": 30.0,
+					"text": "chase"
+				}
+			],
+			"crop": "top",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "56afaecee13040b10199e60f722e06bc4ffafa4b2c7df1276910f47857d1ebd1",
+				"reading": "e7d0981c0ae09f9eb4960a037bbe31b6a78cc8a5a7e988fd75823702f16033fc"
+			},
+			"height": 330.0,
+			"keep_mouse": true,
+			"name": "ask-field",
+			"source": "res://tools/doc_shots/fixtures/patrol_machine.gd",
+			"target": "docs/images/ask-field.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"do": "right_click_row",
+					"text": "print",
+					"x": 700.0
+				},
+				{
+					"activate": true,
+					"button": "@open",
+					"do": "menu_open",
+					"path": [
+						"Select All Events Using This"
+					]
+				},
+				{
+					"do": "dock_call",
+					"frames": 40.0,
+					"method": "_open_batch_param_edit"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "ab897d4be6ee9998e6d996cbd4b61c787e0d502921c1f9e2d5b9fd9324b952c0",
+				"reading": "ac0bf5dc8e2b68a6ca8a4aecda83f115d15c331b954ac11283c7f58f8ec98f3c"
+			},
+			"name": "batch-param-edit",
+			"source": "res://tools/doc_shots/fixtures/status_reporter.gd",
+			"target": "docs/images/batch-param-edit.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"ace": "PrintRich",
+					"context": {
+						"mode": "new_event"
+					},
+					"do": "params_dialog",
+					"provider": "Core",
+					"values": {
+						"value": "\"[b]Level up![/b] [i]+1 HP[/i]\""
+					}
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "9de6dc744b145b5b16e79cdc31cb660c8778e658eabb3a0f97e67fd6cb0787a0",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "bbcode-param",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/bbcode-param.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"do": "click_row",
+					"text": "ready",
+					"x": 30.0
+				},
+				{
+					"args": [],
+					"do": "dock_path_call",
+					"frames": 4.0,
+					"path": "_viewport.toggle_bookmark_selected"
+				},
+				{
+					"do": "click_row",
+					"text": "timeout",
+					"x": 30.0
+				},
+				{
+					"args": [],
+					"do": "dock_path_call",
+					"frames": 4.0,
+					"path": "_viewport.toggle_bookmark_selected"
+				},
+				{
+					"do": "dock_call",
+					"frames": 30.0,
+					"method": "_open_bookmarks_panel"
+				}
+			],
+			"cleanup": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"args": [],
+					"do": "dock_path_call",
+					"path": "_viewport.clear_bookmarks"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "c73fdd316a09e038486bdff0a3e946b38574f78a5476b23b5efa2ad9a8b7f8f0",
+				"reading": "adbb4bdeca6d7cfabb093369164711bafcfa7859e59c32d18cb893219092e557"
+			},
+			"name": "bookmarks-panel",
+			"source": "res://tools/doc_shots/fixtures/tick_logger.gd",
+			"target": "docs/images/bookmarks-panel.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"do": "copy_to_user",
+					"from": "res://tools/doc_shots/fixtures/conflicted_jump.gd.txt",
+					"to": "user://conflicted_jump.gd"
+				},
+				{
+					"args": [
+						"user://conflicted_jump.gd"
+					],
+					"do": "dock_path_call",
+					"frames": 30.0,
+					"path": "_sheet_io._open_conflict_view"
+				}
+			],
+			"cleanup": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "delete_user",
+					"path": "user://conflicted_jump.gd"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "e568b1c4ae92992b2f1f06cb80332e003af27443eba80b8db8bc8f3dd3757248",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "conflict-view",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/conflict-view.png"
+		},
+		{
+			"batch": "dialogs",
+			"cleanup": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "close_scene"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "e35aef605c183be6155620786e24170356b6c12e3bc68764d6416b08f9976032"
+			},
+			"name": "connect-signal-dialog",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "open_scene",
+					"path": "res://tools/doc_shots/fixtures/door_gate.tscn"
+				},
+				{
+					"do": "select_node",
+					"path": "."
+				},
+				{
+					"do": "connect_signal_dialog",
+					"node": ".",
+					"sheet": "res://tools/doc_shots/fixtures/door_gate.gd"
+				}
+			],
+			"target": "docs/images/connect-signal-dialog.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"do": "dock_path_call",
+					"path": "_preview_glue._on_preview_edit_requested"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "right_click_row",
+					"text": "Stats",
+					"x": 30.0
+				},
+				{
+					"activate": true,
+					"button": "@open",
+					"do": "menu_open",
+					"path": [
+						"Add Field…"
+					]
+				},
+				{
+					"do": "type_text",
+					"text": "defense"
+				}
+			],
+			"crop": "main_screen",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "35b9e53a06b87a304b7dbf975c18d333cf4fa2077c7e9b8c0801050c434cc60d",
+				"reading": "a3e7261272a9f2684324b541168860a790550d70e17535284b4fc7e76833437e"
+			},
+			"name": "data-class-add-field",
+			"source": "res://tools/doc_shots/fixtures/chaser.gd",
+			"target": "docs/images/data-class-add-field.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"ace": "HasOSFeature",
+					"context": {
+						"mode": "new_condition_event"
+					},
+					"do": "params_dialog",
+					"provider": "Core",
+					"values": {
+						"feature": "\"steam_deck\""
+					}
+				},
+				{
+					"args": [],
+					"do": "dock_path_call",
+					"frames": 30.0,
+					"path": "_ace_params._on_confirmed"
+				}
+			],
+			"cleanup": [
+				{
+					"do": "close_popups"
+				}
+			],
+			"crop": "popups",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "9dd092de5b5fae6dbc04bf3f4d12285d17179f2775dc5223ab33c0ebc344d726",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "feature-tag-nudge",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/feature-tag-nudge.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"ace": "HasOSFeature",
+					"context": {
+						"mode": "new_condition_event"
+					},
+					"do": "params_dialog",
+					"provider": "Core",
+					"values": {
+						"feature": "mo"
+					}
+				},
+				{
+					"do": "open_menu_button",
+					"text": "▾"
+				},
+				{
+					"do": "wait",
+					"frames": 12.0
+				}
+			],
+			"crop": "popup_menus",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "35a3adcfd2cbb7689fff4343c1ba0513e7091ce9edb488814dc8d7acc7afeac3",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "feature-tags",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/feature-tags.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"ace": "WriteTextFile",
+					"context": {
+						"mode": "new_event"
+					},
+					"do": "params_dialog",
+					"provider": "Core",
+					"values": {
+						"path": "\"user://save.dat\""
+					}
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "b2844ff47fc50a59731d4b11424af77babe27167a4209f29e82ef3e565b3d186",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "file-place-field",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/file-place-field.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"ace": "AddToGroup",
+					"do": "params_dialog",
+					"provider": "Core",
+					"values": {
+						"group": ""
+					}
+				},
+				{
+					"class": "MenuButton",
+					"do": "click_control",
+					"in": "popup",
+					"text": "▾"
+				},
+				{
+					"do": "wait",
+					"frames": 12.0
+				}
+			],
+			"cleanup": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "project_setting",
+					"name": "global_group/pickups",
+					"value": null
+				},
+				{
+					"do": "project_setting",
+					"name": "global_group/checkpoints",
+					"value": null
+				},
+				{
+					"do": "close_scene"
+				}
+			],
+			"crop": "popup_menus",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "5e8ca19971281e81a64a28aa26384ab4fa6f01c282101cb3bb829d8bb702aea1",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "group-reference-param",
+			"prelude": [
+				{
+					"do": "project_setting",
+					"name": "global_group/pickups",
+					"value": "Things the player collects"
+				},
+				{
+					"do": "project_setting",
+					"name": "global_group/checkpoints",
+					"value": "Respawn points"
+				},
+				{
+					"do": "open_scene",
+					"path": "res://demo/showcase/boomer_level/boomer_level.tscn"
+				}
+			],
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/group-reference-param.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"Sheet",
+						"Import event sheet…"
+					]
+				},
+				{
+					"args": [
+						"res://tests/fixtures/foreign_event_sheet.json"
+					],
+					"do": "dock_path_call",
+					"frames": 40.0,
+					"path": "_import_sheet_wizard.load_source"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "87e4b81705e0bb23461dc5faa6e10cd29c1245dac2f0e2040c64e85a01d9e524",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "import-event-sheet-wizard",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/import-event-sheet-wizard.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"args": [
+						"state"
+					],
+					"do": "dock_call",
+					"frames": 40.0,
+					"method": "open_states_dialog"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "fc7f545871dda30effc04bb8934774e2c1bd0017bcc82efa887fc89075388ce5",
+				"reading": "fa33b099375bcb364718404b225c37f144044e62b2295d85b9761f07a18f0a4d"
+			},
+			"name": "object-states-dialog",
+			"source": "res://tools/doc_shots/fixtures/enemy_machine.gd",
+			"target": "docs/images/object-states-dialog.png"
+		},
+		{
+			"batch": "dialogs",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "b536eda826ee5710d1ff7ceb745a4dbeb20a17db9fbe0e9a2ddf94113c7060d8",
+				"reading": "b3fccdc6f8ea1134bb6f0330fa41211eece8ac74fd0d86497711c48c4d1e08fe"
+			},
+			"height": 640.0,
+			"name": "opened-script-canvas-dialog",
+			"rows": [
+				"On draw",
+				"@last"
+			],
+			"source": "res://tests/fixtures/canvas_dialog_reading_fixture.gd",
+			"target": "docs/images/opened-script-canvas-dialog.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"do": "dock_path_call",
+					"path": "_preview_glue._on_preview_edit_requested"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "right_click_row",
+					"text": "subtract delta",
+					"x": 300.0
+				},
+				{
+					"activate": true,
+					"button": "@open",
+					"do": "menu_open",
+					"path": [
+						"Adopt behavior: Cooldown…"
+					]
+				},
+				{
+					"do": "wait",
+					"frames": 30.0
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "ad89944a22d30d02992c81ceeaae87610541b40ac086eb8af48442e80af8997f",
+				"reading": "15253f2370cf7b8adb7cbcddfd7ac569e4ee02e17101f9d8f068ec2640c7a247"
+			},
+			"name": "pattern-adopt-dialog",
+			"source": "res://tools/doc_shots/fixtures/turret_cooldown.gd",
+			"target": "docs/images/pattern-adopt-dialog.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"Sheet",
+						"Publish New Version…"
+					]
+				},
+				{
+					"do": "type_text",
+					"text": "Heal no longer overshoots max health"
+				},
+				{
+					"do": "wait",
+					"frames": 10.0
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "774a0f109449fb9bc70c0bd505c8924f993147128bff6ab06c034970a4c04e75",
+				"reading": "66933d191d9275895f5253ff987e85cd7c2084df430807ef5383d625fe2f2fcd"
+			},
+			"name": "publish-version-dialog",
+			"source": "res://eventsheet_addons/health/health_behavior.gd",
+			"target": "docs/images/publish-version-dialog.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"do": "view_rows",
+					"from": "Create Ability With Cooldown",
+					"height": 300.0,
+					"width": 1200.0
+				}
+			],
+			"crop": "rows",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "77eb89d26bc3f25d85ff3600409a4506d169a64fc4070745e6c4bc52e326953e",
+				"reading": "a9773091a066c4133f47544988ea43a1f104229d6e676e7d93c11fb025c5622d"
+			},
+			"name": "published-verb-rows",
+			"source": "res://eventsheet_addons/abilities/abilities_behavior.gd",
+			"target": "docs/images/published-verb-rows.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"do": "dock_path_call",
+					"path": "_preview_glue._on_preview_edit_requested"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"args": [
+						1.0
+					],
+					"do": "dock_path_call",
+					"frames": 10.0,
+					"path": "_viewport._select_row"
+				},
+				{
+					"do": "dock_call",
+					"frames": 30.0,
+					"method": "_open_replace_object_dialog"
+				},
+				{
+					"do": "open_menu_button",
+					"text": "▾"
+				},
+				{
+					"do": "wait",
+					"frames": 12.0
+				}
+			],
+			"crop": "popup_menus",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "1c1ac9c50e555f9d8c6e4620295f44c0619ae23639b9dbd4b3ff5065b95a3127",
+				"reading": "70638abf2f7553ab6736372a69dbf250f7920b3373f90f5025232acad5d2a3ab"
+			},
+			"name": "replace-autocomplete",
+			"source": "res://tools/doc_shots/fixtures/health_bar_poker.gd",
+			"target": "docs/images/replace-autocomplete.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"do": "dock_path_call",
+					"path": "_preview_glue._on_preview_edit_requested"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"args": [
+						1.0
+					],
+					"do": "dock_path_call",
+					"frames": 10.0,
+					"path": "_viewport._select_row"
+				},
+				{
+					"do": "push_key",
+					"key": "Down",
+					"mods": [
+						"shift"
+					],
+					"times": 1.0
+				},
+				{
+					"do": "dock_call",
+					"frames": 30.0,
+					"method": "_open_replace_object_dialog"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "70b540dea490d6c21ee3dc3f38b218c6c844b49325cbdd4341bb2ebfefda7fa1",
+				"reading": "5e07173f15a2e3666ae05173f3ae3e91705c39f7837faf1dca6ce908c112cf5a"
+			},
+			"name": "replace-object",
+			"source": "res://tools/doc_shots/fixtures/level_triggers.gd",
+			"target": "docs/images/replace-object.png"
+		},
+		{
+			"batch": "dialogs",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "c3bad114f4e0b5f464a85471336409d34f7359b972188d5f35dbf8c75b9446b0",
+				"reading": "05772a3ee813a328b1eae7afd007cd92902a2f91563e7cc2c1f7b79cc7e85df5"
+			},
+			"name": "rich-param-cells",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/rich_log.gd",
+			"target": "docs/images/rich-param-cells.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"ace": "SaveBranchAsSceneFile",
+					"do": "params_dialog",
+					"frames": 40.0,
+					"provider": "Core",
+					"values": {
+						"branch": "$Level",
+						"path": "\"user://built_level.tscn\""
+					}
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "018d55353e11f48ed252acf5e5367820ef7dbeea18c1a4d8bc6f11c8925c12e8",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "scenes-save-place-lead",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/scenes-save-place-lead.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"do": "dock_path_call",
+					"path": "_preview_glue._on_preview_edit_requested"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "right_click_row",
+					"text": "hp",
+					"x": 60.0
+				},
+				{
+					"activate": true,
+					"button": "@open",
+					"do": "menu_open",
+					"path": [
+						"Change Type Everywhere…"
+					]
+				},
+				{
+					"args": [
+						"float"
+					],
+					"do": "dock_path_call",
+					"path": "_variable_retype_dialog.select_type"
+				},
+				{
+					"do": "dock_path_call",
+					"frames": 30.0,
+					"path": "_variable_retype_dialog.refresh_preview"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "f3940c28721c7dd85c3cf5c8b7aa9d5ea27c1ef7f47b5dc7cadd9870b65bd798",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "seam-change-type",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/seam-change-type.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"do": "dock_path_call",
+					"path": "_preview_glue._on_preview_edit_requested"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"args": [
+						"SecretRoom",
+						null,
+						false
+					],
+					"do": "dock_call",
+					"frames": 30.0,
+					"method": "apply_object_bar_drop"
+				}
+			],
+			"cleanup": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "close_scene"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "ca16e12c74ffae118cc5b4636a12d52863bf8f73d27fce3a04e2a8fb06cd5ad5",
+				"reading": "5712e3edbdb95c3afb839bdf1f970287122923abf3ccbc0c9e4fc8f8b8712f9b"
+			},
+			"name": "secret-object-drop-offer",
+			"prelude": [
+				{
+					"do": "open_scene",
+					"path": "res://demo/showcase/boomer_level/boomer_level.tscn"
+				}
+			],
+			"source": "res://demo/showcase/boomer_level/boomer_level.gd",
+			"target": "docs/images/secret-object-drop-offer.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"do": "dock_path_call",
+					"path": "_shared_sheets.open_new_shared_sheet"
+				},
+				{
+					"args": [
+						"Pause Handling"
+					],
+					"do": "dock_path_call",
+					"path": "_shared_sheets.name_edit.set_text"
+				},
+				{
+					"args": [
+						1.0
+					],
+					"do": "dock_path_call",
+					"path": "_shared_sheets.wiring_picker.select"
+				},
+				{
+					"do": "dock_path_call",
+					"frames": 20.0,
+					"path": "_shared_sheets._refresh_preview"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "734c6800b5ba3475a590d95753575b39b5ce1c9713baf37a6560042e13e34c87",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "shared-sheet-new",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/shared-sheet-new.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"ace": "PrintLog",
+					"do": "params_dialog",
+					"frames": 40.0,
+					"provider": "Core",
+					"values": {
+						"message": "tr(\"Spawned\")"
+					}
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "77ada9112daa4f0c9a074b6dcf3f7d2e9890ac66db604bb760a730d03ba14591",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "translation-globe",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/translation-globe.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"do": "dock_call",
+					"frames": 30.0,
+					"method": "open_words_settings"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "246b224ebf745d89ded8220acf3101e31d51bf0b029e9bff7ba313354c971539",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "words-settings",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/words-settings.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"do": "dock_call",
+					"frames": 40.0,
+					"method": "_open_theme_editor"
+				},
+				{
+					"do": "unfold",
+					"title": "Manual pages"
+				},
+				{
+					"do": "unfold",
+					"scroll": true,
+					"title": "Bars around the sheet"
+				},
+				{
+					"do": "wait",
+					"frames": 10.0
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "b3637874f5bbe0e4c0e118c5228be3e5d1303fac402d7587c9e182425d03e9ee",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "theme-editor-new-groups",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/theme-editor-new-groups.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"args": [
+						"res://demo/themes/dracula_theme.tres"
+					],
+					"do": "dock_call",
+					"frames": 40.0,
+					"method": "open_theme_file"
+				},
+				{
+					"do": "unfold",
+					"scroll": true,
+					"title": "Bars around the sheet"
+				},
+				{
+					"do": "wait",
+					"frames": 10.0
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "86fcc47f136b3557b95c26068a491bb70abcfc65da00cc47fff3cbed1a40ec10",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "theme-editor-token-rows",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/theme-editor-token-rows.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"do": "dock_path_call",
+					"path": "_preview_glue._on_preview_edit_requested"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "click_row",
+					"text": "Subtract amount",
+					"x": 420.0
+				},
+				{
+					"do": "push_key",
+					"key": "Slash",
+					"mods": [
+						"ctrl"
+					]
+				},
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"Tools",
+						"Compare With…"
+					]
+				},
+				{
+					"class": "Button",
+					"do": "click_control",
+					"in": "popup",
+					"text": "Compare"
+				},
+				{
+					"do": "wait",
+					"frames": 30.0
+				}
+			],
+			"cleanup": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "push_key",
+					"key": "Z",
+					"mods": [
+						"ctrl"
+					]
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "721ec46cca1e65925efc1c3ee1bf3c8434f9f15ae93d5788b8a48be2b6e69d67",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "tools-compare-with",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/tools-compare-with.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"Tools",
+						"Find Repeated Rows…"
+					]
+				},
+				{
+					"do": "wait",
+					"frames": 30.0
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "3f4e24ce19f0319173b51f934e3b3d5c32c4854e9ae4d89cf2d2af7df860e1d4",
+				"reading": "b3084ab8dd6b2588919e2f17c0b72ccdf3f14298ef46b527739d088307954435"
+			},
+			"name": "tools-find-repeated-rows",
+			"source": "res://tools/doc_shots/fixtures/hazards.gd",
+			"target": "docs/images/tools-find-repeated-rows.png"
+		},
+		{
+			"batch": "dialogs",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"Tools",
+						"Loose Ends…"
+					]
+				},
+				{
+					"do": "wait",
+					"frames": 30.0
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "da755ee3d14d9af7035a8ff0b12ca2e8853183d9a32eef058ac2b26c1de047db",
+				"reading": "df597f7350751606a97b9a2d3c827b0ff1cb508fa0938e4cbb1eaf03e7bdac11"
+			},
+			"name": "tools-loose-ends",
+			"source": "res://tools/doc_shots/fixtures/loot_bonus.gd",
+			"target": "docs/images/tools-loose-ends.png"
+		},
+		{
+			"batch": "pending",
+			"cleanup": [
+				{
+					"do": "close_scene"
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "35c86267653c7655dffde16a74e14f3100d778cd3c720aa52653c5b58ef6cc11",
+				"reading": "4830e64f4a4db8fd5cac2f72740e560f39d75661f036b3ceed9339c12414fba3"
+			},
+			"name": "comment-doors",
+			"prelude": [
+				{
+					"do": "open_scene",
+					"path": "res://tools/doc_shots/fixtures/status_hud.tscn"
+				}
+			],
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/lookout.gd",
+			"target": "docs/images/comment-doors.png"
+		},
+		{
+			"batch": "pending",
+			"before": [
+				{
+					"do": "dock_path_call",
+					"path": "_preview_glue._on_preview_edit_requested"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "click_row",
+					"text": "On function set_third_person",
+					"x": 60.0
+				},
+				{
+					"do": "wait",
+					"frames": 20.0
+				}
+			],
+			"crop": "inspector",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "f8b18f21078e4e03c678d95e04cb01bc9096a2c24c8dd07ca4a465935d668a4d",
+				"reading": "8aad9630a665a6034e96d3efebe853a3fb7242d19a48a571a55ec67cd2f7ff45"
+			},
+			"name": "ace-properties-popup",
+			"source": "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd",
+			"target": "docs/images/ace-properties-popup.png",
+			"window": [
+				1600.0,
+				1000.0
+			]
+		},
+		{
+			"batch": "pending",
+			"before": [
+				{
+					"ace": "HierarchyAddChild",
+					"do": "params_dialog",
+					"provider": "Core",
+					"values": {
+						"child": ""
+					}
+				},
+				{
+					"do": "open_menu_button",
+					"text": "▾"
+				},
+				{
+					"do": "wait",
+					"frames": 20.0
+				}
+			],
+			"cleanup": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "close_scene"
+				}
+			],
+			"crop": "popup_menus",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "1a631fba2af40f0c8216669c218fc6253bbf6a36e010d61cc52606af66d274f5",
+				"reading": "5bb1392d5385a73e0af3a5f8dd8cad8ba96e7f4ae02e742c0dc7d9f771933aec"
+			},
+			"name": "scene-node-param-picker",
+			"prelude": [
+				{
+					"do": "open_scene",
+					"path": "res://tools/doc_shots/fixtures/status_hud.tscn"
+				}
+			],
+			"source": "res://tools/doc_shots/fixtures/status_hud.gd",
+			"target": "docs/images/scene-node-param-picker.png"
+		},
+		{
+			"batch": "pending",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet theme",
+						"Classic Sheet"
+					]
+				},
+				{
+					"do": "dock_path_call",
+					"path": "_preview_glue._on_preview_edit_requested"
+				},
+				{
+					"do": "dock_path_call",
+					"path": "_viewport._refresh_rows"
+				},
+				{
+					"do": "clear_status"
+				}
+			],
+			"cleanup": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet theme",
+						"Match Editor (default)"
+					]
+				}
+			],
+			"crop": "sheet",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "f03c3629697688a4e3839728e80e4d3bcf38ad2958c3a564f4c72c9d985e9226",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"height": 220.0,
+			"name": "sheet-corner-links",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/sheet-corner-links.png"
+		},
+		{
+			"batch": "pending",
+			"before": [
+				{
+					"do": "click_row",
+					"text": "25",
+					"x": 260.0
+				},
+				{
+					"do": "push_key",
+					"key": "Escape"
+				},
+				{
+					"do": "push_key",
+					"key": "Right",
+					"times": 4.0
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "14c66d96e81e3a93b1d562d454a749bb4763b3e055574c2724218c0c953ea901",
+				"reading": "5bb1392d5385a73e0af3a5f8dd8cad8ba96e7f4ae02e742c0dc7d9f771933aec"
+			},
+			"keep_mouse": true,
+			"name": "cell-navigation",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/status_hud.gd",
+			"target": "docs/images/cell-navigation.png"
+		},
+		{
+			"batch": "pending",
+			"before": [
+				{
+					"do": "dock_path_call",
+					"path": "_preview_glue._on_preview_edit_requested"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "right_click_row",
+					"text": "aim_dir",
+					"x": 300.0
+				},
+				{
+					"activate": true,
+					"button": "@open",
+					"do": "menu_open",
+					"path": [
+						"Edit Variable"
+					]
+				},
+				{
+					"do": "wait",
+					"frames": 30.0
+				},
+				{
+					"do": "reveal",
+					"text": "Copy into my project"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "1e734aebe6c593806d19d92322e792a1c182da0fb53caca70fd4a6e9876a71b0",
+				"reading": "3db7e3280a62f952dfba1133f8fc75dfc882cd0aef5c2ef47d07e4061605ec9a"
+			},
+			"name": "look-sheet-8-doors",
+			"source": "res://demo/showcase/inspector_playground/inspector_playground.gd",
+			"target": "docs/images/look-sheet-8-doors.png",
+			"window": [
+				1600.0,
+				1100.0
+			]
+		},
+		{
+			"batch": "pending",
+			"before": [
+				{
+					"ace": "FileTable",
+					"context": {
+						"mode": "new_event"
+					},
+					"do": "params_dialog",
+					"frames": 40.0,
+					"provider": "Core",
+					"values": {
+						"path": "\"res://data/items.csv\""
+					}
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "028b72c3749fbad63d90a3843f076f5da0087368efe38e47fb545d8f6762c6a2",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "engine-table-read",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"stage": [
+				{
+					"from": "res://tools/doc_shots/fixtures/items.csv",
+					"to": "res://data/items.csv"
+				}
+			],
+			"target": "docs/images/engine-table-read.png"
+		},
+		{
+			"batch": "pending",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "7ea64ea38b12d859e86c3d56b17e2e7b87b89e30379f4c150a87193cfc28b7b8",
+				"reading": "95c7d437be993a31da5cf14ca840bf684047a881933eb078d4bc6cfed9363592"
+			},
+			"name": "second-view-rows",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/minimap_setup.gd",
+			"target": "docs/images/second-view-rows.png"
+		},
+		{
+			"batch": "pending",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "2278ae995c4d988f72288ccc09c7bb3e44e5e0c2f24824181e0c3c8fbf1241b0",
+				"reading": "b2524e97da608f30719dd6c9a815914c1371703110ee9e0a6381316c084cabb7"
+			},
+			"name": "pack-recipe-rows",
+			"rows": [
+				0.0,
+				6.0
+			],
+			"source": "res://tools/pack_builders/pin.gd",
+			"target": "docs/images/pack-recipe-rows.png"
+		},
+		{
+			"batch": "inspector",
+			"cleanup": [
+				{
+					"do": "project_setting",
+					"name": "display/window/size/viewport_width",
+					"value": 1152.0
+				},
+				{
+					"do": "project_setting",
+					"name": "display/window/size/viewport_height",
+					"value": 648.0
+				},
+				{
+					"do": "close_scene"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				}
+			],
+			"crop": "main_screen",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "d18698d5c62c0ae5bfbeaadcf4c20a654324938532bc98511676291b5db1d3f3"
+			},
+			"name": "behavior-gizmo",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "project_setting",
+					"name": "display/window/size/viewport_width",
+					"value": 640.0
+				},
+				{
+					"do": "project_setting",
+					"name": "display/window/size/viewport_height",
+					"value": 360.0
+				},
+				{
+					"do": "open_scene",
+					"path": "res://tools/doc_shots/fixtures/bound_stage.tscn"
+				},
+				{
+					"do": "main_screen",
+					"value": "2D"
+				},
+				{
+					"do": "select_node",
+					"path": "."
+				},
+				{
+					"do": "wait",
+					"frames": 30.0
+				}
+			],
+			"target": "docs/images/behavior-gizmo.png"
+		},
+		{
+			"batch": "inspector",
+			"before": [
+				{
+					"args": [
+						"global",
+						{
+							"attributes": {
+								"no_alpha": true
+							}
+						},
+						"team_colour",
+						"Color",
+						"Color(1, 1, 1, 1)",
+						false,
+						"Add Variable",
+						false,
+						true
+					],
+					"do": "dock_path_call",
+					"frames": 40.0,
+					"path": "_variable_dlg.open_for_edit"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "cac45a145b432b8466882a673c36ae1a29955d3ce7380e351ac141c1308fdae7",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "color-no-alpha",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/color-no-alpha.png"
+		},
+		{
+			"batch": "inspector",
+			"before": [
+				{
+					"args": [
+						"global",
+						{
+							"attributes": {
+								"placeholder": "Enter your name"
+							}
+						},
+						"player_name",
+						"String",
+						"",
+						false,
+						"Add Variable",
+						false,
+						true
+					],
+					"do": "dock_path_call",
+					"frames": 40.0,
+					"path": "_variable_dlg.open_for_edit"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "7839bc56a81ea224906a27c7b36f0e245924260fb7cffe1d2b82d80644f9ee2c",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "export-string-options",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/export-string-options.png"
+		},
+		{
+			"batch": "inspector",
+			"before": [
+				{
+					"args": [
+						"global",
+						{
+							"attributes": {
+								"drawer": "progress_bar",
+								"look_line": true,
+								"range": {
+									"max": "100",
+									"min": "0",
+									"step": "1"
+								},
+								"tooltip": "The player's current health (0-100)."
+							}
+						},
+						"health",
+						"int",
+						"100",
+						false,
+						"Add Variable",
+						false,
+						true
+					],
+					"do": "dock_path_call",
+					"frames": 40.0,
+					"path": "_variable_dlg.open_for_edit"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "1a33b9d516e8c8ed1e20903fe1d1c6a1286f9a5105b712a9bb608afcab7c5aab",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "variable-dialog",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/variable-dialog.png",
+			"window": [
+				1600.0,
+				1000.0
+			]
+		},
+		{
+			"batch": "inspector",
+			"before": [
+				{
+					"args": [],
+					"do": "dock_call",
+					"frames": 60.0,
+					"method": "_open_inspector_designer"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "3c96e09d6ce2feaf9cd4b3dc035dc0a0865c9769272dbe0f18439d70be0f70ee",
+				"reading": "4dc76ed3b2b5ecfeced28e3e6fbf559801a9b8b1a3e268016607c1a16247cce4"
+			},
+			"name": "inspector-designer",
+			"source": "res://demo/showcase/enemy_stats/enemy_stats.gd",
+			"target": "docs/images/inspector-designer.png",
+			"window": [
+				1600.0,
+				1100.0
+			]
+		},
+		{
+			"batch": "inspector",
+			"crop": "inspector",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "ee02c36bc5ae2351373994505e5d50aff2f59116e908b7dc22717e2699cfbc4c"
+			},
+			"name": "enemy-stats-preview",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "edit_resource",
+					"path": "res://demo/showcase/enemy_stats/enemy_stats_example.tres"
+				},
+				{
+					"do": "inspector_unfold_all"
+				},
+				{
+					"do": "wait",
+					"frames": 30.0
+				}
+			],
+			"target": "docs/images/enemy-stats-preview.png",
+			"window": [
+				1600.0,
+				1300.0
+			]
+		},
+		{
+			"batch": "inspector",
+			"crop": "inspector",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "28cc05e6741e2bacee0efe0ac66dc8ec3c28aaf776a47e45811c0baa6f3f0629"
+			},
+			"name": "inspector-drawers",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "edit_resource",
+					"path": "res://demo/showcase/enemy_stats/enemy_stats_example.tres"
+				},
+				{
+					"do": "inspector_unfold_all"
+				},
+				{
+					"do": "wait",
+					"frames": 30.0
+				}
+			],
+			"target": "docs/images/inspector-drawers.png",
+			"window": [
+				1600.0,
+				1500.0
+			]
+		},
+		{
+			"batch": "inspector",
+			"cleanup": [
+				{
+					"do": "close_scene"
+				}
+			],
+			"crop": "inspector",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "f9522e882a6723d8db4c6438ff760b42892810d9458cd92cc631f609120fcabc"
+			},
+			"name": "juice-player-inspector",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "open_scene",
+					"path": "res://tools/doc_shots/fixtures/hit_juice.tscn"
+				},
+				{
+					"do": "select_node",
+					"path": "HitJuice"
+				},
+				{
+					"do": "wait",
+					"frames": 30.0
+				},
+				{
+					"class": "Button",
+					"do": "click_inspector",
+					"nth": 0.0,
+					"tooltip": "Open this card."
+				},
+				{
+					"do": "wait",
+					"frames": 20.0
+				}
+			],
+			"target": "docs/images/juice-player-inspector.png",
+			"window": [
+				1600.0,
+				1100.0
+			]
+		},
+		{
+			"batch": "inspector",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"Sheet",
+						"New inspector look…"
+					]
+				},
+				{
+					"args": [
+						"heart_row"
+					],
+					"do": "dock_path_call",
+					"path": "_new_look_dialog._name_edit.set_text"
+				},
+				{
+					"args": [],
+					"do": "dock_path_call",
+					"frames": 20.0,
+					"path": "_new_look_dialog._refresh"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "d69ade08a38bfe848ed8cbb04bdc28373345e7829e611ba34d69a61efbbee1e8",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "look-sheet-2-dialog",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/look-sheet-2-dialog.png"
+		},
+		{
+			"batch": "inspector",
+			"cleanup": [
+				{
+					"args": [],
+					"do": "static_call",
+					"method": "forget",
+					"script": "res://addons/eventsheet/editor/inspector/look_catalogue.gd"
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "a21cfc7af9e11dcb7f67a9d58dfaa7f67230f60b4e9632fab9820b2fc7c238a6",
+				"reading": "2370dc5c475ec52c8ac71e6512c71dbff7fef3fc9bd57a1d6f6ccfa86a5bffc0"
+			},
+			"name": "look-sheet-3-opened",
+			"prelude": [
+				{
+					"args": [],
+					"do": "static_call",
+					"method": "forget",
+					"script": "res://addons/eventsheet/editor/inspector/look_catalogue.gd"
+				}
+			],
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://eventsheet_addons/looks/heart_row.gd",
+			"stage": [
+				{
+					"from": "res://tools/doc_shots/fixtures/heart_row.gd.txt",
+					"to": "res://eventsheet_addons/looks/heart_row.gd"
+				}
+			],
+			"target": "docs/images/look-sheet-3-opened.png"
+		},
+		{
+			"batch": "inspector",
+			"before": [
+				{
+					"args": [
+						"global",
+						{
+							"attributes": {
+								"look": "heart_row",
+								"look_args": []
+							}
+						},
+						"lives",
+						"int",
+						"3",
+						false,
+						"Add Variable",
+						false,
+						true
+					],
+					"do": "dock_path_call",
+					"frames": 40.0,
+					"path": "_variable_dlg.open_for_edit"
+				}
+			],
+			"cleanup": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"args": [],
+					"do": "static_call",
+					"method": "forget",
+					"script": "res://addons/eventsheet/editor/inspector/look_catalogue.gd"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "7830a0a5be706bd85b3daeafb64783e1447d0bb147f664b41ee9620a95438315",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "look-sheet-5-variable",
+			"prelude": [
+				{
+					"args": [],
+					"do": "static_call",
+					"method": "forget",
+					"script": "res://addons/eventsheet/editor/inspector/look_catalogue.gd"
+				}
+			],
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"stage": [
+				{
+					"from": "res://tools/doc_shots/fixtures/heart_row.gd.txt",
+					"to": "res://eventsheet_addons/looks/heart_row.gd"
+				}
+			],
+			"target": "docs/images/look-sheet-5-variable.png"
+		},
+		{
+			"batch": "inspector",
+			"cleanup": [
+				{
+					"do": "close_scene"
+				},
+				{
+					"args": [],
+					"do": "static_call",
+					"method": "forget",
+					"script": "res://addons/eventsheet/editor/inspector/look_catalogue.gd"
+				}
+			],
+			"crop": "inspector",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "71f3016f6793c2ceefa75a6dbfebe5b6c12182adb6edd961919524933e31ff58"
+			},
+			"name": "look-sheet-6-inspector",
+			"stage": [
+				{
+					"from": "res://tools/doc_shots/fixtures/heart_row.gd.txt",
+					"to": "res://eventsheet_addons/looks/heart_row.gd"
+				},
+				{
+					"from": "res://tools/doc_shots/fixtures/heart_holder.gd.txt",
+					"to": "res://tools/doc_shots/fixtures/heart_holder.gd"
+				},
+				{
+					"from": "res://tools/doc_shots/fixtures/heart_holder.tscn.txt",
+					"to": "res://tools/doc_shots/fixtures/heart_holder.tscn"
+				}
+			],
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"args": [],
+					"do": "static_call",
+					"method": "forget",
+					"script": "res://addons/eventsheet/editor/inspector/look_catalogue.gd"
+				},
+				{
+					"do": "open_scene",
+					"path": "res://tools/doc_shots/fixtures/heart_holder.tscn"
+				},
+				{
+					"do": "select_node",
+					"path": "."
+				},
+				{
+					"do": "wait",
+					"frames": 30.0
+				}
+			],
+			"target": "docs/images/look-sheet-6-inspector.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"args": [
+						"reference:tracks"
+					],
+					"do": "api",
+					"frames": 90.0,
+					"method": "open_docs"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "3e18876991382f6ec54a1bf729eae684e7603957e75fc0ad9fbf22147191a5c2",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "doc-learning-paths",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/doc-learning-paths.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"args": [
+						"guide:Addons/Quest",
+						"ace-reference"
+					],
+					"do": "api",
+					"frames": 90.0,
+					"method": "open_docs"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "edc344827e48489a6718f8ee724a6c7a982b3ef99ac02198e294ca9b87bc2229",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "doc-ace-reference",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/doc-ace-reference.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"do": "dock_call",
+					"frames": 90.0,
+					"method": "toggle_manual_beside"
+				},
+				{
+					"args": [
+						"guide:GUIDE-RECIPES"
+					],
+					"do": "api",
+					"frames": 60.0,
+					"method": "open_docs"
+				}
+			],
+			"cleanup": [
+				{
+					"do": "dock_call",
+					"method": "toggle_manual_beside"
+				}
+			],
+			"crop": "manual_beside",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "d5f9e5171040912431faaa0c3fc46c756791dc6baf8da78791952ad7735d54ee",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "doc-dock-beside-sheet",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/doc-dock-beside-sheet.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"args": [
+						"ace:Core/OnReady"
+					],
+					"do": "api",
+					"frames": 90.0,
+					"method": "open_docs"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "e35324c2ffe389beeab9d35f9feabe5cec1b613f8f8798649096fbcbe7a5947d",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "doc-explain-panel",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/doc-explain-panel.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"args": [
+						"ace:Core/Wait"
+					],
+					"do": "api",
+					"frames": 90.0,
+					"method": "open_docs"
+				}
+			],
+			"crop": "figure",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "a7e0f93268f58a83f8ce82f03447a81382a602e0811ed3f3bd3131efe0127299",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "doc-figure",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/doc-figure.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"args": [
+						"guide:GUIDE-RECIPES",
+						"3-hello-jump-a-platformer-character-in-minutes"
+					],
+					"do": "api",
+					"frames": 90.0,
+					"method": "open_docs"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "2b7e67427307ef651e05e42a96577d2e3b475dafd8be3b6fce8896415f5a6ed6",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "doc-guide-anchor",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/doc-guide-anchor.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"args": [
+						"guide:GUIDE-RECIPES",
+						"4-health-and-damage"
+					],
+					"do": "api",
+					"frames": 90.0,
+					"method": "open_docs"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "93a6e62086596bfe4dea4c515f77efcfec8d6b747c3b67b37fe8f511c04bf9d8",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "doc-guide-figure",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/doc-guide-figure.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"do": "dock_call",
+					"frames": 90.0,
+					"method": "toggle_manual_beside"
+				},
+				{
+					"args": [
+						"guide:GUIDE-RECIPES"
+					],
+					"do": "api",
+					"frames": 60.0,
+					"method": "open_docs"
+				}
+			],
+			"cleanup": [
+				{
+					"do": "dock_call",
+					"method": "toggle_manual_beside"
+				}
+			],
+			"crop": "manual_dock",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "7f054e371efee8c079bf36358d197c7437cee9a889cf67671762f59a13f92f6b",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "doc-guide-page",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/doc-guide-page.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"args": [
+						"guide:GUIDE-RECIPES"
+					],
+					"do": "api",
+					"frames": 90.0,
+					"method": "open_docs"
+				},
+				{
+					"args": [
+						"jump"
+					],
+					"do": "manual_call",
+					"frames": 30.0,
+					"method": "search"
+				},
+				{
+					"args": [
+						"guide:GUIDE-RECIPES"
+					],
+					"do": "api",
+					"frames": 40.0,
+					"method": "open_docs"
+				}
+			],
+			"cleanup": [
+				{
+					"args": [
+						""
+					],
+					"do": "manual_call",
+					"method": "search"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "86a7a46bd44fc250c2984971953ab495115aefffe39e0fc4fb90ae7125f00136",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "doc-search-results",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/doc-search-results.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"Tools",
+						"Docs Housekeeping…"
+					]
+				},
+				{
+					"do": "wait",
+					"frames": 30.0
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "9d7e1112b7ae4aad8b144a6c2bc87f29e3bd8c036f1d2b8edfdc12d9d46792dc",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "docs-housekeeping",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/docs-housekeeping.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"do": "dock_call",
+					"frames": 90.0,
+					"method": "toggle_manual_beside"
+				},
+				{
+					"args": [
+						"reference:legend"
+					],
+					"do": "api",
+					"frames": 60.0,
+					"method": "open_docs"
+				}
+			],
+			"cleanup": [
+				{
+					"do": "dock_call",
+					"method": "toggle_manual_beside"
+				}
+			],
+			"crop": "manual_dock",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "4dd6d6d3e178b88ba5423ba2f50e0699147b46b709d72395590689f977bc8e3f",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "manual-docked",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/manual-docked.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"args": [
+						"reference:pack/quest"
+					],
+					"do": "api",
+					"frames": 90.0,
+					"method": "open_docs"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "3657d087ab77f4db5c49d5616a6387d2cf8e9b2750fa61aadd79782b6a292dad",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "manual-reference-page",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/manual-reference-page.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"args": [
+						"reference:pack/health"
+					],
+					"do": "api",
+					"frames": 90.0,
+					"method": "open_docs"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "33373dae0d89ec602f1c7f8a657db20b531b2e850b9e61dce53205111c7b088f",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "manual-reference-shape",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/manual-reference-shape.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"args": [
+						"reference:legend"
+					],
+					"do": "api",
+					"frames": 90.0,
+					"method": "open_docs"
+				},
+				{
+					"args": [
+						"layout"
+					],
+					"do": "manual_call",
+					"frames": 30.0,
+					"method": "search"
+				}
+			],
+			"cleanup": [
+				{
+					"args": [
+						""
+					],
+					"do": "manual_call",
+					"method": "search"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "bd68116bc50d5ed8e78df0b8ee93486ae21fd84df28767a76d15f34a1e84c4ca",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "manual-search-hint",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/manual-search-hint.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"args": [
+						""
+					],
+					"do": "api",
+					"frames": 90.0,
+					"method": "open_docs"
+				},
+				{
+					"args": [
+						"wait"
+					],
+					"do": "manual_call",
+					"frames": 30.0,
+					"method": "search"
+				}
+			],
+			"cleanup": [
+				{
+					"args": [
+						""
+					],
+					"do": "manual_call",
+					"method": "search"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "1d3270f1fae506ce6f8e623d4764e58951ec2789e5240e5c24a2317d1491d1ce",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "manual-search",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/manual-search.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"args": [
+						"first-event",
+						0.0
+					],
+					"do": "static_call",
+					"method": "remember_step",
+					"script": "res://addons/eventsheet/editor/docs/doc_tutorials.gd"
+				},
+				{
+					"args": [
+						"reference:tutorial/first-event"
+					],
+					"do": "api",
+					"frames": 90.0,
+					"method": "open_docs"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "b3eac4aec58f7d28e30428604aff803756021b423c96f300dc962e73dbfcede3",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "manual-tutorial-step",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/manual-tutorial-step.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"args": [
+						"reference:tutorials"
+					],
+					"do": "api",
+					"frames": 90.0,
+					"method": "open_docs"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "1fe4c789dfb73e973b73f11f012a0f795f45293d484412b12b42fd5cde8774cf",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "manual-tutorials",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/manual-tutorials.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"args": [
+						"reference:whatsnew"
+					],
+					"do": "api",
+					"frames": 90.0,
+					"method": "open_docs"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "fa535578b5c120aa272301898dd349c22adf2fe459a0ce268d1c0d6e0fed4b4c",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "manual-whats-new",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/manual-whats-new.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"args": [
+						"ace:Core/Wait"
+					],
+					"do": "api",
+					"frames": 90.0,
+					"method": "open_docs"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "6313aff48e2822622fdfc4f4069c7ca29a4b42863054a250e40cf3e423b3eba8",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "row-doors",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/row-doors.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"args": [
+						"ace:Core/Wait"
+					],
+					"do": "api",
+					"frames": 90.0,
+					"method": "open_docs"
+				},
+				{
+					"args": [
+						100000.0
+					],
+					"do": "manual_call",
+					"frames": 20.0,
+					"method": "_scroll.set_v_scroll"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "e056977275fca2cd0a7dae8676ea3be3543477790bfc1c44652db716779c2cf3",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "row-doors-project",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/row-doors-project.png"
+		},
+		{
+			"batch": "manual",
+			"before": [
+				{
+					"args": [
+						"reference:patterns"
+					],
+					"do": "api",
+					"frames": 90.0,
+					"method": "open_docs"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "37623c9dcee5f981ec6efb7469ac73dcafbe62398e2d91f04d13d788238f1b76",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "pattern-manual-page",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/pattern-manual-page.png"
+		},
+		{
+			"batch": "manual",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "d6bd925c21310241b7ca4d79ddc5436fa17dae493f0e5690986fe256ecaa4ca0",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"layout": "vertical",
+			"name": "doc-figure-tune-marks",
+			"parts": [
+				{
+					"before": [
+						{
+							"args": [
+								"ace:Core/Wait"
+							],
+							"do": "api",
+							"frames": 90.0,
+							"method": "open_docs"
+						}
+					],
+					"crop": "figure",
+					"source": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"crop": "rows",
+					"steps": [
+						{
+							"do": "figure_insert"
+						},
+						{
+							"do": "close_popups"
+						},
+						{
+							"do": "view_rows",
+							"from": 0.0,
+							"to": "@last"
+						}
+					]
+				}
+			],
+			"target": "docs/images/doc-figure-tune-marks.png"
+		},
+		{
+			"batch": "debug",
+			"cleanup": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "static_call",
+					"method": "reset",
+					"script": "res://addons/eventsheet/editor/trace_hit_counts.gd"
+				},
+				{
+					"do": "delete_user",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				}
+			],
+			"crop": "rows",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "faa1d60dfa335c988c291d397194e4dd95feaefd85bc6d78c6850132bc3c3506"
+			},
+			"name": "hit-counts-off",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "copy_to_user",
+					"from": "res://tools/doc_shots/fixtures/tick_pulse.tres.txt",
+					"to": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "static_call",
+					"method": "reset",
+					"script": "res://addons/eventsheet/editor/trace_hit_counts.gd"
+				},
+				{
+					"args": [
+						[
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"b2e002",
+							"b2e002",
+							"b2e002",
+							"c3d003"
+						]
+					],
+					"do": "static_call",
+					"method": "note_fired",
+					"script": "res://addons/eventsheet/editor/trace_hit_counts.gd"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "view_rows",
+					"from": 0.0,
+					"to": "@last"
+				}
+			],
+			"target": "docs/images/hit-counts-off.png"
+		},
+		{
+			"batch": "debug",
+			"cleanup": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet display",
+						"Row Hit Counts"
+					]
+				},
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "static_call",
+					"method": "reset",
+					"script": "res://addons/eventsheet/editor/trace_hit_counts.gd"
+				},
+				{
+					"do": "delete_user",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				}
+			],
+			"crop": "rows",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "91925828478279b2403ba0cb4bbce7e4caeb28ee7495c84c21db8083c3681808"
+			},
+			"name": "hit-counts-on",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "copy_to_user",
+					"from": "res://tools/doc_shots/fixtures/tick_pulse.tres.txt",
+					"to": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "static_call",
+					"method": "reset",
+					"script": "res://addons/eventsheet/editor/trace_hit_counts.gd"
+				},
+				{
+					"args": [
+						[
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"b2e002",
+							"b2e002",
+							"b2e002",
+							"c3d003"
+						]
+					],
+					"do": "static_call",
+					"method": "note_fired",
+					"script": "res://addons/eventsheet/editor/trace_hit_counts.gd"
+				},
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet display",
+						"Row Hit Counts"
+					]
+				},
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "view_rows",
+					"from": 0.0,
+					"to": "@last"
+				}
+			],
+			"target": "docs/images/hit-counts-on.png"
+		},
+		{
+			"batch": "debug",
+			"cleanup": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "static_call",
+					"method": "reset",
+					"script": "res://addons/eventsheet/editor/trace_hit_counts.gd"
+				},
+				{
+					"do": "delete_user",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				}
+			],
+			"crop": "margin",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "3000d0d0892f030b7cc58891eaab992344ec675f9148a8487e6ded7092f93215"
+			},
+			"name": "hit-counts-off-margin",
+			"scale": 4.0,
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "copy_to_user",
+					"from": "res://tools/doc_shots/fixtures/tick_pulse.tres.txt",
+					"to": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "static_call",
+					"method": "reset",
+					"script": "res://addons/eventsheet/editor/trace_hit_counts.gd"
+				},
+				{
+					"args": [
+						[
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"b2e002",
+							"b2e002",
+							"b2e002",
+							"c3d003"
+						]
+					],
+					"do": "static_call",
+					"method": "note_fired",
+					"script": "res://addons/eventsheet/editor/trace_hit_counts.gd"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "view_rows",
+					"from": 1.0,
+					"to": 2.0
+				}
+			],
+			"target": "docs/images/hit-counts-off-margin.png",
+			"width": 60.0
+		},
+		{
+			"batch": "debug",
+			"cleanup": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet display",
+						"Row Hit Counts"
+					]
+				},
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "static_call",
+					"method": "reset",
+					"script": "res://addons/eventsheet/editor/trace_hit_counts.gd"
+				},
+				{
+					"do": "delete_user",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				}
+			],
+			"crop": "margin",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "07303989c68cd14877531714c776235e8e0198bdf92eb817e31392fc316bd392"
+			},
+			"name": "hit-counts-on-margin",
+			"scale": 4.0,
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "copy_to_user",
+					"from": "res://tools/doc_shots/fixtures/tick_pulse.tres.txt",
+					"to": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "static_call",
+					"method": "reset",
+					"script": "res://addons/eventsheet/editor/trace_hit_counts.gd"
+				},
+				{
+					"args": [
+						[
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"a1f001",
+							"b2e002",
+							"b2e002",
+							"b2e002",
+							"c3d003"
+						]
+					],
+					"do": "static_call",
+					"method": "note_fired",
+					"script": "res://addons/eventsheet/editor/trace_hit_counts.gd"
+				},
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet display",
+						"Row Hit Counts"
+					]
+				},
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "view_rows",
+					"from": 1.0,
+					"to": 2.0
+				}
+			],
+			"target": "docs/images/hit-counts-on-margin.png",
+			"width": 60.0
+		},
+		{
+			"batch": "debug",
+			"cleanup": [
+				{
+					"args": [
+						[]
+					],
+					"do": "dock_path_call",
+					"path": "_viewport.set_fired_events"
+				},
+				{
+					"args": [
+						true
+					],
+					"do": "dock_path_call",
+					"path": "_viewport.set_process"
+				},
+				{
+					"do": "delete_user",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				}
+			],
+			"crop": "rows",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "d136c8ae51c74876546285ed5caac936854f50e9419e2670f9546e089e0830de"
+			},
+			"name": "live-pulse",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "copy_to_user",
+					"from": "res://tools/doc_shots/fixtures/tick_pulse.tres.txt",
+					"to": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/tick_pulse.tres"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"args": [
+						false
+					],
+					"do": "dock_path_call",
+					"frames": 2.0,
+					"path": "_viewport.set_process"
+				},
+				{
+					"args": [
+						[
+							"c3d003"
+						]
+					],
+					"do": "dock_path_call",
+					"frames": 2.0,
+					"path": "_viewport.set_fired_events"
+				},
+				{
+					"args": [
+						0.21
+					],
+					"do": "dock_path_call",
+					"frames": 2.0,
+					"path": "_viewport._decay_firing"
+				},
+				{
+					"args": [
+						[
+							"b2e002"
+						]
+					],
+					"do": "dock_path_call",
+					"frames": 2.0,
+					"path": "_viewport.set_fired_events"
+				},
+				{
+					"args": [
+						0.3
+					],
+					"do": "dock_path_call",
+					"frames": 2.0,
+					"path": "_viewport._decay_firing"
+				},
+				{
+					"args": [
+						[
+							"a1f001"
+						]
+					],
+					"do": "dock_path_call",
+					"frames": 4.0,
+					"path": "_viewport.set_fired_events"
+				},
+				{
+					"do": "view_rows",
+					"from": 0.0,
+					"to": "@last"
+				}
+			],
+			"target": "docs/images/live-pulse.png"
+		},
+		{
+			"batch": "debug",
+			"before": [
+				{
+					"args": [
+						"Invalid call. Nonexistent function 'shoot' in base 'Nil'.",
+						"res://tools/doc_shots/fixtures/turret_cooldown.gd",
+						10.0
+					],
+					"do": "api",
+					"frames": 20.0,
+					"method": "report_runtime_error"
+				},
+				{
+					"do": "clear_status"
+				}
+			],
+			"cleanup": [
+				{
+					"do": "dock_call",
+					"method": "clear_runtime_error"
+				},
+				{
+					"do": "clear_status"
+				}
+			],
+			"crop": "error_strip",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "4ac42e1a13b82856a38b53220b384860bd6f0c8c85e97de1cae1e25d0e061efd",
+				"reading": "15253f2370cf7b8adb7cbcddfd7ac569e4ee02e17101f9d8f068ec2640c7a247"
+			},
+			"name": "friendly-runtime-error",
+			"source": "res://tools/doc_shots/fixtures/turret_cooldown.gd",
+			"target": "docs/images/friendly-runtime-error.png"
+		},
+		{
+			"batch": "debug",
+			"before": [
+				{
+					"args": [
+						{
+							"cooldown": 0.31,
+							"fire": true
+						},
+						""
+					],
+					"do": "dock_call",
+					"frames": 10.0,
+					"method": "update_live_values"
+				},
+				{
+					"do": "click_row",
+					"text": "shoot",
+					"x": 260.0
+				},
+				{
+					"do": "dock_call",
+					"frames": 2.0,
+					"method": "_seed_context_from_selection"
+				},
+				{
+					"do": "dock_call",
+					"frames": 40.0,
+					"method": "_open_why_didnt_this_fire"
+				}
+			],
+			"cleanup": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "static_call",
+					"method": "reset",
+					"script": "res://addons/eventsheet/editor/trace_hit_counts.gd"
+				},
+				{
+					"do": "dock_call",
+					"method": "_on_debug_session_ended"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "fdaa6aa83a5fe5e7ab9deb0b51f4be21378916e6a187987269e9f4290d38043e",
+				"reading": "15253f2370cf7b8adb7cbcddfd7ac569e4ee02e17101f9d8f068ec2640c7a247"
+			},
+			"name": "why-didnt-fire",
+			"source": "res://tools/doc_shots/fixtures/turret_cooldown.gd",
+			"target": "docs/images/why-didnt-fire.png"
+		},
+		{
+			"batch": "debug",
+			"before": [
+				{
+					"do": "static_call",
+					"method": "clear",
+					"script": "res://addons/eventsheet/editor/interaction/state_watch.gd"
+				},
+				{
+					"args": [
+						{
+							"state": "CHASE",
+							"state_seconds": 3.2
+						},
+						""
+					],
+					"do": "dock_call",
+					"frames": 30.0,
+					"method": "update_live_values"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "view_rows",
+					"from": 0.0,
+					"to": "@last"
+				}
+			],
+			"cleanup": [
+				{
+					"do": "dock_call",
+					"method": "_on_debug_session_ended"
+				}
+			],
+			"crop": "rows",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "a3f91f9b5edb31a31671d38649583485f55ad03cdc7d591b1d5b698c994523f6",
+				"reading": "fa33b099375bcb364718404b225c37f144044e62b2295d85b9761f07a18f0a4d"
+			},
+			"name": "state-play-mode",
+			"source": "res://tools/doc_shots/fixtures/enemy_machine.gd",
+			"target": "docs/images/state-play-mode.png"
+		},
+		{
+			"batch": "debug",
+			"before": [
+				{
+					"do": "static_call",
+					"method": "clear",
+					"script": "res://addons/eventsheet/editor/state_trail.gd"
+				},
+				{
+					"do": "static_call",
+					"method": "clear",
+					"script": "res://addons/eventsheet/editor/interaction/state_watch.gd"
+				},
+				{
+					"args": [
+						{
+							"state": "PATROL",
+							"state_seconds": 0.0
+						},
+						""
+					],
+					"do": "dock_call",
+					"frames": 2.0,
+					"method": "update_live_values"
+				},
+				{
+					"args": [
+						{
+							"state": "PATROL",
+							"state_seconds": 0.25
+						},
+						""
+					],
+					"do": "dock_call",
+					"frames": 2.0,
+					"method": "update_live_values"
+				},
+				{
+					"args": [
+						{
+							"state": "CHASE",
+							"state_seconds": 0.0
+						},
+						""
+					],
+					"do": "dock_call",
+					"frames": 2.0,
+					"method": "update_live_values"
+				},
+				{
+					"args": [
+						{
+							"state": "CHASE",
+							"state_seconds": 0.25
+						},
+						""
+					],
+					"do": "dock_call",
+					"frames": 2.0,
+					"method": "update_live_values"
+				},
+				{
+					"args": [
+						{
+							"state": "STAGGER",
+							"state_seconds": 0.0
+						},
+						""
+					],
+					"do": "dock_call",
+					"frames": 2.0,
+					"method": "update_live_values"
+				},
+				{
+					"args": [
+						{
+							"state": "STAGGER",
+							"state_seconds": 0.25
+						},
+						""
+					],
+					"do": "dock_call",
+					"frames": 2.0,
+					"method": "update_live_values"
+				},
+				{
+					"args": [
+						{
+							"state": "STAGGER",
+							"state_seconds": 0.0
+						},
+						""
+					],
+					"do": "dock_call",
+					"frames": 2.0,
+					"method": "update_live_values"
+				},
+				{
+					"args": [
+						{
+							"state": "STAGGER",
+							"state_seconds": 0.25
+						},
+						""
+					],
+					"do": "dock_call",
+					"frames": 2.0,
+					"method": "update_live_values"
+				},
+				{
+					"args": [
+						{
+							"state": "STAGGER",
+							"state_seconds": 0.0
+						},
+						""
+					],
+					"do": "dock_call",
+					"frames": 2.0,
+					"method": "update_live_values"
+				},
+				{
+					"args": [
+						"Trail"
+					],
+					"do": "dock_call",
+					"frames": 30.0,
+					"method": "open_debugger"
+				}
+			],
+			"cleanup": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "static_call",
+					"method": "reset",
+					"script": "res://addons/eventsheet/editor/trace_hit_counts.gd"
+				},
+				{
+					"do": "dock_call",
+					"method": "_on_debug_session_ended"
+				},
+				{
+					"do": "static_call",
+					"method": "clear",
+					"script": "res://addons/eventsheet/editor/state_trail.gd"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "3e0cac31977ae98569ae1dfd7e465e94474fc72052666bc22dbfefbc936a6d4e",
+				"reading": "fa33b099375bcb364718404b225c37f144044e62b2295d85b9761f07a18f0a4d"
+			},
+			"name": "state-trail",
+			"source": "res://tools/doc_shots/fixtures/enemy_machine.gd",
+			"target": "docs/images/state-trail.png"
+		},
+		{
+			"batch": "debug",
+			"cleanup": [
+				{
+					"do": "project_setting",
+					"name": "eventsheets/editor/show_scene_events",
+					"value": false
+				},
+				{
+					"do": "select_node",
+					"path": "."
+				},
+				{
+					"do": "close_scene"
+				}
+			],
+			"crop": "rect",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "076393a4400967b94cb927a04c729f19978b6d7e233374061ec192e0e2483177"
+			},
+			"name": "events-overlay-badge",
+			"rect": [
+				0.0,
+				40.0,
+				300.0,
+				330.0
+			],
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "project_setting",
+					"name": "eventsheets/editor/show_scene_events",
+					"value": true
+				},
+				{
+					"do": "open_scene",
+					"path": "res://tools/doc_shots/fixtures/events_level.tscn"
+				},
+				{
+					"do": "select_node",
+					"path": "Background"
+				},
+				{
+					"do": "wait",
+					"frames": 30.0
+				}
+			],
+			"target": "docs/images/events-overlay-badge.png"
+		},
+		{
+			"batch": "dialogs2",
+			"cleanup": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "delete_user",
+					"path": "res://tools/doc_shots/lamp_post.tres"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "186b5e9f35bce62f6e5b6584d5265754e45ad71d901945261b7fb93af8c55c86"
+			},
+			"name": "migration-keep-as-code",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "copy_to_user",
+					"from": "res://tools/doc_shots/fixtures/lamp_post.tres.txt",
+					"to": "res://tools/doc_shots/lamp_post.tres"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tools/doc_shots/lamp_post.tres"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tools/doc_shots/lamp_post.tres"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/lamp_post.tres"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "click_row",
+					"text": "flicker",
+					"x": 520.0
+				},
+				{
+					"do": "dock_call",
+					"frames": 30.0,
+					"method": "apply_selected_row_second_fix"
+				}
+			],
+			"target": "docs/images/migration-keep-as-code.png"
+		},
+		{
+			"batch": "dialogs2",
+			"cleanup": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "delete_user",
+					"path": "res://tools/doc_shots/sentry.tres"
+				},
+				{
+					"do": "project_setting",
+					"name": "eventsheets/project/vocabulary_version",
+					"value": ""
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "a5de8a9a375ea35f610899d759b86daa708120e8bc68edb1eb0d903fbe6ed76c"
+			},
+			"name": "migration-migrate-dialog",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "project_setting",
+					"name": "eventsheets/project/vocabulary_version",
+					"value": "0.14.0"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "copy_to_user",
+					"from": "res://tools/doc_shots/fixtures/sentry.tres.txt",
+					"to": "res://tools/doc_shots/sentry.tres"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tools/doc_shots/sentry.tres"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tools/doc_shots/sentry.tres"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/sentry.tres"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "dock_call",
+					"frames": 40.0,
+					"method": "open_migrate_dialog"
+				}
+			],
+			"target": "docs/images/migration-migrate-dialog.png"
+		},
+		{
+			"batch": "dialogs2",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Outline…"
+					]
+				},
+				{
+					"do": "wait",
+					"frames": 20.0
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "de1a158ac9bd0f9e9aaa719adaf480cbc29af0df3b656cef727f15ce5332707f",
+				"reading": "8e01227f92ead55a54e014589a58c50f79b2302230db31cd5cf063f41159860a"
+			},
+			"name": "outline-panel",
+			"source": "res://tools/doc_shots/fixtures/arena_director.gd",
+			"target": "docs/images/outline-panel.png"
+		},
+		{
+			"batch": "dialogs2",
+			"cleanup": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/nothing.gd"
+				},
+				{
+					"do": "delete_user",
+					"path": "res://tools/doc_shots/guard.gd"
+				},
+				{
+					"do": "delete_user",
+					"path": "res://tools/doc_shots/guard.gd.uid"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "d8ce4ba27239605d854eef0151e9672fd954990e045d0e3e33b8c6abe46b556a"
+			},
+			"name": "rename-receipt",
+			"stage": [
+				{
+					"from": "res://tools/doc_shots/fixtures/enemy_alarm.gd.txt",
+					"to": "res://enemies/enemy.gd"
+				},
+				{
+					"from": "res://tools/doc_shots/fixtures/traps_alarm.gd.txt",
+					"to": "res://traps/traps.gd"
+				}
+			],
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "copy_to_user",
+					"from": "res://tools/doc_shots/fixtures/guard_receipt.gd.txt",
+					"to": "res://tools/doc_shots/guard.gd"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tools/doc_shots/guard.gd"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tools/doc_shots/guard.gd"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/guard.gd"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"args": [
+						"sound_alarm",
+						"ring_alarm"
+					],
+					"do": "dock_call",
+					"frames": 60.0,
+					"method": "open_rename_receipt"
+				}
+			],
+			"target": "docs/images/rename-receipt.png"
 		}
 	],
 	"window": [

@@ -1,0 +1,19 @@
+@tool
+extends EventSheetInspectorLook
+
+## Heart Row
+## Shows the value as text. Change what it draws, and it is drawn in the Inspector.
+
+## The kinds of property this look can be put on.
+@export var works_on: String = "int,float"
+
+var _label: Label
+
+
+func _look_built() -> void:
+	_label = Label.new()
+	add_child(_label)
+
+
+func _value_shown(value: Variant) -> void:
+	_label.text = str(value)

@@ -1,0 +1,21 @@
+extends CharacterBody2D
+
+var hp: int = 100
+
+
+<<<<<<< HEAD
+func _ready() -> void:
+	hp = 100
+
+
+func jump() -> void:
+	velocity.y = -400.0
+=======
+func _ready() -> void:
+	hp = 100
+
+
+func jump() -> void:
+	velocity.y = -520.0
+	$JumpSound.play()
+>>>>>>> feature/jump

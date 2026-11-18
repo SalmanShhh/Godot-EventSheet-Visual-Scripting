@@ -63,6 +63,8 @@ var _has_focus: bool = false
 var _row_rect: Rect2i = Rect2i()
 ## The last menu a step opened (the submenu a path ended in).
 var _last_menu: PopupMenu = null
+## A window object a step opened and the shot still needs alive (a RefCounted would be freed at once).
+var _held: RefCounted = null
 
 
 func _init() -> void:
@@ -149,6 +151,7 @@ func _take(shot: Dictionary) -> void:
 	var pieces: Array[Image] = []
 	var parts: Array = shot.get("parts", [shot])
 	var stashed: PackedStringArray = PackedStringArray()
+	var staged: PackedStringArray = await _stage(shot.get("stage", []))
 	for part: Dictionary in parts:
 		_has_focus = false
 		if EventSheets._dock != null:
@@ -174,6 +177,7 @@ func _take(shot: Dictionary) -> void:
 		await _step(step)
 	for path: String in stashed:
 		_remove_stashed(path)
+	await _unstage(staged)
 	if ok:
 		var joined: Image = pieces[0] if pieces.size() == 1 else _join(pieces, str(shot.get("layout", "vertical")))
 		_save(shot, joined)
@@ -396,6 +400,11 @@ func _step(step: Dictionary) -> bool:
 					hover_view._set_hover_state(hover_row, span_index)
 					hover_view.queue_redraw()
 					break
+			if hover_view._hover_match_spans.is_empty():
+				var said: PackedStringArray = PackedStringArray()
+				for span_text: EventSheetSemanticSpan in hover_data.spans:
+					said.append(span_text.text)
+				_log("no span reads %s among: %s" % [step["word"], " | ".join(said)])
 			await _w(12)
 		"close_scene":
 			EditorInterface.close_scene()
@@ -435,7 +444,7 @@ func _step(step: Dictionary) -> bool:
 			await _w(int(step.get("frames", 40)))
 		"type_text":
 			# What a person types into the focused field, set at once (the field's own change signal fires).
-			var focused: Control = root.gui_get_focus_owner()
+			var focused: Control = _typing_target(str(step.get("where", "")), int(step.get("nth", 0)))
 			if focused is LineEdit:
 				(focused as LineEdit).text = str(step["text"])
 				(focused as LineEdit).text_changed.emit(str(step["text"]))
@@ -458,6 +467,13 @@ func _step(step: Dictionary) -> bool:
 			return await _fold(str(step["text"]), bool(step.get("open", true)))
 		"right_click_row":
 			return await _right_click_row(str(step["text"]), float(step.get("x", 400.0)))
+		"expand_trees":
+			# Every folded branch of every visible Tree in the dock opened (the Objects panel keeps Behaviours and Globals folded).
+			for tree_node: Node in _all_of("Tree", dock):
+				var tree: Tree = tree_node as Tree
+				if tree.is_visible_in_tree() and tree.get_root() != null:
+					_expand_item(tree.get_root())
+			await _w(int(step.get("frames", 15)))
 		"hover_sheet":
 			var area: Rect2 = dock._scroll.get_global_rect()
 			var at: Vector2 = area.position + Vector2(float(step.get("x", 300.0)), float(step.get("y", 40.0)))
@@ -469,11 +485,142 @@ func _step(step: Dictionary) -> bool:
 		"click_row":
 			return await _click_row(str(step["text"]), float(step.get("x", 260.0)))
 		"click_control":
+			if str(step.get("in", "")) == "popup":
+				return await _click_control_in_popup(str(step["class"]), str(step.get("text", "")), int(step.get("nth", 0)))
 			return await _click_control(str(step["class"]), str(step.get("text", "")))
+		"ask_reply":
+			# The answer an Ask box would have got back, fed in so no request leaves the machine.
+			dock._ask._show_answer(str(step["reply"]), dock.get_ace_registry().get_all_definitions())
+			await _w(int(step.get("frames", 30)))
+		"connect_signal_dialog":
+			# The window the Scene dock's Connect Signal door opens, for one node of the open scene.
+			_held = load("res://addons/eventsheet/editor/connect_signal_dialog.gd").new()
+			_held.open(_scene_node(str(step["node"])), str(step["sheet"]), EditorInterface.get_base_control())
+			await _w(int(step.get("frames", 40)))
+		"unfold":
+			# Every foldable section of the top window whose title starts with the words given, opened (and scrolled to).
+			var opened: Control = null
+			for fold_node: Node in root.find_children("*", "FoldableContainer", true, false):
+				var fold: FoldableContainer = fold_node as FoldableContainer
+				if fold.is_visible_in_tree() and fold.title.begins_with(str(step["title"])):
+					fold.folded = false
+					opened = fold
+			await _w(6)
+			if opened != null and bool(step.get("scroll", false)):
+				var up: Node = opened.get_parent()
+				while up != null and not (up is ScrollContainer):
+					up = up.get_parent()
+				if up != null:
+					(up as ScrollContainer).ensure_control_visible(opened)
+					await _w(4)
+					(up as ScrollContainer).scroll_vertical = int(opened.get_global_rect().position.y - (up as Control).get_global_rect().position.y + (up as ScrollContainer).scroll_vertical) - 4
+			await _w(int(step.get("frames", 8)))
+			return opened != null
+		"static_dock_call":
+			# A static function of a script that takes the dock first (the refactor menu's entry points).
+			(load(str(step["script"])) as GDScript).callv(str(step["method"]), [dock] + step.get("args", []))
+			await _w(int(step.get("frames", 30)))
+		"reveal":
+			# Scrolls the top window so a button reading `text` is in view (a tall window inside a short one).
+			var reveal_top: Window = null
+			for win: Window in root.get_embedded_subwindows():
+				if win.visible and not (win is PopupMenu):
+					reveal_top = win
+			if reveal_top == null:
+				return false
+			for reveal_node: Node in reveal_top.find_children("*", "Button", true, false):
+				var reveal_button: Button = reveal_node as Button
+				if reveal_button.is_visible_in_tree() and reveal_button.text.strip_edges() == str(step["text"]):
+					var scroll_up: Node = reveal_button.get_parent()
+					while scroll_up != null:
+						if scroll_up is ScrollContainer:
+							(scroll_up as ScrollContainer).ensure_control_visible(reveal_button)
+						scroll_up = scroll_up.get_parent()
+					break
+			await _w(int(step.get("frames", 10)))
+		"figure_insert":
+			# The Add these events button of the first Manual figure on screen, pressed by its own handler.
+			var figure_found: bool = false
+			for fig_node: Node in root.find_children("*", "Control", true, false):
+				if fig_node.get_script() != null and fig_node.get_script().get_global_name() == &"EventSheetDocFigure" and (fig_node as Control).is_visible_in_tree():
+					fig_node.call("_on_insert_pressed")
+					figure_found = true
+					break
+			await _w(int(step.get("frames", 30)))
+			if not figure_found:
+				_log("no figure on screen")
+				return false
+		"open_menu_button":
+			# A MenuButton of the top window opened the way its press opens it (a pushed click on a window drawn inside the editor can miss).
+			var menu_top: Window = null
+			for win: Window in root.get_embedded_subwindows():
+				if win.visible and not (win is PopupMenu):
+					menu_top = win
+			if menu_top == null:
+				_log("no window holds a menu button")
+				return false
+			for menu_node: Node in menu_top.find_children("*", "MenuButton", true, false):
+				var menu_button: MenuButton = menu_node as MenuButton
+				if menu_button.is_visible_in_tree() and (str(step.get("text", "")).is_empty() or menu_button.text.strip_edges() == str(step["text"])):
+					menu_button.show_popup()
+					await _w(int(step.get("frames", 15)))
+					return true
+			_log("no menu button in the window")
+			return false
+		"click_inspector":
+			# A control of the Inspector found by class and tooltip (or text), clicked like a person would.
+			var clicked: bool = false
+			var passed: int = 0
+			for insp_node: Node in EditorInterface.get_inspector().find_children("*", str(step["class"]), true, false):
+				var insp: Control = insp_node as Control
+				if not insp.is_visible_in_tree():
+					continue
+				if str(step.get("tooltip", "")) != "" and insp.tooltip_text != str(step["tooltip"]):
+					continue
+				if str(step.get("text", "")) != "" and str(insp.get("text")).strip_edges() != str(step["text"]):
+					continue
+				if passed < int(step.get("nth", 0)):
+					passed += 1
+					continue
+				var irect: Rect2 = insp.get_global_rect()
+				await _click_at(irect.position + irect.size * 0.5, MOUSE_BUTTON_LEFT)
+				clicked = true
+				break
+			if not clicked:
+				_log("no inspector control %s" % str(step.get("tooltip", step.get("text", ""))))
+				return false
+		"manual_call":
+			# A call on the Manual's browser, wherever the Manual is showing (beside the sheet or in its window).
+			var doc_dock: Object = load("res://addons/eventsheet/editor/docs/doc_dock.gd")
+			var browser: Object = doc_dock.active_dock().browser() if doc_dock.is_shown_beside() else dock._docs.browser()
+			if browser == null:
+				_log("the Manual is not open")
+				return false
+			var walk: PackedStringArray = str(step["method"]).split(".")
+			var holder: Object = browser
+			for walked: int in walk.size() - 1:
+				holder = holder.get(walk[walked])
+			holder.callv(walk[walk.size() - 1], step.get("args", []))
+			await _w(int(step.get("frames", 30)))
+		"edit_resource":
+			EditorInterface.edit_resource(load(str(step["path"])))
+			await _w(int(step.get("frames", 30)))
+		"inspector_unfold_all":
+			for section: Node in EditorInterface.get_inspector().find_children("*", "EditorInspectorSection", true, false):
+				section.call("unfold")
+			await _w(int(step.get("frames", 20)))
 		_:
 			_log("unknown step %s" % step["do"])
 			return false
 	return true
+
+
+func _expand_item(item: TreeItem) -> void:
+	item.collapsed = false
+	var child: TreeItem = item.get_first_child()
+	while child != null:
+		_expand_item(child)
+		child = child.get_next()
 
 
 ## Every visible control of the editor as `path<TAB>class<TAB>text<TAB>rect`, to find the one a step names.
@@ -756,6 +903,62 @@ func _click_control(class_name_: String, text: String) -> bool:
 	return false
 
 
+## The field a `type_text` step fills: the focused one, or (when a window is open and the step names one with `where`, the text the field holds now, or `nth`) a field found in the top window - a window opened by a call has no focus until a person clicks.
+func _typing_target(where: String, nth: int) -> Control:
+	var top: Window = null
+	for win: Window in root.get_embedded_subwindows():
+		if win.visible and not (win is PopupMenu):
+			top = win
+	if top != null and where.is_empty() and nth == 0:
+		var owner_control: Control = root.gui_get_focus_owner()
+		if owner_control != null and top.is_ancestor_of(owner_control):
+			return owner_control
+	if top == null:
+		return root.gui_get_focus_owner()
+	var seen: int = 0
+	for node: Node in top.find_children("*", "LineEdit", true, false):
+		var line: LineEdit = node as LineEdit
+		if not line.is_visible_in_tree() or not line.editable:
+			continue
+		if not where.is_empty() and line.text != where:
+			continue
+		if seen < nth:
+			seen += 1
+			continue
+		line.grab_focus()
+		return line
+	for node: Node in top.find_children("*", "TextEdit", true, false):
+		if (node as TextEdit).is_visible_in_tree():
+			return node as Control
+	return root.gui_get_focus_owner()
+
+
+## Like `_click_control`, inside the top embedded window (a window's controls are placed from the window's own corner).
+func _click_control_in_popup(class_name_: String, text: String, nth: int) -> bool:
+	var top: Window = null
+	for win: Window in root.get_embedded_subwindows():
+		if win.visible and not (win is PopupMenu):
+			top = win
+	if top == null:
+		_log("no window to click in")
+		return false
+	var seen: int = 0
+	for node: Node in top.find_children("*", class_name_, true, false):
+		var control: Control = node as Control
+		if not control.is_visible_in_tree():
+			continue
+		if text != "" and str(control.get("text")).strip_edges() != text:
+			continue
+		if seen < nth:
+			seen += 1
+			continue
+		var rect: Rect2 = control.get_global_rect()
+		await _click_at(Vector2(top.position) + rect.position + rect.size * 0.5, MOUSE_BUTTON_LEFT)
+		return true
+	_log("no control %s %s in the window" % [class_name_, text])
+	return false
+
+
 ## The pointer a step left over the canvas would light a row or a chip in the picture, and where it stopped
 ## differs from shot to shot, so it is put over the empty part of the Scene dock before every capture: the
 ## pointer leaves the sheet (so no row or chip stays lit) and lands on a panel that holds nothing at that spot.
@@ -821,6 +1024,41 @@ func _grab(shot: Dictionary, shot_name: String) -> Image:
 			if rect.size == Vector2i.ZERO:
 				_log("%s: no window is open" % shot_name)
 				return null
+		"popups":
+			rect = Rect2i()
+			for win: Window in root.get_embedded_subwindows():
+				if win.visible and not (win is PopupMenu):
+					var title_h: int = win.get_theme_constant("title_height", "Window")
+					var piece: Rect2i = Rect2i(win.position - Vector2i(0, title_h), win.size + Vector2i(0, title_h))
+					rect = piece if rect.size == Vector2i.ZERO else rect.merge(piece)
+		"manual_dock":
+			rect = Rect2i(load("res://addons/eventsheet/editor/docs/doc_dock.gd").active_dock().get_global_rect())
+		"manual_beside":
+			rect = Rect2i(load("res://addons/eventsheet/editor/docs/doc_dock.gd").active_dock().get_global_rect()).merge(Rect2i(EditorInterface.get_editor_main_screen().get_global_rect()))
+		"figure":
+			for fig_node: Node in root.find_children("*", "Control", true, false):
+				if fig_node.get_script() != null and fig_node.get_script().get_global_name() == &"EventSheetDocFigure" and (fig_node as Control).is_visible_in_tree():
+					var local_rect: Rect2i = Rect2i((fig_node as Control).get_global_rect())
+					var frame: Rect2i = Rect2i(Vector2i.ZERO, fig_node.get_window().size) if fig_node.get_window() != root else whole
+					if not frame.encloses(local_rect):
+						continue
+					rect = local_rect
+					if fig_node.get_window() != root:
+						rect.position += fig_node.get_window().position
+					break
+		"error_strip":
+			var strip_node: Node = EventSheets._dock.find_child("EventSheetRuntimeErrorStrip", true, false)
+			if strip_node != null:
+				rect = Rect2i((strip_node as Control).get_global_rect()).grow(2)
+		"margin":
+			rect = Rect2i(_row_rect.position, Vector2i(int(shot.get("width", 72)), _row_rect.size.y))
+		"popup_menus":
+			rect = _popup_rect()
+			for menu: PopupMenu in _visible_menus():
+				rect = Rect2i(menu.position, menu.size) if rect.size == Vector2i.ZERO else rect.merge(Rect2i(menu.position, menu.size))
+			rect = rect.grow(2)
+		"rail":
+			rect = Rect2i(EventSheets._dock._rail_panels._root.get_global_rect())
 		"menus":
 			rect = _focus if _has_focus else Rect2i()
 			for menu: PopupMenu in _visible_menus():
@@ -855,6 +1093,9 @@ func _grab(shot: Dictionary, shot_name: String) -> Image:
 
 func _save(shot: Dictionary, cropped: Image) -> void:
 	var path: String = _out.path_join("%s.png" % shot["name"])
+	if int(shot.get("scale", 1)) > 1:
+		cropped.convert(Image.FORMAT_RGBA8)
+		cropped.resize(cropped.get_width() * int(shot["scale"]), cropped.get_height() * int(shot["scale"]), Image.INTERPOLATE_NEAREST)
 	cropped.save_png(path)
 	_log("saved %s %s sha=%s" % [path.get_file(), cropped.get_size(), FileAccess.get_sha256(path).left(16)])
 	if str(_args.get("install", "")) == "1" and shot.has("target"):
@@ -874,6 +1115,50 @@ func _unstash(path: String) -> PackedStringArray:
 	copy.close()
 	written.append(path)
 	return written
+
+
+## Files a picture needs at the paths a game would have (`res://scenes/enemy.tscn`, `res://sfx/jump.wav`): each
+## `{from, to}` entry copies a fixture to its game path for the length of the shot, so the path resolves while the
+## picture is taken and nowhere else. Returns the paths it wrote, for `_unstage`.
+func _stage(entries: Array) -> PackedStringArray:
+	var written: PackedStringArray = PackedStringArray()
+	for entry: Variant in entries:
+		var to: String = str(entry["to"])
+		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(to.get_base_dir()))
+		var bytes: PackedByteArray = FileAccess.get_file_as_bytes(str(entry["from"]))
+		var copy: FileAccess = FileAccess.open(to, FileAccess.WRITE)
+		copy.store_buffer(bytes)
+		copy.close()
+		written.append(to)
+	if not written.is_empty():
+		EditorInterface.get_resource_filesystem().scan()
+		await _w(90)
+	return written
+
+
+## Takes the staged files away again with the import and id files the editor wrote beside them, then the folders
+## they made once nothing else is in them.
+func _unstage(paths: PackedStringArray) -> void:
+	var folders: Dictionary = {}
+	for path: String in paths:
+		for leftover: String in [path, path + ".import", path + ".uid"]:
+			if FileAccess.file_exists(leftover):
+				DirAccess.remove_absolute(ProjectSettings.globalize_path(leftover))
+		# A table file the editor imported as a translation leaves one generated file per column beside it.
+		for generated: String in DirAccess.get_files_at(path.get_base_dir()):
+			if generated.begins_with(path.get_file().get_basename() + ".") and generated.ends_with(".translation"):
+				DirAccess.remove_absolute(ProjectSettings.globalize_path(path.get_base_dir().path_join(generated)))
+		var folder: String = path.get_base_dir()
+		while folder != "res://" and not folder.is_empty():
+			folders[folder] = true
+			folder = folder.get_base_dir()
+	var ordered: Array = folders.keys()
+	ordered.sort_custom(func(a: String, b: String) -> bool: return a.length() > b.length())
+	for folder: String in ordered:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(folder))
+	if not paths.is_empty():
+		EditorInterface.get_resource_filesystem().scan()
+		await _w(30)
 
 
 ## Takes a stashed sheet away again, with the compiled script and the id files the editor wrote beside it.
