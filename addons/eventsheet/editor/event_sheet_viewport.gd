@@ -973,6 +973,20 @@ func get_visible_width() -> float:
 	return _get_scroll_width()
 
 
+## The width of the window onto the sheet that a row can actually be read in: the scrolling window
+## less the vertical scrollbar when one is showing, in the sheet's own (unzoomed) pixels. The canvas is
+## never narrower than its 640 px floor, so in a narrow dock this is the smaller of the two and the
+## one row that pins its words to the reader's edge (the sheet's head bar) lays out to it.
+func get_visible_content_width() -> float:
+	var scroll: ScrollContainer = _get_scroll_container()
+	var bar: float = 0.0
+	if scroll != null:
+		var vertical: VScrollBar = scroll.get_v_scroll_bar()
+		if vertical != null and vertical.visible:
+			bar = vertical.size.x
+	return maxf(_get_scroll_width() - bar, 1.0) / maxf(_zoom_factor, 0.001)
+
+
 func get_scroll_offset() -> int:
 	return _get_scroll_offset()
 

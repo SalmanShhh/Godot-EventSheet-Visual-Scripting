@@ -721,17 +721,30 @@ func _draw_text(
 	control.draw_string(font, baseline * zoom, text, HORIZONTAL_ALIGNMENT_LEFT, physical_width, physical_size, color)
 	control.draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
 
-## Word-wrapped multi-line text (comments). `baseline` is the baseline of the FIRST line;
-## subsequent lines flow downward at the font's line height. The wrap width / break flags
-## match the viewport's wrapped_line_count(), so what is drawn fills exactly the height the
-## row reserved. Zoom is handled like _draw_text: at zoom != 1 we paint at the physical size
-## (scaling width too) so wrap points stay identical and glyphs stay crisp.
+## The lines a wrapped plain cell or note is drawn in: the offsets each visual line starts at, from the
+## one wrapping the height metrics counted with (wrap_line_starts). Kept on the span's metadata under
+## the text, width and size it was made for, so a frame that changes none of them reads it back and
+## nothing is shaped per frame.
+func _wrapped_line_starts(metadata: Dictionary, text: String, max_width: float, font: Font, font_size: int) -> PackedInt32Array:
+	var key: int = hash([text, max_width, font_size, font.get_instance_id() if font != null else 0])
+	if int(metadata.get("wrap_starts_key", 0)) == key and metadata.has("wrap_starts"):
+		return metadata["wrap_starts"]
+	var starts: PackedInt32Array = EventSheetViewportRowMetrics.wrap_line_starts(text, max_width, font, font_size)
+	metadata["wrap_starts_key"] = key
+	metadata["wrap_starts"] = starts
+	return starts
 
 
-func _draw_multiline_text(
+## Word-wrapped multi-line text (comments and long cells). `baseline` is the baseline of the FIRST
+## line; every later line is drawn `line_height` below the one before, the full height the row
+## reserved for a line, so a wrapped line can never land on the one beneath it. Each line goes
+## through _draw_text, so zoom and the bold face are handled the one way every other text is.
+func _draw_wrapped_text(
 	control: CanvasItem,
 	baseline: Vector2,
 	text: String,
+	starts: PackedInt32Array,
+	line_height: float,
 	max_width: float,
 	font: Font,
 	font_size: int,
@@ -739,18 +752,13 @@ func _draw_multiline_text(
 ) -> void:
 	if text.is_empty():
 		return
-	var zoom: float = control.get_zoom_factor() if control.has_method("get_zoom_factor") else 1.0
-	# The same word-first break rule the height metrics measured with, so a cell never paints a
-	# mid-word split its reserved height did not account for (and never splits "Ready" in two).
-	var flags: int = EventSheetViewportRowMetrics.break_flags_for(text, max_width, font, font_size)
-	if is_equal_approx(zoom, 1.0):
-		control.draw_multiline_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, max_width, font_size, -1, color, flags)
-		return
-	var physical_size: int = maxi(int(round(font_size * zoom)), 6)
-	var physical_width: float = max_width * zoom if max_width > 0.0 else max_width
-	control.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	control.draw_multiline_string(font, baseline * zoom, text, HORIZONTAL_ALIGNMENT_LEFT, physical_width, physical_size, -1, color, flags)
-	control.draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
+	for line: int in range(starts.size()):
+		var from: int = starts[line]
+		var to: int = starts[line + 1] if line + 1 < starts.size() else text.length()
+		var line_text: String = text.substr(from, to - from).strip_edges(false, true)
+		if line_text.is_empty():
+			continue
+		_draw_text(control, Vector2(baseline.x, baseline.y + float(line) * line_height), line_text, max_width, font, font_size, color)
 
 
 func draw_row(control: CanvasItem, layout: Dictionary, row_data: EventRowData, font: Font, font_size: int, editor_style: EventSheetEditorStyle = null) -> void:
@@ -2369,7 +2377,9 @@ func _draw_spans(
 			# first-line baseline using the single-line height the layout reserved.
 			var comment_line_h: float = float(metadata.get("comment_line_height", draw_font_size + 6))
 			var comment_baseline_y: float = span.rect.position.y + (comment_line_h * ROW_VERTICAL_CENTER_RATIO) + (draw_font_size * FONT_BASELINE_OFFSET_RATIO)
-			_draw_multiline_text(control, Vector2(text_x, comment_baseline_y), draw_text, text_width, font, draw_font_size, color)
+			_draw_wrapped_text(control, Vector2(text_x, comment_baseline_y), draw_text,
+				_wrapped_line_starts(metadata, draw_text, text_width, font, draw_font_size),
+				comment_line_h, text_width, font, draw_font_size, color)
 		elif painted_ranges.is_empty():
 			# A span flagged `elide` gives up its tail with an ellipsis and a gap rather than being
 			# sliced against whatever the layout put after it (a class head's includers against the
@@ -2411,7 +2421,7 @@ func _draw_spans(
 					door_breaks = stamped_breaks
 					door_baseline_y = wrapped_baseline_y
 			elif bool(metadata.get("comment_wrap", false)):
-				door_breaks = EventSheetViewportRowMetrics.wrap_break_points(draw_text, text_width, font, draw_font_size)
+				door_breaks = _wrapped_line_starts(metadata, draw_text, text_width, font, draw_font_size)
 				door_baseline_y = wrapped_baseline_y
 			_draw_comment_doors(control, span, metadata, Vector2(text_x, door_baseline_y),
 				door_line_h, door_breaks, text_width, font, draw_font_size, color)

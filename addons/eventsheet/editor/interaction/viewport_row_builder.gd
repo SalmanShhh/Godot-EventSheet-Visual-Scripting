@@ -17946,7 +17946,12 @@ func _measure_span_width(span: EventSheetSemanticSpan, display_text: String, fon
 		span_width += max(float(metadata.get("badge_extra_width", _viewport.BADGE_EXTRA_WIDTH)), 0.0)
 		span_width += horizontal_padding * 2.0
 	elif bool(metadata.get("chip", false)):
-		span_width += max(horizontal_padding * 2.0, _viewport.CHIP_EXTRA_WIDTH)
+		# A chip reserves a floor of room around its words, so a chip that fills its lane keeps its text off
+		# the edge. The Else word is the one chip that does NOT fill its lane: the line's note ("event 12 did
+		# not run") stands right after it, and a look whose chips carry no padding of their own drew the
+		# whole floor as blank space between the two words. It takes the padding the look states, no floor.
+		var chip_floor: float = 0.0 if str(metadata.get("kind", "")) == "else_keyword" else _viewport.CHIP_EXTRA_WIDTH
+		span_width += max(horizontal_padding * 2.0, chip_floor)
 	return span_width
 
 # ── Descriptor / format / classify (per-ACE display text + trigger/function classification) ───────

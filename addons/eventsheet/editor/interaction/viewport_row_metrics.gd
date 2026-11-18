@@ -487,6 +487,9 @@ static func strip_mark_advance(span: EventSheetSemanticSpan, event_style: EventS
 ## back out of it: a trigger's parameter chips, the ⟡ chip that names the pattern the event is, and the
 ## "match state" a switch says beside its trigger.
 const TRAILING_CHIP_KINDS: PackedStringArray = ["trigger_payload", "pattern_chip", "match_head"]
+## Room a documentation comment's paragraph mark takes before its first line's words (an upper bound: the
+## layout measures the mark itself, the count only has to never be narrower than what is drawn).
+const COMMENT_MARK_ALLOWANCE := 26.0
 ## The most of the conditions lane the chips after a condition may take, under a theme that lets them
 ## yield (lane_chips_yield).
 const LANE_CHIP_SHARE := 0.4
@@ -631,9 +634,8 @@ func _measure_comment_height(row_data: EventRowData) -> float:
 	# The same right edge the layout lays the note out to - the start of the right-anchored run,
 	# which on a comment row is the echo of the line the row writes. Counted here too, or the
 	# height reserved would be for wrapping the drawing never does.
-	var wrap_width: float = _comment_wrap_width(row_data.indent, canvas_width,
-		_viewport._layout_builder._flow_right_anchor(row_data,
-			canvas_width - EventSheetPalette.ROW_HORIZONTAL_PADDING, canvas_width, font, font_size))
+	var wrap_right_edge: float = _viewport._layout_builder._flow_right_anchor(row_data,
+		canvas_width - EventSheetPalette.ROW_HORIZONTAL_PADDING, canvas_width, font, font_size)
 	var total_lines: int = 0
 	for span in row_data.spans:
 		# The note's own LINES decide its height. The paragraph mark a documentation row leads with
@@ -641,7 +643,7 @@ func _measure_comment_height(row_data: EventRowData) -> float:
 		# two rows tall for a one-line note.
 		if not EventSheetViewportLayoutBuilder._is_comment_text_span(span):
 			continue
-		total_lines += _comment_span_line_count(span, wrap_width, font, font_size)
+		total_lines += _comment_span_line_count(span, _comment_span_wrap_width(row_data, span, wrap_right_edge), font, font_size)
 	return float(maxi(total_lines, 1)) * line_height
 
 
@@ -671,6 +673,30 @@ func _comment_wrap_width(indent: int, width: float, right_edge: float = -1.0) ->
 	return max(right_limit - _comment_text_origin_x(indent) - 2.0, _viewport.MIN_COMMENT_WRAP_WIDTH)
 
 
+## The width ONE text line of a comment wraps inside, which is what the painter wraps it at: a line
+## after the first starts at the row's own left edge, while the first stands beside the note's grip
+## and the paragraph mark. Counting every line at the first line's narrower width reserved a line
+## the painter never drew (and, with the lines stacked at the wrong stride, the reverse). The first
+## line is counted a little narrow on purpose - the mark's exact width is only known to the layout -
+## so a line is never drawn onto more lines than were reserved.
+func _comment_span_wrap_width(row_data: EventRowData, span: EventSheetSemanticSpan, right_edge: float) -> float:
+	var metadata: Dictionary = span.metadata if span != null and span.metadata is Dictionary else {}
+	var line_index: int = int(metadata.get("line_index", 0))
+	var wrap_width: float = _comment_wrap_width(row_data.indent, _viewport._get_logical_canvas_width(), right_edge)
+	if line_index > 0:
+		var event_style: EventSheetEventStyle = _viewport._get_event_style()
+		if event_style != null and event_style.comment_notes:
+			wrap_width += NativeRowMarks.comment_note_lead_width()
+	else:
+		for lead: EventSheetSemanticSpan in row_data.spans:
+			if EventSheetViewportLayoutBuilder._is_comment_text_span(lead):
+				break
+			var lead_metadata: Dictionary = lead.metadata if lead.metadata is Dictionary else {}
+			if bool(lead_metadata.get("badge", false)) and not bool(lead_metadata.get("comment_note_lead", false)):
+				wrap_width -= COMMENT_MARK_ALLOWANCE
+	return maxf(wrap_width, _viewport.MIN_COMMENT_WRAP_WIDTH)
+
+
 ## How many visual lines one comment span occupies after wrapping. BBCode-styled lines are
 ## drawn as a single styled run (segment wrapping is not supported), so they stay one line.
 func _comment_span_line_count(span: EventSheetSemanticSpan, wrap_width: float, font: Font, font_size: int) -> int:
@@ -682,20 +708,34 @@ func _comment_span_line_count(span: EventSheetSemanticSpan, wrap_width: float, f
 	return wrapped_line_count(span.text, wrap_width, font, font_size)
 
 
-## Word-wrapped visual line count for `text` inside `wrap_width` (logical px). Uses the same
-## TextServer word/grapheme breaking the renderer draws with, so measurement and drawing stay
-## in lock-step. Pure + static so it is unit-testable without a live viewport. >= 1 always.
+## Word-wrapped visual line count for `text` inside `wrap_width` (logical px): the number of lines
+## wrap_line_starts() finds, so the height a row reserves and the lines the painter stacks are one
+## answer. Pure + static so it is unit-testable without a live viewport. >= 1 always.
 static func wrapped_line_count(text: String, wrap_width: float, font: Font, font_size: int) -> int:
+	return wrap_line_starts(text, wrap_width, font, font_size).size()
+
+
+## The character offset each visual line of `text` starts at when it is wrapped inside `wrap_width`,
+## on the TextServer's own word breaks (a word wider than the whole width is the one thing split
+## inside). The first is always 0. This is the ONE wrapping of a plain cell or note: the count reads
+## its size, and the painter draws each line at a full line height of its own from these offsets.
+## (Measuring the wrapped block's pixel height and dividing by the font's height undercounted: the
+## shaped lines are shorter than the font's nominal height, so a second line rounded away and the
+## next row's text was drawn over it.)
+static func wrap_line_starts(text: String, wrap_width: float, font: Font, font_size: int) -> PackedInt32Array:
+	var starts := PackedInt32Array([0])
 	if font == null or text.strip_edges().is_empty() or wrap_width <= 1.0:
-		return 1
-	var single_line: float = font.get_height(font_size)
-	if single_line <= 0.0:
-		return 1
-	var wrapped_height: float = font.get_multiline_string_size(
-		text, HORIZONTAL_ALIGNMENT_LEFT, wrap_width, font_size, -1,
-		break_flags_for(text, wrap_width, font, font_size)
-	).y
-	return maxi(1, int(round(wrapped_height / single_line)))
+		return starts
+	# Text that fits on one line is the common case and needs no shaping beyond its width.
+	if font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x <= wrap_width:
+		return starts
+	var paragraph := TextParagraph.new()
+	paragraph.width = wrap_width
+	paragraph.break_flags = break_flags_for(text, wrap_width, font, font_size)
+	paragraph.add_string(text, font, font_size)
+	for line: int in range(1, paragraph.get_line_count()):
+		starts.append(paragraph.get_line_range(line).x)
+	return starts
 
 
 ## Cells break on WORDS, never inside one - "On Ready" wraps to "On / Ready", not "On Read / y".

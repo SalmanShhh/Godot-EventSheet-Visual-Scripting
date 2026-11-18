@@ -147,7 +147,13 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	# the same wherever the drag is, so its key carries just whether a drag is live; keying all of
 	# them by the target would relayout every visible row on each target change.
 	var drag_signature: String = drag_signature_for_row(index)
+	# The sheet's head bar lays its counts out to the width the reader can see, which a narrow dock keeps
+	# smaller than the canvas, so that width is part of ITS key (and only its key).
+	var is_head_bar: bool = row_data.row_uid.begins_with(_viewport._row_builder.SHEET_HEAD_BAR_UID_PREFIX)
+	var visible_width: float = minf(_viewport.get_visible_content_width(), width) if is_head_bar else width
 	var key: String = "%s:%d:%d:%s:%s" % [row_data.row_uid, index, int(width), drag_signature, _viewport._layout_style_signature]
+	if is_head_bar and visible_width < width:
+		key += ":v%d" % int(visible_width)
 	if _viewport._layout_cache.has(key):
 		var cached_layout: Dictionary = _viewport._layout_cache.get_layout(key)
 		# Selection/hover are NOT part of the cache key (geometry is unchanged by them), so they
@@ -220,7 +226,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	var action_lane_rect := Rect2()
 	var lane_divider_rect := Rect2()
 	var lane_divider_x: float = -1.0
-	var row_right_limit: float = width - EventSheetPalette.ROW_HORIZONTAL_PADDING
+	var row_right_limit: float = visible_width - EventSheetPalette.ROW_HORIZONTAL_PADDING
 	if row_data.row_type == EventRowData.RowType.EVENT:
 		lane_divider_x = _viewport.row_lane_divider_x(width, row_data.indent)
 		condition_lane_rect = Rect2(x, row_top, max(lane_divider_x - x, 1.0), row_height)
@@ -274,8 +280,6 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	if badge_reserve > 0.0:
 		flow_right_x = flow_right_anchor + badge_reserve + EventSheetPalette.SPAN_GAP
 		(NativeVariableMarks.badge_span(row_data).metadata as Dictionary)["badge_tiles_x"] = flow_right_anchor
-	var comment_wrap_width: float = _viewport._row_metrics_helper._comment_wrap_width(
-			row_data.indent, width, flow_right_anchor) if is_comment_row else 0.0
 	var comment_line_tops: Array[int] = []
 	var comment_line_counts: Array[int] = []
 	if is_comment_row:
@@ -288,7 +292,8 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				comment_line_tops.append(0)
 				comment_line_counts.append(1)
 				continue
-			var span_lines: int = _viewport._row_metrics_helper._comment_span_line_count(comment_span, comment_wrap_width, font, font_size)
+			var span_lines: int = _viewport._row_metrics_helper._comment_span_line_count(
+					comment_span, _viewport._row_metrics_helper._comment_span_wrap_width(row_data, comment_span, flow_right_anchor), font, font_size)
 			comment_line_tops.append(visual_top)
 			comment_line_counts.append(span_lines)
 			visual_top += span_lines
@@ -436,6 +441,12 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			var run_tail: float = 0.0
 			if bool(metadata.get("code_echo", false)):
 				run_tail = _right_run_after(row_data, span_index, font, font_size)
+			# The head bar's counts are whole or not drawn: a number cut by the reader's edge says less
+			# than none, and a bar too narrow for them gives the room to the words instead.
+			if is_head_bar and row_right_limit - span_x - 2.0 < span_width:
+				span.rect = Rect2()
+				metadata["no_room"] = true
+				continue
 			span_width = max(min(span_width, row_right_limit - span_x - 2.0 - run_tail), 1.0)
 			flow_right_x = span_x + span_width + 2.0 + _viewport._get_span_gap(span)
 		elif bool(metadata.get("align_center", false)):

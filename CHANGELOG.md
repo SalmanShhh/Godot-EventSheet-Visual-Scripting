@@ -4,6 +4,18 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a wrapped line of a note takes its full height
+
+A note line that wrapped drew its last words squeezed between its own first line and the next line, touching both. The wrapped lines were counted by dividing the wrapped block's pixel height by the font's nominal line height, which rounds a second line away when the shaped lines are shorter than that, and they were drawn at the shaped line's own spacing instead of a full line each. The count now comes from the line breaks the text server finds (the same ones the painter draws), every wrapped line is drawn a full line below the one before it, a note's later lines are wrapped at their own wider room rather than the first line's, and a door's underline sits on the line it is really on. Long action and condition cells that wrap read the same way. Pinned in `wrapped_text_spacing_test`.
+
+### Fixed: the counts on the head bar are never cut by the edge
+
+At a narrow dock the sheet's canvas keeps a 640 px floor, so the head bar's "29 events" ran past the visible edge and was cut mid-word. The head bar now lays its counts out to the width the reader can see (less the scrollbar), the words in the middle give way first as before, and a count that cannot fit whole is left out. The rows below still scroll sideways. Pinned in `wrapped_text_spacing_test`.
+
+### Fixed: the gap after Else
+
+The Else word reserved a floor of padding its look does not draw, which stood as a blank band between it and "event 12 did not run". It now takes the padding its look states and no more; no other row moved.
+
 ### Fixed: an event shows its number once in the margin
 
 A function that holds locals showed its number beside its head and again beside its actions. The first row of an event wears the number now and the later rows of it leave the margin bare; the status line, Go to event and the findings still name the event from any of its rows. Pinned in `margin_number_once_test`.
