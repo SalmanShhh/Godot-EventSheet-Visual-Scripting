@@ -64,6 +64,7 @@ static func run() -> bool:
 			passed = _check("doc content marker (%s): %s" % [doc_path.get_file(), needle], content.contains(needle), true) and passed
 	passed = _test_index_lists_every_guide() and passed
 	passed = _test_every_image_is_shown() and passed
+	passed = _test_every_picture_path_resolves() and passed
 	return passed
 
 
@@ -131,6 +132,45 @@ static func _test_every_image_is_shown() -> bool:
 	passed = _check("every image a guide shows exists on disk (broken: %s)"
 		% ", ".join(missing), missing.size(), 0) and passed
 	return passed
+
+
+## A picture's path must resolve FROM THE PAGE THAT WRITES IT. The check above matches by file name, so a
+## guide inside docs/Modules/ that wrote `images/x.png` (it needs `../images/x.png`) passed while the picture
+## was broken on GitHub and drawn as a caption card in the Manual. The changelogs are history and keep the
+## paths they were written with.
+static func _test_every_picture_path_resolves() -> bool:
+	var broken: Array[String] = []
+	for doc_path: String in _every_guide():
+		if doc_path.contains("/changelog/"):
+			continue
+		var body: String = FileAccess.get_file_as_string(doc_path)
+		for target: String in _picture_targets_in(body):
+			if target.begins_with("http"):
+				continue
+			if not FileAccess.file_exists(doc_path.get_base_dir().path_join(target).simplify_path()):
+				broken.append("%s -> %s" % [doc_path.trim_prefix("res://"), target])
+	broken.sort()
+	var passed: bool = _check("a path that cannot resolve from its page is named", _picture_targets_in(
+		"![a](images/x.png) <img src=\"../images/y.png\">"), PackedStringArray(["images/x.png", "../images/y.png"]))
+	return _check("every picture path resolves from the page that writes it (broken: %s)"
+		% ", ".join(broken), broken.size(), 0) and passed
+
+
+## The picture paths a page writes, exactly as written (relative to the page).
+static func _picture_targets_in(body: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for marker: String in ["](", "src=\"", "srcset=\""]:
+		var closer: String = ")" if marker == "](" else "\""
+		var at: int = body.find(marker)
+		while at >= 0:
+			var start: int = at + marker.length()
+			var end: int = body.find(closer, start)
+			if end > start:
+				var target: String = body.substr(start, end - start).strip_edges()
+				if target.to_lower().ends_with(".png") and not target.contains(" "):
+					found.append(target)
+			at = body.find(marker, at + marker.length())
+	return found
 
 
 ## Every guide the reader can open: the .md corpus under docs/ plus the README.

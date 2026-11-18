@@ -125,7 +125,7 @@ Both of them are separate verbs rather than options on the shipped ones, because
 `ace_id` and its template are a compatibility promise: existing sheets keep compiling to exactly what
 they compiled to before.
 
-![The Table Of File parameters dialog: a File box holding "res://data/items.csv" with the muted lead res:// - the game's own files: READ-ONLY once exported under it, a Separator picker reading Comma, and a First line picker reading The first line names the columns; below, the IN CODE strip showing the whole emitted read - FileAccess.open, a while over get_csv_line, and the record it builds per row](images/engine-table-read.png)
+![The Table Of File parameters dialog: a File box holding "res://data/items.csv" with the muted lead res:// - the game's own files: READ-ONLY once exported under it, a Separator picker reading Comma, and a First line picker reading The first line names the columns; below, the IN CODE strip showing the whole emitted read - FileAccess.open, a while over get_csv_line, and the record it builds per row](../images/engine-table-read.png)
 
 **Game saves are still the Save System's territory.** Slots, formats and backups live there; these
 verbs are for content a designer edits and for data a game writes out for a human to read.

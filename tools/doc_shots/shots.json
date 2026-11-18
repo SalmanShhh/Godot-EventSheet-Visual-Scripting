@@ -1,0 +1,2093 @@
+{
+	"kept": {
+		"docs/images/combo-fighter-showcase.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
+		"docs/images/draw-lab-paste.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
+		"docs/images/hierarchy-playground.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
+		"docs/images/menu-starter.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
+		"docs/images/mirror-and-flip-showcase.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
+		"docs/images/pin-modes-showcase.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
+		"docs/images/raycast-lab-3d.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
+		"docs/images/raycast-lab.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
+		"docs/images/second-view-running.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
+		"docs/images/skate-park-3d.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
+		"docs/images/skate-park.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
+		"docs/images/skill-tree-screen.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
+		"docs/images/traversal-course-3d.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
+		"docs/images/traversal-course.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken"
+	},
+	"pending": [
+		"docs/images/ace-properties-popup.png",
+		"docs/images/ace-studio-example.png",
+		"docs/images/ace-studio.png",
+		"docs/images/anatomy-panel.png",
+		"docs/images/archive-unpack.png",
+		"docs/images/arrange-by-object.png",
+		"docs/images/ask-box-proposal.png",
+		"docs/images/ask-field.png",
+		"docs/images/asset-drop.png",
+		"docs/images/async-chip.png",
+		"docs/images/batch-param-edit.png",
+		"docs/images/bbcode-param.png",
+		"docs/images/behavior-gizmo.png",
+		"docs/images/blank-events.png",
+		"docs/images/blank-start.png",
+		"docs/images/block-views-after.png",
+		"docs/images/block-views-before.png",
+		"docs/images/block-views-real-file.png",
+		"docs/images/bookmarks-panel.png",
+		"docs/images/cell-navigation.png",
+		"docs/images/code-patterns-lifted-machine.png",
+		"docs/images/code-patterns-rows.png",
+		"docs/images/code-patterns-state-machine.png",
+		"docs/images/collisions-doctor-report.png",
+		"docs/images/collisions-head-band.png",
+		"docs/images/color-no-alpha.png",
+		"docs/images/comment-doors.png",
+		"docs/images/comment-kinds.png",
+		"docs/images/conflict-view.png",
+		"docs/images/connect-signal-dialog.png",
+		"docs/images/custom-blocks.png",
+		"docs/images/data-class-add-field.png",
+		"docs/images/decl-row-canvas.png",
+		"docs/images/decl-top-canvas.png",
+		"docs/images/description-surfaces.png",
+		"docs/images/divider-guide.png",
+		"docs/images/doc-ace-reference.png",
+		"docs/images/doc-dock-beside-sheet.png",
+		"docs/images/doc-explain-panel.png",
+		"docs/images/doc-figure-tune-marks.png",
+		"docs/images/doc-figure.png",
+		"docs/images/doc-guide-anchor.png",
+		"docs/images/doc-guide-figure.png",
+		"docs/images/doc-guide-page.png",
+		"docs/images/doc-learning-paths.png",
+		"docs/images/doc-search-results.png",
+		"docs/images/docs-housekeeping.png",
+		"docs/images/doctor-reading-page.png",
+		"docs/images/doctor-tidiness-findings.png",
+		"docs/images/duplicate-as-variant.png",
+		"docs/images/enemy-stats-preview.png",
+		"docs/images/engine-table-read.png",
+		"docs/images/event-numbers.png",
+		"docs/images/events-overlay-badge.png",
+		"docs/images/export-string-options.png",
+		"docs/images/feature-tag-nudge.png",
+		"docs/images/feature-tags.png",
+		"docs/images/file-guarded-read.png",
+		"docs/images/file-place-field.png",
+		"docs/images/files-band.png",
+		"docs/images/files-runs-reopened.png",
+		"docs/images/filter-lens.png",
+		"docs/images/folder-watcher.png",
+		"docs/images/friendly-runtime-error.png",
+		"docs/images/ghost-row-chips.png",
+		"docs/images/group-breadcrumb.png",
+		"docs/images/group-reference-param.png",
+		"docs/images/hit-counts-off-margin.png",
+		"docs/images/hit-counts-off.png",
+		"docs/images/hit-counts-on-margin.png",
+		"docs/images/hit-counts-on.png",
+		"docs/images/hover-inspector-preview.png",
+		"docs/images/import-event-sheet-wizard.png",
+		"docs/images/inspector-designer.png",
+		"docs/images/inspector-drawers.png",
+		"docs/images/interop-convert-menu.png",
+		"docs/images/juice-player-inspector.png",
+		"docs/images/layout-on-top-pause-pair.png",
+		"docs/images/live-pulse.png",
+		"docs/images/local-variable-uses-highlight.png",
+		"docs/images/look-sheet-2-dialog.png",
+		"docs/images/look-sheet-3-opened.png",
+		"docs/images/look-sheet-5-variable.png",
+		"docs/images/look-sheet-6-inspector.png",
+		"docs/images/look-sheet-7-text.png",
+		"docs/images/look-sheet-8-doors.png",
+		"docs/images/looping-condition.png",
+		"docs/images/manual-docked.png",
+		"docs/images/manual-reference-page.png",
+		"docs/images/manual-reference-shape.png",
+		"docs/images/manual-search-hint.png",
+		"docs/images/manual-search.png",
+		"docs/images/manual-tutorial-step.png",
+		"docs/images/manual-tutorials.png",
+		"docs/images/manual-whats-new.png",
+		"docs/images/menu-reading-rows.png",
+		"docs/images/merge-guards.png",
+		"docs/images/migration-amber-row.png",
+		"docs/images/migration-doctor-inbox.png",
+		"docs/images/migration-head-band.png",
+		"docs/images/migration-keep-as-code.png",
+		"docs/images/migration-migrate-dialog.png",
+		"docs/images/minimap-column.png",
+		"docs/images/node-dignities.png",
+		"docs/images/number-scrubbing.png",
+		"docs/images/object-states-dialog.png",
+		"docs/images/object-states.png",
+		"docs/images/objects-rail.png",
+		"docs/images/open-progress-strip.png",
+		"docs/images/opened-script-canvas-dialog.png",
+		"docs/images/opened-script-physics.png",
+		"docs/images/opened-script-pin-modes.png",
+		"docs/images/opened-script-pin-rows.png",
+		"docs/images/opened-script-shared-store.png",
+		"docs/images/opened-script-structure5.png",
+		"docs/images/opened-script-systems.png",
+		"docs/images/opened-script-tween-and-head-accessors.png",
+		"docs/images/opened-script-undo-step.png",
+		"docs/images/opened-script-vocabulary-module.png",
+		"docs/images/opened-script-words5.png",
+		"docs/images/outline-panel.png",
+		"docs/images/pack-recipe-rows.png",
+		"docs/images/pack-taught-spellings.png",
+		"docs/images/pack-version-chip.png",
+		"docs/images/palette-param-swatches.png",
+		"docs/images/pattern-adopt-dialog.png",
+		"docs/images/pattern-chip.png",
+		"docs/images/pattern-effects-tilemap-camera.png",
+		"docs/images/pattern-manual-page.png",
+		"docs/images/pattern-pool.png",
+		"docs/images/pattern-verbs.png",
+		"docs/images/pattern-wave3.png",
+		"docs/images/pattern-wave4.png",
+		"docs/images/physics-query-rows.png",
+		"docs/images/picker-preview-panel.png",
+		"docs/images/preload-row.png",
+		"docs/images/prelude-blocks-closed.png",
+		"docs/images/prelude-blocks-open.png",
+		"docs/images/project-view.png",
+		"docs/images/property-drop.png",
+		"docs/images/provider-curation.png",
+		"docs/images/publish-version-dialog.png",
+		"docs/images/published-verb-rows.png",
+		"docs/images/reading-animation-tree-words.png",
+		"docs/images/reading-boss-phases.png",
+		"docs/images/reading-camera-relative-movement.png",
+		"docs/images/reading-cursor-ray-and-canvas.png",
+		"docs/images/reading-detection.png",
+		"docs/images/reading-dialog-hierarchy-and-function-chips.png",
+		"docs/images/reading-match-patterns-and-notes.png",
+		"docs/images/reading-mission-timer.png",
+		"docs/images/reading-orbit-words.png",
+		"docs/images/reading-pity.png",
+		"docs/images/reading-ring-and-test-fold.png",
+		"docs/images/reading-seen-heard-and-the-world.png",
+		"docs/images/reading-sprite-sound-juice.png",
+		"docs/images/reading-vectors-patterns-notes.png",
+		"docs/images/reading-world-space-ui.png",
+		"docs/images/rename-outside-row.png",
+		"docs/images/rename-receipt.png",
+		"docs/images/replace-autocomplete.png",
+		"docs/images/replace-object.png",
+		"docs/images/rich-param-cells.png",
+		"docs/images/row-doors-project.png",
+		"docs/images/row-doors.png",
+		"docs/images/save-studio-what-gets-saved.png",
+		"docs/images/save-studio.png",
+		"docs/images/scene-as-a-sheet.png",
+		"docs/images/scene-node-param-picker.png",
+		"docs/images/scenes-group-arrivals.png",
+		"docs/images/scenes-save-branch.png",
+		"docs/images/scenes-save-place-lead.png",
+		"docs/images/scenes-spawn-3d.png",
+		"docs/images/scenes-trust-inbox.png",
+		"docs/images/seam-change-type.png",
+		"docs/images/second-view-rows.png",
+		"docs/images/secret-object-drop-offer.png",
+		"docs/images/select-all-matching.png",
+		"docs/images/shared-sheet-new.png",
+		"docs/images/sheet-corner-links.png",
+		"docs/images/sheet-health-card.png",
+		"docs/images/sheet-map.png",
+		"docs/images/skill-tree-reading.png",
+		"docs/images/snippet-blanks.png",
+		"docs/images/state-play-mode.png",
+		"docs/images/state-trail.png",
+		"docs/images/successor-row-strip.png",
+		"docs/images/swipe-gestures-reading.png",
+		"docs/images/ternary-editable.png",
+		"docs/images/test-sheet-rows.png",
+		"docs/images/theme-dracula.png",
+		"docs/images/theme-editor-new-groups.png",
+		"docs/images/theme-editor-token-rows.png",
+		"docs/images/themed-gutter.png",
+		"docs/images/toolbar-moment-segment.png",
+		"docs/images/tooldev-content-packs.png",
+		"docs/images/tooldev-editor-verbs.png",
+		"docs/images/tools-compare-with.png",
+		"docs/images/tools-find-repeated-rows.png",
+		"docs/images/tools-loose-ends.png",
+		"docs/images/tools-run-tests.png",
+		"docs/images/translation-globe.png",
+		"docs/images/tween-chain-rows.png",
+		"docs/images/typed-object-labels.png",
+		"docs/images/undoable-tool-edits.png",
+		"docs/images/unique-name-rows.png",
+		"docs/images/unique-names-picker-section.png",
+		"docs/images/user-content-ask.png",
+		"docs/images/user-content-drop.png",
+		"docs/images/variable-dialog.png",
+		"docs/images/variable-sentence-head.png",
+		"docs/images/watch-never-stops.png",
+		"docs/images/welcome-documentation-link.png",
+		"docs/images/why-didnt-fire.png",
+		"docs/images/window-render-reading.png",
+		"docs/images/wired-call-rows.png",
+		"docs/images/words-settings.png",
+		"docs/previews/editor-ace-picker.png",
+		"docs/previews/editor-event-sheet.png",
+		"docs/previews/editor-generated-code-light.png",
+		"docs/previews/editor-generated-code.png",
+		"docs/previews/editor-hero-light.png",
+		"docs/previews/editor-hero.png",
+		"docs/previews/editor-type-check-light.png",
+		"docs/previews/editor-type-check.png"
+	],
+	"settle_frames": 150.0,
+	"shots": [
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "f1fdcde4f4f48ab6a7dc3b8ca97da552f897f43fbdf7c7ea8929c996bb539bb9",
+				"reading": "9f9118d455a05fc1348145b69b8d544c276a632952e63f15e92e1042d3bb9964"
+			},
+			"name": "around-objects-rows",
+			"rows": [
+				0.0,
+				6.0
+			],
+			"source": "res://tools/doc_shots/fixtures/hud_overlay.gd",
+			"target": "docs/images/around-objects-rows.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "920abc23b90335d23ae780f19d12a19b0b3115fa767095ead380f7035c8ca899",
+				"reading": "7433c46cbbe6e0b077325d659840441c3cb4fb31c7ad4055e078c67d756d010f"
+			},
+			"name": "batch6-reading",
+			"rows": [
+				4.0,
+				7.0
+			],
+			"source": "res://tools/doc_shots/fixtures/inventory_walker.gd",
+			"target": "docs/images/batch6-reading.png"
+		},
+		{
+			"batch": "sheets",
+			"crop": "rows",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "3f3f98fb832fd30b6380a825a771696a35739b452e991d39af46483fa57556a6"
+			},
+			"name": "boomer-arsenal-starter",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "new_from_template",
+					"id": 30.0
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "view_rows",
+					"from": 0.0,
+					"to": "@last"
+				}
+			],
+			"target": "docs/images/boomer-arsenal-starter.png"
+		},
+		{
+			"batch": "sheets",
+			"before": [
+				{
+					"do": "lane_ratio",
+					"value": 0.42
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "49ea6a8e55fc854928338d3c1e475aa384844b808b7821096ec8d1d7bc99a51a",
+				"reading": "8d5e508d1a3c2e806c464d35155170add6ee4ac0ae4380578ca35d8f6c2b335d"
+			},
+			"name": "collision-filter-event",
+			"rows": [
+				0.0,
+				2.0
+			],
+			"source": "res://tools/doc_shots/fixtures/enemy_trap.gd",
+			"target": "docs/images/collision-filter-event.png"
+		},
+		{
+			"batch": "sheets",
+			"crop": "rows",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "234b4df117818ab73abd7ff65735ef614afacf89120346f5fb91b6a1875e0a56",
+				"reading": "8d0400f4863b0fbeb3f8695aa4673d10865ce272e2b63d568075eed254023a2f"
+			},
+			"name": "command-tool-rows",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/scene_counter.gd",
+			"target": "docs/images/command-tool-rows.png",
+			"window": [
+				1760.0,
+				900.0
+			]
+		},
+		{
+			"batch": "sheets",
+			"cleanup": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet display",
+						"Compact Rows"
+					]
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "77c3d8ec281497c19f98d1788075a1776dc8a1faea7611a828204cb1f4f0374a",
+				"reading": "c198d4719af6a73c687c9a32fb4ba46c5a97944c0fac73ba362e4e12c2bed099"
+			},
+			"layout": "vertical",
+			"name": "compact-rows",
+			"parts": [
+				{
+					"height": 360.0,
+					"rows": [
+						0.0,
+						8.0
+					],
+					"source": "res://tools/doc_shots/fixtures/item_carrier.gd"
+				},
+				{
+					"before": [
+						{
+							"activate": true,
+							"button": "Menu",
+							"do": "menu_open",
+							"path": [
+								"View",
+								"Sheet display",
+								"Compact Rows"
+							]
+						}
+					],
+					"height": 360.0,
+					"rows": [
+						0.0,
+						8.0
+					],
+					"source": "res://tools/doc_shots/fixtures/item_carrier.gd"
+				}
+			],
+			"target": "docs/images/compact-rows.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "c7f737703951e4229ea571abd98eef3533ec0337d7b341de4ddf6b11d88190e7",
+				"reading": "0391f9556098d8830fd0fd03e83b1c00716c1b3283ea082554cf774f5fc7b57e"
+			},
+			"name": "data-asset-reading",
+			"rows": [
+				0.0,
+				4.0
+			],
+			"source": "res://tools/doc_shots/fixtures/enemy_loader.gd",
+			"target": "docs/images/data-asset-reading.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "06c07bdb67f5f5ecc4e4f8acc95dcb309848de9729ac4741a9f953b63d14f2d1",
+				"reading": "b3721045641c2add826cac8c7d11d268e94074bbf7fa876ffe8744e2c6bef495"
+			},
+			"name": "data-type-include-bar",
+			"rows": [
+				0.0,
+				3.0
+			],
+			"source": "res://tools/doc_shots/fixtures/enemy_stats.gd",
+			"target": "docs/images/data-type-include-bar.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "b13328b2a076b1b6d983d631af6262d65d2fe304415399b47e5f627046bf3f90",
+				"reading": "66933d191d9275895f5253ff987e85cd7c2084df430807ef5383d625fe2f2fcd"
+			},
+			"name": "define-rows",
+			"rows": [
+				67.0,
+				70.0
+			],
+			"source": "res://eventsheet_addons/health/health_behavior.gd",
+			"target": "docs/images/define-rows.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "8204e074c9eab3bd04adcad273c7fec1b81f7317d6fabc5327d9bcb24c525060",
+				"reading": "b4f8e8b95c2bd44b70729336cf843467c63259eb98f16c792305b1f51cd3d04e"
+			},
+			"layout": "vertical",
+			"name": "derived-call-rows",
+			"parts": [
+				{
+					"before": [
+						{
+							"class": "Button",
+							"do": "click_control",
+							"text": "Code"
+						},
+						{
+							"do": "wait",
+							"frames": 40.0
+						}
+					],
+					"crop": "code",
+					"height": 270.0,
+					"source": "res://tools/doc_shots/fixtures/alarm_bar.gd"
+				},
+				{
+					"before": [],
+					"rows": [
+						0.0,
+						3.0
+					],
+					"source": "res://tools/doc_shots/fixtures/alarm_bar.gd"
+				}
+			],
+			"target": "docs/images/derived-call-rows.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "008117e07a2afa5a68eb19c8d8341f0442559b9001d64b5b94d3c48c8078522d",
+				"reading": "dbb3fe02b5e0df5565da8719c3037e55b13bccaeddca434fcda38418f7066ff9"
+			},
+			"layout": "vertical",
+			"name": "derived-property-rows",
+			"parts": [
+				{
+					"before": [
+						{
+							"class": "Button",
+							"do": "click_control",
+							"text": "Code"
+						},
+						{
+							"do": "wait",
+							"frames": 40.0
+						}
+					],
+					"crop": "code",
+					"height": 330.0,
+					"source": "res://tools/doc_shots/fixtures/torch_flicker.gd"
+				},
+				{
+					"before": [
+						{
+							"do": "lane_ratio",
+							"value": 0.42
+						}
+					],
+					"rows": [
+						0.0,
+						2.0
+					],
+					"source": "res://tools/doc_shots/fixtures/torch_flicker.gd"
+				}
+			],
+			"target": "docs/images/derived-property-rows.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "62e08ccf79e402660f53f9cf6daca665cbca47e18f199ec40b68277703cb4dd0",
+				"reading": "5bca04b4f97ce284ef515ea8a82ef09f4560ad066950f7a43c217a1414f44346"
+			},
+			"name": "editor-object-rows",
+			"rows": [
+				0.0,
+				7.0
+			],
+			"source": "res://tools/doc_shots/fixtures/snap_tools.gd",
+			"target": "docs/images/editor-object-rows.png",
+			"window": [
+				1760.0,
+				900.0
+			]
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "b17ca63759874cd167cdd4345767c09f457f207b3fa373264fd51f81f807e89a",
+				"reading": "ac14d4684ed7c3140fa85b7c42604778a2a2c19de2759be9c8fb95b7cbedb49a"
+			},
+			"layout": "vertical",
+			"name": "editor-plugin-reading",
+			"parts": [
+				{
+					"rows": [
+						0.0,
+						3.0
+					],
+					"source": "res://addons/eventforge/plugin.gd",
+					"width": 905.0
+				},
+				{
+					"height": 230.0,
+					"rows": [
+						"On Object Handed To Plugin"
+					],
+					"source": "res://addons/eventforge/plugin.gd"
+				}
+			],
+			"target": "docs/images/editor-plugin-reading.png",
+			"window": [
+				1760.0,
+				900.0
+			]
+		},
+		{
+			"batch": "sheets",
+			"crop": "rows",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "c4a1cd0dd54f2fd35ae3f2fbfc99a9f2ca7284682ba501d2442d8fe8e84a7693"
+			},
+			"name": "editor-tool-dock-panel-skeleton",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "new_from_template",
+					"id": 15.0
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "view_rows",
+					"from": 0.0,
+					"to": "@last"
+				}
+			],
+			"target": "docs/images/editor-tool-dock-panel-skeleton.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "5b6281fb93f7f2eed34203b51c099bdc53ba33ff6fc3d12d0fd4bad74cfcab1b",
+				"reading": "5d8ba1d4c4d785fe333192e88160afc8de5df6b68bef7385f9010069e88e711f"
+			},
+			"name": "functions-as-values",
+			"rows": [
+				0.0,
+				7.0
+			],
+			"source": "res://tools/doc_shots/fixtures/sheet_menu_wiring.gd",
+			"target": "docs/images/functions-as-values.png"
+		},
+		{
+			"batch": "sheets",
+			"crop": "rows",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "79f9c55b15eedba85d2924eb0507deb077c56b340a96643eebd8a72280c49a55"
+			},
+			"name": "game-options-starter",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "new_from_template",
+					"id": 31.0
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "view_rows",
+					"from": 0.0,
+					"to": "@last"
+				}
+			],
+			"target": "docs/images/game-options-starter.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "6c2c03493383b08d0f4331220d037750c08c90602abc86c77081227d5e26bbb8",
+				"reading": "aca1e80d38fbe4a5df9f2c238a462cc7ecefbd70d24fd2e7ce25db3132b43d2b"
+			},
+			"name": "gyro-controls-reading",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/tilt_and_gyro_camera.gd",
+			"target": "docs/images/gyro-controls-reading.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "7a69f2326a7b7ff9dedb24a0df71c70c2cbfa575feffbdb69275d2b1259a46e0",
+				"reading": "c198d4719af6a73c687c9a32fb4ba46c5a97944c0fac73ba362e4e12c2bed099"
+			},
+			"name": "hierarchy-reading",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/item_carrier.gd",
+			"target": "docs/images/hierarchy-reading.png"
+		},
+		{
+			"batch": "sheets",
+			"before": [
+				{
+					"args": [
+						"objects",
+						false
+					],
+					"do": "dock_path_call",
+					"frames": 40.0,
+					"path": "_rail_panels.set_panel_tucked"
+				}
+			],
+			"crop": "main_screen",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "2efa44a7bfa4b90342d114b7072164ccef29c542c3d7a4d7acb70fcc5ccd32eb",
+				"reading": "34ce2997306eabf6dd92d3b8e2db399dd202df6716fff07048c1edc53d0004b5"
+			},
+			"name": "input-object-bar",
+			"source": "res://tests/fixtures/input_controls_fixture.gd",
+			"target": "docs/images/input-object-bar.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "428bfac8101f03f44d5f0c5da4b3c3ed4cd4735f0435677c2554707c7b3414c7",
+				"reading": "8023e1ca49c8ed767ed34bcd62f995b7be5b9710e29b77c0aadcdbb1b9c8db2f"
+			},
+			"name": "input-window-reading",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/dodge_window.gd",
+			"target": "docs/images/input-window-reading.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "890f5bd2e8d0c17c88e32c9f230a37b59d74fb05e7fb875d954cca797594a3af",
+				"reading": "ca1ee20bb5f045986055308c6f208eec315c65d312255c2a1ecfde19a3d5983b"
+			},
+			"name": "interop-opened-gd",
+			"rows": [
+				0.0,
+				14.0
+			],
+			"source": "res://addons/eventforge/importer/variable_parser.gd",
+			"target": "docs/images/interop-opened-gd.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "bf4cbc71361cc0aac839d4888d9d7de5b41dbe83872e4c158054b4e9d90d9b13",
+				"reading": "02a48582222df171355c790e420774a3f7ba26523318b6adcd1b486dc26a5951"
+			},
+			"name": "literal-entry-chips",
+			"rows": [
+				8.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/table_tools.gd",
+			"target": "docs/images/literal-entry-chips.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "f48b60c3392bd67637b5657de33a980544f0e0a0e9c386e75669a71cbc5d8a76",
+				"reading": "4d8efad597af8009a89d85162d2d18c61586d045a3f3ad0b2f646a9209fcfee0"
+			},
+			"name": "local-rows-at-the-top-of-their-event",
+			"rows": [
+				0.0,
+				8.0
+			],
+			"source": "res://tools/doc_shots/fixtures/defender.gd",
+			"target": "docs/images/local-rows-at-the-top-of-their-event.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "d17b19a856753edd3d9636886f8b7645e461cfeb025805a20b4fa8af53f7ff58",
+				"reading": "a9f663b2e53d348709769b3193b5be6040430698fae0076c5da27b1ef579c187"
+			},
+			"layout": "vertical",
+			"name": "member-held-class-rows",
+			"parts": [
+				{
+					"rows": [
+						0.0,
+						8.0
+					],
+					"source": "res://tools/doc_shots/fixtures/radio_tuner.gd"
+				},
+				{
+					"rows": [
+						0.0,
+						"@last"
+					],
+					"source": "res://tools/doc_shots/fixtures/radio_presets.gd"
+				}
+			],
+			"target": "docs/images/member-held-class-rows.png"
+		},
+		{
+			"batch": "sheets",
+			"crop": "submenu",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "68ff70b622646939d87243a2d70ce7f484d948feea638494c364de5c5295019e"
+			},
+			"name": "new-sheet-editor-tool-shapes",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "dock_call",
+					"method": "_open_template_menu"
+				},
+				{
+					"button": "@open",
+					"do": "menu_open",
+					"path": [
+						"Editor Tool\u00c3\u00a2\u00e2\u201a\u00ac\u00c2\u00a6"
+					]
+				}
+			],
+			"target": "docs/images/new-sheet-editor-tool-shapes.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "96e84d9a1a8169ee9653d5037eadff3daf287bcb40aca7f71fc8b30ba6fd23b6",
+				"reading": "5b43de21ceb51f3f113b400397d44d68eff537abb5e7ac67be22d3c1b4a21ae5"
+			},
+			"name": "opened-pack-head-open",
+			"rows": [
+				"AI Driver",
+				"coyote_time \u00c3\u00a2\u00c5\u00a1\u00e2\u201e\u00a2"
+			],
+			"source": "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd",
+			"target": "docs/images/opened-pack-head-open.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "625bb37db3d506e92f2db0214cbc6ddfcd0eb1aebc76170b031c9a4244caeea8",
+				"reading": "5b43de21ceb51f3f113b400397d44d68eff537abb5e7ac67be22d3c1b4a21ae5"
+			},
+			"name": "opened-pack-head",
+			"rows": [
+				0.0,
+				"Camera Mode Changed"
+			],
+			"source": "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd",
+			"target": "docs/images/opened-pack-head.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "1980e9daa13d88880e05b8c51671a28ca1a0d9ca33a9b2edd80996f6fe1674b8",
+				"reading": "5b43de21ceb51f3f113b400397d44d68eff537abb5e7ac67be22d3c1b4a21ae5"
+			},
+			"name": "opened-pack-input-triggers",
+			"rows": [
+				"On mouse moved",
+				"Release Mouse"
+			],
+			"source": "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd",
+			"target": "docs/images/opened-pack-input-triggers.png"
+		},
+		{
+			"batch": "sheets",
+			"cleanup": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet display",
+						"Humanized Names"
+					]
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "699934d2655cb791dcd769173f3c10efa0fdc4db5b6a82a8e5e28a4874c30c14",
+				"reading": "5b43de21ceb51f3f113b400397d44d68eff537abb5e7ac67be22d3c1b4a21ae5"
+			},
+			"layout": "vertical",
+			"name": "opened-pack-lenses",
+			"parts": [
+				{
+					"height": 330.0,
+					"rows": [
+						153.0,
+						163.0
+					],
+					"source": "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd"
+				},
+				{
+					"before": [
+						{
+							"activate": true,
+							"button": "Menu",
+							"do": "menu_open",
+							"path": [
+								"View",
+								"Sheet display",
+								"Humanized Names"
+							]
+						}
+					],
+					"height": 330.0,
+					"rows": [
+						153.0,
+						163.0
+					],
+					"source": "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd"
+				}
+			],
+			"target": "docs/images/opened-pack-lenses.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "8917af5c6ad3d241bca739ec1fea380fdebe5bfff64b24b6a0e46649a8dbd59e",
+				"reading": "5b43de21ceb51f3f113b400397d44d68eff537abb5e7ac67be22d3c1b4a21ae5"
+			},
+			"name": "opened-pack-sentences",
+			"rows": [
+				"hopping is true",
+				"Air Jump"
+			],
+			"source": "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd",
+			"target": "docs/images/opened-pack-sentences.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "7a2d39ad593f27dc78793ac8de43d003f233eea57241053c7b9bda915f117b75",
+				"reading": "5b43de21ceb51f3f113b400397d44d68eff537abb5e7ac67be22d3c1b4a21ae5"
+			},
+			"name": "opened-pack-verbs",
+			"rows": [
+				"On function is_wall_riding",
+				"On function wall_normal_z"
+			],
+			"source": "res://eventsheet_addons/fps_controller/fps_controller_behavior.gd",
+			"target": "docs/images/opened-pack-verbs.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "539492fa2a9aa76b5eb74d96a9c69db7a86d5129ffa988263ba8adc9bad1fe3b",
+				"reading": "a8ee5c705f1671f72acad4c3594ab375b6941e64ff9b5552fbf2a71775f0838b"
+			},
+			"name": "opened-script-3d-words",
+			"rows": [
+				6.0,
+				15.0
+			],
+			"source": "res://tools/doc_shots/fixtures/arena_guard.gd",
+			"target": "docs/images/opened-script-3d-words.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "4eef88283a2efca45bcf323ba1cdcb2b354a0af6f185f9f514db91ddcac7a91d",
+				"reading": "d6385f2a6f34043cb41a2f5a0b1b6321124d36584b28a513f7831b3cd05cad31"
+			},
+			"name": "opened-script-batch7",
+			"rows": [
+				0.0,
+				12.0
+			],
+			"source": "res://tools/doc_shots/fixtures/snapper.gd",
+			"target": "docs/images/opened-script-batch7.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "29a4ea6dd36fd8d58e671c6f29458e0f843fcb1236dd2959fe9f36bf0d04f774",
+				"reading": "d7922ecb0078c45b87a8e65379790d98c15f872af3558d3f3f00f5c1a9f56968"
+			},
+			"name": "opened-script-behaviors-one-liners",
+			"rows": [
+				"On function go_to",
+				"Fade out over"
+			],
+			"source": "res://tools/doc_shots/fixtures/projectile.gd",
+			"target": "docs/images/opened-script-behaviors-one-liners.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "204ec45428778997b63048400fa64f841c69a7f3ea5ec9a67e85184c120de638",
+				"reading": "d7922ecb0078c45b87a8e65379790d98c15f872af3558d3f3f00f5c1a9f56968"
+			},
+			"name": "opened-script-behaviors",
+			"rows": [
+				"Set speed to",
+				"Distance travelled"
+			],
+			"source": "res://tools/doc_shots/fixtures/projectile.gd",
+			"target": "docs/images/opened-script-behaviors.png"
+		},
+		{
+			"batch": "sheets",
+			"before": [
+				{
+					"do": "click_row",
+					"text": "On ready"
+				}
+			],
+			"crop": "main_screen",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "2a0ffe3e47e50cb6a721c0c8f5c3e29d91f0eaaed7e4c303547a74bf05761857",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"name": "opened-script-event-numbers",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/opened-script-event-numbers.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "8d2092fa8da95cc7f69537c84d3d863ccb3e75a70d813fd43d9a6ed475c27ee6",
+				"reading": "3eba6442f06b36d457225be70c1c876befc9bedd157d4132b0dd8fe95159b965"
+			},
+			"layout": "vertical",
+			"name": "opened-script-head5",
+			"parts": [
+				{
+					"rows": [
+						0.0,
+						6.0
+					],
+					"source": "res://tools/doc_shots/fixtures/scout.gd"
+				},
+				{
+					"rows": [
+						0.0,
+						"@last"
+					],
+					"source": "res://tools/doc_shots/fixtures/game_settings.gd"
+				}
+			],
+			"target": "docs/images/opened-script-head5.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "7f133ed0c91af57c0167202312093a159d93a9194ae63bbfe51c1f37951e2cd6",
+				"reading": "98733c51809a3fc63ce2953c9590bae79f255100dfc262c62f628cf228bab14a"
+			},
+			"name": "opened-script-helper-of",
+			"rows": [
+				0.0,
+				11.0
+			],
+			"source": "res://tools/doc_shots/fixtures/bookmarks_panel.gd",
+			"target": "docs/images/opened-script-helper-of.png"
+		},
+		{
+			"batch": "sheets",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "f1080dfe123682273d7a6f54b2782f4e196caa3f63401a223d57d08f17e83e42",
+				"reading": "5c6bb9478222b229b54ebca3f543f5d27abd389d21baa9852f3ca896f0356411"
+			},
+			"name": "opened-script-long-tail",
+			"rows": [
+				10.0,
+				18.0
+			],
+			"source": "res://tools/doc_shots/fixtures/level_intro.gd",
+			"target": "docs/images/opened-script-long-tail.png"
+		},
+		{
+			"batch": "strip",
+			"crop": "top",
+			"files": [
+				"res://addons/eventsheet/editor/dock/menu_bar.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "d431bdedbb9b2f3a5a27b0bea3900779ed27f10c19ce1b3bd50cd31bb3849ed4",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"height": 84.0,
+			"name": "resting-toolbar",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/resting-toolbar.png"
+		},
+		{
+			"batch": "strip",
+			"crop": "strip",
+			"files": [
+				"res://addons/eventsheet/editor/dock/menu_bar.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "fd8bab11d088e7a18c4bab0d979adf764778497b9f22f3814632caffb6dd3483",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"name": "resting-toolbar-icons",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/resting-toolbar-icons.png"
+		},
+		{
+			"batch": "strip",
+			"before": [
+				{
+					"class": "Button",
+					"do": "click_control",
+					"text": "\u00c3\u201a\u00c2\u00bb"
+				}
+			],
+			"cleanup": [
+				{
+					"class": "Button",
+					"do": "click_control",
+					"text": "\u00c3\u201a\u00c2\u00ab"
+				}
+			],
+			"crop": "strip",
+			"files": [
+				"res://addons/eventsheet/editor/dock/menu_bar.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "9b9598c75aa53020970eec978230906ddf750bcec8877fc499f68aa3cd73f5d5",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"name": "resting-toolbar-expanded",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/resting-toolbar-expanded.png"
+		},
+		{
+			"batch": "strip",
+			"before": [
+				{
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"Edit"
+					]
+				}
+			],
+			"crop": "menus",
+			"files": [
+				"res://addons/eventsheet/editor/dock/menu_bar.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "9d08612ac1f19050a5457e9d4981854774a9d336f0725727e0b60ff30ae7cd04",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"name": "resting-toolbar-menu",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/resting-toolbar-menu.png"
+		},
+		{
+			"batch": "strip",
+			"before": [
+				{
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"Add"
+					]
+				}
+			],
+			"crop": "menus",
+			"files": [
+				"res://addons/eventsheet/editor/dock/menu_bar.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "793040b2774862a09855b0ad63fde73e3cdef4dc1335ef9cd091029a16921315",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"name": "add-cascade-keys",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/add-cascade-keys.png"
+		},
+		{
+			"batch": "strip",
+			"before": [
+				{
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet theme"
+					]
+				}
+			],
+			"crop": "menus",
+			"files": [
+				"res://addons/eventsheet/editor/dock/menu_bar.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "07827f0aad6b1c717defa891757c24a26052d5fd9a2a895a8974bc965cca7e65",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"name": "view-sheet-theme-menu",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/view-sheet-theme-menu.png"
+		},
+		{
+			"batch": "strip",
+			"before": [
+				{
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"Sheet"
+					]
+				}
+			],
+			"crop": "menus",
+			"files": [
+				"res://addons/eventsheet/editor/dock/menu_bar.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "bc6bb2f8bb0f78dfc8322d620c69c888d8e7e70bc9665fae1f9d1eb761ab4dbe",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"name": "look-sheet-1-menu",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/look-sheet-1-menu.png"
+		},
+		{
+			"batch": "strip",
+			"before": [
+				{
+					"class": "Button",
+					"do": "click_control",
+					"text": "\u00c3\u201a\u00c2\u00bb"
+				},
+				{
+					"class": "Button",
+					"do": "click_control",
+					"text": "\u00c3\u201a\u00c2\u00ab"
+				},
+				{
+					"args": [
+						"The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back."
+					],
+					"do": "dock_call",
+					"method": "_set_status"
+				},
+				{
+					"args": [],
+					"do": "dock_path_call",
+					"path": "_status_fade_tween.kill"
+				}
+			],
+			"crop": "main_screen",
+			"files": [
+				"res://addons/eventsheet/editor/dock/menu_bar.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "a5dc953a9091517172110636f78b811e31a02825015fccb56cc615c15906e874",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"name": "resting-toolbar-note",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/resting-toolbar-note.png",
+			"window": [
+				1960.0,
+				900.0
+			]
+		},
+		{
+			"batch": "strip",
+			"before": [
+				{
+					"button": "@play",
+					"do": "menu_open",
+					"path": []
+				}
+			],
+			"crop": "menus",
+			"files": [
+				"res://addons/eventsheet/editor/dock/menu_bar.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "01756ca05a8392ceab31b466607069e374469187a5ae9fe1a5200420a6143859",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"name": "play-button-dropdown",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/play-button-dropdown.png"
+		},
+		{
+			"batch": "strip",
+			"before": [
+				{
+					"do": "play_scene",
+					"path": "res://tools/doc_shots/fixtures/empty_stage.tscn"
+				}
+			],
+			"cleanup": [
+				{
+					"do": "stop_scene"
+				}
+			],
+			"crop": "strip",
+			"files": [
+				"res://addons/eventsheet/editor/dock/menu_bar.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "5c64cf2e213899bedb9d2af8be95c146770d2e7c32aaefd3b44dc0b14e4b9285",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"name": "play-button-stop",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/play-button-stop.png"
+		},
+		{
+			"batch": "strip",
+			"before": [
+				{
+					"class": "Button",
+					"do": "click_control",
+					"text": "\u00c3\u201a\u00c2\u00bb"
+				}
+			],
+			"cleanup": [
+				{
+					"class": "Button",
+					"do": "click_control",
+					"text": "\u00c3\u201a\u00c2\u00ab"
+				}
+			],
+			"crop": "strip",
+			"files": [
+				"res://addons/eventsheet/editor/dock/menu_bar.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "b76d3cf9ce4c4080aed837fe1ccc392fa161dc43526fae699d6cbe973d032759",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"name": "beginner-toolbar",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/beginner-toolbar.png",
+			"trim_top": 42.0
+		},
+		{
+			"batch": "strip",
+			"crop": "rows",
+			"files": [
+				"res://addons/eventsheet/editor/dock/menu_bar.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "3d32d782a5b05907cd29bc5b1bf3dec50c4b1e9f5a03a670c0c799b9c8bea1ea",
+				"reading": "5bca04b4f97ce284ef515ea8a82ef09f4560ad066950f7a43c217a1414f44346"
+			},
+			"name": "editor-tool-bar",
+			"rows": [
+				0.0,
+				1.0
+			],
+			"source": "res://tools/doc_shots/fixtures/snap_tools.gd",
+			"target": "docs/images/editor-tool-bar.png",
+			"width": 1270.0,
+			"window": [
+				2100.0,
+				900.0
+			]
+		},
+		{
+			"batch": "strip",
+			"crop": "rows",
+			"files": [
+				"res://addons/eventsheet/editor/dock/menu_bar.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "e75100560fba4351fb3ae14d80ab167b2ea22bd02ff70a05383228d94e22fe9a",
+				"reading": "ac14d4684ed7c3140fa85b7c42604778a2a2c19de2759be9c8fb95b7cbedb49a"
+			},
+			"name": "this-editor-plugin-bar",
+			"rows": [
+				0.0,
+				2.0
+			],
+			"source": "res://addons/eventforge/plugin.gd",
+			"target": "docs/images/this-editor-plugin-bar.png",
+			"width": 1175.0,
+			"window": [
+				2100.0,
+				900.0
+			]
+		},
+		{
+			"batch": "strip",
+			"before": [
+				{
+					"do": "right_click_row",
+					"text": "On ready",
+					"x": 30.0
+				},
+				{
+					"button": "@open",
+					"do": "menu_open",
+					"path": [
+						"Refactor"
+					]
+				}
+			],
+			"crop": "menus",
+			"files": [
+				"res://addons/eventsheet/editor/dock/menu_bar.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "d68b236e103fd283d8e01b5ca6bd03ca6d6881426137d304a502f7a6d47f0ce9",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"name": "refactor-row-menu",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/refactor-row-menu.png"
+		},
+		{
+			"batch": "picker",
+			"crop": "popup",
+			"files": [
+				"res://addons/eventsheet/editor/ace_picker.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "73bf53d5ae1bdc78cecf752148b5e5a1d0058c200ae7bdc02cbc385525e80e19",
+				"godot": "4.7-stable (official)",
+				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "72559b61e18904b3e43e20de4a29da5f1c24c680a7064aa0b803590dd99a6b79",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"icons": [
+				"sections"
+			],
+			"name": "ace-picker-figure",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "picker",
+					"mode": "append_action",
+					"seed": "paste"
+				},
+				{
+					"do": "wait",
+					"frames": 60.0
+				}
+			],
+			"target": "docs/images/ace-picker-figure.png"
+		},
+		{
+			"batch": "picker",
+			"crop": "popup",
+			"files": [
+				"res://addons/eventsheet/editor/ace_picker.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "73bf53d5ae1bdc78cecf752148b5e5a1d0058c200ae7bdc02cbc385525e80e19",
+				"godot": "4.7-stable (official)",
+				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "64462218b81c6cf3a128219e7961189ddb20387c7d4d8fe6bd36a553a55fd174",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"icons": [
+				"sections"
+			],
+			"name": "raycast-vocabulary",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "picker",
+					"mode": "append_action",
+					"seed": "raycast"
+				},
+				{
+					"do": "wait",
+					"frames": 60.0
+				}
+			],
+			"target": "docs/images/raycast-vocabulary.png"
+		},
+		{
+			"batch": "picker",
+			"crop": "popup",
+			"files": [
+				"res://addons/eventsheet/editor/ace_picker.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "73bf53d5ae1bdc78cecf752148b5e5a1d0058c200ae7bdc02cbc385525e80e19",
+				"godot": "4.7-stable (official)",
+				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "72559b61e18904b3e43e20de4a29da5f1c24c680a7064aa0b803590dd99a6b79",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"icons": [
+				"sections"
+			],
+			"name": "paste-picker",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "picker",
+					"mode": "append_action",
+					"seed": "paste"
+				},
+				{
+					"do": "wait",
+					"frames": 60.0
+				}
+			],
+			"target": "docs/images/paste-picker.png"
+		},
+		{
+			"batch": "picker",
+			"crop": "popup",
+			"files": [
+				"res://addons/eventsheet/editor/ace_picker.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "73bf53d5ae1bdc78cecf752148b5e5a1d0058c200ae7bdc02cbc385525e80e19",
+				"godot": "4.7-stable (official)",
+				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "e940309e0007709bd984255cc43edce76b6cea59e7e1bd8d2981d00324f4a35b",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"icons": [
+				"sections"
+			],
+			"name": "object-first-add",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"context": {
+						"object_first": true
+					},
+					"do": "picker",
+					"mode": "new_event",
+					"seed": ""
+				},
+				{
+					"do": "wait",
+					"frames": 60.0
+				}
+			],
+			"target": "docs/images/object-first-add.png"
+		},
+		{
+			"batch": "picker",
+			"crop": "popup",
+			"files": [
+				"res://addons/eventsheet/editor/ace_picker.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "73bf53d5ae1bdc78cecf752148b5e5a1d0058c200ae7bdc02cbc385525e80e19",
+				"godot": "4.7-stable (official)",
+				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "bf6f7e2db94fdabf574dba0b90a7ac7d0e7531d5af11c000b333d55384ae102a",
+				"reading": "ffbfe8f905eea2918c088c36dfc76982e4dc13d0b90c0e3ffb3b15bfea4399a0"
+			},
+			"icons": [
+				"sections"
+			],
+			"name": "picker-functions-page",
+			"source": "res://tests/fixtures/picker_functions_fixture.gd",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tests/fixtures/picker_functions_fixture.gd"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tests/fixtures/picker_functions_fixture.gd"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tests/fixtures/picker_functions_fixture.gd"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"context": {
+						"object_first": true
+					},
+					"do": "picker",
+					"mode": "new_event",
+					"seed": ""
+				},
+				{
+					"do": "wait",
+					"frames": 60.0
+				}
+			],
+			"target": "docs/images/picker-functions-page.png"
+		},
+		{
+			"batch": "picker",
+			"crop": "popup",
+			"files": [
+				"res://addons/eventsheet/editor/ace_picker.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "73bf53d5ae1bdc78cecf752148b5e5a1d0058c200ae7bdc02cbc385525e80e19",
+				"godot": "4.7-stable (official)",
+				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "aa3e1f15389616c0cc20034b42268eda7864f317e2ab799890ec87c05eea1a95",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"icons": [
+				"sections"
+			],
+			"name": "derived-methods-shelf",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tests/fixtures/interop_corpus/room.gd"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tests/fixtures/interop_corpus/room.gd"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tests/fixtures/interop_corpus/room.gd"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "picker",
+					"mode": "append_action",
+					"seed": "take damage"
+				},
+				{
+					"do": "wait",
+					"frames": 60.0
+				}
+			],
+			"target": "docs/images/derived-methods-shelf.png"
+		},
+		{
+			"batch": "picker",
+			"crop": "popup",
+			"files": [
+				"res://addons/eventsheet/editor/ace_picker.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "73bf53d5ae1bdc78cecf752148b5e5a1d0058c200ae7bdc02cbc385525e80e19",
+				"godot": "4.7-stable (official)",
+				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "e0fac0238a1a7fbe9620c62b667ae8c5ca1d5eaa1c7b9bb8e44f401c45db0221",
+				"reading": "438fe8ede7e8a1bfeffcb129da51bcbbfb6122ff5892fb7710772d6cef3d5d1e"
+			},
+			"icons": [
+				"sections"
+			],
+			"name": "interop-scoped-verbs",
+			"source": "res://tests/fixtures/interop_corpus/enemy.gd",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tests/fixtures/interop_corpus/enemy.gd"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tests/fixtures/interop_corpus/enemy.gd"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tests/fixtures/interop_corpus/enemy.gd"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "picker",
+					"mode": "new_event",
+					"seed": ""
+				},
+				{
+					"do": "wait",
+					"frames": 60.0
+				}
+			],
+			"target": "docs/images/interop-scoped-verbs.png"
+		},
+		{
+			"batch": "picker",
+			"crop": "popup",
+			"files": [
+				"res://addons/eventsheet/editor/ace_picker.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "73bf53d5ae1bdc78cecf752148b5e5a1d0058c200ae7bdc02cbc385525e80e19",
+				"godot": "4.7-stable (official)",
+				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "3cc471131d45a31bd19f8dcef56c873a8ca4a2aaf2203dba084954863a8046db",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"icons": [
+				"sections"
+			],
+			"name": "look-sheet-4-picker",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "picker",
+					"mode": "append_action",
+					"seed": "focus"
+				},
+				{
+					"do": "push_key",
+					"key": "Down",
+					"times": 8.0
+				},
+				{
+					"do": "wait",
+					"frames": 20.0
+				},
+				{
+					"do": "wait",
+					"frames": 60.0
+				}
+			],
+			"target": "docs/images/look-sheet-4-picker.png"
+		},
+		{
+			"batch": "picker",
+			"crop": "popup",
+			"files": [
+				"res://addons/eventsheet/editor/ace_picker.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "73bf53d5ae1bdc78cecf752148b5e5a1d0058c200ae7bdc02cbc385525e80e19",
+				"godot": "4.7-stable (official)",
+				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "a651737d2f3e4b3d7025f231dbb1cfe2fe4e4596f882261c09597180805c5e1c",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"icons": [
+				"sections"
+			],
+			"name": "picker-gate-fix",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "picker",
+					"mode": "new_condition_event",
+					"seed": "host is valid"
+				},
+				{
+					"do": "wait",
+					"frames": 60.0
+				}
+			],
+			"target": "docs/images/picker-gate-fix.png"
+		},
+		{
+			"batch": "picker",
+			"crop": "popup",
+			"files": [
+				"res://addons/eventsheet/editor/ace_picker.gd"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "73bf53d5ae1bdc78cecf752148b5e5a1d0058c200ae7bdc02cbc385525e80e19",
+				"godot": "4.7-stable (official)",
+				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "1ad3e47ccc9345d0fd7915b358853f5bd6369a8c81a3409d40a6d1c7f4163c0f",
+				"reading": "033c780287af37c4e3dddf1821a1b1f36fd3c61caa5ac981e665364df5e947ab"
+			},
+			"icons": [
+				"sections"
+			],
+			"name": "picker-recipes",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/fixtures/player.gd"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "picker",
+					"mode": "new_event",
+					"seed": "wall jump recovery zz"
+				},
+				{
+					"do": "wait",
+					"frames": 60.0
+				}
+			],
+			"target": "docs/images/picker-recipes.png"
+		}
+	],
+	"window": [
+		1600.0,
+		900.0
+	]
+}
