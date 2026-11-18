@@ -148,8 +148,9 @@ The pack answers what happens next with triggers, so each answer is an ordinary 
   gives the key to the control being rebound and leaves the other without it (it turns up in *Unbound
   Actions*). **Pick Another Key** forgets the press and goes on listening.
 - **Escape cancels.** While a row is listening, the key your `ui_cancel` action is bound to stops the
-  listening and fires **On Binding Cancelled**; that key cannot itself be bound while listening. A plain
-  left click is left to the page, so the player can still press Swap or another button. A pad's B button
+  listening and fires **On Binding Cancelled**; that key cannot itself be bound while listening. A left
+  click is captured like any other mouse button, except one that lands on a button, so the player can still
+  press Swap or another button; a click anywhere else is bound. A pad's B button
   is a normal binding, so a pad can be rebound too.
 - The pack catches the press before any button sees it and marks it handled, so Space or a pad's A does not
   press the button that started the listening a second time.

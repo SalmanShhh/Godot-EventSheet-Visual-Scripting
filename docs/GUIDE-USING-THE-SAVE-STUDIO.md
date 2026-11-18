@@ -150,7 +150,7 @@ Options, key bindings and graphics are kept in their own files, apart from save 
 |---|---|---|---|
 | `user://save_0.cfg` | The game itself: where the player is, what they carry. One file per slot. | Save Game, Save Value | Load Game |
 | `user://settings.cfg` | Every declared setting: volume, subtitles, fullscreen, quality. One file for the whole game. | Save All Settings, Save Setting | Load All Settings |
-| `user://bindings.cfg`, and `user://settings.cfg` under `[bindings]` | Which key or button does each action in the Input Map. | Keyboard > Save bindings, or Settings > Save Bindings | the Load bindings row of the same pair |
+| `user://bindings.cfg`, and `user://settings.cfg` under `[bindings]` | Keyboard > Save bindings writes `user://bindings.cfg`; Settings > Save Bindings keeps them in `user://settings.cfg` under `[bindings]`, beside the options. | Keyboard > Save bindings, or Settings > Save Bindings | the Load bindings row of the same pair |
 
 The Key bindings card names both places because the bindings can be kept either way: the Keyboard object's rows write their own file, and the Game Settings pack keeps them in its settings file, beside the options. Use one pair or the other, never half of each. The settings file's name is the pack's `settings_file` property (default `user://settings.cfg`).
 
@@ -162,7 +162,7 @@ The **Options and Quick Save** showcase (`demo/showcase/options_and_quick_save/`
 
 1. Press **Tab** (or the pad's Y) to open the options. Drag **Master volume** to 30 and tick **Fullscreen**. On the controls page, click the keyboard button of **Open Options** and press **O**. Press **Back**. That wrote `user://settings.cfg`: the two settings under `[settings]` and the controls under `[bindings]`.
 2. Walk with the arrow keys and pick up two coins. Press **F5**: *Saved (slot 0)* appears. That wrote `user://save_0.cfg` with `coins`, `player_spot` and `picked_coins`.
-3. Stop the game and run it again. The volume is 30, the window is fullscreen, and **O** opens the options: the options and the controls came back by themselves. You have no coins and the player is at the start, because the game itself comes back only when you ask.
+3. Stop the game and run it again. The volume is 30, the window is fullscreen, and **Tab** opens the options: the options and the controls came back by themselves. You have no coins and the player is at the start, because the game itself comes back only when you ask.
 4. Press **F9**. The coins, the places you picked them up and where the player stood are back.
 
 Now open this window on the showcase's sheet. **What gets saved** reads *coins, player_spot, picked_coins only at your Save Game / Load Game*: all three are set to **Manually**, which is why F5 and F9 do all the work. **Save slots** lists `save_0.cfg`, and **Look inside a save** shows `coins 2` and the `player_spot`. **Player settings** names the other two files.

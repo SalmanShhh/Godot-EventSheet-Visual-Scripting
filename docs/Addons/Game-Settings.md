@@ -238,8 +238,9 @@ and marks it handled. Two things follow:
 - **Space, Enter and a pad's A do not press the button that started the listening again.** They are
   `ui_accept`, and a press left for the controls would re-arm the row.
 - **Escape cancels.** The key `ui_cancel` is bound to stops the listening, changes nothing and fires
-  **On Binding Cancelled**; that key cannot itself be bound while listening. A plain left click is never
-  captured, so the player can still press Swap, Take it anyway or another binding button. A pad's B button
+  **On Binding Cancelled**; that key cannot itself be bound while listening. A left click is captured like any
+  other mouse button, except one that lands on a button, so the player can still press Swap, Take it anyway,
+  Reset or another binding button; a click anywhere else is bound. A pad's B button
   is an ordinary binding.
 
 ## The options screen
@@ -584,6 +585,8 @@ On Ready
 
 ## Tips and common mistakes
 
+- **A project of your own can point the pack at its own file.** Set `settings_file` (default `user://settings.cfg`) and
+  every save and load in the pack, the bindings included, uses that file instead. Set it before Load All Settings.
 - **Declare before anything else touches a setting.** Set Setting refuses an undeclared name with a
   warning, and Setting Value gives nothing back. Declaring in the earliest On Ready you have is the
   habit that avoids this.
