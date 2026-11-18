@@ -61,7 +61,8 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 	var library_names: Dictionary = {}
 	var held_packs: Dictionary = {}
 	if EventSheetPackLibrary.exists():
-		var index: Dictionary = EventSheetPackLibrary.class_index()
+		var index: Dictionary = await EventSheetPackLibrary.class_index_in_turns(
+			func(read: int) -> void: await EventSheetProjectDoctor.breathe_every(read))
 		for declared: String in index:
 			var folder: String = str(index[declared])
 			library_names[declared] = folder

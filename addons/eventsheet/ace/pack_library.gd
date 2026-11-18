@@ -165,14 +165,58 @@ static func class_index(root: String = LIBRARY_ROOT) -> Dictionary:
 	if _class_index_cache.has(root):
 		return _class_index_cache[root]
 	var index: Dictionary = {}
-	var pattern: RegEx = RegEx.create_from_string("(?m)^class_name\\s+([A-Za-z_][A-Za-z0-9_]*)")
+	var pattern: RegEx = _class_line_pattern()
 	for pack_dir: String in folders(root):
 		for script_path: String in _scripts_in(root.path_join(pack_dir)):
-			var found: RegExMatch = pattern.search(FileAccess.get_file_as_string(script_path))
-			if found != null and not index.has(found.get_string(1)):
-				index[found.get_string(1)] = pack_dir
+			_note_declared(index, script_path, pack_dir, pattern)
 	_class_index_cache[root] = index
 	return index
+
+
+## The same table, read a few scripts at a time: `after_script` is awaited after each one with how many
+## have been read, so a caller that draws (the Project Doctor) can give the editor a frame between them.
+## Opening a hundred and eighty files is a quarter of a second on a machine that checks each open.
+static func class_index_in_turns(after_script: Callable, root: String = LIBRARY_ROOT) -> Dictionary:
+	if _class_index_cache.has(root):
+		return _class_index_cache[root]
+	var index: Dictionary = {}
+	var pattern: RegEx = _class_line_pattern()
+	var read: int = 0
+	for pack_dir: String in folders(root):
+		for script_path: String in _scripts_in(root.path_join(pack_dir)):
+			_note_declared(index, script_path, pack_dir, pattern)
+			read += 1
+			await after_script.call(read)
+	_class_index_cache[root] = index
+	return index
+
+
+static func _class_line_pattern() -> RegEx:
+	return RegEx.create_from_string("^class_name\\s+([A-Za-z_][A-Za-z0-9_]*)")
+
+
+## Files the class a script declares under `pack_dir`, unless an earlier folder already holds that name.
+static func _note_declared(index: Dictionary, script_path: String, pack_dir: String, line_pattern: RegEx) -> void:
+	var declared: String = _declared_class(script_path, line_pattern)
+	if not declared.is_empty() and not index.has(declared):
+		index[declared] = pack_dir
+
+
+## The class a script declares: the first line of it that starts `class_name`, or "". The declaration sits
+## in the first lines of a script, so the file is read a line at a time and left as soon as it is found
+## instead of being read whole - the library is some five megabytes and most of it is never needed.
+static func _declared_class(script_path: String, line_pattern: RegEx) -> String:
+	var file: FileAccess = FileAccess.open(script_path, FileAccess.READ)
+	if file == null:
+		return ""
+	while not file.eof_reached():
+		var line: String = file.get_line()
+		if not line.begins_with("class_name"):
+			continue
+		var found: RegExMatch = line_pattern.search(line)
+		if found != null:
+			return found.get_string(1)
+	return ""
 
 
 ## The library folders a pack needs, read from its own `@ace_requires` and theirs in turn - a class
