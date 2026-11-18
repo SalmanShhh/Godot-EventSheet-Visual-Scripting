@@ -74,6 +74,9 @@ On a project of two thousand scripts the mistake checks read twelve sheets and b
 ### Fixed: a missing folder no longer prints an engine error
 
 A closest-file hint for a path in a sheet row, and the list of runtime helpers in a project that carries the plugin without the behaviour library, listed a folder that was not there and printed "Couldn't open directory" into Output; each now asks first.
+### Changed: the documentation pictures are retaken from the real editor, and a test says when one goes stale
+
+A new tool, `tools/doc_shots.ps1`, starts one sandboxed Godot editor (its own settings, single-window mode, 100% scale, a clean session) and takes each picture from `tools/doc_shots/shots.json` the way a person would: it opens the sheet, opens the menu or the Add window with the keys, and saves the cropped window. Running it twice writes the same bytes. The first pictures retaken are the sheets of real files, the toolbar and menus, and the Add window; every one shows today's default look and Godot's own words, in the editor's own fonts and theme. A new test, `doc_pictures_fresh_test`, keeps what each picture shows beside it (what the rows say, the icons in frame, the engine version) and fails with the picture's name, the pages that show it and the line that retakes it when one of those moves; a picture with no entry, or an entry whose file is gone, fails too. A guide in `docs/Modules/` now finds the `engine-table-read.png` picture it names, and `docs_integrity_test` checks that every picture path resolves from the page that writes it, not only that the file name exists somewhere.
 
 ### Changed: eleven more behaviour icons are redrawn with one large, simple shape each
 

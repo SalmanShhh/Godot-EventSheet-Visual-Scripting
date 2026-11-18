@@ -1,0 +1,12 @@
+[gd_resource type="EditorSettings" format=3]
+
+[resource]
+interface/theme/color_preset = "Default"
+interface/editor/appearance/display_scale = 2
+interface/editor/display/single_window_mode = true
+interface/editor/appearance/show_update_spinner = 0
+interface/editor/behavior/save_on_focus_loss = false
+interface/editor/behavior/show_internal_errors_in_toast_notifications = 2
+interface/editor/appearance/expand_to_title = true
+interface/editor/display/update_continuously = true
+network/connection/check_for_updates = 1
