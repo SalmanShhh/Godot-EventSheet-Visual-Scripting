@@ -237,15 +237,18 @@ static func is_current_format(dump_text: String) -> bool:
 ## A viewport wired the way the canvas wires one, holding `sheet`. The caller frees it.
 ##
 ## Reading mode is on because the dump is about what a row SAYS, not about the authoring chrome
-## around it, and read-only because nothing here may write a byte back to a sheet.
-static func viewport_for(sheet: EventSheetResource) -> EventSheetViewport:
+## around it, and read-only because nothing here may write a byte back to a sheet. `registry` is the
+## vocabulary the canvas looks a verb up in: the dump leaves it empty (a reading that comes from the
+## descriptor alone), and a caller asking about a reading that needs the live definitions hands in
+## one it has filled.
+static func viewport_for(sheet: EventSheetResource, registry: EventSheetACERegistry = null) -> EventSheetViewport:
 	sheet.read_only = true
 	if sheet.editor_style == null:
 		var style: EventSheetEditorStyle = EventSheetEditorStyle.new()
 		style.ensure_defaults()
 		sheet.editor_style = style
 	var viewport: EventSheetViewport = EventSheetViewport.new()
-	viewport.set_ace_registry(EventSheetACERegistry.new())
+	viewport.set_ace_registry(registry if registry != null else EventSheetACERegistry.new())
 	viewport.set_sheet(sheet)
 	viewport.set_reading_mode(true)
 	return viewport
@@ -258,8 +261,8 @@ static func viewport_for(sheet: EventSheetResource) -> EventSheetViewport:
 ## pending values those formatters hand to the next span made. Classifying inside the walk would
 ## therefore let one cell's leftovers land on the next cell's spans, which is the one way an
 ## instrument could change the thing it measures.
-static func readings_of_sheet(sheet: EventSheetResource, origin_prefix: String) -> Array:
-	var viewport: EventSheetViewport = viewport_for(sheet)
+static func readings_of_sheet(sheet: EventSheetResource, origin_prefix: String, registry: EventSheetACERegistry = null) -> Array:
+	var viewport: EventSheetViewport = viewport_for(sheet, registry)
 	var rows: Array = []
 	_walk_rows(viewport, viewport._root_rows, rows)
 	var readings: Array = []

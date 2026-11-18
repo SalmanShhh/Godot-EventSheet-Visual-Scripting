@@ -18128,7 +18128,7 @@ func _object_label_for(provider_id: String, ace_id: String, params: Dictionary =
 				return str(_picked_words[target])
 			if not target.is_empty() and target != "self":
 				return node_type
-			var own: String = _own_object_for_class(node_type)
+			var own: String = _own_object_for_class(node_type, str(definition.metadata.get("codegen_template", "")))
 			return own if not own.is_empty() else node_type
 	if provider_id.is_empty() or provider_id == "Core":
 		# An event sheet treats the input devices as OBJECTS, not as part of System: a captured-cursor
@@ -18218,7 +18218,7 @@ func _own_object_word() -> String:
 ## script's own node - the script extends that class or one below it - else "". An opened behaviour
 ## pack reads under its picker name here too, like its own verbs. The caller decides first whether
 ## the line is about the script's own node at all: a row with a target of its own never asks.
-func _own_object_for_class(node_type: String) -> String:
+func _own_object_for_class(node_type: String, template: String = "") -> String:
 	var sheet: EventSheetResource = _viewport._sheet if _viewport != null else null
 	if sheet == null:
 		return ""
@@ -18231,7 +18231,41 @@ func _own_object_for_class(node_type: String) -> String:
 	if ClassDB.class_exists(StringName(host)) and ClassDB.class_exists(StringName(node_type)) \
 			and ClassDB.is_parent_class(StringName(host), StringName(node_type)):
 		return own
+	if _two_d_verb_fits_host(host, node_type, template):
+		return own
 	return ""
+
+
+## Whether a verb filed under a 2D node class can speak for a script that extends a 3D one. Set Velocity X
+## and Add To Velocity have no 3D twin, but their line (`velocity.x = 4`) is as true of a 3D body as of a
+## 2D one, so the row reads under the script's own name like the 3D verb beside it. True only when the
+## script extends a 3D class, the verb is filed under a 2D class, and the template names nothing 2D (no
+## 2D class, no Vector2) and starts with a member the host itself has. A 2D file and a plain Node keep
+## the class the verb is filed under.
+func _two_d_verb_fits_host(host: String, node_type: String, template: String) -> bool:
+	if not node_type.ends_with("2D") or template.strip_edges().is_empty():
+		return false
+	if not ClassDB.class_exists(StringName(host)) or not ClassDB.is_parent_class(StringName(host), &"Node3D"):
+		return false
+	if _two_d_words.search(template) != null:
+		return false
+	var found: RegExMatch = _leading_member.search(template)
+	if found == null:
+		return false
+	var member: String = found.get_string(1)
+	if ClassDB.class_has_method(StringName(host), StringName(member)):
+		return true
+	for property: Dictionary in ClassDB.class_get_property_list(StringName(host)):
+		if str(property.get("name", "")) == member:
+			return true
+	return false
+
+
+## A word that makes a template about 2D: a 2D class, or a vector or rectangle of two axes.
+static var _two_d_words: RegEx = RegEx.create_from_string("2D|Vector2|Rect2")
+
+## The member a template starts with, after the optional `{host.}` or `{target.}` marker.
+static var _leading_member: RegEx = RegEx.create_from_string("^\\s*(?:\\{(?:host|target)\\.\\})?([a-z_][a-z0-9_]*)")
 
 
 ## A call to a sheet Function - the row IS an abstraction (a named verb), so it reads under the object
@@ -18685,6 +18719,8 @@ func _own_object_for_class_verb(provider_id: String, ace_id: String, params: Dic
 	var host: String = str(sheet.host_class).strip_edges()
 	if host == node_type or (ClassDB.class_exists(host) and ClassDB.class_exists(node_type)
 			and ClassDB.is_parent_class(host, node_type)):
+		return own
+	if _two_d_verb_fits_host(host, node_type, str(definition.metadata.get("codegen_template", ""))):
 		return own
 	return ""
 
