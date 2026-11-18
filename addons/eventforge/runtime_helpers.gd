@@ -25,6 +25,10 @@ const _DECLARATION := "(?m)^class_name\\s+([A-Za-z_][A-Za-z0-9_]*)"
 ## class_name -> file name for every helper script in `library_dir`.
 static func class_files(library_dir: String = LIBRARY_DIR) -> Dictionary:
 	var out: Dictionary = {}
+	# A project that carries the plugin without the behaviour library has no such folder, and listing one
+	# that is not there prints an engine error into Output on every run that asks.
+	if not DirAccess.dir_exists_absolute(library_dir):
+		return out
 	var pattern: RegEx = RegEx.create_from_string(_DECLARATION)
 	for file_name: String in DirAccess.get_files_at(library_dir):
 		if file_name.get_extension() != "gd":
