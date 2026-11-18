@@ -11265,6 +11265,6 @@ Opened the issue form in your browser. Nothing is sent until you press Submit th
 The script %s followed its sheet to its new place.,Le script %s a suivi sa feuille à son nouvel emplacement.
 "The open sheet follows %s to its new place, and its script %s goes with it.","La feuille ouverte suit %s à son nouvel emplacement, et son script %s la suit."
 the Load bindings row of the same pair,la ligne Charger les touches de la même paire
-"The slot card, which the Save System keeps for the load menu:",
-"Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.",
-"Keyboard ▸ Save bindings, or Settings ▸ Save Bindings",
+"The slot card, which the Save System keeps for the load menu:","La carte de l'emplacement, que le Save System garde pour le menu de chargement :"
+"Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.","Clavier ▸ Enregistrer les touches écrit %s ; Settings ▸ Save Bindings les garde dans %s sous [%s], à côté des options."
+"Keyboard ▸ Save bindings, or Settings ▸ Save Bindings","Clavier ▸ Enregistrer les touches, ou Settings ▸ Save Bindings"

@@ -11265,6 +11265,6 @@ Opened the issue form in your browser. Nothing is sent until you press Submit th
 The script %s followed its sheet to its new place.,스크립트 %s가 시트의 새 위치를 따라갔습니다.
 "The open sheet follows %s to its new place, and its script %s goes with it.","열려 있는 시트가 %s의 새 위치를 따라가고, 스크립트 %s도 함께 옮겨집니다."
 the Load bindings row of the same pair,같은 쌍의 바인딩 불러오기 행
-"The slot card, which the Save System keeps for the load menu:",
-"Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.",
-"Keyboard ▸ Save bindings, or Settings ▸ Save Bindings",
+"The slot card, which the Save System keeps for the load menu:","슬롯 카드 - 불러오기 메뉴를 위해 Save System이 보관합니다:"
+"Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.","키보드 ▸ 바인딩 저장은 %s에 쓰고, Settings ▸ Save Bindings는 옵션 옆의 %s 안 [%s]에 보관합니다."
+"Keyboard ▸ Save bindings, or Settings ▸ Save Bindings","키보드 ▸ 바인딩 저장, 또는 Settings ▸ Save Bindings"

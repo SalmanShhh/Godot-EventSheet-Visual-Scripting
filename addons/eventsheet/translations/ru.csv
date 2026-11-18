@@ -11265,6 +11265,6 @@ Opened the issue form in your browser. Nothing is sent until you press Submit th
 The script %s followed its sheet to its new place.,Скрипт %s последовал за своим листом на новое место.
 "The open sheet follows %s to its new place, and its script %s goes with it.","Открытый лист следует за файлом %s на новое место, а его скрипт %s идёт вместе с ним."
 the Load bindings row of the same pair,строка «Загрузить привязки» из той же пары
-"The slot card, which the Save System keeps for the load menu:",
-"Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.",
-"Keyboard ▸ Save bindings, or Settings ▸ Save Bindings",
+"The slot card, which the Save System keeps for the load menu:","Карточка слота, которую Save System хранит для меню загрузки:"
+"Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.","Клавиатура ▸ Сохранить привязки пишет %s; Settings ▸ Save Bindings хранит их в %s в разделе [%s], рядом с настройками."
+"Keyboard ▸ Save bindings, or Settings ▸ Save Bindings",Клавиатура ▸ Сохранить привязки или Settings ▸ Save Bindings

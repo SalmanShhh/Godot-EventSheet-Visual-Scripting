@@ -11265,6 +11265,6 @@ Opened the issue form in your browser. Nothing is sent until you press Submit th
 The script %s followed its sheet to its new place.,脚本 %s 已跟随它的表单到新位置。
 "The open sheet follows %s to its new place, and its script %s goes with it.",已打开的表单会跟随 %s 到新位置，它的脚本 %s 也会一起移动。
 the Load bindings row of the same pair,同一对中的“加载按键绑定”行
-"The slot card, which the Save System keeps for the load menu:",
-"Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.",
-"Keyboard ▸ Save bindings, or Settings ▸ Save Bindings",
+"The slot card, which the Save System keeps for the load menu:","存档位卡片，由 Save System 为读取菜单保存："
+"Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.",键盘 ▸ 保存按键绑定 会写入 %s；Settings ▸ Save Bindings 则把它们保存在 %s 的 [%s] 段中，与选项放在一起。
+"Keyboard ▸ Save bindings, or Settings ▸ Save Bindings",键盘 ▸ 保存按键绑定，或 Settings ▸ Save Bindings
