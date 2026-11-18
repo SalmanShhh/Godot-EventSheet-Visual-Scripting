@@ -11271,3 +11271,4 @@ the Load bindings row of the same pair,la riga Carica i tasti della stessa coppi
 "Saved %s. %s","%s salvato. %s"
 "%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.","%s non è stato scritto: è uno script tuo, non uno creato da questo foglio, e scriverlo sostituirebbe il tuo codice. Rinomina il foglio o lo script in modo che i due nomi siano diversi, poi riprova."
 "%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.","%s non è stato scritto: appartiene al foglio %s. Rinomina uno dei due fogli in modo che i nomi siano diversi, poi riprova."
+"Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.",

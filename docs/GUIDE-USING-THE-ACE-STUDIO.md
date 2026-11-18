@@ -112,7 +112,8 @@ The dialog's live preview shows the one function you are editing; the side panel
 **Picker preview** tab (it shows while the Add window is open) keeps the same promise for the WHOLE
 sheet - every published action, condition and expression, every trigger, and every exported
 knob rendered as the picker will show it, live from the unsaved sheet. Rename one, move its
-category, or toggle featured, and its picker face updates there immediately.
+category, or toggle featured, and its picker face updates there immediately. A sheet that
+publishes nothing yet shows one sentence in the tab saying how to publish a function.
 
 <img src="images/picker-preview-panel.png" alt="The side panel's Picker preview tab, open beside the Add window on the Health pack: each published entry with its kind pill, the featured star on Take Damage and Heal, the parameter list in parentheses, and the Health category chip." width="300">
 

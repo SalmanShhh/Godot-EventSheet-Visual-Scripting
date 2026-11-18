@@ -11271,3 +11271,4 @@ the Load bindings row of the same pair,同一对中的“加载按键绑定”�
 "Saved %s. %s","已保存 %s。%s"
 "%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.","未写入 %s：它是你自己的脚本，不是这个事件表生成的，写入会替换你的代码。请重命名这个事件表或该脚本，使两个名称不同，然后重试。"
 "%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.","未写入 %s：它属于事件表 %s。请重命名两个事件表中的一个，使名称不同，然后重试。"
+"Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.",

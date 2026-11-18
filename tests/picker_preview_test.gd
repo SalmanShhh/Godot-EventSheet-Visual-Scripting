@@ -65,7 +65,29 @@ static func run() -> bool:
 	all_passed = _check("a dict knob previews too", str(_entry(entries, "Speed").get("kind")), "knob") and all_passed
 	all_passed = _check("a non-exported dict variable never previews", _entry(entries, "Hidden State"), {}) and all_passed
 	all_passed = _check("a null sheet previews nothing", EventSheetPickerPreviewPanel.collect_preview(null), []) and all_passed
+	all_passed = _body(sheet) and all_passed
 	return all_passed
+
+
+## The tab's body: the list when the sheet publishes something, one quiet sentence when it does not,
+## and a list that takes the height the tab has (the scroll box was as tall as its own minimum, which is
+## nothing, so the tab opened onto an empty body whatever the sheet published).
+static func _body(sheet: EventSheetResource) -> bool:
+	var panel: EventSheetPickerPreviewPanel = EventSheetPickerPreviewPanel.new()
+	panel.set_expanded(true)
+	var scroll: ScrollContainer = panel.get("_scroll") as ScrollContainer
+	var note: Label = panel.get("_empty_note") as Label
+	var ok: bool = _check("the list takes the height of the tab", scroll.size_flags_vertical, Control.SIZE_EXPAND_FILL)
+	panel.refresh(null)
+	ok = _check("a sheet that publishes nothing says so in one sentence, with no empty list",
+		[note != null and note.visible, scroll.visible], [true, false]) and ok
+	ok = _check("that sentence names the way to publish a function",
+		note != null and note.text.contains("Other sheets can use this"), true) and ok
+	panel.refresh(sheet)
+	ok = _check("a sheet that publishes something shows its list and no sentence",
+		[note != null and note.visible, scroll.visible], [false, true]) and ok
+	panel.free()
+	return ok
 
 
 static func _entry(entries: Array, name: String) -> Dictionary:

@@ -11271,3 +11271,4 @@ the Load bindings row of the same pair,строка «Загрузить при�
 "Saved %s. %s","%s сохранён. %s"
 "%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.","%s не записан: это ваш собственный скрипт, а не созданный этим листом, и запись заменила бы ваш код. Переименуйте лист или этот скрипт, чтобы имена различались, и повторите попытку."
 "%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.","%s не записан: он принадлежит листу %s. Переименуйте один из двух листов, чтобы имена различались, и повторите попытку."
+"Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.",

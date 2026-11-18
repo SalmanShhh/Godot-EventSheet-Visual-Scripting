@@ -26,6 +26,8 @@ const _ROW_HEIGHT: float = 22.0
 var _canvas: Control = null
 var _scroll: ScrollContainer = null
 var _entries: Array = []
+## The one quiet sentence the body says when the sheet publishes nothing to the picker (yet).
+var _empty_note: Label = null
 var _header_button: Button = null
 var _header_row: HBoxContainer = null
 var _expanded: bool = false
@@ -49,8 +51,17 @@ func _init() -> void:
 	# that kept one could not be dragged shut past its own header, which is how a panel is
 	# tucked away.
 	_scroll.custom_minimum_size = Vector2.ZERO
+	# The list takes the height the panel has: without this the scroll box is as tall as its own minimum,
+	# which is nothing, and the tab opened onto an empty body however many entries the sheet published.
+	_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_scroll.visible = false
 	add_child(_scroll)
+	_empty_note = Label.new()
+	_empty_note.name = "PickerPreviewEmptyNote"
+	_empty_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_empty_note.add_theme_color_override("font_color", EventSheetPopupUI.secondary_text_color())
+	_empty_note.visible = false
+	add_child(_empty_note)
 	_canvas = Control.new()
 	_canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_canvas.draw.connect(_draw_entries)
@@ -60,7 +71,6 @@ func _init() -> void:
 
 func set_expanded(expanded: bool) -> void:
 	_expanded = expanded
-	_scroll.visible = expanded
 	_refresh_header()
 	fold_toggled.emit(expanded)
 
@@ -82,6 +92,10 @@ func refresh(sheet: EventSheetResource) -> void:
 
 
 func _refresh_header() -> void:
+	# The list when there is one; the one sentence when there is none.
+	_scroll.visible = _expanded and not _entries.is_empty()
+	_empty_note.visible = _expanded and _entries.is_empty()
+	_empty_note.text = EventSheetL10n.translate("Nothing in this sheet is published to the picker yet. Tick \"Other sheets can use this\" on a function and it is listed here as the picker will show it.")
 	_header_button.text = "%s Picker preview · %d" % ["▼" if _expanded else "▶", _entries.size()]
 
 
