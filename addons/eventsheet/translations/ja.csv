@@ -11271,5 +11271,4 @@ the Load bindings row of the same pair,同じペアのバインドを読み込�
 "Saved %s. %s","%s を保存しました。%s"
 "%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.","%s は書き込まれませんでした。これはあなた自身のスクリプトで、このシートが作ったものではなく、書き込むとあなたのコードが置き換わってしまうためです。2つの名前が異なるように、シートかそのスクリプトの名前を変更してから、もう一度お試しください。"
 "%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.","%s は書き込まれませんでした。これはシート %s のものです。2つの名前が異なるように、どちらかのシートの名前を変更してから、もう一度お試しください。"
-"Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.",
 "Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.","このシートにはピッカーに公開されているものがまだありません。関数で「他のシートで使える」にチェックを入れると、ピッカーに表示されるとおりにここへ一覧されます。"
