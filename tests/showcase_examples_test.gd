@@ -66,14 +66,14 @@ static func run() -> bool:
 	# Options and Quick Save - options, controls and F5 / F9, each kept in its own file.
 	passed = _check_sheet("options_and_quick_save", "res://demo/showcase/options_and_quick_save/options_and_quick_save.gd", [
 		"class_name OptionsAndQuickSaveDemo",
-		"$Settings.declare_setting(\"master_volume\", 80, \"percent\", \"\", \"\", \"\")",
-		"$Settings.load_all_settings()",
-		"$Settings.save_all_settings()",
-		"$Settings.bind_control($OptionsPanel/Box/VolumeRow/master_volume, \"master_volume\")",
+		"$Services/Settings.declare_setting(\"master_volume\", 80, \"percent\")",
+		"$Services/Settings.load_all_settings()",
+		"$Services/Settings.save_all_settings()",
+		"$Services/Settings.bind_control($OptionsPanel/Box/VolumeRow/master_volume, \"master_volume\")",
 		"event.is_action_pressed(&\"quick_save\")",
-		"$SaveSystem.save_game()",
-		"$SaveSystem.load_game()",
-		"func _on_savesystem_before_save(_slot_index: int) -> void:",
+		"$Services/SaveSystem.save_game()",
+		"$Services/SaveSystem.load_game()",
+		"func _on_services_savesystem_2896_before_save(_slot_index: int) -> void:",
 		"func save_state() -> Dictionary:",
 		"\"player_spot\": player_spot",
 	]) and passed
