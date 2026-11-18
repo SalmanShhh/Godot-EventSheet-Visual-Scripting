@@ -11262,3 +11262,5 @@ The open sheet follows %s to its new place.,Открытый лист следу
 "A sheet's file was deleted, so its tab was closed.","Файл листа удалён, поэтому его вкладка закрыта."
 "%d sheets' files were deleted, so their tabs were closed.","Файлы листов (%d) удалены, поэтому их вкладки закрыты."
 Opened the issue form in your browser. Nothing is sent until you press Submit there.,"Форма обращения открыта в браузере. Ничего не отправляется, пока вы не нажмёте «Отправить» там."
+The script %s followed its sheet to its new place.,Скрипт %s последовал за своим листом на новое место.
+"The open sheet follows %s to its new place, and its script %s goes with it.","Открытый лист следует за файлом %s на новое место, а его скрипт %s идёт вместе с ним."

@@ -11262,3 +11262,5 @@ The open sheet follows %s to its new place.,Il foglio aperto segue %s nella sua 
 "A sheet's file was deleted, so its tab was closed.","Il file di un foglio è stato eliminato, quindi la sua scheda è stata chiusa."
 "%d sheets' files were deleted, so their tabs were closed.","I file di %d fogli sono stati eliminati, quindi le loro schede sono state chiuse."
 Opened the issue form in your browser. Nothing is sent until you press Submit there.,Il modulo di segnalazione è stato aperto nel browser. Non viene inviato nulla finché non premi Invia lì.
+The script %s followed its sheet to its new place.,Lo script %s ha seguito il suo foglio nella nuova posizione.
+"The open sheet follows %s to its new place, and its script %s goes with it.","Il foglio aperto segue %s nella sua nuova posizione, e il suo script %s lo accompagna."

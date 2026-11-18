@@ -39,6 +39,9 @@ static func run() -> bool:
 	passed = _known_sheets_funnel_tells_the_dock() and passed
 	passed = _save_after_the_file_vanished() and passed
 	passed = _gone_file_notice_is_a_quiet_amber_that_stays() and passed
+	passed = _resource_sheet_script_follows_a_rename() and passed
+	passed = _resource_sheet_script_follows_a_move_and_a_second_rename() and passed
+	passed = _resource_sheet_script_is_left_alone_when_it_cannot_follow() and passed
 	return passed
 
 
@@ -329,3 +332,146 @@ static func _gone_file_notice_is_a_quiet_amber_that_stays() -> bool:
 		["the next ordinary message takes the ordinary colour back", ordinary_again, true],
 	])
 
+
+## A resource sheet saved to `path` and compiled the way a Save compiles it: its script beside it, with the
+## compiler's own header, a uid file, and the script loaded (so it is cached, as a scene holds it).
+static func _compiled_resource_sheet(path: String) -> EventSheetResource:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	var comment: CommentRow = CommentRow.new()
+	comment.text = "saved row"
+	sheet.events.append(comment)
+	ResourceSaver.save(sheet, path)
+	var loaded: EventSheetResource = ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
+	loaded.take_over_path(path)
+	EventSheetCompiler.compile(loaded, "")
+	var script: String = path.get_basename() + "_generated.gd"
+	var id: int = ResourceUID.create_id()
+	ResourceUID.add_id(id, script)
+	_write(script + ".uid", ResourceUID.id_to_text(id) + "\n")
+	return loaded
+
+
+static func _uid_of(script: String) -> int:
+	return ResourceUID.text_to_id(FileAccess.get_file_as_string(script + ".uid").strip_edges())
+
+
+static func _generated_files(folder: String) -> Array:
+	var found: Array = []
+	for file: String in DirAccess.get_files_at(folder):
+		if file.ends_with("_generated.gd"):
+			found.append(file)
+	found.sort()
+	return found
+
+
+static func _forget_uid(id: int) -> void:
+	if ResourceUID.has_id(id):
+		ResourceUID.remove_id(id)
+
+
+## Renaming only a resource sheet carries the script it compiled with it: the file, its uid file, the
+## header that names the sheet, the uid's place, and the script a scene already holds. Nothing is left
+## under the old name, and the next Save writes into the one script instead of making a second.
+static func _resource_sheet_script_follows_a_rename() -> bool:
+	var editor: EventSheetEditor = _editor()
+	var old_path: String = SUPPORT.own_path("follow_script_rename/probe.tres")
+	var new_path: String = SUPPORT.own_path("follow_script_rename/probe_renamed.tres")
+	var old_script: String = old_path.get_basename() + "_generated.gd"
+	var new_script: String = new_path.get_basename() + "_generated.gd"
+	var sheet: EventSheetResource = _compiled_resource_sheet(old_path)
+	var held: GDScript = load(old_script) as GDScript
+	var uid: int = _uid_of(old_script)
+	var body: String = FileAccess.get_file_as_string(old_script)
+	editor._open_sheet_in_tab(sheet, old_path)
+	DirAccess.rename_absolute(old_path, new_path)
+	editor.follow_file_event("moved", old_path, new_path)
+	var said: String = editor._status_label.text
+	var moved_body: String = FileAccess.get_file_as_string(new_script)
+	EventSheetCompiler.compile(sheet, "")
+	var passed: bool = SUPPORT.pins(TEST_NAME, [
+		["the script is under the new name", FileAccess.file_exists(new_script), true],
+		["nothing is left under the old name", FileAccess.file_exists(old_script), false],
+		["its uid file went with it", FileAccess.file_exists(new_script + ".uid"), true],
+		["no uid file is left behind", FileAccess.file_exists(old_script + ".uid"), false],
+		["the uid is the same one", _uid_of(new_script), uid],
+		["the uid now answers to the new place", ResourceUID.get_id_path(uid), new_script],
+		["the header names the renamed sheet", moved_body.contains("\n# Source: %s\n" % new_path), true],
+		["the rest of the script is untouched", moved_body.replace(new_path, old_path), body],
+		["a script a scene holds takes the new path", held.resource_path, new_script],
+		["the status says the script went with the sheet", said, "The open sheet follows probe_renamed.tres to its new place, and its script probe_renamed_generated.gd goes with it."],
+		["Save writes into the one script", _generated_files(new_path.get_base_dir()), ["probe_renamed_generated.gd"]],
+	])
+	_forget_uid(uid)
+	editor.free()
+	return passed
+
+
+## A move to another folder takes the script there too, and a second rename straight after still finds the
+## script provably the sheet's (the first one rewrote the header). With no tab open the sentence names the
+## script alone.
+static func _resource_sheet_script_follows_a_move_and_a_second_rename() -> bool:
+	var editor: EventSheetEditor = _editor()
+	var first: String = SUPPORT.own_path("follow_script_move/a/probe.tres")
+	var second: String = SUPPORT.own_path("follow_script_move/b/probe.tres")
+	var third: String = SUPPORT.own_path("follow_script_move/b/probe_again.tres")
+	_compiled_resource_sheet(first)
+	var uid: int = _uid_of(first.get_basename() + "_generated.gd")
+	DirAccess.make_dir_recursive_absolute(second.get_base_dir())
+	DirAccess.rename_absolute(first, second)
+	editor.follow_file_event("moved", first, second)
+	var after_move: bool = FileAccess.file_exists(second.get_basename() + "_generated.gd")
+	var said: String = editor._status_label.text
+	DirAccess.rename_absolute(second, third)
+	editor.follow_file_event("moved", second, third)
+	var passed: bool = SUPPORT.pins(TEST_NAME, [
+		["the script moved to the other folder", after_move, true],
+		["with no tab open the sentence names the script", said, "The script probe_generated.gd followed its sheet to its new place."],
+		["the old folder holds no script", _generated_files(first.get_base_dir()), []],
+		["a second rename moves it again", _generated_files(third.get_base_dir()), ["probe_again_generated.gd"]],
+		["the uid is still the same one", _uid_of(third.get_basename() + "_generated.gd"), uid],
+	])
+	_forget_uid(uid)
+	editor.free()
+	return passed
+
+
+## A script that is not provably the sheet's own output, a new name that is taken, and a folder move
+## (which carries both files itself) all leave every file exactly where it is.
+static func _resource_sheet_script_is_left_alone_when_it_cannot_follow() -> bool:
+	var editor: EventSheetEditor = _editor()
+	var by_hand: String = SUPPORT.own_path("follow_script_alone/hand/probe.tres")
+	var by_hand_script: String = by_hand.get_basename() + "_generated.gd"
+	ResourceSaver.save(EventSheetResource.new(), by_hand)
+	_write(by_hand_script, "extends Node\n\n\nfunc _ready() -> void:\n\tpass\n")
+	var by_hand_new: String = by_hand.get_base_dir() + "/probe_renamed.tres"
+	DirAccess.rename_absolute(by_hand, by_hand_new)
+	editor.follow_file_event("moved", by_hand, by_hand_new)
+	var hand_said: String = editor._status_label.text
+
+	var taken: String = SUPPORT.own_path("follow_script_alone/taken/probe.tres")
+	var taken_new: String = taken.get_base_dir() + "/probe_renamed.tres"
+	_compiled_resource_sheet(taken)
+	var taken_script: String = taken.get_basename() + "_generated.gd"
+	var taken_text: String = FileAccess.get_file_as_string(taken_script)
+	var occupant: String = taken_new.get_basename() + "_generated.gd"
+	_write(occupant, "extends Node\n# not the sheet's\n")
+	DirAccess.rename_absolute(taken, taken_new)
+	editor.follow_file_event("moved", taken, taken_new)
+	var taken_said: String = editor._status_label.text
+
+	var folder: String = SUPPORT.own_folder("follow_script_alone/folder")
+	var inside: String = folder + "/probe.tres"
+	_compiled_resource_sheet(inside)
+	var inside_script: String = inside.get_basename() + "_generated.gd"
+	editor.follow_file_event("folder_moved", folder, folder + "_elsewhere")
+	var passed: bool = SUPPORT.pins(TEST_NAME, [
+		["a hand-written script of that name stays", FileAccess.get_file_as_string(by_hand_script).begins_with("extends Node"), true],
+		["and nothing is said about it", hand_said.contains("script"), false],
+		["a taken new name leaves the old script where it was", FileAccess.get_file_as_string(taken_script), taken_text],
+		["and leaves the other file's words as they were", FileAccess.get_file_as_string(occupant), "extends Node\n# not the sheet's\n"],
+		["the sentence names the script left behind", taken_said.begins_with("The sheet was renamed but its script probe_generated.gd was not."), true],
+		["that sentence is a quiet notice, not an error", taken_said.begins_with("⚠"), false],
+		["a folder move event moves no script by itself", FileAccess.file_exists(inside_script), true],
+	])
+	editor.free()
+	return passed
