@@ -31,6 +31,13 @@ Keyboard > Save bindings writes `user://bindings.cfg` and Settings > Save Bindin
 ### Fixed: a sheet whose Save choices are all Manually no longer makes Godot warn
 
 The block written for Manual-only choices declared a private member nothing reads. It now carries `@warning_ignore("unused_private_class_variable")`; a file written before that line still opens as its choices and saves back exactly as it was.
+### Fixed: a 3D file's velocity rows read under the file's own name
+
+Set Velocity X and Add To Velocity are filed under CharacterBody2D and have no 3D twin, so in a script that extends a 3D class their rows read "CharacterBody2D" beside a Move and slide row that read the script's own name. Where a verb filed under a 2D class writes a line that is as true of the 3D host (it names nothing 2D and starts with a member the host has), the row now reads under the host's own name. A 2D file and a plain Node keep what they showed, and the line written is the same.
+
+### Fixed: a Doctor check asked on its own no longer remembers the scenes it listed
+
+The listing of the project's scenes and scripts was kept after a check asked on its own, so a scene written just after the first ask was never seen by the second. It is now kept only while an audit is running, as the text of a file already was. This was the cause of the nightly one-process run failing the rotated-gravity check while every shard of the split run passed.
 
 ### Changed: editing a Juice card no longer reads the project
 
