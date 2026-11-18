@@ -18,39 +18,10 @@
 		"docs/images/traversal-course.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken"
 	},
 	"pending": [
-		"docs/images/rename-outside-row.png",
-		"docs/images/hover-inspector-preview.png",
-		"docs/images/tools-run-tests.png",
-		"docs/images/local-variable-uses-highlight.png",
-		"docs/images/interop-convert-menu.png",
-		"docs/images/duplicate-as-variant.png"
+		"docs/images/interop-convert-menu.png"
 	],
 	"settle_frames": 150.0,
 	"shots": [
-		{
-			"batch": "final",
-			"crop": "sheet",
-			"fingerprint": {
-				"godot": "4.7-stable (official)",
-				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "f6bbad7edd852b1c3c51665d0f3df4cc73848b151b06e5c655b0991abc0c37ea"
-			},
-			"height": 460.0,
-			"name": "blank-start",
-			"steps": [
-				{
-					"do": "close_popups"
-				},
-				{
-					"do": "main_screen",
-					"value": "EventSheet"
-				},
-				{
-					"do": "clear_status"
-				}
-			],
-			"target": "docs/images/blank-start.png"
-		},
 		{
 			"batch": "sheets",
 			"fingerprint": {
@@ -9949,6 +9920,242 @@
 			"name": "toolbar-moment-segment",
 			"source": "res://tools/doc_shots/fixtures/juice_hit.gd",
 			"target": "docs/images/toolbar-moment-segment.png"
+		},
+		{
+			"batch": "final",
+			"crop": "sheet",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "e4e7de82414012edf5354b0a60e21016c65e37ed340277ad85d005d29baf3ec0"
+			},
+			"height": 460.0,
+			"name": "blank-start",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "new_from_template",
+					"id": 0.0
+				},
+				{
+					"do": "clear_status"
+				}
+			],
+			"target": "docs/images/blank-start.png"
+		},
+		{
+			"batch": "faults",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"Tools",
+						"Run Tests…"
+					]
+				},
+				{
+					"do": "wait",
+					"frames": 900.0
+				}
+			],
+			"cleanup": [
+				{
+					"do": "close_popups"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "80bd8f11cdf9fa476ec140fb389f97a463cef3a68425c8a41581418a3d40a587",
+				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
+			},
+			"name": "tools-run-tests",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"stage": [
+				{
+					"from": "res://tools/doc_shots/fixtures/player_health_test.gd.txt",
+					"to": "res://game_tests/player_health_test.gd"
+				},
+				{
+					"from": "res://tools/doc_shots/fixtures/player_speed_test.gd.txt",
+					"to": "res://game_tests/player_speed_test.gd"
+				},
+				{
+					"from": "res://tools/doc_shots/fixtures/player_armor_test.gd.txt",
+					"to": "res://game_tests/player_armor_test.gd"
+				}
+			],
+			"target": "docs/images/tools-run-tests.png"
+		},
+		{
+			"batch": "faults",
+			"before": [
+				{
+					"do": "click_row",
+					"text": "process",
+					"x": 300.0
+				},
+				{
+					"do": "right_click_row",
+					"text": "process",
+					"x": 300.0
+				},
+				{
+					"activate": true,
+					"button": "@open",
+					"do": "menu_open",
+					"path": [
+						"Refactor",
+						"Duplicate as Variant…"
+					]
+				},
+				{
+					"do": "wait",
+					"frames": 40.0
+				}
+			],
+			"cleanup": [
+				{
+					"do": "close_popups"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "683915cf835942ad4dfbaee88f681f1c4c3ca57a36244ad8fc36b7433401d098",
+				"reading": "a1d53dbd84387fe1f01ff8244837a25263d52a2f49fdbaff12b24d34ab26c4d2"
+			},
+			"name": "duplicate-as-variant",
+			"source": "res://tools/doc_shots/fixtures/hurt_flash.gd",
+			"target": "docs/images/duplicate-as-variant.png"
+		},
+		{
+			"batch": "faults",
+			"before": [
+				{
+					"do": "hover_row",
+					"frames": 120.0,
+					"text": "health",
+					"x": 200.0
+				}
+			],
+			"crop": "borderless",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "4d53a92bf96217272491fa789e167505e410840fe309d1a1e33736b513869c57",
+				"reading": "b80ed8365617373e54277b4d270462a8bbc7f3a4315312ca321530c5bf64ce4a"
+			},
+			"keep_mouse": true,
+			"name": "hover-inspector-preview",
+			"source": "res://tools/doc_shots/fixtures/fighter_stats.gd",
+			"target": "docs/images/hover-inspector-preview.png"
+		},
+		{
+			"batch": "faults",
+			"before": [
+				{
+					"do": "hover_span",
+					"row": 9.0,
+					"word": "dealt"
+				}
+			],
+			"crop": "sheet",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "aa118b16e70671861f6e1af4c6f14f1bc6e49cb9077e6245f774d6985c0e52c4",
+				"reading": "2b72a96cf5bd784291f255543bc4e96ba27bc1c8ccdd0a821b2d0a5bcf09d170"
+			},
+			"keep_mouse": true,
+			"name": "local-variable-uses-highlight",
+			"source": "res://tools/doc_shots/fixtures/stat_tracker.gd",
+			"target": "docs/images/local-variable-uses-highlight.png"
+		},
+		{
+			"batch": "faults",
+			"before": [
+				{
+					"do": "click_row",
+					"text": "alarm",
+					"x": 300.0
+				},
+				{
+					"do": "wait",
+					"frames": 30.0
+				}
+			],
+			"cleanup": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"args": [],
+					"do": "static_call",
+					"method": "clear_cache",
+					"script": "res://addons/eventforge/importer/rename_evidence.gd"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/nothing.gd"
+				},
+				{
+					"do": "delete_user",
+					"path": "res://guard_calls.gd"
+				},
+				{
+					"do": "delete_user",
+					"path": "res://guard_calls.gd.uid"
+				}
+			],
+			"crop": "main_screen",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "6591910573b28ed8b1b3762c14641e15c18fb7ca8f464334c75f0cdca074622f",
+				"reading": "74f6dad820a724084cb560f4448ad62cfa9fbcd5f09f6e06a241114a4727f16f"
+			},
+			"name": "rename-outside-row",
+			"prelude": [
+				{
+					"do": "copy_to_user",
+					"from": "res://tools/doc_shots/fixtures/guard_before.gd.txt",
+					"to": "res://guard_calls.gd"
+				},
+				{
+					"args": [
+						"res://guard_calls.gd"
+					],
+					"do": "static_call",
+					"method": "witness_for",
+					"script": "res://addons/eventforge/importer/rename_evidence.gd"
+				},
+				{
+					"do": "copy_to_user",
+					"from": "res://tools/doc_shots/fixtures/guard_after.gd.txt",
+					"to": "res://guard_calls.gd"
+				},
+				{
+					"args": [
+						"res://guard_calls.gd"
+					],
+					"do": "static_call",
+					"method": "witness_for",
+					"script": "res://addons/eventforge/importer/rename_evidence.gd"
+				}
+			],
+			"source": "res://tools/doc_shots/fixtures/guard_calls.tres",
+			"target": "docs/images/rename-outside-row.png"
 		}
 	],
 	"window": [

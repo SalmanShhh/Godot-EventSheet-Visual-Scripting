@@ -416,7 +416,11 @@ func _step(step: Dictionary) -> bool:
 				return false
 			var hover_data: EventRowData = hover_view.get_row_data(hover_row)
 			for span_index: int in hover_data.spans.size():
-				if hover_data.spans[span_index].text == str(step["word"]):
+				# A local's own line names it in the span's metadata (`local_name`), not in the span's words.
+				var hover_local: String = ""
+				if hover_data.spans[span_index].metadata is Dictionary:
+					hover_local = str((hover_data.spans[span_index].metadata as Dictionary).get("local_name", ""))
+				if hover_data.spans[span_index].text == str(step["word"]) or hover_local == str(step["word"]):
 					hover_view._set_hover_state(hover_row, span_index)
 					hover_view.queue_redraw()
 					break

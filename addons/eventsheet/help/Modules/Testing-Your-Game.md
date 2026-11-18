@@ -272,7 +272,7 @@ On Test Start (test_name)
 **16. CI on every push.** One line in the pipeline, and a red build the moment a claim stops holding:
 
 ```
-godot --headless --path . --script tools/run_test_sheets.gd
+godot --headless --path . --script addons/eventsheet/editor/test_sheet_command.gd
 ```
 
 It prints a heading per test, a line per claim, the totals, and then `All tests passed.` or

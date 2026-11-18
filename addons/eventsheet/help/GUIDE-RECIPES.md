@@ -49,12 +49,13 @@ Short, concrete walkthroughs that each build one real thing - a platformer chara
 
 ## 2. The Golden Loop
 
-![A new sheet before anything is added: just its head row, Untitled, a Script extending Node, and the + Add event link under it](images/blank-start.png)
+![A new sheet before anything is added: its head row, Untitled, a Script extending Node, and the + Add event link, with the getting-started words under them - this event sheet is empty, how to add the first event, and a tip](images/blank-start.png)
 
 Every recipe below rides the same loop: **New sheet (a `.gd`) → set the host class → add events (pick
 Conditions + Actions) → save → set the `.gd` as your node's script → Run.** A sheet *is* just
 GDScript now (no `.tres` needed) - so "Open in Godot" edits the same file in the script editor, and
-any `.gd` auto-previews as an event sheet.
+any `.gd` auto-previews as an event sheet. A new sheet starts as the head row and the **+ Add event** line,
+with a few lines of getting-started words under them; they go away with your first event or variable.
 
 ---
 

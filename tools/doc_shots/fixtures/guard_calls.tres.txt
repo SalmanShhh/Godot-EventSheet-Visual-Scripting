@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="EventSheetResource" format=3]
+
+[ext_resource type="Script" path="res://addons/eventforge/resources/ace_action.gd" id="1_act"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_row.gd" id="2_row"]
+[ext_resource type="Script" path="res://addons/eventforge/resources/event_sheet.gd" id="3_sheet"]
+
+[sub_resource type="Resource" id="Resource_alarm"]
+script = ExtResource("1_act")
+provider_id = "Core"
+ace_id = "CallFunction"
+params = {
+"args": "",
+"function_name": "sound_alarm"
+}
+codegen_template = "{function_name}({args})"
+
+[sub_resource type="Resource" id="Resource_gate"]
+script = ExtResource("1_act")
+provider_id = "Core"
+ace_id = "CallFunction"
+params = {
+"args": "",
+"function_name": "open_gate"
+}
+codegen_template = "{function_name}({args})"
+
+[sub_resource type="Resource" id="Resource_first"]
+script = ExtResource("2_row")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_alarm")])
+event_uid = "4a1f20"
+
+[sub_resource type="Resource" id="Resource_second"]
+script = ExtResource("2_row")
+trigger_provider_id = "Core"
+trigger_id = "OnReady"
+actions = Array[Resource]([SubResource("Resource_gate")])
+event_uid = "4a1f21"
+
+[resource]
+script = ExtResource("3_sheet")
+external_source_path = "res://guard_calls.gd"
+events = Array[Resource]([SubResource("Resource_first"), SubResource("Resource_second")])

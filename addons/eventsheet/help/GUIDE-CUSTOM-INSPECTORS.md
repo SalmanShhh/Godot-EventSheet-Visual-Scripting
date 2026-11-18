@@ -1020,7 +1020,7 @@ and every drawer degrades to the plain field for its type.
 
 - **Hover a variable row to see its Inspector.** In the sheet, hovering an exported variable pops the same live preview card the dialog shows - decor, grouping, and the chosen widget - so you can audit a whole sheet's Inspector without opening a single dialog.
 
-  <img src="images/hover-inspector-preview.png" alt="Hovering an exported variable row pops a live Inspector preview: the Combat accent header, an info note panel, the Stats group, and the progress-bar widget, with the plain-language sentence beneath." width="420">
+  <img src="images/hover-inspector-preview.png" alt="Hovering an exported variable row pops a live Inspector preview: the Combat section header, the progress-bar widget, an info note under it, and the plain-language sentence beneath." width="420">
 - **Tick "Editable in the Inspector" first.** The drawers and most options only appear for an exported variable; they have no effect on a private value.
 - **A drawer needs its type.** Each drawer is offered only for the type it fits (progress bar for numbers, dial or min-max range for Vector2, swatch for Color, and so on). Change the type and the Inspector look list updates.
 - **A drawer carries its own bounds.** The progress bar and the min-max slider take a Min and a Max, and the dial a Reach, as details of the look itself.

@@ -407,7 +407,7 @@ The other direction is the one that used to be silent: somebody renames a functi
 editor, or a node in the Scene dock, and the rows that pointed at it are suddenly holding a name
 nothing answers to. Those rows wear the quiet amber, and the help strip says what happened.
 
-![A sheet whose first event calls Sound Alarm and whose second calls Open Gate; the first row wears the quiet amber and carries no icon or inline text, and the help strip at the foot reads sound_alarm is no longer declared in guard.gd - it went out of the file in the same save that wrote it, that same save added, with a door reading Point the rows at ring_alarm](images/rename-outside-row.png)
+![A sheet whose first event calls sound_alarm and whose second calls open_gate; the first row wears the quiet amber and carries no icon or inline text, and the help strip at the foot reads sound_alarm is no longer declared in guard_calls.gd - it went out of the file in the same save that wrote it, that same save added ring_alarm - with a door in the status bar reading Point the rows at ring_alarm](images/rename-outside-row.png)
 
 **The "did you mean" beside it is evidence, never a guess.** It is offered only when the file's own
 last save shows the old name vanishing and one name arriving - one save, one file, one swap:

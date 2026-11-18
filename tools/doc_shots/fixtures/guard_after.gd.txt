@@ -1,0 +1,9 @@
+extends Node2D
+
+
+func ring_alarm() -> void:
+	print("alarm")
+
+
+func open_gate() -> void:
+	print("gate")

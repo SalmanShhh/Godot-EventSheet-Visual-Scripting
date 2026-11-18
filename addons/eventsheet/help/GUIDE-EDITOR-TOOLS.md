@@ -865,10 +865,10 @@ The vocabulary lives in the picker's **Testing** section:
 
 ### 11.2 Running them
 
-**Tools > Run Tests…** runs every Test sheet in the project and shows the report: a verdict pill, one card per test with its claims as a table, and the whole report as copyable text. Headlessly, the same run is one command:
+**Tools > Run Tests…** runs every Test sheet in the project and shows the report: a verdict pill, one card per test with its claims as a table, and the whole report as copyable text. The tests run in a second copy of Godot started on your project (the way a game's own code runs), so the window waits for that copy to finish, and the same run is one command you can type yourself:
 
 ```
-godot --headless --path . --script tools/run_test_sheets.gd
+godot --headless --path . --script addons/eventsheet/editor/test_sheet_command.gd
 ```
 
 It prints a heading per test, a line per claim, the totals, and then either `All tests passed.` or `Some tests failed.` - and exits 0 or 1 to match, so a CI step can gate on either. Point it somewhere else with `-- --root res://tests_folder`, and give slow tests more room with `-- --timeout 10`.

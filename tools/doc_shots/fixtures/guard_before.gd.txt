@@ -1,0 +1,9 @@
+extends Node2D
+
+
+func sound_alarm() -> void:
+	print("alarm")
+
+
+func open_gate() -> void:
+	print("gate")
