@@ -98,7 +98,10 @@ static func suggest(target: String, method: String, args: String, candidates: Ar
 			continue
 		# Arity must agree exactly. A mismatch means this is a different overload or the
 		# member changed, and silently dropping or inventing an argument would corrupt the row.
-		if definition.parameters.size() != arguments.size():
+		# A verb of a scene class carries one extra leading "On node" field that the call's own
+		# receiver fills, so it is counted without it.
+		var own_count: int = definition.parameters.size() - (1 if takes_node_target(definition) else 0)
+		if own_count != arguments.size():
 			continue
 		if not found.is_empty():
 			return {}  # two candidates: the tool does not actually know
@@ -111,14 +114,31 @@ static func suggest(target: String, method: String, args: String, candidates: Ar
 	return found
 
 
+## Whether a verb's first field is the generated "On node" receiver of a scene class's verb
+## (the field the `{target.}` in its template is filled from).
+static func takes_node_target(definition: ACEDefinition) -> bool:
+	if definition == null or definition.parameters.is_empty():
+		return false
+	var first: Variant = definition.parameters[0]
+	return first is Dictionary and str((first as Dictionary).get("id", "")) == "target" \
+		and str((first as Dictionary).get("display_name", "")) == "On node"
+
+
 ## The parameter values for a converted row: each split argument mapped positionally onto the
-## verb's own parameter ids. {} when the counts disagree (the caller should not convert).
-static func mapped_params(definition: ACEDefinition, arguments: PackedStringArray) -> Dictionary:
-	if definition == null or definition.parameters.size() != arguments.size():
+## verb's own parameter ids, and the call's receiver (`target`) onto the "On node" field when the
+## verb has one. {} when the counts disagree (the caller should not convert).
+static func mapped_params(definition: ACEDefinition, arguments: PackedStringArray, target: String = "") -> Dictionary:
+	if definition == null:
 		return {}
 	var params: Dictionary = {}
+	var offset: int = 0
+	if takes_node_target(definition):
+		offset = 1
+		params["target"] = target
+	if definition.parameters.size() - offset != arguments.size():
+		return {}
 	for index: int in range(arguments.size()):
-		var parameter: Variant = definition.parameters[index]
+		var parameter: Variant = definition.parameters[index + offset]
 		if not (parameter is Dictionary):
 			return {}
 		var id: String = str((parameter as Dictionary).get("id", ""))

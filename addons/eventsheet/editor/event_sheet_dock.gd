@@ -6211,7 +6211,9 @@ func _convert_context_action_to_verb() -> void:
 				break
 	if definition == null:
 		return
-	var params: Dictionary = load(VERB_SUGGESTION_PATH).mapped_params(definition, suggestion["arguments"])
+	var call_params: Dictionary = (action as ACEAction).params if action is ACEAction else {}
+	var params: Dictionary = load(VERB_SUGGESTION_PATH).mapped_params(definition, suggestion["arguments"],
+		str(call_params.get("target", "")))
 	if params.is_empty() and definition.parameters.size() > 0:
 		return
 	_ace_apply._apply_ace_definition(definition, params, {

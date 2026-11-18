@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: "Convert to <your action>" is offered for a call on a scene class
+
+Right-clicking a hand-written call such as `$Enemy.take_damage(25.0)` is meant to offer "Convert to Enemy ▸ Take Damage" when the call matches one of your project's actions, but it never did for a class that lives in a scene: the action it would convert to carries one extra "On node" field (the receiver), so its field count never equalled the call's argument count and the match was always refused. The offer now counts the arguments without that receiver field, and converting fills "On node" with the receiver the call already had and the other fields with its arguments, so the row writes exactly the line it replaced. The matching rules are unchanged: one candidate or none, a plain reference as the receiver, and the argument count must agree. The guide's picture of this menu is retaken from a real right click on the action cell.
+
 ### Fixed: renaming a sheet's file leaves nothing of the old name behind
 
 Four things the first rename work left over now follow the rename in the same moment the tab does.
@@ -22,7 +26,7 @@ A sheet saved as a resource (a `.tres`) writes its script beside itself as `<nam
 
 ### Changed: six more guide pictures are retaken from the real editor
 
-Run Tests (with a failing test on purpose), Duplicate as Variant, the hover card of an exported variable, a new sheet's getting-started words, a local variable's uses lit by hovering its name, and a row left pointing at a name renamed outside the sheet. The picture harness can now hover a local variable's name (its span has no words of its own) and keeps the fixtures these shots need as text files. The picture of the Convert menu for a raw call is still waiting: a call to a project class now reads as that class's own verb, and the harness only reaches the row menu, not the action menu the Convert entry sits in.
+Run Tests (with a failing test on purpose), Duplicate as Variant, the hover card of an exported variable, a new sheet's getting-started words, a local variable's uses lit by hovering its name, and a row left pointing at a name renamed outside the sheet. The picture harness can now hover a local variable's name (its span has no words of its own) and keeps the fixtures these shots need as text files.
 
 ### Fixed: a new sheet shows its getting-started words
 

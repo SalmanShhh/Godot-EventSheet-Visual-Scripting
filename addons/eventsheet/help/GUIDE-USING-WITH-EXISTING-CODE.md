@@ -194,13 +194,15 @@ property opens its page in the Manual.
 A row that came in as a bare **Call Method** - typed by hand, or lifted from existing
 GDScript - can usually be named. Right-click it and, when it matches exactly one of your
 own actions, the menu offers **Convert to Inventory ▸ Add Item**. Converting gives the row
-that action's proper parameter fields and emits exactly the same code as before.
+that action's proper parameter fields and emits exactly the same code as before. The row may
+already read in plain words (Enemy, Take damage, 25) while still being a call underneath; the
+conversion is what turns it into the action itself.
 
 The offer appears only when the match is certain: the target must be a plain reference (not
 `get_node("Inventory")` or `bags[0]`), and the argument count must match exactly, so a
 conversion can never drop or invent an argument.
 
-<img src="images/interop-convert-menu.png" alt="A row reading $Enemy.take_damage(25.0) with its right-click menu open; the last entry reads Convert to Enemy - Take Damage." width="620">
+<img src="images/interop-convert-menu.png" alt="A row reading Enemy, Take damage, 25 with its right-click menu open; the last entry reads Convert to Enemy ▸ Take Damage." width="620">
 
 ### When you rename a method
 

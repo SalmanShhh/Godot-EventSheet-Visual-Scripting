@@ -17,9 +17,7 @@
 		"docs/images/traversal-course-3d.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
 		"docs/images/traversal-course.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken"
 	},
-	"pending": [
-		"docs/images/interop-convert-menu.png"
-	],
+	"pending": [],
 	"settle_frames": 150.0,
 	"shots": [
 		{
@@ -10156,6 +10154,26 @@
 			],
 			"source": "res://tools/doc_shots/fixtures/guard_calls.tres",
 			"target": "docs/images/rename-outside-row.png"
+		},
+		{
+			"batch": "interop",
+			"before": [
+				{
+					"do": "right_click_row",
+					"text": "take damage",
+					"x": 520.0
+				}
+			],
+			"crop": "menus",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "736ee2747dec92626b17500da6dc747cb25135f4f212567046f7e09ee1fa96a8",
+				"reading": "56f82a0981e846ab31ec7582c89c493393317d42be95269dbc0d74741001563c"
+			},
+			"name": "interop-convert-menu",
+			"source": "res://tools/doc_shots/fixtures/arena_hazard.gd",
+			"target": "docs/images/interop-convert-menu.png"
 		}
 	],
 	"window": [

@@ -7,6 +7,9 @@
 class_name VerbSuggestionTest
 extends RefCounted
 
+const SUPPORT := preload("res://tests/support.gd")
+const P := "verb_suggestion_test"
+
 
 static func run() -> bool:
 	var ok: bool = true
@@ -81,6 +84,29 @@ static func run() -> bool:
 		EventSheetVerbSuggestion.mapped_params(_definition("Inventory", "method:clear", "Clear", []),
 			PackedStringArray()), {}) and ok
 
+	# ── A scene class's verb carries a leading "On node" field the call's own receiver fills ──
+	var scoped_hit: ACEDefinition = _definition("Enemy", "method:take_damage", "Take Damage", ["target", "amount"])
+	(scoped_hit.parameters[0] as Dictionary)["display_name"] = "On node"
+	var scoped_vocabulary: Array = [scoped_hit]
+	var scoped: Dictionary = EventSheetVerbSuggestion.suggest("$Enemy", "take_damage", "25.0", scoped_vocabulary)
+	ok = _check("a scene class's verb is named by the call's own arguments",
+		str(scoped.get("display_name", "")), "Take Damage") and ok
+	ok = _check("a call with one argument too many still names nothing",
+		EventSheetVerbSuggestion.suggest("$Enemy", "take_damage", "25.0, 3", scoped_vocabulary), {}) and ok
+	ok = _check("a call with the argument missing still names nothing",
+		EventSheetVerbSuggestion.suggest("$Enemy", "take_damage", "", scoped_vocabulary), {}) and ok
+	ok = _check("the receiver fills On node and the argument fills the rest",
+		EventSheetVerbSuggestion.mapped_params(scoped_hit, PackedStringArray(["25.0"]), "$Enemy"),
+		{"target": "$Enemy", "amount": "25.0"}) and ok
+	ok = _check("a count mismatch maps nothing for a scene verb either",
+		EventSheetVerbSuggestion.mapped_params(scoped_hit, PackedStringArray(["1", "2"]), "$Enemy"), {}) and ok
+	var no_args_scoped: ACEDefinition = _definition("Enemy", "method:die", "Die", ["target"])
+	(no_args_scoped.parameters[0] as Dictionary)["display_name"] = "On node"
+	ok = _check("a scene verb with no arguments is named by a call with none",
+		str(EventSheetVerbSuggestion.suggest("$Enemy", "die", "", [no_args_scoped]).get("display_name", "")), "Die") and ok
+	ok = _check("and maps only the receiver",
+		EventSheetVerbSuggestion.mapped_params(no_args_scoped, PackedStringArray(), "%Enemy"), {"target": "%Enemy"}) and ok
+
 	# ── The dock path: only a raw Call Method is ever a candidate ──
 	var editor: EventSheetEditor = EventSheetEditor.new()
 	editor.setup(EventSheetResource.new())
@@ -97,6 +123,9 @@ static func run() -> bool:
 	unknown_class.params = {"target": "$NotAProjectClass", "method": "whatever", "args": ""}
 	ok = _check("a call on a class this project does not have suggests nothing",
 		editor.suggested_verb_for_action(unknown_class), {}) and ok
+
+	# ── The whole door: a hand-written call on a project class is offered, converted, and writes the same line ──
+	ok = _through_the_menu_entry() and ok
 	editor.free()
 	return ok
 
@@ -121,3 +150,52 @@ static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 		return true
 	print("[FAIL] verb_suggestion_test: %s - expected %s, got %s" % [label, str(expected), str(actual)])
 	return false
+
+
+class NoopUndoManager:
+	extends RefCounted
+	func create_action(_a = null) -> void: pass
+	func add_do_method(_a = null, _b = null, _c = null, _d = null, _e = null) -> void: pass
+	func add_undo_method(_a = null, _b = null, _c = null, _d = null, _e = null) -> void: pass
+	func commit_action() -> void: pass
+	func has_undo() -> bool: return false
+	func has_redo() -> bool: return false
+
+
+## A script that calls a method of one of the project's own scene classes: the right-click offer is
+## made for the call, and converting it names the row and keeps the line it writes.
+static func _through_the_menu_entry() -> bool:
+	var ok: bool = true
+	var source: String = "extends Node2D\n\n\nfunc _ready() -> void:\n\t$Enemy.take_damage(25.0)\n"
+	var sheet: EventSheetResource = SUPPORT.reopen(source)
+	sheet.external_source_path = SUPPORT.own_path("verb_suggestion_menu.gd")
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	editor.setup(sheet)
+	editor.set_undo_redo_manager(NoopUndoManager.new())
+	var event_row: EventRow = null
+	for entry: Variant in sheet.events:
+		if entry is EventRow:
+			event_row = entry
+	ok = SUPPORT.check(P, "the call opens as a row with one action", event_row != null and event_row.actions.size() == 1, true) and ok
+	if event_row == null or event_row.actions.size() != 1:
+		editor.free()
+		return false
+	var offer: Dictionary = editor.suggested_verb_for_action(event_row.actions[0])
+	ok = SUPPORT.check(P, "the call on a scene class is offered its verb", str(offer.get("display_name", "")), "Take Damage") and ok
+	var row_data: EventRowData = EventRowData.new()
+	row_data.source_resource = event_row
+	editor._context_row = row_data
+	editor._context_hit = {"ace_index": 0, "span_metadata": {"kind": "action", "ace_index": 0}}
+	editor._convert_context_action_to_verb()
+	event_row = null
+	for entry: Variant in sheet.events:
+		if entry is EventRow:
+			event_row = entry
+	var converted: ACEAction = event_row.actions[0] as ACEAction
+	ok = SUPPORT.check(P, "converting names the row by the project's verb", converted.ace_id, "method:take_damage") and ok
+	ok = SUPPORT.check(P, "and fills its receiver and its argument", [str(converted.params.get("target", "")), str(converted.params.get("amount", ""))],
+		["$Enemy", "25.0"]) and ok
+	var out: String = SUPPORT.compile_output(sheet, sheet.external_source_path)
+	ok = SUPPORT.check(P, "the converted row writes the line it replaced", out, source) and ok
+	editor.free()
+	return ok
