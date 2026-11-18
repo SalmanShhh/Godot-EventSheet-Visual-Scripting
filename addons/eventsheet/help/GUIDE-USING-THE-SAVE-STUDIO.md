@@ -150,7 +150,7 @@ Options, key bindings and graphics are kept in their own files, apart from save 
 |---|---|---|---|
 | `user://save_0.cfg` | The game itself: where the player is, what they carry. One file per slot. | Save Game, Save Value | Load Game |
 | `user://settings.cfg` | Every declared setting: volume, subtitles, fullscreen, quality. One file for the whole game. | Save All Settings, Save Setting | Load All Settings |
-| `user://bindings.cfg`, and `user://settings.cfg` under `[bindings]` | Keyboard > Save bindings writes `user://bindings.cfg`; Settings > Save Bindings keeps them in `user://settings.cfg` under `[bindings]`, beside the options. | Keyboard > Save bindings, or Settings > Save Bindings | the Load bindings row of the same pair |
+| `user://bindings.cfg`, and `user://settings.cfg` under `[bindings]` | Keyboard ▸ Save bindings writes `user://bindings.cfg`; Settings ▸ Save Bindings keeps them in `user://settings.cfg` under `[bindings]`, beside the options. | Keyboard ▸ Save bindings, or Settings ▸ Save Bindings | the Load bindings row of the same pair |
 
 The Key bindings card names both places because the bindings can be kept either way: the Keyboard object's rows write their own file, and the Game Settings pack keeps them in its settings file, beside the options. Use one pair or the other, never half of each. The settings file's name is the pack's `settings_file` property (default `user://settings.cfg`).
 

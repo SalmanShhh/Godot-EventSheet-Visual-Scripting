@@ -11265,3 +11265,6 @@ Opened the issue form in your browser. Nothing is sent until you press Submit th
 The script %s followed its sheet to its new place.,スクリプト %s はシートの新しい場所に追従しました。
 "The open sheet follows %s to its new place, and its script %s goes with it.",開いているシートは %s の新しい場所に追従し、スクリプト %s も一緒に移ります。
 the Load bindings row of the same pair,同じペアのバインドを読み込む行
+"The slot card, which the Save System keeps for the load menu:",
+"Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.",
+"Keyboard ▸ Save bindings, or Settings ▸ Save Bindings",

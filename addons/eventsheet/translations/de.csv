@@ -11265,3 +11265,6 @@ Opened the issue form in your browser. Nothing is sent until you press Submit th
 The script %s followed its sheet to its new place.,Das Skript %s ist seinem Sheet an den neuen Ort gefolgt.
 "The open sheet follows %s to its new place, and its script %s goes with it.","Das geöffnete Sheet folgt %s an seinen neuen Ort, und sein Skript %s zieht mit um."
 the Load bindings row of the same pair,die Zeile Bindungen laden desselben Paars
+"The slot card, which the Save System keeps for the load menu:",
+"Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.",
+"Keyboard ▸ Save bindings, or Settings ▸ Save Bindings",

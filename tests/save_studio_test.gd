@@ -26,6 +26,7 @@ static func run() -> bool:
 	all_passed = _copy_and_plain_words() and all_passed
 	all_passed = _open_save_folder_pair() and all_passed
 	all_passed = _player_settings_cards() and all_passed
+	all_passed = _descriptions_and_slot_card() and all_passed
 	for file: String in DirAccess.get_files_at(dir):
 		DirAccess.remove_absolute(dir + file)
 	DirAccess.remove_absolute(dir)
@@ -175,4 +176,22 @@ static func _player_settings_cards() -> bool:
 		["and its code is what its template writes", uses[0][4].contains("Settings.declare_setting(\"master_volume\", 80, \"percent\", \"\", \"\", \"\")"), true],
 		["a condition row becomes the use's if", uses[1][4], "func _on_setting_changed(setting_name: String, value: Variant) -> void:\n\tif Settings.changed_setting_is(\"master_volume\"):\n\t\tAudioServer.set_bus_volume_db(0, linear_to_db(value / 100.0))"],
 		["the settings sample is the file Godot writes", cards[1][3], "[settings]\n\nmaster_volume=80\nfullscreen=true\nquality=\"High\""],
+	])
+
+
+static func _descriptions_and_slot_card() -> bool:
+	var source: String = "extends Node\n\n## Coins picked up in this run.\nvar coins: int = 0\nvar plain: int = 1\n## Where the player stands.\nvar spot: Vector2 = Vector2.ZERO\n"
+	var sheet: EventSheetResource = SUPPORT.reopen(source, true, "res://tests/fixtures/save_studio_doc_lines.gd")
+	var described: Dictionary = {}
+	for variable: Dictionary in EventSheetSaveStudio.savable_variables(sheet):
+		described[variable["name"]] = variable["description"]
+	var rows: Array = EventSheetSaveStudio.plain_rows({"__persist": {"/root/Game": {".": {"coins": 2}}}, "__card": {"playtime": 3.87, "chapter": "Two"}})
+	var split: Dictionary = EventSheetSaveStudio.split_slot_card(rows)
+	return SUPPORT.pins(NAME, [
+		["a ## line above a variable is its description in the What gets saved list", described.get("coins", "missing"), "Coins picked up in this run."],
+		["and so is the one above the next", described.get("spot", "missing"), "Where the player stands."],
+		["a variable with no line above has none", described.get("plain", "missing"), ""],
+		["the game's own values stay in the main table", split["game"], [PackedStringArray(["coins", "2"])]],
+		["the slot card's fields are set apart, named without the key", split["card"], [
+			PackedStringArray(["playtime", "3.87"]), PackedStringArray(["chapter", "Two"])]],
 	])

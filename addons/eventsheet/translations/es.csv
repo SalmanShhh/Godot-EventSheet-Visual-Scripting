@@ -11265,3 +11265,6 @@ Opened the issue form in your browser. Nothing is sent until you press Submit th
 The script %s followed its sheet to its new place.,El script %s siguió a su hoja a su nuevo lugar.
 "The open sheet follows %s to its new place, and its script %s goes with it.","La hoja abierta sigue a %s a su nuevo lugar, y su script %s se va con ella."
 the Load bindings row of the same pair,la fila Cargar controles del mismo par
+"The slot card, which the Save System keeps for the load menu:",
+"Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.",
+"Keyboard ▸ Save bindings, or Settings ▸ Save Bindings",

@@ -134,8 +134,13 @@ static func variables_of(sheet: EventSheetResource) -> Array:
 	for entry: Variant in sheet.events:
 		if entry is LocalVariable and not (entry as LocalVariable).is_constant:
 			var variable: LocalVariable = entry as LocalVariable
+			# An opened script keeps the `##` line above a variable as its `tooltip` attribute, the
+			# description the Inspector shows; a sheet built in the editor keeps it in `description`.
+			var written: String = variable.description
+			if written.is_empty() and variable.attributes is Dictionary:
+				written = str((variable.attributes as Dictionary).get("tooltip", ""))
 			found.append({"name": variable.name, "type": variable.type_name, "choice": choice_of(variable.attributes),
-				"saved_as": _saved_as(variable.attributes), "description": variable.description})
+				"saved_as": _saved_as(variable.attributes), "description": written})
 	return found
 
 

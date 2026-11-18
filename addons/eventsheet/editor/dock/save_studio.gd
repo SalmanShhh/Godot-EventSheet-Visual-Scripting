@@ -22,6 +22,8 @@ const BINDINGS_MODULE: String = "res://addons/eventforge/registration/modules/co
 const SAVE_AUTOLOAD: String = "SaveSystem"
 ## Where the Save System keeps the snapshot of every node in its persist group, keyed by node path.
 const PERSIST_KEY: String = "__persist"
+## The key the Save System stores a slot's card under (the load menu's header).
+const CARD_KEY: String = "__card"
 ## Where "Keep them in a scene" puts the Save System node when the autoload is a bare script.
 const SETTINGS_SCENE: String = "res://save_system.tscn"
 const AUTOLOAD_GUARD_PATH: String = "res://addons/eventsheet/editor/dock/autoload_guard.gd"
@@ -697,12 +699,20 @@ func _show_peek() -> void:
 		_peek_heading.text = EventSheetL10n.translate("What a save of %s would hold right now, in plain words:") % entry["label"]
 		_peek_file.text = EventSheets.preview_save(data, str(_settings.get("format", "config")), str(entry["label"]))
 	reader.free()
-	var rows: Array = plain_rows(data)
+	var split: Dictionary = split_slot_card(plain_rows(data))
+	var rows: Array = split["game"]
+	var card_rows: Array = split["card"]
+	var table_head: PackedStringArray = PackedStringArray([EventSheetL10n.translate("Name"), EventSheetL10n.translate("Value")])
 	if rows.is_empty():
 		_peek_table.add_child(_muted(EventSheetL10n.translate("It holds nothing yet. A node joins a save by exposing save_state(); a Save choice on its variables writes the pair.")))
 	else:
-		_peek_table.add_child(EventSheetPopupUI.compact_table(PackedStringArray([EventSheetL10n.translate("Name"),
-			EventSheetL10n.translate("Value")]), rows, 1))
+		_peek_table.add_child(EventSheetPopupUI.compact_table(table_head, rows, 1))
+	# The slot card is the Save System's own header for the load menu, not a variable of the game: kept in
+	# view, set apart under its own heading so it is never read as one of the game's values.
+	if not card_rows.is_empty():
+		var card_heading: Label = _muted(EventSheetL10n.translate("The slot card, which the Save System keeps for the load menu:"))
+		_peek_table.add_child(card_heading)
+		_peek_table.add_child(EventSheetPopupUI.compact_table(table_head, card_rows, 1))
 
 
 ## A file's bytes as the reader can see them: its text, or the head of a binary file in hex.
@@ -736,6 +746,22 @@ static func plain_rows(data: Dictionary, prefix: String = "") -> Array:
 		else:
 			rows.append(PackedStringArray([name, plain_words(value)]))
 	return rows
+
+
+## `rows` (from plain_rows) split into {"game": the game's own values, "card": the slot card's fields}.
+## The card is what the Save System writes under `__card` for a load menu (chapter, hero, percent,
+## playtime); its rows lose the key's prefix, so they read as the field names.
+static func split_slot_card(rows: Array) -> Dictionary:
+	var game: Array = []
+	var card: Array = []
+	var prefix: String = CARD_KEY + "/"
+	for row: Variant in rows:
+		var cells: PackedStringArray = row
+		if cells[0].begins_with(prefix):
+			card.append(PackedStringArray([cells[0].trim_prefix(prefix), cells[1]]))
+		else:
+			game.append(row)
+	return {"game": game, "card": card}
 
 
 ## One saved value, said plainly: a position as "Vector2(120, 64)", a list by its length, a flag as yes/no.
@@ -819,7 +845,7 @@ static func settings_files() -> Array:
 	var bindings_file: String = str((load(BINDINGS_MODULE) as Script).get_script_constant_map().get("BINDINGS_FILE", "")).trim_prefix("\"").trim_suffix("\"")
 	var settings_file: String = str(settings_pack.get("SETTINGS_FILE", ""))
 	var bindings_section: String = str(settings_pack.get("BINDINGS_SECTION", "bindings"))
-	var bindings_words: String = EventSheetL10n.translate("Keyboard > Save bindings writes %s; Settings > Save Bindings keeps them in %s under [%s], beside the options.") % [bindings_file, settings_file, bindings_section]
+	var bindings_words: String = EventSheetL10n.translate("Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.") % [bindings_file, settings_file, bindings_section]
 	return [
 		[EventSheetL10n.translate("Save slots"), str(slot["save_directory"]).path_join(str(slot["file_pattern"]).replace("{slot}", "0")),
 			EventSheetL10n.translate("The game itself: where the player is, what they carry. One file per slot."),
@@ -832,7 +858,7 @@ static func settings_files() -> Array:
 		[EventSheetL10n.translate("Key bindings"), bindings_file,
 			bindings_words,
 			# A key is stored as its whole object, every field spelled out; its class says enough here.
-			bindings.encode_to_text().get_slice(",", 0) + ", …)]", EventSheetL10n.translate("Keyboard > Save bindings, or Settings > Save Bindings"),
+			bindings.encode_to_text().get_slice(",", 0) + ", …)]", EventSheetL10n.translate("Keyboard ▸ Save bindings, or Settings ▸ Save Bindings"),
 			EventSheetL10n.translate("the Load bindings row of the same pair"), EventSheetL10n.translate("Kept as it is"),
 			"%s [%s]" % [settings_file, bindings_section]],
 	]
@@ -1237,7 +1263,11 @@ func _refresh_what() -> void:
 			if cell[1] and mono != null:
 				label.add_theme_font_override("font", mono)
 			_what_rows.add_child(label)
-		_what_rows.get_child(_what_rows.get_child_count() - 1).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var description_label: Label = _what_rows.get_child(_what_rows.get_child_count() - 1) as Label
+		description_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		# A description is shown whole: it wraps onto a second line rather than running under the Save choice.
+		description_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		description_label.custom_minimum_size.x = EventSheetPalette.scaled(160)
 		if not older.has(variable["name"]):
 			_what_rows.add_child(_save_choice_dropdown(str(variable["name"]), str(variable["choice"])))
 			continue

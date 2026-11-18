@@ -12,6 +12,18 @@ The rebind example and the options-and-quick-save example now read the way they 
 
 The packs teach the reader their own call lines (`$Settings.load_bindings()`, the same on a Services child, and the bare `Settings.load_bindings()` of an autoload; the same for SaveSystem and the Hud's verbs), so a hand-written script or a sheet saved before now reads as the pack's rows too, with no byte of the file moved. While a row is listening, a plain left click is bound like any other mouse button, except a click that lands on a button (Swap, Reset, another binding, the button that started the listening), which keeps pressing it; the click that started the listening is never bound. Save Studio's Look inside a save names the variables themselves (`coins 2`, `player_spot Vector2(342, 188)`) instead of the stored path, the Key bindings card says only which Save bindings row writes which file, both Save bindings descriptions point at the other pair in the board's words, and the Project Doctor's note for a Settings global that is not the pack says \"There is already a global named Settings that loads <path>, and it is not replaced.\"
 
+### Fixed: a pack's rows on a named node read under the node's own name
+
+A row that calls a pack on a node of the scene (`$Services/Settings.save_bindings()`, `$HudKit.show_toast(...)`) was filed under the name of the pack's class (`GameSettingsAddon`, `HudKitBehavior`), while the triggers of the same node read under the node's name (`Settings`). One node had two names on one sheet. Both lanes now say the node's name, as written in the scene, and the row keeps the pack's icon and its sentence. A pack called as a global (`Settings.save_bindings()`) is unchanged.
+
+### Fixed: the Key bindings card in Save Studio uses the plugin's own triangle
+
+The card read `Keyboard > Save bindings`; every other path of the editor writes the small triangle (`Keyboard ▸ Save bindings`), and now this one does too, in the card and in the Save Studio guide.
+
+### Fixed: Save Studio shows each variable's description, and sets the slot card apart
+
+What gets saved listed a script's variables with no description, although the sheet showed the `##` line written above each one: an opened script keeps that line as the variable's tooltip, and the list read only the other field. The line is now shown beside the variable, wrapped to a second line rather than cut short. Look inside a save listed the Save System's own `__card` fields (playtime, chapter) among the game's values, so a reader took `playtime` for a variable of theirs; they now stand under their own heading, \"The slot card\", the name the Save System pack and its guide give them. The save file's keys and format do not change.
+
 ### Changed: the issue forms and the plugin's report links are brought up to date
 
 The bug form asks for what happened, what you expected, steps, a small sheet or snippet (`.gd` first), the Project Doctor's summary line, the plugin and Godot versions and the platform, and lists today's areas; there is a new Documentation form, and the feature form and the form chooser no longer name other products or link to a guide that moved. Report an Issue opens the bug form with the plugin version, the Godot version and the platform already filled in (nothing else), and the Manual's \"Report a problem\" and \"ask for a page\" open the Documentation form with the page named. The repository address now lives in one place, and a test keeps the forms, their field ids and every address the plugin builds in step.
