@@ -75,7 +75,7 @@ That is the whole loop: edit rows, save, File > Run, read the Output panel. Ever
 
 ### Run it from the sheet - the tool's own head bar
 
-![An editor plugin sheet: the identity bar carries Run now, Reload, Output and Enable plugin, and the Anatomy rail's EDITOR TOOLS section lists the Tools menu item the plugin adds](images/editor-tool-bar.png)
+![An editor plugin sheet: the identity bar carries Runs in the editor, Run now, Reload, Output and Enable plugin.](images/editor-tool-bar.png)
 
 You do not have to leave the sheet to run a tool. A tool sheet's head bar carries its own buttons, and they are the whole loop:
 
@@ -280,7 +280,7 @@ On an EditorPlugin sheet, `_enter_tree` reads as **On plugin enabled** rather th
 
 Four more callbacks read as what the editor wants rather than as their Godot spelling: `_handles` is **Asks: can this plugin edit object?** with its `return` as **System ▸ Answer object is a Sheet**, `_make_visible` is **On workspace shown**, `_build` is **On project run** and `_save_external_data` is **On save**. The three that answer a constant - `_get_plugin_name`, `_has_main_screen`, `_get_plugin_icon` - are not events at all: nothing ever happens in them, so they read on the head bar as the facts they state.
 
-![This plugin's own plugin.gd opened as a sheet: the head bar says editor plugin, main screen "EventSheet" and icon eventsheet.svg, and the events below read as On Object Handed To Plugin](images/editor-plugin-reading.png)
+![This plugin's own plugin.gd opened as a sheet: the head bar says Editor plugin, extends EditorPlugin, Runs in the editor, with its Enabled and Reload buttons, and the events below read as On Object Handed To Plugin.](images/editor-plugin-reading.png)
 
 Every other editor plugin class Godot offers has a word of its own, and its callbacks read in that thing's voice: an `EditorInspectorPlugin` is a **Inspector add-on** (*Asks: show this add-on for object? / On start of object's properties / On property name of object / Add control / Use editor X for property*), an `EditorImportPlugin` an **Importer add-on**, an `EditorExportPlugin` an **Export hook** (*On export begins / On file exported / On export ends / Add file to export / Skip file*), an `EditorDebuggerPlugin` a **Debugger panel**, an `EditorResourcePreviewGenerator` a **Thumbnail maker**, an `EditorContextMenuPlugin` a **Context menu**, an `EditorSyntaxHighlighter` **Code colours** and an `EditorTranslationParserPlugin` a **Text finder**. Where such a callback answers a "did this add-on take it" flag, `return true` / `return false` read as **Answer handled** / **Answer not handled**.
 

@@ -385,7 +385,7 @@ not count it twice; **Secrets Found** is the number an end-of-level screen shows
 Movement is not this page's job - add the FPS Controller behaviour for that. New Sheet ▸ Boomer
 Arsenal (3D) wires firing, switching, ammo and secrets together to start from:
 
-![The boomer arsenal starter: fire, switch, spend ammo, count secrets](../images/boomer-arsenal-starter.png)
+![The Boomer Arsenal starter: a fire event that spends a round and fires a hitscan shot, a switch-weapon event, and a row that marks a secret found, under the weapons, ammo and secrets variables.](../images/boomer-arsenal-starter.png)
 
 ### Keys and doors
 

@@ -171,7 +171,7 @@ follow the theme.
 
 ## Switching themes
 
-![The dock's View menu open with Sheet theme highlighted near its foot, its submenu beside it listing Match Editor (default) - ticked - above the bundled presets: Catppuccin Mocha, Designer Template, Dracula, Gruvbox Dark, High Contrast, Mockup Slate, Monokai, Nord, Soft Light and Solarized Light](images/view-sheet-theme-menu.png)
+![The dock's View menu open with Sheet theme highlighted, its submenu beside it listing Match Editor (default) - ticked - above the bundled presets: Catppuccin Mocha, Classic Sheet, Designer Template, Dracula, Editor Native, Gruvbox Dark, High Contrast, Mockup Slate, Monokai, Nord, Soft Light and Solarized Light.](images/view-sheet-theme-menu.png)
 
 - In the EventSheet dock's **Menu ▸ View**:
   - **Sheet theme**: pick a bundled preset for this sheet; the active one is ticked.
@@ -308,7 +308,7 @@ the comfortable default. The choice is per user and per project (editor metadata
 committed), independent of whichever theme is active, and it composes with the editor's
 display scale - a compact sheet on a HiDPI monitor stays crisp.
 
-<img src="images/compact-rows.png" alt="The same Health pack rows twice: Comfortable on the left, Compact on the right - the compact side fits more rows in the same height while every label stays the same text size." width="640">
+<img src="images/compact-rows.png" alt="The same rows twice: Comfortable above, Compact below - the compact rows take less height while every label stays the same text size." width="640">
 
 ## Reading it another way (accessibility)
 

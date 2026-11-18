@@ -3,7 +3,7 @@
 The event-sheet workspace has one strip along its top edge. At rest it carries **seven controls**,
 in one row that never wraps (once a sheet is open, the Events / Code / Both switch joins the end of it):
 
-![The editor strip at rest: a Menu button, the Save, Undo and Redo icons, the play button with its dropdown arrow, the Quick add field, and a chevron at the end](images/resting-toolbar.png)
+![The editor strip at rest: a Menu button, the Save, Undo and Redo icons, the play button with its dropdown arrow, the Quick add field, a chevron, and the Events, Code and Both buttons.](images/resting-toolbar.png)
 
 Everything the editor can do is still one or two clicks from that row. This page says where each
 thing is, what the play button does, why adding lives in the sheet rather than on the strip, and
@@ -62,7 +62,7 @@ sheet stays linked to its `.gd`, and the line gives the file and Godot's reason.
 After the chevron, once a sheet is open, comes the **Events | Code | Both** switch: the rows, the GDScript
 the file is, or both side by side. It is offered for every open sheet and is not part of the seven.
 
-![The resting strip drawn with the editor's own icons: the Menu, the Save / Undo / Redo icons, the play button, Quick add and the chevron](images/resting-toolbar-icons.png)
+![The resting strip drawn with the editor's own icons: the Menu, the Save / Undo / Redo icons, the play button, Quick add, the chevron and the Events, Code and Both buttons.](images/resting-toolbar-icons.png)
 
 The three icons are the editor's own. Godot ships a `Redo` arrow but no `Undo` one, so the undo
 arrow you see is the redo arrow mirrored - which is why the pair matches stroke for stroke and takes
@@ -85,7 +85,7 @@ a real editor is the one that matters, and the preview harness
 
 One button, five groups, then two doors at its foot:
 
-![The strip at rest with the Menu open, cascading into its Sheet, Add, Edit, View and Tools submenus](images/resting-toolbar-menu.png)
+![The editor strip at rest with the Menu open on its Sheet, Add, Edit, View and Tools submenus, the Edit submenu showing.](images/resting-toolbar-menu.png)
 
 | Group | What lives there |
 |-------|------------------|
@@ -118,7 +118,7 @@ Godot has no split-button control, so the play button is what Godot's own editor
 situation: two adjacent controls in one frame. The **face** performs one run. The narrow arrow
 beside it opens the four.
 
-![The play button's dropdown open on the ways to play, with Main button at the foot](images/play-button-dropdown.png)
+![The play button's dropdown open on the ways to play - Run Scene, Debug scene, Run with profiler and Play as host + client - with Main button at the foot.](images/play-button-dropdown.png)
 
 | Run | What it does | Key |
 |-----|--------------|-----|
@@ -191,7 +191,7 @@ rows you accept or discard, never in code you have to paste.
 Press the chevron at the end of the row and the strip shows every button it has, in the order it
 always had them:
 
-![The same strip expanded, every button on show](images/resting-toolbar-expanded.png)
+![The same strip expanded, every button on show: the run buttons, the Add Event, Add Condition, Add Action and Add Code buttons, GDScript, Quick add, Sentences and the Events, Code and Both buttons.](images/resting-toolbar-expanded.png)
 
 Menu, Save, Undo, Redo, the play button, then Run Scene, Debug scene, Run with profiler, Play as
 host + client, then Add Event, Add Condition, Add Action, Add Code,

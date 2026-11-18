@@ -357,14 +357,14 @@ i18n (Godot translations).
   Edit, View and Tools are inside the Menu as cascading submenus - the same menus with the same
   entries, one hop in - and the Manual and What's new sit at its foot.
 
-  ![The editor strip at rest - Menu, Save, Undo, Redo, the play button, Quick add and the chevron - with the Menu open on its Sheet, Edit, View and Tools submenus](images/resting-toolbar-menu.png)
+  ![The editor strip at rest with the Menu open on its Sheet, Add, Edit, View and Tools submenus, the Edit submenu showing.](images/resting-toolbar-menu.png)
 
   Press the chevron (or tick **View ▸ Full toolbar**) and every button the strip has comes back, in
   the order it always had them: Run Scene, Debug scene, Add Event / Condition / Action /
   Code and the GDScript toggle. The choice is remembered for the
   project, and nothing was taken away - a button you cannot see still answers to its key.
 
-  ![The same strip expanded, every button on show](images/resting-toolbar-expanded.png)
+  ![The same strip expanded, every button on show: the run buttons, the Add Event, Add Condition, Add Action and Add Code buttons, GDScript, Quick add, Sentences and the Events, Code and Both buttons.](images/resting-toolbar-expanded.png)
 
   The first time a project that already has sheets in it opens on the resting strip, the status bar
   says so once - where the buttons went, and that no key changed. It is remembered per project, so
@@ -392,7 +392,7 @@ i18n (Godot translations).
   sheet does not repeat them. *Main button* at the foot says which of the four the face does,
   ticked, and the choice is remembered for the project.
 
-  ![The play button's dropdown open on the ways to play with Main button at the foot](images/play-button-dropdown.png)
+  ![The play button's dropdown open on the ways to play - Run Scene, Debug scene, Run with profiler and Play as host + client - with Main button at the foot.](images/play-button-dropdown.png)
 
   While a game is running the face reads **Stop**, so the button
   never claims it will do something it will not. Every run is still a plain button on the expanded
@@ -427,7 +427,7 @@ i18n (Godot translations).
   The important difference to notice: what C3 calls an *object type* is here a **node with
   a behavior attached, or an autoload** - the dialog is quietly teaching you Godot's own API.
 
-  ![The picker's object-cards front page: System first, then every pack and autoload as its own card with its icon](images/object-first-add.png)
+  ![The picker's object page: Browse every row, then a Your classes section listing the project's own classes, each with its icon.](images/object-first-add.png)
 - **Event numbers live in the margin**, flat and sequential through groups and sub-events,
   computed from the sheet - collapsing or filtering never renumbers, so "check event 34" in a
   forum reply stays meaningful. Jump to one with **Go to event** (Ctrl+G) or Godot's Command Palette (Ctrl+Shift+P).

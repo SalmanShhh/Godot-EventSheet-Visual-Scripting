@@ -132,7 +132,7 @@ as chips beside it. "internal" names a distinction only a behavior pack has.
 
 ## Function blocks - what this sheet can be asked to do
 
-![A pack's published rows: the role badge, one typed chip per input and the gives-back return, with no func signature anywhere](images/define-rows.png)
+![A pack's published function read as an event: On function take_damage with its input as a typed line under it, its conditions and actions beside it, and no func signature anywhere.](images/define-rows.png)
 
 A function reads as the trigger it is. Its head is one line in the CONDITION lane - the function
 icon, then `On function jump`, the name as written with no object name before it - and each input

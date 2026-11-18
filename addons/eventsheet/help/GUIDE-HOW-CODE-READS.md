@@ -347,7 +347,7 @@ arrived whole, as code, so the classes with the most structure in them were exac
 read as none. None of this is a reading of MEANING. It is a pure view over the same block with every
 member keeping its own source lines, which is why the file re-emits byte for byte either way.
 
-![A hand-written class carrying a multi-line enum, a signal, a field, a class nested inside it and a method, read as a fold whose header counts what it holds; below it the same class with one bare statement in its body, refused and left as visible code](images/member-held-class-rows.png)
+![A hand-written class carrying an enum, a signal, a field, a class nested inside it and a method, read as a fold of its own members; below it a class with an empty nested class, refused and left as one visible block of code.](images/member-held-class-rows.png)
 
 The refusals are the same shape as everywhere else. A bare statement in the body, an enum whose own
 shape the enum reading will not take, code after the class, a second class at the top level: any of

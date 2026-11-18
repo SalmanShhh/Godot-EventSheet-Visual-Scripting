@@ -46,7 +46,7 @@ A new file lands in the right group the moment it is written. There is no list t
 
 `plugin.gd` is the one file with a bar of its own:
 
-![The plugin's own sheet, with Enabled, Reload, Output and plugin.cfg on its bar](images/this-editor-plugin-bar.png)
+![The plugin's own sheet, with Runs in the editor, Enabled, Reload, Output, plugin.cfg and a read-only note on its bar.](images/this-editor-plugin-bar.png)
 
 - **Enabled ●** is the plugin list's live state. It does not switch the plugin off - taking the editor down from inside itself is the one thing this bar will not do.
 - **Reload ↻** is disable-then-enable through the editor, which is exactly what you would otherwise walk to Project Settings ▸ Plugins to press by hand.

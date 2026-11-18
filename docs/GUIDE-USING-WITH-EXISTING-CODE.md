@@ -64,7 +64,7 @@ Each row is covered below with the exact code it compiles to.
 Open the picker's object page and, under **Your classes**, you will find the classes and
 autoloads your game declares.
 
-<img src="images/interop-your-project.png" alt="The Add Event picker's object page: a Your classes section listing the game's own classes - Checkpoint, Door, Enemy, Hero and Inventory - then the open script's Functions, System, and an Objects and Behaviors section." width="620">
+<img src="images/picker-functions-page.png" alt="The Add Event picker's object page: Browse every row, then a Your classes section listing the project's own classes, then its other objects and behaviors." width="620">
 
 The toolbar's Add Event opens on this page, the same one a double click on empty canvas opens. Pick a card to see what that object offers, or just start typing: the search box looks across every object at once, and the "All objects" button above a card's list brings the cards back.
 
@@ -78,7 +78,7 @@ $Inventory.add_item("potion", 3)          # picked from Your classes > Inventory
 Inventory.add_item("potion", 3)           # an autoload emits through its own name
 ```
 
-<img src="images/interop-scoped-verbs.png" alt="The Add Event dialog scoped to the Enemy class: the tree lists the engine classes it inherits from - CharacterBody2D, Area2D, Node2D, RigidBody2D, Timer, AnimationPlayer - followed by an All of Enemy section holding the script's own verbs." width="620">
+<img src="images/interop-scoped-verbs.png" alt="The Add Event window for a script that extends CharacterBody2D: the tree starts with (none - runs every frame), then CharacterBody2D, Area2D, Node2D, RigidBody2D, Timer, AnimationPlayer and the project's other objects." width="620">
 
 **Nothing is required of you** - no annotations, no moving files into `eventsheet_addons/`,
 no wizard. The list is derived from your scripts (never by running them), so it is correct
@@ -455,10 +455,11 @@ losslessly.
 Here is an ordinary hand-written helper from this plugin's own source - nothing was written or reformatted
 for the picture - opened as a sheet:
 
-<img src="images/interop-opened-gd.png" alt="A hand-written GDScript file opened as an event sheet: the head's band stack, an Expression verb named Parse with a source parameter and a gives back Dictionary badge, then condition and action rows including a For each raw_line loop with nested sub-events." width="720">
+<img src="images/interop-opened-gd.png" alt="A hand-written GDScript file opened as an event sheet: the head's comment row and its quiet bands, a parse function with a source parameter and a typed result, then condition and action rows including a For each raw_line loop with nested sub-events." width="720">
 
-Note what the file became: the header comment, `@tool`, `class_name` and `extends` fold into one **Class
-setup** strip; the function becomes a real function row with a named parameter and a return badge; and its body
+Note what the file became: the header comment becomes a comment row, `@tool` with `class_name` and `extends` fold into
+two quiet one-line bands, each opened by its arrow; the function becomes a real function row with a named parameter and
+a typed result; and its body
 becomes conditions and actions, including the `for` loop as a condition with its own sub-events. What still
 has no structured equivalent stays an in-flow GDScript block - honest, editable, and byte-for-byte
 unchanged when you save.
@@ -588,9 +589,11 @@ That is the order this section is in.
   description is a comment row rather than a band drawn over its own echo, and a pack that closes on
   a paragraph repeating it has that paragraph left where its author wrote it.
 
-  ![A behaviour pack's head: one bar reading "FPSController extends Node - reads as events - 5 input actions", the pack's own description as a comment row under it, and one folded folder per setting group below](images/opened-pack-head.png)
+  A shipped behaviour pack opens in the second way described just below - a **Behaviour** title row, the node it acts on, its trigger rows, then its settings in one group per heading:
 
-  ![The same head with the fold open: the bands for class_name, extends, @icon and the host binding, the head bar reading "Addon Pack v1.0.0 behaves on a CharacterBody3D", the Input bar, and one folder per setting group](images/opened-pack-head-open.png)
+  ![A shipped behaviour pack's head: one bar reading FPSController - Behaviour, the node it acts on and its host, then one trigger row for each signal the pack emits.](images/opened-pack-head.png)
+
+  ![The same pack further down: its settings, one group per heading (AI Driver, Camera, Crouch & Slide, Jump), each knob with its default and its own description.](images/opened-pack-head-open.png)
 - **A behaviour or a global opens as its own file.** A behaviour (a pack's node script, or a
   sheet made as one), a global and any other file of a pack read exactly in the order the file is
   written, under the slim title row an edited sheet has with a quiet kind word -
@@ -708,7 +711,7 @@ That is the order this section is in.
 
   ![Functions read as an event sheet, each row a hierarchy sentence: Hand gains a child keeping its place, an item is removed from its parent, a remove-then-add pair reads as one row snapping to it, and an Add child row wears its follow-flag chips](images/hierarchy-reading.png)
 
-  ![Three opened scripts stacked: one whose head bar says "73% reads as events - 2 script blocks", one whose settings read as Movement and Look folders with every export hint family, and the same file opened as an autoload, whose head is one Global variables folder](images/opened-script-head5.png)
+  ![Two opened scripts stacked: one whose head bar says Scout, Custom node, with its two script blocks, and one whose settings read as Movement and Look folders with every export hint family.](images/opened-script-head5.png)
 
   **Three small lines that used to read as something else.** `x.owner = y` is not a property being
   poked - it says which scene the node belongs to, which is what decides whether it is written out
@@ -943,7 +946,7 @@ pivot turns.
   inserts, and the function behind it - with Edit..., Open guide and Show in code. Unpublished helpers are
   the same blocks with their doc as the right-hand caption, gathered under a closed **Helpers** folder.
 
-  ![A pack's published functions read as events: f Functions - On Can Stand Up with "condition" beside the name and Set return value in the action lane, and a closed Helpers folder reading "functions this pack uses inside itself - 7"](images/opened-pack-verbs.png)
+  ![A pack's published functions read as events: On function is_wall_riding, can_stand_up and wall_normal_x, each with Return in the action lane under the Function object.](images/opened-pack-verbs.png)
 
   ![The ACE properties popup for one published function: its kind, category, inputs with their types, what it gives back, its description, its icon, the exact line it inserts and the function behind it](images/ace-properties-popup.png)
 
@@ -953,7 +956,7 @@ pivot turns.
   **Your classes** under that with every class the project declares. Picking one inserts an ordinary
   Call Function row.
 
-  ![The Add Event picker opened on a script's own functions: a Your classes section listing the project's own classes, then a Functions section headed "this script - 1" listing the function heal, then System and Objects and Behaviors](images/picker-functions-page.png)
+  ![The Add Event picker's object page: Browse every row, then a Your classes section listing the project's own classes, then its other objects and behaviors.](images/picker-functions-page.png)
 
   ![The Change Type Everywhere dialog listing each row it will rewrite before the retype is committed](images/seam-change-type.png)
 
@@ -991,12 +994,12 @@ pivot turns.
 - **Every event has a number, and everything names it by that number.** The left margin counts events
   down the sheet - sub-events included, groups descended into - and the count is stable, so collapsing a
   group or filtering the sheet never renumbers anything. **Ctrl+G** opens *Go to event* and jumps to
-  one. The status bar says where you are in the same words - `event 4 of 61 · line 38` - and a
+  one. The status bar names the event you are on in the same words - `Event 4 selected · On ready` - and a
   bookmark, the Find bar's counter (`3 of 12 · event 4`) and a Project Doctor finding
   (`player.gd · event 4`) all print the same number, so "look at event 12" means one row to everybody
   reading the file. The numbers are display-only: nothing about them touches the script.
 
-  ![An opened script: the event number in the left margin, a static variable reading "Static number spawned = 0 shared by every Player", a function reading as Functions - On Take Damage, and the status bar saying "event 1 of 1 - line 3"](images/opened-script-event-numbers.png)
+  ![An opened script: the event number in the left margin, two variables, the On ready event selected, the helper functions take_damage and die, and the status bar naming the selected event - Event 1 selected, On ready.](images/opened-script-event-numbers.png)
 
 - **The shapes the sheet reads, you can also type.** Right-click an event for **Add blank sub-event
   (B)**, **Make 'Or' block** (which reads **Make 'And' block** once the event is an Or block) and
@@ -1021,7 +1024,7 @@ pivot turns.
   in GDScript or picked from the palette - one grammar produces both - and the exact code is always on
   hover.
 
-  ![Rows in the sheet's own grammar: a Keyboard trigger for "ui_accept" pressed, an OR block joining two conditions, and action rows reading System - Else, System - Subtract 1 from jumps left and f - Call Wall Jump](images/opened-pack-sentences.png)
+  ![Rows in the sheet's own grammar: a Keyboard trigger for "ui_accept" pressed, an OR block joining two conditions, and action rows reading System - Else, Subtract 1 from _jumps_left, Jump, Wall Jump and Air Jump.](images/opened-pack-sentences.png)
 - **A table or a list written across several lines is one row, and its entries are chips.** A
   `{ ... }` or `[ ... ]` handed to `return`, to a signal, to `append`, to any call, or to a `var`
   reads as ONE row: the statement's own sentence, the word **table** or **list** where the literal
@@ -1135,7 +1138,7 @@ to the function it names, the same jump the Outline panel makes.
   named keeps its number. The DEVICE an action is bound to picks its object too, so an action bound
   only to mouse buttons reads under `Mouse` and one bound only to a pad under `Gamepad`.
 
-<img src="images/batch6-reading.png" alt="A hand-written script opened as a sheet: an On Ready event whose actions read Push back, Push front, Insert at, Delete at, Delete key, Shuffle, Append, Set collision with layer Enemies on, Set process mode to Always, Set Y to 1,000,000, Set angle to π over 2 and Call Reset at end of frame, followed by two top-level Keyboard trigger events for jump pressed and fire released." width="720">
+<img src="images/batch6-reading.png" alt="A hand-written script opened as a sheet: an On ready event whose actions read Push back, Push front, Insert at, Delete at, Delete key, Shuffle, Be on layer 2, Set process_mode to Always, Set Y to 1,000,000, Set rotation (radians) to π/2 and Call Reset (at end of frame), followed by two top-level Keyboard events for jump pressed and fire released." width="720">
 
 - **Deferred work says the delay out loud.** `call_deferred("reset")` reads `Call Reset (at end of
   frame)`, `set_deferred("visible", true)` reads `Set visible to true (at end of frame)`, and
@@ -1697,7 +1700,7 @@ each file runs, it just does something its author did not mean.
 
 ![A projectile script read as an event sheet: Set speed to speed accelerating by accel, Set angle of motion to angle, Set gravity to gravity and Move under one tick event, with Distance travelled greater than range px as the condition that destroys it](images/opened-script-behaviors.png)
 
-![The same file further down: Move toward destination at speed, Has arrived and Stop for the glide, then Rotate clockwise, Wrap around scene horizontally, Bound to scene, Pin to anchor by position and by angle, and Fade out over 1 seconds then destroy](images/opened-script-behaviors-one-liners.png)
+![The same file further down: go_to setting destination and moving, the glide's arrival check with Set moving to false and Signal On Arrived, then Rotate clockwise, Pin to anchor by position and by angle, and Fade out over 1 seconds then destroy.](images/opened-script-behaviors-one-liners.png)
 
 #### Data assets, and the window
 
@@ -1713,7 +1716,7 @@ off one says whose it is (`stats.hp` is **stats's hp**), and `ResourceSaver.save
 Asset** and **Save Data Asset** in the picker's Files folder. A `.tres` also opens as a table sheet,
 and a folder of them as one grid - see the Custom Resources guide.
 
-![A Resource script's head: the identity bar reading "Enemy Stats Preview" with a "data type" chip instead of the Node class ladder, over its three exported fields](images/data-type-include-bar.png)
+![A Resource script's head: the title row reading enemy_stats.gd with the words Custom resource, over its three exported fields.](images/data-type-include-bar.png)
 
 ![An opened script's data-asset rows: Set s to the data asset slime.tres, and Save data asset stats as slime.tres](images/data-asset-reading.png)
 
@@ -1815,7 +1818,7 @@ events around it.
   that could not lift is one collapsed card with a line count. **View > Humanized Names** turns the name
   lens on or off for editable sheets; nothing on the sheet is scaffolding until you press **Edit Events**.
 
-  ![The same pack read with the lenses off and on: raw member names and property chains on one side, humanized words on the other - coyote timer, host's velocity X, Wall Jump Enabled is true](images/opened-pack-lenses.png)
+  ![The same pack read with the lenses off and on: raw member names (_jumps_left, max_jumps) above, humanized words (jumps left, Max Jumps) below.](images/opened-pack-lenses.png)
 - **Expression names, under Familiar Words.** With **View > Familiar Words** on, the values read under
   the names a sheet author types into an expression field: `a.position.distance_to(b.position)` reads
   `distance(a, b)`, `a.get_angle_to(b)` reads `angle(a, b)`, `s.to_lower()` / `s.to_upper()` read
@@ -2001,7 +2004,7 @@ events around it.
   These claim four more patterns on the event that owns them - web requests, lighting, first-person
   look and background work - and the last two offer the behavior that does the whole shape.
 
-  ![A 3D script read as an event sheet: a web request under the AJAX object, a light's energy and shadows, a video set and played with a positional sound's hearing distance and falloff, the mouse-look trio as one Mouse look row with its values muted beside it, a music crossfade as one row, work run in the background with its wait, and a signal unwired](images/opened-script-long-tail.png)
+  ![A 3D script read as an event sheet: a web request under the AJAX object, a light's energy and shadows, a video played with a positional sound's hearing distance and falloff, the mouse-look lines as one Mouse look row with its values muted beside it, a music crossfade as one row, work run in the background with its wait, and a signal unwired.](images/opened-script-long-tail.png)
 - **A rigid body reads as the Physics behavior.** On a `RigidBody2D` or `RigidBody3D`, `mass = 2.0`
   reads **Physics ▸ Set mass to 2**, `gravity_scale` reads **Set gravity scale**, `linear_damp` and
   `angular_damp` read **Set linear / angular damping**, `freeze = true` reads **Set immovable**, and
@@ -2206,7 +2209,7 @@ a control the Input Map has not got is a FINDING, so the sheet's only signal is 
 on the head bar, and the sentence - *"dash" is not in the Input Map - the control never fires and
 nothing says so* - is read in the help strip under the selected bar and in the Doctor's inbox.
 
-<img src="images/input-object-bar.png" alt="The Object bar's INPUT section listing ui_left with the bindings Left and A, ui_right with Right and D, ui_accept with Enter and Kp Enter, and a warning-marked dash reading 'not in the Input Map'; beside it the sheet's Input head bar saying 'this script uses 4 actions - ui_left, ui_right, ui_accept, dash - Project, Input Map' followed by each control's bindings, and the rows below reading Keyboard On ui_accept pressed, Keyboard dash is down and Gamepad On button A pressed." width="900">
+<img src="images/input-object-bar.png" alt="The Objects panel beside the sheet: its INPUT section lists ui_left with the bindings Left and A, ui_right with Right and D, ui_accept with its keys, and a warning-marked dash reading not in the Input Map; the rows beside it read Keyboard On ui_accept pressed, Keyboard dash is down and Gamepad On button A pressed." width="900">
 
 ### A whole scene, read in one place
 
@@ -2331,7 +2334,7 @@ All four are also authorable, and that is the point: every picker row's template
 shape the reading recognises, so a script that already had these lines OPENS as those rows and saves
 back byte for byte. See **docs/Modules/Around-Objects.md** for the rows themselves.
 
-<img src="images/around-objects-rows.png" alt="A hand-written Node2D script opened as a sheet: an On enter tree event whose actions read set Z order to 5, move to top of layer, move to layer $../FX, set layer order to 10, set font size to 32 and set word wrap on, then a Share function whose actions read go to URL https://example.com, copy code to clipboard and request fullscreen." width="720">
+<img src="images/around-objects-rows.png" alt="A hand-written Node2D script opened as a sheet: an On enter tree event whose actions read Set z_index to 5, move to top of layer, Move to layer hud_layer, set layer order to 10, set font size to 32 and set word wrap on, then a share function whose actions read go to URL &quot;https://example.com&quot;, copy code to clipboard and request fullscreen." width="720">
 
 ### Inheritance shown as one thing - Family, Base class, or your own word
 
@@ -2607,7 +2610,7 @@ Three smaller surfaces are worth knowing on day one:
 - **View ▸ Add toolbar** - the eight Add gestures as buttons above the canvas, each naming its key on
   hover, on by default in Simple mode. Its keys, like every other sheet key, are listed and rebound in Godot's own **Editor Settings ▸ Shortcuts**.
 
-![The Add toolbar above the canvas: + Event, + Sub-event, + Condition, + Action, + Group, + Comment, + Variable, + Function, then a separator and the three Preview buttons](images/beginner-toolbar.png)
+![The Add toolbar on the expanded strip: Add Event, Add Condition, Add Action, Add Code, GDScript, Quick add and Sentences, with the Events, Code and Both buttons under it.](images/beginner-toolbar.png)
 
 ### Tool code: the five shapes an editor is written in
 
@@ -2649,7 +2652,7 @@ the constructor folds into the bar (it stored a reference; there is nothing to r
 through the reference reads as the object's own property, and a call through it reads under the
 object's name:
 
-![A helper script read as an event sheet: the head bar says helper of Dock (event_sheet_dock.gd), made with the dock; the Build function reads Set window to a new Window, Set title, Set size, and the connected lambdas read as On Close Requested and On Pressed triggers](images/opened-script-helper-of.png)
+![A helper script read as an event sheet: the head bar says Runs in the editor, the _dock variable is typed EventSheetDock; the build function reads Set window to a new Window, Set title, Set size, and the connected lambdas read as On Close Requested and On Pressed triggers.](images/opened-script-helper-of.png)
 
 **An edit handed to an undo funnel is one undoable step.** A label plus a callback reads as a Local
 boolean catching the answer, named by the label the user will see in Undo, with the edit hanging
