@@ -198,7 +198,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "e6829b2d4839553649e0699ee17165da47745ad8a7b64efe44eca8e0c068a829"
+				"png": "a8310796b976d5cb95349c65bb138260c5d06023dd73b620a5b409f3f6610da3"
 			},
 			"name": "boomer-arsenal-starter",
 			"steps": [
@@ -2154,7 +2154,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "9824b112a202251d1f61e17d5d0cdf874bbedd4a32191a1a63ec7ffb7dad46ea",
+				"png": "717f19c773608b9bf3043c4fa854ed45c5427941bca27a2a99b295e621f7c2e4",
 				"reading": "de22535e9cfec2b75623a3fdb79ee799fadf8417cbd3fc77def5e84137f36058"
 			},
 			"name": "opened-script-shared-store",
@@ -2270,7 +2270,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "c8710e53074f32b46eaa90fb7fc96760e656e77063977ff2ec0b9f8809b5fc18",
+				"png": "2fab22dbcbb07f06c035b5fca17a7983cc8ad3a42580884d01e0cbef0a5df904",
 				"reading": "e68fa79e67852109b378d17a7dd8e3fdfb546371911b0e4b3c2e38ef1741b3a8"
 			},
 			"name": "opened-script-tween-and-head-accessors",
@@ -2409,7 +2409,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "245cb61fc10ea87a4ca6a3749cdfd13967790c03d73ee73577235e07c5acb95c",
+				"png": "fe9e486dfe7a38dea2a4cd85ae801abb7f93cbf8c4eae972886af14f36c0e289",
 				"reading": "50457cb61bc4f15a6247f34fb898ddd4f24b505ef8b3b5e0784a8b672823a741"
 			},
 			"layout": "vertical",
@@ -2478,7 +2478,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "2172418b619a4a8bb52208a5b6cfab5e2ac8566beb7a99d4ef272964b01e65a5",
+				"png": "8b329f34452f2040a571a4415f517582ca17a891cb137ec8bd019034798ae0c7",
 				"reading": "1579c57970690b4a8c30cb74d7e9d9ee4c6b658149117353df3a0dde309868e7"
 			},
 			"name": "reading-camera-relative-movement",
@@ -2494,7 +2494,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "a37b26d4b372feeb0097fd82a47c7c469bf03cf7042a03fa5b13c175b0096e18",
+				"png": "5c3c451a23bc683dc7dd01ad61033eaf1a719c64ba1c2405af824389bae63dcf",
 				"reading": "c50b41ce8ba9d9a19a71dd61a750e108b6a13f82c9212e149d255d2726d14e5d"
 			},
 			"name": "reading-cursor-ray-and-canvas",
@@ -2514,8 +2514,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "706c5bf81dd649d3d3c06ac5e179f6e2d4a62ebde8bc9d7fbe3cf96eeb849dba",
-				"reading": "465c0ca58226a473b536bc245f1639ecbc1fe67b4a64e96cf2f048313c807c4a"
+				"png": "d23a37dd51be423e0381f5a7d197742be2ccf4a0a6596cddc9a5ce5728591aaa",
+				"reading": "9ce499beb8c39934589a4ada03319584bd7dc1943896db85a08a967a6856c5b8"
 			},
 			"name": "reading-detection",
 			"rows": [
@@ -2578,7 +2578,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "4d824305cb2b458c98d4a2fc42974ba3ff9d1b03bcf77218dfa3c5bc5d3bc67a",
+				"png": "b2338f8ffc13217b10c83d2b50e44e0ad2c36918f2b4b1cab3bbf96354fbd4b0",
 				"reading": "f841ecfd7226566f9eaca7851e1a9c8e17a6d0535ee1618b766519d44440e2ea"
 			},
 			"name": "reading-pity",
@@ -2594,7 +2594,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "4fe663149535674a4280758d4402ee03b65cefd097dc5e3d8595548847a77256",
+				"png": "252dd50c4c830787715ddbbf0e04009aaa7b027b733af884c09eb3685bde9672",
 				"reading": "cad8d15f8c90eddefe85f6cbee346af4441aded118c020b3fbacc2de97ffc625"
 			},
 			"layout": "vertical",
@@ -2665,7 +2665,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "4e880083b10d9415791a024a9e9151edfbea95b5ae82fdc76c5c148f3f941e15",
+				"png": "8a36abfd15784b3ee6e2a477b384a3c6c61f6a0ab26c9359c36a69d7e785ca3c",
 				"reading": "a3e7261272a9f2684324b541168860a790550d70e17535284b4fc7e76833437e"
 			},
 			"name": "reading-vectors-patterns-notes",
@@ -2733,8 +2733,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "cb29f0c967f56f401cc2c00e4e9a79fd9589fbb9389b6bcb2043dd2d498f3b5c",
-				"reading": "b5c71b27e71bbe382ec94a24410920b59f6b224d704f2f9b6a47b9f15816f248"
+				"png": "dff1f28f089df2093b2e5eff0e1f2edadca0c658c6d8fa3be7320bc0d7e8baba",
+				"reading": "048543a6d5647fc09b4295120e227afc3c1b43a6fdd8b945c0f475d4bccbf5e5"
 			},
 			"name": "swipe-gestures-reading",
 			"rows": [
@@ -2749,7 +2749,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "0ee09186b1289f80f6c21216d1c33996ebf2762d4dea18e28a224235137a2e6b",
+				"png": "f8b7d476b704016ce5c6fdfc4ce5f5cfc5eb83988b3dad00bf2e27a965b39f3f",
 				"reading": "472ae46269de127eea5e745977115cdda044b846fac5be02ed96996763deb781"
 			},
 			"name": "test-sheet-rows",
@@ -2797,7 +2797,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "2888194f2874022333ddfb8f67df56d88651c693de44e8e0de257d3e22dcf035",
+				"png": "e8752905f1b9cb0d6552276ce47fd1b4095b9391fac06f5d9bddbab61e176ab7",
 				"reading": "6e5e4746b7baced1a29ff378752dab08a893511124af85ad3cfa4999dcf19056"
 			},
 			"layout": "vertical",
@@ -2927,7 +2927,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "dd3b71d4ed48e2e3df4776e5ef758a249ff0c84290f9d253ad7081d47fa14d96",
+				"png": "767f74c980b05dbc3e7e50a5e33a7a5a219e5da6aa6ebd00ded398e5a3e3aab2",
 				"reading": "fbd8e417edabd272bab8fa34dcf16f646e63aacf029acf290e173798838775d2"
 			},
 			"name": "wired-call-rows",
@@ -2943,7 +2943,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "4ab34e0121fdfbe1192a122271d8dd23dda33a48610e832ca25617e70c18ebba",
+				"png": "c720c63d0db0a474c7c695e1bfc6948afe35f5291349782684329fa94528b461",
 				"reading": "c1d8505680446c4ce9b1eaf9f06e5eb79227a9ed8e7e202e2b94b0dd0cde017f"
 			},
 			"name": "archive-unpack",
@@ -3064,7 +3064,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "655953caf61a6702c907d2f5478dd869d251986f711e2d4c40146cd006df7297",
-				"reading": "b898d7110735e9f727886bad7b6ba77e712e089eb19c705fbc492d6ac9f04113"
+				"reading": "450b370391d03471c98eabb0aa74a41504fb8a011f518c60b4983f3f02aab3c5"
 			},
 			"name": "block-views-real-file",
 			"rows": [
@@ -3176,7 +3176,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "9a9f2c16f39f45ade29da9809317de7555570b4858efb6a1d1f993a01bce75de",
-				"reading": "b898d7110735e9f727886bad7b6ba77e712e089eb19c705fbc492d6ac9f04113"
+				"reading": "450b370391d03471c98eabb0aa74a41504fb8a011f518c60b4983f3f02aab3c5"
 			},
 			"name": "decl-top-canvas",
 			"rows": [
@@ -3207,7 +3207,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "4157109b7a87424c2638d24a141ed8e6a5f280dd02c1283a9844cb43fcb38c37",
+				"png": "85ff029b835cb16ba7b174112c0360684fac7859177bc4d065e28a47e943e973",
 				"reading": "74bbe5d27a81c706aa70c5c38e37f9383749b54526e8151f71a50f94756fb387"
 			},
 			"name": "event-numbers",
@@ -3223,8 +3223,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "2195c3d506384d1b98dd1a4fa3380a9cddc1117fb5947bc17996e1b93186a75d",
-				"reading": "dc64f256c1838c21de05b4ae9a807f72585742671644ef1097bc7be6ec40dc33"
+				"png": "50342deb58c6737abfa9d1227972b5bed97d065e5c10da4f66595136cdf35cf2",
+				"reading": "5c4d1e7c976fc1db9297488d20f90913754fb81fcd3a0432fcd4e5d79d3de5d5"
 			},
 			"name": "file-guarded-read",
 			"rows": [
@@ -3570,7 +3570,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "d32bac2ba2d5593666a87eac9a0047c327c6d83be60fdd38b2d68e46130b169b",
+				"png": "36942fc45b05a34752fc0a830d4ec0c7a002b6d62bad798953130968da6d1272",
 				"reading": "c75036d2a219fd35e2efe099c565226c35cdbc970a2b0c86387f9674b60a3e83"
 			},
 			"name": "pattern-pool",
@@ -3586,7 +3586,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "285e947696e85942afe36b3e74b4f515b06bc1c0f7dd1e834398f3310c74a9c1",
+				"png": "60872678f125b6939f72f2b9d02c7b48b9ec08cc3bc5c7e7d6117c927924e049",
 				"reading": "8a0a6e03ac20455f105dd2c61eb3752952b857c941741e36f176ccdb76b26deb"
 			},
 			"name": "pattern-verbs",
@@ -3602,7 +3602,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "f3798c7c9b9ae1eb6b3f2205798587cdd87a51f3c9c6c8386ab3dc1cf805a612",
+				"png": "44a23690f31c10984fe360c2281d2750ce8cb051d03be31347370db52affa1d0",
 				"reading": "dc2640985b76ea14b2a726a47212e6b3eeb4f4f979072d701ae714d6f4ab78de"
 			},
 			"name": "pattern-wave3",
@@ -3699,7 +3699,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "7b56003d9ecfde80f1678f4290f821870cf08d0a11e0dfa438cb48653117c9e7",
-				"reading": "3f1b12e1ca38246590742909c8c27ef32e6b4c4f005ad09a587324253b89e136"
+				"reading": "5c4f7316c39a134827b7820ed04bda1f75e1ac69c81e763f76a37cf8209aab54"
 			},
 			"layout": "vertical",
 			"name": "scenes-save-branch",
@@ -3735,8 +3735,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "3a2ab1ad536b4a8d3ff2fe737b16f4f7c56b6bd4b17189f102db6ebc34500b7b",
-				"reading": "940b272c53e2d21e79e99790f12122be6997030017c17c425b575116d22085f0"
+				"png": "931b61c75ee7d2d8ad6d8a3cb8606a4a3f4e1c4c2f6cfc9ce160458dc01ef5ab",
+				"reading": "fd5b2d1ed93ed52532ce69fba10da8a1beaa8dc3b15d13c1dd1a15dcae0f1065"
 			},
 			"name": "scenes-spawn-3d",
 			"rows": [
@@ -3830,7 +3830,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "d95cd4de8245b07fef5531152959dab58efa1b262dd12ee4d7be5eaeab0584dd",
+				"png": "ba1178074c095376ae5484e84ebfdaede34071bb55e1aed1ca9aa2649a86a29e",
 				"reading": "246f8760978080f868da1a96058f22e349cdc8f5b159a7547e52ca6cc0ae106e"
 			},
 			"name": "user-content-ask",
@@ -3846,7 +3846,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "dc6ae284998bc83ca8fc65702c3d9e19ff9deb1d7bcd35e609beffcf28f9649d",
+				"png": "38f98cb5ed43567dd42edd1c1aae9dd489ef35708d639da67048c826391ed5d9",
 				"reading": "3d69f6945d4597cf999aff9195e0769e140a4507b42463b8ad05ad44b0f6e6e2"
 			},
 			"name": "user-content-drop",
@@ -3862,7 +3862,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "e447ed1e2b8581f03c44695d3d2c171ba134f6c1c5a9472c4e1c21eefd0dea8d",
+				"png": "8a400e41889e5277981551946c61c2d4eea2b37610d35930e2ab133b2571cc33",
 				"reading": "2b72a96cf5bd784291f255543bc4e96ba27bc1c8ccdd0a821b2d0a5bcf09d170"
 			},
 			"name": "variable-sentence-head",
@@ -3933,7 +3933,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "6ac8b6c01fa05dcc6820a12e27add9478408a8b6136e9507f245af350dd0ac1f",
+				"png": "7f3486aa0a480e3667238de3f48f41456118f52433be6a08cde0b74ee81aff76",
 				"reading": "ac0bf5dc8e2b68a6ca8a4aecda83f115d15c331b954ac11283c7f58f8ec98f3c"
 			},
 			"name": "select-all-matching",
