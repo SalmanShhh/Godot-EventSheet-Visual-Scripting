@@ -11248,8 +11248,8 @@ Getting ready...,Подготовка...
 about %d seconds,около %d секунд
 about %d minutes,около %d минут
 Check these %d scripts as sheets too,Проверить эти %d скриптов как листы
-"Keyboard > Save bindings writes %s; Settings > Save Bindings keeps them in %s under [%s], beside the options.",
-Which key or button does each action in the Input Map.,
-"Keyboard > Save bindings, or Settings > Save Bindings",
-The Load bindings row of the same pair,
-"The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.",
+"Keyboard > Save bindings writes %s; Settings > Save Bindings keeps them in %s under [%s], beside the options.","Клавиатура > Сохранить привязки пишет %s; Settings > Save Bindings хранит их в %s в разделе [%s], рядом с настройками."
+Which key or button does each action in the Input Map.,Какая клавиша или кнопка запускает каждое действие Input Map.
+"Keyboard > Save bindings, or Settings > Save Bindings",Клавиатура > Сохранить привязки или Settings > Save Bindings
+The Load bindings row of the same pair,Строка «Загрузить привязки» из той же пары
+"The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.","Глобальная переменная Settings загружает %s, а не пакет Game Settings, и этот скрипт использует строки пакета. Дайте своей глобальной другое имя, чтобы строки вызывали пакет."

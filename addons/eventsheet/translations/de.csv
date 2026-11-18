@@ -11248,8 +11248,8 @@ Getting ready...,Wird vorbereitet...
 about %d seconds,etwa %d Sekunden
 about %d minutes,etwa %d Minuten
 Check these %d scripts as sheets too,Diese %d Skripte auch als Sheets prüfen
-"Keyboard > Save bindings writes %s; Settings > Save Bindings keeps them in %s under [%s], beside the options.",
-Which key or button does each action in the Input Map.,
-"Keyboard > Save bindings, or Settings > Save Bindings",
-The Load bindings row of the same pair,
-"The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.",
+"Keyboard > Save bindings writes %s; Settings > Save Bindings keeps them in %s under [%s], beside the options.","Tastatur > Bindungen speichern schreibt %s; Settings > Save Bindings legt sie in %s unter [%s] ab, neben den Optionen."
+Which key or button does each action in the Input Map.,Welche Taste oder welcher Knopf jede Aktion der Input Map auslöst.
+"Keyboard > Save bindings, or Settings > Save Bindings",Tastatur > Bindungen speichern oder Settings > Save Bindings
+The Load bindings row of the same pair,Die Zeile Bindungen laden desselben Paars
+"The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.","Der globale Name Settings lädt %s und nicht das Game-Settings-Pack, und dieses Skript nutzt die Zeilen des Packs. Gib deinem eigenen Global einen anderen Namen, damit die Zeilen das Pack aufrufen."

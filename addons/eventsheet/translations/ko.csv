@@ -11248,8 +11248,8 @@ Getting ready...,준비 중...
 about %d seconds,약 %d초
 about %d minutes,약 %d분
 Check these %d scripts as sheets too,이 스크립트 %d개도 시트로 검사
-"Keyboard > Save bindings writes %s; Settings > Save Bindings keeps them in %s under [%s], beside the options.",
-Which key or button does each action in the Input Map.,
-"Keyboard > Save bindings, or Settings > Save Bindings",
-The Load bindings row of the same pair,
-"The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.",
+"Keyboard > Save bindings writes %s; Settings > Save Bindings keeps them in %s under [%s], beside the options.","키보드 > 바인딩 저장은 %s에 쓰고, Settings > Save Bindings는 옵션 옆의 %s 안 [%s]에 보관합니다."
+Which key or button does each action in the Input Map.,Input Map의 각 동작을 어떤 키나 버튼으로 실행하는지.
+"Keyboard > Save bindings, or Settings > Save Bindings","키보드 > 바인딩 저장, 또는 Settings > Save Bindings"
+The Load bindings row of the same pair,같은 쌍의 바인딩 불러오기 행
+"The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.","Settings라는 이름의 글로벌이 Game Settings 팩이 아닌 %s을(를) 불러오고 있으며, 이 스크립트는 팩의 행을 사용합니다. 행이 팩을 호출하도록 자신의 글로벌에 다른 이름을 지어 주세요."
