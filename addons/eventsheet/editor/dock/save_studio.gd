@@ -797,6 +797,12 @@ static func settings_files() -> Array:
 	space.keycode = KEY_SPACE
 	var bindings: ConfigFile = ConfigFile.new()
 	bindings.set_value("bindings", "jump", [space])
+	# The bindings live in two places, one per pair of rows: the Keyboard rows write their own file, and the
+	# Settings rows keep them in the settings file beside the options. Both paths are the shipping constants.
+	var bindings_file: String = str((load(BINDINGS_MODULE) as Script).get_script_constant_map().get("BINDINGS_FILE", "")).trim_prefix("\"").trim_suffix("\"")
+	var settings_file: String = str(settings_pack.get("SETTINGS_FILE", ""))
+	var bindings_section: String = str(settings_pack.get("BINDINGS_SECTION", "bindings"))
+	var bindings_words: String = EventSheetL10n.translate("Keyboard > Save bindings writes %s; Settings > Save Bindings keeps them in %s under [%s], beside the options.") % [bindings_file, settings_file, bindings_section]
 	return [
 		[EventSheetL10n.translate("Save slots"), str(slot["save_directory"]).path_join(str(slot["file_pattern"]).replace("{slot}", "0")),
 			EventSheetL10n.translate("The game itself: where the player is, what they carry. One file per slot."),
@@ -806,11 +812,12 @@ static func settings_files() -> Array:
 			EventSheetL10n.translate("Every declared setting: volume, subtitles, fullscreen, quality. One file for the whole game."),
 			settings.encode_to_text().strip_edges(), EventSheetL10n.translate("Save All Settings, Save Setting"),
 			EventSheetL10n.translate("Load All Settings"), EventSheetL10n.translate("Kept as it is")],
-		[EventSheetL10n.translate("Key bindings"), str((load(BINDINGS_MODULE) as Script).get_script_constant_map().get("BINDINGS_FILE", "")).trim_prefix("\"").trim_suffix("\""),
-			EventSheetL10n.translate("Which key or button does each action in the Input Map. One file for the whole game."),
+		[EventSheetL10n.translate("Key bindings"), bindings_file,
+			EventSheetL10n.translate("Which key or button does each action in the Input Map.") + " " + bindings_words,
 			# A key is stored as its whole object, every field spelled out; its class says enough here.
-			bindings.encode_to_text().get_slice(",", 0) + ", …)]", EventSheetL10n.translate("Save Bindings"),
-			EventSheetL10n.translate("Load Bindings"), EventSheetL10n.translate("Kept as it is")],
+			bindings.encode_to_text().get_slice(",", 0) + ", …)]", EventSheetL10n.translate("Keyboard > Save bindings, or Settings > Save Bindings"),
+			EventSheetL10n.translate("The Load bindings row of the same pair"), EventSheetL10n.translate("Kept as it is"),
+			"%s [%s]" % [settings_file, bindings_section]],
 	]
 
 
@@ -900,6 +907,8 @@ func _file_card(card: Array) -> Control:
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
 	head.add_child(EventSheetPopupUI.metadata_badge(str(card[1])))
+	if card.size() > 7:
+		head.add_child(EventSheetPopupUI.metadata_badge(str(card[7])))
 	box.add_child(head)
 	box.add_child(_muted(str(card[2]), EventSheetPalette.scaled_f(150.0)))
 	box.add_child(EventSheetPopupUI.code_card(str(card[3]), EventSheetPalette.scaled_f(150.0)))

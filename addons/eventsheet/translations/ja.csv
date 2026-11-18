@@ -11248,3 +11248,8 @@ Getting ready...,準備中...
 about %d seconds,約%d秒
 about %d minutes,約%d分
 Check these %d scripts as sheets too,この%d個のスクリプトもシートとしてチェックする
+"Keyboard > Save bindings writes %s; Settings > Save Bindings keeps them in %s under [%s], beside the options.",
+Which key or button does each action in the Input Map.,
+"Keyboard > Save bindings, or Settings > Save Bindings",
+The Load bindings row of the same pair,
+"The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.",
