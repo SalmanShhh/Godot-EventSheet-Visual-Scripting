@@ -11274,3 +11274,5 @@ the Load bindings row of the same pair,die Zeile Bindungen laden desselben Paars
 "Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.","In diesem Blatt ist noch nichts für den Picker veröffentlicht. Hake „Andere Blätter können dies verwenden“ bei einer Funktion an, dann steht sie hier, so wie der Picker sie zeigt."
 "%d sheet(s) that name it follow it too.","%d Blatt/Blätter, die darauf verweisen, ziehen mit um."
 "Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.","Eigene Skripte, die noch den alten Pfad nennen: %d. Werkzeuge > Im Projekt suchen listet sie auf."
+The tests could not be started in a second copy of Godot.,Die Tests konnten nicht in einer zweiten Godot-Kopie gestartet werden.
+The test run ended before it wrote a report. Run the tests from a terminal to see why.,"Der Testlauf endete, bevor er einen Bericht geschrieben hat. Starte die Tests in einem Terminal, um den Grund zu sehen."

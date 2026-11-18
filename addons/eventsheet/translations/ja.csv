@@ -11274,3 +11274,5 @@ the Load bindings row of the same pair,同じペアのバインドを読み込�
 "Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.","このシートにはピッカーに公開されているものがまだありません。関数で「他のシートで使える」にチェックを入れると、ピッカーに表示されるとおりにここへ一覧されます。"
 "%d sheet(s) that name it follow it too.","これを参照している %d 件のシートも一緒に更新されました。"
 "Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.","古いパスをまだ参照しているあなたのスクリプト: %d 件。ツール > プロジェクト内を検索 で一覧できます。"
+The tests could not be started in a second copy of Godot.,2つ目のGodotでテストを開始できませんでした。
+The test run ended before it wrote a report. Run the tests from a terminal to see why.,レポートが書き込まれる前にテストの実行が終了しました。ターミナルからテストを実行して原因を確認してください。

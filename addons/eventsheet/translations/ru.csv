@@ -11274,3 +11274,5 @@ the Load bindings row of the same pair,строка «Загрузить при�
 "Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.","В этом листе пока ничего не опубликовано для выбора. Отметьте у функции «Могут использовать другие листы», и она появится здесь так, как её покажет окно выбора."
 "%d sheet(s) that name it follow it too.","Листов, которые на него ссылаются, тоже обновлено: %d."
 "Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.","Ваших скриптов, которые всё ещё называют старый путь: %d. Список покажет Инструменты > Найти в проекте."
+The tests could not be started in a second copy of Godot.,Не удалось запустить тесты во второй копии Godot.
+The test run ended before it wrote a report. Run the tests from a terminal to see why.,"Прогон тестов завершился, не записав отчёт. Запустите тесты из терминала, чтобы узнать причину."

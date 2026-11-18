@@ -11274,3 +11274,5 @@ the Load bindings row of the same pair,同一对中的“加载按键绑定”�
 "Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.","此表中还没有发布到选择器的内容。在某个函数上勾选“其他表可以使用”，它就会按选择器显示的样子列在这里。"
 "%d sheet(s) that name it follow it too.","引用它的 %d 个事件表也已一并更新。"
 "Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.","仍然引用旧路径的你的脚本：%d 个。工具 > 在项目中查找 可列出它们。"
+The tests could not be started in a second copy of Godot.,无法在第二个 Godot 副本中启动测试。
+The test run ended before it wrote a report. Run the tests from a terminal to see why.,测试运行在写出报告之前就结束了。请在终端中运行测试以查看原因。

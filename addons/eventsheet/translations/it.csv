@@ -11274,3 +11274,5 @@ the Load bindings row of the same pair,la riga Carica i tasti della stessa coppi
 "Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.","Nulla in questo foglio è ancora pubblicato nel selettore. Spunta «Altri fogli possono usarlo» su una funzione e sarà elencata qui come la mostrerà il selettore."
 "%d sheet(s) that name it follow it too.","%d foglio/fogli che lo nominano lo seguono."
 "Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.","Script tuoi che nominano ancora il vecchio percorso: %d. Strumenti > Cerca nel progetto li elenca."
+The tests could not be started in a second copy of Godot.,Non è stato possibile avviare i test in una seconda copia di Godot.
+The test run ended before it wrote a report. Run the tests from a terminal to see why.,L'esecuzione dei test è terminata prima di scrivere un rapporto. Esegui i test da un terminale per vedere il motivo.
