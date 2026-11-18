@@ -364,6 +364,8 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				metadata.erase("object_column_base")
 		var display_text: String = _viewport._editing_buffer if index == _viewport._editing_row_index and span_index == _viewport._editing_span_index else span.text
 		var span_width: float = _viewport._row_builder._measure_span_width(span, display_text, font, font_size)
+		# A cell wider than the lane it stands in, which wraps instead of being cut (a function head).
+		var wraps_wide: bool = false
 		if lane_divider_x > 0.0 and span_lane != "action":
 			var max_condition_right: float = EventSheetViewportRowMetrics.condition_right_limit(
 				row_data, width, lane_divider_x, float(event_style.condition_lane_padding)
@@ -416,6 +418,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 					span.rect = Rect2()
 					metadata["no_room"] = true
 					continue
+				wraps_wide = bool(metadata.get("wraps_when_wide", false)) and span_width > max_condition_right - span_x + 0.5
 				span_width = max(min(span_width, max_condition_right - span_x), _viewport.MIN_SPAN_WIDTH)
 				if stacked_chip_x.has(int(metadata.get("line_index", 0))) and EventSheetViewportRowMetrics.STACKED_CHIP_KINDS.has(chip_kind):
 					stacked_chip_x[int(metadata.get("line_index", 0))] = span_x + span_width + 2.0 + _viewport._get_span_gap(span)
@@ -506,7 +509,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			var wrap_line: int = int(metadata.get("line_index", 0))
 			if span_lane == "action" and str(metadata.get("kind", "")) == "action" and not bool(metadata.get("natural_width", false)) and not bool(metadata.get("align_right", false)):
 				span_visual_lines = maxi(int(act_line_counts.get(wrap_line, 1)), 1)
-			elif span_lane != "action" and not bool(metadata.get("badge", false)) and EventSheetViewportRowMetrics.FILL_CONDITION_KINDS.has(str(metadata.get("kind", ""))):
+			elif span_lane != "action" and not bool(metadata.get("badge", false)) and (wraps_wide or EventSheetViewportRowMetrics.FILL_CONDITION_KINDS.has(str(metadata.get("kind", "")))):
 				span_visual_lines = maxi(int(cond_line_counts.get(wrap_line, 1)), 1)
 				# The line the chips stand on under the cell is the line's, not the cell's: the cell is
 				# only as tall as its own words, so its label and its underline stay beside them.

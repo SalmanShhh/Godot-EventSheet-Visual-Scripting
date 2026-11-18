@@ -358,6 +358,10 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 	var cond_count: Dictionary = {}
 	var act_count: Dictionary = {}
 	var max_line: int = 0
+	# The last logical line each lane really holds a cell on: a lane's height is where ITS last cell ends,
+	# not where the other lane's last line would stand if this lane had one too.
+	var last_cond_line: int = -1
+	var last_act_line: int = -1
 	# A theme that shows the add lines on hover gives them no room on an event at rest.
 	var resting_add_kinds: PackedStringArray = resting_add_line_kinds(row_data, event_style)
 	for span_index: int in range(row_data.spans.size()):
@@ -375,6 +379,7 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 		var lane: String = _viewport._row_builder._resolve_span_lane(span)
 		var measured: float = _viewport._row_builder._measure_span_width(span, span.text, font, font_size)
 		if lane == "action":
+			last_act_line = maxi(last_act_line, line)
 			if bool(metadata.get("align_right", false)):
 				continue
 			var start_x: float = float(act_x.get(line, action_x))
@@ -386,6 +391,7 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 			else:
 				act_x[line] = start_x + measured + 2.0 + _viewport._get_span_gap(span)
 		else:
+			last_cond_line = maxi(last_cond_line, line)
 			if bool(metadata.get("badge", false)):
 				var natural_badge: bool = bool(metadata.get("badge_natural_width", false))
 				var badge_width: float = measured if natural_badge or badge_column <= 0.0 else badge_column
@@ -412,6 +418,9 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 					cond_text_x[line] = text_start + available_c + 2.0 + _viewport._get_span_gap(span)
 				else:
 					var chip_width: float = maxf(minf(measured, max_condition_right - text_start), _viewport.MIN_SPAN_WIDTH)
+					# A function head's words that are wider than the lane wrap inside it like any other cell.
+					if bool(metadata.get("wraps_when_wide", false)) and measured > max_condition_right - text_start + 0.5:
+						cond_count[line] = maxi(int(cond_count.get(line, 1)), _fill_cell_line_count(span, metadata, chip_width + 2.0, font, font_size, object_column_override(metadata, condition_text_start_x, text_start)))
 					cond_text_x[line] = text_start + chip_width + 2.0 + _viewport._get_span_gap(span)
 	var cond_top: Dictionary = {}
 	var act_top: Dictionary = {}
@@ -422,9 +431,17 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 		act_top[line_cursor] = act_cursor
 		cond_cursor += maxi(int(cond_count.get(line_cursor, 1)), 1)
 		act_cursor += maxi(int(act_count.get(line_cursor, 1)), 1)
+	# A lane that holds nothing on a logical line the other lane has more of takes no room for it: an
+	# empty line under a wrapped condition used to be reserved only because an action stood on that line.
+	var cond_end: int = 0
+	if last_cond_line >= 0:
+		cond_end = int(cond_top.get(last_cond_line, 0)) + maxi(int(cond_count.get(last_cond_line, 1)), 1)
+	var act_end: int = 0
+	if last_act_line >= 0:
+		act_end = int(act_top.get(last_act_line, 0)) + maxi(int(act_count.get(last_act_line, 1)), 1)
 	return {
 		"cond_top": cond_top, "act_top": act_top, "cond_count": cond_count, "act_count": act_count,
-		"total": maxi(maxi(cond_cursor, act_cursor), 1)
+		"total": maxi(maxi(cond_end, act_end), 1)
 	}
 
 
@@ -529,6 +546,14 @@ func condition_trailing_width(row_data: EventRowData, line_index: int, font: Fon
 		return 0.0
 	if condition_chips_stack(row_data, line_index, font, font_size, room, column_override):
 		return 0.0
+	return _chips_beside_width(row_data, line_index, font, font_size, room, column_override)
+
+
+## What the chips after the cell of one condition line take when they stand beside it, never so much that
+## the cell is left narrower than its own longest word. condition_trailing_width answers 0 instead when they
+## stand under the cell.
+func _chips_beside_width(row_data: EventRowData, line_index: int, font: Font, font_size: int,
+		room: float, column_override: float) -> float:
 	var total: float = 0.0
 	for span: EventSheetSemanticSpan in row_data.spans:
 		if span == null or not (span.metadata is Dictionary):
@@ -581,7 +606,29 @@ func condition_chips_stack(row_data: EventRowData, line_index: int, font: Font, 
 	var share: float = LANE_CHIP_SHARE if event_style != null and event_style.lane_chips_yield else LANE_CHIP_LIMIT
 	var beside: float = minf(natural + others, _viewport.lane_width_for("condition", row_data.indent) * share)
 	beside = minf(beside, maxf(room - _cell_floor_width(row_data, line_index, font, font_size, column_override), 0.0))
-	return natural + others > beside
+	if natural + others > beside:
+		return true
+	# They fit beside the cell, but a sentence that has to wrap to leave them room reads broken: the chip
+	# lands in the middle of it ("event [other]" and "is text" on the next line). Meaningful chips stand
+	# after the whole sentence or not at all, so a sentence that wraps puts them on a line under it.
+	var cell: EventSheetSemanticSpan = _fill_cell_of_line(row_data, line_index)
+	if cell == null:
+		return false
+	var cell_metadata: Dictionary = cell.metadata as Dictionary
+	var cell_width: float = maxf(room - _chips_beside_width(row_data, line_index, font, font_size, room, column_override), _viewport.MIN_SPAN_WIDTH)
+	return _fill_cell_line_count(cell, cell_metadata, cell_width + 2.0, font, font_size, column_override) > 1
+
+
+## The fill cell of one condition line (the first one), or null when the line has none.
+func _fill_cell_of_line(row_data: EventRowData, line_index: int) -> EventSheetSemanticSpan:
+	for span: EventSheetSemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		if FILL_CONDITION_KINDS.has(str(metadata.get("kind", ""))) and int(metadata.get("line_index", 0)) == line_index \
+				and not bool(metadata.get("badge", false)):
+			return span
+	return null
 
 
 ## The narrowest the fill cell of one condition line may be left: its longest word plus everything the

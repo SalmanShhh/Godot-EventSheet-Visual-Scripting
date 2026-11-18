@@ -4506,6 +4506,7 @@ func _function_head_spans(event_function: EventFunction, role: String) -> Array[
 	spans.append(_make_span("%s %s" % [arrival, name_word], EventSheetSemanticSpan.SpanType.CONDITION, head.merged({
 		"chip": true,
 		"function_name": true,
+		"wraps_when_wide": true,
 		"function_kind": role,
 		"object_label": _function_head_object(event_function),
 		"object_glyph": NativeRowMarks.OBJECT_GLYPH_FUNCTION,
