@@ -5,6 +5,7 @@
 		"docs/images/hierarchy-playground.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
 		"docs/images/menu-starter.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
 		"docs/images/mirror-and-flip-showcase.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
+		"docs/images/open-progress-strip.png": "the strip exists only while a file is being read (dock/open_progress.gd), so the picture is a race against the machine: how many rows are painted when the frame is taken changes with the machine's speed and load, and no wait or step can fix a frame count, so it cannot be byte-stable; the old picture stays and the guide text it illustrates is still true",
 		"docs/images/pin-modes-showcase.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
 		"docs/images/raycast-lab-3d.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
 		"docs/images/raycast-lab.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
@@ -19,39 +20,19 @@
 		"docs/images/ace-properties-popup.png",
 		"docs/images/ace-studio-example.png",
 		"docs/images/ace-studio.png",
-		"docs/images/anatomy-panel.png",
-		"docs/images/archive-unpack.png",
-		"docs/images/arrange-by-object.png",
 		"docs/images/ask-box-proposal.png",
 		"docs/images/ask-field.png",
-		"docs/images/asset-drop.png",
-		"docs/images/async-chip.png",
 		"docs/images/batch-param-edit.png",
 		"docs/images/bbcode-param.png",
 		"docs/images/behavior-gizmo.png",
-		"docs/images/blank-events.png",
 		"docs/images/blank-start.png",
-		"docs/images/block-views-after.png",
-		"docs/images/block-views-before.png",
-		"docs/images/block-views-real-file.png",
 		"docs/images/bookmarks-panel.png",
-		"docs/images/cell-navigation.png",
-		"docs/images/code-patterns-lifted-machine.png",
-		"docs/images/code-patterns-rows.png",
-		"docs/images/code-patterns-state-machine.png",
 		"docs/images/collisions-doctor-report.png",
-		"docs/images/collisions-head-band.png",
 		"docs/images/color-no-alpha.png",
 		"docs/images/comment-doors.png",
-		"docs/images/comment-kinds.png",
 		"docs/images/conflict-view.png",
 		"docs/images/connect-signal-dialog.png",
-		"docs/images/custom-blocks.png",
 		"docs/images/data-class-add-field.png",
-		"docs/images/decl-row-canvas.png",
-		"docs/images/decl-top-canvas.png",
-		"docs/images/description-surfaces.png",
-		"docs/images/divider-guide.png",
 		"docs/images/doc-ace-reference.png",
 		"docs/images/doc-dock-beside-sheet.png",
 		"docs/images/doc-explain-panel.png",
@@ -67,21 +48,12 @@
 		"docs/images/doctor-tidiness-findings.png",
 		"docs/images/duplicate-as-variant.png",
 		"docs/images/enemy-stats-preview.png",
-		"docs/images/engine-table-read.png",
-		"docs/images/event-numbers.png",
 		"docs/images/events-overlay-badge.png",
 		"docs/images/export-string-options.png",
 		"docs/images/feature-tag-nudge.png",
 		"docs/images/feature-tags.png",
-		"docs/images/file-guarded-read.png",
 		"docs/images/file-place-field.png",
-		"docs/images/files-band.png",
-		"docs/images/files-runs-reopened.png",
-		"docs/images/filter-lens.png",
-		"docs/images/folder-watcher.png",
 		"docs/images/friendly-runtime-error.png",
-		"docs/images/ghost-row-chips.png",
-		"docs/images/group-breadcrumb.png",
 		"docs/images/group-reference-param.png",
 		"docs/images/hit-counts-off-margin.png",
 		"docs/images/hit-counts-off.png",
@@ -91,18 +63,14 @@
 		"docs/images/import-event-sheet-wizard.png",
 		"docs/images/inspector-designer.png",
 		"docs/images/inspector-drawers.png",
-		"docs/images/interop-convert-menu.png",
 		"docs/images/juice-player-inspector.png",
-		"docs/images/layout-on-top-pause-pair.png",
 		"docs/images/live-pulse.png",
-		"docs/images/local-variable-uses-highlight.png",
 		"docs/images/look-sheet-2-dialog.png",
 		"docs/images/look-sheet-3-opened.png",
 		"docs/images/look-sheet-5-variable.png",
 		"docs/images/look-sheet-6-inspector.png",
 		"docs/images/look-sheet-7-text.png",
 		"docs/images/look-sheet-8-doors.png",
-		"docs/images/looping-condition.png",
 		"docs/images/manual-docked.png",
 		"docs/images/manual-reference-page.png",
 		"docs/images/manual-reference-shape.png",
@@ -111,69 +79,21 @@
 		"docs/images/manual-tutorial-step.png",
 		"docs/images/manual-tutorials.png",
 		"docs/images/manual-whats-new.png",
-		"docs/images/menu-reading-rows.png",
 		"docs/images/merge-guards.png",
-		"docs/images/migration-amber-row.png",
 		"docs/images/migration-doctor-inbox.png",
-		"docs/images/migration-head-band.png",
 		"docs/images/migration-keep-as-code.png",
 		"docs/images/migration-migrate-dialog.png",
-		"docs/images/minimap-column.png",
-		"docs/images/node-dignities.png",
 		"docs/images/number-scrubbing.png",
 		"docs/images/object-states-dialog.png",
-		"docs/images/object-states.png",
-		"docs/images/objects-rail.png",
-		"docs/images/open-progress-strip.png",
 		"docs/images/opened-script-canvas-dialog.png",
-		"docs/images/opened-script-physics.png",
-		"docs/images/opened-script-pin-modes.png",
-		"docs/images/opened-script-pin-rows.png",
-		"docs/images/opened-script-shared-store.png",
-		"docs/images/opened-script-structure5.png",
-		"docs/images/opened-script-systems.png",
-		"docs/images/opened-script-tween-and-head-accessors.png",
-		"docs/images/opened-script-undo-step.png",
-		"docs/images/opened-script-vocabulary-module.png",
-		"docs/images/opened-script-words5.png",
 		"docs/images/outline-panel.png",
-		"docs/images/pack-recipe-rows.png",
-		"docs/images/pack-taught-spellings.png",
-		"docs/images/pack-version-chip.png",
 		"docs/images/palette-param-swatches.png",
 		"docs/images/pattern-adopt-dialog.png",
-		"docs/images/pattern-chip.png",
-		"docs/images/pattern-effects-tilemap-camera.png",
 		"docs/images/pattern-manual-page.png",
-		"docs/images/pattern-pool.png",
-		"docs/images/pattern-verbs.png",
-		"docs/images/pattern-wave3.png",
-		"docs/images/pattern-wave4.png",
-		"docs/images/physics-query-rows.png",
-		"docs/images/picker-preview-panel.png",
-		"docs/images/preload-row.png",
-		"docs/images/prelude-blocks-closed.png",
-		"docs/images/prelude-blocks-open.png",
 		"docs/images/project-view.png",
-		"docs/images/property-drop.png",
-		"docs/images/provider-curation.png",
 		"docs/images/publish-version-dialog.png",
 		"docs/images/published-verb-rows.png",
-		"docs/images/reading-animation-tree-words.png",
-		"docs/images/reading-boss-phases.png",
-		"docs/images/reading-camera-relative-movement.png",
-		"docs/images/reading-cursor-ray-and-canvas.png",
-		"docs/images/reading-detection.png",
 		"docs/images/reading-dialog-hierarchy-and-function-chips.png",
-		"docs/images/reading-match-patterns-and-notes.png",
-		"docs/images/reading-mission-timer.png",
-		"docs/images/reading-orbit-words.png",
-		"docs/images/reading-pity.png",
-		"docs/images/reading-ring-and-test-fold.png",
-		"docs/images/reading-seen-heard-and-the-world.png",
-		"docs/images/reading-sprite-sound-juice.png",
-		"docs/images/reading-vectors-patterns-notes.png",
-		"docs/images/reading-world-space-ui.png",
 		"docs/images/rename-outside-row.png",
 		"docs/images/rename-receipt.png",
 		"docs/images/replace-autocomplete.png",
@@ -187,55 +107,28 @@
 		"docs/images/save-studio-save-slots.png",
 		"docs/images/save-studio-what-gets-saved.png",
 		"docs/images/save-studio.png",
-		"docs/images/scene-as-a-sheet.png",
 		"docs/images/scene-node-param-picker.png",
-		"docs/images/scenes-group-arrivals.png",
-		"docs/images/scenes-save-branch.png",
 		"docs/images/scenes-save-place-lead.png",
-		"docs/images/scenes-spawn-3d.png",
 		"docs/images/scenes-trust-inbox.png",
 		"docs/images/seam-change-type.png",
-		"docs/images/second-view-rows.png",
 		"docs/images/secret-object-drop-offer.png",
-		"docs/images/select-all-matching.png",
 		"docs/images/shared-sheet-new.png",
-		"docs/images/sheet-corner-links.png",
 		"docs/images/sheet-health-card.png",
-		"docs/images/sheet-map.png",
-		"docs/images/skill-tree-reading.png",
 		"docs/images/snippet-blanks.png",
 		"docs/images/state-play-mode.png",
 		"docs/images/state-trail.png",
-		"docs/images/successor-row-strip.png",
-		"docs/images/swipe-gestures-reading.png",
-		"docs/images/ternary-editable.png",
-		"docs/images/test-sheet-rows.png",
-		"docs/images/theme-dracula.png",
 		"docs/images/theme-editor-new-groups.png",
 		"docs/images/theme-editor-token-rows.png",
-		"docs/images/themed-gutter.png",
 		"docs/images/toolbar-moment-segment.png",
-		"docs/images/tooldev-content-packs.png",
-		"docs/images/tooldev-editor-verbs.png",
 		"docs/images/tools-compare-with.png",
 		"docs/images/tools-find-repeated-rows.png",
 		"docs/images/tools-loose-ends.png",
 		"docs/images/tools-run-tests.png",
 		"docs/images/translation-globe.png",
-		"docs/images/tween-chain-rows.png",
-		"docs/images/typed-object-labels.png",
-		"docs/images/undoable-tool-edits.png",
-		"docs/images/unique-name-rows.png",
-		"docs/images/unique-names-picker-section.png",
-		"docs/images/user-content-ask.png",
-		"docs/images/user-content-drop.png",
 		"docs/images/variable-dialog.png",
-		"docs/images/variable-sentence-head.png",
 		"docs/images/watch-never-stops.png",
 		"docs/images/welcome-documentation-link.png",
 		"docs/images/why-didnt-fire.png",
-		"docs/images/window-render-reading.png",
-		"docs/images/wired-call-rows.png",
 		"docs/images/words-settings.png",
 		"docs/previews/editor-ace-picker.png",
 		"docs/previews/editor-event-sheet.png",
@@ -244,7 +137,16 @@
 		"docs/previews/editor-hero-light.png",
 		"docs/previews/editor-hero.png",
 		"docs/previews/editor-type-check-light.png",
-		"docs/previews/editor-type-check.png"
+		"docs/previews/editor-type-check.png",
+		"docs/images/second-view-rows.png",
+		"docs/images/interop-convert-menu.png",
+		"docs/images/unique-names-picker-section.png",
+		"docs/images/local-variable-uses-highlight.png",
+		"docs/images/cell-navigation.png",
+		"docs/images/picker-preview-panel.png",
+		"docs/images/engine-table-read.png",
+		"docs/images/sheet-corner-links.png",
+		"docs/images/pack-recipe-rows.png"
 	],
 	"settle_frames": 150.0,
 	"shots": [
@@ -281,12 +183,22 @@
 			"target": "docs/images/batch6-reading.png"
 		},
 		{
-			"batch": "sheets",
+			"batch": "fixes",
+			"cleanup": [
+				{
+					"do": "delete_user",
+					"path": "res://tools/doc_shots/boomer_arsenal.gd"
+				},
+				{
+					"do": "delete_user",
+					"path": "res://tools/doc_shots/boomer_arsenal.gd.uid"
+				}
+			],
 			"crop": "rows",
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "3f3f98fb832fd30b6380a825a771696a35739b452e991d39af46483fa57556a6"
+				"png": "e6829b2d4839553649e0699ee17165da47745ad8a7b64efe44eca8e0c068a829"
 			},
 			"name": "boomer-arsenal-starter",
 			"steps": [
@@ -300,6 +212,14 @@
 				{
 					"do": "new_from_template",
 					"id": 30.0
+				},
+				{
+					"args": [
+						"res://tools/doc_shots/boomer_arsenal.gd"
+					],
+					"do": "dock_path_call",
+					"frames": 120.0,
+					"path": "_sheet_io._save_sheet_to_path"
 				},
 				{
 					"do": "clear_status"
@@ -760,11 +680,11 @@
 			"target": "docs/images/interop-opened-gd.png"
 		},
 		{
-			"batch": "sheets",
+			"batch": "fixes",
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "bf4cbc71361cc0aac839d4888d9d7de5b41dbe83872e4c158054b4e9d90d9b13",
+				"png": "3a6a28923c570bba5446edd945b7a045f9217a8d45fd80a2c0dfefff585a7b52",
 				"reading": "02a48582222df171355c790e420774a3f7ba26523318b6adcd1b486dc26a5951"
 			},
 			"name": "literal-entry-chips",
@@ -773,7 +693,12 @@
 				"@last"
 			],
 			"source": "res://tools/doc_shots/fixtures/table_tools.gd",
-			"target": "docs/images/literal-entry-chips.png"
+			"target": "docs/images/literal-entry-chips.png",
+			"width": 1300.0,
+			"window": [
+				2100.0,
+				900.0
+			]
 		},
 		{
 			"batch": "sheets",
@@ -1439,7 +1364,7 @@
 			"trim_top": 42.0
 		},
 		{
-			"batch": "strip",
+			"batch": "fixes",
 			"crop": "rows",
 			"files": [
 				"res://addons/eventsheet/editor/dock/menu_bar.gd"
@@ -1449,15 +1374,15 @@
 				"files": "3beb5148c37e61cf490186ddc3ca01400daa5bff67b4d8f29ae8c5316b0e4819",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "3d32d782a5b05907cd29bc5b1bf3dec50c4b1e9f5a03a670c0c799b9c8bea1ea",
-				"reading": "5bca04b4f97ce284ef515ea8a82ef09f4560ad066950f7a43c217a1414f44346"
+				"png": "ac2f4a6e161fa40e46d9f1329225284c1f084096d911655c02153005c9678e8d",
+				"reading": "c9eabcb2dc9396962094536124526ae5718029bb25c31e2e933be9507168adfe"
 			},
 			"name": "editor-tool-bar",
 			"rows": [
 				0.0,
-				1.0
+				"on plugin disabled"
 			],
-			"source": "res://tools/doc_shots/fixtures/snap_tools.gd",
+			"source": "res://tools/doc_shots/fixtures/tool_menu_plugin.gd",
 			"target": "docs/images/editor-tool-bar.png",
 			"width": 1270.0,
 			"window": [
@@ -1525,7 +1450,7 @@
 			"target": "docs/images/refactor-row-menu.png"
 		},
 		{
-			"batch": "picker",
+			"batch": "fixes",
 			"crop": "popup",
 			"files": [
 				"res://addons/eventsheet/editor/ace_picker.gd"
@@ -1536,7 +1461,7 @@
 				"godot": "4.7-stable (official)",
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "d0034168bc4bad67047b50a27f6d7425199333f0577f0646f0cb201e02448ac6",
+				"png": "fb36905be896b0e40618a80b4175714ea3699046ac66a94da34adc971441a8c6",
 				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"icons": [
@@ -1570,11 +1495,11 @@
 				{
 					"do": "picker",
 					"mode": "append_action",
-					"seed": "paste"
+					"seed": "take damage"
 				},
 				{
 					"do": "wait",
-					"frames": 60.0
+					"frames": 40.0
 				}
 			],
 			"target": "docs/images/ace-picker-figure.png"
@@ -1690,7 +1615,7 @@
 			"target": "docs/images/paste-picker.png"
 		},
 		{
-			"batch": "picker",
+			"batch": "fixes",
 			"crop": "popup",
 			"files": [
 				"res://addons/eventsheet/editor/ace_picker.gd"
@@ -1701,7 +1626,7 @@
 				"godot": "4.7-stable (official)",
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "e940309e0007709bd984255cc43edce76b6cea59e7e1bd8d2981d00324f4a35b",
+				"png": "007d136176ebeb82c41350d5e9ec0ea5755039fa1de6c8922144bc63c6989b44",
 				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
 			},
 			"icons": [
@@ -1743,6 +1668,14 @@
 				{
 					"do": "wait",
 					"frames": 60.0
+				},
+				{
+					"do": "picker_collapse",
+					"text": "Your classes"
+				},
+				{
+					"do": "wait",
+					"frames": 20.0
 				}
 			],
 			"target": "docs/images/object-first-add.png"
@@ -2088,6 +2021,2265 @@
 				}
 			],
 			"target": "docs/images/picker-recipes.png"
+		},
+		{
+			"batch": "sheets2",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet theme",
+						"Classic Sheet"
+					]
+				}
+			],
+			"cleanup": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet theme",
+						"Match Editor (default)"
+					]
+				},
+				{
+					"do": "project_setting",
+					"name": "layer_names/2d_physics/layer_2",
+					"value": ""
+				},
+				{
+					"do": "dock_call",
+					"method": "_on_translations_maybe_changed"
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "c88f07402f066dcaf954509baff32ed3fdc9cb18f63cbe5789aacece3abc8434",
+				"reading": "60b210c4bca67e4232644cd80539c5580f4d04b8d7579fa91dc7ecdb37f545d0"
+			},
+			"name": "collisions-head-band",
+			"prelude": [
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "wait",
+					"frames": 60.0
+				},
+				{
+					"do": "project_setting",
+					"name": "layer_names/2d_physics/layer_2",
+					"value": "Doors"
+				},
+				{
+					"do": "dock_call",
+					"method": "_on_translations_maybe_changed"
+				}
+			],
+			"rows": [
+				0.0,
+				3.0
+			],
+			"source": "res://tools/doc_shots/fixtures/door_gate.gd",
+			"target": "docs/images/collisions-head-band.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "a215cd3e2e492241775005227dbbbef3c4e750c4f169338c5b90a1ac786ffed2",
+				"reading": "df0851c30249b347f460581040ea25432d59636612755e4c4442d4669ea0e405"
+			},
+			"name": "opened-script-physics",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/crate.gd",
+			"target": "docs/images/opened-script-physics.png"
+		},
+		{
+			"batch": "sheets2",
+			"before": [
+				{
+					"do": "fold",
+					"open": true,
+					"text": "what this object rides"
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "e47f5004f1e17936c8694da308bd405b8a2e7c344a93482afba2240b2d08583d",
+				"reading": "e9e329d3baf629aabb214849175b55469007799bd0641adbe687b4d72ae1d477"
+			},
+			"name": "opened-script-pin-modes",
+			"rows": [
+				0.0,
+				"pinned to ground"
+			],
+			"source": "res://tools/doc_shots/fixtures/lantern.gd",
+			"target": "docs/images/opened-script-pin-modes.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "2509b3adedb7fc343738b06196cf0b5fd44ea1b6c024fa7584beac968f00f85f",
+				"reading": "e9e329d3baf629aabb214849175b55469007799bd0641adbe687b4d72ae1d477"
+			},
+			"name": "opened-script-pin-rows",
+			"rows": [
+				"physics process",
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/lantern.gd",
+			"target": "docs/images/opened-script-pin-rows.png",
+			"window": [
+				1760.0,
+				900.0
+			]
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "9824b112a202251d1f61e17d5d0cdf874bbedd4a32191a1a63ec7ffb7dad46ea",
+				"reading": "de22535e9cfec2b75623a3fdb79ee799fadf8417cbd3fc77def5e84137f36058"
+			},
+			"name": "opened-script-shared-store",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/pattern_registry.gd",
+			"target": "docs/images/opened-script-shared-store.png"
+		},
+		{
+			"batch": "sheets2",
+			"cleanup": [
+				{
+					"do": "delete_user",
+					"path": "res://tools/doc_shots/trail_emitter.gd"
+				},
+				{
+					"do": "delete_user",
+					"path": "res://tools/doc_shots/trail_emitter.gd.uid"
+				}
+			],
+			"files": [
+				"res://tools/doc_shots/fixtures/trail_emitter.gd.txt"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "a0db9606e4d651c19f79e73c3bd5cd663cd9d2d6be4c5d38d92e597efad5de6f",
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "890d3863c2444a7f976370e6a11d427a59a57fc408180e376225e984f3089a7d"
+			},
+			"layout": "vertical",
+			"name": "opened-script-structure5",
+			"parts": [
+				{
+					"crop": "rows",
+					"steps": [
+						{
+							"do": "close_popups"
+						},
+						{
+							"do": "main_screen",
+							"value": "EventSheet"
+						},
+						{
+							"do": "copy_to_user",
+							"from": "res://tools/doc_shots/fixtures/trail_emitter.gd.txt",
+							"to": "res://tools/doc_shots/trail_emitter.gd"
+						},
+						{
+							"do": "open_sheet",
+							"path": "res://tools/doc_shots/trail_emitter.gd"
+						},
+						{
+							"do": "wait_sheet",
+							"path": "res://tools/doc_shots/trail_emitter.gd"
+						},
+						{
+							"do": "close_other_tabs",
+							"path": "res://tools/doc_shots/trail_emitter.gd"
+						},
+						{
+							"do": "wait",
+							"frames": 200.0
+						},
+						{
+							"do": "clear_status"
+						},
+						{
+							"do": "view_rows",
+							"from": 0.0,
+							"to": "@last"
+						}
+					]
+				},
+				{
+					"crop": "rect",
+					"rect": [
+						288.0,
+						822.0,
+						1024.0,
+						28.0
+					],
+					"steps": [
+						{
+							"do": "wait",
+							"frames": 4.0
+						}
+					]
+				}
+			],
+			"target": "docs/images/opened-script-structure5.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "8cec2b59aac5690289ed380947a539a347f4a9cd5a79b97bdcb549770a4b9353",
+				"reading": "e5e27d2e64788e5f34dd47744bda7052fd015124a942d8b5f2a8c2e51a30083d"
+			},
+			"name": "opened-script-systems",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/drone_controller.gd",
+			"target": "docs/images/opened-script-systems.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "c8710e53074f32b46eaa90fb7fc96760e656e77063977ff2ec0b9f8809b5fc18",
+				"reading": "e68fa79e67852109b378d17a7dd8e3fdfb546371911b0e4b3c2e38ef1741b3a8"
+			},
+			"name": "opened-script-tween-and-head-accessors",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/pulse_meter.gd",
+			"target": "docs/images/opened-script-tween-and-head-accessors.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "0af11ce5781be33a95146eee20e844611efd08a0a68170c5cd0be53deb4a2cd5",
+				"reading": "713e78e23430c3257ecea248d496629878f738c5a0d8946fc8745f887dc1419b"
+			},
+			"name": "opened-script-undo-step",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/cell_edit_applier.gd",
+			"target": "docs/images/opened-script-undo-step.png",
+			"window": [
+				1760.0,
+				900.0
+			]
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "9e93b9ff0a8fd4adbc24200d270dcc7ad3428502e28fbfb60ecf1aef567ae6e8",
+				"reading": "434eab13882a7ebc25cc74a4de4e79f0281cf66f4642877f532f7038242a2362"
+			},
+			"name": "opened-script-vocabulary-module",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/pin_vocabulary.gd",
+			"target": "docs/images/opened-script-vocabulary-module.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "008cc57b97413a7809807386587dba699702e08d4b58483456ddc50f288c57a9",
+				"reading": "699b5a56ac500e38919a99c3bfb0734afc807a071e7b651d40357ac075d9ed2f"
+			},
+			"layout": "vertical",
+			"name": "opened-script-words5",
+			"parts": [
+				{
+					"rows": [
+						0.0,
+						"@last"
+					],
+					"source": "res://tools/doc_shots/fixtures/fuse_bomb.gd"
+				},
+				{
+					"rows": [
+						0.0,
+						"@last"
+					],
+					"source": "res://tools/doc_shots/fixtures/fuse_spark.gd"
+				}
+			],
+			"target": "docs/images/opened-script-words5.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "69f7c94ab9b7d4e6300ab454bb178ee21db639d623c0995f364acf1ac0b1bf8a",
+				"reading": "5887532f44720181b88f5be77bb6b28d790978521863a9899f1e51a5a165bdef"
+			},
+			"name": "pack-taught-spellings",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/torch_igniter.gd",
+			"target": "docs/images/pack-taught-spellings.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "129bc3082d71dac4683c11ec6aca4d53b81c246536e682343cc0f8941db661e2",
+				"reading": "15253f2370cf7b8adb7cbcddfd7ac569e4ee02e17101f9d8f068ec2640c7a247"
+			},
+			"layout": "vertical",
+			"name": "pattern-chip",
+			"parts": [
+				{
+					"before": [
+						{
+							"do": "click_row",
+							"text": "subtract delta",
+							"x": 300.0
+						}
+					],
+					"rows": [
+						0.0,
+						"@last"
+					],
+					"source": "res://tools/doc_shots/fixtures/turret_cooldown.gd"
+				},
+				{
+					"crop": "rect",
+					"rect": [
+						288.0,
+						822.0,
+						1024.0,
+						28.0
+					],
+					"steps": [
+						{
+							"do": "wait",
+							"frames": 4.0
+						}
+					]
+				}
+			],
+			"target": "docs/images/pattern-chip.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "245cb61fc10ea87a4ca6a3749cdfd13967790c03d73ee73577235e07c5acb95c",
+				"reading": "50457cb61bc4f15a6247f34fb898ddd4f24b505ef8b3b5e0784a8b672823a741"
+			},
+			"layout": "vertical",
+			"name": "physics-query-rows",
+			"parts": [
+				{
+					"before": [
+						{
+							"class": "Button",
+							"do": "click_control",
+							"text": "Code"
+						},
+						{
+							"do": "wait",
+							"frames": 40.0
+						}
+					],
+					"crop": "code",
+					"height": 330.0,
+					"source": "res://tools/doc_shots/fixtures/sight_check.gd"
+				},
+				{
+					"rows": [
+						0.0,
+						"@last"
+					],
+					"source": "res://tools/doc_shots/fixtures/sight_check.gd"
+				}
+			],
+			"target": "docs/images/physics-query-rows.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "158b48f0ffd7cf4efb84c88ab8d6ae72ecf6fa03df57e4180a3704db103a437b",
+				"reading": "1579c57970690b4a8c30cb74d7e9d9ee4c6b658149117353df3a0dde309868e7"
+			},
+			"name": "reading-animation-tree-words",
+			"rows": [
+				"on function animate",
+				"on function animate"
+			],
+			"source": "res://tools/doc_shots/fixtures/knight_controller.gd",
+			"target": "docs/images/reading-animation-tree-words.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "230c49f7b14d9515f396b07eacf3a6e75d913818a6ba20642e20bd7bcfbe38d4",
+				"reading": "e34ea959acb76f784b2274e1c68d299c9885d73343a29f17dc42a6aa24063938"
+			},
+			"name": "reading-boss-phases",
+			"rows": [
+				"on function take_damage",
+				"on function take_damage"
+			],
+			"source": "res://tools/doc_shots/fixtures/boss.gd",
+			"target": "docs/images/reading-boss-phases.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "2172418b619a4a8bb52208a5b6cfab5e2ac8566beb7a99d4ef272964b01e65a5",
+				"reading": "1579c57970690b4a8c30cb74d7e9d9ee4c6b658149117353df3a0dde309868e7"
+			},
+			"name": "reading-camera-relative-movement",
+			"rows": [
+				"move relative to the camera",
+				"move relative to the camera"
+			],
+			"source": "res://tools/doc_shots/fixtures/knight_controller.gd",
+			"target": "docs/images/reading-camera-relative-movement.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "a37b26d4b372feeb0097fd82a47c7c469bf03cf7042a03fa5b13c175b0096e18",
+				"reading": "c50b41ce8ba9d9a19a71dd61a750e108b6a13f82c9212e149d255d2726d14e5d"
+			},
+			"name": "reading-cursor-ray-and-canvas",
+			"rows": [
+				"on function _pick",
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/aim_camera.gd",
+			"target": "docs/images/reading-cursor-ray-and-canvas.png",
+			"window": [
+				1600.0,
+				1200.0
+			]
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "706c5bf81dd649d3d3c06ac5e179f6e2d4a62ebde8bc9d7fbe3cf96eeb849dba",
+				"reading": "465c0ca58226a473b536bc245f1639ecbc1fe67b4a64e96cf2f048313c807c4a"
+			},
+			"name": "reading-detection",
+			"rows": [
+				"fill suspicion",
+				"drain suspicion"
+			],
+			"source": "res://tools/doc_shots/fixtures/guard.gd",
+			"target": "docs/images/reading-detection.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "5b613148ed6bcd84cc1ca07bad046f91885107c7c8d98ae488c14b9dacf39a5a",
+				"reading": "0966e2700c10f5beaf7f4748a7fd07fb74ae48f46f6a24434a2315ec34b88a3f"
+			},
+			"name": "reading-match-patterns-and-notes",
+			"rows": [
+				"on function chase",
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/quest_events.gd",
+			"target": "docs/images/reading-match-patterns-and-notes.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "ae825163e93ef33911b94051131bce67ab42af866c4fc929ec37740cd4b8d537",
+				"reading": "e17adc3b6e2e0627f0663154a13f2bdce48d842275b1aaecf28bc62a7a4f831c"
+			},
+			"name": "reading-mission-timer",
+			"rows": [
+				"count down",
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/mission_clock.gd",
+			"target": "docs/images/reading-mission-timer.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "8d9a28b4deceeb03cf1399e376eb7c371b5d189b71c47bb25387fca9f8a1afb2",
+				"reading": "1579c57970690b4a8c30cb74d7e9d9ee4c6b658149117353df3a0dde309868e7"
+			},
+			"name": "reading-orbit-words",
+			"rows": [
+				"on function circle_the_moon",
+				"on function circle_the_moon"
+			],
+			"source": "res://tools/doc_shots/fixtures/knight_controller.gd",
+			"target": "docs/images/reading-orbit-words.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "4d824305cb2b458c98d4a2fc42974ba3ff9d1b03bcf77218dfa3c5bc5d3bc67a",
+				"reading": "f841ecfd7226566f9eaca7851e1a9c8e17a6d0535ee1618b766519d44440e2ea"
+			},
+			"name": "reading-pity",
+			"rows": [
+				"on function open",
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/loot_chest.gd",
+			"target": "docs/images/reading-pity.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "4fe663149535674a4280758d4402ee03b65cefd097dc5e3d8595548847a77256",
+				"reading": "cad8d15f8c90eddefe85f6cbee346af4441aded118c020b3fbacc2de97ffc625"
+			},
+			"layout": "vertical",
+			"name": "reading-ring-and-test-fold",
+			"parts": [
+				{
+					"rows": [
+						"on function fire_ring",
+						"@last"
+					],
+					"source": "res://tools/doc_shots/fixtures/bullet_ring.gd"
+				},
+				{
+					"rows": [
+						"on function drop_crate",
+						"@last"
+					],
+					"source": "res://tools/doc_shots/fixtures/crate_dropper.gd"
+				},
+				{
+					"rows": [
+						0.0,
+						"@last"
+					],
+					"source": "res://tools/doc_shots/fixtures/tests/coin_value_test.gd"
+				}
+			],
+			"target": "docs/images/reading-ring-and-test-fold.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "13e546dac273d76b45a2e331e57238b516b43f8ab3bd3ab7be6394750edba64d",
+				"reading": "1579c57970690b4a8c30cb74d7e9d9ee4c6b658149117353df3a0dde309868e7"
+			},
+			"name": "reading-seen-heard-and-the-world",
+			"rows": [
+				"on function tune",
+				"on function apply_dusk"
+			],
+			"source": "res://tools/doc_shots/fixtures/knight_controller.gd",
+			"target": "docs/images/reading-seen-heard-and-the-world.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "fb767f6bcf1e045ce049c792a1f26918fd1d757d17096a32ec00032f0aeea6c7",
+				"reading": "16b6fd4f36ed3f990489573916342fa5d080f3e4f12084dd61ad900a6997f78d"
+			},
+			"name": "reading-sprite-sound-juice",
+			"rows": [
+				"set mirrored",
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/hero_feel.gd",
+			"target": "docs/images/reading-sprite-sound-juice.png",
+			"window": [
+				1600.0,
+				1200.0
+			]
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "4e880083b10d9415791a024a9e9151edfbea95b5ae82fdc76c5c148f3f941e15",
+				"reading": "a3e7261272a9f2684324b541168860a790550d70e17535284b4fc7e76833437e"
+			},
+			"name": "reading-vectors-patterns-notes",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/chaser.gd",
+			"target": "docs/images/reading-vectors-patterns-notes.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "fd29d64959870d2cd268eebcabe276fcdf86623fc0b7d3252f9da84340c46859",
+				"reading": "1579c57970690b4a8c30cb74d7e9d9ee4c6b658149117353df3a0dde309868e7"
+			},
+			"name": "reading-world-space-ui",
+			"rows": [
+				"on function dress_the_knight",
+				"on function dress_the_knight"
+			],
+			"source": "res://tools/doc_shots/fixtures/knight_controller.gd",
+			"target": "docs/images/reading-world-space-ui.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "8b81c9b79dbfd0995ba582c2ce4eeb261128dcd2117ca6e0ad7648c44e728f1a",
+				"reading": "47db4f76fbbc16619d1707d645920d3566636a368d113c4017b4f3a18073ebe0"
+			},
+			"name": "scene-as-a-sheet",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tests/fixtures/opened_scene_level.tscn",
+			"target": "docs/images/scene-as-a-sheet.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "02060ee639be6e076e77caedbe812b6302030693d4f4167feafe8211c8e924dc",
+				"reading": "7602b3f5db4f2d20bd6b57677e3d5340cd503de2defc9938c75f58c5cbe1fd76"
+			},
+			"name": "skill-tree-reading",
+			"rows": [
+				"on function can_unlock",
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/skill_tree.gd",
+			"target": "docs/images/skill-tree-reading.png",
+			"window": [
+				1600.0,
+				1200.0
+			]
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "cb29f0c967f56f401cc2c00e4e9a79fd9589fbb9389b6bcb2043dd2d498f3b5c",
+				"reading": "b5c71b27e71bbe382ec94a24410920b59f6b224d704f2f9b6a47b9f15816f248"
+			},
+			"name": "swipe-gestures-reading",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/stroke_gatherer.gd",
+			"target": "docs/images/swipe-gestures-reading.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "0ee09186b1289f80f6c21216d1c33996ebf2762d4dea18e28a224235137a2e6b",
+				"reading": "472ae46269de127eea5e745977115cdda044b846fac5be02ed96996763deb781"
+			},
+			"name": "test-sheet-rows",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/tests/coin_value_test.gd",
+			"target": "docs/images/test-sheet-rows.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "e6846cee8b014572b4e991d808b35d421885ca49ce5fbc4b5527e2c369d7793a",
+				"reading": "d5b29ad78697d072b8591556aa9bb75371a43e3fd1b2fe3719596f6f40e3d44c"
+			},
+			"name": "tooldev-content-packs",
+			"rows": [
+				"on function open_shop",
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/shop_and_waves.gd",
+			"target": "docs/images/tooldev-content-packs.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "8e875a2d78c60dedf762c6206d426b06e811627ce5906722d633a27a923aa435",
+				"reading": "34c6883d484cb3effa1f9e2941cfafa4aaa2ea0ec58f17b821d022a207b04d6f"
+			},
+			"name": "tooldev-editor-verbs",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/build_tools.tres",
+			"target": "docs/images/tooldev-editor-verbs.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "2888194f2874022333ddfb8f67df56d88651c693de44e8e0de257d3e22dcf035",
+				"reading": "6e5e4746b7baced1a29ff378752dab08a893511124af85ad3cfa4999dcf19056"
+			},
+			"layout": "vertical",
+			"name": "tween-chain-rows",
+			"parts": [
+				{
+					"before": [
+						{
+							"class": "Button",
+							"do": "click_control",
+							"text": "Code"
+						},
+						{
+							"do": "wait",
+							"frames": 40.0
+						}
+					],
+					"crop": "code",
+					"height": 330.0,
+					"source": "res://tools/doc_shots/fixtures/hit_pop.gd"
+				},
+				{
+					"rows": [
+						0.0,
+						"@last"
+					],
+					"source": "res://tools/doc_shots/fixtures/hit_pop.gd"
+				}
+			],
+			"target": "docs/images/tween-chain-rows.png"
+		},
+		{
+			"batch": "sheets2",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet display",
+						"Humanized Names"
+					]
+				}
+			],
+			"cleanup": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet display",
+						"Humanized Names"
+					]
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "89f0738b24ea7ac6aed4e3099b81f4096009a1e0cfd563346d464612b3bea529",
+				"reading": "3db90cc9b95a66308ad903bff86e37d40e16caa3e808a35de8323b14ca61e0e1"
+			},
+			"name": "typed-object-labels",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/find_panel.gd",
+			"target": "docs/images/typed-object-labels.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "9db2e8a0d50fd8401ae4ed5985dd538ba321f115de1f9a74d4d7c8ea371045b0",
+				"reading": "da62463e6470b8814913b218136fa7263d3e855589b6fe2a672f327b1539c2a9"
+			},
+			"layout": "vertical",
+			"name": "undoable-tool-edits",
+			"parts": [
+				{
+					"rows": [
+						0.0,
+						"@last"
+					],
+					"source": "res://tools/doc_shots/fixtures/snap_props_tool.gd"
+				},
+				{
+					"before": [
+						{
+							"class": "Button",
+							"do": "click_control",
+							"text": "Code"
+						},
+						{
+							"do": "wait",
+							"frames": 40.0
+						}
+					],
+					"crop": "code",
+					"height": 520.0,
+					"source": "res://tools/doc_shots/fixtures/snap_props_tool.gd"
+				}
+			],
+			"target": "docs/images/undoable-tool-edits.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "68a5d7f8caaf6cd526c3edd877aba812b3771ed4349fed439cf76dbc811e751d",
+				"reading": "52486ea502fea145d8499a2d106e6863297af13e86431127d30ab508d8239fba"
+			},
+			"name": "window-render-reading",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/display_settings.gd",
+			"target": "docs/images/window-render-reading.png"
+		},
+		{
+			"batch": "sheets2",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "dd3b71d4ed48e2e3df4776e5ef758a249ff0c84290f9d253ad7081d47fa14d96",
+				"reading": "fbd8e417edabd272bab8fa34dcf16f646e63aacf029acf290e173798838775d2"
+			},
+			"name": "wired-call-rows",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tests/fixtures/opened_scene_level.gd",
+			"target": "docs/images/wired-call-rows.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "4ab34e0121fdfbe1192a122271d8dd23dda33a48610e832ca25617e70c18ebba",
+				"reading": "c1d8505680446c4ce9b1eaf9f06e5eb79227a9ed8e7e202e2b94b0dd0cde017f"
+			},
+			"name": "archive-unpack",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/mod_installer.tres",
+			"target": "docs/images/archive-unpack.png"
+		},
+		{
+			"batch": "sheets3",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Arrange by",
+						"Object"
+					]
+				}
+			],
+			"cleanup": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Arrange by",
+						"File order"
+					]
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "d0684476f3aa7ca0d4a9c9fc4d8c87464f841bfff16a24b4971b63a0fd716318",
+				"reading": "5e07173f15a2e3666ae05173f3ae3e91705c39f7837faf1dca6ce908c112cf5a"
+			},
+			"name": "arrange-by-object",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/level_triggers.gd",
+			"target": "docs/images/arrange-by-object.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "17954c5d2a23e7daab8c32b0169e1a06d8965f66194f96dfa6d2dd5d975a9a8e",
+				"reading": "d8ee8c3ddc97e1a95ad791a1a7b4e8b8d0966b471ef97687c3d9b2b52e5996dd"
+			},
+			"name": "asset-drop",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/asset_drops.tres",
+			"target": "docs/images/asset-drop.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "1883d2d7542fec8fdaa11bd24ae7590211c95f70ebecb8a132a23f64852837a6",
+				"reading": "70df0c4860c116a0c4293010ea44605e6d27642b25062b28f6043ae6db973695"
+			},
+			"name": "async-chip",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/countdown_label.gd",
+			"target": "docs/images/async-chip.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "29438019124d7971529fa96db6f1e4ec9549d5cc03e1126469d52d945252b131",
+				"reading": "a1d53dbd84387fe1f01ff8244837a25263d52a2f49fdbaff12b24d34ab26c4d2"
+			},
+			"name": "blank-events",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/hurt_flash.gd",
+			"target": "docs/images/blank-events.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "5f62ca253deb2b3cb0ac64dd1df85aed3e51690f1b0e90dc7ec49df51afcf0ad",
+				"reading": "b69dacd48d3ebdec4c880fb45cee5135f44aa1926286e465eeb8d4304beea822"
+			},
+			"name": "block-views-after",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/wave_planner.gd",
+			"target": "docs/images/block-views-after.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "655953caf61a6702c907d2f5478dd869d251986f711e2d4c40146cd006df7297",
+				"reading": "b898d7110735e9f727886bad7b6ba77e712e089eb19c705fbc492d6ac9f04113"
+			},
+			"name": "block-views-real-file",
+			"rows": [
+				0.0,
+				3.0
+			],
+			"source": "res://addons/eventsheet/ace/semantic_analyzer.gd",
+			"target": "docs/images/block-views-real-file.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "e4c9bdeb763815054ba2518bc7a464c6939069d5571974374c4acc6a30732d98",
+				"reading": "e7d0981c0ae09f9eb4960a037bbe31b6a78cc8a5a7e988fd75823702f16033fc"
+			},
+			"name": "code-patterns-lifted-machine",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/patrol_machine.gd",
+			"target": "docs/images/code-patterns-lifted-machine.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "d9ca1afb332bdede04f5e407b9bee68d0db3ba3974914072aab9aef82a417c48",
+				"reading": "ae64fdb7ef6838eee5047473316c48e7734c2ca2872bb2fecc716f9e676825b4"
+			},
+			"name": "code-patterns-rows",
+			"rows": [
+				"every 0.5",
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/combo_counter.gd",
+			"target": "docs/images/code-patterns-rows.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "52b2003254c66af795ca9926d74481535a1ad7eb2048fa334808eef028cd3f49",
+				"reading": "e7d0981c0ae09f9eb4960a037bbe31b6a78cc8a5a7e988fd75823702f16033fc"
+			},
+			"name": "code-patterns-state-machine",
+			"rows": [
+				4.0,
+				10.0
+			],
+			"source": "res://tools/doc_shots/fixtures/patrol_machine.gd",
+			"target": "docs/images/code-patterns-state-machine.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "bfa4406388a46d8e166bcd8d1e607d945b98b0f0122e567096dfe470160dc4e6",
+				"reading": "cfd1a4b9aba0db7769cd5e5f94b471e523e16468b668111413779e036cfc2619"
+			},
+			"name": "comment-kinds",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/guard_route.gd",
+			"target": "docs/images/comment-kinds.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "da3dcbb9a77b612aae6f814a1f7844bb4001ba4b4bd1201a198d294073b9bfc9",
+				"reading": "2cce7fdfda66c927c4f888a6de4394469ad1dc548a4d33f0e9e4d0aa8dded319"
+			},
+			"name": "custom-blocks",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/audio_cues.gd",
+			"target": "docs/images/custom-blocks.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "e488fa04ce6447e141eaa30e59bb63afe14478020255c3e69921a3ad1c43a825",
+				"reading": "b69dacd48d3ebdec4c880fb45cee5135f44aa1926286e465eeb8d4304beea822"
+			},
+			"name": "decl-row-canvas",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/wave_planner.gd",
+			"target": "docs/images/decl-row-canvas.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "9a9f2c16f39f45ade29da9809317de7555570b4858efb6a1d1f993a01bce75de",
+				"reading": "b898d7110735e9f727886bad7b6ba77e712e089eb19c705fbc492d6ac9f04113"
+			},
+			"name": "decl-top-canvas",
+			"rows": [
+				"known_annotations",
+				"on function parse_source_metadata"
+			],
+			"source": "res://addons/eventsheet/ace/semantic_analyzer.gd",
+			"target": "docs/images/decl-top-canvas.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "55e935d4305dd4f20c79afefeaca19c7ae29726e2493c85233f2a3b53e3625af",
+				"reading": "ed9ea73f46c7cec11e4336224dbf0e5dbc9d2607e03af083e90e369289e56cab"
+			},
+			"name": "description-surfaces",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/ledge_jump.gd",
+			"target": "docs/images/description-surfaces.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "4157109b7a87424c2638d24a141ed8e6a5f280dd02c1283a9844cb43fcb38c37",
+				"reading": "74bbe5d27a81c706aa70c5c38e37f9383749b54526e8151f71a50f94756fb387"
+			},
+			"name": "event-numbers",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/turn_counter.gd",
+			"target": "docs/images/event-numbers.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "2195c3d506384d1b98dd1a4fa3380a9cddc1117fb5947bc17996e1b93186a75d",
+				"reading": "dc64f256c1838c21de05b4ae9a807f72585742671644ef1097bc7be6ec40dc33"
+			},
+			"name": "file-guarded-read",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/save_slot.gd",
+			"target": "docs/images/file-guarded-read.png"
+		},
+		{
+			"batch": "sheets3",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet theme",
+						"Classic Sheet"
+					]
+				}
+			],
+			"cleanup": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet theme",
+						"Match Editor (default)"
+					]
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "b50858588eea3ea4eb91e4e5cc64fd9e2a39c1a038a65c4481e358d880b94bb5",
+				"reading": "47d41ecaf266e855a20a6b9d0cbe71a076c9a52a38fc497f98c51432cc3c0bf9"
+			},
+			"name": "files-band",
+			"rows": [
+				0.0,
+				3.0
+			],
+			"source": "res://tools/doc_shots/fixtures/files_band/score_board.gd",
+			"target": "docs/images/files-band.png"
+		},
+		{
+			"batch": "sheets3",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet theme",
+						"Classic Sheet"
+					]
+				}
+			],
+			"cleanup": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet theme",
+						"Match Editor (default)"
+					]
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "6129d07406f848e37aaf8ad761bd11c1863eca9ecbd13c19a83ff41e0b927882",
+				"reading": "a79e57e88abf6eb803d1fc2c4a590c0ee2c5c4c85e01f5cf4633259e082adc76"
+			},
+			"name": "files-runs-reopened",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/score_board.gd",
+			"target": "docs/images/files-runs-reopened.png"
+		},
+		{
+			"batch": "sheets3",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet theme",
+						"Classic Sheet"
+					]
+				}
+			],
+			"cleanup": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet theme",
+						"Match Editor (default)"
+					]
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "0766b97480a3a40c175d1f22b4587303c90ceeae4516d66605b7297f1abb353c",
+				"reading": "dbfb3e40fa6fb6bbebef928f8819cf172927fe4918fac76c3116ab4be7e56e5b"
+			},
+			"name": "folder-watcher",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/mod_folder.gd",
+			"target": "docs/images/folder-watcher.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "f612f19338305531ecdea895b483ff7a43a84b0f529b9147e9d1d467155c8a19",
+				"reading": "d6ead1a581ba8e94e0c325573b2f26bcd023905ad06373c0fa7028444e188dc6"
+			},
+			"layout": "vertical",
+			"name": "layout-on-top-pause-pair",
+			"parts": [
+				{
+					"rows": [
+						0.0,
+						"@last"
+					],
+					"source": "res://tools/doc_shots/fixtures/pause_toggle.tres"
+				},
+				{
+					"before": [
+						{
+							"class": "Button",
+							"do": "click_control",
+							"text": "Code"
+						},
+						{
+							"do": "wait",
+							"frames": 40.0
+						}
+					],
+					"crop": "code",
+					"height": 330.0,
+					"source": "res://tools/doc_shots/fixtures/pause_toggle.tres"
+				}
+			],
+			"target": "docs/images/layout-on-top-pause-pair.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "c94a91928555b9703ce9e8bad1732fafd81b0c853380326952a1f0ed3d1ec540",
+				"reading": "17fe5e6180f2a92c215d5a3e6d63d53c1db85a56b9ff243a71b9902f259537c1"
+			},
+			"name": "looping-condition",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/buff_hud.gd",
+			"target": "docs/images/looping-condition.png"
+		},
+		{
+			"batch": "sheets3",
+			"before": [
+				{
+					"do": "click_row",
+					"text": "flicker",
+					"x": 520.0
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "bf66491b66367acc3ebe376dc955f6b8aa65a33b1f1af1c28fd34b96fb699ee9",
+				"reading": "468e05a69e16e3199be93614a70959edf6e12d011ab417bb9f5af6f2f44e25e1"
+			},
+			"name": "migration-amber-row",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tests/fixtures/doc_shots/lamp_post.tres",
+			"target": "docs/images/migration-amber-row.png"
+		},
+		{
+			"batch": "sheets3",
+			"cleanup": [
+				{
+					"do": "project_setting",
+					"name": "eventsheets/project/vocabulary_version",
+					"value": ""
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "37ef4abe91debaeabff98c56a15d143dc0408ec2fbe19263795abb5e7fda0abe",
+				"reading": "bbf1735d8ceca6c6e997198a066824f6811fe162333a80d8706ae2f23bdfe054"
+			},
+			"name": "migration-head-band",
+			"prelude": [
+				{
+					"do": "project_setting",
+					"name": "eventsheets/project/vocabulary_version",
+					"value": "0.14.0"
+				}
+			],
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tests/fixtures/doc_shots/sentry.tres",
+			"target": "docs/images/migration-head-band.png"
+		},
+		{
+			"batch": "sheets3",
+			"cleanup": [
+				{
+					"do": "project_setting",
+					"name": "eventsheets/project/vocabulary_version",
+					"value": ""
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "ef7ff447135d5cb12f20c6e5817038dec6be92e18d3f312d6153620854719396",
+				"reading": "9bc8627f12b5f73000849fe14813d1d4135513fa1359705665c608cb8d419c97"
+			},
+			"layout": "vertical",
+			"name": "successor-row-strip",
+			"parts": [
+				{
+					"before": [
+						{
+							"do": "click_row",
+							"text": "stop sound",
+							"x": 520.0
+						}
+					],
+					"prelude": [
+						{
+							"do": "project_setting",
+							"name": "eventsheets/project/vocabulary_version",
+							"value": "0.14.0"
+						}
+					],
+					"rows": [
+						0.0,
+						"@last"
+					],
+					"source": "res://tests/fixtures/doc_shots/siren_post.tres"
+				},
+				{
+					"crop": "rect",
+					"rect": [
+						288.0,
+						822.0,
+						1024.0,
+						28.0
+					],
+					"steps": [
+						{
+							"do": "wait",
+							"frames": 4.0
+						}
+					]
+				}
+			],
+			"target": "docs/images/successor-row-strip.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "109c61be04eb0af462dbe94741e470c28271958925a4c84c1f70630682060135",
+				"reading": "95ebe3fd273c5a7cb0ab3e6db53fb4cffc42e34f34ef3b84bfcf93d8e1d024c7"
+			},
+			"name": "node-dignities",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/crate_mover.gd",
+			"target": "docs/images/node-dignities.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "59fc4967e7bfadf952cb8323bb089339f4bf8d8c7eb2279e5abea7d86e4e3103",
+				"reading": "47dc50de1b0e10c24271fdee70402f716b98fce0e8228caaf89c8806a0080f1f"
+			},
+			"name": "object-states",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/enemy_machine.gd",
+			"target": "docs/images/object-states.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "fb63869b6e12e15295151ce3ce13a7574dfabf5a8c8320ce0e646966c0acc9ee",
+				"reading": "8de5cf384cbb0772c5c54707ff693cfbb7e42a52f46f80c26f441df60eb2c650"
+			},
+			"name": "pattern-effects-tilemap-camera",
+			"rows": [
+				7.0,
+				15.0
+			],
+			"source": "res://tools/doc_shots/fixtures/sprite_polish.gd",
+			"target": "docs/images/pattern-effects-tilemap-camera.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "d32bac2ba2d5593666a87eac9a0047c327c6d83be60fdd38b2d68e46130b169b",
+				"reading": "c75036d2a219fd35e2efe099c565226c35cdbc970a2b0c86387f9674b60a3e83"
+			},
+			"name": "pattern-pool",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tests/fixtures/patterns/object_pool.gd",
+			"target": "docs/images/pattern-pool.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "285e947696e85942afe36b3e74b4f515b06bc1c0f7dd1e834398f3310c74a9c1",
+				"reading": "8a0a6e03ac20455f105dd2c61eb3752952b857c941741e36f176ccdb76b26deb"
+			},
+			"name": "pattern-verbs",
+			"rows": [
+				"on ready",
+				"is within 64"
+			],
+			"source": "res://tools/doc_shots/fixtures/round_director.gd",
+			"target": "docs/images/pattern-verbs.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "f3798c7c9b9ae1eb6b3f2205798587cdd87a51f3c9c6c8386ab3dc1cf805a612",
+				"reading": "dc2640985b76ea14b2a726a47212e6b3eeb4f4f979072d701ae714d6f4ab78de"
+			},
+			"name": "pattern-wave3",
+			"rows": [
+				"buffer press",
+				"push away"
+			],
+			"source": "res://tools/doc_shots/fixtures/combat_feel.gd",
+			"target": "docs/images/pattern-wave3.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "3508cc47bf7b21b425b021f7ea3d889da3eb0c7d3990e7049d0a64b25f2b2d42",
+				"reading": "7836e488c8d999a8f3968abe3e2fe8d535a8620999c491200882987149f3b1fb"
+			},
+			"name": "pattern-wave4",
+			"rows": [
+				"advance objective",
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/village_day_cycle.gd",
+			"target": "docs/images/pattern-wave4.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "b56845389f3c60c2bf11c4b54ea058efd904fa799af59a1b1398b60f463c7d32",
+				"reading": "07386ca3afd900427ca8f40a66988a29e1ba9449ff5ecd6d2b49c7d679fc6643"
+			},
+			"name": "preload-row",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/loot_references.gd",
+			"target": "docs/images/preload-row.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "0e99a802c7b3371844313f486a387382935950f6e13518f048963b86bd9543dd",
+				"reading": "aa3ee2d0b8091ba295304e7dbda7b0a032ac9388280dad6777c167bb1741ab9e"
+			},
+			"name": "prelude-blocks-closed",
+			"rows": [
+				0.0,
+				3.0
+			],
+			"source": "res://tools/doc_shots/fixtures/patrol_enemy.gd",
+			"target": "docs/images/prelude-blocks-closed.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "4540c545198e0fbd28b89283099ce9f3df73c6278b430864b72ea1ba77ae7f74",
+				"reading": "70638abf2f7553ab6736372a69dbf250f7920b3373f90f5025232acad5d2a3ab"
+			},
+			"name": "property-drop",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/health_bar_poker.gd",
+			"target": "docs/images/property-drop.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "ccef168bbcd993bf3ed03d00a9cc63724ac69ef850959adfd49c475ca72b5450",
+				"reading": "5d8d6559598876f9618f3ed711720df1620957c25bf065a9321fdbb61b753445"
+			},
+			"name": "scenes-group-arrivals",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/minimap_tracker.gd",
+			"target": "docs/images/scenes-group-arrivals.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "7b56003d9ecfde80f1678f4290f821870cf08d0a11e0dfa438cb48653117c9e7",
+				"reading": "3f1b12e1ca38246590742909c8c27ef32e6b4c4f005ad09a587324253b89e136"
+			},
+			"layout": "vertical",
+			"name": "scenes-save-branch",
+			"parts": [
+				{
+					"rows": [
+						"save_level",
+						"load_level"
+					],
+					"source": "res://tools/doc_shots/fixtures/level_saver.gd"
+				},
+				{
+					"before": [
+						{
+							"class": "Button",
+							"do": "click_control",
+							"text": "Code"
+						},
+						{
+							"do": "wait",
+							"frames": 40.0
+						}
+					],
+					"crop": "code",
+					"height": 330.0,
+					"source": "res://tools/doc_shots/fixtures/level_saver.gd"
+				}
+			],
+			"target": "docs/images/scenes-save-branch.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "3a2ab1ad536b4a8d3ff2fe737b16f4f7c56b6bd4b17189f102db6ebc34500b7b",
+				"reading": "940b272c53e2d21e79e99790f12122be6997030017c17c425b575116d22085f0"
+			},
+			"name": "scenes-spawn-3d",
+			"rows": [
+				10.0,
+				16.0
+			],
+			"source": "res://tools/doc_shots/fixtures/wave_spawner_3d.gd",
+			"target": "docs/images/scenes-spawn-3d.png"
+		},
+		{
+			"batch": "sheets3",
+			"before": [
+				{
+					"do": "click_row",
+					"text": "sprint_held is true",
+					"x": 300.0
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "bc993c2187a0ac19a054c0ec513d42638d773289d48e8aef339df65efc7bba0a",
+				"reading": "871305562fe3fe1a5d31889c05d71be43d689719da3812f707ccf7c579adaa2e"
+			},
+			"name": "ternary-editable",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/speed_picker.gd",
+			"target": "docs/images/ternary-editable.png"
+		},
+		{
+			"batch": "sheets3",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet theme",
+						"Dracula"
+					]
+				}
+			],
+			"cleanup": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet theme",
+						"Match Editor (default)"
+					]
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "c3114183ce487fd5ec12369e67c0def47fd8fe5404e8f83a0f73240f211e8085",
+				"reading": "8e01227f92ead55a54e014589a58c50f79b2302230db31cd5cf063f41159860a"
+			},
+			"name": "theme-dracula",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/arena_director.gd",
+			"target": "docs/images/theme-dracula.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "68aaca5d0b08d9c7751b5a3515bd690b1d5e906478b7b2e30c67895eed404fae",
+				"reading": "5bb1392d5385a73e0af3a5f8dd8cad8ba96e7f4ae02e742c0dc7d9f771933aec"
+			},
+			"name": "unique-name-rows",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/status_hud.gd",
+			"target": "docs/images/unique-name-rows.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "d95cd4de8245b07fef5531152959dab58efa1b262dd12ee4d7be5eaeab0584dd",
+				"reading": "246f8760978080f868da1a96058f22e349cdc8f5b159a7547e52ca6cc0ae106e"
+			},
+			"name": "user-content-ask",
+			"rows": [
+				2.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/avatar_chooser.gd",
+			"target": "docs/images/user-content-ask.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "dc6ae284998bc83ca8fc65702c3d9e19ff9deb1d7bcd35e609beffcf28f9649d",
+				"reading": "3d69f6945d4597cf999aff9195e0769e140a4507b42463b8ad05ad44b0f6e6e2"
+			},
+			"name": "user-content-drop",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/avatar_picker.gd",
+			"target": "docs/images/user-content-drop.png"
+		},
+		{
+			"batch": "sheets3",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "e447ed1e2b8581f03c44695d3d2c171ba134f6c1c5a9472c4e1c21eefd0dea8d",
+				"reading": "2b72a96cf5bd784291f255543bc4e96ba27bc1c8ccdd0a821b2d0a5bcf09d170"
+			},
+			"name": "variable-sentence-head",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/stat_tracker.gd",
+			"target": "docs/images/variable-sentence-head.png"
+		},
+		{
+			"batch": "sheets4",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet theme",
+						"Nord"
+					]
+				}
+			],
+			"cleanup": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet theme",
+						"Match Editor (default)"
+					]
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "d1dd01660f912c1ab749ceb876d1eed004a66a011acae7382f458b21757817e3",
+				"reading": "adbb4bdeca6d7cfabb093369164711bafcfa7859e59c32d18cb893219092e557"
+			},
+			"name": "themed-gutter",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/tick_logger.gd",
+			"target": "docs/images/themed-gutter.png"
+		},
+		{
+			"batch": "sheets4",
+			"before": [
+				{
+					"do": "right_click_row",
+					"text": "print",
+					"x": 700.0
+				},
+				{
+					"activate": true,
+					"button": "@open",
+					"do": "menu_open",
+					"path": [
+						"Select All Events Using This"
+					]
+				}
+			],
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "6ac8b6c01fa05dcc6820a12e27add9478408a8b6136e9507f245af350dd0ac1f",
+				"reading": "ac0bf5dc8e2b68a6ca8a4aecda83f115d15c331b954ac11283c7f58f8ec98f3c"
+			},
+			"name": "select-all-matching",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://tools/doc_shots/fixtures/status_reporter.gd",
+			"target": "docs/images/select-all-matching.png"
+		},
+		{
+			"batch": "sheets5",
+			"before": [
+				{
+					"do": "view_rows",
+					"from": "combat 7",
+					"to": "combat 8"
+				}
+			],
+			"crop": "sheet",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "1b5ee99a8b648e547aee070f1155b72b69738dbc76e6359514243e5e4c96e8c1",
+				"reading": "a677aa23fe9b64d1c0f335799271ec5003bcdb33fd8a18c6887096e21f8f413b"
+			},
+			"height": 160.0,
+			"name": "group-breadcrumb",
+			"source": "res://tools/doc_shots/fixtures/zone_groups.tres",
+			"target": "docs/images/group-breadcrumb.png",
+			"window": [
+				1600.0,
+				560.0
+			]
+		},
+		{
+			"batch": "sheets6",
+			"before": [
+				{
+					"do": "click_row",
+					"text": "on ready",
+					"x": 300.0
+				},
+				{
+					"do": "push_key",
+					"key": "F",
+					"mods": [
+						"ctrl"
+					]
+				},
+				{
+					"do": "wait",
+					"frames": 20.0
+				},
+				{
+					"do": "type_text",
+					"text": "health"
+				},
+				{
+					"class": "Button",
+					"do": "click_control",
+					"text": "Filter"
+				},
+				{
+					"do": "wait",
+					"frames": 20.0
+				}
+			],
+			"cleanup": [
+				{
+					"args": [
+						""
+					],
+					"do": "dock_call",
+					"method": "_apply_lens"
+				},
+				{
+					"do": "dock_path_call",
+					"path": "_find_bar.hide"
+				},
+				{
+					"do": "wait",
+					"frames": 10.0
+				}
+			],
+			"crop": "rect",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "58d6fc69a8be378bb3cc17d6fa4dfbdbedadd50427730db7f2bcb2fc2db9d7d2",
+				"reading": "8406ad14db64f7a30da090368740a8f37ba0f797c3fa902e012fb040d82edb90"
+			},
+			"name": "filter-lens",
+			"rect": [
+				288.0,
+				122.0,
+				1026.0,
+				180.0
+			],
+			"source": "res://tools/doc_shots/fixtures/health_events.gd",
+			"target": "docs/images/filter-lens.png"
+		},
+		{
+			"batch": "sheets6",
+			"before": [
+				{
+					"activate": true,
+					"button": "Menu",
+					"do": "menu_open",
+					"path": [
+						"View",
+						"Sheet display",
+						"Minimap"
+					]
+				},
+				{
+					"do": "click_row",
+					"text": "on ready",
+					"x": 300.0
+				},
+				{
+					"do": "dock_path_call",
+					"path": "_viewport.toggle_bookmark_selected"
+				}
+			],
+			"crop": "rect",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "3e7933f498b85b43e4aca6af3f963834676c63b15bf82dfa16293b01335c0c59",
+				"reading": "b8c7a08291786f00436011015e67a7b623f93966018e6ce95281fb301bf3798c"
+			},
+			"name": "minimap-column",
+			"rect": [
+				288.0,
+				196.0,
+				1026.0,
+				624.0
+			],
+			"source": "res://tools/doc_shots/fixtures/level_tally.gd",
+			"target": "docs/images/minimap-column.png"
+		},
+		{
+			"batch": "sheets6",
+			"before": [
+				{
+					"args": [
+						false
+					],
+					"do": "dock_path_call",
+					"path": "_rail_panels.set_rail_tucked"
+				},
+				{
+					"args": [
+						"objects"
+					],
+					"do": "dock_path_call",
+					"path": "_rail_panels.set_active_tab"
+				},
+				{
+					"do": "wait",
+					"frames": 30.0
+				}
+			],
+			"cleanup": [
+				{
+					"args": [
+						true
+					],
+					"do": "dock_path_call",
+					"path": "_rail_panels.set_rail_tucked"
+				}
+			],
+			"crop": "rect",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "92f275552365fe09a00b2898ce471b0144dc1648ed2bf6135f34403be56f68a9",
+				"reading": "a1d53dbd84387fe1f01ff8244837a25263d52a2f49fdbaff12b24d34ab26c4d2"
+			},
+			"name": "objects-rail",
+			"rect": [
+				288.0,
+				160.0,
+				232.0,
+				660.0
+			],
+			"source": "res://tools/doc_shots/fixtures/hurt_flash.gd",
+			"target": "docs/images/objects-rail.png"
+		},
+		{
+			"batch": "sheets4",
+			"before": [
+				{
+					"args": [
+						false
+					],
+					"do": "dock_path_call",
+					"path": "_rail_panels.set_rail_tucked"
+				},
+				{
+					"args": [
+						"anatomy"
+					],
+					"do": "dock_path_call",
+					"path": "_rail_panels.set_active_tab"
+				},
+				{
+					"do": "wait",
+					"frames": 30.0
+				}
+			],
+			"cleanup": [
+				{
+					"args": [
+						true
+					],
+					"do": "dock_path_call",
+					"path": "_rail_panels.set_rail_tucked"
+				}
+			],
+			"crop": "rect",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "eccecd4d1aff15fa219eb60e13e47bf9ec401475c9fded196392b27c3539cc30",
+				"reading": "66933d191d9275895f5253ff987e85cd7c2084df430807ef5383d625fe2f2fcd"
+			},
+			"name": "anatomy-panel",
+			"rect": [
+				288.0,
+				160.0,
+				232.0,
+				660.0
+			],
+			"source": "res://eventsheet_addons/health/health_behavior.gd",
+			"target": "docs/images/anatomy-panel.png"
+		},
+		{
+			"batch": "sheets5",
+			"before": [
+				{
+					"do": "dock_call",
+					"frames": 60.0,
+					"method": "_open_sheet_map_panel"
+				}
+			],
+			"cleanup": [
+				{
+					"do": "close_popups"
+				}
+			],
+			"crop": "popup",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "05d58affc05a9e6388f934753dc91c3b49b1822df54f9502e8c83999d486caf4",
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+			},
+			"name": "sheet-map",
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/sheet-map.png"
+		},
+		{
+			"batch": "sheets5",
+			"before": [
+				{
+					"do": "drag_divider",
+					"dx": 90.0
+				}
+			],
+			"cleanup": [
+				{
+					"do": "end_drag"
+				}
+			],
+			"crop": "sheet",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "79e6529e8f6a563da66919a1368ead9be315469aac10c62a7fdaf639d355c1aa",
+				"reading": "a1d53dbd84387fe1f01ff8244837a25263d52a2f49fdbaff12b24d34ab26c4d2"
+			},
+			"height": 330.0,
+			"keep_mouse": true,
+			"name": "divider-guide",
+			"source": "res://tools/doc_shots/fixtures/hurt_flash.gd",
+			"target": "docs/images/divider-guide.png"
+		},
+		{
+			"batch": "fixes",
+			"before": [
+				{
+					"do": "click_row",
+					"text": "on ready",
+					"x": 300.0
+				},
+				{
+					"do": "dock_call",
+					"frames": 40.0,
+					"method": "_open_ghost_action"
+				}
+			],
+			"cleanup": [
+				{
+					"do": "push_key",
+					"key": "Escape"
+				},
+				{
+					"do": "wait",
+					"frames": 10.0
+				}
+			],
+			"crop": "rect",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "c70b9d9859ba8a4ae238eda0718dce6a5f2c68a2580c8597ec4026852deb3ef8",
+				"reading": "40cee976d142eca4c21d09a1a1ffbbec8bd6a41b5ad103c44da7608bcf3c9dca"
+			},
+			"keep_mouse": true,
+			"name": "ghost-row-chips",
+			"rect": [
+				386.0,
+				292.0,
+				472.0,
+				268.0
+			],
+			"source": "res://tools/doc_shots/fixtures/player.gd",
+			"target": "docs/images/ghost-row-chips.png"
+		},
+		{
+			"batch": "sheets6",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "452ba8ccf4da105c94ae279b6a736add77d97c7ec706f7f6ddba564a1673a8bd",
+				"reading": "a7a16ca83dd49c91176df8c25479df040c44f37819cfbab0258e44394eca0cb7"
+			},
+			"name": "menu-reading-rows",
+			"rows": [
+				0.0,
+				"sheet type"
+			],
+			"source": "res://tools/doc_shots/fixtures/sheet_menu.gd",
+			"target": "docs/images/menu-reading-rows.png"
 		}
 	],
 	"window": [
