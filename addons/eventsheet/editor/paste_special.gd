@@ -178,7 +178,7 @@ static func describe_variable_target(sheet: EventSheetResource, target_name: Str
 		return "not a usable name - letters, digits and underscores"
 	if trimmed != from_name and Array(_declared_names(snippet)).has(trimmed):
 		return "another copied variable is already called %s - left as %s" % [trimmed, from_name]
-	if sheet != null and sheet.variables.has(trimmed):
+	if sheet != null and EventSheetSnippet.sheet_declares(sheet, trimmed):
 		return "reuses this sheet's %s" % trimmed
 	return "creates %s" % trimmed
 

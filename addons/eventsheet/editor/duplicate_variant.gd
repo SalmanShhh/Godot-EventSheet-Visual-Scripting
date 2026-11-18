@@ -42,12 +42,13 @@ static func variant(sheet: EventSheetResource, rows: Array, mapping: Dictionary)
 
 
 ## The preview pane's lines: what the variant's rows will SAY, read off the rebuilt resources
-## rather than predicted - conditions with a "?" lead, actions plain, sub-events indented. The
-## text is each row's baked template with its parameter values filled in, which is both the
-## sheet's sentence and the GDScript it compiles to, so the preview cannot drift from the result.
-static func preview_lines(remapped: Dictionary) -> PackedStringArray:
+## rather than predicted. With `sentence_of` (the sheet's own row builder, which turns an event into
+## the sentence the row reads as) each event is one line in the sheet's words, sub-events indented.
+## Without it the line is the row's baked template with its parameter values filled in, which is the
+## GDScript it compiles to - and, for a row that carries no baked template, its id.
+static func preview_lines(remapped: Dictionary, sentence_of: Callable = Callable()) -> PackedStringArray:
 	var lines: PackedStringArray = PackedStringArray()
-	_describe_rows(remapped.get("rows", []) if remapped.get("rows") is Array else [], 0, lines)
+	_describe_rows(remapped.get("rows", []) if remapped.get("rows") is Array else [], 0, lines, sentence_of)
 	return lines
 
 
@@ -60,13 +61,13 @@ static func summary(row_count: int, remapped: Dictionary) -> String:
 	]
 
 
-static func _describe_rows(rows: Array, depth: int, lines: PackedStringArray) -> void:
+static func _describe_rows(rows: Array, depth: int, lines: PackedStringArray, sentence_of: Callable = Callable()) -> void:
 	var indent: String = "    ".repeat(depth)
 	for row: Variant in rows:
 		if row is EventGroup:
 			var group: EventGroup = row as EventGroup
 			lines.append("%s▸ %s" % [indent, group.group_name])
-			_describe_rows(group.events if not group.events.is_empty() else group.rows, depth + 1, lines)
+			_describe_rows(group.events if not group.events.is_empty() else group.rows, depth + 1, lines, sentence_of)
 			continue
 		if row is CommentRow:
 			lines.append("%s# %s" % [indent, (row as CommentRow).text])
@@ -78,6 +79,12 @@ static func _describe_rows(rows: Array, depth: int, lines: PackedStringArray) ->
 		if not (row is EventRow):
 			continue
 		var event: EventRow = row as EventRow
+		if sentence_of.is_valid():
+			var sentence: String = str(sentence_of.call(event)).strip_edges()
+			if not sentence.is_empty():
+				lines.append("%s%s" % [indent, sentence])
+				_describe_rows(event.sub_events, depth + 1, lines, sentence_of)
+				continue
 		if event.trigger != null:
 			lines.append("%s? %s" % [indent, _describe_ace(event.trigger)])
 		for condition: Variant in event.conditions:
@@ -87,7 +94,7 @@ static func _describe_rows(rows: Array, depth: int, lines: PackedStringArray) ->
 				lines.append("%s%s" % [indent, (action as RawCodeRow).code.split("\n")[0]])
 			else:
 				lines.append("%s%s" % [indent, _describe_ace(action)])
-		_describe_rows(event.sub_events, depth + 1, lines)
+		_describe_rows(event.sub_events, depth + 1, lines, sentence_of)
 
 
 ## One row's sentence: its baked codegen template with each {param} filled in. An ACE with no

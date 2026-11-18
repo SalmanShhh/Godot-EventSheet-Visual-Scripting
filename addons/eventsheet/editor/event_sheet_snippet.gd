@@ -356,22 +356,73 @@ static func _dict_to_variable(data: Dictionary) -> LocalVariable:
 
 
 ## Sheet variables the snippet's params/templates/code reference (whole-word match), so
-## paste can auto-create the missing ones in the target sheet.
+## paste can auto-create the missing ones in the target sheet. A sheet opened from a `.gd` file keeps
+## its class-level `var` lines as variable ROWS rather than in `variables`; those count here the same
+## way, so a row naming `hp` finds `hp` whichever way the sheet stores it.
 static func _collect_required_variables(rows: Array, sheet: EventSheetResource) -> Dictionary:
 	var required: Dictionary = {}
-	if sheet == null or sheet.variables.is_empty():
+	if sheet == null:
+		return required
+	var candidates: Dictionary = {}
+	for variable_name: Variant in sheet.variables.keys():
+		candidates[str(variable_name)] = sheet.variables[variable_name]
+	for variable_row: LocalVariable in _class_level_variable_rows(sheet.events):
+		var descriptor_of_row: Dictionary = variable_row_descriptor(variable_row)
+		if not descriptor_of_row.is_empty() and not candidates.has(variable_row.name):
+			candidates[variable_row.name] = descriptor_of_row
+	if candidates.is_empty():
 		return required
 	var haystack: String = var_to_str(rows)
-	for variable_name in sheet.variables.keys():
-		var name_text: String = str(variable_name)
+	for name_text: String in candidates.keys():
 		if name_text.is_empty():
 			continue
 		var regex: RegEx = RegEx.new()
 		regex.compile("\\b%s\\b" % name_text)
 		if regex.search(haystack) != null:
-			var descriptor: Variant = sheet.variables[variable_name]
+			var descriptor: Variant = candidates[name_text]
 			required[name_text] = descriptor.duplicate(true) if descriptor is Dictionary else descriptor
 	return required
+
+
+## The class-level variable rows of a sheet opened from a `.gd` (top level, or inside a group).
+static func _class_level_variable_rows(rows: Array) -> Array[LocalVariable]:
+	var found: Array[LocalVariable] = []
+	for row: Variant in rows:
+		if row is LocalVariable:
+			found.append(row as LocalVariable)
+		elif row is EventGroup:
+			var group: EventGroup = row as EventGroup
+			found.append_array(_class_level_variable_rows(group.events if not group.events.is_empty() else group.rows))
+	return found
+
+
+## The `variables` entry that makes the same declaration as a plain variable row, or {} when the row says
+## more than an entry can (`@onready`, `static`, a setter or getter, an expression for a default, a
+## hinted export, a default left out): such a row is never copied as an entry, because the copy would
+## declare something else.
+static func variable_row_descriptor(variable: LocalVariable) -> Dictionary:
+	if variable == null or variable.name.is_empty() or variable.onready or variable.is_static or variable.static_local:
+		return {}
+	if variable.expression_default or variable.no_default or variable.untyped:
+		return {}
+	if not variable.setter_body.is_empty() or not variable.getter_body.is_empty() or not variable.export_hint.is_empty():
+		return {}
+	return {"type": variable.type_name, "default": variable.default_value, "const": variable.is_constant,
+		"exported": variable.exported, "exposed": false, "options": Array(variable.options),
+		"attributes": variable.attributes.duplicate(true)}
+
+
+## True when the sheet already declares `variable_name`, as a `variables` entry or as a variable row. The
+## paste paths create a missing variable and never a second declaration of one that is there.
+static func sheet_declares(sheet: EventSheetResource, variable_name: String) -> bool:
+	if sheet == null:
+		return false
+	if sheet.variables.has(variable_name):
+		return true
+	for variable_row: LocalVariable in _class_level_variable_rows(sheet.events):
+		if variable_row.name == variable_name:
+			return true
+	return false
 
 
 static func _collect_provider_ids(rows: Array) -> Array:

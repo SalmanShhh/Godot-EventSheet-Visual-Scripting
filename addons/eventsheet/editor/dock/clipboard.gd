@@ -265,7 +265,7 @@ func paste_snippet(snippet: Dictionary, action_name: String = "Paste Snippet", e
 	var required_variables: Dictionary = snippet.get("required_variables", {})
 	var changed: bool = _dock._perform_undoable_sheet_edit(action_name, func() -> bool:
 		for variable_name in required_variables.keys():
-			if not _dock._current_sheet.variables.has(variable_name):
+			if not EventSheetSnippet.sheet_declares(_dock._current_sheet, str(variable_name)):
 				_dock._current_sheet.variables[variable_name] = required_variables[variable_name]
 				counters["variables_created"] = int(counters["variables_created"]) + 1
 		var anchor: Resource = _dock._active_view().get_selected_context().get("source_resource", null)

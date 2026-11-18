@@ -140,7 +140,19 @@ func refresh_preview() -> void:
 ## The preview pane's text, exposed so the suite pins what the author reads before committing.
 func preview_lines() -> PackedStringArray:
 	return EventSheetDuplicateVariant.preview_lines(
-		EventSheetDuplicateVariant.variant(_dock._current_sheet if _dock != null else null, _rows, mapping()))
+		EventSheetDuplicateVariant.variant(_dock._current_sheet if _dock != null else null, _rows, mapping()),
+		_row_sentence())
+
+
+## The sheet's own words for an event: the sentence its row builder gives the row when it hovers, so
+## this window never spells a row a second way. Empty (and the preview falls back to the row's code
+## text) when no sheet canvas is at hand.
+func _row_sentence() -> Callable:
+	var view: Variant = _dock._active_view() if _dock != null and _dock.has_method("_active_view") else null
+	if view == null or view.get("_row_builder") == null:
+		return Callable()
+	var builder: Object = view.get("_row_builder")
+	return func(event: EventRow) -> String: return str(builder.call("row_sentence", event))
 
 
 ## Creates the variant: remap + insert, as ONE undo step. `keep_open` is the "Again with…" path -

@@ -238,7 +238,7 @@ func bring_row_over(index: int) -> bool:
 	var created: Dictionary = {"count": 0}
 	var changed: bool = _dock._perform_undoable_sheet_edit("Bring Row Over", func() -> bool:
 		for variable_name: Variant in required.keys():
-			if not _dock._current_sheet.variables.has(variable_name):
+			if not EventSheetSnippet.sheet_declares(_dock._current_sheet, str(variable_name)):
 				_dock._current_sheet.variables[variable_name] = required[variable_name]
 				created["count"] = int(created["count"]) + 1
 		_dock._current_sheet.events.append(copy)

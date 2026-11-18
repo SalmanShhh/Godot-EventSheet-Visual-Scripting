@@ -467,8 +467,8 @@ static func _test_duplicate_as_variant() -> bool:
 		{"objects": {"$Player1": "$Player2"}, "variables": {"p1_jumps": "p2_jumps"}}) and all_passed
 	all_passed = _check("the variant form survives its own OK press (it hides itself, on success only)",
 		dialog.dialog_hide_on_ok, false) and all_passed
-	all_passed = _check("the preview shows the rows it will produce, already retargeted",
-		"\n".join(dialog.preview_lines()).contains("$Player2.velocity = p2_jumps"), true) and all_passed
+	all_passed = _check("the preview shows the rows it will produce, in the sheet's own sentence, already retargeted",
+		"\n".join(dialog.preview_lines()).contains("Set velocity to p2_jumps"), true) and all_passed
 	var before_variant: String = _compile(editor._current_sheet)
 	all_passed = _check("the variant lands", dialog.confirm(), true) and all_passed
 	var live: EventSheetResource = editor._current_sheet
