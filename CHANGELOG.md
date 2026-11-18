@@ -38,6 +38,10 @@ The guide for updating and refactoring has a new section, "Replacing a word ever
 
 The tab of the side panel that lists how the open sheet's published functions will read in the picker was an empty body whatever the sheet held, because its list was given no height. It now takes the height of the tab. A sheet that publishes nothing gets one sentence saying how to publish a function, instead of a blank tab.
 
+### Fixed: the Juice words a reader sees: the toolbar's segment leaves with its row, a connected signal reads as the picker names it, and the notes use today's row names
+
+A Juice Player row selected on one tab left "Juice" with its Play, Stop, Skip, Restore and Open buttons on the strip when another tab came to the front with nothing selected; each tab now says what its own selection says. A script that connects one of the Juice Player's signals on a node the sheet cannot tell is a Juice Player showed the row as "On Feedback Signal" (the signal's id spelt out); it reads "On Juice Signal", as the picker names it. Some notes of this release named the Juice Player's rows by older names in the What's new page; they now use the names the picker shows.
+
 ### Changed: the issue forms and the plugin's report links are brought up to date
 
 The bug form asks for what happened, what you expected, steps, a small sheet or snippet (`.gd` first), the Project Doctor's summary line, the plugin and Godot versions and the platform, and lists today's areas; there is a new Documentation form, and the feature form and the form chooser no longer name other products or link to a guide that moved. Report an Issue opens the bug form with the plugin version, the Godot version and the platform already filled in (nothing else), and the Manual's "Report a problem" and "ask for a page" open the Documentation form with the page named. The repository address now lives in one place, and a test keeps the forms, their field ids and every address the plugin builds in step.
@@ -600,7 +604,7 @@ When the scene the sheet runs in is saved, the field box reads the Juice Player 
 
 ### Fixed: Show its cards is offered on a Play Juice row that was reopened from a line of code
 
-A line written by hand (`$HitJuice.play(1.0)`) already reopens as the Juice Player's own row when the scene the script runs in says that node is a Juice Player, for every verb the pack has a row for (forty-three actions and conditions, each saved back byte for byte; a test now pins all of them against a fixture scene). Such a row carries the id `method:play` where one placed from the picker carries `play`, and the Show its cards entry only knew the second; it now offers the entry on both. The nine verbs that return a value (Juice Card Field, Feedbacks Duration and the like) are read inside other rows, so they have no row of their own to reopen as.
+A line written by hand (`$HitJuice.play(1.0)`) already reopens as the Juice Player's own row when the scene the script runs in says that node is a Juice Player, for every verb the pack has a row for (forty-three actions and conditions, each saved back byte for byte; a test now pins all of them against a fixture scene). Such a row carries the id `method:play` where one placed from the picker carries `play`, and the Show its cards entry only knew the second; it now offers the entry on both. The nine verbs that return a value (Juice Card Field, Juice Duration and the like) are read inside other rows, so they have no row of their own to reopen as.
 
 ### Changed: a block kind's validate() is the quiet amber note, not red text in the row
 
@@ -936,7 +940,7 @@ Opening a script that holds `$FeedbackPlayer.enable_feedback("hit")` or `$JuiceP
 
 ### Fixed: two inner members of the Juice Player are no longer rows in the picker
 
-"Play Feedbacks From Channel" (what a channel broadcast calls) and the private resume signal showed up as rows to place. Both are hidden from the picker and search now. A sheet that already holds a row with one of them opens and compiles the same line.
+"Play Juice From Channel" (what a channel broadcast calls) and the private resume signal showed up as rows to place. Both are hidden from the picker and search now. A sheet that already holds a row with one of them opens and compiles the same line.
 
 ### Fixed: a node that wears a script extending another still draws its base class's Inspector decoration
 
@@ -1097,9 +1101,9 @@ About twenty messages used to end in "(error 31)": a failed Save (which did not 
 
 - A block kind that hands the importer a ready-made row instead of a field table used to skip the check every other lift passes: opening a `.gd` file asked the kind for a row and trusted it, so a kind whose row did not re-emit the line it had claimed changed the file on save (in one case writing `extends Node` twice). That claim now goes through the same byte check. The kind's own emitted lines must reproduce the lines it consumed exactly, or the claim is dropped and the lines stay a verbatim block, so opening and saving a file untouched still gives the same bytes whatever kinds are installed.
 
-### Fixed: changing one object's feedback no longer changes every copy of its scene
+### Fixed: changing one object's juice no longer changes every copy of its scene
 
-- Objects made from one scene all started out sharing the same feedback cards, so a row that changed a card on one of them (Set Feedback Field, Set Feedback Timing, Set Feedback Chance, Set Feedback Label, Enable or Disable Feedback, Set Loop Count, Scale Feedback Amounts, Retime Feedbacks or Pick One Feedback Of) changed it on all of them, and on every one spawned afterwards for the rest of the run. One Scale Feedback Amounts row per spawned enemy kept halving them all. A Feedback Player now takes its own copy of its cards the first time a row changes one, so each object keeps its own beat. A player no row changes copies nothing, and nothing in a saved scene changes: the copy is made while the game runs, never when a scene loads or saves. Copy Feedbacks From, Load Moment File and Duplicate Feedback still do what their descriptions say.
+- Objects made from one scene all started out sharing the same juice cards, so a row that changed a card on one of them (Set Juice Card Field, Set Juice Card Timing, Set Juice Card Chance, Rename Juice Card, Enable or Disable Juice Card, Set Loop Count, Scale Juice Amounts, Scale Juice Timing or Pick One Juice Card Starting With) changed it on all of them, and on every one spawned afterwards for the rest of the run. One Scale Juice Amounts row per spawned enemy kept halving them all. A Juice Player now takes its own copy of its cards the first time a row changes one, so each object keeps its own beat. A player no row changes copies nothing, and nothing in a saved scene changes: the copy is made while the game runs, never when a scene loads or saves. Copy Juice Cards From, Load Moment File and Duplicate Juice Card still do what their descriptions say.
 
 ### Fixed: movement packs under a rigid body now say what will go wrong
 
@@ -1183,9 +1187,9 @@ About twenty messages used to end in "(error 31)": a failed Save (which did not 
 
 - Each row of the Behaviour library cut its description off at the right edge with no sign it was cut. The lines on a row now wrap inside it and the row grows to hold them, so the whole description is read.
 
-### Fixed: the Feedback Player's row of buttons wraps instead of widening the Inspector
+### Fixed: the Juice Player's row of buttons wraps instead of widening the Inspector
 
-- The seven buttons under the Feedback Player's list (Play, Stop, Skip, Restore, Debug view, Save as file, Load from file) sat in one row that asked for about 520 px, which pushed the Inspector to 543 px wide. They are in Godot's own wrapping row now, so the buttons drop to a second line when the Inspector is narrow and the Inspector keeps the width you gave it.
+- The seven buttons under the Juice Player's list (Play, Stop, Skip, Restore, Debug view, Save as file, Load from file) sat in one row that asked for about 520 px, which pushed the Inspector to 543 px wide. They are in Godot's own wrapping row now, so the buttons drop to a second line when the Inspector is narrow and the Inspector keeps the width you gave it.
 
 ### Fixed: the Rename window no longer lists a text in quotes as if it were rewritten
 
@@ -1337,7 +1341,7 @@ About twenty messages used to end in "(error 31)": a failed Save (which did not 
 
 ### Changed: Juice keeps each moment in the air as a small class
 
-- A moment that is playing was a dictionary of twelve keys read by text from a dozen places; it is now a small class with a typed field for each, so a misspelt key is a parse error. Two keys that were written into it and never read (the strength and the direction the play was started with) are gone. The step cards, the Feedback Player's list and the moment file's rows stay dictionaries on purpose: the user writes them, scenes and files store them, and their rows' words are the file format.
+- A moment that is playing was a dictionary of twelve keys read by text from a dozen places; it is now a small class with a typed field for each, so a misspelt key is a parse error. Two keys that were written into it and never read (the strength and the direction the play was started with) are gone. The step cards, the Juice Player's list and the moment file's rows stay dictionaries on purpose: the user writes them, scenes and files store them, and their rows' words are the file format.
 
 ### Changed: Group, Include and System read in Godot's own words by default
 
@@ -1394,7 +1398,7 @@ About twenty messages used to end in "(error 31)": a failed Save (which did not 
   - **Number with its unit** writes `@export_range(0, 1, 0.001, "or_greater", "or_less", "hide_slider", "suffix:<stored unit>")` under `# @inspector_look unit:kinds=...,store=...`, so Godot itself shows `2.0 px`; the stored float is unchanged.
   - **Progress bar** writes `@export_range(min, max)` under `# @inspector_look progress_bar`.
 - A new pick in the Variable window writes the new form (its "Writes" hover and IN CODE block say the Godot line and the comment). A script that already holds the old `eventsheet:` marker opens as the same look, shows the same mark and saves back byte for byte; opening such a variable in the Variable window and pressing OK without touching it keeps the old spelling. Nothing is rewritten for you. The marker form stays for looks Godot has no hint for (tables, cards, dials, swatch rows, curves, textures, corners, seeds) and for any look you add.
-- The shipped packs were rebuilt through their builders: Feedback Player (2 toggle rows) and the 18 Vector Shape scripts (10 toggle rows and 6 unit numbers in the builder's field text, 40 and 15 in the emitted scripts); the three showcase bars (`enemy_stats`, `inspector_playground`) follow their builder.
+- The shipped packs were rebuilt through their builders: Juice Player (2 toggle rows) and the 18 Vector Shape scripts (10 toggle rows and 6 unit numbers in the builder's field text, 40 and 15 in the emitted scripts); the three showcase bars (`enemy_stats`, `inspector_playground`) follow their builder.
 - The importer reads a hidden pack field's `## @ace_hidden` line, its doc and its section line through a look comment above them, and a look over a property with a setter, so those fields still open as the look. A hidden field with no look comment is read exactly as before.
 
 ### Fixed: Add > Global Variable makes a file Godot can run

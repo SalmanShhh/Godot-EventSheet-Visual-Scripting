@@ -1296,6 +1296,9 @@ func _activate_tab(index: int) -> void:
 	_refresh_tab_bar()
 	# The help strip speaks for the selection in front of the reader: this tab's, never the one left.
 	_update_row_help_strip(_viewport.get_selected_row_data())
+	# So does the toolbar's Moment segment: a beat row selected on the tab left must not leave its buttons
+	# on the strip of a tab that has no such row selected.
+	_follow_moment_segment(_viewport.get_selected_row_data())
 	# A save's engine check that answered while this tab was behind another one says so now.
 	if _save_checks != null:
 		_save_checks.on_sheet_shown(_current_sheet)
@@ -7434,9 +7437,15 @@ func _on_viewport_selection_changed(_row_data: EventRowData) -> void:
 	# The toolbar's contextual Moment segment: Play, Stop, Skip, Restore and a strength appear on the
 	# strip while a row about a beat is selected, and go away when it is not. The sheet row itself
 	# never grows a button - this is where the buttons for a selection live.
-	if _moment_segment != null and _viewport != null:
-		_moment_segment.follow(_active_view().get_selected_ace_resource(), _selected_block_kind(_row_data))
+	_follow_moment_segment(_row_data)
 	_follow_function()
+
+
+## The toolbar's Moment segment answers for the selection in front of the reader: a row about a beat on
+## the sheet being looked at, and nothing at all when that sheet has no such row selected.
+func _follow_moment_segment(row_data: EventRowData) -> void:
+	if _moment_segment != null and _viewport != null:
+		_moment_segment.follow(_active_view().get_selected_ace_resource(), _selected_block_kind(row_data))
 
 
 ## The block kind the selected row is the head of, or "" for every other row. A block's head carries

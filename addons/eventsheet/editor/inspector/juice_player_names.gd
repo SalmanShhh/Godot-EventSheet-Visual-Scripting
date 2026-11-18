@@ -19,6 +19,16 @@ const GLOBAL_NAMES: PackedStringArray = ["JuicePlayer", "FeedbackPlayer"]
 ## The file names of the node's scripts, newest first. The first one that exists holds the code.
 const FILE_NAMES: PackedStringArray = ["juice_player.gd", "feedback_player.gd"]
 const PACK_FOLDER: String = "res://eventsheet_addons/juice/"
+## The words the picker shows for the node's signals, by signal name. A script that connects one on a node the
+## sheet cannot tell is a Juice Player has no picker entry to read them from, so a row reads them from here.
+const SIGNAL_WORDS: Dictionary = {
+	"on_feedbacks_started": "On Juice Started",
+	"on_feedbacks_finished": "On Juice Finished",
+	"on_feedback_signal": "On Juice Signal",
+	"on_feedback_started": "On Juice Card Started",
+	"on_feedback_finished": "On Juice Card Finished",
+	"on_feedback_skipped": "On Juice Card Skipped",
+}
 
 
 ## Whether a script, or any script it extends, is a Juice Player: by the file it is, or the global

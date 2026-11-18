@@ -13607,6 +13607,12 @@ func _trigger_display_text(provider_id: String, trigger_id: String) -> String:
 		# trigger_id is the frozen one, and a signal the table does not name reads as it always did.
 		if CONTROL_TRIGGER_WORDS.has(signal_name):
 			return EventSheetL10n.translate(str(CONTROL_TRIGGER_WORDS[signal_name]))
+		# The Juice Player's own signals read as its picker names them ("On Juice Signal"), also in a script
+		# that connects one on a node the sheet cannot tell is a Juice Player: the id is the frozen one, the
+		# words are what a reader sees.
+		var player_words: Dictionary = load("res://addons/eventsheet/editor/inspector/juice_player_names.gd").SIGNAL_WORDS
+		if player_words.has(signal_name):
+			return EventSheetL10n.translate(str(player_words[signal_name]))
 		# A signal already NAMED on_* must not read "On On ..." - strip the prefix first.
 		return "On %s" % signal_name.trim_prefix("on_").capitalize()
 	return trigger_id
