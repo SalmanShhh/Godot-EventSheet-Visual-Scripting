@@ -49,6 +49,21 @@ At its narrowest size the Start window could break a word between two letters (\
 ### Fixed: a Juice Player whose script is marked `@tool` keeps the cards you edit
 
 When a Juice Player's script runs as a tool script, the list of cards is a typed list that refuses an ordinary one. A card removed, added, moved, duplicated, pasted or edited in the Inspector was announced and then quietly refused by the node, so the list drew the old cards again a frame later and the scene saved the old cards. The Inspector now hands the node a list of the type it holds, so every edit sticks and Ctrl+Z and Ctrl+Y take it back and put it back. A Juice Player on a plain script, which is what the shipped one is, was never affected.
+### Fixed: the Project Doctor reads your sheets row by row again, and a door reads the rest
+
+The Doctor had stopped checking default-format sheets row by row, because it only recognised a script that starts with the compiler's banner and a sheet saved as a plain script has none. It now reads a script as a sheet when it starts with that banner, is open in a sheet tab, or the plugin has a record that it was saved from the sheet editor. The record lives in the editor's own per-project data, so it adds no file to your project; it is kept when you save a sheet, drops files that are gone, follows a rename or a move made in the FileSystem dock, and is filled once from your sheet backups, saved tabs and Recent list so you keep your checks after updating. Every other script gets the checks that make sense for any script, counted in one note that carries a door, \"Check these N scripts as sheets too\", saying how long it will take; the door runs the full checks over them a few milliseconds at a time, with progress and Cancel. The command-line tool still checks every script as a sheet, as it always did, and `-- --known-sheets` limits it to the known ones.
+
+### Fixed: a 3D file reads a line as the 3D verb, not as its 2D twin
+
+A 2D verb and its 3D twin write the same line, and the opened file used to give the line to whichever registered first, so a Node3D script showed rows such as \"Set position\" through the 2D verb. A file that extends a 3D class now reads those lines as the 3D twin (the bytes of the file are the same either way); 2D files and files that extend a plain Node read as before. The 3D twins of Set Rotation and Make Camera Current now read in the same words as their 2D versions.
+
+### Fixed: the Project Doctor hands the editor a frame between the scripts it reads
+
+On a project of two thousand scripts the mistake checks read twelve sheets and built a canvas for each in one go, which held the editor still for about four seconds, and several other sections held it for a few hundred milliseconds. The mistake checks, the reading page, the performance report, the class-name check, the declaration, scene and required-field checks, the family check and the first step now give the editor a frame between the scripts they read, so the window keeps drawing and Cancel keeps working while they run. The first line in the window now says it is getting ready. One part still holds a frame: a sheet has to be read and a canvas built for its row numbers in one piece, about a fifth of a second each, and the first of them takes about a second more because the editor loads what it draws with for the first time.
+
+### Fixed: a missing folder no longer prints an engine error
+
+A closest-file hint for a path in a sheet row, and the list of runtime helpers in a project that carries the plugin without the behaviour library, listed a folder that was not there and printed \"Couldn't open directory\" into Output; each now asks first.
 
 ### Changed: eleven more behaviour icons are redrawn with one large, simple shape each
 
@@ -60,7 +75,7 @@ The behaviour library now carries the small import file that sits beside each pa
 
 ### Fixed: the Project Doctor no longer freezes the editor on a big project
 
-On a project of two thousand scripts the check took five minutes with the editor frozen and printed two thousand warnings into Godot's Output. It now runs a few milliseconds at a time with a frame between, shows how far it is, has a Cancel that works, and fills its window as findings come in; the whole check takes a few seconds, and nothing is printed into Output. Only a file that starts with the compiler's banner is checked as a sheet: the plain scripts you wrote are read by the checks that make sense for any script, and counted in one line instead of reported one by one. The window opens wide enough to read, remembers the size you leave it at, and shows the selected finding whole under the list. The command-line tool prints the same lines and the same verdict.
+On a project of two thousand scripts the check took five minutes with the editor frozen and printed two thousand warnings into Godot's Output. It now runs a few milliseconds at a time with a frame between, shows how far it is, has a Cancel that works, and fills its window as findings come in; the whole check takes a few seconds, and nothing is printed into Output. The window opens wide enough to read, remembers the size you leave it at, and shows the selected finding whole under the list. The command-line tool prints the same lines and the same verdict.
 
 ### Fixed: Save Studio no longer re-points a SaveSystem global you already had
 
