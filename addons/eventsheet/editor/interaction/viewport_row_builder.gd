@@ -8957,11 +8957,11 @@ func _collect_group_object_labels(rows: Array, labels: PackedStringArray, seen: 
 		for condition: Variant in event_row.conditions:
 			if condition is ACECondition:
 				_note_object_label(_object_label_for((condition as ACECondition).provider_id, (condition as ACECondition).ace_id,
-					_row_params(condition)), labels, seen)
+					_row_params(condition), (condition as ACECondition).codegen_template), labels, seen)
 		for action: Variant in event_row.actions:
 			if action is ACEAction:
 				_note_object_label(_object_label_for((action as ACEAction).provider_id, (action as ACEAction).ace_id,
-					_row_params(action)), labels, seen)
+					_row_params(action), (action as ACEAction).codegen_template), labels, seen)
 
 
 func _note_object_label(label: String, labels: PackedStringArray, seen: Dictionary) -> void:
@@ -15021,7 +15021,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 			if _names_compiler_helpers():
 				condition_text = _compiler_names_text(condition_text)
 			var condition_owner: String = str(joined_lead.get("object", "")) if not joined_lead.is_empty() \
-				else _object_label_or_pending(condition.provider_id, condition.ace_id, _row_params(condition))
+				else _object_label_or_pending(condition.provider_id, condition.ace_id, _row_params(condition), condition.codegen_template)
 			var condition_colours: Dictionary = _colours_in_reading(condition, condition_text)
 			condition_text = str(condition_colours["text"])
 			spans.append(
@@ -15445,7 +15445,7 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 				if _names_compiler_helpers():
 					action_words = _spawn_copy_text(action_resource as ACEAction, action_words)
 				var action_object: String = _object_label_or_pending((action_resource as ACEAction).provider_id,
-					(action_resource as ACEAction).ace_id, _row_params(action_resource))
+					(action_resource as ACEAction).ace_id, _row_params(action_resource), (action_resource as ACEAction).codegen_template)
 				var action_colours: Dictionary = _colours_in_reading(action_resource, action_words)
 				action_words = str(action_colours["text"])
 				spans.append(
@@ -17580,7 +17580,7 @@ func _append_branch_ace_spans(spans: Array, action: ACEAction, param_key: String
 		"ace_enabled": action.enabled,
 		"chip": true,
 		"line_index": 0,
-		"object_label": _object_label_or_pending(action.provider_id, action.ace_id, _row_params(action)),
+		"object_label": _object_label_or_pending(action.provider_id, action.ace_id, _row_params(action), action.codegen_template),
 		"object_icon": _object_icon_for(action.provider_id, action.ace_id)
 	}.merged(action_style_meta, true)))
 
@@ -18132,7 +18132,7 @@ func _format_pick_filter(pick: PickFilter) -> String:
 ## "Sprite", "CharacterBody2D"). Core ACEs read as "System"; node-typed ACEs use the class, or the
 ## script's own name when the line acts on the script's own node. `params` are the row's own, read
 ## for its target: a row aimed at another node never claims the script's name.
-func _object_label_for(provider_id: String, ace_id: String, params: Dictionary = {}) -> String:
+func _object_label_for(provider_id: String, ace_id: String, params: Dictionary = {}, template: String = "") -> String:
 	# A call to one of the sheet's own functions belongs to the object that owns the function - the
 	# script's own object, as "Player | take_damage with amount 2" - like any other line about it.
 	if (provider_id.is_empty() or provider_id == "Core") and ace_id == "CallFunction":
@@ -18192,7 +18192,29 @@ func _object_label_for(provider_id: String, ace_id: String, params: Dictionary =
 		if not behaviour_object.is_empty():
 			return behaviour_object
 		return "System"
+	# A pack's verb called on a node the script names by its path (`$Services/Settings.save_bindings()`) is
+	# about that node, under the name the scene tree and the node's own trigger rows give it - never the
+	# class the pack is written in, which would make one node two words on one sheet.
+	if ace_id.begins_with("method:"):
+		var called_node: String = _called_node_name(template)
+		if not called_node.is_empty():
+			return called_node
 	return str(definition.metadata.get("provider_label", provider_id)) if definition != null else provider_id
+
+
+## The node a call template opens on, by the name its path ends in: `$Services/Settings.x()` -> "Settings",
+## `%Hud.x()` -> "Hud". "" when the template does not open on a node reference followed by a member.
+func _called_node_name(template: String) -> String:
+	if _called_node_pattern == null:
+		_called_node_pattern = RegEx.create_from_string("^([$%](?:[A-Za-z0-9_]+(?:/[A-Za-z0-9_]+)*|\"[^\"]+\"))\\.[A-Za-z_]")
+	var found: RegExMatch = _called_node_pattern.search(template.strip_edges())
+	if found == null:
+		return ""
+	var named: String = EventSheetSentence.object_of_reference(found.get_string(1))
+	return "" if named == found.get_string(1) else named
+
+
+static var _called_node_pattern: RegEx = null
 
 
 ## The behaviour's name when this row writes one of its own variables, else "". See OWN_VARIABLE_WRITE_ACE_IDS.
@@ -21282,10 +21304,10 @@ func _row_params(row: Variant) -> Dictionary:
 
 ## The label an ACE row shows in its object column - the pending one when the row's shape named its
 ## own object, otherwise the ordinary provider/node reading over the row's own `params`.
-func _object_label_or_pending(provider_id: String, ace_id: String, params: Dictionary = {}) -> String:
+func _object_label_or_pending(provider_id: String, ace_id: String, params: Dictionary = {}, template: String = "") -> String:
 	var pending: String = _pending_object_label
 	_pending_object_label = ""
-	var label: String = pending if not pending.is_empty() else _object_label_for(provider_id, ace_id, params)
+	var label: String = pending if not pending.is_empty() else _object_label_for(provider_id, ace_id, params, template)
 	# The state variable is the object of its own rows, named as written: it is not re-read as the class
 	# of its type ("State"), because the machine is the thing, and the variable is its name.
 	if label == EventSheetStateFacts.STATE_VARIABLE and EventSheetStateFacts.is_state_vocabulary(ace_id):

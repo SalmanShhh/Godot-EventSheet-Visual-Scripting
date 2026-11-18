@@ -122,7 +122,7 @@ static func _test_rows_the_way_the_examples_are_drawn() -> bool:
 	var rebind_triggers: PackedStringArray = _lines_with(rebind, "condition|", "On Pressed")
 	var pack_rows: PackedStringArray = PackedStringArray()
 	for line: String in options:
-		if line.begins_with("action|GameSettingsAddon|") or line.begins_with("action|SaveSystemAddon|") or line.begins_with("action|HudKitBehavior|"):
+		if line.begins_with("action|Settings|") or line.begins_with("action|SaveSystem|") or line.begins_with("action|HudKit|") or line.begins_with("action|GameSettingsAddon|") or line.begins_with("action|SaveSystemAddon|") or line.begins_with("action|HudKitBehavior|"):
 			pack_rows.append(line.get_slice("|", 1))
 	return SUPPORT.pins("shipped example reading", [
 		["each button of the rebind example is its own trigger", rebind_triggers, PackedStringArray([
@@ -130,8 +130,10 @@ static func _test_rows_the_way_the_examples_are_drawn() -> bool:
 			"condition|ResetAllButton|On Pressed", "condition|VibrateButton|On Pressed"])],
 		["no row asks the Hud which button was pressed", _lines_with(rebind, "", "Button Is").size(), 0],
 		["the options example's back button is its own trigger", _lines_with(options, "condition|", "BackButton|On Pressed").size(), 1],
-		["the packs' verbs read as the packs' own rows", pack_rows.has("GameSettingsAddon") and pack_rows.has("SaveSystemAddon") and pack_rows.has("HudKitBehavior"), true],
-		["no row of a pack shows the call it is written as", _lines_with(options, "action|GameSettingsAddon|", "$Services/Settings.").size() 			+ _lines_with(rebind, "action|GameSettingsAddon|", "$Settings.").size(), 0],
+		["the packs' verbs read under the node's own name, the one its triggers wear", pack_rows.has("Settings") and pack_rows.has("SaveSystem") and pack_rows.has("HudKit"), true],
+		["and never under the class the pack is written in", pack_rows.has("GameSettingsAddon") or pack_rows.has("SaveSystemAddon") or pack_rows.has("HudKitBehavior"), false],
+		["a pack's question reads under the node's name too", _lines_with(options, "condition|GameSettingsAddon|", "").size() + _lines_with(options, "condition|SaveSystemAddon|", "").size(), 0],
+		["no row of a pack shows the call it is written as", _lines_with(options, "action|Settings|", "$Services/Settings.").size() 			+ _lines_with(rebind, "action|Settings|", "$Settings.").size(), 0],
 		["the coin pickup is rows: the overlap, the count and the hide", [
 			_lines_with(options, "condition|Player|", "Overlaps").size(), _lines_with(options, "action|", "Add 1 to coins").size(),
 			_lines_with(options, "action|", "Set invisible").size()], [1, 1, 1]],
