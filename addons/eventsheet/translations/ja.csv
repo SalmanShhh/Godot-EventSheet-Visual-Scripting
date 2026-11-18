@@ -11268,3 +11268,6 @@ the Load bindings row of the same pair,同じペアのバインドを読み込�
 "The slot card, which the Save System keeps for the load menu:","セーブ枠のカード（ロード画面用に Save System が保持します）:"
 "Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.",キーボード ▸ バインドを保存 は %s に書き込み、Settings ▸ Save Bindings はオプションと同じ %s の [%s] に保存します。
 "Keyboard ▸ Save bindings, or Settings ▸ Save Bindings",キーボード ▸ バインドを保存、または Settings ▸ Save Bindings
+Saved %s. %s,
+"%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.",
+"%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.",

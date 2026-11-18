@@ -619,6 +619,11 @@ static func new_sheet(config: Dictionary = {}) -> EventSheetResource:
 ##     can be restored from Tools > Sheet Backups.
 ##   * With no path on a sheet that has NO file yet: writes nothing, and says so in "warnings" -
 ##     the text is still in "output".
+## A sheet saved as a resource writes `<name>_generated.gd` beside itself. That script is written over only
+## when it is provably this sheet's own (the compiler's banner and a "# Source:" line naming this sheet); a
+## script of your own, or one another sheet made, is left exactly as it is. The result then has "success"
+## false, one plain sentence in "errors" (it names the file and says what to do), the file's path in
+## "refused_path", and the code that would have been written still in "output".
 ## To read the code a sheet compiles to without writing anything, call `echo()`.
 static func compile(sheet: EventSheetResource, output_path: String = "") -> Dictionary:
 	if sheet == null or not output_path.is_empty():
@@ -630,6 +635,10 @@ static func compile(sheet: EventSheetResource, output_path: String = "") -> Dict
 		var unwritten: Dictionary = EventSheetCompiler.echo(sheet)
 		(unwritten["warnings"] as Array).append("EventSheets.compile() wrote nothing: this sheet has no file yet. Pass an output path to write the script, or call EventSheets.echo(sheet) to read it without a file.")
 		return unwritten
+	# A script that is not this sheet's own is not written, so there is nothing to take a backup of.
+	var claim: GDScript = load("res://addons/eventforge/compiler/generated_script_claim.gd")
+	if sheet.external_source_path.is_empty() and not claim.refusal(own_file, sheet.resource_path).is_empty():
+		return EventSheetCompiler.compile(sheet, "")
 	EventSheetBackups.backup_sheet(own_file)
 	return EventSheetCompiler.compile(sheet, "")
 

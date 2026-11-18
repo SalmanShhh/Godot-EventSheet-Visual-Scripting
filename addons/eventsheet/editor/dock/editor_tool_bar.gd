@@ -305,6 +305,16 @@ func script_path() -> String:
 	return ""
 
 
+## What the status line says when a compile did not go through. A script that is not this sheet's own is
+## not written, and then the one sentence about that file is the whole answer; any other failure keeps its
+## lead and the compiler's errors after it.
+func _compile_problem(compile_result: Dictionary, lead: String) -> String:
+	var errors: Array = compile_result.get("errors", [])
+	if not str(compile_result.get("refused_path", "")).is_empty() and not errors.is_empty():
+		return str(errors[0])
+	return "%s (%s)" % [lead, ", ".join(PackedStringArray(errors))]
+
+
 ## Dispatches one bar button. Returns true when the click was handled, so the viewport's input branch
 ## stays a one-liner and every "why did nothing happen" answer is written here, once.
 func activate(kind: String) -> bool:
@@ -478,7 +488,7 @@ func run_now() -> void:
 		return
 	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, target)
 	if not bool(compile_result.get("success", false)):
-		_dock._set_status("This tool doesn't compile yet, so there is nothing to run. (%s)" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
+		_dock._set_status(_compile_problem(compile_result, "This tool doesn't compile yet, so there is nothing to run."), true)
 		return
 	var script: Script = ResourceLoader.load(target, "Script", ResourceLoader.CACHE_MODE_IGNORE) as Script
 	if script == null or not script.can_instantiate():
@@ -511,7 +521,7 @@ func reload() -> void:
 		return
 	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, target)
 	if not bool(compile_result.get("success", false)):
-		_dock._set_status("This tool doesn't compile yet, so the old script is still what is loaded. (%s)" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
+		_dock._set_status(_compile_problem(compile_result, "This tool doesn't compile yet, so the old script is still what is loaded."), true)
 		return
 	var script: Script = ResourceLoader.load(target, "Script", ResourceLoader.CACHE_MODE_IGNORE) as Script
 	if script != null:
@@ -568,7 +578,7 @@ func enable_plugin() -> void:
 		return
 	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(_dock._current_sheet, target)
 	if not bool(compile_result.get("success", false)):
-		_dock._set_status("This plugin doesn't compile yet, so it was not enabled. (%s)" % ", ".join(PackedStringArray(compile_result.get("errors", []))), true)
+		_dock._set_status(_compile_problem(compile_result, "This plugin doesn't compile yet, so it was not enabled."), true)
 		return
 	var plugin_name: String = _dock._current_sheet.custom_class_name.strip_edges()
 	if plugin_name.is_empty():

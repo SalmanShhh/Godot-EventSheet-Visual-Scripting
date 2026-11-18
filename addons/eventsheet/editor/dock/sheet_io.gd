@@ -585,6 +585,12 @@ func _on_save_requested(after_save_as: Callable = Callable()) -> void:
 				_last_warning_summary = _dock.save_checks().after_write(_dock._current_sheet,
 					load(SHEET_COMPILER_PATH)._resolve_output_path(_dock._current_sheet, ""), auto_result)
 				warning_tail = _warning_tail()
+			if not str(auto_result.get("refused_path", "")).is_empty():
+				# Nothing wrong with a row: the script's name is taken by a file this sheet did not make. The
+				# sheet is saved, that file is untouched, and the sentence says what to do.
+				_dock._set_status_notice(EventSheetL10n.translate("Saved %s. %s") % [save_path.get_file(), str((auto_result.get("errors", []) as Array)[0])])
+				_dock._refresh_title_strip()
+				return
 			if not bool(auto_result.get("success", false)):
 				_dock._run_diagnostics()
 				# Friendly + actionable first (diagnostics just flagged + jumped to the bad row), with

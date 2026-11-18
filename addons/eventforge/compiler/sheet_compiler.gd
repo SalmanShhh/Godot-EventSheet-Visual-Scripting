@@ -1066,6 +1066,17 @@ static func _compile_body(sheet: EventSheetResource, output_path: String = "", o
 		(result["warnings"] as Array).append("Nothing was written: this sheet has no file yet. Pass an output path to write the script, or ask echo() for its text.")
 		return result
 	var final_output_path: String = _resolve_output_path(sheet, output_path)
+	# A script the plugin did not write for this sheet is never written over: a hand-written one, or one
+	# another sheet wrote. The text is still in "output"; the sheet itself is the caller's to save.
+	if _writes_output and result["success"] and not omit_generated_banner:
+		var claim: GDScript = load("res://addons/eventforge/compiler/generated_script_claim.gd")
+		if claim.is_companion_of(final_output_path, sheet.resource_path):
+			var refusal: String = claim.refusal(final_output_path, sheet.resource_path)
+			if not refusal.is_empty():
+				result["success"] = false
+				result["refused_path"] = final_output_path
+				(result["errors"] as Array[String]).append(refusal)
+				return result
 	if _writes_output and result["success"] and not _write_output_if_changed(final_output_path, output):
 		result["success"] = false
 		(result["errors"] as Array[String]).append(load("res://addons/eventforge/failure_words.gd").write_blocked(final_output_path))
