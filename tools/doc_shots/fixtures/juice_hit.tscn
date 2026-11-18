@@ -1,0 +1,32 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://tools/doc_shots/fixtures/juice_hit.gd" id="1_hit"]
+[ext_resource type="Script" path="res://eventsheet_addons/juice/juice_player.gd" id="2_juice"]
+
+[node name="Crate" type="Node2D"]
+script = ExtResource("1_hit")
+
+[node name="HitJuice" type="Node" parent="."]
+script = ExtResource("2_juice")
+steps = Array[Dictionary]([{
+"amount": 0.8,
+"effect": "",
+"fade_out": true,
+"seconds": 0.4,
+"verb": "shake"
+}, {
+"amount": 110.0,
+"effect": "",
+"seconds": 0.2,
+"verb": "zoom"
+}, {
+"amount": 0.0,
+"effect": "",
+"seconds": 0.06,
+"verb": "hitstop"
+}, {
+"amount": 0.55,
+"effect": "",
+"seconds": 0.25,
+"verb": "chromatic"
+}])
