@@ -11272,3 +11272,4 @@ the Load bindings row of the same pair,같은 쌍의 바인딩 불러오기 행
 "%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.","%s을(를) 쓰지 않았습니다. 이 시트가 만든 것이 아니라 직접 작성한 스크립트이며, 쓰면 작성한 코드가 대체됩니다. 두 이름이 달라지도록 시트나 그 스크립트의 이름을 바꾼 다음 다시 시도하세요."
 "%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.","%s을(를) 쓰지 않았습니다. 시트 %s의 것입니다. 두 이름이 달라지도록 두 시트 중 하나의 이름을 바꾼 다음 다시 시도하세요."
 "Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.",
+"Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.","이 시트에는 아직 피커에 게시된 항목이 없습니다. 함수에서 “다른 시트에서 사용 가능”을 선택하면 피커에 표시되는 모습 그대로 여기에 나열됩니다."
