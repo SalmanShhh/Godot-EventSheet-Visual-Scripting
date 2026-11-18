@@ -71,7 +71,7 @@ static func ensure_registered() -> void:
 ## inside res://. `sheet_paths` is deliberately unused - it finds only `.tres` sheets while `.gd` is
 ## the default sheet format, and this page is about hand-written GDScript above all.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(EventSheetDoctorSection.own_paths(EventSheetProjectDoctor._project_scripts())))
+	findings.append_array(await report_in_turns(EventSheetDoctorSection.own_paths(EventSheetProjectDoctor._project_scripts())))
 
 
 ## The whole page for a list of scripts, as findings. Pure over the paths, so a test can hand it a
@@ -97,6 +97,38 @@ static func report(script_paths: PackedStringArray) -> Array[Dictionary]:
 		read_lines += int(coverage.get("read_lines", 0))
 		total_lines += int(coverage.get("total_lines", 0))
 		lines.append_array(EventSheetReadingShapes.stays_code_lines(reading, script_path))
+	return _page_from(sorted, read, read_lines, total_lines, lines)
+
+
+## `report`, a script at a time with a frame between: the same page, so the editor draws while a project's
+## scripts are read line by line.
+static func report_in_turns(script_paths: PackedStringArray) -> Array[Dictionary]:
+	_place = 0
+	var sorted: PackedStringArray = script_paths.duplicate()
+	sorted.sort()
+	var lines: Array[Dictionary] = []
+	var read_lines: int = 0
+	var total_lines: int = 0
+	var read: int = 0
+	for script_path: String in sorted:
+		if read >= SCRIPTS_READ_LIMIT:
+			break
+		var source: String = EventSheetProjectDoctor.source_of(script_path)
+		if source.strip_edges().is_empty():
+			continue
+		await EventSheetProjectDoctor.breathe()
+		read += 1
+		var reading: Dictionary = EventSheetLiftReading.read(source, script_path)
+		var coverage: Dictionary = reading.get("coverage", {}) as Dictionary
+		read_lines += int(coverage.get("read_lines", 0))
+		total_lines += int(coverage.get("total_lines", 0))
+		lines.append_array(EventSheetReadingShapes.stays_code_lines(reading, script_path))
+	return _page_from(sorted, read, read_lines, total_lines, lines)
+
+
+## The page once the scripts are read: the head, the ledger of shapes and the tail.
+static func _page_from(sorted: PackedStringArray, read: int, read_lines: int, total_lines: int, lines: Array[Dictionary]) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
 	if read == 0:
 		return findings
 	var census: Dictionary = EventSheetReadingShapes.census(lines)

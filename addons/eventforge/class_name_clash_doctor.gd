@@ -42,9 +42,12 @@ static func ensure_registered() -> void:
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	var pattern: RegEx = RegEx.create_from_string(_DECLARATION)
 	var user_classes: Dictionary = {}
+	var looked: int = 0
 	for script_path: String in EventSheetProjectDoctor._project_scripts():
 		if _is_shipped(script_path):
 			continue
+		looked += 1
+		await EventSheetProjectDoctor.breathe_every(looked)
 		var source: String = EventSheetProjectDoctor.source_of(script_path)
 		if not source.contains("class_name"):
 			continue
@@ -69,7 +72,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 		library_names[declared] = str(helpers[declared])
 		if FileAccess.file_exists(PACK_DIRECTORY.path_join(str(helpers[declared]))):
 			held_packs[declared] = PACK_DIRECTORY.path_join(str(helpers[declared]))
-	findings.append_array(report(user_classes, plugin_names(), held_packs, library_names))
+	findings.append_array(report(user_classes, await plugin_names(), held_packs, library_names))
 
 
 ## class_name -> file for every script of the plugin itself, read straight off disk (the global class
@@ -79,9 +82,14 @@ static func plugin_names() -> Dictionary:
 	if not _plugin_names.is_empty():
 		return _plugin_names
 	var pattern: RegEx = RegEx.create_from_string(_DECLARATION)
+	_files_read = 0
 	for folder: String in PLUGIN_FOLDERS:
-		_read_names(folder.trim_suffix("/"), pattern, _plugin_names)
+		await _read_names(folder.trim_suffix("/"), pattern, _plugin_names)
 	return _plugin_names
+
+
+## How many of the plugin's files the walk above has opened, so it can give the editor a frame every few.
+static var _files_read: int = 0
 
 
 static func _read_names(folder: String, pattern: RegEx, out: Dictionary) -> void:
@@ -96,8 +104,10 @@ static func _read_names(folder: String, pattern: RegEx, out: Dictionary) -> void
 		var found: RegExMatch = pattern.search(_whole_characters(file.get_buffer(HEAD_BYTES)))
 		if found != null:
 			out[found.get_string(1)] = folder.path_join(file_name)
+		_files_read += 1
+		await EventSheetProjectDoctor.breathe_every(_files_read)
 	for child: String in DirAccess.get_directories_at(folder):
-		_read_names(folder.path_join(child), pattern, out)
+		await _read_names(folder.path_join(child), pattern, out)
 
 
 ## The text of the first bytes of a file, cut back to the last whole character: a cut through the

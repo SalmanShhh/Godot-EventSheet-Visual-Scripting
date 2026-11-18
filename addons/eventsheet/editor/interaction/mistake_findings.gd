@@ -944,29 +944,62 @@ static func project_groups() -> Dictionary:
 		return _project_groups
 	var groups: Dictionary = {}
 	for scene_path: String in EventSheetSceneConnections.scene_paths():
-		if not _in_group_scan_scope(scene_path):
-			continue
-		for entry: Variant in EventSheetSceneConnections.nodes_of_scene(scene_path):
-			for group_name: String in (entry as Dictionary).get("groups", PackedStringArray()):
-				groups[group_name] = "scene"
+		_note_scene_groups(groups, scene_path)
 	for script_path: String in preload("res://addons/eventforge/project_files.gd").all_scripts():
-		if not _in_group_scan_scope(script_path):
-			continue
-		var source: String = FileAccess.get_file_as_string(script_path)
-		if not source.contains("add_to_group"):
-			continue
-		for group_name: String in groups_added_in(source):
-			if not groups.has(group_name):
-				groups[group_name] = "script"
+		_note_script_groups(groups, script_path)
+	_note_declared_groups(groups)
+	_project_groups = groups
+	_project_groups_built = true
+	return groups
+
+
+## `project_groups`, built a few files at a time with a frame between, for the Doctor: the same answer,
+## held the same way, so the first sheet it judges does not walk the whole project in a frame of its own.
+static func project_groups_in_turns() -> Dictionary:
+	if _project_groups_built:
+		return _project_groups
+	var groups: Dictionary = {}
+	var looked: int = 0
+	for scene_path: String in EventSheetSceneConnections.scene_paths():
+		_note_scene_groups(groups, scene_path)
+		looked += 1
+		await load("res://addons/eventforge/project_doctor.gd").breathe_every(looked)
+	for script_path: String in preload("res://addons/eventforge/project_files.gd").all_scripts():
+		_note_script_groups(groups, script_path)
+		looked += 1
+		await load("res://addons/eventforge/project_doctor.gd").breathe_every(looked)
+	_note_declared_groups(groups)
+	_project_groups = groups
+	_project_groups_built = true
+	return groups
+
+
+static func _note_scene_groups(groups: Dictionary, scene_path: String) -> void:
+	if not _in_group_scan_scope(scene_path):
+		return
+	for entry: Variant in EventSheetSceneConnections.nodes_of_scene(scene_path):
+		for group_name: String in (entry as Dictionary).get("groups", PackedStringArray()):
+			groups[group_name] = "scene"
+
+
+static func _note_script_groups(groups: Dictionary, script_path: String) -> void:
+	if not _in_group_scan_scope(script_path):
+		return
+	var source: String = FileAccess.get_file_as_string(script_path)
+	if not source.contains("add_to_group"):
+		return
+	for group_name: String in groups_added_in(source):
+		if not groups.has(group_name):
+			groups[group_name] = "script"
+
+
+static func _note_declared_groups(groups: Dictionary) -> void:
 	var in_section: bool = false
 	for line: String in FileAccess.get_file_as_string("res://project.godot").split("\n"):
 		if line.begins_with("["):
 			in_section = line.strip_edges() == "[global_groups]"
 		elif in_section and line.contains("="):
 			groups[line.get_slice("=", 0).strip_edges()] = "project"
-	_project_groups = groups
-	_project_groups_built = true
-	return groups
 
 
 ## The candidate closest to a wanted name - same word in another case, a plural, a typo - or "".

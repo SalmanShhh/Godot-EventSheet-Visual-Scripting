@@ -291,7 +291,7 @@ func _set_running(running: bool) -> void:
 	(_progress_label.get_meta("row") as Control).visible = running
 	_rerun_button.disabled = running
 	if running:
-		_progress_label.text = EventSheetL10n.translate("Checking the project...")
+		_progress_label.text = EventSheetL10n.translate("Getting ready...")
 		_progress_label.set_meta("drawn", -1)
 		_summary_label.text = ""
 

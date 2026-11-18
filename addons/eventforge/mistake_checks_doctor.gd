@@ -77,6 +77,9 @@ static func ensure_registered() -> void:
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	# The groups of the whole project are listed once and held; built here a few files at a time, so the first
+	# sheet judged below does not walk the project in a frame of its own.
+	await EventSheetMistakeFindings.project_groups_in_turns()
 	# The sheets the report is about to open are opened here, one turn each, so the editor draws between
 	# them; the report then finds each one already held for the audit.
 	var scripts: PackedStringArray = EventSheetProjectDoctor._project_scripts()
@@ -87,7 +90,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 		await EventSheetProjectDoctor.breathe()
 		EventSheetProjectDoctor.sheet_of(script_path)
 		opened += 1
-	findings.append_array(report(scripts))
+	findings.append_array(await report_in_turns(scripts))
 
 
 ## The whole section as findings, the summary first (only when something was found: a project with
@@ -109,12 +112,46 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 			worst_path = script_path
 		troubled += 1
 		findings.append_array(found)
+	return _with_summary(findings, worst_path, measured, troubled)
+
+
+## The summary line in front of what was found, only when something was found.
+static func _with_summary(findings: Array[Dictionary], worst_path: String, measured: int, troubled: int) -> Array[Dictionary]:
 	if findings.is_empty():
 		return findings
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
 		EventSheetL10n.translate("Mistake checks: %d script(s) read, %d with a line that cannot run or does not do what it says.") % [
 			measured, troubled], ""))
 	return findings
+
+
+## `report`, a sheet at a time with a frame between: the same answer, so the editor draws while a project's sheets
+## are read and their margin numbers are built (each of those is a whole canvas).
+static func report_in_turns(scripts: PackedStringArray) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	var troubled: int = 0
+	var measured: int = 0
+	var worst_path: String = ""
+	for script_path: String in ranked(scripts):
+		if measured >= MEASURED_LIMIT:
+			break
+		measured += 1
+		await EventSheetProjectDoctor.breathe()
+		var sheet: EventSheetResource = EventSheetProjectDoctor.sheet_of(script_path)
+		if sheet == null:
+			continue
+		var mine: Array[Dictionary] = EventSheetMistakeFindings.findings(sheet, script_path)
+		# The margin numbers build a whole canvas, so they are a turn of their own.
+		if not mine.is_empty():
+			await EventSheetProjectDoctor.breathe()
+		var found: Array[Dictionary] = script_findings(script_path, mine, EventSheetProjectDoctor.margin_numbers_of(sheet) if not mine.is_empty() else {})
+		if found.is_empty():
+			continue
+		if troubled == 0:
+			worst_path = script_path
+		troubled += 1
+		findings.append_array(found)
+	return _with_summary(findings, worst_path, measured, troubled)
 
 
 ## What one script contributes: its findings, each filed under its own check id with the sheet's

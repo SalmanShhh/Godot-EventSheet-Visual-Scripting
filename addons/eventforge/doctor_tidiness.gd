@@ -532,6 +532,7 @@ static func check_declaration_reach(findings: Array[Dictionary]) -> void:
 	var sources: Dictionary = {}
 	var corpus_parts: PackedStringArray = PackedStringArray()
 	for script_path: String in script_paths:
+		await EventSheetProjectDoctor.breathe_every(sources.size() + 1)
 		var text: String = EventSheetProjectDoctor.source_of(script_path)
 		sources[script_path] = text
 		corpus_parts.append(text)
@@ -540,9 +541,11 @@ static func check_declaration_reach(findings: Array[Dictionary]) -> void:
 	for scene_path: String in EventSheetSceneConnections.scene_paths():
 		if EventSheetProjectDoctor.is_in_skipped_folder(scene_path):
 			continue
+		await EventSheetProjectDoctor.breathe_every(scene_parts.size() + 1)
 		scene_parts.append(EventSheetProjectDoctor.source_of(scene_path))
 	var scenes_text: String = "\n".join(scene_parts)
 	for script_path: String in script_paths:
+		await EventSheetProjectDoctor.breathe()
 		if script_path.begins_with("res://eventsheet_addons/"):
 			continue
 		var source: String = str(sources[script_path])

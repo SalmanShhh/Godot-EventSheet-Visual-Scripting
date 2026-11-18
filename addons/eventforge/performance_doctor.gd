@@ -78,7 +78,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 			await EventSheetProjectDoctor.breathe()
 			EventSheetProjectDoctor.sheet_of(script_path)
 			opened += 1
-	findings.append_array(report(busy))
+	findings.append_array(await report_in_turns(busy))
 	if not bool(swept.get("handles_trouble", true)) and _still_asking():
 		findings.append(_finding("info", CHECK_NO_REPORT, "",
 			"Nothing in this game hears about its own errors. Add an On Something Went Wrong event to the Game sheet and a build can save the report, show the player something, or skip the broken thing and keep playing - the editor's error strip only helps while you are the one running it.", ""))
@@ -170,9 +170,42 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 			worst_path = script_path
 		safe_fixes += EventSheetPerformanceFindings.safe(mine).size()
 		findings.append_array(script_findings(script_path, mine))
+	return _with_summary(findings, scripts.size(), worst_path, measured, safe_fixes)
+
+
+## `report`, a script at a time with a frame between: the same answer, so the editor draws while the scripts
+## that work every frame are read.
+static func report_in_turns(scripts: PackedStringArray) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	if scripts.is_empty():
+		return findings
+	var measured: int = 0
+	var safe_fixes: int = 0
+	var worst_path: String = scripts[0]
+	var worst_count: int = -1
+	var deadline: int = Time.get_ticks_msec() + MEASURE_BUDGET_MSEC
+	for script_path: String in _smallest_first(scripts):
+		if measured >= MEASURED_LIMIT or Time.get_ticks_msec() > deadline:
+			break
+		await EventSheetProjectDoctor.breathe()
+		var sheet: EventSheetResource = EventSheetProjectDoctor.sheet_of(script_path)
+		if sheet == null:
+			continue
+		measured += 1
+		var mine: Array[Dictionary] = EventSheetPerformanceFindings.findings(sheet)
+		if mine.size() > worst_count:
+			worst_count = mine.size()
+			worst_path = script_path
+		safe_fixes += EventSheetPerformanceFindings.safe(mine).size()
+		findings.append_array(script_findings(script_path, mine))
+	return _with_summary(findings, scripts.size(), worst_path, measured, safe_fixes)
+
+
+## The summary line in front of what was found.
+static func _with_summary(findings: Array[Dictionary], script_count: int, worst_path: String, measured: int, safe_fixes: int) -> Array[Dictionary]:
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
 		"Performance: %d of %d script(s) that work every frame were read, and %d of them earn a finding. %d of those fixes are safe to apply together." % [
-			measured, scripts.size(), _scripts_with_findings(findings), safe_fixes], ""))
+			measured, script_count, _scripts_with_findings(findings), safe_fixes], ""))
 	return findings
 
 

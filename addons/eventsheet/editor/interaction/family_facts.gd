@@ -76,6 +76,9 @@ static func project_families() -> Dictionary:
 		paths[class_text] = str(record.get("path", ""))
 		bases[class_text] = str(record.get("base", "")).strip_edges()
 	var families: Dictionary = {}
+	# Members are gathered in an Array with a set beside it: a packed array handed back and forth on every
+	# member copied itself each time, which on a project with thousands of classes was most of the cost.
+	var seen: Dictionary = {}
 	for class_text: String in bases:
 		# Walk up the chain rather than one step, so every ancestor counts this class as a member.
 		# The guard is the class count: a cycle cannot happen in a valid project, and a corrupt list
@@ -85,16 +88,16 @@ static func project_families() -> Dictionary:
 		while not ancestor.is_empty() and bases.has(ancestor) and walked < bases.size():
 			walked += 1
 			if not families.has(ancestor):
-				families[ancestor] = {"members": PackedStringArray(), "path": str(paths.get(ancestor, ""))}
-			var members: PackedStringArray = (families[ancestor] as Dictionary)["members"]
-			if not members.has(class_text):
-				members.append(class_text)
-			(families[ancestor] as Dictionary)["members"] = members
+				families[ancestor] = {"members": [], "path": str(paths.get(ancestor, ""))}
+				seen[ancestor] = {}
+			if not (seen[ancestor] as Dictionary).has(class_text):
+				(seen[ancestor] as Dictionary)[class_text] = true
+				((families[ancestor] as Dictionary)["members"] as Array).append(class_text)
 			ancestor = str(bases[ancestor])
 	for base: String in families:
-		var sorted: PackedStringArray = (families[base] as Dictionary)["members"]
-		sorted.sort()
-		(families[base] as Dictionary)["members"] = sorted
+		var sorted_members: Array = (families[base] as Dictionary)["members"]
+		sorted_members.sort()
+		(families[base] as Dictionary)["members"] = PackedStringArray(sorted_members)
 	return families
 
 

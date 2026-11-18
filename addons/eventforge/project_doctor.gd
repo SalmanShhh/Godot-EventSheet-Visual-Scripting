@@ -64,6 +64,11 @@ static var _margin_cache: Dictionary = {}
 ## person wrote. Empty outside an audit.
 static var _audited_sheets: Dictionary = {}
 
+## The step of a sliced audit in hand, for whoever measures where a frame went. Empty between audits.
+static var current_step: String = ""
+## How many times a section offered the editor a frame, for a test that pins that a section gives one per script it reads.
+static var breathe_calls: int = 0
+
 
 ## Whether the running audit reads this script as a sheet (see begin()).
 static func is_audited_sheet(script_path: String) -> bool:
@@ -180,7 +185,7 @@ static func begin(options: Dictionary = {}) -> Dictionary:
 	steps.append(["generated_outputs", func() -> void: check_generated_outputs(context["sheet_paths"], findings)])
 	steps.append(["debug_residue", func() -> void: check_debug_residue(context["sheet_paths"], findings)])
 	steps.append(["autoload_registration", func() -> void: check_autoload_registration(context["sheet_paths"], findings)])
-	steps.append(["scene_attachment", func() -> void: check_scene_attachment(context["sheet_paths"], findings)])
+	steps.append(["scene_attachment", func() -> void: await check_scene_attachment(context["sheet_paths"], findings)])
 	steps.append(["unused_variables", func() -> void: check_unused_variables(context["sheet_paths"], findings)])
 	steps.append(["duplicated_globals", func() -> void: check_duplicated_globals(context["sheet_paths"], findings)])
 	steps.append(["fanout_god_sheets", func() -> void: check_fanout_god_sheets(context["sheet_paths"], findings)])
@@ -200,7 +205,7 @@ static func begin(options: Dictionary = {}) -> Dictionary:
 	steps.append(["stale_translated_labels", func() -> void: check_stale_translated_labels(context["sheet_paths"], findings)])
 	# Required fields read every sheet in BOTH formats: a `.gd` sheet is its own output and is the
 	# default format, so the `.tres`-only list above would skip most real projects.
-	steps.append(["required_fields", func() -> void: check_required_fields(EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_all_project_sheets()), findings)])
+	steps.append(["required_fields", func() -> void: await check_required_fields(EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_all_project_sheets()), findings)])
 	steps.append(["missing_save_support", func() -> void: check_missing_save_support(context["sheet_paths"], findings)])
 	steps.append(["save_key_symmetry", func() -> void: check_save_key_symmetry(context["sheet_paths"], findings)])
 	steps.append(["editor_tool_undo", func() -> void: check_editor_tool_undo(context["sheet_paths"], findings)])
@@ -245,7 +250,7 @@ static func begin(options: Dictionary = {}) -> Dictionary:
 	# Declarations nobody reaches (dead enum values, signals nothing hears) - driven by the
 	# project's generated scripts, not by sheet_paths. After the tidiness sweep for the same
 	# reason the sweep runs last: new notes append, the established report never reorders.
-	steps.append(["declaration_reach", func() -> void: EventSheetDoctorTidiness.check_declaration_reach(findings)])
+	steps.append(["declaration_reach", func() -> void: await EventSheetDoctorTidiness.check_declaration_reach(findings)])
 	# The Multiplayer and Lighting sections ship as EXTENSION checks, registered through the
 	# same public seam a pack uses, so "a pack adds its own networking scripts to that section" is the
 	# shipped path rather than a special case. Registering here is what puts them in all four runners.
@@ -417,6 +422,7 @@ static func run_sliced(session: Dictionary, tree: SceneTree, cancelled: Callable
 			return {}
 		var entry: Array = steps[int(session["index"])]
 		session["current"] = str(entry[0])
+		current_step = str(entry[0])
 		var started: int = Time.get_ticks_usec()
 		await (entry[1] as Callable).call()
 		var timings: Dictionary = session["timings"]
@@ -428,6 +434,7 @@ static func run_sliced(session: Dictionary, tree: SceneTree, cancelled: Callable
 		if wait != null:
 			await wait
 	_frame_source = null
+	current_step = ""
 	return finish(session)
 
 
@@ -435,6 +442,7 @@ static func run_sliced(session: Dictionary, tree: SceneTree, cancelled: Callable
 ## audit it answers null and the await goes straight on. Inside one it answers null while the slice has
 ## time left and, once the slice is spent, the signal of the next frame, so the loop resumes there.
 static func breathe() -> Variant:
+	breathe_calls += 1
 	if _frame_source == null:
 		return null
 	var now: int = Time.get_ticks_usec()
@@ -639,9 +647,13 @@ static func check_scene_attachment(sheet_paths: PackedStringArray, findings: Arr
 	var scene_texts: Array[String] = []
 	for scene_path: String in _list_files_with_extension("tscn"):
 		scene_texts.append(source_of(scene_path))
+		await breathe_every(scene_texts.size())
+	var looked: int = 0
 	for sheet_path: String in sheet_paths:
 		if sheet_path.begins_with("res://eventsheet_addons/"):
 			continue
+		looked += 1
+		await breathe()
 		var sheet: EventSheetResource = sheet_at(sheet_path)
 		if sheet == null or sheet.autoload_mode:
 			continue
@@ -668,11 +680,14 @@ static func check_scene_attachment(sheet_paths: PackedStringArray, findings: Arr
 ## empty default ships. Warnings name the exact file + property. demo/showcase is exempt (its
 ## deliberately unset portrait IS the required-badge demo), as are the packs themselves.
 static func check_required_fields(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	var watched: Dictionary = required_defaults_of_sheets(sheet_paths)
+	var watched: Dictionary = await required_defaults_of_sheets(sheet_paths)
 	if watched.is_empty():
 		return
+	var looked: int = 0
 	for container_ext: String in ["tscn", "tres"]:
 		for container_path: String in _list_files_with_extension(container_ext):
+			looked += 1
+			await breathe_every(looked)
 			if container_path.begins_with("res://demo/") or container_path.begins_with("res://eventsheet_addons/") or container_path.begins_with("res://addons/"):
 				continue
 			for missing: Dictionary in required_gaps_in_container(source_of(container_path), watched):
@@ -685,7 +700,10 @@ static func check_required_fields(sheet_paths: PackedStringArray, findings: Arra
 ## reads a scene, so it is the half of the audit a test can drive with files of its own.
 static func required_defaults_of_sheets(sheet_paths: PackedStringArray) -> Dictionary:
 	var watched: Dictionary = {}
+	var looked: int = 0
 	for sheet_path: String in sheet_paths:
+		looked += 1
+		await breathe_every(looked)
 		var output_path: String = output_path_for(sheet_path)
 		if not FileAccess.file_exists(output_path):
 			continue
@@ -2510,8 +2528,8 @@ static func check_family_group_agreement(findings: Array[Dictionary]) -> void:
 		# A script is in a group only by saying add_to_group, so a script that never does is not read
 		# line by line (the reading below is, for a class-heavy project, most of this section's time).
 		walked_classes += 1
+		await breathe_every(walked_classes)
 		if not path.begins_with("res://addons/") and not source_of(path).contains("add_to_group("):
-			await breathe_every(walked_classes)
 			continue
 		var facts: Dictionary = EventSheetObjectFacts.script_facts(path)
 		for group: Variant in (facts.get("families", PackedStringArray()) as PackedStringArray):

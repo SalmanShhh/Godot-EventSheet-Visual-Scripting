@@ -88,7 +88,7 @@ static func run() -> bool:
 	var finding: Dictionary = {"check": "sheet-coverage", "plain_count": 2000, "severity": "info", "path": "", "message": "x", "event": 0}
 	var offers: Array[Dictionary] = EventSheetProjectDoctorPanel.offers_for(finding)
 	rows.append(["the coverage note offers the door", offers.size() > 0 and str(offers[0].get("id", "")) == EventSheetProjectDoctorPanel.CHECK_EVERY_SCRIPT, true])
-	rows.append(["the door says how many scripts and about how long", Known.door_text(2000), "Check these 2000 scripts as sheets too (about 3 minutes)"])
+	rows.append(["the door says how many scripts and about how long", Known.door_text(2000), "Check these 2000 scripts as sheets too (about 2 minutes)"])
 	rows.append(["a small count says seconds", Known.door_text(40), "Check these 40 scripts as sheets too (about 5 seconds)"])
 	rows.append(["a note with no plain scripts has no door", EventSheetProjectDoctorPanel.offers_for({"check": "sheet-coverage", "message": "x"}).size(), 0])
 

@@ -82,7 +82,7 @@ static func run() -> bool:
 ")
 	gd_file.close()
 	all_passed = _eq("a .gd sheet's Required variable goes under watch",
-		EventSheetProjectDoctor.required_defaults_of_sheets(PackedStringArray([gd_path])),
+		await EventSheetProjectDoctor.required_defaults_of_sheets(PackedStringArray([gd_path])),
 		{gd_path: PackedStringArray(["portrait"])}) and all_passed
 	DirAccess.remove_absolute(gd_path)
 	all_passed = _eq("and the Doctor's walk for this check lists .gd sheets, not only .tres",
