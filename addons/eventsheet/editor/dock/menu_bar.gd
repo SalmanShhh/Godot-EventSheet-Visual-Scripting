@@ -1139,7 +1139,7 @@ func build(root: Node) -> void:
 			_open_replay_recorder())
 	tools_popup.add_item("Run Tests…", 9701)
 	tools_popup.set_item_tooltip(tools_popup.get_item_index(9701),
-		"Run every Test sheet in the project and show what each claim said - pass, fail, and why. The same run happens headlessly with: godot --headless --script tools/run_test_sheets.gd. Nothing is drawn on your sheets.")
+		"Run every Test sheet in the project and show what each claim said - pass, fail, and why. The same run happens headlessly with: godot --headless --script addons/eventsheet/editor/test_sheet_command.gd. Nothing is drawn on your sheets.")
 	tools_popup.id_pressed.connect(func(id: int) -> void:
 		if id == 9701:
 			_open_run_tests())

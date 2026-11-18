@@ -20,6 +20,7 @@ extends RefCounted
 const SUPPORT := preload("res://tests/support.gd")
 const RUNNER_PATH := "res://addons/eventsheet/editor/test_sheet_runner.gd"
 const PANEL_PATH := "res://addons/eventsheet/editor/dock/test_report_panel.gd"
+const COMMAND_PATH := "res://addons/eventsheet/editor/test_sheet_command.gd"
 static var fixture_dir: String = SUPPORT.own_path("ef_test_sheet_fixtures")
 static var temp_compile_path: String = SUPPORT.own_path("ef_test_sheet_compile.gd")
 
@@ -41,6 +42,7 @@ static func run() -> bool:
 	passed = _test_the_report_panel_shows_the_same_claims() and passed
 	passed = _test_the_report_panel_counts_a_silent_test_as_failed() and passed
 	passed = _test_the_report_panel_does_not_start_a_second_run() and passed
+	passed = _test_a_second_process_runs_every_test_and_writes_what_each_claimed() and passed
 	return passed
 
 
@@ -327,6 +329,44 @@ static func _test_the_report_panel_does_not_start_a_second_run() -> bool:
 	var ok: bool = SUPPORT.check("test_sheets_test", "a second Run Tests leaves the run alone",
 		shown, "RunInProgress")
 	dock.free()
+	return ok
+
+
+## What the Run Tests window starts: a second process of the project. A compiled test sheet is a plain
+## script (never @tool), and the editor will not make an instance of a plain script, so running the
+## tests inside the editor reported every sheet as "failed to load". Here the real command runs three
+## sheets - two that pass, one that fails on purpose - and the results file the window reads back holds
+## the real passes and the real failure, and not one "failed to load".
+static func _test_a_second_process_runs_every_test_and_writes_what_each_claimed() -> bool:
+	var folder: String = SUPPORT.own_path("ef_second_process_tests")
+	DirAccess.make_dir_recursive_absolute(folder)
+	_write(folder + "/a_passing_test.gd", _compile(_passing_sheet()))
+	_write(folder + "/b_failing_test.gd", _compile(_failing_sheet()))
+	_write(folder + "/c_other_passing_test.gd", _compile(_passing_sheet()))
+	var results_path: String = ProjectSettings.globalize_path(SUPPORT.own_path("ef_second_process_results.json"))
+	DirAccess.remove_absolute(results_path)
+	var output: Array = []
+	var exit_code: int = OS.execute(OS.get_executable_path(), PackedStringArray([
+		"--headless", "--path", ProjectSettings.globalize_path("res://"),
+		"--script", ProjectSettings.globalize_path(COMMAND_PATH),
+		"--", "--root", folder, "--results", results_path,
+	]), output, true, false)
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(results_path))
+	var results: Array = ((parsed as Dictionary).get("results", []) as Array) if parsed is Dictionary else []
+	var runner: GDScript = load(RUNNER_PATH)
+	var lines: PackedStringArray = runner.call("report_lines", results)
+	var text: String = "\n".join(lines)
+	var ok: bool = _check("the command ends red, because one test fails on purpose", exit_code, 1)
+	ok = _check("it wrote a result for each of the three sheets", results.size(), 3) and ok
+	ok = _check("the totals are the real ones", lines[lines.size() - 2], "4 passed, 2 failed") and ok
+	ok = _check("the verdict is the suite's own words", lines[lines.size() - 1], "Some tests failed.") and ok
+	ok = _check("the failing claim carries its real reason",
+		text.contains("FAIL gravity pulls down - expected true, got false"), true) and ok
+	ok = _check("no sheet is reported as failing to load", text.contains("failed to load"), false) and ok
+	for file_name: String in DirAccess.get_files_at(folder):
+		DirAccess.remove_absolute(folder + "/" + file_name)
+	DirAccess.remove_absolute(folder)
+	DirAccess.remove_absolute(results_path)
 	return ok
 
 

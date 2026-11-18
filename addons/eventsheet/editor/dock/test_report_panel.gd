@@ -1,6 +1,6 @@
 # Godot EventSheets - the Run Tests… report window.
 #
-# Tools > Run Tests… finds every Test sheet in the project, runs each one in the editor's own tree,
+# Tools > Run Tests… finds every Test sheet in the project, runs each one in a second process of the project,
 # and shows what each claim said. THE REPORT IS A PANEL, NEVER ROW CHROME: nothing here writes back
 # onto the sheet, no row gains a mark, and with this window closed the canvas is byte-identical to
 # what it was before the run. A test result is a fact about a run, not a property of a row.
@@ -17,6 +17,8 @@
 extends RefCounted
 
 const RUNNER_PATH := "res://addons/eventsheet/editor/test_sheet_runner.gd"
+## The command a second process of the project runs: every test sheet, one after another.
+const COMMAND_PATH := "res://addons/eventsheet/editor/test_sheet_command.gd"
 ## The footer button that copies the report rather than closing anything.
 const COPY_ACTION: StringName = &"copy_report"
 
@@ -28,6 +30,8 @@ var _report_text: String = ""
 ## True while a run is in progress. The run awaits each test, so the menu item can be chosen again
 ## before it finishes; a second run started then would interleave with the first in the same tree.
 var _running: bool = false
+## Why the last run produced no report, or empty when it did.
+var _run_failed_message: String = ""
 
 
 func init(dock: Control) -> void:
@@ -48,17 +52,48 @@ func open() -> void:
 	if tree == null:
 		_fill(_placeholder(EventSheetL10n.translate("Tests need a running editor tree to run in.")))
 		return
-	var results: Array = []
 	_set_running(true)
-	for path: String in runner.call("discover", "res://"):
-		var result: Dictionary = await runner.call("run_script", tree, path, 5.0)
-		results.append(result)
+	var results: Array = await _run_in_second_process(tree, runner)
+	_set_running(false)
+	if results.is_empty() and not _run_failed_message.is_empty():
+		_report_text = ""
+		_fill(_placeholder(_run_failed_message))
+		return
+	for result: Dictionary in results:
 		# A sheet's health card says how its tests last went, and this run is what it means by
 		# "last". Nothing is written onto any sheet: the memory is the editor's own, per project.
-		EventSheetHealthCard.record_test_result(path, recorded_failures(result))
-	_set_running(false)
+		EventSheetHealthCard.record_test_result(str(result.get("path", "")), recorded_failures(result))
 	_report_text = "\n".join(runner.call("report_lines", results))
 	_fill(build_body(results))
+
+
+## Runs every test in a second process of this project and answers the results it wrote. The editor
+## cannot make an instance of a plain script (a compiled test sheet never carries @tool), so the
+## tests run the way game code always does: in a process of their own. Polls per frame, so the editor
+## stays alive while a slow test runs. Answers [] and sets `_run_failed_message` when the process
+## ended without a report.
+func _run_in_second_process(tree: SceneTree, runner: GDScript) -> Array:
+	_run_failed_message = ""
+	if (runner.call("discover", "res://") as PackedStringArray).is_empty():
+		return []
+	var results_path: String = ProjectSettings.globalize_path("user://eventforge_test_results.json")
+	DirAccess.remove_absolute(results_path)
+	var pid: int = OS.create_process(OS.get_executable_path(), PackedStringArray([
+		"--headless", "--path", ProjectSettings.globalize_path("res://"),
+		"--script", ProjectSettings.globalize_path(COMMAND_PATH),
+		"--", "--results", results_path,
+	]))
+	if pid < 0:
+		_run_failed_message = EventSheetL10n.translate("The tests could not be started in a second copy of Godot.")
+		return []
+	while OS.is_process_running(pid):
+		await tree.process_frame
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(results_path))
+	DirAccess.remove_absolute(results_path)
+	if not (parsed is Dictionary) or not (parsed as Dictionary).has("results"):
+		_run_failed_message = EventSheetL10n.translate("The test run ended before it wrote a report. Run the tests from a terminal to see why.")
+		return []
+	return (parsed as Dictionary)["results"] as Array
 
 
 ## Run Again is greyed while a run is going, so it cannot start a second one beside it.
