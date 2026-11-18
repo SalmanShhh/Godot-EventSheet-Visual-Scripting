@@ -721,6 +721,7 @@ func _draw_text(
 	control.draw_string(font, baseline * zoom, text, HORIZONTAL_ALIGNMENT_LEFT, physical_width, physical_size, color)
 	control.draw_set_transform(Vector2.ZERO, 0.0, Vector2(zoom, zoom))
 
+
 ## The lines a wrapped plain cell or note is drawn in: the offsets each visual line starts at, from the
 ## one wrapping the height metrics counted with (wrap_line_starts). Kept on the span's metadata under
 ## the text, width and size it was made for, so a frame that changes none of them reads it back and
