@@ -99,10 +99,14 @@ const SHOWCASE_DIR: String = "res://demo/showcase"
 ## wraps. CELL_SLACK is the room a row spends on its icon, the gaps and the scroll bar; CELL_GAP the breathing space between
 ## a name and its kind.
 const TAG_LIMIT: float = 110.0
-const NAME_FLOOR: float = 110.0
+const NAME_FLOOR: float = 64.0
 const NAME_LIMIT: float = 230.0
 const CELL_SLACK: float = 56.0
 const CELL_GAP: float = 14.0
+## What a column may be squeezed to when the window is made smaller: a kind no wider than TAG_LEAST, a name no narrower than
+## NAME_FLOOR, and the room an icon, the gaps and the scroll bar need.
+const TAG_LEAST: float = 80.0
+const LEAST_SLACK: float = 36.0
 ## How much more of the window than its words ask for the template column is given.
 const TEMPLATE_WEIGHT: float = 1.3
 
@@ -540,8 +544,14 @@ func _fit_column(card: PanelContainer, list: Tree, section: Dictionary) -> void:
 	# The template list is the long one: a name that wraps there costs a row in a list that scrolls, so it is given more of
 	# the room than its words alone would earn.
 	card.size_flags_stretch_ratio = float(plan["ideal"]) * (TEMPLATE_WEIGHT if str(section.get("id", "")) == "templates" else 1.0)
-	list.set_column_custom_minimum_width(1, int(ceil(float(plan["tag"]))))
 	list.set_column_custom_minimum_width(0, int(ceil(float(plan["name_floor"]))))
+	# The kind column keeps its words' width while the list has room, and gives way (to what it least needs, then to
+	# two lines) as the window is made smaller, so a narrow window wraps instead of pushing a column off its edge.
+	var fit_kind: Callable = func() -> void:
+		var room: float = maxf(list.size.x * 0.45, float(plan["tag_least"]))
+		list.set_column_custom_minimum_width(1, int(ceil(minf(float(plan["tag"]), room))))
+	fit_kind.call()
+	list.resized.connect(fit_kind)
 
 
 ## The plan for one column of `columns()`, its words measured in the language the page speaks now with `font` (the list's own).
@@ -565,11 +575,12 @@ static func plan_for(section: Dictionary, font: Font, font_size: int, title_font
 ## shrink to, and the width it would like. Pure, so the suite pins the sums without a window.
 static func column_plan(widest_name: float, widest_tag: float, widest_title: float) -> Dictionary:
 	var tag: float = minf(widest_tag, EventSheetPalette.scaled_f(TAG_LIMIT)) + (EventSheetPalette.scaled_f(CELL_GAP) if widest_tag > 0.0 else 0.0)
+	var tag_least: float = minf(tag, EventSheetPalette.scaled_f(TAG_LEAST) + (EventSheetPalette.scaled_f(CELL_GAP) if widest_tag > 0.0 else 0.0))
 	var slack: float = EventSheetPalette.scaled_f(CELL_SLACK)
 	var name_floor: float = minf(widest_name, EventSheetPalette.scaled_f(NAME_FLOOR))
-	var minimum: float = maxf(widest_title + EventSheetPalette.scaled_f(CELL_SLACK), tag + name_floor + slack)
+	var minimum: float = maxf(widest_title + EventSheetPalette.scaled_f(LEAST_SLACK) * 0.7, tag_least + name_floor + EventSheetPalette.scaled_f(LEAST_SLACK))
 	var ideal: float = maxf(minimum, tag + minf(widest_name, EventSheetPalette.scaled_f(NAME_LIMIT)) + slack)
-	return {"tag": tag, "name_floor": name_floor, "minimum": minimum, "ideal": ideal}
+	return {"tag": tag, "tag_least": tag_least, "name_floor": name_floor, "minimum": minimum, "ideal": ideal}
 
 
 ## One row per entry - its name, and its kind in the quieter second column - under the heading of

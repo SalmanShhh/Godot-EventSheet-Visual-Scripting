@@ -13,6 +13,8 @@ const P := "start_page_columns_test"
 ## The window's default width and the room its margins and the gaps between four columns take.
 const WINDOW_WIDTH: float = 1240.0
 const FRAME: float = 90.0
+## The least width the window can be made, and what it holds the columns to.
+const LEAST_WIDTH: float = 760.0
 
 
 static func _font() -> Font:
@@ -63,6 +65,7 @@ static func run() -> bool:
 		table.append(["%s: no kind column is narrower than its widest kind (or the limit)" % locale, cut_kind, ""])
 		table.append(["%s: the empty Recent column asks for less than Learn" % locale, recent_ideal < learn_ideal, true])
 		table.append(["%s: the four columns, at the least each needs, fit the window's own width" % locale, asked <= (WINDOW_WIDTH - FRAME) * scale, true])
+		table.append(["%s: and fit the narrowest the window can be made" % locale, asked <= (LEAST_WIDTH - FRAME) * scale, true])
 	EventSheetL10n.set_locale(first_locale)
 	_row_pins(table, sections)
 	return SUPPORT.pins(P, table)
