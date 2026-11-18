@@ -589,7 +589,7 @@ static func check_tidiness(sheet_paths: PackedStringArray, findings: Array[Dicti
 			_add(findings, "unused-behavior", sheet_path,
 				"Behavior \"%s\" is attached but no event uses it." % behavior)
 		_note_disabled_events(sheet, sheet_path, findings)
-		for pair: Array in identical_event_pairs(sheet.events, sheet.functions, EventSheetProjectDoctor.margin_numbers_of(sheet)):
+		for pair: Array in _identical_pairs_in_margin_numbers(sheet):
 			_add(findings, "identical-events", sheet_path,
 				"Events %d and %d are identical - make one?" % [int(pair[0]), int(pair[1])], int(pair[0]))
 		var repeated: Dictionary = repeated_literals(sheet.events)
@@ -628,9 +628,25 @@ static func _note_unread_locals(sheet: EventSheetResource, sheet_path: String,
 					% [local_name, event_function.function_name])
 
 
+## The identical pairs of one sheet, numbered the way its margin numbers them. Finding the pairs needs no
+## numbers, so the sheet's margin is read only when there is a pair to name: reading it builds a whole
+## canvas, and most sheets have nothing to say.
+static func _identical_pairs_in_margin_numbers(sheet: EventSheetResource) -> Array:
+	if identical_event_pairs(sheet.events, sheet.functions).is_empty():
+		return []
+	return identical_event_pairs(sheet.events, sheet.functions, EventSheetProjectDoctor.margin_numbers_of(sheet))
+
+
+## The switched-off events of one sheet, by margin number, reading the margin only when one is switched off.
+static func _disabled_in_margin_numbers(sheet: EventSheetResource) -> PackedInt32Array:
+	if disabled_event_numbers(sheet.events, sheet.functions).is_empty():
+		return PackedInt32Array()
+	return disabled_event_numbers(sheet.events, sheet.functions, EventSheetProjectDoctor.margin_numbers_of(sheet))
+
+
 static func _note_disabled_events(sheet: EventSheetResource, sheet_path: String,
 		findings: Array[Dictionary]) -> void:
-	var disabled: PackedInt32Array = disabled_event_numbers(sheet.events, sheet.functions, EventSheetProjectDoctor.margin_numbers_of(sheet))
+	var disabled: PackedInt32Array = _disabled_in_margin_numbers(sheet)
 	if disabled.is_empty():
 		return
 	var change: Dictionary = last_change(sheet_path)

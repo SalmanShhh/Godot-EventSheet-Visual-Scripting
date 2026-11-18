@@ -141,10 +141,12 @@ static func report_in_turns(scripts: PackedStringArray) -> Array[Dictionary]:
 		if sheet == null:
 			continue
 		var mine: Array[Dictionary] = EventSheetMistakeFindings.findings(sheet, script_path)
-		# The margin numbers build a whole canvas, so they are a turn of their own.
-		if not mine.is_empty():
+		# The margin numbers build a whole canvas, so they are a turn of their own - and only for a sheet
+		# with a finding that names an event.
+		var named: bool = names_an_event(mine)
+		if named:
 			await EventSheetProjectDoctor.breathe()
-		var found: Array[Dictionary] = script_findings(script_path, mine, EventSheetProjectDoctor.margin_numbers_of(sheet) if not mine.is_empty() else {})
+		var found: Array[Dictionary] = script_findings(script_path, mine, EventSheetProjectDoctor.margin_numbers_of(sheet) if named else {})
 		if found.is_empty():
 			continue
 		if troubled == 0:
@@ -161,8 +163,18 @@ static func sheet_findings(script_path: String) -> Array[Dictionary]:
 	if sheet == null:
 		return []
 	var mine: Array[Dictionary] = EventSheetMistakeFindings.findings(sheet, script_path)
-	# The margin is numbered only for a script that has something to say: it builds a whole canvas.
-	return script_findings(script_path, mine, EventSheetProjectDoctor.margin_numbers_of(sheet) if not mine.is_empty() else {})
+	# The margin is numbered only for a script with a finding that names an event: it builds a whole canvas.
+	return script_findings(script_path, mine, EventSheetProjectDoctor.margin_numbers_of(sheet) if names_an_event(mine) else {})
+
+
+## Whether any of a script's findings is filed with the margin number of an event, which is the only
+## thing the number is for. A finding said elsewhere is dropped, and one about the file as a whole
+## carries no event.
+static func names_an_event(mine: Array[Dictionary]) -> bool:
+	for finding: Dictionary in mine:
+		if not SAID_ELSEWHERE.has(str(finding.get("kind", ""))) and finding.get("event") is Object:
+			return true
+	return false
 
 
 ## Pure over the findings it earned, so the wording is pinned without going through the importer.
