@@ -26,24 +26,45 @@ const FAMILY: String = "yours"
 ## The most bases a chain of classes is followed through, so a loop in a broken project ends.
 const MOST_BASES: int = 32
 
-## What the project's own cards were the last time they were read, and in which frame, so a list that draws
-## forty cards asks the project's class list once.
+## What the project's own cards were the last time they were read. They are read once and kept until the project's
+## script files change (see `_watch`): a card edit never reads the project, however big the project is.
 static var _kinds_cache: Array = []
-static var _read_in_frame: int = -1
+static var _valid: bool = false
+## Whether the editor's file-system signals are being listened to.
+static var _watching: bool = false
+## How many times the project's classes have been read, and how many card scripts those reads opened. A bounded-work
+## pin reads them before and after an edit and wants no change.
+static var scans: int = 0
+static var files_read: int = 0
 
 
 ## Forgets what was read, so the next ask reads the project's classes again.
 static func reset() -> void:
 	_kinds_cache = []
-	_read_in_frame = -1
+	_valid = false
+
+
+## Listens (once) to the editor's file system: a script added, removed or saved, or a change to the project's class
+## list, is the only thing that can change what the project's own cards are, so that is when what was read is dropped.
+static func _watch() -> void:
+	if _watching or not Engine.is_editor_hint():
+		return
+	var files: EditorFileSystem = EditorInterface.get_resource_filesystem() if EditorInterface != null else null
+	if files == null:
+		return
+	_watching = true
+	var forget: Callable = Callable(load("res://addons/eventsheet/editor/inspector/juice_own_cards.gd"), "reset")
+	files.script_classes_updated.connect(forget)
+	files.filesystem_changed.connect(forget)
 
 
 ## The kind entries of every class of the project that extends JuiceCard, in the order their files sort.
 static func kinds() -> Array:
-	var frame: int = Engine.get_process_frames()
-	if _read_in_frame == frame and frame > 0:
+	if _valid:
 		return _kinds_cache
-	_read_in_frame = frame
+	_watch()
+	scans += 1
+	_valid = true
 	_kinds_cache = []
 	var found: Array = []
 	var bases: Dictionary = {}
@@ -105,6 +126,7 @@ static func address_of(path: String) -> String:
 
 ## One card's kind entry, read from its script.
 static func _entry_of(class_name_text: String, path: String) -> Dictionary:
+	files_read += 1
 	var script: Script = load(path) as Script
 	var fields: Array = []
 	var defaults: Dictionary = {"card_script": address_of(path)}

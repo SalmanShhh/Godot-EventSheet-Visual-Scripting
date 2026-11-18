@@ -89,6 +89,9 @@ var _try_box: SpinBox = null
 var _sounded: Dictionary = {}
 var _voices: Array[AudioStreamPlayer] = []
 var _lit: PackedInt32Array = PackedInt32Array()
+## What the head, the loop note and the timeline were last worked out from (see `refresh`).
+var _shown: bool = false
+var _shown_key: int = 0
 ## The quiet line that says no sheet plays this player, and the menu that lists the sheets that do.
 var _find_note: Label = null
 var _find_menu: PopupMenu = null
@@ -160,10 +163,19 @@ func _exit_tree() -> void:
 ## The head line and the timeline, re-read from the player as it is edited.
 func refresh() -> void:
 	var list: Array = steps_of(_player)
+	var looping: bool = bool(_player.get("loop")) if _player != null else false
+	# Everything the head, the loop note and the timeline show comes from the list and the Loop tick, so a refresh that finds
+	# both as they were (the Inspector asks again after every edit it makes, and so does the edit's own signal) has nothing
+	# to work out. The open debug view is rebuilt every time, as it also shows what the last pass did.
+	var key: int = hash([list, looping])
+	if _shown and key == _shown_key and not (_lines != null and _lines.visible):
+		return
+	_shown = true
+	_shown_key = key
 	# The pack walks every card to answer how long the beat lasts, so it is asked once for both lines.
 	var total: float = duration_of(list)
 	_head.text = head_text(list.size(), seconds_text(total))
-	_loop_note.text = loop_note_text(bool(_player.get("loop")) if _player != null else false, total)
+	_loop_note.text = loop_note_text(looping, total)
 	_loop_note.visible = not _loop_note.text.is_empty()
 	if _timeline != null:
 		_timeline.queue_redraw()
