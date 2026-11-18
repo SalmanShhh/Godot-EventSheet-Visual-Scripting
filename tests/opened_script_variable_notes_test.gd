@@ -8,6 +8,9 @@
 #     names the line can use, and the note treated them as missing members.
 # And a variable with no written type (`var hits = 3`) is not "any - Subtract from wants a number":
 # it holds the number it starts at, so the amber kind note has nothing to say about it.
+# A ray written the way the engine's pages write it (`var sight := space_state.intersect_ray(query)`)
+# opens as one Cast Ray Into row, whose Into Variable is that line's own `var`: the name it declares
+# is not a variable the sheet forgot.
 # The typo control proves the note still fires where it should.
 @tool
 extends RefCounted
@@ -51,6 +54,20 @@ func hurt(amount) -> void:
 """
 
 
+const RAY := """extends Node2D
+
+var hits: int = 0
+
+
+func _physics_process(_delta: float) -> void:
+	var space_state := get_world_2d().direct_space_state
+	var query := PhysicsRayQueryParameters2D.create(global_position, Vector2(100, 0))
+	var sight := space_state.intersect_ray(query)
+	if sight:
+		hits += 1
+"""
+
+
 static func run() -> bool:
 	var typo: String = CLEAN.replace("\t_start_x = position.x", "\t_strat_x = position.x")
 	# A local of _process is not a name another function can use: `direction` in spin() is a typo of
@@ -66,6 +83,7 @@ static func run() -> bool:
 		["a local of one function does not hide a missing name in another", _notes(elsewhere, "elsewhere"),
 			["direction is not a variable of opened_script_variable_notes_elsewhere."]],
 		["a comment or a string declares no name in code kept as written", declared.keys(), ["real"]],
+		["a Cast Ray Into the line itself declares grows no note for its own local", _notes(RAY, "ray"), []],
 	])
 
 

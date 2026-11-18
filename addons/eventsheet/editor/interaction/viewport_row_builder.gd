@@ -12148,6 +12148,25 @@ func _build_variable_note_rows(event_row: EventRow, event_uid: String, indent: i
 	return rows
 
 
+## The names the written lines of these rows declare as locals: a row whose own template opens a line
+## with `var {param}` declares whatever its `param` holds. The Cast Ray Into a hand-written
+## `var sight := space_state.intersect_ray(query)` lifts to is one - its Into Variable is that line's
+## own `var`, so the name is not one the sheet has to declare anywhere else.
+func _names_declared_by_rows(rows: Array) -> PackedStringArray:
+	var declared: PackedStringArray = PackedStringArray()
+	for entry: Variant in rows:
+		var action: ACEAction = entry as ACEAction
+		if action == null or not action.codegen_template.contains("var {"):
+			continue
+		var params: Dictionary = _ace_params_of(action)
+		for key: Variant in params.keys():
+			if action.codegen_template.contains("var {%s}" % str(key)):
+				var written: String = str(params[key]).strip_edges()
+				if EventSheetIdentifierRules.is_valid(written):
+					declared.append(written)
+	return declared
+
+
 ## Every name this sheet declares as a local or a parameter, {name: true}: the Local Variable rows and
 ## local tables of every event, and the parameters and local tables of every function. Kept with the
 ## owner catalog, so it is walked once per sheet and dropped with it.
@@ -12252,6 +12271,10 @@ func _collect_local_names(entries: Variant, names: Dictionary, walked: Dictionar
 			for declared: Array in _declared_locals(event_row):
 				if not str(declared[0]).is_empty():
 					names[str(declared[0])] = true
+			# A row that opens with `var {param}` in its own lines (a lifted Cast Ray Into) declares the
+			# local it was given: it is a name of this body, not a variable the sheet failed to declare.
+			for written_name: String in _names_declared_by_rows(event_row.actions):
+				names[written_name] = true
 			# The name a loop walks a collection with, and its counter.
 			for filter: PickFilter in event_row.pick_filters:
 				if filter != null:
@@ -16274,8 +16297,13 @@ func _append_undo_step_spans(spans: Array, parts: Dictionary, action_index: int,
 			"natural_width": true,
 			"text_color": _viewport._get_event_style().value_highlight_color
 		}, true).merged(action_style_meta, false)))
+	# The cue keeps its own width and gives up its tail with an ellipsis when the lane has less room than
+	# the words need. As a fill cell it took whatever the other two left and wrapped there: a lane with
+	# a few pixels over drew it a letter to a line, in a row as tall as the sentence was long.
 	spans.append(_make_span(EventSheetL10n.translate("↓ the steps below are the edit"),
 		EventSheetSemanticSpan.SpanType.VALUE, base_meta.duplicate().merged({
+			"natural_width": true,
+			"elide": true,
 			"text_color": _viewport._get_reading_style().muted_text_color
 		}, true).merged(action_style_meta, false)))
 
@@ -21596,6 +21624,8 @@ func _collect_declared_local_names(rows: Array, into: Dictionary) -> void:
 		if entry is EventGroup:
 			_collect_declared_local_names(EventSheetGroupFacts.children(entry as EventGroup), into)
 		elif entry is EventRow:
+			for written_name: String in _names_declared_by_rows((entry as EventRow).actions):
+				into[written_name] = true
 			for action: Variant in (entry as EventRow).actions:
 				if action is ACEAction and str((action as ACEAction).ace_id).begins_with("SetLocal"):
 					var local_name: String = str(_ace_params_of(action as Resource).get("name", "")).strip_edges()
