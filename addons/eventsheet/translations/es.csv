@@ -11255,3 +11255,10 @@ The Load bindings row of the same pair,La fila Cargar controles del mismo par
 "The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.","El global llamado Settings carga %s, no el pack Game Settings, y este script usa las filas del pack. Dale a tu propio global otro nombre para que las filas llamen al pack."
 made by this sheet,creado por esta hoja
 event {n} did not run,el evento {n} no se ejecutó
+The open sheet follows %s to its new place.,La hoja abierta sigue a %s a su nuevo lugar.
+%d open sheets follow their files to their new place.,%d hojas abiertas siguen a sus archivos a su nuevo lugar.
+"The sheet was renamed but its script %s was not. Rename the script too, or scenes keep running the old one.","La hoja se renombró, pero su script %s no. Renombra también el script, o las escenas seguirán usando el antiguo."
+"%s is gone, but your unsaved changes are still here. Save As keeps them in a new file.","%s ya no existe, pero tus cambios sin guardar siguen aquí. Guardar como los conserva en un archivo nuevo."
+"A sheet's file was deleted, so its tab was closed.","Se eliminó el archivo de una hoja, así que se cerró su pestaña."
+"%d sheets' files were deleted, so their tabs were closed.","Se eliminaron los archivos de %d hojas, así que se cerraron sus pestañas."
+Opened the issue form in your browser. Nothing is sent until you press Submit there.,Se abrió el formulario de incidencias en tu navegador. No se envía nada hasta que pulses Enviar allí.

@@ -686,6 +686,7 @@ var _start_page: RefCounted = null
 var _context_menus: EventSheetContextMenus = EventSheetContextMenus.new()  # right-click context menus: condition/action/row/variable/empty-space build + per-click configure (dock/context_menus.gd)
 var _external_watcher: EventSheetExternalWatcher = EventSheetExternalWatcher.new()  # GDScript-backed sheet file-watch + reload-on-disk-change dialog (dock/external_watcher.gd)
 var _sheet_io: EventSheetSheetIO = EventSheetSheetIO.new()  # sheet FILE-IO: open-from-disk + every write-back path (Save/Save As/Export/Save-as-.gd) (dock/sheet_io.gd)
+var _path_follower: RefCounted = null  # follows a renamed or deleted file (dock/path_follower.gd)
 var _tab_state: EventSheetTabState = EventSheetTabState.new()  # what an open tab keeps while another is on screen: its reading, undo log, vocabulary and compiled output, and the stamp each is held against (dock/tab_state.gd)
 var _live_edit_bar: EventSheetLiveEditBar = EventSheetLiveEditBar.new()  # ⟳ Apply to running game on the status strip (dock/live_edit_bar.gd)
 var _shared_sheets: RefCounted = null:  # New shared sheet… + Include sheet… (dock/shared_sheet_dialogs.gd)
@@ -1052,6 +1053,13 @@ func _ready() -> void:
 		if filesystem != null and filesystem.has_signal("filesystem_changed") \
 				and not filesystem.is_connected("filesystem_changed", _on_translations_maybe_changed):
 			filesystem.connect("filesystem_changed", _on_translations_maybe_changed)
+		# A rename, move or delete in the FileSystem dock reaches the known-sheets record first, and the
+		# record tells the open tabs; a change made outside Godot lands after the rescan, and an open tab
+		# whose file is gone is treated as deleted (a walk over the open tabs only).
+		load("res://addons/eventforge/known_sheets.gd").path_listener = follow_file_event
+		if filesystem != null and filesystem.has_signal("filesystem_changed") \
+				and not filesystem.is_connected("filesystem_changed", follow_file_event.bind("missing")):
+			filesystem.connect("filesystem_changed", follow_file_event.bind("missing"))
 	# Project Settings is the OTHER way the facts behind a row change: adding an input action there
 	# never touches the filesystem scan, so without this the Object bar kept naming yesterday's
 	# actions until a restart.
@@ -1398,6 +1406,16 @@ func _close_tab(index: int) -> void:
 		_persist_session()
 		return
 	_activate_tab(mini(index, _open_tabs.size() - 1))
+
+
+## The FileSystem dock moved, renamed or deleted a file or folder a tab may stand on, or the editor's file
+## list changed: the open tabs follow or let go (dock/path_follower.gd, loaded when first needed).
+## `event` is moved, folder_moved, removed, folder_removed or missing.
+func follow_file_event(event: String, first: String = "", second: String = "") -> int:
+	if _path_follower == null:
+		_path_follower = load("res://addons/eventsheet/editor/dock/path_follower.gd").new()
+		_path_follower.init(self)
+	return int(_path_follower.handle(event, first, second))
 
 
 func _refresh_tab_bar() -> void:

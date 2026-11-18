@@ -11255,3 +11255,10 @@ The Load bindings row of the same pair,同一对中的“加载按键绑定”�
 "The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.",名为 Settings 的全局加载的是 %s，而不是 Game Settings 包，而此脚本使用了该包的行。请给你自己的全局换一个名字，这样这些行才会调用该包。
 made by this sheet,由此工作表创建
 event {n} did not run,事件 {n} 未运行
+The open sheet follows %s to its new place.,已打开的表单会跟随 %s 到新位置。
+%d open sheets follow their files to their new place.,已打开的 %d 个表单会跟随其文件到新位置。
+"The sheet was renamed but its script %s was not. Rename the script too, or scenes keep running the old one.",表单已重命名，但它的脚本 %s 没有。请一并重命名脚本，否则场景仍会运行旧脚本。
+"%s is gone, but your unsaved changes are still here. Save As keeps them in a new file.",%s 已不存在，但你未保存的更改仍在这里。使用“另存为”可把它们保存到新文件。
+"A sheet's file was deleted, so its tab was closed.",某个表单的文件已被删除，因此关闭了它的标签页。
+"%d sheets' files were deleted, so their tabs were closed.",%d 个表单的文件已被删除，因此关闭了它们的标签页。
+Opened the issue form in your browser. Nothing is sent until you press Submit there.,已在浏览器中打开问题表单。在那里点击提交之前不会发送任何内容。

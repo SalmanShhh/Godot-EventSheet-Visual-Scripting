@@ -100,14 +100,19 @@ func use_file_on_disk() -> bool:
 ## Puts the version in the editor - unsaved edits and all - into the file's backup ring, so taking
 ## the file on disk loses nothing for good. Returns the backup's path, "" when it could not be kept.
 func keep_unsaved_in_backups() -> String:
-	var sheet: EventSheetResource = _dock._current_sheet
-	if sheet == null or watched_path().is_empty():
+	return keep_sheet_in_backups(_dock._current_sheet, watched_path())
+
+
+## The same for any open sheet, under the file name its ring is kept by: the unsaved version of `sheet`
+## goes into `ring_path`'s backup ring. "" when it could not be kept.
+func keep_sheet_in_backups(sheet: EventSheetResource, ring_path: String) -> String:
+	if sheet == null or ring_path.is_empty():
 		return ""
 	if sheet.external_source_path.is_empty():
-		return load(RELOAD_FROM_DISK_PATH).keep_unsaved(sheet, watched_path())
+		return load(RELOAD_FROM_DISK_PATH).keep_unsaved(sheet, ring_path)
 	var compiled: Dictionary = load(SHEET_COMPILER_PATH).compile(sheet, UNSAVED_COPY)
 	var kept: String = ""
 	if bool(compiled.get("success", false)):
-		kept = EventSheetBackups.backup_bytes(sheet.external_source_path, FileAccess.get_file_as_bytes(UNSAVED_COPY))
+		kept = EventSheetBackups.backup_bytes(ring_path, FileAccess.get_file_as_bytes(UNSAVED_COPY))
 	DirAccess.remove_absolute(UNSAVED_COPY)
 	return kept

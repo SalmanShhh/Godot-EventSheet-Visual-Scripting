@@ -11255,3 +11255,10 @@ The Load bindings row of the same pair,Die Zeile Bindungen laden desselben Paars
 "The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.","Der globale Name Settings lädt %s und nicht das Game-Settings-Pack, und dieses Skript nutzt die Zeilen des Packs. Gib deinem eigenen Global einen anderen Namen, damit die Zeilen das Pack aufrufen."
 made by this sheet,von diesem Sheet erstellt
 event {n} did not run,Ereignis {n} lief nicht
+The open sheet follows %s to its new place.,Das geöffnete Sheet folgt %s an seinen neuen Ort.
+%d open sheets follow their files to their new place.,%d geöffnete Sheets folgen ihren Dateien an den neuen Ort.
+"The sheet was renamed but its script %s was not. Rename the script too, or scenes keep running the old one.","Das Sheet wurde umbenannt, sein Skript %s aber nicht. Benenne das Skript auch um, sonst führen Szenen weiter das alte aus."
+"%s is gone, but your unsaved changes are still here. Save As keeps them in a new file.","%s ist weg, aber deine ungespeicherten Änderungen sind noch hier. Mit Speichern unter bleiben sie in einer neuen Datei erhalten."
+"A sheet's file was deleted, so its tab was closed.","Die Datei eines Sheets wurde gelöscht, daher wurde sein Tab geschlossen."
+"%d sheets' files were deleted, so their tabs were closed.","Die Dateien von %d Sheets wurden gelöscht, daher wurden ihre Tabs geschlossen."
+Opened the issue form in your browser. Nothing is sent until you press Submit there.,"Das Meldeformular wurde in deinem Browser geöffnet. Erst wenn du dort auf Absenden drückst, wird etwas gesendet."

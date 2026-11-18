@@ -28,6 +28,16 @@ static func backup_dir_for(sheet_path: String) -> String:
 	return "%s/%s" % [BACKUPS_ROOT, sanitized]
 
 
+## A sheet's file was renamed or moved: its backup ring goes with it, so Sheet Backups still lists the
+## older saves under the new name. Nothing moves when the new name already has a ring of its own.
+static func follow(old_path: String, new_path: String) -> void:
+	var from: String = backup_dir_for(old_path)
+	var to: String = backup_dir_for(new_path)
+	if from == to or not DirAccess.dir_exists_absolute(from) or DirAccess.dir_exists_absolute(to):
+		return
+	DirAccess.rename_absolute(ProjectSettings.globalize_path(from), ProjectSettings.globalize_path(to))
+
+
 ## All backups of a file, newest first. Filenames are zero-padded sequence numbers
 ## ("0002.player.tres") so lexicographic order IS age order - timestamps would collide
 ## on same-second saves.

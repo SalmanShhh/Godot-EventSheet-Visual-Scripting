@@ -11255,3 +11255,10 @@ The Load bindings row of the same pair,같은 쌍의 바인딩 불러오기 행
 "The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.","Settings라는 이름의 글로벌이 Game Settings 팩이 아닌 %s을(를) 불러오고 있으며, 이 스크립트는 팩의 행을 사용합니다. 행이 팩을 호출하도록 자신의 글로벌에 다른 이름을 지어 주세요."
 made by this sheet,이 시트가 만듦
 event {n} did not run,이벤트 {n} 실행되지 않음
+The open sheet follows %s to its new place.,열려 있는 시트가 %s의 새 위치를 따라갑니다.
+%d open sheets follow their files to their new place.,열려 있는 시트 %d개가 파일의 새 위치를 따라갑니다.
+"The sheet was renamed but its script %s was not. Rename the script too, or scenes keep running the old one.",시트 이름은 바뀌었지만 스크립트 %s는 바뀌지 않았습니다. 스크립트 이름도 바꾸지 않으면 씬은 이전 스크립트를 계속 사용합니다.
+"%s is gone, but your unsaved changes are still here. Save As keeps them in a new file.",%s이(가) 사라졌지만 저장하지 않은 변경 내용은 여기에 남아 있습니다. 다른 이름으로 저장하면 새 파일에 보관됩니다.
+"A sheet's file was deleted, so its tab was closed.",시트 파일이 삭제되어 해당 탭을 닫았습니다.
+"%d sheets' files were deleted, so their tabs were closed.",시트 %d개의 파일이 삭제되어 해당 탭을 닫았습니다.
+Opened the issue form in your browser. Nothing is sent until you press Submit there.,이슈 양식을 브라우저에서 열었습니다. 거기서 제출을 누르기 전에는 아무것도 전송되지 않습니다.

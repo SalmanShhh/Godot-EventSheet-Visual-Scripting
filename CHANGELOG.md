@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: an open sheet follows its file when the FileSystem dock renames, moves or deletes it
+
+Renaming or moving a sheet's file (or its folder) in Godot's FileSystem dock left the open tab on the old path, so the next Save wrote the OLD file back beside the renamed one, with the scene using the renamed one and the edits going to a file nothing used; after a folder rename Save could not write at all. The tab, its header, the saved session, the recently-closed list, the sheet's own file link and its backup ring now follow to the new path, with the unsaved edits and the undo history intact. Deleting the file closes a tab with nothing unsaved, as Godot's script editor does; a tab with unsaved edits stays open, a copy of the edits goes into Sheet Backups, and the tab lets go of the dead path so Save asks where to write. A file removed or renamed outside Godot is handled the same way once the editor rescans. Only the open tabs are walked, so a folder move carrying many open sheets is one pass.
+
 ### Fixed: a wrapped line of a note takes its full height
 
 A note line that wrapped drew its last words squeezed between its own first line and the next line, touching both. The wrapped lines were counted by dividing the wrapped block's pixel height by the font's nominal line height, which rounds a second line away when the shaped lines are shorter than that, and they were drawn at the shaped line's own spacing instead of a full line each. The count now comes from the line breaks the text server finds (the same ones the painter draws), every wrapped line is drawn a full line below the one before it, a note's later lines are wrapped at their own wider room rather than the first line's, and a door's underline sits on the line it is really on. Long action and condition cells that wrap read the same way. Pinned in `wrapped_text_spacing_test`.

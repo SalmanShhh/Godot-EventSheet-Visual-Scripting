@@ -33,6 +33,11 @@ const METADATA_FILE: String = "res://.godot/editor/project_metadata.cfg"
 ## door will cost: the door took 97 seconds over a project of 2,008 scripts in the editor.
 const SECONDS_PER_SCRIPT: float = 0.05
 
+## Told when the FileSystem dock moves, renames or deletes a path, through the one
+## funnel the record follows: the sheet editor sets this so its open tabs follow the same event. It receives the
+## kind (moved, folder_moved, removed, folder_removed), then the path or paths. Empty when no editor is open.
+static var path_listener: Callable = Callable()
+
 ## Headless twin of the editor's metadata, so every rule here is testable without an editor.
 static var _memory: Array = []
 static var _memory_seeded: bool = false
@@ -86,6 +91,7 @@ static func note_saved(path: String) -> void:
 
 ## A file moved or renamed: the record follows it.
 static func note_moved(old_path: String, new_path: String) -> void:
+	_tell("moved", old_path, new_path)
 	var from: String = old_path.simplify_path()
 	var paths: Array = _read()
 	if not paths.has(from):
@@ -99,6 +105,7 @@ static func note_moved(old_path: String, new_path: String) -> void:
 
 ## A whole folder moved or renamed: every recorded path under it follows.
 static func note_folder_moved(old_folder: String, new_folder: String) -> void:
+	_tell("folder_moved", old_folder, new_folder)
 	var from: String = old_folder.simplify_path().trim_suffix("/") + "/"
 	var to: String = new_folder.simplify_path().trim_suffix("/") + "/"
 	var paths: Array = _read()
@@ -113,6 +120,7 @@ static func note_folder_moved(old_folder: String, new_folder: String) -> void:
 
 
 static func note_removed(path: String) -> void:
+	_tell("removed", path)
 	var paths: Array = _read()
 	if paths.has(path.simplify_path()):
 		paths.erase(path.simplify_path())
@@ -120,6 +128,7 @@ static func note_removed(path: String) -> void:
 
 
 static func note_folder_removed(folder: String) -> void:
+	_tell("folder_removed", folder)
 	var prefix: String = folder.simplify_path().trim_suffix("/") + "/"
 	var kept: Array = []
 	var changed: bool = false
@@ -130,6 +139,11 @@ static func note_folder_removed(folder: String) -> void:
 			kept.append(path)
 	if changed:
 		_write(kept)
+
+
+static func _tell(kind: String, first: String, second: String = "") -> void:
+	if path_listener.is_valid():
+		path_listener.call(kind, first, second)
 
 
 ## Drops every recorded path whose file is no longer there. Returns how many it dropped.

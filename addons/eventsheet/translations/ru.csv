@@ -11255,3 +11255,10 @@ The Load bindings row of the same pair,Строка «Загрузить при�
 "The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.","Глобальная переменная Settings загружает %s, а не пакет Game Settings, и этот скрипт использует строки пакета. Дайте своей глобальной другое имя, чтобы строки вызывали пакет."
 made by this sheet,создано этим листом
 event {n} did not run,событие {n} не выполнилось
+The open sheet follows %s to its new place.,Открытый лист следует за файлом %s на новое место.
+%d open sheets follow their files to their new place.,Открытые листы (%d) следуют за своими файлами на новое место.
+"The sheet was renamed but its script %s was not. Rename the script too, or scenes keep running the old one.","Лист переименован, а его скрипт %s нет. Переименуйте и скрипт, иначе сцены продолжат запускать старый."
+"%s is gone, but your unsaved changes are still here. Save As keeps them in a new file.","Файла %s больше нет, но ваши несохранённые изменения остались здесь. «Сохранить как» сохранит их в новом файле."
+"A sheet's file was deleted, so its tab was closed.","Файл листа удалён, поэтому его вкладка закрыта."
+"%d sheets' files were deleted, so their tabs were closed.","Файлы листов (%d) удалены, поэтому их вкладки закрыты."
+Opened the issue form in your browser. Nothing is sent until you press Submit there.,"Форма обращения открыта в браузере. Ничего не отправляется, пока вы не нажмёте «Отправить» там."
