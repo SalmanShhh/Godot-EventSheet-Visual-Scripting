@@ -26,6 +26,11 @@ static func measure(viewport: Control) -> Dictionary:
 	var font: Font = viewport._get_font()
 	var font_size: int = viewport._get_font_size()
 	var measured: Dictionary = {}
+	# A trigger line leads with its arrow, which moves the object name right by the arrow's advance while the
+	# column's far edge stays where every other row has it. That much of the column is not the name's, so a
+	# trigger's name is measured with it. (Only the look that nests by lines draws the arrow this way.)
+	var event_style: EventSheetEventStyle = viewport._get_event_style()
+	var trigger_lead: float = EventSheetViewportRowMetrics.STRIP_MARK_ADVANCE if event_style != null and event_style.sub_event_strips else 0.0
 	for entry: Dictionary in viewport._flat_rows:
 		var row_data: EventRowData = entry.get("row")
 		if row_data == null:
@@ -42,5 +47,6 @@ static func measure(viewport: Control) -> Dictionary:
 			var key: String = "%s|%d" % [label, drawn_size]
 			if not measured.has(key):
 				measured[key] = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1.0, drawn_size).x
-			widest[lane] = maxf(float(widest.get(lane, 0.0)), float(measured[key]))
+			var lead: float = trigger_lead if str(metadata.get("kind", "")) == "trigger" else 0.0
+			widest[lane] = maxf(float(widest.get(lane, 0.0)), float(measured[key]) + lead)
 	return widest

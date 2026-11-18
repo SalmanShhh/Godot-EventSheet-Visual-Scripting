@@ -2602,8 +2602,9 @@ static func check_unknown_input_actions(_sheet_paths: PackedStringArray, finding
 		if source.is_empty():
 			continue
 		var missing: PackedStringArray = PackedStringArray()
+		var made: PackedStringArray = EventSheetInputMapFacts.declared_names_in(source)
 		for action_name: String in EventSheetInputMapFacts.action_names_in(source):
-			if not EventSheetInputMapFacts.has_action(action_name) \
+			if not EventSheetInputMapFacts.has_action(action_name) and not made.has(action_name) \
 					and not ProjectSettings.has_setting("input/%s" % action_name) \
 					and not missing.has(action_name):
 				missing.append(action_name)

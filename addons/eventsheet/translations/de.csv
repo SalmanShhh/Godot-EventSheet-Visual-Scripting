@@ -11253,3 +11253,4 @@ Which key or button does each action in the Input Map.,Welche Taste oder welcher
 "Keyboard > Save bindings, or Settings > Save Bindings",Tastatur > Bindungen speichern oder Settings > Save Bindings
 The Load bindings row of the same pair,Die Zeile Bindungen laden desselben Paars
 "The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.","Der globale Name Settings lädt %s und nicht das Game-Settings-Pack, und dieses Skript nutzt die Zeilen des Packs. Gib deinem eigenen Global einen anderen Namen, damit die Zeilen das Pack aufrufen."
+made by this sheet,von diesem Sheet erstellt

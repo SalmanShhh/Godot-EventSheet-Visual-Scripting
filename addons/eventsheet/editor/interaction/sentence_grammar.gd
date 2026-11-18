@@ -4174,6 +4174,11 @@ static func call_reading(text: String, context: Dictionary, parameter_names: Pac
 		return {}
 	var method: String = str(call.get("method", ""))
 	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	# Arguments left as empty text at the END of the call are optional ones the line spelled out and
+	# gave nothing (`declare_setting("volume", 80, "percent", "", "", "")`); a run of `""` chips says
+	# nothing a reader can use. The first argument always stays, so a call is never read as having none.
+	while arguments.size() > 1 and arguments[arguments.size() - 1].strip_edges() == "\"\"":
+		arguments.remove_at(arguments.size() - 1)
 	var verb: String = verb_words(method)
 	var segments: Array = [{"text": verb, "tone": "name"}]
 	# A `set_x(v)` verb already ends in "to", so its one value follows the word rather than wearing a

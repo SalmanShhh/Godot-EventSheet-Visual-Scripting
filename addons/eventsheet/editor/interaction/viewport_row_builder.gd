@@ -3555,6 +3555,8 @@ func _build_input_actions_bar_rows(sheet: EventSheetResource) -> Array[EventRowD
 func _input_action_detail(facts: Dictionary) -> String:
 	if not bool(facts.get("known", false)):
 		return ""
+	if bool(facts.get("declared", false)):
+		return EventSheetL10n.translate("made by this sheet")
 	var bindings: PackedStringArray = facts.get("bindings", PackedStringArray())
 	if bindings.is_empty():
 		return EventSheetL10n.translate("unbound")
@@ -18400,11 +18402,80 @@ func _is_state_header_condition(condition: ACECondition) -> bool:
 	return not str(params_dict.get("state_name", "")).strip_edges().is_empty()
 
 
+## An Expression Is True condition whose whole expression is one call on a node a pack is mounted as
+## (`$HudKit.button_is("BackButton")`), as {"condition": the pack's own condition row filled with the call's
+## values, "owner": the node's name}, or {} for every other expression. Only a method the pack publishes as a
+## CONDITION counts; the call stays what the file wrote, nothing here touches the stored row.
+func _pack_question_of(condition: ACECondition) -> Dictionary:
+	if condition == null or not condition.enabled or condition.ace_id != "ExpressionIsTrue" \
+			or not (condition.provider_id.is_empty() or condition.provider_id == "Core"):
+		return {}
+	var held: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
+	var call: Dictionary = EventSheetSentence.call_parts(str(held.get("expr", "")).strip_edges())
+	if call.is_empty():
+		return {}
+	var target: String = str(call.get("target", "")).strip_edges()
+	if target.is_empty() or target == "self":
+		return {}
+	var owner: String = EventSheetSentence.object_of_reference(target)
+	if EventSheetViewportReadingRows.behaviour_pack_of(owner, _reading_class_map()).is_empty():
+		return {}
+	var provider: String = str(EventSheetViewportReadingRows._pack_classes.get(owner, ""))
+	var ace_id: String = "method:%s" % str(call.get("method", ""))
+	var definition: ACEDefinition = _viewport._find_definition(provider, ace_id)
+	# A canvas with no registry of its own (a reading tool, a test) still reads a pack's question: the pack's
+	# script is asked once, and what it publishes is remembered for the session.
+	if definition == null:
+		definition = _reflected_pack_definition(provider, ace_id)
+	if definition == null or definition.ace_type != ACEDefinition.ACEType.CONDITION:
+		return {}
+	var arguments: PackedStringArray = call.get("args", PackedStringArray())
+	var values: Dictionary = {"target": target}
+	var argument_at: int = 0
+	for parameter: Variant in definition.parameters:
+		var parameter_id: String = str((parameter as Dictionary).get("id", ""))
+		# The "On node" slot a node-scoped verb carries is the call's receiver, not one of its arguments.
+		if parameter_id == "target" or parameter_id.is_empty():
+			continue
+		if argument_at < arguments.size():
+			values[parameter_id] = arguments[argument_at].strip_edges()
+		argument_at += 1
+	var pack_condition: ACECondition = ACECondition.new()
+	pack_condition.provider_id = provider
+	pack_condition.ace_id = definition.id
+	pack_condition.params = values
+	pack_condition.negated = condition.negated
+	return {"condition": pack_condition, "owner": owner, "definition": definition}
+
+
+## What a pack's script publishes, by id, reflected the first time it is asked for and kept.
+static var _reflected_pack_definitions: Dictionary = {}
+
+
+func _reflected_pack_definition(provider: String, ace_id: String) -> ACEDefinition:
+	if not _reflected_pack_definitions.has(provider):
+		var by_id: Dictionary = {}
+		for definition: ACEDefinition in load("res://addons/eventsheet/ace/pack_reading_check.gd").definitions_for_script(EventSheetDerivedCalls.script_of_class(provider)):
+			by_id[definition.id] = definition
+		_reflected_pack_definitions[provider] = by_id
+	return (_reflected_pack_definitions[provider] as Dictionary).get(ace_id, null) as ACEDefinition
+
+
 func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	# An inverted COMPARISON reads as its opposite - `hp > 0`, which is also what it compiles to
 	# now - so the row says the question rather than a question wrapped in a denial. Done on a COPY
 	# before anything downstream sees the params; the stored condition keeps its own spelling.
 	condition = _comparison_flip_of(condition)
+	# A question that is one call on a pack's node (`$Settings.changed_setting_is("master_volume")`) is the
+	# pack's own condition, whichever way the file reached it - picked, or lifted from a script that
+	# already wrote the call - so it reads as that row: the node in the object column, the pack's words.
+	var pack_question: Dictionary = _pack_question_of(condition)
+	var pack_owner: String = ""
+	var pack_definition: ACEDefinition = null
+	if not pack_question.is_empty():
+		condition = pack_question["condition"] as ACECondition
+		pack_owner = str(pack_question["owner"])
+		pack_definition = pack_question["definition"] as ACEDefinition
 	var params_dict: Dictionary = condition.params if not condition.params.is_empty() else condition.parameters
 	# An Is In State condition reads as a state header - "State: patrol", with the ◆ diamond
 	# rendered as a BADGE by the span builder (the same column trigger icons use, never inline
@@ -18430,6 +18501,11 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	if global_read.is_empty():
 		global_read = EventSheetPickScope.read_through(params_dict, _typed_picked_words())
 	var global_owner: String = str(global_read.get("object", ""))
+	if global_owner.is_empty():
+		global_owner = pack_owner
+	# The pack's own picture leads its question, as it leads the pack's verbs on the other lane.
+	if pack_definition != null:
+		_pending_pack_icon = EventSheetViewportReadingRows.behaviour_pack_icon(pack_owner, _reading_class_map())
 	# A row about a list belongs to the list: "undo_stack | Pop back of undo_stack into last".
 	if global_owner.is_empty():
 		global_owner = _array_owner_label(condition.provider_id, condition.ace_id, params_dict)
@@ -18475,6 +18551,8 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 		return "%s %s" % [EventSheetL10n.translate("Current state is"),
 			"\"%s\"" % state_value if quoted else state_value]
 	var generated_definition: ACEDefinition = _viewport._find_definition(condition.provider_id, condition.ace_id)
+	if generated_definition == null:
+		generated_definition = pack_definition
 	var descriptor: ACEDescriptor = null if generated_definition != null else ACERegistry.find_descriptor(condition.provider_id, condition.ace_id)
 	if generated_definition == null and descriptor == null:
 		# THE LAST STORED READING FIRST. A row whose verb the installed vocabulary no longer has
@@ -18490,7 +18568,17 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 		# "method:can_afford_entry" beside actions that read "Buy" - the id leaking into the one
 		# lane a beginner reads first.
 		return _reflected_member_sentence(condition.ace_id, read_params)
-	return _format_display_translated(generated_definition, descriptor, read_params)
+	var shown: String = _format_display_translated(generated_definition, descriptor, read_params)
+	# A pack question whose own sentence names no value ("Button Is") says the values it was asked about,
+	# which a picked row of the same verb shows as chips beside it.
+	if not pack_owner.is_empty() and generated_definition != null and not str(generated_definition.metadata.get("display_template", "")).contains("{"):
+		shown = shown.strip_edges()
+		for parameter: Variant in generated_definition.parameters:
+			var parameter_id: String = str((parameter as Dictionary).get("id", ""))
+			var value_text: String = str(read_params.get(parameter_id, "")).strip_edges()
+			if parameter_id != "target" and not value_text.is_empty():
+				shown += "  " + value_text
+	return shown
 
 
 ## One row's stored reading, filled with its own values - what a row whose verb the installed

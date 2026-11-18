@@ -198,7 +198,7 @@ static func findings(sheet: EventSheetResource, script_path: String = "") -> Arr
 	_wrong_node_types(rows, scene, walk, found)
 	_missing_paths(rows, walk["variable_rows"], found)
 	_empty_groups(rows, sheet, own_path, remembered, found)
-	_missing_actions(rows, walk, found)
+	_missing_actions(rows, walk, found, sheet)
 	_missing_nodes(rows, scene, remembered, found)
 	_signal_counts(sheet, walk, rows, found)
 	_endless_whiles(rows, walk, found)
@@ -1022,11 +1022,13 @@ static func closest_name(wanted: String, candidates: PackedStringArray) -> Strin
 ## A control a row names that the Input Map does not have. A warning: Godot prints "The InputMap action
 ## ... doesn't exist" and the control never fires. The action is read from the row's line and from any
 ## input-action parameter of the row, trigger included.
-static func _missing_actions(rows: Array[Dictionary], walk: Dictionary, found: Array[Dictionary]) -> void:
+static func _missing_actions(rows: Array[Dictionary], walk: Dictionary, found: Array[Dictionary], sheet: EventSheetResource = null) -> void:
 	var seen: Dictionary = {}
 	var candidates: Array[Dictionary] = []
 	var added_here: Dictionary = {}
 	var everything: String = str(walk.get("text", "")) + "\n" + "\n".join(walk["verbatim"] as Array)
+	for made: String in EventSheetInputMapFacts.declared_names_in(everything):
+		added_here[made] = true
 	if everything.contains("add_action"):
 		if _added_action_regex == null:
 			_added_action_regex = RegEx.create_from_string("\\badd_action\\(\\s*&?\"(?<name>[^\"]+)\"")
@@ -1052,9 +1054,17 @@ static func _missing_actions(rows: Array[Dictionary], walk: Dictionary, found: A
 		for named: String in _input_parameters(trigger_event.trigger_provider_id, trigger_event.trigger_id, trigger_event.trigger_params):
 			candidates.append({"context": carried, "action": named})
 	var known: PackedStringArray = EventSheetInputMapFacts.project_action_names()
+	# What the sheet makes itself is only worked out once a control turns up missing, because it takes a compile.
+	var made_here: PackedStringArray = PackedStringArray()
+	var made_known: bool = false
 	for entry: Dictionary in candidates:
 		var action_name: String = str(entry["action"])
 		if EventSheetInputMapFacts.has_action(action_name):
+			continue
+		if not made_known:
+			made_here = EventSheetInputMapFacts.declared_names_of(sheet)
+			made_known = true
+		if made_here.has(action_name):
 			continue
 		var context: Dictionary = entry["context"]
 		var event_row: EventRow = context["event"] as EventRow

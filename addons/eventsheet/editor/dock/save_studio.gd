@@ -910,19 +910,35 @@ func _file_card(card: Array) -> Control:
 	if card.size() > 7:
 		head.add_child(EventSheetPopupUI.metadata_badge(str(card[7])))
 	box.add_child(head)
-	box.add_child(_muted(str(card[2]), EventSheetPalette.scaled_f(150.0)))
+	box.add_child(_muted(keep_paths_whole(str(card[2])), EventSheetPalette.scaled_f(150.0)))
 	box.add_child(EventSheetPopupUI.code_card(str(card[3]), EventSheetPalette.scaled_f(150.0)))
 	var facts: GridContainer = GridContainer.new()
 	facts.columns = 2
 	var names: Array = [EventSheetL10n.translate("Written by"), EventSheetL10n.translate("Read by"), EventSheetL10n.translate("New game")]
 	for index: int in range(3):
 		facts.add_child(_label(str(names[index]), EventSheetPopupUI.muted_text_color()))
-		var fact: Label = _muted(str(card[4 + index]), EventSheetPalette.scaled_f(80.0))
+		var fact: Label = _muted(keep_paths_whole(str(card[4 + index])), EventSheetPalette.scaled_f(80.0))
 		fact.add_theme_color_override("font_color", EventSheetPopupUI.text_color())
 		fact.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		facts.add_child(fact)
 	box.add_child(facts)
 	return _card(box)
+
+
+## A file path in running text, kept on one line. A wrapping label breaks after a slash, which split
+## `user://settings.cfg` into `user://` and `settings.cfg` on two lines; a word joiner after each slash and
+## hyphen of a path (`user://` and `res://` ones) tells the line breaker there is nowhere to break inside it.
+## The joiner draws nothing. Only the label's text carries it - the card's data keeps the plain path.
+static func keep_paths_whole(text: String) -> String:
+	var paths: RegEx = RegEx.create_from_string("(?:user|res)://[^\\s;,)\\]]+")
+	var joiner: String = String.chr(0x2060)
+	var out: String = ""
+	var at: int = 0
+	for found: RegExMatch in paths.search_all(text):
+		out += text.substr(at, found.get_start() - at)
+		out += found.get_string().replace("/", "/" + joiner).replace("-", "-" + joiner)
+		at = found.get_end()
+	return out + text.substr(at)
 
 
 func _use_card(use: Array) -> Control:

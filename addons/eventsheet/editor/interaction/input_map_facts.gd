@@ -265,11 +265,24 @@ static func binding_object(event: InputEvent) -> String:
 static func actions_named_by(sheet: EventSheetResource) -> Array[Dictionary]:
 	var named: Array[Dictionary] = []
 	var seen: Dictionary = {}
-	for action_name: String in action_names_in(EventSheetViewportReadingRows.sheet_code_text(sheet)):
+	var code_text: String = EventSheetViewportReadingRows.sheet_code_text(sheet)
+	var made: PackedStringArray = PackedStringArray()
+	var made_known: bool = false
+	for action_name: String in action_names_in(code_text):
 		if seen.has(action_name):
 			continue
 		seen[action_name] = true
 		var facts: Dictionary = action(action_name)
+		if facts.is_empty() and not made_known:
+			made = declared_names_of(sheet)
+			made_known = true
+		if facts.is_empty() and made.has(action_name):
+			named.append({
+				"name": action_name, "known": true, "declared": true, "deadzone": 0.0,
+				"bindings": PackedStringArray(), "devices": PackedStringArray(),
+				"object": OBJECT_KEYBOARD, "gamepad": gamepad_number_of(action_name),
+			})
+			continue
 		if facts.is_empty():
 			named.append({
 				"name": action_name, "known": false, "deadzone": 0.0,
@@ -310,6 +323,74 @@ static func findings(sheet: EventSheetResource) -> Array[Dictionary]:
 			"message": EventSheetL10n.translate("\"%s\" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling.") % action_name,
 		})
 	return found
+
+
+## The controls a block of GDScript makes itself, so a name it asks for later is not a typo. Three
+## spellings count: `InputMap.add_action("x")`, `ProjectSettings.set_setting("input/x", ...)`, and a
+## call such as `define_control("x", ...)` of a function in the same code whose own body adds the
+## control it is given (`InputMap.add_action(name)`, or `set_setting("input/" + name, ...)`). The
+## project's Input Map is only the controls made before the game starts; a game that makes its own as
+## it starts is not wrong to ask for them.
+static func declared_names_in(code: String) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	if not (code.contains("add_action") or code.contains("input/")):
+		return found
+	if _declared_regexes.is_empty():
+		_declared_regexes = [
+			RegEx.create_from_string("\\badd_action\\(\\s*&?\"([^\"]+)\""),
+			RegEx.create_from_string("\"input/([^\"/%]+)\""),
+			RegEx.create_from_string("^\\s*(?:static\\s+)?func\\s+(\\w+)\\s*\\(([^)]*)\\)"),
+		]
+	for direct: RegExMatch in (_declared_regexes[0] as RegEx).search_all(code):
+		if not found.has(direct.get_string(1)):
+			found.append(direct.get_string(1))
+	for setting: RegExMatch in (_declared_regexes[1] as RegEx).search_all(code):
+		if not found.has(setting.get_string(1)):
+			found.append(setting.get_string(1))
+	# The functions whose body makes the control they are handed: name -> index of that parameter.
+	var makers: Dictionary = {}
+	var current: String = ""
+	var params: PackedStringArray = PackedStringArray()
+	var body: String = ""
+	var lines: PackedStringArray = code.split("\n")
+	lines.append("func _end_()")
+	for line: String in lines:
+		var header: RegExMatch = (_declared_regexes[2] as RegEx).search(line)
+		if header == null:
+			body += line + "\n"
+			continue
+		if not current.is_empty():
+			for index: int in range(params.size()):
+				var param: String = params[index].strip_edges().get_slice(":", 0).get_slice("=", 0).strip_edges()
+				if param.is_empty():
+					continue
+				if body.contains("add_action(" + param) or body.contains("\"input/\" + " + param) \
+						or body.contains("\"input/%s\" % " + param) or body.contains("\"input/%s\" % [" + param):
+					makers[current] = index
+					break
+		current = header.get_string(1)
+		params = header.get_string(2).split(",")
+		body = ""
+	for maker: String in makers:
+		var call: RegEx = RegEx.create_from_string("\\b%s\\((?:[^,()]*,){%d}\\s*&?\"([^\"]+)\"" % [maker, int(makers[maker])])
+		for hit: RegExMatch in call.search_all(code):
+			if not found.has(hit.get_string(1)):
+				found.append(hit.get_string(1))
+	return found
+
+
+static var _declared_regexes: Array = []
+
+
+## Every control one sheet makes itself, read from the code it writes (so a function that makes the control it is
+## handed is known by its calls). It compiles the sheet, so a caller asks it only once a control it reads is
+## missing from the Input Map - the one case that has a use for the answer.
+static func declared_names_of(sheet: EventSheetResource) -> PackedStringArray:
+	if sheet == null:
+		return PackedStringArray()
+	# The rows of a function keep the values of a call and lose the call itself, so the one place that can say
+	# what a function does with its parameter is the code the sheet writes.
+	return declared_names_in(str(EventSheetCompiler.echo(sheet).get("output", "")))
 
 
 ## The action names a block of GDScript asks for, in the order they appear. A name is only taken from
