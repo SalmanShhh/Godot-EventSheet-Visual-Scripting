@@ -16,8 +16,16 @@ const STEPS := 40
 
 ## One fold clicked and clicked back, by reflow. A whole rebuild of this sheet is seconds.
 const FOLD_PAIR_BUDGET_MS: float = 130.0
-## One pointer crossing between two events under a look that shows add lines on hover.
-const HOVER_CROSS_BUDGET_MS: float = 2.5
+## One pointer crossing between two events under a look that shows add lines on hover, as a share of what
+## a fixed piece of work (see `_reference_ms`) takes in this process right now. A crossing costs more as the
+## sheet grows (the Juice pack went from about 800 rows to over a thousand and crossed the 2.5 ms this
+## once was, on a machine with a suite running beside it), and a fixed number of milliseconds cannot tell a
+## slower machine from slower code; a share of work timed beside it can. Measured: 0.05 to 0.10 of the
+## reference on a machine busy with other builds, so 0.15 holds a crossing that takes half as long again and still
+## fails one that took three times as long. What a crossing may TOUCH is pinned apart, by counts.
+const HOVER_CROSS_REFERENCE_SHARE: float = 0.15
+## How many dictionary entries the reference work fills and reads back.
+const REFERENCE_ENTRIES: int = 100000
 ## Laying out the rows on screen again after the drop target moved one row.
 const DRAG_MOVE_BUDGET_MS: float = 3.0
 ## One fold clicked and clicked back on a sheet of eleven hundred rows (a hundred groups of ten notes), by
@@ -196,10 +204,38 @@ static func _hover_cross_cost(sheet: EventSheetResource) -> bool:
 		view.free()
 		return SUPPORT.check(NAME, "the sheet has events to cross", false, true)
 	view.settle_all_row_heights()
+	var builds: int = view.row_builds()
+	var laid_out: int = view._layout_cache.size()
 	var started: int = Time.get_ticks_usec()
 	for step: int in range(STEPS):
 		view._set_hover_state(events[step], 0)
 	var each_ms: float = float(Time.get_ticks_usec() - started) / 1000.0 / float(STEPS)
-	print("%s: a pointer crossing between events takes %.2f ms" % [NAME, each_ms])
+	var built: int = view.row_builds() - builds
+	var grown: int = view._layout_cache.size() - laid_out
+	var reference: float = _reference_ms()
+	var budget: float = HOVER_CROSS_REFERENCE_SHARE * reference
+	print("%s: a pointer crossing between events takes %.2f ms (reference work %.1f ms, budget %.2f ms)" % [NAME, each_ms, reference, budget])
 	view.free()
-	return SUPPORT.check(NAME, "a hover crossing is inside its budget", each_ms < HOVER_CROSS_BUDGET_MS, true)
+	return SUPPORT.pins(NAME, [
+		["a hover crossing builds no rows", built, 0],
+		["a hover crossing lays out at most the two rows it moved", grown <= 2 * STEPS, true],
+		["a hover crossing is inside its budget", each_ms < budget, true],
+	])
+
+
+## A fixed piece of work, timed here and now (the best of three, so one slow moment does not set it): how
+## long this process takes to fill a dictionary and read it back. A clock budget is a share of it.
+static func _reference_ms() -> float:
+	var best: float = 1e9
+	for attempt: int in range(3):
+		var started: int = Time.get_ticks_usec()
+		var table: Dictionary = {}
+		for index: int in range(REFERENCE_ENTRIES):
+			table[index] = index * 2
+		var total: int = 0
+		for index: int in range(REFERENCE_ENTRIES):
+			total += int(table[index])
+		best = minf(best, float(Time.get_ticks_usec() - started) / 1000.0)
+		if total < 0:
+			return 0.0
+	return best
