@@ -849,6 +849,9 @@ static func path_exists(path: String) -> bool:
 ## The file in the same folder whose name is closest to the missing one, or "".
 static func closest_file(path: String) -> String:
 	var folder: String = path.get_base_dir()
+	# A folder that is not there has no closest file, and listing it would print an engine error into Output.
+	if not DirAccess.dir_exists_absolute(folder):
+		return ""
 	var best: String = ""
 	var best_score: float = 0.0
 	for file_name: String in DirAccess.get_files_at(folder):
