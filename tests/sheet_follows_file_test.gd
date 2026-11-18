@@ -37,6 +37,7 @@ static func run() -> bool:
 	passed = _resource_sheet_follows() and passed
 	passed = _backup_ring_follows() and passed
 	passed = _known_sheets_funnel_tells_the_dock() and passed
+	passed = _save_after_the_file_vanished() and passed
 	return passed
 
 
@@ -271,6 +272,28 @@ static func _known_sheets_funnel_tells_the_dock() -> bool:
 	var passed: bool = SUPPORT.pins(TEST_NAME, [
 		["the funnel the plugin calls retargets the open tab", sheet.external_source_path, new_path],
 		["and the tab list follows", _paths(editor), [new_path]],
+	])
+	editor.free()
+	return passed
+
+
+## Save on a tab whose file vanished before any rescan said so writes nothing: the old file is never
+## brought back, and the work stays open without a path.
+static func _save_after_the_file_vanished() -> bool:
+	var editor: EventSheetEditor = _editor()
+	var path: String = SUPPORT.own_path("follow_save/vanished.gd")
+	var sheet: EventSheetResource = _open_script_sheet(editor, path, true)
+	editor._external_mtime = FileAccess.get_modified_time(path)
+	DirAccess.remove_absolute(path)
+	editor._sheet_io._on_save_requested()
+	var came_back: bool = FileAccess.file_exists(path)
+	if came_back:
+		DirAccess.remove_absolute(path)
+	_drop_ring(path)
+	var passed: bool = SUPPORT.pins(TEST_NAME, [
+		["Save does not bring a vanished file back", came_back, false],
+		["the sheet let go of the dead path", sheet.external_source_path, ""],
+		["the unsaved edit is still there", sheet.events.size(), 1],
 	])
 	editor.free()
 	return passed

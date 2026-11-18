@@ -505,6 +505,16 @@ func _on_save_requested(after_save_as: Callable = Callable()) -> void:
 	if _dock._current_sheet == null:
 		_dock._set_status("Nothing to save.", true)
 		return
+	# The file this tab stands on was there when it was opened or last saved and is gone now - deleted or
+	# renamed outside the editor, before the rescan said so. Saving would write the old file back, so the
+	# tabs let go of the dead path first (the work stays open and says so) and nothing is written.
+	var bound_file: String = _dock._current_sheet.external_source_path
+	if bound_file.is_empty():
+		bound_file = _dock._current_sheet_path
+	var bound_is_file: bool = (bound_file.begins_with("res://") or bound_file.begins_with("user://")) and not bound_file.contains("::")
+	if _dock._external_mtime != 0 and bound_is_file and not FileAccess.file_exists(bound_file) \
+			and int(_dock.follow_file_event("missing")) > 0:
+		return
 	# Read-only preview never writes back over the source file. The user opts in with
 	# "Edit Events" (then this becomes a normal GDScript-backed save), or forks via Save As.
 	# A scene read as one sheet is many files at once, and the .tscn is not one of them: there is
