@@ -11268,6 +11268,6 @@ the Load bindings row of the same pair,같은 쌍의 바인딩 불러오기 행
 "The slot card, which the Save System keeps for the load menu:","슬롯 카드 - 불러오기 메뉴를 위해 Save System이 보관합니다:"
 "Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.","키보드 ▸ 바인딩 저장은 %s에 쓰고, Settings ▸ Save Bindings는 옵션 옆의 %s 안 [%s]에 보관합니다."
 "Keyboard ▸ Save bindings, or Settings ▸ Save Bindings","키보드 ▸ 바인딩 저장, 또는 Settings ▸ Save Bindings"
-Saved %s. %s,
-"%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.",
-"%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.",
+"Saved %s. %s","%s을(를) 저장했습니다. %s"
+"%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.","%s을(를) 쓰지 않았습니다. 이 시트가 만든 것이 아니라 직접 작성한 스크립트이며, 쓰면 작성한 코드가 대체됩니다. 두 이름이 달라지도록 시트나 그 스크립트의 이름을 바꾼 다음 다시 시도하세요."
+"%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.","%s을(를) 쓰지 않았습니다. 시트 %s의 것입니다. 두 이름이 달라지도록 두 시트 중 하나의 이름을 바꾼 다음 다시 시도하세요."

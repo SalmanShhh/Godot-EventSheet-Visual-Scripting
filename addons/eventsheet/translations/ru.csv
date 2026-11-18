@@ -11268,6 +11268,6 @@ the Load bindings row of the same pair,строка «Загрузить при�
 "The slot card, which the Save System keeps for the load menu:","Карточка слота, которую Save System хранит для меню загрузки:"
 "Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.","Клавиатура ▸ Сохранить привязки пишет %s; Settings ▸ Save Bindings хранит их в %s в разделе [%s], рядом с настройками."
 "Keyboard ▸ Save bindings, or Settings ▸ Save Bindings",Клавиатура ▸ Сохранить привязки или Settings ▸ Save Bindings
-Saved %s. %s,
-"%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.",
-"%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.",
+"Saved %s. %s","%s сохранён. %s"
+"%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.","%s не записан: это ваш собственный скрипт, а не созданный этим листом, и запись заменила бы ваш код. Переименуйте лист или этот скрипт, чтобы имена различались, и повторите попытку."
+"%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.","%s не записан: он принадлежит листу %s. Переименуйте один из двух листов, чтобы имена различались, и повторите попытку."

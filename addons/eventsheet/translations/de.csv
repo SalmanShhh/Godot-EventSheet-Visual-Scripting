@@ -11268,6 +11268,6 @@ the Load bindings row of the same pair,die Zeile Bindungen laden desselben Paars
 "The slot card, which the Save System keeps for the load menu:","Die Slot-Karte, die das Save System für das Lademenü führt:"
 "Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.","Tastatur ▸ Bindungen speichern schreibt %s; Settings ▸ Save Bindings legt sie in %s unter [%s] ab, neben den Optionen."
 "Keyboard ▸ Save bindings, or Settings ▸ Save Bindings",Tastatur ▸ Bindungen speichern oder Settings ▸ Save Bindings
-Saved %s. %s,
-"%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.",
-"%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.",
+"Saved %s. %s","%s gespeichert. %s"
+"%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.","%s wurde nicht geschrieben: Es ist ein eigenes Skript von dir, nicht eines, das dieses Blatt erzeugt hat, und das Schreiben würde deinen Code ersetzen. Benenne das Blatt oder das Skript um, damit die beiden Namen verschieden sind, und versuche es dann erneut."
+"%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.","%s wurde nicht geschrieben: Es gehört zum Blatt %s. Benenne eines der beiden Blätter um, damit die Namen verschieden sind, und versuche es dann erneut."

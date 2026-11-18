@@ -11268,6 +11268,6 @@ the Load bindings row of the same pair,同一对中的“加载按键绑定”�
 "The slot card, which the Save System keeps for the load menu:","存档位卡片，由 Save System 为读取菜单保存："
 "Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.",键盘 ▸ 保存按键绑定 会写入 %s；Settings ▸ Save Bindings 则把它们保存在 %s 的 [%s] 段中，与选项放在一起。
 "Keyboard ▸ Save bindings, or Settings ▸ Save Bindings",键盘 ▸ 保存按键绑定，或 Settings ▸ Save Bindings
-Saved %s. %s,
-"%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.",
-"%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.",
+"Saved %s. %s","已保存 %s。%s"
+"%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.","未写入 %s：它是你自己的脚本，不是这个事件表生成的，写入会替换你的代码。请重命名这个事件表或该脚本，使两个名称不同，然后重试。"
+"%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.","未写入 %s：它属于事件表 %s。请重命名两个事件表中的一个，使名称不同，然后重试。"

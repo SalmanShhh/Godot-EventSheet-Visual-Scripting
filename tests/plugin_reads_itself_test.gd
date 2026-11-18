@@ -146,7 +146,11 @@ const GENERIC_CEILING_BY_ROLE: Dictionary = {
 	# changed to move it; the ceiling is a description of the group, taken off the worst file in it.
 	"manual": 0,
 	"tests": 30,
-	"command_tools": 2,
+	# Raised from 2 when the rotating sample reached tools/project_doctor.gd, which measures 3, after the
+	# corpus gained a file and the sample moved. Re-measured over the WHOLE role (144 files, worst first:
+	# project_doctor 3, render_select_all_matching_preview 2, render_files_band_preview 2, and nothing
+	# else over 1), so it is the measured number rather than one the sample happened to reach.
+	"command_tools": 3,
 	"pack_recipes": 0,
 	"other": 7,
 }

@@ -11268,6 +11268,6 @@ the Load bindings row of the same pair,la fila Cargar controles del mismo par
 "The slot card, which the Save System keeps for the load menu:","La tarjeta de la ranura, que el Save System guarda para el menú de carga:"
 "Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.","Teclado ▸ Guardar controles escribe %s; Settings ▸ Save Bindings los guarda en %s bajo [%s], junto a las opciones."
 "Keyboard ▸ Save bindings, or Settings ▸ Save Bindings","Teclado ▸ Guardar controles, o Settings ▸ Save Bindings"
-Saved %s. %s,
-"%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.",
-"%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.",
+"Saved %s. %s","%s guardado. %s"
+"%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.","%s no se escribió: es un script tuyo, no uno que haya creado esta hoja, y escribirlo reemplazaría tu código. Cambia el nombre de la hoja o del script para que los dos nombres sean distintos y vuelve a intentarlo."
+"%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.","%s no se escribió: pertenece a la hoja %s. Cambia el nombre de una de las dos hojas para que los nombres sean distintos y vuelve a intentarlo."
