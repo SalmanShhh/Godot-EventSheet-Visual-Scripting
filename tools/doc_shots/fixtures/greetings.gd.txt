@@ -1,0 +1,20 @@
+## A small provider of greetings for the shop and the hut.
+## @ace_version(1.0.0)
+@tool
+extends RefCounted
+
+
+## @ace_action
+## @ace_name("Say Hello")
+## @ace_category("Greeting")
+## @ace_description("Prints a hello.")
+func say_hello(who: String) -> void:
+	print(who)
+
+
+## Says goodbye to someone.
+## @ace_action
+## @ace_name("Say Goodbye")
+## @ace_category("Greeting")
+func say_goodbye(who: String) -> void:
+	print("bye ", who)

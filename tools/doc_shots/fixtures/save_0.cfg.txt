@@ -1,0 +1,5 @@
+[player]
+
+coins=12
+player_spot=Vector2(240, 96)
+picked_coins=[3, 7, 9]

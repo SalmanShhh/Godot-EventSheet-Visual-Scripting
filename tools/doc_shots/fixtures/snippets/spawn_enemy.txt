@@ -1,0 +1,62 @@
+[eventsheet-snippet v1]
+{
+"providers": [],
+"required_variables": {},
+"rows": [{
+"actions": [{
+"ace_id": "SpawnScene",
+"codegen_template": "",
+"comment": "",
+"enabled": true,
+"is_awaited": false,
+"kind": "action",
+"note_above": "",
+"note_above_marker": "",
+"params": {
+"path": "{{blank:Enemy Scene|\"res://enemy.tscn\"}}"
+},
+"provider_id": "Core"
+}, {
+"ace_id": "SetProperty",
+"codegen_template": "",
+"comment": "",
+"enabled": true,
+"is_awaited": false,
+"kind": "action",
+"note_above": "",
+"note_above_marker": "",
+"params": {
+"property": "speed",
+"target": "self",
+"value": "{{blank:Speed|120.0}}"
+},
+"provider_id": "Core"
+}, {
+"ace_id": "AddToGroup",
+"codegen_template": "",
+"comment": "",
+"enabled": true,
+"is_awaited": false,
+"kind": "action",
+"note_above": "",
+"note_above_marker": "",
+"params": {
+"group": "{{blank:Spawn Group|\"enemies\"}}"
+},
+"provider_id": "Core"
+}],
+"comment": "",
+"condition_mode": 0,
+"conditions": [],
+"else_mode": 0,
+"enabled": true,
+"kind": "event",
+"local_variables": [],
+"sub_events": [],
+"trigger": {},
+"trigger_id": "OnReady",
+"trigger_provider_id": "Core"
+}],
+"version": 1
+}
+[/eventsheet-snippet]

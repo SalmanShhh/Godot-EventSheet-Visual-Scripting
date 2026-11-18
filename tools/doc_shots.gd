@@ -32,12 +32,23 @@
 #   params_dialog {provider, ace, values}   type_text {text}              drag_divider {dx}       end_drag
 #   hover_span {row, word}              close_scene                       picker_collapse {text}  rename_file {from, to}
 #   report_files {paths}
+#   doctor_page {page, select, nth, width, height}   the Project Doctor window drawn with the findings one staged page
+#                                       holds (tools/doc_shots/doctor_pages.gd: migration, reading, collisions, scene_trust,
+#                                       watch, tidiness); `select` picks a finding row so its fixes show; doctor_release puts back
+#                                       what the collisions page set
+#   popup_size {width, height, frame}   the top window at an exact size (`frame` counts the title bar in the height)
+#   tab {path, index}                   the tab of a TabContainer a dock property path names
+#   select_tree_item {path, text, nth, column}   a row of a Tree a dock property path names, chosen by a cell's text
+#   snap                                grabs the crop now and keeps it, so one shot can show a window twice (layout horizontal)
+#   drag_label {text, dx}               press on a label of the top window and drag right dx pixels (number scrubbing)
+#   hover_row {text, x, frames}         the pointer resting on a row until Godot's own tooltip opens (use keep_mouse and crop borderless)
 #   (menu_open also takes activate: true to press the last item; a shot may list `cleanup` steps and `parts` with a `layout`;
-#   `keep_mouse: true` leaves the pointer where a step put it - otherwise it is parked in a corner before every capture)
+#   `keep_mouse: true` leaves the pointer where a step put it - otherwise it is parked in a corner before every capture;
+#   `crop_top` and `crop_height` keep one stretch of a tall popup)
 #
 # THE CROPS: `window` (the whole editor), `main_screen`, `sheet` (the sheet canvas), `rows` (the rows named
 # by view_rows), `inspector`, `popup` (the top window exactly, title bar in and nothing outside it),
-# `menus` (every open menu plus the strip it hangs from), `strip`, `top` (the strip and the tab bar) and `submenu` (only the last menu opened), `code` (the code panel) and `rect` ([x, y, w, h]). No scaling: one picture
+# `inspector_menus` (the Inspector with the menus open on it), `borderless` (a window with no title bar, such as a tooltip), `menus` (every open menu plus the strip it hangs from), `strip`, `top` (the strip and the tab bar) and `submenu` (only the last menu opened), `code` (the code panel) and `rect` ([x, y, w, h]). No scaling: one picture
 # pixel is one screen pixel.
 #
 # RERUNS: nothing here uses a clock, a random number or the real mouse. The text caret is pinned so it
@@ -65,6 +76,10 @@ var _row_rect: Rect2i = Rect2i()
 var _last_menu: PopupMenu = null
 ## A window object a step opened and the shot still needs alive (a RefCounted would be freed at once).
 var _held: RefCounted = null
+## The part being taken and the pictures its `snap` steps already grabbed (a before-and-after in one frame).
+var _part: Dictionary = {}
+var _part_name: String = ""
+var _snaps: Array[Image] = []
 
 
 func _init() -> void:
@@ -124,11 +139,11 @@ func _start() -> void:
 		EditorInterface.get_editor_settings().get_setting("interface/editor/display/single_window_mode"),
 		Engine.get_version_info()["string"]])
 	var only: PackedStringArray = str(_args.get("only", "")).split(",", false)
-	var batch: String = str(_args.get("batch", ""))
+	var batch: PackedStringArray = str(_args.get("batch", "")).split(",", false)
 	for shot: Dictionary in _list["shots"]:
 		if not only.is_empty() and not only.has(str(shot["name"])):
 			continue
-		if not batch.is_empty() and str(shot.get("batch", "")) != batch:
+		if not batch.is_empty() and not batch.has(str(shot.get("batch", ""))):
 			continue
 		await _take(shot)
 	var file: FileAccess = FileAccess.open(_out.path_join("report.txt"), FileAccess.WRITE)
@@ -154,6 +169,9 @@ func _take(shot: Dictionary) -> void:
 	var staged: PackedStringArray = await _stage(shot.get("stage", []))
 	for part: Dictionary in parts:
 		_has_focus = false
+		_part = part
+		_part_name = str(shot["name"])
+		_snaps.clear()
 		if EventSheets._dock != null:
 			await _show_events()
 			await _rest_toolbar()
@@ -169,6 +187,8 @@ func _take(shot: Dictionary) -> void:
 		await _w(4)
 		_dump_rows(str(shot["name"]))
 		var image: Image = await _grab(part, str(shot["name"]))
+		pieces.append_array(_snaps)
+		_snaps.clear()
 		if image == null:
 			ok = false
 		else:
@@ -609,10 +629,149 @@ func _step(step: Dictionary) -> bool:
 			for section: Node in EditorInterface.get_inspector().find_children("*", "EditorInspectorSection", true, false):
 				section.call("unfold")
 			await _w(int(step.get("frames", 20)))
+		"snap":
+			# Grabs the picture as it is now, for a shot that shows the same window twice (before and after).
+			var snapped: Image = await _grab(_part, _part_name)
+			if snapped == null:
+				return false
+			_snaps.append(snapped)
+		"select_tree_item":
+			# A row of a Tree held by the dock (a property path), chosen by the text of one of its cells.
+			var tree_owner: Object = dock
+			for tree_part: String in str(step["path"]).split("."):
+				tree_owner = tree_owner.get(tree_part)
+			var wanted: TreeItem = _find_tree_item((tree_owner as Tree).get_root(), str(step["text"]), int(step.get("nth", 0)))
+			if wanted == null:
+				_log("no tree row %s" % step["text"])
+				return false
+			(tree_owner as Tree).set_selected(wanted, int(step.get("column", 0)))
+			await _w(int(step.get("frames", 20)))
+		"drag_label":
+			# A press on a label in the top window and a drag to the right, the way a number is scrubbed.
+			var drag_top: Window = null
+			for win: Window in root.get_embedded_subwindows():
+				if win.visible and not (win is PopupMenu):
+					drag_top = win
+			if drag_top == null:
+				return false
+			var grabbed: Control = null
+			for node: Node in drag_top.find_children("*", "Label", true, false):
+				if (node as Label).is_visible_in_tree() and (node as Label).text.strip_edges() == str(step["text"]):
+					grabbed = node as Control
+					break
+			if grabbed == null:
+				_log("no label %s to drag" % step["text"])
+				return false
+			var grab_rect: Rect2 = grabbed.get_global_rect()
+			var start: Vector2 = Vector2(drag_top.position) + grab_rect.position + grab_rect.size * 0.5
+			var move: InputEventMouseMotion = InputEventMouseMotion.new()
+			move.position = start
+			move.global_position = start
+			root.push_input(move)
+			await _w(6)
+			var press: InputEventMouseButton = InputEventMouseButton.new()
+			press.button_index = MOUSE_BUTTON_LEFT
+			press.pressed = true
+			press.position = start
+			press.global_position = start
+			root.push_input(press)
+			await _w(3)
+			var pieces_of_drag: int = 8
+			for part_index: int in range(1, pieces_of_drag + 1):
+				var drag_to: Vector2 = start + Vector2(float(step["dx"]) * part_index / pieces_of_drag, 0.0)
+				var dragged: InputEventMouseMotion = InputEventMouseMotion.new()
+				dragged.position = drag_to
+				dragged.global_position = drag_to
+				dragged.relative = Vector2(float(step["dx"]) / pieces_of_drag, 0.0)
+				dragged.button_mask = MOUSE_BUTTON_MASK_LEFT
+				root.push_input(dragged)
+				await _w(3)
+			var release: InputEventMouseButton = InputEventMouseButton.new()
+			release.button_index = MOUSE_BUTTON_LEFT
+			release.pressed = false
+			release.position = start + Vector2(float(step["dx"]), 0.0)
+			release.global_position = release.position
+			root.push_input(release)
+			await _w(int(step.get("frames", 10)))
+		"hover_row":
+			# The real pointer resting on a word of a row long enough for Godot's own tooltip to open.
+			var tip_view: EventSheetViewport = dock._viewport
+			var tip_row: int = _find_row(tip_view, step["text"])
+			if tip_row < 0:
+				_log("no row to hover: %s" % step["text"])
+				return false
+			dock._scroll.scroll_vertical = maxi(0, int(tip_view.get_row_top(tip_row)) - 40)
+			await _w(6)
+			var tip_at: Vector2 = Vector2(tip_view.get_global_position().x + float(step.get("x", 200.0)),
+				tip_view.get_global_position().y + tip_view.get_row_top(tip_row) + minf(tip_view.get_row_height(tip_row) * 0.5, 14.0))
+			for nudge: int in 6:
+				var tip_move: InputEventMouseMotion = InputEventMouseMotion.new()
+				tip_move.position = tip_at + Vector2(float(nudge % 2), 0.0)
+				tip_move.global_position = tip_move.position
+				root.push_input(tip_move)
+				await _w(10)
+			await _w(int(step.get("frames", 90)))
+		"doctor_page":
+			# The Project Doctor window drawn with the findings of one staged page (tools/doc_shots/doctor_pages.gd):
+			# the window's own page code, without the audit of this repository's own files behind it. `select` names
+			# a finding row to select, so the fixes it offers show under it.
+			var panel: Object = dock._doctor
+			if panel._doctor_window == null:
+				panel._build()
+			panel._doctor_window.size = Vector2i(int(step.get("width", 1120)), int(step.get("height", 720)))
+			EventSheetWindowPlacement.popup_centered(panel._doctor_window)
+			var staged_findings: Array = load("res://tools/doc_shots/doctor_pages.gd").findings(str(step["page"]))
+			panel._draw_page(staged_findings)
+			await _w(20)
+			if step.has("select"):
+				var chosen: TreeItem = _find_tree_item(panel._doctor_tree.get_root(), str(step["select"]), int(step.get("nth", 0)))
+				if chosen == null:
+					_log("no finding row %s" % step["select"])
+					return false
+				panel._doctor_tree.set_selected(chosen, 3)
+				await _w(20)
+		"doctor_release":
+			load("res://tools/doc_shots/doctor_pages.gd").release_collisions()
+		"popup_size":
+			# The top window at an exact size, so a picture keeps the frame it always had.
+			var sized: Window = null
+			for win: Window in root.get_embedded_subwindows():
+				if win.visible and not (win is PopupMenu):
+					sized = win
+			if sized == null:
+				_log("popup_size: no window is open")
+				return false
+			var title_bar: int = sized.get_theme_constant("title_height", "Window")
+			# `frame: true` sizes the whole picture (title bar included) instead of the window under it.
+			sized.size = Vector2i(int(step["width"]), int(step["height"]) - (title_bar if bool(step.get("frame", false)) else 0))
+			sized.position = Vector2i((root.size.x - sized.size.x) / 2, maxi((root.size.y - sized.size.y) / 2, sized.get_theme_constant("title_height", "Window")))
+			await _w(int(step.get("frames", 20)))
+		"tab":
+			# A tab of the TabContainer found by a dock property path (for example "_save_studio._tabs").
+			var holder_tabs: Object = dock
+			for part: String in str(step["path"]).split("."):
+				holder_tabs = holder_tabs.get(part)
+			(holder_tabs as TabContainer).current_tab = int(step["index"])
+			await _w(int(step.get("frames", 20)))
 		_:
 			_log("unknown step %s" % step["do"])
 			return false
 	return true
+
+
+func _find_tree_item(from: TreeItem, text: String, nth: int) -> TreeItem:
+	var found: Array[TreeItem] = []
+	var stack: Array[TreeItem] = [from]
+	while not stack.is_empty():
+		var item: TreeItem = stack.pop_back()
+		for column: int in item.get_tree().columns:
+			if item.get_text(column).contains(text):
+				found.append(item)
+				break
+		var children: Array[TreeItem] = item.get_children()
+		children.reverse()
+		stack.append_array(children)
+	return found[nth] if nth < found.size() else null
 
 
 func _expand_item(item: TreeItem) -> void:
@@ -1023,6 +1182,27 @@ func _grab(shot: Dictionary, shot_name: String) -> Image:
 			rect = _popup_rect()
 			if rect.size == Vector2i.ZERO:
 				_log("%s: no window is open" % shot_name)
+				return null
+			# `crop_top` drops that many pixels from the top of the window and `crop_height` keeps only the next
+			# stretch of it (the part a picture is about).
+			var dropped: int = mini(int(shot.get("crop_top", 0)), rect.size.y - 8)
+			rect.position.y += dropped
+			rect.size.y -= dropped
+			if int(shot.get("crop_height", 0)) > 0:
+				rect.size.y = mini(rect.size.y, int(shot["crop_height"]))
+		"inspector_menus":
+			# The Inspector as the editor lays it out, with every menu open on it.
+			rect = Rect2i(EditorInterface.get_inspector().get_parent().get_global_rect())
+			for menu: PopupMenu in _visible_menus():
+				rect = rect.merge(Rect2i(menu.position, menu.size))
+		"borderless":
+			# A window with no title bar (a tooltip): exactly its own rectangle.
+			rect = Rect2i()
+			for win: Window in root.get_embedded_subwindows():
+				if win.visible and win.borderless:
+					rect = Rect2i(win.position, win.size)
+			if rect.size == Vector2i.ZERO:
+				_log("%s: no tooltip is open" % shot_name)
 				return null
 		"popups":
 			rect = Rect2i()
