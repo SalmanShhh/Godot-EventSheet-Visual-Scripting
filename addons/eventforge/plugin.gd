@@ -11,6 +11,7 @@ const BRIDGE_PATH: String = "res://addons/eventforge/runtime/eventforge_bridge.g
 const EVENT_SHEET_EDITOR_PATH: String = "res://addons/eventforge/editor/event_sheet_editor.gd"
 const MAIN_SCREEN_ROOT_NAME: String = "EventSheetWorkspace"
 const PLUGIN_ICON_PATH: String = "res://addons/eventsheet/icons/eventsheet.svg"
+const KNOWN_SHEETS_PATH: String = "res://addons/eventforge/known_sheets.gd"
 ## Keeps the pack icons and the picker's section icons in the editor's icon colours (loaded by path).
 const PACK_ICON_IMPORTS_PATH: String = "res://addons/eventforge/editor/pack_icon_imports.gd"
 ## The one ink the plugin icon is drawn in: the light grey Godot draws its own plain icons in on the
@@ -324,6 +325,14 @@ func _watch_file_system_clicks(on: bool) -> void:
 	var file_system_dock: FileSystemDock = get_editor_interface().get_file_system_dock()
 	if file_system_dock == null:
 		return
+	# A script the plugin knows is a sheet stays known through a rename, a move or a delete in the FileSystem dock.
+	for pair: Array in [[file_system_dock.files_moved, _on_sheet_file_moved], [file_system_dock.folder_moved, _on_sheet_folder_moved],
+			[file_system_dock.file_removed, _on_sheet_file_removed], [file_system_dock.folder_removed, _on_sheet_folder_removed]]:
+		var moved: Signal = pair[0]
+		if on and not moved.is_connected(pair[1]):
+			moved.connect(pair[1])
+		elif not on and moved.is_connected(pair[1]):
+			moved.disconnect(pair[1])
 	for tree: Node in file_system_dock.find_children("*", "Tree", true, false):
 		var clicked: Signal = (tree as Tree).item_mouse_selected
 		if on and not clicked.is_connected(_on_file_system_tree_clicked):
@@ -336,6 +345,22 @@ func _watch_file_system_clicks(on: bool) -> void:
 			clicked.connect(_on_file_system_list_clicked)
 		elif not on and clicked.is_connected(_on_file_system_list_clicked):
 			clicked.disconnect(_on_file_system_list_clicked)
+
+
+func _on_sheet_file_moved(old_file: String, new_file: String) -> void:
+	load(KNOWN_SHEETS_PATH).note_moved(old_file, new_file)
+
+
+func _on_sheet_folder_moved(old_folder: String, new_folder: String) -> void:
+	load(KNOWN_SHEETS_PATH).note_folder_moved(old_folder, new_folder)
+
+
+func _on_sheet_file_removed(file: String) -> void:
+	load(KNOWN_SHEETS_PATH).note_removed(file)
+
+
+func _on_sheet_folder_removed(folder: String) -> void:
+	load(KNOWN_SHEETS_PATH).note_folder_removed(folder)
 
 
 func _on_file_system_tree_clicked(_at: Vector2, button: int) -> void:

@@ -26,6 +26,7 @@ const SCENE_SHEET_MARKS_PATH := "res://addons/eventforge/importer/scene_sheet_ma
 const TEXT_LISTING_PATH := "res://addons/eventsheet/editor/dock/text_listing.gd"
 const GDSCRIPT_IMPORTER_PATH := "res://addons/eventforge/importer/gdscript_importer.gd"
 const SHEET_COMPILER_PATH := "res://addons/eventforge/compiler/sheet_compiler.gd"
+const KNOWN_SHEETS_PATH := "res://addons/eventforge/known_sheets.gd"
 const SAVE_CHECKS_PATH := "res://addons/eventsheet/editor/dock/save_checks.gd"
 ## The list the public API keeps its lifecycle listeners on, in a file that names nothing: asking
 ## the API itself here would compile it, and everything it names, into the first open.
@@ -433,6 +434,9 @@ func _save_backed_sheet() -> bool:
 		_dock._run_diagnostics()
 		_dock._set_status(load("res://addons/eventforge/failure_words.gd").compile_failed(compile_result.get("errors", []), _dock._current_sheet.external_source_path), true)
 		return false
+	# The plugin now has a record that this script is a sheet, which is what lets the Project Doctor read it
+	# row by row without reading every hand-written script of a big project that way.
+	load(KNOWN_SHEETS_PATH).note_saved(_dock._current_sheet.external_source_path)
 	_dock._dirty = false
 	_dock._external_mtime = FileAccess.get_modified_time(_dock._current_sheet.external_source_path)
 	_dock._refresh_title_strip()
@@ -742,6 +746,7 @@ func _save_sheet_as_gdscript(path: String) -> bool:
 	if backed == null:
 		_dock._set_status("Saved %s, but couldn't reopen it as a sheet." % path.get_file(), true)
 		return false
+	load(KNOWN_SHEETS_PATH).note_saved(path)
 	backed.read_only = false  # the user just authored it - open it editable, not as a preview
 	# Replace the ACTIVE tab's sheet in place. Calling setup() would append a SECOND tab (its dedup
 	# matches by object identity, and `backed` is a freshly-imported resource), duplicating the sheet.

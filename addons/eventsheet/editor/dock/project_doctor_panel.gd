@@ -52,6 +52,8 @@ var _page: Array[Dictionary] = []
 var _fix_pending: bool = false
 ## The door every row finding has: its sheet opened on that row.
 const SHOW_ROW := "show_row"
+## The door the coverage note has: read every script as a sheet too, in slices, with progress and Cancel.
+const CHECK_EVERY_SCRIPT := "check_every_script"
 ## The window opens wide enough to read a real finding, never under its least, and keeps the size the
 ## reader leaves it at.
 const DEFAULT_WIDTH: int = 1120
@@ -67,6 +69,8 @@ var _progress_label: Label = null
 var _cancel_button: Button = null
 var _rerun_button: Button = null
 var _running: bool = false
+## True once the reader took the coverage note's door: this window's runs read every script as a sheet.
+var _every_script: bool = false
 var _cancel_requested: bool = false
 ## The selected finding's whole sentence, wrapped, under the list: a cell cuts a long one.
 var _whole_finding: PanelContainer = null
@@ -89,12 +93,15 @@ static func offers_for(finding: Dictionary) -> Array[Dictionary]:
 	# A row finding's address is a door too: the sheet opened with that row selected.
 	if finding.has("doors") and int(finding.get("event", 0)) > 0:
 		offers.append({"id": SHOW_ROW, "label": EventSheetL10n.translate("Show row")})
+	if str(finding.get("check", "")) == "sheet-coverage" and int(finding.get("plain_count", 0)) > 0:
+		offers.append({"id": CHECK_EVERY_SCRIPT, "label": load("res://addons/eventforge/known_sheets.gd").door_text(int(finding["plain_count"]))})
 	return offers
 
 
 func open() -> void:
 	if _doctor_window == null:
 		_build()
+	_every_script = false
 	_doctor_window.size = _wanted_size()
 	EventSheetWindowPlacement.popup_centered(_doctor_window)
 	_run_project_doctor()
@@ -228,7 +235,7 @@ func _run_project_doctor() -> void:
 	# for the first time in this session (which takes a moment the window should not hide behind).
 	await _dock.get_tree().process_frame
 	await _dock.get_tree().process_frame
-	var session: Dictionary = EventSheetProjectDoctor.begin()
+	var session: Dictionary = EventSheetProjectDoctor.begin(_audit_options())
 	var report: Dictionary = await EventSheetProjectDoctor.run_sliced(session, _dock.get_tree(),
 		func() -> bool: return _cancel_requested or _doctor_window == null,
 		func(partial: Dictionary) -> void: _show_progress(partial))
@@ -244,6 +251,19 @@ func _run_project_doctor() -> void:
 	set_doctor_findings(report.get("findings", []))
 	_draw_page(report.get("findings", []) as Array)
 	_dock._set_status(_summary_label.text, int(report.get("errors", 0)) > 0)
+
+
+## What the audit is told about the project: only the known sheets are read row by row, unless the reader
+## took the door that reads every script.
+func _audit_options() -> Dictionary:
+	var state: Dictionary = _dock.get_open_sheets_state()
+	var open_paths: PackedStringArray = PackedStringArray()
+	for tab: Variant in (state.get("open", []) as Array):
+		var tab_path: String = str((tab as Dictionary).get("path", ""))
+		if not tab_path.is_empty():
+			open_paths.append(tab_path)
+	return {"known_only": true, "every_script": _every_script, "open_paths": open_paths,
+		"recent_paths": PackedStringArray(state.get("recent", []))}
 
 
 ## Draws the page for the findings so far: worst first, and what is new against the last read.
@@ -436,6 +456,11 @@ func _apply_fix_row(item: TreeItem) -> bool:
 	_fix_pending = true
 	var finding: Dictionary = item.get_parent().get_metadata(1) as Dictionary
 	var fix_id: String = str((item.get_metadata(2) as Dictionary).get("id", ""))
+	if fix_id == CHECK_EVERY_SCRIPT:
+		_every_script = true
+		_fix_pending = false
+		_run_project_doctor.call_deferred()
+		return true
 	if fix_id == SHOW_ROW:
 		_fix_pending = false
 		_show_finding_row(finding)

@@ -57,9 +57,9 @@ static func own_scripts() -> PackedStringArray:
 	return scripts
 
 
-## The project's own scripts that ARE sheets, opened as sheets by the checks: those that carry the
-## compiler's banner. A plain hand-written script is not one, and is read only by the checks that make
-## sense for any script.
+## The project's own scripts that carry the compiler's banner. Which scripts the editor reads as sheets is
+## decided in known_sheets.gd (this is only the banner part of it): a plain hand-written script is read
+## only by the checks that make sense for any script, unless the plugin knows it as a sheet.
 static func script_sheets() -> PackedStringArray:
 	var sheets: PackedStringArray = PackedStringArray()
 	for script_path: String in own_scripts():
@@ -99,7 +99,11 @@ static func coverage_finding(tres_count: int, script_count: int, plain_count: in
 		script_count, tres_count, "; ".join(parts)]
 	if plain_count > 0:
 		message += " The other %d .gd file(s) are plain scripts: only the checks that make sense for any script read them, and they are not reported on one by one." % plain_count
-	return {"severity": "info", "check": "sheet-coverage", "path": "", "message": message, "event": 0}
+	var note: Dictionary = {"severity": "info", "check": "sheet-coverage", "path": "", "message": message, "event": 0}
+	if plain_count > 0:
+		# The editor's door reads this: how many scripts it would check as sheets.
+		note["plain_count"] = plain_count
+	return note
 
 
 ## Whether something other than a scene gives a script a reason to exist: it names a class (so other

@@ -211,7 +211,7 @@ static func debug_row_findings(sources: Dictionary) -> Array[Dictionary]:
 			continue
 		# A hand-written script is code, and the advice below is about a row (Log, Debug Builds Only), so
 		# it is not told once per file: the plain scripts that print are counted in one line at the end.
-		if not text.begins_with(SHEET_BANNER):
+		if not text.begins_with(SHEET_BANNER) and not EventSheetProjectDoctor.is_audited_sheet(script_path):
 			plain_scripts.append(script_path)
 			continue
 		var first: String = lines[0]

@@ -21,6 +21,7 @@ extends RefCounted
 
 const ProjectFiles := preload("res://addons/eventforge/project_files.gd")
 const GdSheets := preload("res://addons/eventforge/doctor_gd_sheets.gd")
+const KnownSheets := preload("res://addons/eventforge/known_sheets.gd")
 
 ## Extension checks registered through EventSheets.register_doctor_check: Array of
 ## {"id": String, "run": Callable}. They run after the built-ins in every runner
@@ -59,6 +60,15 @@ static var _spent_slice: bool = true
 ## margin's numbering is read off a whole throwaway canvas, and six sections ask it of every sheet.
 static var _margin_cache: Dictionary = {}
 
+## The scripts this audit reads as sheets, {path: true}: for a section that must tell a sheet from a script the
+## person wrote. Empty outside an audit.
+static var _audited_sheets: Dictionary = {}
+
+
+## Whether the running audit reads this script as a sheet (see begin()).
+static func is_audited_sheet(script_path: String) -> bool:
+	return _audited_sheets.has(script_path)
+
 
 ## Registers a project-health check. `check` receives (sheet_paths: PackedStringArray,
 ## findings: Array[Dictionary]) and appends findings shaped
@@ -88,8 +98,8 @@ static func unregister_check(check_id: String) -> void:
 
 ## Full audit over every sheet in the project. Returns
 ## {findings: Array[Dictionary{severity, check, path, message}], errors, warnings, infos}.
-static func run() -> Dictionary:
-	var session: Dictionary = begin()
+static func run(options: Dictionary = {}) -> Dictionary:
+	var session: Dictionary = begin(options)
 	while step(session):
 		pass
 	return finish(session)
@@ -99,7 +109,14 @@ static func run() -> Dictionary:
 ## each `step(session)` runs one check and answers whether any are left, `run_sliced` hands the same
 ## steps to a running editor a frame at a time, `finish()` closes it and returns what `run()` returns.
 ## `session["current"]` names the step in hand and `progress_of` says how far it is.
-static func begin() -> Dictionary:
+##
+## `options` says which scripts are read as sheets. By default EVERY script is: the command line and the
+## tests are run unattended and have always done that. `{"known_only": true}` reads only the known
+## sheets (see known_sheets.gd) row by row and gives every other script just the checks that make sense
+## for any script, which is what the editor wants on a project of thousands of scripts; `open_paths` and
+## `recent_paths` tell it what the editor has open and what it lists as recent, and `{"every_script":
+## true}` is the editor's door that reads the others as sheets too.
+static func begin(options: Dictionary = {}) -> Dictionary:
 	var findings: Array[Dictionary] = []
 	var steps: Array = []
 	# One listing of the project's scripts serves the whole audit; dropping it here is what makes an
@@ -134,20 +151,21 @@ static func begin() -> Dictionary:
 	# The sheet checks read the project's `.gd` sheets as well: `.gd` is the default sheet format, and a
 	# check handed only the `.tres` list said nothing at all about a project of scripts. The few checks
 	# that cannot apply to a script skip it themselves, and one note below says which and why.
-	# Which of the scripts ARE sheets is told by the compiler's banner on their first line, the same
-	# test Replace in Project uses. It is a step of its own, taken a handful of files at a time, because
-	# a project can hold thousands of plain scripts and the editor must keep drawing while it looks.
+	# Which of the scripts ARE sheets: every one by default, and with `known_only` the ones the plugin has
+	# reason to call sheets (the compiler's banner, an open tab, a recorded save from the sheet editor).
+	# It is a step of its own, taken a handful of files at a time, because a project can hold thousands of
+	# plain scripts and the editor must keep drawing while it looks.
 	var candidates: PackedStringArray = GdSheets.own_scripts()
+	var known_only: bool = bool(options.get("known_only", false)) and not bool(options.get("every_script", false))
 	var context: Dictionary = {"sheet_paths": tres_paths}
 	steps.append(["which_scripts_are_sheets", func() -> void:
-		var script_sheets: PackedStringArray = PackedStringArray()
-		var looked: int = 0
-		for script_path: String in candidates:
-			if GdSheets.is_sheet_script(script_path):
-				script_sheets.append(script_path)
-			looked += 1
-			await breathe_every(looked)
+		var script_sheets: PackedStringArray = candidates
+		if known_only:
+			script_sheets = await _known_among_sliced(candidates, options)
 		context["sheet_paths"] = tres_paths + script_sheets
+		_audited_sheets = {}
+		for script_path: String in script_sheets:
+			_audited_sheets[script_path] = true
 		var coverage: Dictionary = GdSheets.coverage_finding(tres_paths.size(), script_sheets.size(), candidates.size() - script_sheets.size())
 		if not coverage.is_empty():
 			findings.insert(0, coverage)])
@@ -357,6 +375,7 @@ static func begin() -> Dictionary:
 	return {
 		"findings": findings,
 		"steps": steps,
+		"context": context,
 		"index": 0,
 		"current": "",
 		"importer_calls_before": importer_calls_before,
@@ -394,6 +413,7 @@ static func run_sliced(session: Dictionary, tree: SceneTree, cancelled: Callable
 		if cancelled.is_valid() and bool(cancelled.call()):
 			_frame_source = null
 			_run_in_progress = false
+			_audited_sheets = {}
 			return {}
 		var entry: Array = steps[int(session["index"])]
 		session["current"] = str(entry[0])
@@ -479,6 +499,7 @@ static func finish(session: Dictionary) -> Dictionary:
 	# suite pins them as equal, and that pin costs no wall clock and so cannot flap on a slow runner.
 	var sheets_opened: int = _sheet_cache.size()
 	var importer_calls: int = EventSheetGDScriptImporter.external_imports - importer_calls_before
+	_audited_sheets = {}
 	_source_cache.clear()
 	_sheet_cache.clear()
 	_margin_cache.clear()
@@ -4370,3 +4391,24 @@ static func task_note_in(line: String) -> Dictionary:
 static func _project_script_paths() -> PackedStringArray:
 	return _walk_files(_TASK_NOTE_SKIPPED_DIRS, func(path: String) -> bool:
 		return path.ends_with(".gd"))
+
+
+## The scripts among `candidates` that are known sheets, a handful of files at a time. The first look
+## in the editor also seeds the record from what already exists and drops paths that are gone.
+static func _known_among_sliced(candidates: PackedStringArray, options: Dictionary) -> PackedStringArray:
+	var open_paths: PackedStringArray = PackedStringArray(options.get("open_paths", PackedStringArray()))
+	KnownSheets.seed_once(candidates, KnownSheets.saved_tab_paths(),
+		PackedStringArray(options.get("recent_paths", PackedStringArray())), open_paths, KnownSheets.backup_folders())
+	KnownSheets.prune()
+	var known: PackedStringArray = PackedStringArray()
+	var looked: int = 0
+	var open: Dictionary = {}
+	for path: String in open_paths:
+		open[path.simplify_path()] = true
+	var record: Dictionary = KnownSheets.recorded()
+	for script_path: String in candidates:
+		if open.has(script_path) or record.has(script_path) or KnownSheets.has_banner(script_path):
+			known.append(script_path)
+		looked += 1
+		await breathe_every(looked)
+	return known

@@ -342,6 +342,7 @@ func save_as(path: String) -> String:
 	var compiled: Dictionary = EventSheetCompiler.compile(_imported["sheet"] as EventSheetResource, path, true)
 	if not bool(compiled["success"]):
 		return "That sheet did not compile: %s" % ", ".join(compiled["errors"] as Array)
+	load("res://addons/eventforge/known_sheets.gd").note_saved(path)
 	if _dialog != null:
 		_dialog.hide()
 	var report: Dictionary = _imported["report"] as Dictionary
