@@ -214,6 +214,7 @@ static func begin(options: Dictionary = {}) -> Dictionary:
 	steps.append(["background_thread_safety", func() -> void: check_background_thread_safety(context["sheet_paths"], findings)])
 	steps.append(["unknown_input_actions", func() -> void: check_unknown_input_actions(context["sheet_paths"], findings)])
 	steps.append(["unsaved_rebindings", func() -> void: check_unsaved_rebindings(context["sheet_paths"], findings)])
+	steps.append(["settings_global", func() -> void: check_settings_global(context["sheet_paths"], findings)])
 	steps.append(["caption_less_sounds", func() -> void: check_caption_less_sounds(context["sheet_paths"], findings)])
 	steps.append(["orphaned_provider_calls", func() -> void: check_orphaned_provider_calls(context["sheet_paths"], findings)])
 	steps.append(["sheet_signal_declarations", func() -> void: check_sheet_signal_declarations(context["sheet_paths"], findings)])
@@ -2656,6 +2657,65 @@ static func check_unsaved_rebindings(_sheet_paths: PackedStringArray, findings: 
 		_add(findings, "info", "unsaved-rebindings", script_path,
 			"This script changes control bindings at runtime but never saves them - every remap is lost when the game closes. Add Save bindings after the rebind and Load bindings on start-up.")
 
+
+
+## The global named Settings loading something that is not the Game Settings pack, while a script of the
+## project uses the pack's rows. The rows emit `Settings.<method>(...)`, so with another script behind that
+## name they call into it and find it missing the functions. Quiet on purpose: it speaks only when the
+## global's script lacks a function the project calls, so a Settings global that really does answer the same
+## calls is left alone. The pack's own scripts and the behaviour library are not the project's to fix.
+const GAME_SETTINGS_PACK_PATHS: Array[String] = [
+	"res://eventsheet_addons/game_settings/game_settings_addon.gd",
+	"res://addons/eventsheet_library/game_settings/game_settings_addon.gd",
+]
+
+
+static func check_settings_global(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	if not ProjectSettings.has_setting("autoload/Settings"):
+		return
+	var held: String = str(ProjectSettings.get_setting("autoload/Settings")).trim_prefix("*")
+	var pack_source: String = ""
+	for pack_path: String in GAME_SETTINGS_PACK_PATHS:
+		if FileAccess.file_exists(pack_path):
+			pack_source = source_of(pack_path)
+			break
+	if pack_source.is_empty():
+		return
+	var held_source: String = source_of(held) if held.ends_with(".gd") else ""
+	for script_path: String in _list_files_with_extension("gd"):
+		if script_path.begins_with("res://eventsheet_addons/") or script_path.begins_with("res://addons/eventsheet_library/") or script_path == held:
+			continue
+		var message: String = settings_global_message(held, held_source, pack_source, source_of(script_path))
+		if not message.is_empty():
+			_add(findings, "info", "settings-global", script_path, message)
+			return
+
+
+## The note's words, or "" when there is nothing to say. `held` is where the Settings global points,
+## `held_source` its text ("" when it is a scene), `pack_source` the Game Settings pack's text and
+## `script_source` one script of the project. The pack's own public functions are read from its text, so a
+## function added to the pack is covered with nothing to keep in step.
+static func settings_global_message(held: String, held_source: String, pack_source: String, script_source: String) -> String:
+	if held.ends_with("game_settings_addon.gd") or held_source.contains("class_name GameSettingsAddon"):
+		return ""
+	if held.ends_with(".tscn") and source_of(held).contains("game_settings_addon.gd"):
+		return ""
+	var function_regex: RegEx = RegEx.create_from_string("(?m)^func ([a-z][a-z0-9_]*)\\(")
+	var pack_functions: PackedStringArray = PackedStringArray()
+	for found: RegExMatch in function_regex.search_all(pack_source):
+		pack_functions.append(found.get_string(1))
+	if pack_functions.is_empty():
+		return ""
+	var calls: RegEx = RegEx.create_from_string("\\bSettings\\.(%s)\\(" % "|".join(pack_functions))
+	var missing: bool = false
+	var used: bool = false
+	for found: RegExMatch in calls.search_all(script_source):
+		used = true
+		if held_source.is_empty() or not held_source.contains("func %s(" % found.get_string(1)):
+			missing = true
+	if not used or not missing:
+		return ""
+	return EventSheetL10n.translate("The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.") % held
 
 ## Sounds played with nothing for a player who cannot hear them to read. OPT IN: a project
 ## that has not decided to caption its audio would get one note per script for a decision it has not
