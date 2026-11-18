@@ -1959,6 +1959,9 @@ func _draw_spans(
 			continue
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 		var span_kind: String = str(metadata.get("kind", ""))
+		# A word the head bar had no room for is left out, not drawn at the row's corner.
+		if bool(metadata.get("no_room", false)):
+			continue
 		if span_kind in ["add_action", "add_menu"] and not reveal_add_action:
 			continue
 		if span_kind == "add_condition" and not reveal_add_condition:

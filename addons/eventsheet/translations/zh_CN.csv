@@ -11254,3 +11254,4 @@ Which key or button does each action in the Input Map.,输入映射中每个动�
 The Load bindings row of the same pair,同一对中的“加载按键绑定”行
 "The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.",名为 Settings 的全局加载的是 %s，而不是 Game Settings 包，而此脚本使用了该包的行。请给你自己的全局换一个名字，这样这些行才会调用该包。
 made by this sheet,由此工作表创建
+event {n} did not run,事件 {n} 未运行

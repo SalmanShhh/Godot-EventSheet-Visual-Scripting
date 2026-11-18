@@ -164,7 +164,7 @@ func _open_selected_include_source() -> void:
 	var path: String = _selected_path()
 	if ResourceLoader.exists(path):
 		_include_manager_window.hide()
-		_dock._load_sheet_from_path(path)
+		_dock._navigate.open_or_focus(path)
 
 
 func _refresh_include_list(select_index: int = -1) -> void:

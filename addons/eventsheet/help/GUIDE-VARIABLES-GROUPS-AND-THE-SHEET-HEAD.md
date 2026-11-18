@@ -503,7 +503,7 @@ mark, which is now the word **not** in the badge column rather than a symbol.
 between them, in place of the badge every condition after the first used to wear. "or" is what sits
 between two questions, not a property of one. Right-clicking an event still toggles AND / OR.
 
-**An Else says what it follows.** An Else row carries "neither of 9" - the number of the event its
+**An Else says what it follows.** An Else row says "event 9 did not run" - the number of the event its
 chain starts at - because an Else several sub-events below its `if` is the classic reading mistake.
 
 ## Picking with a test

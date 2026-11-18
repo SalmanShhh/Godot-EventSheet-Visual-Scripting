@@ -11254,3 +11254,4 @@ Which key or button does each action in the Input Map.,Quelle touche ou quel bou
 The Load bindings row of the same pair,La ligne Charger les touches de la même paire
 "The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.","Le global nommé Settings charge %s, pas le pack Game Settings, et ce script utilise les lignes du pack. Donnez un autre nom à votre propre global pour que les lignes appellent le pack."
 made by this sheet,créé par cette feuille
+event {n} did not run,l'événement {n} ne s'est pas exécuté

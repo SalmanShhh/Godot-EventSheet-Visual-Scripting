@@ -582,7 +582,7 @@ func apply_numbered_labels(numbered_rows: Array) -> void:
 	apply_else_follows_labels(numbered_rows)
 
 
-## The Else row says what it is the else OF: "neither of 9", the gutter number of the event its
+## The Else row says what it is the else OF: "event 9 did not run", the gutter number of the event its
 ## chain starts at. Idempotent - a fold re-flattens and re-numbers without rebuilding spans, so this
 ## runs again over the same rows and must only ever write the span that IS the note.
 func apply_else_follows_labels(numbered_rows: Array) -> void:
@@ -593,7 +593,7 @@ func apply_else_follows_labels(numbered_rows: Array) -> void:
 		if (row_data.source_resource as EventRow).else_mode != EventRow.ElseMode.ELSE:
 			continue
 		# An Else whose words are not built yet has no span to write the note into, and an Else row
-		# is cheap: build this one's words rather than leave "neither of N" blank until it is scrolled to.
+		# is cheap: build this one's words rather than leave "event N did not run" blank until it is scrolled to.
 		_ensure_event_spans(row_data)
 		for span: EventSheetSemanticSpan in row_data.spans:
 			if span.metadata is Dictionary and bool((span.metadata as Dictionary).get("else_follows", false)):
@@ -618,7 +618,7 @@ static func else_follows_text(numbered_rows: Array, else_index: int, indent: int
 			continue
 		if row_data.event_number <= 0:
 			return ""
-		return EventSheetL10n.translate("neither of {n}").replace("{n}", str(row_data.event_number))
+		return EventSheetL10n.translate("event {n} did not run").replace("{n}", str(row_data.event_number))
 	return ""
 
 
@@ -18572,12 +18572,22 @@ func _format_condition_descriptor_base(condition: ACECondition) -> String:
 	# A pack question whose own sentence names no value ("Button Is") says the values it was asked about,
 	# which a picked row of the same verb shows as chips beside it.
 	if not pack_owner.is_empty() and generated_definition != null and not str(generated_definition.metadata.get("display_template", "")).contains("{"):
-		shown = shown.strip_edges()
-		for parameter: Variant in generated_definition.parameters:
-			var parameter_id: String = str((parameter as Dictionary).get("id", ""))
-			var value_text: String = str(read_params.get(parameter_id, "")).strip_edges()
-			if parameter_id != "target" and not value_text.is_empty():
-				shown += "  " + value_text
+		shown = pack_question_with_values(shown, generated_definition.parameters, read_params)
+	return shown
+
+
+## A pack question whose sentence names no value, followed by the values it was asked about, one space apart.
+## The node the call is made on is the object column's to show, so it is never repeated here - under the
+## parameter that carries it, or under any other that holds the same text.
+static func pack_question_with_values(sentence: String, parameters: Array, values: Dictionary) -> String:
+	var shown: String = sentence.strip_edges()
+	var receiver: String = str(values.get("target", "")).strip_edges()
+	for parameter: Variant in parameters:
+		var parameter_id: String = str((parameter as Dictionary).get("id", ""))
+		var value_text: String = str(values.get(parameter_id, "")).strip_edges()
+		if parameter_id == "target" or value_text.is_empty() or (not receiver.is_empty() and value_text == receiver):
+			continue
+		shown += " " + value_text
 	return shown
 
 

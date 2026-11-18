@@ -563,8 +563,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "f3540858fd95934059f1137c216c00b8068a99bd8d4a18802fd2339fbf7321cc",
-				"reading": "6fdf0e71d1ccce833108f8190ee87ffca2af0c400622446ae56120391010ef60"
+				"png": "6d43168a65bcf91622da02e6fd69669b4c1cc905c5fcb764bcf6cad67c277f4d",
+				"reading": "7e2c6d6c2d77f34acf79104b1c84c0d8002d2f10b62f82425ad733461d18ef74"
 			},
 			"layout": "vertical",
 			"name": "editor-plugin-reading",
@@ -748,8 +748,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "890f5bd2e8d0c17c88e32c9f230a37b59d74fb05e7fb875d954cca797594a3af",
-				"reading": "ca1ee20bb5f045986055308c6f208eec315c65d312255c2a1ecfde19a3d5983b"
+				"png": "9ef0d7d1ecb77a278b7ae4b97d22c56af6b275ff7fc70277ba83ce314683f1ae",
+				"reading": "b7c322c31d01a5ca4c210c31bc27bcab3b01a87d056f627b49312fa3198f862c"
 			},
 			"name": "interop-opened-gd",
 			"rows": [
@@ -856,7 +856,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "afadf151f89dd6d147a05e5b19b9e1daa5094e99d15b81fa6c7237cc2106111f",
-				"reading": "0254b71d4a17c18795d03b20e8d0d5e6a72f9e79b133f8dfd76d970d625ad8e8"
+				"reading": "8aad9630a665a6034e96d3efebe853a3fb7242d19a48a571a55ec67cd2f7ff45"
 			},
 			"name": "opened-pack-head-open",
 			"rows": [
@@ -872,7 +872,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "037228c0ab96a8b2f46c8e802b4db72872659ad83f330b1e89a1db085f2c610f",
-				"reading": "0254b71d4a17c18795d03b20e8d0d5e6a72f9e79b133f8dfd76d970d625ad8e8"
+				"reading": "8aad9630a665a6034e96d3efebe853a3fb7242d19a48a571a55ec67cd2f7ff45"
 			},
 			"name": "opened-pack-head",
 			"rows": [
@@ -888,7 +888,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "50f6fe5e5e258493ec8ec476a27e98b07964ebf73f867819321b8dd489f32489",
-				"reading": "0254b71d4a17c18795d03b20e8d0d5e6a72f9e79b133f8dfd76d970d625ad8e8"
+				"reading": "8aad9630a665a6034e96d3efebe853a3fb7242d19a48a571a55ec67cd2f7ff45"
 			},
 			"name": "opened-pack-input-triggers",
 			"rows": [
@@ -915,8 +915,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "dd3e80721afc3e10880d0da83343b2ae8770a49167d16f8a9f02a8dbf84ca399",
-				"reading": "0254b71d4a17c18795d03b20e8d0d5e6a72f9e79b133f8dfd76d970d625ad8e8"
+				"png": "2598fdba1acd6177195212065d6578216a2d461dbf219b9edfdb51e5280e6151",
+				"reading": "8aad9630a665a6034e96d3efebe853a3fb7242d19a48a571a55ec67cd2f7ff45"
 			},
 			"layout": "vertical",
 			"name": "opened-pack-lenses",
@@ -957,8 +957,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "80eb3041c51768bafca9198413bba8d5e1340a26af4584bd18eb3ed8dd7e9498",
-				"reading": "0254b71d4a17c18795d03b20e8d0d5e6a72f9e79b133f8dfd76d970d625ad8e8"
+				"png": "347e378d0f4e75af4a0771c9e43966aad541279979ba6ce41284103a1efd2546",
+				"reading": "8aad9630a665a6034e96d3efebe853a3fb7242d19a48a571a55ec67cd2f7ff45"
 			},
 			"name": "opened-pack-sentences",
 			"rows": [
@@ -973,8 +973,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "c37a6ef21a9b7486d4f8270a746e025359e6ad30812714a8c3e08f28374e3141",
-				"reading": "0254b71d4a17c18795d03b20e8d0d5e6a72f9e79b133f8dfd76d970d625ad8e8"
+				"png": "0ec1770c9727fbb61af83fe5f43b9c0b4bf33b0efdd53ed17c4e4228d510c53b",
+				"reading": "8aad9630a665a6034e96d3efebe853a3fb7242d19a48a571a55ec67cd2f7ff45"
 			},
 			"name": "opened-pack-verbs",
 			"rows": [
@@ -1477,7 +1477,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "88df0095393290f543f434ab6dcdd303e43027031216b90b468f2d857e53a29c",
-				"reading": "6fdf0e71d1ccce833108f8190ee87ffca2af0c400622446ae56120391010ef60"
+				"reading": "7e2c6d6c2d77f34acf79104b1c84c0d8002d2f10b62f82425ad733461d18ef74"
 			},
 			"name": "this-editor-plugin-bar",
 			"rows": [
@@ -1873,7 +1873,7 @@
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "e0fac0238a1a7fbe9620c62b667ae8c5ca1d5eaa1c7b9bb8e44f401c45db0221",
-				"reading": "438fe8ede7e8a1bfeffcb129da51bcbbfb6122ff5892fb7710772d6cef3d5d1e"
+				"reading": "6768489b0c78875b08b8a5add960bb0cc4435e1207f17a8ebffe6f257a9f0830"
 			},
 			"icons": [
 				"sections"

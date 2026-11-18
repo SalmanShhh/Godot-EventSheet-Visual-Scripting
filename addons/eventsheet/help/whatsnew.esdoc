@@ -6,6 +6,34 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Fixed: an event shows its number once in the margin
+
+A function that holds locals showed its number beside its head and again beside its actions. The first row of an event wears the number now and the later rows of it leave the margin bare; the status line, Go to event and the findings still name the event from any of its rows. Pinned in `margin_number_once_test`.
+
+### Changed: an Else row says which event it follows in plain words
+
+\"neither of 4\" read as a riddle. The note now reads \"event 4 did not run\". Nine translation files carry the new words.
+
+### Changed: a handler placed now on a node path is named for the path alone
+
+A signal source written as a path (`$Services/Settings`) named its handler with a short number (`_on_services_settings_1184_setting_changed`), there so two paths that spell the same letters never share a function. A handler placed now is `_on_services_settings_setting_changed`, and the later of two that would meet takes the number back. A handler saved before keeps the number, a file written either way opens and saves back byte for byte, and a file that already spells the plain name opens as a handler named that way. The options example gains the plain names. Pinned in `readable_handler_name_test`.
+
+### Fixed: a pack question that names no value of its own
+
+The values it was asked about follow its words one space apart, and the node the call is made on is never repeated after them. Pinned in `pack_question_words_test`.
+
+### Fixed: the options example in a fullscreen window
+
+The key hints stand at the foot of the play area instead of the bottom edge of the screen, and the options panel is as tall as what it holds, with no empty band under Back. Pinned in `options_example_layout_test`.
+
+### Fixed: opening a sheet that is already open brings its tab forward
+
+The Open dialog, the Start page's recent sheets, a Project Doctor finding, a runtime error's Open the sheet, the Include manager, a saved workspace and Open built pack each added a second tab of the same file, two copies to edit. They go through the door that re-focuses the open tab now. Pinned in `one_tab_per_file_test`.
+
+### Fixed: the words on the sheet's head bar no longer run over its counts
+
+On a narrow bar the notes and buttons after the name were squeezed into slivers that drew over the counts at the right edge. A note or button after the first four words is shown whole or left out, and the counts keep their room. Pinned in `sheet_head_words_fit_test`.
+
 ### Fixed: the two example sheets open with no problems and read as the packs they use
 
 A sheet that makes a control itself (an Input Map add, a Project Settings write, or a call of a function of the same sheet that does one of them) is no longer told the control is missing, on the row or in the Doctor, and the Input bar says \"made by this sheet\" beside it. A question that is one call on a pack's node (`$Settings.changed_setting_is(\"master_volume\")`, `$HudKit.button_is(\"BackButton\")`) now reads as that pack's row, and optional empty text arguments at the end of a call are no longer drawn as a run of empty quotes.

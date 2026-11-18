@@ -33,7 +33,7 @@ static func jump_label(report: Dictionary) -> String:
 ## the ordinary jump carries on from there.
 static func open_sheet_of(dock: Control, report: Dictionary) -> void:
 	var path: String = str(report.get("open_path", ""))
-	dock._load_sheet_from_path(path)
+	dock._navigate.open_or_focus(path)
 	var located: Dictionary = dock._locate_runtime_error_row(path, int(report.get("line", 0)))
 	report["row_resource"] = located.get("resource")
 	report["tab_index"] = int(located.get("tab_index", -1))

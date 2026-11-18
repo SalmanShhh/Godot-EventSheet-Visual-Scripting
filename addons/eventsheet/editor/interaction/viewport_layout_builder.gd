@@ -21,6 +21,15 @@ extends RefCounted
 ## (an empty rect draws nothing and hit-tests to nothing), because a sentence squeezed against a
 ## half-drawn declaration reads worse than a sentence alone. The line is still one hover away.
 const CODE_ECHO_MIN_ROW_WIDTH := 440.0
+
+## The least room a word on the sheet's head bar may be given before the counts at its right edge. Narrower than a
+## few letters it would only be a sliver of the word, so the word is left out instead.
+const HEAD_WORD_MIN_ROOM := 56.0
+
+## How many words open the head bar and are only ever shortened, never left out: the icon, the name, the kind of
+## script and what it extends. Every word after them (notes, chips, buttons) is whole or not drawn.
+const HEAD_LEADING_WORDS := 4
+
 ## The share of a flow row the SENTENCE keeps whatever the right-anchored run measures. A long `##`
 ## description echoes an equally long line, and without a floor that echo would claim the whole row
 ## and leave the words it stands for nowhere to draw - so the echo is the half that gets clipped.
@@ -290,6 +299,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		var span_lane: String = _viewport._row_builder._resolve_span_lane(span)
 		var metadata: Dictionary = span.metadata if span.metadata is Dictionary else {}
 		metadata["row_indent"] = row_data.indent
+		metadata.erase("no_room")
 		if bool(metadata.get("code_echo", false)) and width < CODE_ECHO_MIN_ROW_WIDTH:
 			span.rect = Rect2()
 			continue
@@ -438,6 +448,17 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			# blocks) never bleed past the row's right padding - nor under the right-anchored run
 			# beside them, which lays out from that edge inward. A long description used to draw
 			# straight through the echo of the very line it stands for.
+			#
+			# The sheet's head bar is the one row whose words after the name are ranked by their place: a note
+			# or a button that does not fit whole before the counts is dropped (a shorter one after it may still fit)
+			# rather than cut in the middle of a phrase or squeezed into a sliver that draws over the counts.
+			# The icon, the name, the kind and what it extends are the bar itself and are only ever shortened.
+			if row_data.row_uid.begins_with(_viewport._row_builder.SHEET_HEAD_BAR_UID_PREFIX) \
+					and (flow_right_anchor - span_x - 2.0 < minf(span_width, HEAD_WORD_MIN_ROOM) \
+					or (span_index >= HEAD_LEADING_WORDS and flow_right_anchor - span_x - 2.0 < span_width)):
+				span.rect = Rect2()
+				metadata["no_room"] = true
+				continue
 			span_width = max(min(span_width, flow_right_anchor - span_x - 2.0), 1.0)
 		# A fill cell whose text wraps grows to its visual-line count (the reserved height
 		# already covers it). Plain cells take the renderer's wrapped-text path (comment_wrap);
@@ -588,7 +609,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 		"drag_feedback_text": _viewport._drag_feedback_text if _viewport._drag_ace_target_row_index == index else "",
 		"drag_feedback_error": _viewport._drag_feedback_is_error and _viewport._drag_ace_target_row_index == index,
 		"line_number": row_data.line_number,
-		"event_number": row_data.event_number,
+		"event_number": row_data.margin_number(),
 		"branch_number": row_data.branch_number,
 		# The row's event uid, so the GUTTER can look its trace hit count up without the draw loop
 		# touching the sheet resources. Stable per row, which is why it is safe in a cached layout.

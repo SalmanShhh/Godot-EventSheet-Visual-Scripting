@@ -11254,3 +11254,4 @@ Which key or button does each action in the Input Map.,Input Map の各アクシ
 The Load bindings row of the same pair,同じペアのバインドを読み込む行
 "The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.",Settings という名前のグローバルが %s を読み込んでおり、Game Settings パックではありません。このスクリプトはパックの行を使っています。自分のグローバルに別の名前を付けると、行がパックを呼び出します。
 made by this sheet,このシートが作成
+event {n} did not run,イベント {n} は実行されなかった

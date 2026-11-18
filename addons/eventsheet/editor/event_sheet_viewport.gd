@@ -3746,6 +3746,7 @@ func _reflow_flat_rows(kept_metrics: Dictionary = {}) -> void:
 	# a pair move down by the branches before them. Read off the whole tree, folded rows included, so a
 	# fold never renumbers anything.
 	var branch_shifts: Dictionary = _branch_number_shifts(event_numbers)
+	var numbers_worn: Dictionary = {}
 	for index in range(_flat_rows.size()):
 		var line_row: EventRowData = _flat_rows[index].get("row")
 		if line_row == null:
@@ -3768,13 +3769,19 @@ func _reflow_flat_rows(kept_metrics: Dictionary = {}) -> void:
 				line_row.event_number += int(shift[0]) if line_row.event_number > 0 else 0
 			else:
 				line_row.branch_number = int(shift[1])
+		# One event wears its number once: the later rows of it (the step a function's head leads with, the
+		# Local rows an event reads as) keep the number for the status line and Go to event, and the margin
+		# leaves them bare.
+		line_row.number_worn_above = line_row.event_number > 0 and numbers_worn.has(line_row.event_number)
+		if line_row.event_number > 0:
+			numbers_worn[line_row.event_number] = true
 		if _breakpoint_rows.has(state_uid):
 			line_row.breakpoint_enabled = gutter_owner and bool(_breakpoint_rows[state_uid])
 		line_row.bookmark_enabled = gutter_owner and _bookmark_rows.has(state_uid)
 		if _row_disabled_state.has(state_uid):
 			line_row.disabled = bool(_row_disabled_state[state_uid])
 	# The two notes that name a GUTTER NUMBER, filled now that the numbers exist: an unmatched
-	# fence's "close after row N", and an Else row's "neither of N". Both are no-ops on a
+	# fence's "close after row N", and an Else row's "event N did not run". Both are no-ops on a
 	# sheet that has neither, and both are safe to run again after a fold re-numbers the rows.
 	_row_builder.apply_numbered_labels(_flat_rows)
 	if _selected_row_index >= _flat_rows.size():
@@ -5545,7 +5552,7 @@ func update_event_number_card(hit: Dictionary, at_once: bool = false) -> bool:
 ## The card an event row's number opens ({} when it has none): the event's own claim, or - for a
 ## published verb's head, which wears the number of the step it leads with - the claim on that step.
 func event_number_card_for(row_data: EventRowData) -> Dictionary:
-	if row_data == null or row_data.row_type != EventRowData.RowType.EVENT or row_data.event_number <= 0:
+	if row_data == null or row_data.row_type != EventRowData.RowType.EVENT or row_data.margin_number() <= 0:
 		return {}
 	var event_uid: String = ""
 	if row_data.source_resource is EventRow:

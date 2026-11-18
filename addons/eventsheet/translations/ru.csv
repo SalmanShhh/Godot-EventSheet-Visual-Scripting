@@ -11254,3 +11254,4 @@ Which key or button does each action in the Input Map.,Какая клавиша
 The Load bindings row of the same pair,Строка «Загрузить привязки» из той же пары
 "The global named Settings loads %s, not the Game Settings pack, and this script uses the pack's rows. Give your own global another name, so the rows call the pack.","Глобальная переменная Settings загружает %s, а не пакет Game Settings, и этот скрипт использует строки пакета. Дайте своей глобальной другое имя, чтобы строки вызывали пакет."
 made by this sheet,создано этим листом
+event {n} did not run,событие {n} не выполнилось

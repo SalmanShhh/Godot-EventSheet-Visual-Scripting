@@ -110,6 +110,11 @@ var line_number: int = 0
 # The event-sheet stable event number (1-based, sheet order through groups and sub-events);
 # 0 for non-event rows. View-only, recomputed per rebuild - never serialized.
 var event_number: int = 0
+# True when an EARLIER row of the canvas already wears this row's event number: a function's head and the
+# step it leads with are one event, as are an event and the Local rows it reads as, so the margin says the
+# number once, on the first of them. event_number itself stays (the status line, Go to event and the findings
+# still name the event from any of its rows); only the margin goes quiet. View-only, never serialized.
+var number_worn_above: bool = false
 # The number a BRANCH or a run after one wears in the margin of the look that nests by lines: a branch
 # of a pair is an event of its own there, so it counts in the sequence (the event it branches from keeps
 # its place, the events after it move down). 0 on every other row; view-only, never serialized.
@@ -233,3 +238,9 @@ var picking_note: String = ""
 ## row->resource lookups are all keyed on this, so a pair counts once wherever rows are counted.
 func statement_uid() -> String:
 	return ternary_anchor_uid if not ternary_anchor_uid.is_empty() else row_uid
+
+
+## The number the margin DRAWS beside this row: the event's number on the first row that wears it, 0 on
+## any later row of the same event, and the branch number is a separate thing the renderer falls back to.
+func margin_number() -> int:
+	return 0 if number_worn_above else event_number

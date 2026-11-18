@@ -1500,7 +1500,7 @@ func activate_open_tab(index: int) -> void:
 
 
 ## Reopen a recently-closed sheet by path (the Start page's recent sheets). Drops it from the MRU
-## first - _load_sheet_from_path opens or re-focuses it as a tab.
+## first - opening it brings its tab forward when that file is already open.
 func reopen_sheet_path(path: String) -> void:
 	if path.strip_edges().is_empty():
 		return
@@ -1508,7 +1508,7 @@ func reopen_sheet_path(path: String) -> void:
 	# Drop the row from the dock now, so a failed load (a deleted/renamed file) can't leave a
 	# dead "recently closed" entry behind. A successful load re-emits via _refresh_tab_bar.
 	open_tabs_changed.emit()
-	_load_sheet_from_path(path)
+	open_or_focus_sheet(path)
 
 
 ## The file behind a tab, plus the note that says what kind of sheet it is ("addon pack",
@@ -2003,7 +2003,7 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _on_open_requested() -> void:
-	EventSheetPopupUI.browse_file(self, PackedStringArray(EVENT_SHEET_FILTERS), _load_sheet_from_path, {"plain": true,
+	EventSheetPopupUI.browse_file(self, PackedStringArray(EVENT_SHEET_FILTERS), open_or_focus_sheet, {"plain": true,
 		"title": "Open EventSheet", "dir": _sheet_io._suggest_sheet_directory(), "size": Vector2i(860, 580)})
 
 
@@ -9018,7 +9018,7 @@ func _open_workspace_paths(name: String, paths: PackedStringArray) -> void:
 	for path: String in paths:
 		if not FileAccess.file_exists(path):
 			continue
-		_load_sheet_from_path(path)
+		open_or_focus_sheet(path)
 		opened += 1
 	if opened == 0:
 		_set_status(EventSheetL10n.translate("That workspace has nothing left to open."), true)

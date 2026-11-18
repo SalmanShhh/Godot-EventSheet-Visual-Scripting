@@ -274,7 +274,7 @@ static func _test_or_and_else() -> bool:
 
 	# The Else row names the event its chain starts at.
 	passed = _check("an Else says what it follows",
-		EventSheetViewportRowBuilder.else_follows_text(_numbered_else_rows(9), 1, 0), "neither of 9") and passed
+		EventSheetViewportRowBuilder.else_follows_text(_numbered_else_rows(9), 1, 0), "event 9 did not run") and passed
 	passed = _check("an Else whose head is off the canvas says nothing",
 		EventSheetViewportRowBuilder.else_follows_text(_numbered_else_rows(0), 1, 0), "") and passed
 	return passed

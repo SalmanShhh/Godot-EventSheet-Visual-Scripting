@@ -600,6 +600,6 @@ func _open_activated_finding() -> void:
 	if path.get_extension() != "gd" and path.get_extension() != "tres":
 		_dock._set_status(EventSheetL10n.translate("This finding points at %s - open it from the FileSystem dock.") % path.get_file())
 		return
-	_dock._load_sheet_from_path(path)
+	_dock._navigate.open_or_focus(path)
 	_doctor_window.hide()
 	_dock._set_status(EventSheetL10n.translate("Opened %s from the Project Doctor.") % path.get_file())

@@ -451,7 +451,7 @@ func open_built_pack() -> void:
 	if built.is_empty() or not FileAccess.file_exists(built):
 		_dock._set_status("This recipe has not been built yet - press Build pack first.", true)
 		return
-	_dock._load_sheet_from_path(built)
+	_dock._navigate.open_or_focus(built)
 
 
 ## The `.gd` a recipe emits: the base path it hands `save_pack`, plus the extension a pack ships
