@@ -366,6 +366,26 @@ static func build() -> bool:
 		"assist_is_on": "Assist [b]{assist_name}[/b] is on",
 	})
 	Lib.feature_verbs(sheet, ["declare_setting", "set_setting"])
+	# The lines a sheet or a hand-written script calls these on - the child node of a scene, the same node
+	# under a Services node, or the global of the same name - so they read as the pack's own rows.
+	Lib.verb_spellings(sheet, ["$Settings", "$Services/Settings", "Settings"], {
+		"load_bindings": "load_bindings()",
+		"save_bindings": "save_bindings()",
+		"reset_all_bindings": "reset_all_bindings()",
+		"reset_binding": "reset_binding([[action|argument: \"jump\"]])",
+		"swap_the_binding": "swap_the_binding()",
+		"take_the_binding_anyway": "take_the_binding_anyway()",
+		"pick_another_key": "pick_another_key()",
+		"cancel_listening": "cancel_listening()",
+		"listen_for_binding": "listen_for_binding([[action|argument: \"jump\"]], [[device|argument: \"keyboard\"]])",
+		"load_all_settings": "load_all_settings()",
+		"apply_all_settings": "apply_all_settings()",
+		"save_all_settings": "save_all_settings()",
+		"build_controls_page": "build_controls_page([[container|argument: $Column/Controls]])",
+		"declare_setting": "declare_setting([[setting_name|argument: \"master_volume\"]], [[default_value|argument: 80]], [[kind|argument: \"percent\"]])",
+		"bind_control": "bind_control([[control|argument: $Options/Volume]], [[setting_name|argument: \"master_volume\"]])",
+		"changed_setting_is": "changed_setting_is([[setting_name|argument: \"master_volume\"]])",
+	})
 	return Lib.save_pack(sheet, "res://eventsheet_addons/game_settings/game_settings_addon",
 		"res://eventsheet_addons/game_settings/icon.svg")
 
@@ -727,8 +747,10 @@ static func _append_rebinding(sheet: EventSheetResource) -> void:
 		"# every control, and the press is marked handled: Space and a pad's A are also ui_accept, so a press",
 		"# left for the controls would press the button that started the listening all over again, and a",
 		"# click would reach whatever lay under it. A key matching ui_cancel (Escape) cancels instead of",
-		"# binding, so Escape itself cannot be bound while listening. A plain left click is never captured: it",
-		"# is how the page is operated, so the player can still click Swap, Reset or another binding.",
+		"# binding, so Escape itself cannot be bound while listening. A left click is captured like any other",
+		"# button, except one that lands on a button: that is how the page is operated, so the player can",
+		"# still click Swap, Reset or another binding, and the button that started the listening stays",
+		"# clickable. The click that started the listening is never bound - it had already happened.",
 		"func _input(event: InputEvent) -> void:",
 		"\tif _listening_action.is_empty():",
 		"\t\treturn",
@@ -740,7 +762,7 @@ static func _append_rebinding(sheet: EventSheetResource) -> void:
 		"\t\treturn",
 		"\tif not _is_binding_event(event) or not event.is_pressed() or event.is_echo():",
 		"\t\treturn",
-		"\tif event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:",
+		"\tif event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT and get_viewport().gui_get_hovered_control() is BaseButton:",
 		"\t\treturn",
 		"\tif _device_of(event) != _listening_device:",
 		"\t\treturn",
@@ -954,7 +976,7 @@ static func _append_rebinding(sheet: EventSheetResource) -> void:
 		[],
 		"for action: String in project_actions():\n\treset_binding(action)")
 	Lib.append_function(sheet, "save_bindings", "Save Bindings", "Settings",
-		"Writes every control's current bindings into the same file the settings live in (settings_file, user://settings.cfg unless you changed it), under a section of their own. Call it when the player closes the options screen, beside Save All Settings. The Keyboard object's Save bindings row writes user://bindings.cfg instead; use one pair or the other.",
+		"Writes every control's current bindings into the same file the settings live in (settings_file, user://settings.cfg unless you changed it), under a section of their own. Call it when the player closes the options screen, beside Save All Settings. The Keyboard row of the same name writes user://bindings.cfg instead.",
 		[],
 		"\n".join(PackedStringArray([
 			"var config: ConfigFile = ConfigFile.new()",

@@ -185,6 +185,9 @@ var _assists: Dictionary = {}
 # @ace_name("Declare Setting")
 # @ace_description("Names a setting once: what it is called, what it defaults to, what kind of value it is, (for a Choice) its options, and which options page it belongs on. Everything else in this pack reads that declaration, so the default is written in one place instead of at five call sites - and this is the single entry point for an option of ANY kind. Difficulty, motion blur and invert Y are one Declare row each plus one On Setting Changed reaction whose rows do what the setting means; the menu control, the saved value, Reset To Defaults and the boot re-apply all follow from the declaration, with nothing to register anywhere else. Declaring the same name again replaces the declaration and keeps any value already set.")
 # @ace_display_template("Declare setting [b]{setting_name}[/b] default [b]{default_value}[/b] kind [b]{kind}[/b]")
+# @ace_lift_example("$Settings.declare_setting([[setting_name|argument: "master_volume"]], [[default_value|argument: 80]], [[kind|argument: "percent"]])")
+# @ace_lift_example("$Services/Settings.declare_setting([[setting_name|argument: "master_volume"]], [[default_value|argument: 80]], [[kind|argument: "percent"]])")
+# @ace_lift_example("Settings.declare_setting([[setting_name|argument: "master_volume"]], [[default_value|argument: 80]], [[kind|argument: "percent"]])")
 # @ace_param_options(kind percent=Percent (0-100 slider), toggle=Yes/No, choice=Choice, number=Number, text=Text)
 # @ace_codegen_template("Settings.declare_setting({setting_name}, {default_value}, "{kind}", {choices}, {page}, {label})")
 func declare_setting(setting_name: String, default_value: Variant, kind: String = "percent", choices: String = "", page: String = "", label: String = "") -> void:
@@ -208,6 +211,9 @@ func set_setting(setting_name: String, value: Variant) -> void:
 # @ace_action
 # @ace_name("Apply All Settings")
 # @ace_description("Re-fires On Setting Changed for EVERY declared setting, with the value in force now. This is the one row that makes boot and the options screen take the same path: the volume, the shake and the difficulty are applied by the same events either way, so they can never drift apart. Call it once after Load All Settings.")
+# @ace_lift_example("$Settings.apply_all_settings()")
+# @ace_lift_example("$Services/Settings.apply_all_settings()")
+# @ace_lift_example("Settings.apply_all_settings()")
 # @ace_codegen_template("Settings.apply_all_settings()")
 func apply_all_settings() -> void:
 	for setting_name: String in _declared:
@@ -224,6 +230,9 @@ func reset_settings_to_defaults() -> void:
 # @ace_action
 # @ace_name("Load All Settings")
 # @ace_description("Reads saved values out of the settings file (settings_file, user://settings.cfg unless you changed it; the settings section) for every declared setting. The built-in Save Setting action writes the same file but takes its section as a parameter, so values saved that way are picked up when that row names the settings section. A setting with nothing saved keeps its default. Nothing is applied yet: follow it with Apply All Settings.")
+# @ace_lift_example("$Settings.load_all_settings()")
+# @ace_lift_example("$Services/Settings.load_all_settings()")
+# @ace_lift_example("Settings.load_all_settings()")
 # @ace_codegen_template("Settings.load_all_settings()")
 func load_all_settings() -> void:
 	var config: ConfigFile = ConfigFile.new()
@@ -236,6 +245,9 @@ func load_all_settings() -> void:
 # @ace_action
 # @ace_name("Save All Settings")
 # @ace_description("Writes every declared setting's current value into the settings file (settings_file; the settings section), keeping anything else already in the file. Call it when the player closes the options screen. Settings live outside your save slots on purpose, so starting a new run never resets the volume.")
+# @ace_lift_example("$Settings.save_all_settings()")
+# @ace_lift_example("$Services/Settings.save_all_settings()")
+# @ace_lift_example("Settings.save_all_settings()")
 # @ace_codegen_template("Settings.save_all_settings()")
 func save_all_settings() -> void:
 	var config: ConfigFile = ConfigFile.new()
@@ -248,6 +260,9 @@ func save_all_settings() -> void:
 # @ace_name("Changed Setting Is")
 # @ace_description("Whether the setting being announced right now is this one - the branch under On Setting Changed. Put one sub-event per setting under the trigger and each reaction stays a plain row. Once the announcement is over it keeps answering about the setting announced most recently, which is what makes it survive a reaction that waits; where several settings are applied in one go (Apply All Settings) and the reaction waits, branch on the trigger row's own setting_name value instead.")
 # @ace_display_template("Changed setting is [b]{setting_name}[/b]")
+# @ace_lift_example("$Settings.changed_setting_is([[setting_name|argument: "master_volume"]])")
+# @ace_lift_example("$Services/Settings.changed_setting_is([[setting_name|argument: "master_volume"]])")
+# @ace_lift_example("Settings.changed_setting_is([[setting_name|argument: "master_volume"]])")
 # @ace_codegen_template("Settings.changed_setting_is({setting_name})")
 func changed_setting_is(setting_name: String) -> bool:
 	if not _announcing.is_empty():
@@ -415,6 +430,9 @@ func quality_is(word: String) -> bool:
 # @ace_name("Bind To Setting")
 # @ace_description("Ties one control to one setting, both ways and at once: the control shows the value in force the moment it is bound, moving it changes the setting, and anything else that changes the setting - a quality preset, Reset To Defaults, a second menu - moves the control back. This is the glue every options screen writes twice per option, as one row. A dropdown with no items yet takes the setting's declared choices.")
 # @ace_display_template("Bind [i]{control}[/i] to setting [b]{setting_name}[/b]")
+# @ace_lift_example("$Settings.bind_control([[control|argument: $Options/Volume]], [[setting_name|argument: "master_volume"]])")
+# @ace_lift_example("$Services/Settings.bind_control([[control|argument: $Options/Volume]], [[setting_name|argument: "master_volume"]])")
+# @ace_lift_example("Settings.bind_control([[control|argument: $Options/Volume]], [[setting_name|argument: "master_volume"]])")
 # @ace_codegen_template("Settings.bind_control({control}, {setting_name})")
 func bind_control(control: Node, setting_name: String) -> void:
 	if control == null:
@@ -657,6 +675,9 @@ func pending_binding_words() -> String:
 # @ace_name("Listen For A New Binding")
 # @ace_description("Waits for the player to press a key, a mouse button or a pad button, and gives it to this control. A free key is bound straight away and On Binding Changed fires; a key something else already answers to fires On Binding Conflict instead and waits for one of the three answers. Only presses on the device you name are taken, so listening for a pad button is not ended by someone resting on the keyboard. Escape stops the listening and fires On Binding Cancelled, and a plain left click is left to the page so Swap, Reset and the other binding buttons still work.")
 # @ace_display_template("Listen for a new [b]{device}[/b] binding for [b]{action}[/b]")
+# @ace_lift_example("$Settings.listen_for_binding([[action|argument: "jump"]], [[device|argument: "keyboard"]])")
+# @ace_lift_example("$Services/Settings.listen_for_binding([[action|argument: "jump"]], [[device|argument: "keyboard"]])")
+# @ace_lift_example("Settings.listen_for_binding([[action|argument: "jump"]], [[device|argument: "keyboard"]])")
 # @ace_param_hint(action input_action)
 # @ace_param_options(device keyboard=Keyboard or mouse, pad=Gamepad)
 # @ace_codegen_template("Settings.listen_for_binding({action}, "{device}")")
@@ -671,6 +692,9 @@ func listen_for_binding(action: String, device: String) -> void:
 # @ace_action
 # @ace_name("Take The Binding Anyway")
 # @ace_description("The first answer to a conflict: this control takes the key, and the one that had it is left without it. Honest rather than tidy - the other control really has lost its key, which is why it turns up in Unbound Actions and its row goes amber until somebody gives it another.")
+# @ace_lift_example("$Settings.take_the_binding_anyway()")
+# @ace_lift_example("$Services/Settings.take_the_binding_anyway()")
+# @ace_lift_example("Settings.take_the_binding_anyway()")
 # @ace_codegen_template("Settings.take_the_binding_anyway()")
 func take_the_binding_anyway() -> void:
 	if _pending_event == null:
@@ -688,6 +712,9 @@ func take_the_binding_anyway() -> void:
 # @ace_action
 # @ace_name("Swap The Binding")
 # @ace_description("The second answer to a conflict: the two controls trade. This one takes the key the player pressed, and the control that had it takes this one's old key on the same device. Nobody is left without a binding, which is why it is the answer to offer first.")
+# @ace_lift_example("$Settings.swap_the_binding()")
+# @ace_lift_example("$Services/Settings.swap_the_binding()")
+# @ace_lift_example("Settings.swap_the_binding()")
 # @ace_codegen_template("Settings.swap_the_binding()")
 func swap_the_binding() -> void:
 	if _pending_event == null:
@@ -712,6 +739,9 @@ func swap_the_binding() -> void:
 # @ace_action
 # @ace_name("Pick Another Key")
 # @ace_description("The third answer to a conflict: forget the key that was taken and go on listening, so the player simply presses a different one. Nothing has changed yet at this point, which is what makes this the safe answer.")
+# @ace_lift_example("$Settings.pick_another_key()")
+# @ace_lift_example("$Services/Settings.pick_another_key()")
+# @ace_lift_example("Settings.pick_another_key()")
 # @ace_codegen_template("Settings.pick_another_key()")
 func pick_another_key() -> void:
 	_pending_event = null
@@ -719,6 +749,9 @@ func pick_another_key() -> void:
 # @ace_action
 # @ace_name("Stop Listening For A Binding")
 # @ace_description("Stops waiting for a key and leaves every binding as it was, then fires On Binding Cancelled with the control that was waiting. The Escape key does this by itself while a row is listening (Escape cannot be bound, for that reason), and a row can call it for a Cancel button of its own.")
+# @ace_lift_example("$Settings.cancel_listening()")
+# @ace_lift_example("$Services/Settings.cancel_listening()")
+# @ace_lift_example("Settings.cancel_listening()")
 # @ace_codegen_template("Settings.cancel_listening()")
 func cancel_listening() -> void:
 	var cancelled_action: String = _listening_action
@@ -732,6 +765,9 @@ func cancel_listening() -> void:
 # @ace_name("Reset One Binding")
 # @ace_description("Puts one control back to the bindings your project ships with, on every device, and fires On Binding Changed. The originals come from the Input Map in Project Settings, so this is a reset to what you designed rather than to what was last saved.")
 # @ace_display_template("Reset the binding of [b]{action}[/b]")
+# @ace_lift_example("$Settings.reset_binding([[action|argument: "jump"]])")
+# @ace_lift_example("$Services/Settings.reset_binding([[action|argument: "jump"]])")
+# @ace_lift_example("Settings.reset_binding([[action|argument: "jump"]])")
 # @ace_param_hint(action input_action)
 # @ace_codegen_template("Settings.reset_binding({action})")
 func reset_binding(action: String) -> void:
@@ -746,6 +782,9 @@ func reset_binding(action: String) -> void:
 # @ace_action
 # @ace_name("Reset Every Binding")
 # @ace_description("Puts every control back to the bindings your project ships with - the page-level Reset All. Save Bindings afterwards to make it stick.")
+# @ace_lift_example("$Settings.reset_all_bindings()")
+# @ace_lift_example("$Services/Settings.reset_all_bindings()")
+# @ace_lift_example("Settings.reset_all_bindings()")
 # @ace_codegen_template("Settings.reset_all_bindings()")
 func reset_all_bindings() -> void:
 	for action: String in project_actions():
@@ -753,7 +792,10 @@ func reset_all_bindings() -> void:
 
 # @ace_action
 # @ace_name("Save Bindings")
-# @ace_description("Writes every control's current bindings into the same file the settings live in (settings_file, user://settings.cfg unless you changed it), under a section of their own. Call it when the player closes the options screen, beside Save All Settings. The Keyboard object's Save bindings row writes user://bindings.cfg instead; use one pair or the other.")
+# @ace_description("Writes every control's current bindings into the same file the settings live in (settings_file, user://settings.cfg unless you changed it), under a section of their own. Call it when the player closes the options screen, beside Save All Settings. The Keyboard row of the same name writes user://bindings.cfg instead.")
+# @ace_lift_example("$Settings.save_bindings()")
+# @ace_lift_example("$Services/Settings.save_bindings()")
+# @ace_lift_example("Settings.save_bindings()")
 # @ace_codegen_template("Settings.save_bindings()")
 func save_bindings() -> void:
 	var config: ConfigFile = ConfigFile.new()
@@ -765,6 +807,9 @@ func save_bindings() -> void:
 # @ace_action
 # @ace_name("Load Bindings")
 # @ace_description("Reads saved bindings back out of the settings file (settings_file) and puts them into the Input Map. Call it at boot beside Load All Settings. A control with nothing saved keeps the binding your project ships with, so an action added since the player last saved is bound the way you designed it.")
+# @ace_lift_example("$Settings.load_bindings()")
+# @ace_lift_example("$Services/Settings.load_bindings()")
+# @ace_lift_example("Settings.load_bindings()")
 # @ace_codegen_template("Settings.load_bindings()")
 func load_bindings() -> void:
 	var config: ConfigFile = ConfigFile.new()
@@ -781,6 +826,9 @@ func load_bindings() -> void:
 # @ace_name("Controls Page From The Input Map")
 # @ace_description("Fills a container with one row per control your project declares: its name, its keyboard binding, its pad binding, and a reset. Pressing a binding starts listening for a new one. The rows come from the Input Map, so an action added to the project appears on its own; the buttons keep themselves current through On Binding Changed; and the focus neighbours are wired, so the page works on a pad from the first frame.")
 # @ace_display_template("Controls page on [i]{container}[/i] from the Input Map")
+# @ace_lift_example("$Settings.build_controls_page([[container|argument: $Column/Controls]])")
+# @ace_lift_example("$Services/Settings.build_controls_page([[container|argument: $Column/Controls]])")
+# @ace_lift_example("Settings.build_controls_page([[container|argument: $Column/Controls]])")
 # @ace_codegen_template("Settings.build_controls_page({container})")
 func build_controls_page(container: Node) -> void:
 	if container == null:
@@ -1037,8 +1085,10 @@ func _input(event: InputEvent) -> void:
 	# every control, and the press is marked handled: Space and a pad's A are also ui_accept, so a press
 	# left for the controls would press the button that started the listening all over again, and a
 	# click would reach whatever lay under it. A key matching ui_cancel (Escape) cancels instead of
-	# binding, so Escape itself cannot be bound while listening. A plain left click is never captured: it
-	# is how the page is operated, so the player can still click Swap, Reset or another binding.
+	# binding, so Escape itself cannot be bound while listening. A left click is captured like any other
+	# button, except one that lands on a button: that is how the page is operated, so the player can
+	# still click Swap, Reset or another binding, and the button that started the listening stays
+	# clickable. The click that started the listening is never bound - it had already happened.
 	if _listening_action.is_empty():
 		return
 	if event is InputEventKey and event.is_pressed() and not event.is_echo() and InputMap.event_is_action(event, "ui_cancel"):
@@ -1049,7 +1099,7 @@ func _input(event: InputEvent) -> void:
 		return
 	if not _is_binding_event(event) or not event.is_pressed() or event.is_echo():
 		return
-	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT and get_viewport().gui_get_hovered_control() is BaseButton:
 		return
 	if _device_of(event) != _listening_device:
 		return

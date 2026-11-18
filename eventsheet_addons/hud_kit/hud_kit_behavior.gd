@@ -84,6 +84,8 @@ func connect_buttons() -> void:
 # @ace_name("Set Text")
 # @ace_description("Sets the text of a named Label, RichTextLabel, Button or LineEdit.")
 # @ace_display_template("Set text of [b]{control_name}[/b] to [b]{text}[/b]")
+# @ace_lift_example("$HudKit.set_text([[control_name|argument: "StatusLabel"]], [[text|argument: "Ready"]])")
+# @ace_lift_example("$Hud.set_text([[control_name|argument: "StatusLabel"]], [[text|argument: "Ready"]])")
 # @ace_codegen_template("$HudKitBehavior.set_text({control_name}, {text})")
 func set_text(control_name: String, text: String) -> void:
 	var target: Node = _ui(control_name)
@@ -136,6 +138,8 @@ func set_bar_lag(bar_name: String, seconds: float, lag_colour: Color) -> void:
 # @ace_action
 # @ace_name("Show Panel")
 # @ace_description("Makes a named panel (any CanvasItem) visible.")
+# @ace_lift_example("$HudKit.show_panel([[panel_name|argument: "Panel"]])")
+# @ace_lift_example("$Hud.show_panel([[panel_name|argument: "Panel"]])")
 # @ace_codegen_template("$HudKitBehavior.show_panel({panel_name})")
 func show_panel(panel_name: String) -> void:
 	var target: Node = _ui(panel_name)
@@ -145,6 +149,8 @@ func show_panel(panel_name: String) -> void:
 # @ace_action
 # @ace_name("Hide Panel")
 # @ace_description("Hides a named panel (any CanvasItem).")
+# @ace_lift_example("$HudKit.hide_panel([[panel_name|argument: "Panel"]])")
+# @ace_lift_example("$Hud.hide_panel([[panel_name|argument: "Panel"]])")
 # @ace_codegen_template("$HudKitBehavior.hide_panel({panel_name})")
 func hide_panel(panel_name: String) -> void:
 	var target: Node = _ui(panel_name)
@@ -163,6 +169,8 @@ func toggle_panel(panel_name: String) -> void:
 # @ace_action
 # @ace_name("Switch Screen")
 # @ace_description("Shows the named panel and hides its sibling panels - one call flips a whole menu screen.")
+# @ace_lift_example("$HudKit.switch_screen([[panel_name|argument: "Panel"]])")
+# @ace_lift_example("$Hud.switch_screen([[panel_name|argument: "Panel"]])")
 # @ace_codegen_template("$HudKitBehavior.switch_screen({panel_name})")
 func switch_screen(panel_name: String) -> void:
 	var target: Node = _ui(panel_name)
@@ -177,6 +185,8 @@ func switch_screen(panel_name: String) -> void:
 # @ace_name("Show Toast")
 # @ace_description("Pops a bottom-centre message that fades out after toast_seconds.")
 # @ace_display_template("Show toast [b]{text}[/b]")
+# @ace_lift_example("$HudKit.show_toast([[text|argument: "Saved"]])")
+# @ace_lift_example("$Hud.show_toast([[text|argument: "Saved"]])")
 # @ace_codegen_template("$HudKitBehavior.show_toast({text})")
 func show_toast(text: String) -> void:
 	var toast: Label = Label.new()

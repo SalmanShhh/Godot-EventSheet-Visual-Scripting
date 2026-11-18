@@ -248,6 +248,30 @@ static func verb_sentences(sheet: EventSheetResource, sentences: Dictionary) -> 
 		push_warning("verb_sentences: no function named %s on this sheet (typo?)" % str(missing))
 
 
+## Teaches the reader the lines these verbs are written as on a node or global that wears the pack, so a
+## sheet that calls `$Settings.load_bindings()` (or the bare global `Settings.load_bindings()`) reads as the
+## pack's own row - its name and its sentence - rather than as a call of some method. `receivers` are the
+## spellings of the thing the call is made on, written as they stand in the file (`$Settings`, `Settings`);
+## `verbs` maps a function name to the rest of the line, value spans marked as in a lift example
+## (`build_controls_page([[container|argument: $Column/Controls]])`). Only the words change: the line a
+## person wrote is baked onto the row as its template, so a file saves back byte for byte.
+static func verb_spellings(sheet: EventSheetResource, receivers: Array, verbs: Dictionary) -> void:
+	var missing: Array = verbs.keys()
+	for function_resource: Resource in sheet.functions:
+		if not (function_resource is EventFunction):
+			continue
+		var function_name: String = (function_resource as EventFunction).function_name
+		if not verbs.has(function_name):
+			continue
+		missing.erase(function_name)
+		var examples: PackedStringArray = PackedStringArray()
+		for receiver: Variant in receivers:
+			examples.append("%s.%s" % [str(receiver), str(verbs[function_name])])
+		(function_resource as EventFunction).lift_examples = examples
+	if not missing.is_empty():
+		push_warning("verb_spellings: no function named %s on this sheet (typo?)" % str(missing))
+
+
 ## Marks the named exposed functions FEATURED - the pack's hero verbs, starred + bold at the
 ## top of their picker section. Call once at the end of a builder with the 1-3 verbs a new
 ## user should meet first: Lib.feature_verbs(sheet, ["take_damage", "heal"]).

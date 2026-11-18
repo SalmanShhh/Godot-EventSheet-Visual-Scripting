@@ -325,6 +325,9 @@ func delete_slot() -> void:
 # @ace_name("Save Game")
 # @ace_category("Save System")
 # @ace_description("Broadcasts On Before Save (every sheet writes its state), snapshots every node in the persist group, stamps the slot card, then fires On Save Written (or On Save Failed).")
+# @ace_lift_example("$SaveSystem.save_game()")
+# @ace_lift_example("$Services/SaveSystem.save_game()")
+# @ace_lift_example("SaveSystem.save_game()")
 # @ace_codegen_template("SaveSystem.save_game()")
 func save_game() -> void:
 	_write_depth += 1
@@ -336,6 +339,9 @@ func save_game() -> void:
 # @ace_name("Load Game")
 # @ace_category("Save System")
 # @ace_description("Reads the slot, gives migration rows their moment (On Save Needs Upgrade) when an older build wrote it, restores every persist-group snapshot, then broadcasts On After Load. A file it cannot read fires On Load Failed instead.")
+# @ace_lift_example("$SaveSystem.load_game()")
+# @ace_lift_example("$Services/SaveSystem.load_game()")
+# @ace_lift_example("SaveSystem.load_game()")
 # @ace_codegen_template("SaveSystem.load_game()")
 func load_game() -> void:
 	_load_depth += 1
@@ -400,6 +406,9 @@ func load_singleton_state(singleton_name: String, key: String) -> void:
 # @ace_name("Slot Exists")
 # @ace_category("Save System")
 # @ace_description("Whether the slot has a save file.")
+# @ace_lift_example("$SaveSystem.slot_exists([[slot_index|argument: 0]])")
+# @ace_lift_example("$Services/SaveSystem.slot_exists([[slot_index|argument: 0]])")
+# @ace_lift_example("SaveSystem.slot_exists([[slot_index|argument: 0]])")
 # @ace_codegen_template("SaveSystem.slot_exists({slot_index})")
 func slot_exists(slot_index: int) -> bool:
 	return FileAccess.file_exists(_slot_path(slot_index))

@@ -454,6 +454,13 @@ static func build() -> bool:
 		"pop_floating_text_as": "Pop floating text [b]{text}[/b] as [b]{style}[/b] at [b]{at}[/b]",
 	})
 	Lib.feature_verbs(sheet, ["set_text", "set_bar", "show_toast"])
+	Lib.verb_spellings(sheet, ["$HudKit", "$Hud"], {
+		"set_text": "set_text([[control_name|argument: \"StatusLabel\"]], [[text|argument: \"Ready\"]])",
+		"show_toast": "show_toast([[text|argument: \"Saved\"]])",
+		"show_panel": "show_panel([[panel_name|argument: \"Panel\"]])",
+		"hide_panel": "hide_panel([[panel_name|argument: \"Panel\"]])",
+		"switch_screen": "switch_screen([[panel_name|argument: \"Panel\"]])",
+	})
 	return Lib.save_pack(sheet, "res://eventsheet_addons/hud_kit/hud_kit_behavior")
 
 

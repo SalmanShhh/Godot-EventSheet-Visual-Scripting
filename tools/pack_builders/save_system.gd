@@ -256,4 +256,9 @@ static func build() -> bool:
 		"can_open_save_folder": "the save folder can be shown here",
 	})
 	Lib.feature_verbs(src.sheet, ["save_game", "load_game", "save_all_addons"])
+	Lib.verb_spellings(src.sheet, ["$SaveSystem", "$Services/SaveSystem", "SaveSystem"], {
+		"save_game": "save_game()",
+		"load_game": "load_game()",
+		"slot_exists": "slot_exists([[slot_index|argument: 0]])",
+	})
 	return Lib.publish(src, "res://eventsheet_addons/save_system/save_system_addon")
