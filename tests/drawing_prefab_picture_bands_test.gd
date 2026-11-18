@@ -86,6 +86,7 @@ static func run() -> bool:
 	table.append(["a stamp prefab draws the same picture however it is drawn", with_stamp.get_data() == EventSheetDrawingPrefabPreview.rasterize(stamped, Vector2i(384, 200), ground, [], 1).get_data(), true])
 	var ok: bool = SUPPORT.pins(P, table)
 	ok = fuzz_pins() and ok
+	ok = band_pins() and ok
 	return hoist_pins() and ok
 
 
@@ -168,3 +169,66 @@ static func hoist_pins() -> bool:
 		["a polygon's test, worked out once per shape, answers what the per-pixel test answers", polygon_wrong, 0],
 		["so does a sweep's", sweep_wrong, 0],
 	])
+
+
+## Steps of the kinds that were still asked pixel by pixel: rings thick and thin (some with no hole, some half outside the
+## picture), arcs of a full turn and of part of one, pies, cones, and see-through colours over each other.
+static func _band_steps(seed_value: int) -> Array:
+	var random: RandomNumberGenerator = RandomNumberGenerator.new()
+	random.seed = seed_value
+	var steps: Array = []
+	for index: int in 40:
+		var color: String = "#%02x%02x%02x%02x" % [random.randi() % 256, random.randi() % 256, random.randi() % 256, [255, 255, 200, 120, 60][random.randi() % 5]]
+		var at: Dictionary = {"x": random.randf_range(-130.0, 130.0), "y": random.randf_range(-90.0, 90.0), "color": color}
+		match index % 6:
+			0:
+				steps.append(at.merged({"kind": "ring", "p1": random.randf_range(2.0, 60.0), "p2": random.randf_range(0.2, 70.0)}))
+			1:
+				steps.append(at.merged({"kind": "arc", "p1": random.randf_range(2.0, 60.0), "p2": 0.0, "p3": [360.0, 720.0, -360.0, 400.0][random.randi() % 4], "thickness": random.randf_range(0.3, 40.0)}))
+			2:
+				var from_angle: float = random.randf_range(0.0, 360.0)
+				steps.append(at.merged({"kind": "arc", "p1": random.randf_range(2.0, 60.0), "p2": from_angle, "p3": from_angle + random.randf_range(20.0, 340.0), "thickness": random.randf_range(0.3, 25.0)}))
+			3:
+				var start: float = random.randf_range(0.0, 360.0)
+				steps.append(at.merged({"kind": "pie", "p1": random.randf_range(2.0, 60.0), "p2": start, "p3": start + random.randf_range(10.0, 360.0)}))
+			4:
+				steps.append(at.merged({"kind": "cone", "p1": random.randf_range(0.0, 360.0), "p2": random.randf_range(5.0, 330.0), "p3": random.randf_range(3.0, 60.0)}))
+			5:
+				steps.append(at.merged({"kind": "circle", "p1": random.randf_range(2.0, 50.0)}))
+	return steps
+
+
+## The rings, arcs, pies and cones, and a run of see-through colour written across in one go, draw the pixels that asking
+## every pixel one by one draws, on the ground and with some steps quietened.
+static func band_pins() -> bool:
+	var ground: Color = Color(0.11, 0.12, 0.15, 1.0)
+	var table: Array = []
+	var same_pruned: int = 0
+	var same_runs: int = 0
+	var total: int = 0
+	var first_difference: String = ""
+	for seed_value: int in 30:
+		var steps: Array = _band_steps(seed_value)
+		for size: Vector2i in [Vector2i(160, 100), Vector2i(61, 87)]:
+			for quiet: Array in [[], [seed_value % 40, 7]]:
+				EventSheetDrawingPrefabPreview.prune_columns = false
+				EventSheetDrawingPrefabPreview.blend_runs = false
+				var long_way: Image = EventSheetDrawingPrefabPreview.rasterize(steps, size, ground, quiet, 1)
+				EventSheetDrawingPrefabPreview.prune_columns = true
+				var pruned: Image = EventSheetDrawingPrefabPreview.rasterize(steps, size, ground, quiet, 1)
+				EventSheetDrawingPrefabPreview.blend_runs = true
+				var runs: Image = EventSheetDrawingPrefabPreview.rasterize(steps, size, ground, quiet, 1)
+				total += 1
+				if pruned.get_data() == long_way.get_data():
+					same_pruned += 1
+				elif first_difference.is_empty():
+					first_difference = "pruned: seed %d at %dx%d quiet %s" % [seed_value, size.x, size.y, str(quiet)]
+				if runs.get_data() == long_way.get_data():
+					same_runs += 1
+				elif first_difference.is_empty():
+					first_difference = "runs: seed %d at %dx%d quiet %s" % [seed_value, size.x, size.y, str(quiet)]
+	EventSheetDrawingPrefabPreview.prune_columns = true
+	EventSheetDrawingPrefabPreview.blend_runs = true
+	table.append(["rings, arcs, pies and cones drawn visiting only the columns they can fill equal the long way (%d of %d)" % [same_pruned, total], first_difference, ""])
+	table.append(["and with see-through runs blended in one go (%d of %d)" % [same_runs, total], same_runs, total])
+	return SUPPORT.pins(P, table)

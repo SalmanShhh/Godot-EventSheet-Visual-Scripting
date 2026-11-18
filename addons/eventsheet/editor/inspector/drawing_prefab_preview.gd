@@ -20,9 +20,14 @@ const BAND_COUNT: int = 8
 const BAND_MIN_STEPS: int = 24
 ## Room to spare, in pixels, when a fill works out which columns of a row can hold its shape.
 const PRUNE_MARGIN: float = 1.5
+## The shortest see-through run worth looking at to blend it in one go: a shorter one is blended pixel by pixel.
+const BLEND_RUN_LEAST: int = 12
 ## Whether a fill visits only the columns of a row that can hold its shape. It always draws the same pixels either way;
 ## a test turns it off to draw every pixel of the bounding box the long way and compares.
 static var prune_columns: bool = true
+## Whether a see-through run laid over pixels of one colour is blended once and written across. It always draws the same
+## pixels either way; a test turns it off and compares.
+static var blend_runs: bool = true
 
 
 ## The prefab-local bounding box that encloses every step (before any fit/scale). Empty steps -> a unit box.
@@ -352,9 +357,18 @@ static func _fill_run(img: _Canvas, y: int, first: int, last: int, c: Color) -> 
 		return
 	if c.a >= 0.999:
 		img.image.fill_rect(Rect2i(first, y - img.top, last - first, 1), c)
-	else:
-		for x: int in range(first, last):
-			_blend(img, x, y, c)
+		return
+	# A see-through run over pixels that are all one colour (the ground, or the inside of one earlier shape) is that one
+	# colour blended once and written across, which is what blending each pixel gives: the same sum on the same colour.
+	var count: int = last - first
+	if blend_runs and count >= BLEND_RUN_LEAST:
+		var row: int = y - img.top
+		var under: PackedByteArray = img.image.get_region(Rect2i(first, row, count, 1)).get_data()
+		if under.slice(4) == under.slice(0, under.size() - 4):
+			img.image.fill_rect(Rect2i(first, row, count, 1), img.image.get_pixel(first, row).lerp(c, c.a))
+			return
+	for x: int in range(first, last):
+		_blend(img, x, y, c)
 
 
 static func _fill_disc(img: _Canvas, center: Vector2, radius: float, c: Color) -> void:
@@ -381,31 +395,63 @@ static func _fill_ring(img: _Canvas, center: Vector2, radius: float, width: floa
 	var half: float = maxf(width, 1.0) * 0.5
 	var box: Rect2i = _px_bounds(img, Rect2(center - Vector2(r + half, r + half), Vector2(r + half, r + half) * 2.0))
 	for y: int in range(box.position.y, box.position.y + box.size.y):
-		for x: int in _band_columns(box, center, r, half, y):
-			if absf(Vector2(x + 0.5, y + 0.5).distance_to(center) - r) <= half:
-				_blend(img, x, y, c)
+		var cuts: PackedInt32Array = _band_cuts(box, center, r, half, y, true)
+		if cuts.is_empty():
+			continue
+		# The stretches between the cuts are asked pixel by pixel; the two stretches the cuts mark as lying wholly inside the
+		# ring are written as runs, and the middle of the hole is left alone.
+		for span: int in [0, 2, 4, 6]:
+			for x: int in range(cuts[span], cuts[span + 1]):
+				if absf(Vector2(x + 0.5, y + 0.5).distance_to(center) - r) <= half:
+					_blend(img, x, y, c)
+			if span == 0:
+				_fill_run(img, y, cuts[1], cuts[2], c)
+			elif span == 4:
+				_fill_run(img, y, cuts[5], cuts[6], c)
 
 
-## The pixel columns of row `y` that can lie in a band `half` either side of a circle of `radius`: the columns of the
-## outer circle, less the ones inside the hole the inner circle leaves.
-static func _band_columns(box: Rect2i, center: Vector2, radius: float, half: float, y: int) -> Array[int]:
-	var found: Array[int] = []
+## The pixel columns of row `y` that can lie in a band `half` either side of a circle of `radius`, as eight column numbers
+## in order: [first of the outer circle, the left stretch that is surely inside the band (from, up to), the hole's middle
+## (from, up to), the right stretch that is surely inside the band (from, up to), one past the last of the outer circle].
+## A pixel centre well inside the band by the room spared (see PRUNE_MARGIN) is surely in it, and one well inside the hole
+## surely is not; everything else between is for the caller to ask. `solids` says whether the stretches that are surely inside
+## are wanted (a ring's are; an arc's are not, its sweep decides). Empty when the row cannot touch the band.
+static func _band_cuts(box: Rect2i, center: Vector2, radius: float, half: float, y: int, solids: bool) -> PackedInt32Array:
 	var dy: float = y + 0.5 - center.y
 	var outer: float = _chord(radius + half, dy)
 	if outer < 0.0:
-		return found
+		return PackedInt32Array()
 	var outside: Vector2i = _columns(box, center.x, outer)
 	var inner_radius: float = radius - half
-	var hole: float = sqrt(inner_radius * inner_radius - dy * dy) - PRUNE_MARGIN if prune_columns and inner_radius > 0.0 and absf(dy) < inner_radius else 0.0
-	if hole <= 0.0:
-		found.assign(range(outside.x, outside.y))
-		return found
-	# The pixels whose centres are nearer the middle than the hole's half width are all inside the hole.
-	var left_end: int = mini(outside.y, int(floor(center.x - hole - 0.5)) + 1)
-	var right_start: int = maxi(maxi(outside.x, left_end), int(ceil(center.x + hole - 0.5)))
-	found.assign(range(outside.x, left_end))
-	found.append_array(range(right_start, outside.y))
-	return found
+	var near_in: float = 0.0
+	var near_out: float = 0.0
+	if prune_columns and inner_radius > 0.0 and absf(dy) < inner_radius:
+		var along: float = sqrt(inner_radius * inner_radius - dy * dy)
+		near_in = along - PRUNE_MARGIN
+		near_out = along + PRUNE_MARGIN
+	# The columns whose centres are surely in the hole, and (wider) the ones that may be near it.
+	var hole: Vector2i = _solid_columns(outside, center.x, near_in)
+	var solid: Vector2i = Vector2i(outside.x, outside.x)
+	if solids:
+		solid = _solid_columns(outside, center.x, sqrt(maxf((radius + half) * (radius + half) - dy * dy, 0.0)) - PRUNE_MARGIN)
+	var left: Vector2i = Vector2i(outside.x, outside.x)
+	var right: Vector2i = Vector2i(outside.y, outside.y)
+	var skip: Vector2i = Vector2i(outside.x, outside.x)
+	if solid.y > solid.x:
+		left = solid
+		right = Vector2i(solid.y, solid.y)
+		skip = Vector2i(solid.y, solid.y)
+		if near_out > 0.0:
+			var near: Vector2i = _solid_columns(outside, center.x, near_out)
+			if near.y > near.x:
+				left = Vector2i(solid.x, clampi(near.x, solid.x, solid.y))
+				right = Vector2i(clampi(near.y, solid.x, solid.y), solid.y)
+				skip = Vector2i(clampi(hole.x, left.y, right.x), clampi(hole.y, left.y, right.x))
+				skip.y = maxi(skip.x, skip.y)
+	elif hole.y > hole.x:
+		skip = hole
+		right = Vector2i(outside.y, outside.y)
+	return PackedInt32Array([outside.x, left.x, left.y, skip.x, skip.y, right.x, right.y, outside.y])
 
 
 static func _fill_rect(img: _Canvas, r: Rect2, c: Color) -> void:
@@ -640,10 +686,19 @@ static func _fill_arc(img: _Canvas, center: Vector2, radius: float, width: float
 	var half: float = maxf(width, 1.0) * 0.5
 	var box: Rect2i = _px_bounds(img, Rect2(center - Vector2(radius + half, radius + half), Vector2(radius + half, radius + half) * 2.0))
 	for y: int in range(box.position.y, box.position.y + box.size.y):
-		for x: int in _band_columns(box, center, radius, half, y):
-			var d: Vector2 = Vector2(x + 0.5, y + 0.5) - center
-			if absf(d.length() - radius) <= half and (plan.z == 2.0 or fposmod(d.angle() - plan.x, TAU) <= plan.y):
-				_blend(img, x, y, c)
+		var cuts: PackedInt32Array = _band_cuts(box, center, radius, half, y, plan.z == 2.0)
+		if cuts.is_empty():
+			continue
+		for span: int in [0, 2, 4, 6]:
+			for x: int in range(cuts[span], cuts[span + 1]):
+				var d: Vector2 = Vector2(x + 0.5, y + 0.5) - center
+				if absf(d.length() - radius) <= half and (plan.z == 2.0 or fposmod(d.angle() - plan.x, TAU) <= plan.y):
+					_blend(img, x, y, c)
+			# A full turn is a plain ring: the stretches wholly inside it are written as runs.
+			if span == 0:
+				_fill_run(img, y, cuts[1], cuts[2], c)
+			elif span == 4:
+				_fill_run(img, y, cuts[5], cuts[6], c)
 
 
 static func _fill_pie(img: _Canvas, center: Vector2, radius: float, start_deg: float, end_deg: float, c: Color) -> void:
