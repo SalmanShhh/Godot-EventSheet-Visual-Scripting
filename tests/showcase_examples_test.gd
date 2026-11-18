@@ -73,7 +73,7 @@ static func run() -> bool:
 		"event.is_action_pressed(&\"quick_save\")",
 		"$Services/SaveSystem.save_game()",
 		"$Services/SaveSystem.load_game()",
-		"func _on_services_savesystem_2896_before_save(_slot_index: int) -> void:",
+		"func _on_services_savesystem_before_save(_slot_index: int) -> void:",
 		"func save_state() -> Dictionary:",
 		"\"player_spot\": player_spot",
 	]) and passed

@@ -37,6 +37,11 @@ static var _uid_counter: int = 0
 ## to write `get_node("Button").pressed.connect(...)`. Off for every handler saved before this existed, and a
 ## handler read from a file keeps the connect line it was read with.
 @export var connect_short: bool = false
+## A handler placed now on a node path with slashes in it (`$Services/Settings`) is named for the path alone
+## (`_on_services_settings_setting_changed`), the way a person would write it. Off for every handler saved before
+## this existed, which keeps the short number it was named with so its file never changes, and a handler read
+## from a file is only set when the file already spells the plain name.
+@export var readable_handler_name: bool = false
 ## Baked argument signature for custom signal triggers (e.g. "amount: int"), captured from
 ## the ACE definition at apply time so the compiler can generate a connectable handler
 ## without registry access (mirrors codegen_template baking on conditions/actions).

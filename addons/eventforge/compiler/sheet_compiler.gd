@@ -2397,12 +2397,18 @@ static func _emit_grouped_trigger_functions(event_rows: Array, lines: PackedStri
 	# known up front (handlers used to be generated but never connected - they only fired
 	# when the user wired the signal manually in the scene).
 	var signatures: Dictionary = {}
+	var function_names_taken: Dictionary = {}
 	var ready_connections: Array = []
 	for key: String in trigger_order:
 		var events: Array = grouped.get(key, [])
 		if events.is_empty():
 			continue
 		var signature: Dictionary = EventSheetTriggerResolver.resolve_trigger(events[0])
+		# Two paths whose plain names meet (`A/B` and `A_B`) would be two functions of one name, which does
+		# not parse: the later one gets back the short number it would have had, so only it is named differently.
+		if (events[0] as EventRow).readable_handler_name and function_names_taken.has(str(signature.get("function_name", ""))):
+			signature = EventSheetTriggerResolver.resolve_trigger(events[0], true)
+		function_names_taken[str(signature.get("function_name", ""))] = true
 		signatures[key] = signature
 		# A lambda-wired event IS its connect line: the wiring and the handler are one statement, so
 		# the whole group goes into `_ready` and no separate handler function is written for it.

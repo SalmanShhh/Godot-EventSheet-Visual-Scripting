@@ -229,9 +229,9 @@ static func _handler_trigger_id(event: EventRow) -> String:
 ##   `<source>.<signal_name>.connect(<function_name>)` in `_ready`)
 ## - source_path: the node whose signal fires ("" = self); baked into the handler name so
 ##   "On landed (Platform)" and "On landed (Boss)" coexist.
-static func resolve_trigger(event: EventRow) -> Dictionary:
+static func resolve_trigger(event: EventRow, keep_number: bool = false) -> Dictionary:
 	var source_path: String = event.trigger_source_path.strip_edges()
-	var source_token: String = _identifier_for_source(source_path)
+	var source_token: String = _identifier_for_source(source_path, event.readable_handler_name and not keep_number)
 	match _handler_trigger_id(event):
 		"OnReady":
 			return _lifecycle("_ready", "")
@@ -699,9 +699,24 @@ static func _signal_backed(function_name: String, args: String, signal_name: Str
 	return {"function_name": function_name, "args": args, "signal_name": signal_name, "source_path": source_path}
 
 
+## True when `handler_name` is the plain name (no number) this event's handler would have, and not the numbered one
+## it was always given. Asked of a handler read from a file: the one whose file already spells the plain name is
+## marked, so it writes that name back byte for byte, and every other keeps the name it had.
+static func spells_plain_name(event: EventRow, handler_name: String) -> bool:
+	if event == null or event.readable_handler_name or event.trigger_source_path.strip_edges().is_empty():
+		return false
+	var numbered: String = str(resolve_trigger(event).get("function_name", ""))
+	if numbered == handler_name:
+		return false
+	event.readable_handler_name = true
+	var plain: String = str(resolve_trigger(event).get("function_name", ""))
+	event.readable_handler_name = false
+	return plain == handler_name
+
+
 ## "" → "" (self keeps the classic handler names); "Platform" → "_platform";
 ## "Enemies/Boss" → "_enemies_boss" - a safe identifier fragment for handler names.
-static func _identifier_for_source(source_path: String) -> String:
+static func _identifier_for_source(source_path: String, readable: bool = false) -> String:
 	if source_path.is_empty():
 		return ""
 	# Autoload sources ("autoload:EventBus") token on the singleton name alone,
@@ -722,6 +737,8 @@ static func _identifier_for_source(source_path: String) -> String:
 	# which would emit two same-named handler funcs (a parse error). Disambiguate ONLY the
 	# illegal-char path with a short stable suffix of the raw path, so the clean source keeps its
 	# readable handler name and distinct sources never collide.
-	if normalized:
+	# A handler placed now (`readable`) leaves the number off: the compiler gives the number back to the later
+	# of two handlers whose plain names would meet, so nothing collides and nothing else changes.
+	if normalized and not readable:
 		token += "_" + str(abs(hash(source_path))).substr(0, 4)
 	return "_" + token

@@ -2108,6 +2108,7 @@ func _signal_row(node: String, signal_name: String, args: String = "") -> EventR
 	row.trigger_args = args
 	row.trigger_source_path = node
 	row.connect_short = true
+	row.readable_handler_name = true
 	return row
 
 
@@ -2467,19 +2468,23 @@ func _build_options_and_quick_save() -> bool:
 	player.size = Vector2(28, 28)
 	player.position = Vector2(200, 300)
 	game.add_child(player)
-	root.add_child(game)
+	# The key hints stand at the foot of the play area, so a fullscreen window keeps them with the game
+	# instead of at the bottom edge of the screen.
 	var hints: Label = _label("HintLabel", "", 15)
-	hints.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	hints.offset_top = -40.0
-	root.add_child(hints)
+	hints.position = Vector2(0, 604)
+	hints.size = Vector2(1152, 28)
+	game.add_child(hints)
+	root.add_child(game)
 	var options: PanelContainer = PanelContainer.new()
 	options.name = "OptionsPanel"
 	options.visible = false
 	options.set_anchors_preset(Control.PRESET_CENTER)
 	options.offset_left = -280.0
 	options.offset_right = 280.0
-	options.offset_top = -170.0
-	options.offset_bottom = 170.0
+	# As tall as what it holds: the panel grows from its middle to fit, so no empty band is left under Back.
+	options.offset_top = -1.0
+	options.offset_bottom = 1.0
+	options.grow_vertical = Control.GROW_DIRECTION_BOTH
 	# Opaque, so the coins behind the panel do not show through it.
 	var options_back: StyleBoxFlat = StyleBoxFlat.new()
 	options_back.bg_color = Color(0.16, 0.17, 0.2, 1.0)
@@ -2517,7 +2522,6 @@ func _build_options_and_quick_save() -> bool:
 	options_box.add_child(_button("BackButton", "Back"))
 	root.add_child(options)
 	_own_deep(game, root)
-	_own_deep(hints, root)
 	_own_deep(options, root)
 	_settings_path = "Settings"
 	_save_system_path = "SaveSystem"

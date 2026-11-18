@@ -2974,6 +2974,8 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 	var trigger_provider: String = "Core"
 	var trigger_args: String = ""
 	var trigger_source: String = ""
+	# The name of the function a signal handler is, read off its header.
+	var handler_name: String = ""
 	# The connect line VERBATIM, so emission reproduces the author's own spelling of it.
 	var connect_line: String = ""
 	# The group a FILTERED touch handler guards on, and the guard exactly as it was written. Both
@@ -3065,6 +3067,7 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 		if header_match == null or not connections.has(header_match.get_string(1)):
 			return {"ok": false}
 		var connection: Dictionary = connections[header_match.get_string(1)]
+		handler_name = header_match.get_string(1)
 		var signal_name: String = str(connection.get("signal", ""))
 		trigger_source = str(connection.get("source", ""))
 		connect_line = str(connection.get("line", ""))
@@ -3189,6 +3192,12 @@ static func _lift_function(function_lines: PackedStringArray, connections: Dicti
 			(event as EventRow).set_meta("__source_trigger_header", source_header)
 			if spelled_again:
 				(event as EventRow).set_meta(EventSheetCompiler.UNUSED_PARAMS_SPELLED_META, true)
+	if not handler_name.is_empty():
+		# A file that already names the handler for its path alone (`_on_services_settings_setting_changed`) opens as
+		# a handler placed that way, so writing it back reproduces the name; a numbered name is the default.
+		for event: Variant in events:
+			if event is EventRow and EventSheetTriggerResolver.spells_plain_name(event as EventRow, handler_name):
+				(event as EventRow).readable_handler_name = true
 	if not connect_line.is_empty():
 		# The handler carries the exact connect line that wired it, so the regenerated ready
 		# handler reproduces the author's spelling rather than the canonical get_node() one.

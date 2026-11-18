@@ -8,13 +8,13 @@ var picked_coins: Array = []
 
 
 func _ready() -> void:
-	$Services/Settings.setting_changed.connect(_on_services_settings_1184_setting_changed)
-	$Services/Settings.binding_changed.connect(_on_services_settings_1184_binding_changed)
+	$Services/Settings.setting_changed.connect(_on_services_settings_setting_changed)
+	$Services/Settings.binding_changed.connect(_on_services_settings_binding_changed)
 	$HudKit.on_button_pressed.connect(_on_hudkit_on_button_pressed)
-	$Services/SaveSystem.before_save.connect(_on_services_savesystem_2896_before_save)
-	$Services/SaveSystem.after_load.connect(_on_services_savesystem_2896_after_load)
-	$Services/SaveSystem.save_written.connect(_on_services_savesystem_2896_save_written)
-	$Services/SaveSystem.load_failed.connect(_on_services_savesystem_2896_load_failed)
+	$Services/SaveSystem.before_save.connect(_on_services_savesystem_before_save)
+	$Services/SaveSystem.after_load.connect(_on_services_savesystem_after_load)
+	$Services/SaveSystem.save_written.connect(_on_services_savesystem_save_written)
+	$Services/SaveSystem.load_failed.connect(_on_services_savesystem_load_failed)
 	$Services/Settings.declare_setting("master_volume", 80, "percent")
 	$Services/Settings.declare_setting("fullscreen", false, "toggle")
 	define_controls()
@@ -27,7 +27,7 @@ func _ready() -> void:
 	refresh_hints()
 
 
-func _on_services_settings_1184_setting_changed(_setting_name: String, value: Variant) -> void:
+func _on_services_settings_setting_changed(_setting_name: String, value: Variant) -> void:
 	if $Services/Settings.changed_setting_is("master_volume"):
 		AudioServer.set_bus_volume_db(0, linear_to_db(clampf(float(value) / 100.0, 0.0, 1.0)))
 	if $Services/Settings.changed_setting_is("fullscreen"):
@@ -37,7 +37,7 @@ func _on_services_settings_1184_setting_changed(_setting_name: String, value: Va
 			get_window().mode = Window.MODE_WINDOWED
 
 
-func _on_services_settings_1184_binding_changed(_action: String) -> void:
+func _on_services_settings_binding_changed(_action: String) -> void:
 	refresh_hints()
 
 
@@ -57,23 +57,23 @@ func _input(event: InputEvent) -> void:
 		$HudKit.show_panel("OptionsPanel")
 
 
-func _on_services_savesystem_2896_before_save(_slot_index: int) -> void:
+func _on_services_savesystem_before_save(_slot_index: int) -> void:
 	player_spot = $GameScreen/Player.position
 
 
-func _on_services_savesystem_2896_after_load(slot_index: int) -> void:
+func _on_services_savesystem_after_load(slot_index: int) -> void:
 	$GameScreen/Player.position = player_spot
 	hide_picked_coins()
 	$HudKit.set_text("CoinsLabel", "Coins: %d" % coins)
 	$HudKit.show_toast("Loaded (slot %d)" % slot_index)
 
 
-func _on_services_savesystem_2896_save_written(slot_index: int) -> void:
+func _on_services_savesystem_save_written(slot_index: int) -> void:
 	$HudKit.show_toast("Saved (slot %d)" % slot_index)
 	refresh_hints()
 
 
-func _on_services_savesystem_2896_load_failed(_slot_index: int, reason: String) -> void:
+func _on_services_savesystem_load_failed(_slot_index: int, reason: String) -> void:
 	$HudKit.show_toast(reason)
 
 
