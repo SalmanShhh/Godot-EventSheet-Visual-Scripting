@@ -2840,7 +2840,11 @@ static func _list_files_with_extension(extension: String) -> PackedStringArray:
 		return (_listed_by_extension[extension] as PackedStringArray).duplicate()
 	var listed: PackedStringArray = _walk_files(_PLUGIN_DIRECTORIES, func(path: String) -> bool:
 		return path.get_extension() == extension)
-	_listed_by_extension[extension] = listed
+	# Held only while an audit is running, as `source_of` holds a text: a check asked on its own is
+	# usually asked about a fixture written just after, and a listing kept from before it would never
+	# name the file.
+	if _run_in_progress:
+		_listed_by_extension[extension] = listed
 	return listed.duplicate()
 
 

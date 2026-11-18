@@ -41,6 +41,11 @@ static func run() -> bool:
 	quiet_host.free()
 
 	# ---- the Doctor flags scenes combining the two ----
+	# An earlier ask with no scene on disk must not be remembered: a check asked on its own is usually
+	# asked about a fixture written just after (every test of one), so the listing it walked is not held
+	# beyond the audit that asked for it.
+	var before_findings: Array[Dictionary] = []
+	EventSheetProjectDoctor.check_rotated_gravity_pathfinding(before_findings)
 	var scene_file: FileAccess = FileAccess.open(FIXTURE_SCENE, FileAccess.WRITE)
 	scene_file.store_string("[gd_scene format=3]\n\n[node name=\"Agent\" type=\"CharacterBody2D\"]\n; platformer_pathfinding_behavior.gd\ngravity_angle = 0.0\n")
 	scene_file.close()

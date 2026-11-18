@@ -23,6 +23,11 @@ if [ -n "$FAILURES" ]; then
     | while IFS= read -r line; do echo "::error::$LABEL: $line"; done
 fi
 if ! $VERDICT_OK; then
+  if grep -qF 'Some tests failed.' "$LOG"; then
+    # The runner finished and said so: a red run prints no 'All tests passed.' by design. It did not die.
+    echo "::error::$LABEL: the run finished red ('Some tests failed.'); the [FAIL] lines above are the cause."
+    exit 1
+  fi
   echo "::error::$LABEL: the 'All tests passed.' verdict never printed - the run died mid-suite."
   for trail in .godot/test_progress/*.log; do
     [ -f "$trail" ] && echo "::error::$LABEL: crash sentinel $(basename "$trail"): $(tail -n 1 "$trail")"
