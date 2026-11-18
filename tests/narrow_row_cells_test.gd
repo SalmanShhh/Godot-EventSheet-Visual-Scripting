@@ -104,12 +104,28 @@ func _replace_action() -> void:
 	mode = "done"
 """
 
+const NOTES := """extends Node2D
+
+var speed: float = 10.0
+
+
+func _process(delta: float) -> void:
+	# Remember to tune the speed value before shipping because the designers keep changing their minds about it.
+	position.x += speed * delta
+	# Collision layers are documented elsewhere so check the project settings page before touching anything here ever.
+	print(speed)
+	# Short one.
+	print(delta)
+"""
+
 
 static func run() -> bool:
 	var ok: bool = true
 	for width: float in [800.0, 900.0, 996.0]:
 		ok = _triggers(width) and ok
 		ok = _patterns(width) and ok
+	for width: float in [480.0, 520.0, 640.0, 700.0]:
+		ok = _notes_inside(width) and ok
 	for width: float in [700.0, 760.0, 800.0, 860.0, 900.0, 950.0, 996.0, 1100.0]:
 		ok = _undo_step(width) and ok
 	return ok
@@ -254,3 +270,26 @@ static func _undo_step(width: float) -> bool:
 	made[0].free()
 	return ok
 
+
+## A note beside an action wraps to what the reader can see: nothing in the action lane reaches past the
+## visible edge, even where the canvas keeps its 640 px floor.
+static func _notes_inside(width: float) -> bool:
+	var made: Array = _laid_out(NOTES, width)
+	var view: EventSheetViewport = made[1]
+	var visible: float = view.get_visible_content_width()
+	var seen: int = 0
+	var past: int = 0
+	for index: int in range(view.get_flat_rows().size()):
+		var row_data: EventRowData = view._row_at(index)
+		if row_data == null or row_data.row_type != EventRowData.RowType.EVENT:
+			continue
+		for span: EventSheetSemanticSpan in row_data.spans:
+			if str((span.metadata as Dictionary).get("lane", "")) != "action" or span.rect.size.x <= 0.0:
+				continue
+			seen += 1
+			if span.rect.end.x > visible + 0.5:
+				past += 1
+	var ok: bool = SUPPORT.check(P, "at %d px the actions were laid out" % int(width), seen > 2, true)
+	ok = SUPPORT.check(P, "at %d px no action or note reaches past the visible edge" % int(width), past, 0) and ok
+	made[0].free()
+	return ok

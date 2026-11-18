@@ -15,6 +15,10 @@ Renaming or moving a sheet's file (or its folder) in Godot's FileSystem dock lef
 
 A state machine's "On leaving STAGGER" and "On entering CHASE" shared their cell with the payload chips after them ("from state", "to state"), and in a narrow lane the chips took the room and the state name was drawn a letter to a line. A match arm's captured names (the `x` and `y` of `[var x, var y]`) were laid after the arm's sentence at their own width and ran on over the cell beside it. A cell now keeps room for its longest word and the object column before it. The chips that carry meaning (the values a trigger hands over, the names a match arm binds) are never left out: when they cannot stand beside their cell they stand on a line of their own under it and the row grows by that line. A chip that is only decoration and has no room is left out instead of drawn as a sliver.
 
+### Fixed: notes and actions wrap to what a narrow dock shows
+
+The canvas never sits narrower than 640 px, so a dock narrower than that scrolls sideways; rows were laid out to the full 640 and a note or an action ran under the visible edge and was cut mid-word. Rows are now laid out to the width the window shows (never less than 480 px), and the layout follows the window when it narrows without the canvas changing.
+
 ### Fixed: a state trigger whose chips stand under it is only as tall as its own words
 
 When the values a trigger hands over ("from state", "to state") stood on a line under their cell, the cell was drawn two lines tall: its object icon and name were cut by the line below and the dotted underline floated alone under the second line. The cell now covers its own words and the chips stand on their own line beneath it.

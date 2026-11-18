@@ -137,7 +137,7 @@ static func _head_counts() -> bool:
 			counted += 1
 			if span.rect.end.x > visible:
 				cut += 1
-		ok = SUPPORT.check(P, "at %d px the canvas keeps its floor and the visible width is the dock's" % int(width), [view.get_canvas_logical_width() >= 640.0, visible], [true, width]) and ok
+		ok = SUPPORT.check(P, "at %d px the rows are laid out to the visible width, down to the layout floor" % int(width), [view.get_canvas_logical_width() >= EventSheetViewport.LAYOUT_WIDTH_FLOOR and view.get_canvas_logical_width() <= maxf(width, EventSheetViewport.LAYOUT_WIDTH_FLOOR) + 0.5, visible], [true, width]) and ok
 		ok = SUPPORT.check(P, "at %d px no count reaches past the visible edge" % int(width), cut, 0) and ok
 		ok = SUPPORT.check(P, "at %d px a count that is not drawn says so" % int(width), unmarked, 0) and ok
 		if width >= 520.0:

@@ -495,12 +495,30 @@ func _init() -> void:
 
 func _ready() -> void:
 	_configure_viewport()
+	# The window the canvas scrolls in can narrow while the canvas itself stays at its floor, and the rows
+	# are laid out to what the window shows: that is a layout change the canvas's own resize never reports.
+	var host: ScrollContainer = _get_scroll_container()
+	if host != null and not host.resized.is_connected(_on_scroll_window_resized):
+		host.resized.connect(_on_scroll_window_resized)
 	# A figure has no scroll container to poll and no firing intensity to decay, so the
 	# per-frame poll would be pure cost. _ready runs AFTER set_figure_mode in every host that
 	# builds the figure before adding it, which is why the flag is honored here and not only
 	# in the setter - an unconditional set_process(true) silently re-enabled it.
 	set_process(not figure_mode)
 	_refresh_rows()
+
+
+func _on_scroll_window_resized() -> void:
+	if figure_mode or _row_metrics_helper.is_empty():
+		return
+	# Above its floor the canvas follows the window and reports its own resize, which does this work once.
+	if size.x > CANVAS_WIDTH_FLOOR * maxf(_zoom_factor, 0.001) + 0.5:
+		return
+	if absf(_get_logical_canvas_width() - _row_metrics_helper.metrics_width()) > 0.5:
+		_row_metrics_helper.rebuild()
+		_layout_cache.clear()
+		_update_canvas_min_size()
+		queue_redraw()
 
 
 func _process(_delta: float) -> void:
@@ -4688,7 +4706,7 @@ func _update_canvas_min_size() -> void:
 		_update_figure_min_size()
 		return
 	var zoom: float = max(_zoom_factor, 0.001)
-	var canvas_width: float = max(_get_scroll_width(), 640.0 * zoom)
+	var canvas_width: float = max(_get_scroll_width(), CANVAS_WIDTH_FLOOR * zoom)
 	var total_height: float = _row_metrics_helper.total_height()
 	var target_size: Vector2 = Vector2(
 		canvas_width,
@@ -4793,12 +4811,24 @@ func _to_logical_position(position: Vector2) -> Vector2:
 	return position / max(_zoom_factor, 0.001)
 
 
+## The narrowest the canvas sits at (what a narrow dock scrolls sideways across), and the narrowest a row is
+## laid out to even when less than that is visible, so the lanes keep room for their words.
+const CANVAS_WIDTH_FLOOR := 640.0
+const LAYOUT_WIDTH_FLOOR := 480.0
+
+
 func _get_logical_canvas_width() -> float:
 	# A figure lays out at its own settled width - the 640 px floor below is exactly what a
 	# narrow host (a picker panel, a side dock) cannot afford.
 	if figure_mode:
 		return maxf(_figure_logical_width, 1.0)
-	return max(max(size.x, _get_scroll_width()), 640.0) / max(_zoom_factor, 0.001)
+	var zoom: float = max(_zoom_factor, 0.001)
+	# The canvas never SITS narrower than 640 px (a narrow dock scrolls sideways), but its rows are laid out
+	# to the width the reader can see: a note or an action wrapped to the full 640 ran under the visible
+	# edge and was cut mid-word. Only while the canvas is at its floor; above it nothing changes.
+	if size.x <= CANVAS_WIDTH_FLOOR * zoom + 0.5:
+		return maxf(_get_scroll_width(), LAYOUT_WIDTH_FLOOR) / zoom
+	return maxf(size.x, _get_scroll_width()) / zoom
 
 
 func _select_row(row_index: int, span_index: int = -1) -> void:
