@@ -263,6 +263,24 @@ func _paint_mark(index: int) -> void:
 	mark.tooltip_text = EventSheetL10n.translate("Stop.") if sounding else EventSheetL10n.translate("Play this card alone.")
 
 
+## The list as the object's own property wants it. A script that runs for real in the editor (one marked `@tool`)
+## keeps its list in a typed array, and such a property refuses a plain Array without a word, so an edit
+## that was announced never reached the object and the list drew the old cards again. `current` is what the
+## property holds now; the result is `cards` in the same type, or `cards` as it came when the property is untyped.
+## An entry the typed list cannot hold (not a card) is left out.
+static func typed_like(current: Variant, cards: Array) -> Array:
+	if not (current is Array) or not (current as Array).is_typed():
+		return cards
+	var held: Array = current as Array
+	var kind: int = held.get_typed_builtin()
+	var script: Variant = held.get_typed_script()
+	var fitted: Array = Array([], kind, held.get_typed_class_name(), script)
+	for card: Variant in cards:
+		if typeof(card) == kind or kind == TYPE_OBJECT:
+			fitted.append(card)
+	return fitted
+
+
 ## Tells the drawer which object it is editing, and builds the footer the schema declares for it
 ## (the strip of buttons that play a Juice Player's list sits there, under the cards it plays).
 func set_edited_object(object: Object) -> void:

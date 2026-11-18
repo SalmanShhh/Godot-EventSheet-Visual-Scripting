@@ -592,7 +592,8 @@ class CardListProperty:
 		_list.call("set_edited_object", get_edited_object())
 
 	func _on_changed(cards: Array) -> void:
-		emit_changed(get_edited_property(), cards)
+		# A script that runs for real in the editor keeps its list in a typed array, which refuses a plain one: hand it its own type.
+		emit_changed(get_edited_property(), _list.call("typed_like", get_edited_object().get(get_edited_property()), cards))
 		# A property write does not fire a resource's `changed` signal, so live previews (a prefab's
 		# picture, a stamp in the viewport) would not repaint. Fire it, as the table drawer does.
 		var edited: Object = get_edited_object()

@@ -46,7 +46,7 @@ func _on_switched(table: bool) -> void:
 
 
 func _on_changed(steps: Array) -> void:
-	emit_changed(get_edited_property(), steps)
+	emit_changed(get_edited_property(), EventSheetCardListDrawer.typed_like(get_edited_object().get(get_edited_property()), steps))
 	# A plain property write does not fire the resource's `changed` signal, so preview panels
 	# (and the FileSystem thumbnail) would not repaint. Emit it explicitly on each edit.
 	var edited: Object = get_edited_object()

@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a Juice Player whose script is marked `@tool` keeps the cards you edit
+
+When a Juice Player's script runs as a tool script, the list of cards is a typed list that refuses an ordinary one. A card removed, added, moved, duplicated, pasted or edited in the Inspector was announced and then quietly refused by the node, so the list drew the old cards again a frame later and the scene saved the old cards. The Inspector now hands the node a list of the type it holds, so every edit sticks and Ctrl+Z and Ctrl+Y take it back and put it back. A Juice Player on a plain script, which is what the shipped one is, was never affected.
+
 ### Changed: eleven more behaviour icons are redrawn with one large, simple shape each
 
 Ability Set, State Machine, Skill Tree, Eight Direction, Physics Car, Prestige, Rotate, Hit Flash, Light Pulse, Combo Box and Fade were still hard to read at 16 pixels after the first redraw. Each is now one silhouette with fewer, larger parts and a gap of at least a pixel between them: two sparkles, three linked states, a sideways tree, a body with eight pips, a car with floating wheels, a rising arrow, a block with a turning arrow, a framed sprite with flash ticks, a bulb with glow bars, key-arrow-key, and a bar breaking into squares. File names and `@icon` paths are unchanged.
