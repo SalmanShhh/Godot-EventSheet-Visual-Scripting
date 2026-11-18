@@ -13,6 +13,7 @@ const SUPPORT := preload("res://tests/support.gd")
 
 static func run() -> bool:
 	var ok: bool = true
+	ok = _test_the_hover_marker_is_never_shown_as_text() and ok
 	ok = _pin("plain exported int", "int", {}, true, false,
 		"A whole number.") and ok
 	ok = _pin("range + progress bar + grouping", "int",
@@ -119,3 +120,40 @@ static func _pin(label: String, type_name: String, attributes: Dictionary, expor
 
 static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	return SUPPORT.check("inspector_preview_test", label, actual, expected)
+
+
+## Hovering an exported variable row asks for the Inspector card through a marker string, and Godot only
+## swaps the marker for the card when the sheet canvas answers `_make_custom_tooltip`. When it does not,
+## the marker itself is drawn as the tooltip. So the canvas must answer, with the card when one is staged,
+## with an empty control (never null, which means "show the text") when none is, and with null for any
+## ordinary sentence so those keep Godot's own tooltip.
+static func _test_the_hover_marker_is_never_shown_as_text() -> bool:
+	var viewport: EventSheetViewport = EventSheetViewport.new()
+	var marker: String = EventSheetViewportTooltipHelper.INSPECTOR_PREVIEW_SENTINEL
+	viewport._tooltip_helper.set_pending_inspector_preview({"name": "health", "type_name": "int",
+		"default_text": "100", "constant": false, "attributes": {"drawer": "progress_bar", "header": "Combat",
+		"info": "Shared by every fighter - edits affect all of them, so change it with care."}})
+	var staged: Object = viewport._make_custom_tooltip(marker)
+	viewport._tooltip_helper.set_pending_inspector_preview({})
+	var unstaged: Object = viewport._make_custom_tooltip(marker)
+	var plain: Object = viewport._make_custom_tooltip("Adds one to the score.")
+	var ok: bool = SUPPORT.check("inspector_preview_test", "a staged variable answers with the card",
+		staged is PanelContainer, true)
+	ok = SUPPORT.check("inspector_preview_test", "a marker with nothing staged still answers with a control, never the text",
+		unstaged is Control, true) and ok
+	ok = SUPPORT.check("inspector_preview_test", "an ordinary sentence keeps Godot's own tooltip",
+		plain == null, true) and ok
+	var unwrapped: int = 0
+	if staged is Node:
+		for node: Node in (staged as Node).find_children("*", "Label", true, false):
+			if (node as Label).autowrap_mode != TextServer.AUTOWRAP_OFF and (node as Label).custom_minimum_size.x < 200.0:
+				unwrapped += 1
+	ok = SUPPORT.check("inspector_preview_test", "every wrapped line of the staged card has the width it wraps to (a tooltip is sized once)",
+		unwrapped, 0) and ok
+	ok = SUPPORT.check("inspector_preview_test", "the staged card asks for a window no taller than its words need",
+		(staged as Control).get_combined_minimum_size().y < 300.0 if staged is Control else false, true) and ok
+	for answer: Object in [staged, unstaged]:
+		if answer is Node:
+			(answer as Node).free()
+	viewport.free()
+	return ok

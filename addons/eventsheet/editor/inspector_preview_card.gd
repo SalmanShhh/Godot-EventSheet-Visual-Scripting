@@ -90,6 +90,17 @@ static func reading_ink(ink: Color, ground: Color, minimum: float = READABLE_CON
 	return EventSheetLookMinis.readable_ink(shown, ground, minimum)
 
 
+## Gives every wrapped line of the card (the info note and the plain sentence) the width it wraps to. A
+## wrapped label asks for the height its words need at the width it has NOW, and a tooltip is sized once,
+## from what its content asks for before it has any width, so without this the hover card asked for a
+## window as tall as the screen. Call it after `update_preview`, which rebuilds the rows.
+func fit_text_to(width: float) -> void:
+	for node: Node in find_children("*", "Label", true, false):
+		var label: Label = node as Label
+		if label.autowrap_mode != TextServer.AUTOWRAP_OFF:
+			label.custom_minimum_size = Vector2(width, 0.0)
+
+
 ## Hides the per-card "Inspector preview" caption - for surfaces that stack many cards into one
 ## whole-Inspector view (the Designer), where a caption per variable would read as noise.
 func hide_caption() -> void:

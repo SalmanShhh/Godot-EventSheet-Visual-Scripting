@@ -38,7 +38,12 @@ func set_pending_inspector_preview(payload: Dictionary) -> void:
 ## An exported variable row instead hovers as a small live mock of its Inspector - the same preview card
 ## the Variable dialog shows, built from the row's attributes (drawers, decor, grouping, range).
 func build_custom_tooltip(for_text: String) -> Object:
-	if for_text == INSPECTOR_PREVIEW_SENTINEL and not _pending_inspector_preview.is_empty():
+	if for_text == INSPECTOR_PREVIEW_SENTINEL:
+		# The marker is never a sentence a reader may see. With nothing staged to draw (or no card
+		# script to draw it with) an empty control stands in, which Godot shows as nothing at all
+		# rather than as the marker text.
+		if _pending_inspector_preview.is_empty() or ReadingDoors.inspector_preview_card() == null:
+			return Control.new()
 		return build_inspector_preview_tooltip(_pending_inspector_preview)
 	if not EventSheetBBCodeLite.has_markup(for_text):
 		return null
@@ -82,6 +87,7 @@ static func build_inspector_preview_tooltip(payload: Dictionary) -> Control:
 		true,
 		bool(payload.get("constant", false))
 	)
+	card.fit_text_to(300.0)
 	panel.add_child(card)
 	return panel
 

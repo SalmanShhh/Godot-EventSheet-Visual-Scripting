@@ -5656,6 +5656,13 @@ func elided_object_name_at(row_index: int, span_index: int, logical: Vector2) ->
 	return label
 
 
+## Godot asks this with the text `_get_tooltip` answered, and shows the Control it returns in place of
+## that text. Without it the staged marker for an exported variable's Inspector card would be drawn as
+## plain words. The helper owns the answer; the virtual has to stay on the Control.
+func _make_custom_tooltip(for_text: String) -> Object:
+	return _tooltip_helper.build_custom_tooltip(for_text)
+
+
 func _get_tooltip(at_position: Vector2) -> String:
 	# While something is carried the ghost is the only thing that talks.
 	if _drag_motion.active:
