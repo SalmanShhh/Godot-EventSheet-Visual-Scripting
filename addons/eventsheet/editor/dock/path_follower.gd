@@ -19,6 +19,9 @@ extends RefCounted
 # about what is open on screen.
 
 var _dock: Control = null
+## The scene object each followed script was named after before the rename, by its new path, until the
+## scenes have been rewritten and the index of them is read again.
+var _scene_names: Dictionary = {}
 
 
 func init(dock: Control) -> void:
@@ -111,6 +114,7 @@ func _retarget(old_path: String, new_path: String, is_folder: bool) -> int:
 	var last_name: String = ""
 	var pairs: Array = []
 	var changed_tabs: Array[Dictionary] = []
+	var scene_entries: Dictionary = {}
 	for tab: Dictionary in _dock._open_tabs:
 		var moved_from: String = str(tab.get("path", ""))
 		var sheet: EventSheetResource = tab.get("sheet") as EventSheetResource
@@ -129,13 +133,16 @@ func _retarget(old_path: String, new_path: String, is_folder: bool) -> int:
 				sheet.external_source_path = source_to
 			if resource_to != sheet.resource_path:
 				sheet.take_over_path(resource_to)
+		scene_entries[tab_to] = EventSheetViewportRowBuilder.scene_using_script(moved_from)
 		tab["path"] = tab_to
 		tab["mtime"] = FileAccess.get_modified_time(tab_to) if FileAccess.file_exists(tab_to) else 0
 		last_name = tab_to.get_file()
 		if moved_from != tab_to and not moved_from.is_empty():
 			pairs.append([moved_from, tab_to])
+	var tail: String = _follow_references(old_path, new_path, is_folder)
 	if followed == 0:
-		_say_script_fate(script_fate, "")
+		if not _say_script_fate(script_fate, "", tail) and not tail.is_empty():
+			_dock._set_status(tail)
 		return 0
 	var active: int = _dock._active_tab_index
 	if active >= 0 and active < _dock._open_tabs.size():
@@ -148,15 +155,22 @@ func _retarget(old_path: String, new_path: String, is_folder: bool) -> int:
 		var at: int = _dock._recent_closed_paths.find(str(pair[0]))
 		if at >= 0:
 			_dock._recent_closed_paths[at] = str(pair[1])
+	# A tab's title can be the name of the scene object the script sits on, read from the scene files; the
+	# scenes were just rewritten for the new path, so the index of them is read afresh and the followed tab
+	# is named by the same rule as one opened now.
+	EventSheetViewportRowBuilder.clear_scene_script_index()
+	_scene_names.merge(scene_entries, true)
+	_adopt_scene_names()
+	_read_titles_again_when_files_settle()
 	_dock._refresh_tab_bar()
 	_dock._refresh_title_strip()
 	_rebuild_views(changed_tabs)
 	_dock._persist_session()
 	if followed == 1:
-		if not _say_script_fate(script_fate, last_name):
-			_dock._set_status(EventSheetL10n.translate("The open sheet follows %s to its new place.") % last_name)
+		if not _say_script_fate(script_fate, last_name, tail):
+			_dock._set_status(_joined(EventSheetL10n.translate("The open sheet follows %s to its new place.") % last_name, tail))
 	else:
-		_dock._set_status(EventSheetL10n.translate("%d open sheets follow their files to their new place.") % followed)
+		_dock._set_status(_joined(EventSheetL10n.translate("%d open sheets follow their files to their new place.") % followed, tail))
 	return followed
 
 
@@ -201,15 +215,20 @@ func _follow_generated_script(old_path: String, new_path: String) -> Dictionary:
 	var fate: Dictionary = {"moved": "", "left": ""}
 	if old_path.get_extension() != "tres" or new_path.get_extension() != "tres":
 		return fate
-	var old_script: String = old_path.get_basename() + SCRIPT_SUFFIX
-	var new_script: String = new_path.get_basename() + SCRIPT_SUFFIX
-	if old_script == new_script or not is_output_of(old_script, old_path):
-		return fate
-	if FileAccess.file_exists(new_script) or FileAccess.file_exists(new_script + ".uid") or not _move_script_pair(old_script, new_script):
-		fate["left"] = old_script.get_file()
-		return fate
-	_after_script_moved(old_script, new_script, old_path, new_path)
-	fate["moved"] = new_script
+	# The two scripts a resource sheet writes beside itself: the generated one, and the plain one the Run,
+	# Reload and Enable plugin buttons write. Either is carried along only when it is provably this sheet's.
+	for suffix: String in [SCRIPT_SUFFIX, ".gd"]:
+		var old_script: String = old_path.get_basename() + suffix
+		var new_script: String = new_path.get_basename() + suffix
+		if old_script == new_script or not is_output_of(old_script, old_path):
+			continue
+		if FileAccess.file_exists(new_script) or FileAccess.file_exists(new_script + ".uid") or not _move_script_pair(old_script, new_script):
+			if str(fate["left"]).is_empty():
+				fate["left"] = old_script.get_file()
+			continue
+		_after_script_moved(old_script, new_script, old_path, new_path)
+		if str(fate["moved"]).is_empty():
+			fate["moved"] = new_script
 	return fate
 
 
@@ -249,24 +268,101 @@ func _after_script_moved(old_script: String, new_script: String, old_sheet: Stri
 " % new_sheet + text.substr(at + line.length()))
 			file.close()
 	if Engine.is_editor_hint() and Engine.has_singleton("EditorInterface"):
+		_refresh_open_script_tab()
 		EditorInterface.get_resource_filesystem().scan.call_deferred()
+
+
+## A script open in Godot's own script editor keeps showing the text it was opened with, so after the header
+## was respelled it still named the old sheet, and saving that tab would have written the old line back.
+## Godot's script editor has its own way to read open files again (the one it runs when the editor window
+## is focused): it reloads a tab whose file changed on disk, and asks the reader first when that tab holds
+## edits of theirs. It is asked once the rename has settled.
+func _refresh_open_script_tab() -> void:
+	var script_editor: ScriptEditor = EditorInterface.get_script_editor()
+	if script_editor != null:
+		script_editor.reload_open_files.call_deferred()
 
 
 ## Says what became of a renamed resource sheet's script in one quiet sentence. `sheet_name` is the open
 ## sheet's new file name, or empty when no tab follows it. Returns whether a sentence was said.
-func _say_script_fate(fate: Dictionary, sheet_name: String) -> bool:
+func _say_script_fate(fate: Dictionary, sheet_name: String, tail: String = "") -> bool:
 	var moved: String = str(fate.get("moved", ""))
 	var left: String = str(fate.get("left", ""))
 	if not moved.is_empty():
 		if sheet_name.is_empty():
-			_dock._set_status(EventSheetL10n.translate("The script %s followed its sheet to its new place.") % moved.get_file())
+			_dock._set_status(_joined(EventSheetL10n.translate("The script %s followed its sheet to its new place.") % moved.get_file(), tail))
 		else:
-			_dock._set_status(EventSheetL10n.translate("The open sheet follows %s to its new place, and its script %s goes with it.") % [sheet_name, moved.get_file()])
+			_dock._set_status(_joined(EventSheetL10n.translate("The open sheet follows %s to its new place, and its script %s goes with it.") % [sheet_name, moved.get_file()], tail))
 		return true
 	if not left.is_empty():
-		_dock._set_status_notice(EventSheetL10n.translate("The sheet was renamed but its script %s was not. Rename the script too, or scenes keep running the old one.") % left)
+		_dock._set_status_notice(_joined(EventSheetL10n.translate("The sheet was renamed but its script %s was not. Rename the script too, or scenes keep running the old one.") % left, tail))
 		return true
 	return false
+
+
+## Godot rewrites the scenes that hold the renamed script after it has said the file moved, so the names the
+## tabs read from those scenes are read once more when the editor next reports its files changed.
+func _read_titles_again_when_files_settle() -> void:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return
+	var files: EditorFileSystem = EditorInterface.get_resource_filesystem()
+	if files != null and not files.filesystem_changed.is_connected(_titles_after_files_settled):
+		files.filesystem_changed.connect(_titles_after_files_settled, CONNECT_ONE_SHOT)
+
+
+func _titles_after_files_settled() -> void:
+	if _dock == null:
+		return
+	EventSheetViewportRowBuilder.clear_scene_script_index()
+	_adopt_scene_names()
+	_scene_names.clear()
+	_dock._refresh_tab_bar()
+	_dock._refresh_title_strip()
+
+
+## A renamed script keeps the scene object it was named after until the scenes themselves say otherwise.
+func _adopt_scene_names() -> void:
+	for followed_path: Variant in _scene_names:
+		EventSheetViewportRowBuilder.adopt_scene_entry(str(followed_path), _scene_names[followed_path])
+
+
+## Two sentences on one status line, or the first alone when there is no second.
+static func _joined(first: String, second: String) -> String:
+	return first if second.is_empty() else "%s %s" % [first, second]
+
+
+## What else the plugin wrote down about the moved file follows it (path_references.gd): the editor's memory
+## of the file, the paths in the open sheets and in the sheet files that are not open. Returns the sentence
+## to add to the status line: the sheets that followed, and how many of the user's own scripts still name
+## the old path ("" when there is nothing to say).
+func _follow_references(old_path: String, new_path: String, is_folder: bool) -> String:
+	var extension: String = old_path.get_extension()
+	if not is_folder and extension != "gd" and extension != "tres":
+		return ""
+	var references: GDScript = load("res://addons/eventsheet/editor/dock/path_references.gd")
+	references.follow_editor_memory(old_path, new_path, is_folder)
+	var followed_sheets: int = 0
+	var open_paths: PackedStringArray = PackedStringArray()
+	for tab: Dictionary in _dock._open_tabs:
+		open_paths.append(str(tab.get("path", "")))
+		var tab_sheet: EventSheetResource = tab.get("sheet") as EventSheetResource
+		# A sheet read from a script keeps these lists in memory only (the file holds none of them), so
+		# following them there is not an edit the reader has to save.
+		if references.follow_in_sheet(tab_sheet, old_path, new_path, is_folder) > 0 and tab_sheet.external_source_path.is_empty():
+			tab["dirty"] = true
+			followed_sheets += 1
+			if _dock._active_tab_index >= 0 and _dock._open_tabs[_dock._active_tab_index] == tab:
+				_dock._dirty = true
+	# The project's files are only read for a path inside the project: nothing in it can name another place.
+	var found: Dictionary = references.scan(old_path, new_path, is_folder, open_paths) if old_path.begins_with("res://") 		else {"sheets": [], "scripts": []}
+	followed_sheets += references.write_sheets(found["sheets"], old_path, new_path, is_folder)
+	var sentences: PackedStringArray = PackedStringArray()
+	if followed_sheets > 0:
+		sentences.append(EventSheetL10n.translate("%d sheet(s) that name it follow it too.") % followed_sheets)
+	var leftover: String = references.leftover_sentence((found["scripts"] as Array).size())
+	if not leftover.is_empty():
+		sentences.append(leftover)
+	return " ".join(sentences)
 
 
 # ── Delete ───────────────────────────────────────────────────────────────────
@@ -306,6 +402,7 @@ func _remove(gone: Callable) -> int:
 			# old path still names the ring, and the tab lets go of the file so Save asks where to write.
 			var old_file: String = str(tab.get("path", ""))
 			_dock._external_watcher.keep_sheet_in_backups(sheet, old_file if not old_file.is_empty() else sheet.external_source_path)
+			sheet.gone_file_path = old_file if not old_file.is_empty() else sheet.external_source_path
 			sheet.external_source_path = ""
 			if not sheet.resource_path.is_empty():
 				sheet.resource_path = ""

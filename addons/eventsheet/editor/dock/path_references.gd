@@ -1,0 +1,188 @@
+@tool
+extends RefCounted
+
+# What the plugin itself has written down about a file's path, followed when the FileSystem dock renames or
+# moves that file (path_follower.gd calls this in the same moment the open tabs follow).
+#
+# The plugin keeps a file's path in four kinds of place besides the tab, and each one follows:
+#   * the editor's per-project memory keyed by a sheet's path: the regions folded, how far a sheet is
+#     collapsed, the functions locked, the look chosen for a script, the last test result, where the boxes of
+#     the sheet map were put, and the files a saved workspace opens;
+#   * the paths a sheet stores in its own fields (the sheets it includes, the scripts it registers as
+#     providers, its icon) in every OPEN sheet, which is changed in memory and left unsaved;
+#   * the same fields in every sheet FILE of the project that is not open, respelled in place, one line of
+#     the file, after the file's backup is taken;
+#   * and, said but not touched, the user's own GDScript: a `preload("res://old.gd")` in code the user wrote
+#     is theirs and Godot's to handle, so the files that still name the old path are counted and the reader
+#     is told where to look.
+#
+# Loaded by path from the follower, so the editor's boot path never carries it.
+
+const FOLLOWER := preload("res://addons/eventsheet/editor/dock/path_follower.gd")
+const CLAIM := preload("res://addons/eventforge/compiler/generated_script_claim.gd")
+const SECTION: String = "eventsheets"
+## Per-project memory whose value is a dictionary keyed by a file's path.
+const PATH_KEYED: PackedStringArray = ["region_folds", "collapse_state", "function_locks", "sheet_looks", "test_results", "sheet_map_layout"]
+## The fields of a sheet file that hold a path, as a line of the file begins them.
+const SHEET_FIELDS: PackedStringArray = ["includes", "ace_provider_scripts", "custom_class_icon"]
+## Folders the walks never enter: the engine's cache and the plugin's own shipped code.
+const SKIPPED: PackedStringArray = ["res://.godot", "res://addons/eventforge", "res://addons/eventsheet", "res://addons/eventsheet_library", "res://eventsheet_addons"]
+
+
+## `store` with every key under the moved path renamed, keeping its value. A key that would land on one that
+## exists is left where it is (the new name already has memory of its own). `store` is not changed.
+static func rekeyed(store: Dictionary, old_path: String, new_path: String, is_folder: bool) -> Dictionary:
+	var out: Dictionary = {}
+	for key: Variant in store:
+		var mapped: String = FOLLOWER.mapped(str(key), old_path, new_path, is_folder)
+		if mapped != str(key) and not store.has(mapped):
+			out[mapped] = store[key]
+		else:
+			out[key] = store[key]
+	return out
+
+
+## A list of paths with the moved ones renamed.
+static func remapped(paths: Variant, old_path: String, new_path: String, is_folder: bool) -> PackedStringArray:
+	var out: PackedStringArray = PackedStringArray()
+	for path: Variant in paths:
+		out.append(FOLLOWER.mapped(str(path), old_path, new_path, is_folder))
+	return out
+
+
+## Moves the editor's per-project memory of a file to its new path. Returns how many stores changed.
+static func follow_editor_memory(old_path: String, new_path: String, is_folder: bool) -> int:
+	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
+		return 0
+	var settings: EditorSettings = EditorInterface.get_editor_settings()
+	var changed_stores: int = 0
+	for key: String in PATH_KEYED:
+		var stored: Variant = settings.get_project_metadata(SECTION, key, {})
+		if not (stored is Dictionary):
+			continue
+		var moved: Dictionary = rekeyed(stored as Dictionary, old_path, new_path, is_folder)
+		if moved.hash() != (stored as Dictionary).hash():
+			settings.set_project_metadata(SECTION, key, moved)
+			changed_stores += 1
+	var workspaces: Variant = settings.get_project_metadata(SECTION, "workspaces", {})
+	if workspaces is Dictionary:
+		var edited: Dictionary = (workspaces as Dictionary).duplicate(true)
+		var touched: bool = false
+		for workspace_name: Variant in edited:
+			var entry: Variant = edited[workspace_name]
+			if not (entry is Dictionary) or not (entry as Dictionary).has("paths"):
+				continue
+			var before: PackedStringArray = remapped((entry as Dictionary)["paths"], "", "", false)
+			var after: PackedStringArray = remapped((entry as Dictionary)["paths"], old_path, new_path, is_folder)
+			if before != after:
+				(entry as Dictionary)["paths"] = after
+				touched = true
+		if touched:
+			settings.set_project_metadata(SECTION, "workspaces", edited)
+			changed_stores += 1
+	return changed_stores
+
+
+## The paths in a sheet's own fields, followed to the new place. Returns how many it changed; the sheet is
+## changed in memory only, so the caller marks it unsaved.
+static func follow_in_sheet(sheet: EventSheetResource, old_path: String, new_path: String, is_folder: bool) -> int:
+	if sheet == null:
+		return 0
+	var changed: int = 0
+	for list: Array in [sheet.includes, sheet.ace_provider_scripts]:
+		for index: int in range(list.size()):
+			var mapped: String = FOLLOWER.mapped(str(list[index]), old_path, new_path, is_folder)
+			if mapped != str(list[index]):
+				list[index] = mapped
+				changed += 1
+	var icon: String = FOLLOWER.mapped(sheet.custom_class_icon, old_path, new_path, is_folder)
+	if icon != sheet.custom_class_icon:
+		sheet.custom_class_icon = icon
+		changed += 1
+	return changed
+
+
+## The text of a sheet file with the moved path respelled on the lines that hold a path, and nothing else
+## touched: every other byte, line ending included, stays as it was. A file that names the path nowhere
+## comes back unchanged.
+static func respelled(text: String, old_path: String, new_path: String, is_folder: bool) -> String:
+	var from: String = "\"%s" % (old_path.simplify_path().trim_suffix("/") + "/" if is_folder else old_path.simplify_path())
+	var to: String = "\"%s" % (new_path.simplify_path().trim_suffix("/") + "/" if is_folder else new_path.simplify_path())
+	if not is_folder:
+		from += "\""
+		to += "\""
+	if not text.contains(from):
+		return text
+	var lines: PackedStringArray = text.split("\n")
+	for index: int in range(lines.size()):
+		for field: String in SHEET_FIELDS:
+			if lines[index].begins_with(field + " = "):
+				lines[index] = lines[index].replace(from, to)
+	return "\n".join(lines)
+
+
+## One walk over the project's scripts and sheet files for the moved path: {"sheets": sheet files that hold
+## it in a path field and are not open (`skip` names the open ones), "scripts": scripts of the user's that
+## still name it}. A script the plugin compiled is its own output and is not the user's.
+static func scan(old_path: String, new_path: String, is_folder: bool, skip: PackedStringArray, root: String = "res://") -> Dictionary:
+	var found: Dictionary = {"sheets": [], "scripts": []}
+	var needle: String = old_path.simplify_path().trim_suffix("/") + "/" if is_folder else old_path.simplify_path()
+	var pending: PackedStringArray = PackedStringArray([root])
+	while not pending.is_empty():
+		var directory_path: String = pending[pending.size() - 1]
+		pending.remove_at(pending.size() - 1)
+		var directory: DirAccess = DirAccess.open(directory_path)
+		if directory == null:
+			continue
+		directory.list_dir_begin()
+		var entry: String = directory.get_next()
+		while not entry.is_empty():
+			var full_path: String = directory_path.path_join(entry)
+			if directory.current_is_dir():
+				if not entry.begins_with(".") and not SKIPPED.has(full_path):
+					pending.append(full_path)
+			elif full_path != new_path:
+				_look_at(full_path, needle, old_path, new_path, is_folder, skip, found)
+			entry = directory.get_next()
+	return found
+
+
+static func _look_at(full_path: String, needle: String, old_path: String, new_path: String, is_folder: bool,
+		skip: PackedStringArray, found: Dictionary) -> void:
+	var extension: String = full_path.get_extension()
+	if extension != "gd" and extension != "tres":
+		return
+	var text: String = FileAccess.get_file_as_string(full_path)
+	if not text.contains(needle):
+		return
+	if extension == "tres":
+		if not skip.has(full_path) and respelled(text, old_path, new_path, is_folder) != text:
+			(found["sheets"] as Array).append(full_path)
+	elif CLAIM.source_of(full_path).is_empty():
+		(found["scripts"] as Array).append(full_path)
+
+
+## Respells the moved path in each sheet file named. The file's bytes go into the backup ring first, so
+## Tools > Sheet Backups can put it back. Returns how many files were written.
+static func write_sheets(paths: Array, old_path: String, new_path: String, is_folder: bool) -> int:
+	var written: int = 0
+	for path: String in paths:
+		var text: String = FileAccess.get_file_as_string(path)
+		var spelled: String = respelled(text, old_path, new_path, is_folder)
+		if spelled == text:
+			continue
+		EventSheetBackups.backup_sheet(path)
+		var file: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+		if file == null:
+			continue
+		file.store_string(spelled)
+		file.close()
+		written += 1
+	return written
+
+
+## The one quiet sentence about the user's own scripts that still name the old path, or "" when none do.
+static func leftover_sentence(count: int) -> String:
+	if count <= 0:
+		return ""
+	return EventSheetL10n.translate("Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.") % count

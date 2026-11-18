@@ -29,6 +29,14 @@ class NoopUndoManager:
 
 
 static func run() -> bool:
+	# The backup rings this test makes live in its own folder, so a run leaves nothing in the shared one.
+	EventSheetBackups.root_override = SUPPORT.own_folder("follow_backups")
+	var passed: bool = _all()
+	EventSheetBackups.root_override = ""
+	return passed
+
+
+static func _all() -> bool:
 	var passed: bool = _pure_rows()
 	passed = _rename_keeps_the_tab_and_its_edits() and passed
 	passed = _folder_move_carries_every_tab_under_it() and passed
@@ -42,6 +50,9 @@ static func run() -> bool:
 	passed = _resource_sheet_script_follows_a_rename() and passed
 	passed = _resource_sheet_script_follows_a_move_and_a_second_rename() and passed
 	passed = _resource_sheet_script_is_left_alone_when_it_cannot_follow() and passed
+	passed = _the_plain_script_beside_a_sheet_follows_too() and passed
+	passed = _a_followed_tab_is_named_by_the_rule_a_fresh_one_is() and passed
+	passed = _what_the_plugin_wrote_down_follows_the_file() and passed
 	return passed
 
 
@@ -192,6 +203,10 @@ static func _delete_closes_clean_tabs_and_keeps_unsaved_work() -> bool:
 		["a compile writes nothing at the dead path", FileAccess.file_exists(dirty_path), false],
 		["the compile said it had no file to write", bool(written.get("success", false)) and not FileAccess.file_exists(dirty_path), true],
 		["a copy of the unsaved work went into the backup ring", rings.size() >= 1, true],
+		["the head bar keeps the name the work had", EventSheetViewportRowBuilder.head_bar_name(dirty_sheet), "dirty.gd"],
+		["the head's name band keeps it too", EventSheetHeadBands.facts(dirty_sheet, "").get("file_name"), "dirty.gd"],
+		["the tab keeps the name", EventSheetDock._format_sheet_title(dirty_sheet, ""), "dirty"],
+		["the path hint still says there is no file", EventSheetDock._format_sheet_path_hint(dirty_sheet, ""), "Unsaved (in-memory)"],
 	])
 	_drop_ring(dirty_path)
 	editor.free()
@@ -259,7 +274,7 @@ static func _drop_ring(sheet_path: String) -> void:
 	for ring: String in EventSheetBackups.list_backups(sheet_path):
 		DirAccess.remove_absolute(ring)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(EventSheetBackups.backup_dir_for(sheet_path)))
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(EventSheetBackups.BACKUPS_ROOT))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(EventSheetBackups.backups_root()))
 
 
 ## The FileSystem dock's events reach the open tabs through the known-sheets funnel the plugin already
@@ -474,4 +489,109 @@ static func _resource_sheet_script_is_left_alone_when_it_cannot_follow() -> bool
 		["a folder move event moves no script by itself", FileAccess.file_exists(inside_script), true],
 	])
 	editor.free()
+	return passed
+
+
+## The plain `<name>.gd` the Run, Reload and Enable plugin buttons write is the plugin's own output when its
+## header names the sheet, so it goes with the sheet; a hand-written one of that name stays where it is.
+static func _the_plain_script_beside_a_sheet_follows_too() -> bool:
+	var editor: EventSheetEditor = _editor()
+	var old_path: String = SUPPORT.own_path("follow_plain/door.tres")
+	var new_path: String = SUPPORT.own_path("follow_plain/gate.tres")
+	var sheet: EventSheetResource = _compiled_resource_sheet(old_path)
+	var plain: String = old_path.get_basename() + ".gd"
+	EventSheetCompiler.compile(sheet, plain)
+	var mine: String = old_path.get_basename() + "_generated.gd"
+	var other_old: String = SUPPORT.own_path("follow_plain_hand/door.tres")
+	_compiled_resource_sheet(other_old)
+	var hand: String = other_old.get_basename() + ".gd"
+	_write(hand, "extends Node\n# written by hand\n")
+	editor._open_sheet_in_tab(sheet, old_path)
+	DirAccess.rename_absolute(old_path, new_path)
+	editor.follow_file_event("moved", old_path, new_path)
+	var other_new: String = SUPPORT.own_path("follow_plain_hand/gate.tres")
+	DirAccess.rename_absolute(other_old, other_new)
+	editor.follow_file_event("moved", other_old, other_new)
+	var passed: bool = SUPPORT.pins(TEST_NAME, [
+		["the plain script followed the sheet", FileAccess.file_exists(new_path.get_basename() + ".gd"), true],
+		["nothing of it is left under the old name", FileAccess.file_exists(plain), false],
+		["its header names the renamed sheet", FileAccess.get_file_as_string(new_path.get_basename() + ".gd").contains("\n# Source: %s\n" % new_path), true],
+		["the generated script followed as before", FileAccess.file_exists(new_path.get_basename() + "_generated.gd") and not FileAccess.file_exists(mine), true],
+		["a hand-written script of the sheet's name stays", FileAccess.get_file_as_string(hand), "extends Node\n# written by hand\n"],
+	])
+	_forget_uid(_uid_of(new_path.get_basename() + "_generated.gd") if FileAccess.file_exists(new_path.get_basename() + "_generated.gd.uid") else -1)
+	editor.free()
+	return passed
+
+
+## A script with no class_name is named after the scene object it drives, which is read from an index of the
+## project's scene files. Godot rewrites those scenes for the new path in the same moment as the rename, so
+## the index must be read afresh then; one kept from before still answers for the old path, and the followed
+## tab fell back to the file's name while a tab opened now was named for the scene object.
+static func _a_followed_tab_is_named_by_the_rule_a_fresh_one_is() -> bool:
+	var editor: EventSheetEditor = _editor()
+	var folder: String = SUPPORT.own_folder("follow_title")
+	var old_path: String = _write(folder + "/hero.gd")
+	var new_path: String = folder + "/hero_brain.gd"
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.external_source_path = old_path
+	editor._open_sheet_in_tab(sheet, old_path)
+	# An index built before the rename, holding an answer that is no longer true.
+	EventSheetViewportRowBuilder._script_scene_cache = {"stale_marker": {"root_name": "Hero"}}
+	EventSheetViewportRowBuilder._script_scene_scanned = true
+	var kept_before: bool = EventSheetViewportRowBuilder._script_scene_cache.has("stale_marker")
+	DirAccess.rename_absolute(old_path, new_path)
+	editor.follow_file_event("moved", old_path, new_path)
+	var passed: bool = SUPPORT.pins(TEST_NAME, [
+		["the scene index was in use before the rename", kept_before, true],
+		["a followed tab reads the scene files afresh", EventSheetViewportRowBuilder._script_scene_cache.has("stale_marker"), false],
+		["and is named by the file when no scene names it", EventSheetDock._format_sheet_title(sheet, new_path), "hero_brain"],
+	])
+	editor.free()
+	return passed
+
+
+## The things the plugin itself wrote a file's path into follow it: the editor's memory keyed by the path,
+## the sheets a sheet includes (open and on disk), and the user's own scripts are counted, never rewritten.
+static func _what_the_plugin_wrote_down_follows_the_file() -> bool:
+	var refs: GDScript = load("res://addons/eventsheet/editor/dock/path_references.gd")
+	var rekeyed: Dictionary = refs.rekeyed({"res://a/x.gd": 2, "res://b/y.gd": 3, "res://a/z.gd": 4}, "res://a/x.gd", "res://a/x2.gd", false)
+	var folder_rekeyed: Dictionary = refs.rekeyed({"res://a/x.gd": 2, "res://ab/y.gd": 3}, "res://a", "res://c", true)
+	var clash: Dictionary = refs.rekeyed({"res://a/x.gd": 2, "res://a/x2.gd": 9}, "res://a/x.gd", "res://a/x2.gd", false)
+	var lines: String = "[resource]\nincludes = Array[String]([\"res://a/x.tres\", \"res://a/y.tres\"])\nace_provider_scripts = Array[String]([\"res://a/x.tres\"])\nnote = \"res://a/x.tres\"\n"
+	var respelled: String = refs.respelled(lines, "res://a/x.tres", "res://a/w.tres", false)
+	var folder_respelled: String = refs.respelled(lines, "res://a", "res://c", true)
+	var in_memory: EventSheetResource = EventSheetResource.new()
+	in_memory.includes = ["res://a/x.tres", "res://a/y.tres"]
+	in_memory.ace_provider_scripts = ["res://a/p.gd"]
+	in_memory.custom_class_icon = "res://a/i.svg"
+	var changed_in_memory: int = refs.follow_in_sheet(in_memory, "res://a", "res://b", true)
+	# Files on disk: a sheet that includes the renamed one, a script that preloads it, a script the plugin
+	# compiled (never the user's), and an open sheet that is skipped.
+	var root: String = SUPPORT.own_folder("follow_refs")
+	var includer: String = _write(root + "/includer.tres", "[resource]\nincludes = Array[String]([\"res://lib/door.tres\"])\n")
+	var open_one: String = _write(root + "/open_one.tres", "[resource]\nincludes = Array[String]([\"res://lib/door.tres\"])\n")
+	var user_script: String = _write(root + "/user.gd", "extends Node\nconst Door := preload(\"res://lib/door.tres\")\n")
+	var compiled: String = _write(root + "/made.gd", "# AUTO-GENERATED by EventForge v0.20.0\n# Source: res://lib/door.tres\nextends Node\n")
+	var found: Dictionary = refs.scan("res://lib/door.tres", "res://lib/gate.tres", false, PackedStringArray([open_one]), root)
+	var written: int = refs.write_sheets(found["sheets"], "res://lib/door.tres", "res://lib/gate.tres", false)
+	var passed: bool = SUPPORT.pins(TEST_NAME, [
+		["a key under the moved file follows it", rekeyed, {"res://a/x2.gd": 2, "res://b/y.gd": 3, "res://a/z.gd": 4}],
+		["a folder carries every key under it, and not a sibling that shares the prefix", folder_rekeyed, {"res://c/x.gd": 2, "res://ab/y.gd": 3}],
+		["a key never lands on one that exists", clash, {"res://a/x.gd": 2, "res://a/x2.gd": 9}],
+		["a sheet's path fields are respelled and nothing else", respelled, lines.replace("[\"res://a/x.tres\", \"res://a/y.tres\"]", "[\"res://a/w.tres\", \"res://a/y.tres\"]").replace("Array[String]([\"res://a/x.tres\"])", "Array[String]([\"res://a/w.tres\"])")],
+		["a moved folder respells the paths under it", folder_respelled.contains("\"res://c/x.tres\", \"res://c/y.tres\"") and folder_respelled.contains("note = \"res://a/x.tres\""), true],
+		["an open sheet follows in memory", changed_in_memory, 4],
+		["and holds the new paths", [in_memory.includes[0], in_memory.ace_provider_scripts[0], in_memory.custom_class_icon], ["res://b/x.tres", "res://b/p.gd", "res://b/i.svg"]],
+		["a sheet file that is not open is found", found["sheets"], [includer]],
+		["a script of the user's that names the old path is counted", found["scripts"], [user_script]],
+		["a script the plugin compiled is not the user's", (found["scripts"] as Array).has(compiled), false],
+		["one sheet file was written", written, 1],
+		["it names the new place", FileAccess.get_file_as_string(includer), "[resource]\nincludes = Array[String]([\"res://lib/gate.tres\"])\n"],
+		["the user's script was not touched", FileAccess.get_file_as_string(user_script), "extends Node\nconst Door := preload(\"res://lib/door.tres\")\n"],
+		["the open sheet's file was not touched", FileAccess.get_file_as_string(open_one), "[resource]\nincludes = Array[String]([\"res://lib/door.tres\"])\n"],
+		["nothing to say when no script names it", refs.leftover_sentence(0), ""],
+		["one sentence says how many scripts still name it and where to look", refs.leftover_sentence(2), "Scripts of yours that still name the old path: 2. Tools > Find in Project lists them."],
+	])
+	_drop_ring(includer)
 	return passed

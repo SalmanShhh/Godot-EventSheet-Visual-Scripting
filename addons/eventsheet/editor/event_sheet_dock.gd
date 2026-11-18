@@ -8197,6 +8197,9 @@ static func _format_sheet_title(sheet: EventSheetResource, explicit_path: String
 	if load(SCENE_SHEET_MARKS_PATH).is_scene_sheet(sheet):
 		return load(SCENE_SHEET_MARKS_PATH).scene_path_of(sheet).get_file()
 	var resolved_path: String = _resolve_sheet_path(sheet, explicit_path)
+	# A sheet whose file was deleted behind its tab keeps the name its work had.
+	if resolved_path.is_empty():
+		resolved_path = sheet.gone_file_path
 	if resolved_path.is_empty():
 		return "Untitled EventSheet"
 	var object_name: String = str(EventSheetObjectFacts.sheet_object_title(sheet, resolved_path).get("name", ""))

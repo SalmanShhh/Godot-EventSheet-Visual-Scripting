@@ -1646,6 +1646,8 @@ static func head_bar_name(sheet: EventSheetResource, head_facts: Dictionary = {}
 		source_path = sheet.resource_path
 	if not source_path.is_empty() and not source_path.contains("::"):
 		return source_path.get_file()
+	if not sheet.gone_file_path.is_empty():
+		return sheet.gone_file_path.get_file()
 	return EventSheetL10n.translate("Untitled")
 
 
@@ -7945,6 +7947,14 @@ static var _script_scene_scanned: bool = false
 static func clear_scene_script_index() -> void:
 	_script_scene_cache.clear()
 	_script_scene_scanned = false
+
+
+## Gives `script_path` the scene entry `entry` when the index knows no scene for it. A script that was just
+## renamed is named by its scene before Godot has finished rewriting that scene for the new path, so the
+## entry it had at its old path stands in until the index is read from the files again.
+static func adopt_scene_entry(script_path: String, entry: Dictionary) -> void:
+	if not entry.is_empty() and scene_using_script(script_path).is_empty():
+		_script_scene_cache[script_path] = entry
 
 
 ## The scene a script is attached to as its ROOT, as {scene_path, root_name} - what lets a script with

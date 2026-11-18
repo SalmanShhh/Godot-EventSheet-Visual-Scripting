@@ -192,7 +192,8 @@ static func facts(sheet: EventSheetResource, scaffold_code: String, attached: bo
 	if str(head["description"]).is_empty():
 		head["description"] = sheet.class_description.strip_edges()
 	var source_path: String = str(sheet.external_source_path).strip_edges()
-	head["file_name"] = source_path.get_file()
+	# A file deleted behind its open tab leaves the work with the name it had.
+	head["file_name"] = (source_path if not source_path.is_empty() else sheet.gone_file_path).get_file()
 	head["source_path"] = source_path
 	head["autoload"] = sheet.autoload_singleton_name()
 	head["host"] = sheet.host_class.strip_edges() if host_bound or sheet.behavior_mode else ""

@@ -22,10 +22,20 @@ static func backup_count() -> int:
 	return int(ProjectSettings.get_setting("eventsheets/editor/backup_count", 10))
 
 
+## Where the rings live when something other than the default is wanted: a test keeps them inside its own
+## folder so a run leaves nothing in the shared user folder. Empty means the default root above.
+static var root_override: String = ""
+
+
+## The folder every ring lives under.
+static func backups_root() -> String:
+	return root_override if not root_override.is_empty() else BACKUPS_ROOT
+
+
 ## One folder per sheet path, flattened so res:// and user:// sheets can't collide.
 static func backup_dir_for(sheet_path: String) -> String:
 	var sanitized: String = sheet_path.replace("://", "_").replace("/", "_").replace(":", "_")
-	return "%s/%s" % [BACKUPS_ROOT, sanitized]
+	return "%s/%s" % [backups_root(), sanitized]
 
 
 ## A sheet's file was renamed or moved: its backup ring goes with it, so Sheet Backups still lists the

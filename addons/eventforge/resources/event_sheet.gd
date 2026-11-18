@@ -167,6 +167,12 @@ var annotation_gate_canonical: bool = false
 ## field because a `.gd` somewhere else was mid-merge.
 var conflict_marker_lines: PackedInt32Array = PackedInt32Array()
 
+## The file this sheet was read from or saved to before that file was deleted behind its open tab with
+## unsaved edits, and empty for every other sheet. The tab and the head band keep reading the name the
+## work had while its file is gone, instead of "Untitled". DELIBERATELY NOT EXPORTED: it is a fact about
+## this session, never part of the saved sheet.
+var gone_file_path: String = ""
+
 
 ## True while this sheet is blocked by unfinished merge markers - the one question every write path
 ## asks before it writes. A method rather than a bare read of the array, so the reason a sheet is
