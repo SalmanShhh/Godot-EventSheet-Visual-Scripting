@@ -50,6 +50,8 @@ const CHOICES: PackedStringArray = ["auto", "load", "save", "manual"]
 ## The doc line the block opens with. Frozen once shipped: the importer finds the block by it.
 const DOC: String = "## Saved by each variable's Save choice (Save Studio > What gets saved) - change the choice, not these lines."
 const STORE: String = "user://remembered.cfg"
+## The line that keeps the boot member quiet when nothing reads it (a block of Manual choices only).
+const UNUSED_BOOT_IGNORE: String = "@warning_ignore(\"unused_private_class_variable\")"
 const GROUP: String = "persist"
 ## The block's own load and store functions (and the older Remember Between Runs loader). A sheet that
 ## already has one of them carries a copy of the block as code, so it gets no second one.
@@ -183,6 +185,10 @@ static func block_lines(sheet: EventSheetResource, declared: Callable, warnings:
 	var stored_at_save: Array = by_choice["load"]
 	lines.append("")
 	lines.append(DOC)
+	# With only Manual choices there is no store function to read the boot member, and Godot would warn
+	# that a private variable is never used. Files written before this line existed keep their spelling.
+	if stores.is_empty() and stored_at_save.is_empty() and not bool(sheet.get_meta(LEGACY_SPELLING_META, false)):
+		lines.append(UNUSED_BOOT_IGNORE)
 	lines.append("@onready var __ef_save_boot: bool = _ef_load_saved()")
 	lines.append("")
 	lines.append("func _ef_load_saved() -> bool:")

@@ -114,7 +114,9 @@ static func apply(sheet: EventSheetResource, cut_block: Dictionary, source: Stri
 	sheet.external_source_path = VERIFY_PATH
 	var output: String = str(EventSheetCompiler.echo(sheet).get("output", ""))
 	# A file an older version wrote: the same block in its older spelling, written back as it was read.
-	if output != source and source.contains("func _ef_store_saved(at_save_game: bool = false) -> void:\n\tvar __remember_cfg"):
+	# (A block of Manual choices only, written before it carried the line that keeps its boot member quiet, is the same case.)
+	if output != source and (source.contains("func _ef_store_saved(at_save_game: bool = false) -> void:\n\tvar __remember_cfg")
+			or not source.contains(SaveChoices.UNUSED_BOOT_IGNORE)):
 		sheet.set_meta(SaveChoices.LEGACY_SPELLING_META, true)
 		output = str(EventSheetCompiler.echo(sheet).get("output", ""))
 		if output != source:

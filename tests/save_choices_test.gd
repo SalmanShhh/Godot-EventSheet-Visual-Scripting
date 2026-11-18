@@ -77,6 +77,7 @@ static func run() -> bool:
 	ok = _refuses_what_it_cannot_write() and ok
 	ok = _keeps_remembering_beside_an_own_pair() and ok
 	ok = _the_studio_row() and ok
+	ok = _manual_only_boot_member_is_quiet() and ok
 	return ok
 
 
@@ -224,6 +225,27 @@ static func _only_health() -> EventSheetResource:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.variables = {"health": {"type": "int", "default": 3, "exported": true, "attributes": {"save": "manual"}}}
 	return sheet
+
+
+## A block of Manual choices has no store function to read its boot member, so the member carries the line
+## that keeps Godot from warning about it. A file written before that line existed still opens as the
+## choices and saves back exactly as it was.
+static func _manual_only_boot_member_is_quiet() -> bool:
+	var written: String = SUPPORT.compile_output(_only_health(), SUPPORT.own_path("save_choices_manual.gd"))
+	var older: String = written.replace(SaveChoices.UNUSED_BOOT_IGNORE + "\n", "")
+	var reopened: EventSheetResource = SUPPORT.reopen(older)
+	var choice: String = ""
+	for entry: Variant in reopened.events:
+		if entry is LocalVariable and (entry as LocalVariable).name == "health":
+			choice = SaveChoices.choice_of((entry as LocalVariable).attributes)
+	return SUPPORT.pins(PREFIX, [
+		["a Manual-only block marks its boot member quiet", written.contains(SaveChoices.UNUSED_BOOT_IGNORE + "\n@onready var __ef_save_boot"), true],
+		["a block with a store function does not", SUPPORT.compile_output(_sheet_with_choices(), SUPPORT.own_path("save_choices_all.gd")).contains(SaveChoices.UNUSED_BOOT_IGNORE), false],
+		["the older Manual-only block is a different file", older != written, true],
+		["it still reads back as the choice", choice, "manual"],
+		["and saves back byte for byte", SUPPORT.reemit(older, SUPPORT.own_path("save_choices_manual.gd")), older],
+		["the new block saves back byte for byte", SUPPORT.reemit(written, SUPPORT.own_path("save_choices_manual.gd")), written],
+	])
 
 
 ## A Resource has no ready or exit to hang the loads on, and a sheet that already writes the pair keeps
