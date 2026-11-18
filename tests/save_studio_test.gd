@@ -34,7 +34,9 @@ static func run() -> bool:
 
 static func _formats_and_slots() -> bool:
 	var studio: GDScript = EventSheetSaveStudio
-	var now: int = int(Time.get_unix_time_from_system())
+	# A fixed noon in the reader's own clock, so a run that crosses midnight cannot move "a minute ago" onto yesterday.
+	var bias: int = int(Time.get_time_zone_from_system().get("bias", 0)) * 60
+	var now: int = 1718452800 - bias
 	return SUPPORT.pins(NAME, [
 		["the file name follows the format", studio.pattern_for_format("save_{slot}.cfg", "json"), "save_{slot}.json"],
 		["a renamed pattern keeps its stem", studio.pattern_for_format("slot-{slot}.dat", "binary"), "slot-{slot}.sav"],
@@ -47,6 +49,7 @@ static func _formats_and_slots() -> bool:
 		["a slot saved a minute ago reads as today", studio.slot_meta(now - 60, 2048, now).begins_with("Saved today at "), true],
 		["with its size", studio.slot_meta(now - 60, 2048, now).ends_with(" · 2.0 KB"), true],
 		["a slot saved yesterday says so", studio.slot_meta(now - 86400, 512, now).begins_with("Saved yesterday at "), true],
+		["a slot saved a minute before midnight is yesterday (the edge the old clock-based reading fell over at)", studio.slot_meta(1718409600 - bias - 60, 512, 1718409600 - bias + 30).begins_with("Saved yesterday at "), true],
 		["a copy's ending names its format", studio.format_for_extension("C:/backups/slot.json"), "json"],
 		["the binary ending is binary", studio.format_for_extension("user://save_0.sav"), "binary"],
 	])
