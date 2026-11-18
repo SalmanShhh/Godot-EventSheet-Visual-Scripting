@@ -198,7 +198,7 @@ static func run() -> bool:
 	# would answer from the numbers before it. The script listing is dropped at the head of a run for
 	# the same reason, and the scene answers derived from a parse that refreshes underneath them are
 	# the inversion this plugin has been bitten by before.
-	var audit: String = _function_body(_read(DOCTOR_PATH), "static func run() -> Dictionary:")
+	var audit: String = _function_body(_read(DOCTOR_PATH), "static func begin(options: Dictionary = {}) -> Dictionary:")
 	all_passed = _check("a fresh audit drops the scene answers the last one derived",
 		audit.contains("EventSheetSceneCollisionFacts.clear_cache()"), true) and all_passed
 	var settings_hook: String = _function_body(dock_source, "func _on_project_settings_changed()")
