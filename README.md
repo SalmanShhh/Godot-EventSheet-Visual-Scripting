@@ -160,7 +160,7 @@ Every feature lands with tests, a CHANGELOG entry, and its spec updated. Pushes 
 
 ## Contributing & license
 
-[CONTRIBUTING.md](CONTRIBUTING.md) has the dev setup, the compatibility covenant, and how to add ACEs, addons, packs, and themes. The project improves fastest through real-world reports - [open an issue](../../issues/new/choose) if something breaks or a C3 workflow feels wrong. MIT licensed (`LICENSE`).
+[CONTRIBUTING.md](CONTRIBUTING.md) has the dev setup, the compatibility covenant, and how to add ACEs, addons, packs, and themes. The project improves fastest through real-world reports - [open an issue](../../issues/new/choose) if something breaks, a page of the Manual is wrong, or a workflow you know from another event-sheet editor feels wrong. MIT licensed (`LICENSE`).
 
 ## 🙏 Acknowledgments
 

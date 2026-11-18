@@ -1,30 +1,26 @@
 name: Feature request
-description: Something from Construct 3 / GDevelop you miss, or a Godot-native idea.
+description: Something you would like to do that you cannot do yet.
 labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        Before filing: skim the [C3 migration guide](../blob/main/docs/C3-MIGRATION-GUIDE.md) -
-        many C3 features map to a Godot idiom that already exists here, and a few are
-        documented **permanent non-goals** (e.g. importing `.c3p` projects).
-  - type: input
-    id: c3_equivalent
-    attributes:
-      label: C3/GDevelop equivalent (if any)
-      placeholder: "C3's 'Pick overlapping object', GDevelop's external layouts, …"
+        Before filing, it is worth a look at the
+        [guide for people moving from another event-sheet editor](https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/blob/main/docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md):
+        many things map to something that already exists here.
   - type: textarea
-    id: usecase
+    id: use_case
     attributes:
       label: What are you trying to make?
-      description: |
-        The concrete game situation beats the abstract feature: "my boss fight needs X"
-        gets designed faster than "add X". This project's tie-breakers are
-        speed-to-game and C3 familiarity - frame it that way and you're halfway in.
+      description: The game situation beats the abstract feature. "My boss fight needs X" is easier to design for than "add X".
     validations:
       required: true
   - type: textarea
     id: today
     attributes:
-      label: How do you work around it today?
-      description: ƒx expression? GDScript block? A behavior pack you hand-rolled?
+      label: How do you get by today?
+      description: A workaround, a GDScript block, a behaviour you wrote by hand, or another tool.
+  - type: input
+    id: other_editor
+    attributes:
+      label: Does another event-sheet editor do this? What is it called there?

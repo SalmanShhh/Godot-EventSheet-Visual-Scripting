@@ -2249,7 +2249,7 @@ static func collection_decl(variable_name: String, entries: Array, dictionary: b
 
 
 ## The repository the released plugin is published from. Doc links are built against it.
-const DOCS_REPO_URL: String = "https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting"
+const DOCS_REPO_URL: String = preload("res://addons/eventforge/report_links.gd").REPO_URL
 
 ## Where a pack's guide lives, relative to the repo root.
 const ADDON_GUIDE_DIR: String = "docs/Addons"

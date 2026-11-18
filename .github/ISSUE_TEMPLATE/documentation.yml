@@ -1,0 +1,23 @@
+name: Documentation
+description: A page in the Manual is wrong, unclear or missing.
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The Manual's "Report a problem" and "ask for a page" links open this form with the
+        page already named. Nothing else is sent.
+  - type: input
+    id: page
+    attributes:
+      label: Which page?
+      description: The page's title, or what you searched for when no page answered.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong or missing?
+      description: What you read, what you expected to find, or what you tried that the page did not explain.
+    validations:
+      required: true

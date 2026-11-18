@@ -1,51 +1,88 @@
 name: Bug report
-description: Something broke - the editor, the compiler, or generated GDScript.
+description: Something broke, or lost or changed something it should not have.
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for kicking the tires on an **experimental** plugin - reports like this
-        are exactly how it earns real-world validation. Two minutes of detail here
-        usually saves a day of guessing.
-  - type: input
-    id: versions
+        Thank you for reporting this. A few plain answers below are usually enough for a fix.
+        If the plugin opened this form for you, the three version fields are already filled in.
+        Nothing else about you or your project is sent.
+  - type: textarea
+    id: what_happened
     attributes:
-      label: Versions
-      description: Plugin release tag + Godot version.
-      placeholder: "v0.6.1, Godot 4.5.1"
+      label: What happened?
+      description: Say it in your own words. If a sheet or a file was changed or lost, say which and how.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What you clicked or typed, one step per line, from a new or small sheet if you can.
+      placeholder: |
+        1. Open a sheet
+        2. ...
     validations:
       required: true
   - type: dropdown
     id: area
     attributes:
-      label: Where did it break?
+      label: Where did it happen?
       options:
-        - Editor (viewport, dialogs, picker, themes)
-        - Compiler / generated GDScript
-        - GDScript pairing (open .gd as sheet, paste, round-trip)
-        - Behavior packs / addons
-        - Live Values / debugging
-        - MCP server
-        - Other
+        - The sheet editor (rows, picker, dialogs, undo)
+        - Opening or saving a sheet (.gd or .tres), or the files on disk
+        - The generated GDScript (Code view, compile, run)
+        - Project Doctor
+        - Save Studio or saving and loading in a game
+        - Juice Player
+        - Inspector looks or Drawing Prefabs
+        - Input, settings or controls
+        - Behaviour packs
+        - Themes or the look of the editor
+        - The Manual
+        - Debugging or live values
+        - The MCP server
+        - Something else
     validations:
       required: true
   - type: textarea
-    id: repro
+    id: sample
     attributes:
-      label: Steps to reproduce
+      label: A small sheet or snippet that shows it
       description: |
-        The gold standard is a minimal sheet: attach the .tres (zip it), or paste a
-        **text snippet** (select rows → Copy - the clipboard format is shareable text).
-      placeholder: |
-        1. New sheet → add event "Every tick"
-        2. …
+        A `.gd` sheet is the easiest to share: paste it here, or paste the rows as text
+        (select rows, then Copy). For a `.tres` sheet, zip it and drag the zip in.
+        Leave out anything private.
+      render: gdscript
+  - type: input
+    id: doctor_line
+    attributes:
+      label: Project Doctor summary line (if it is about a project check)
+      description: The line that starts with "doctor:".
+  - type: input
+    id: plugin_version
+    attributes:
+      label: Plugin version
+      description: The version of EventSheets you are using. It is in the plugin's list in Project Settings > Plugins.
     validations:
       required: true
-  - type: textarea
-    id: expected_actual
+  - type: input
+    id: godot_version
     attributes:
-      label: Expected vs actual
-      description: For compiler bugs, paste the generated GDScript (the GDScript panel shows it) and any errors from the Output dock.
+      label: Godot version
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      description: Windows, macOS, Linux, or the like.
     validations:
       required: true

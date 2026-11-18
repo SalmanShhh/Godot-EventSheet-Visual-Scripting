@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Changed: the issue forms and the plugin's report links are brought up to date
+
+The bug form asks for what happened, what you expected, steps, a small sheet or snippet (`.gd` first), the Project Doctor's summary line, the plugin and Godot versions and the platform, and lists today's areas; there is a new Documentation form, and the feature form and the form chooser no longer name other products or link to a guide that moved. Report an Issue opens the bug form with the plugin version, the Godot version and the platform already filled in (nothing else), and the Manual's "Report a problem" and "ask for a page" open the Documentation form with the page named. The repository address now lives in one place, and a test keeps the forms, their field ids and every address the plugin builds in step.
+
 ### Fixed: an open sheet follows its file when the FileSystem dock renames, moves or deletes it
 
 Renaming or moving a sheet's file (or its folder) in Godot's FileSystem dock left the open tab on the old path, so the next Save wrote the OLD file back beside the renamed one, with the scene using the renamed one and the edits going to a file nothing used; after a folder rename Save could not write at all. The tab, its header, the saved session, the recently-closed list, the sheet's own file link and its backup ring now follow to the new path, with the unsaved edits and the undo history intact. Deleting the file closes a tab with nothing unsaved, as Godot's script editor does; a tab with unsaved edits stays open, a copy of the edits goes into Sheet Backups, and the tab lets go of the dead path so Save asks where to write. A file removed or renamed outside Godot is handled the same way once the editor rescans. Only the open tabs are walked, so a folder move carrying many open sheets is one pass.

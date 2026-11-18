@@ -5128,9 +5128,10 @@ func _on_picker_guide_requested(definition: ACEDefinition) -> void:
 		bool(explain.opens_inside(guide_id))))
 
 
-## The addon's issue tracker. A plain constant rather than a project setting: it is where THIS
-## plugin's bugs go, and a fork that wants its own tracker is editing the plugin anyway.
-const ISSUES_URL: String = "https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/issues/new"
+## The report links: the one repository address and the forms the plugin opens (eventforge/report_links.gd).
+const REPORT_LINKS = preload("res://addons/eventforge/report_links.gd")
+## The addon's issue tracker, derived from the one repository address.
+const ISSUES_URL: String = REPORT_LINKS.NEW_ISSUE_URL
 
 
 ## The report skeleton the tracker opens with. Static and pure so the exact text that travels is
@@ -5159,12 +5160,19 @@ static func issue_report_body() -> String:
 	])
 
 
-## Tools ▾ "Report an Issue…" (and the Welcome window's footer): opens the tracker in the browser
-## with the skeleton above pre-filled. The browser shows the whole report before anything is sent,
-## so nothing leaves the machine without the user reading it and pressing submit.
+## Tools ▾ "Report an Issue…" (and the Welcome window's footer): opens the tracker's bug form in the
+## browser with the plugin version, the Godot version and the platform filled in. The browser shows the
+## whole report before anything is sent, so nothing leaves the machine without the user reading it and
+## pressing submit.
 func _report_issue() -> void:
-	OS.shell_open("%s?body=%s" % [ISSUES_URL, issue_report_body().uri_encode()])
+	REPORT_LINKS.open(issue_report_url())
 	_set_status("Opened the issue tracker in your browser - your Godot and plugin versions are pre-filled.")
+
+
+## The address the bug form opens at. Pure over the running versions, so a test pins what travels.
+static func issue_report_url() -> String:
+	return REPORT_LINKS.bug_url(load(SHEET_COMPILER_PATH).VERSION,
+		str(Engine.get_version_info().get("string", "unknown")), OS.get_name())
 
 
 ## Writes the always-current project vocabulary reference (EventSheetVocabularyDoc) -

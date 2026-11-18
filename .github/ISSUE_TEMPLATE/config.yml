@@ -1,5 +1,8 @@
 blank_issues_enabled: true
 contact_links:
-  - name: "Docs: C3 migration guide"
-    url: "https://github.com/SalmanShhh/GodotEventSheet/blob/main/docs/C3-MIGRATION-GUIDE.md"
-    about: "Maps every C3 concept/behavior/plugin to its home here (incl. honest non-goals)."
+  - name: Guide for people moving from another event-sheet editor
+    url: https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/blob/main/docs/GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR.md
+    about: Maps the ideas you already know to their home here, including what is deliberately left out.
+  - name: Uninstalling
+    url: https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/blob/main/docs/GUIDE-UNINSTALL.md
+    about: Your compiled scripts are plain GDScript and keep working without the plugin.

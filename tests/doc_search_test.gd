@@ -177,7 +177,7 @@ static func _test_never_empty() -> bool:
 	# It files through the SAME channel the foot of every page uses - one address, not two.
 	all_passed = _check("asking for a page files through the tracker with the search in the title",
 		EventSheetDocFeedback.ask_url("https://example.com/repo/", "widget frobnication"),
-		"https://example.com/repo/issues/new?title=Manual%3A%20no%20page%20about%20widget%20frobnication") and all_passed
+		"https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/issues/new?template=documentation.yml&title=Manual%3A%20no%20page%20about%20widget%20frobnication&page=no%20page%20yet%20-%20searched%20for%3A%20widget%20frobnication") and all_passed
 	all_passed = _check("an empty search files nothing",
 		EventSheetDocFeedback.ask_url("https://example.com/repo", "  "), "") and all_passed
 

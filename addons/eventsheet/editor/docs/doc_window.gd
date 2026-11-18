@@ -116,7 +116,7 @@ func _ensure_built() -> void:
 	_browser.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_browser.custom_minimum_size = Vector2(0.0, EventSheetPalette.scaled_f(420.0))
 	_browser.link_activated.connect(func(target: String) -> void:
-		_dock._set_status("Opened %s in your browser." % target.get_file()))
+		_dock._set_status(EventSheetDocFeedback.LINKS.opened_line(target)))
 	_browser.snippet_inserted.connect(func() -> void:
 		_dock._set_status("Inserted the illustrated rows below your selection - one undo step."))
 	_browser.control_highlight_requested.connect(func(control_label: String) -> void:

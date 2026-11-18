@@ -5,8 +5,8 @@
 #   WAS THIS PAGE HELPFUL?  Yes / No, stored LOCALLY and sent nowhere. Nothing in this plugin phones
 #                           anybody, and a feedback widget that quietly did would be the one thing
 #                           on this surface a reader could not verify by reading it.
-#   REPORT A PROBLEM        opens the project's issue tracker in the reader's browser with the page
-#                           name already in the title. It OPENS a page; it never submits one - the
+#   REPORT A PROBLEM        opens the tracker's documentation form in the reader's browser with the
+#                           page name already in the title and in the form's page field. It OPENS a page; it never submits one - the
 #                           reader types and presses the button themselves, in their own browser,
 #                           signed in as themselves.
 #   A- / A+                 the page's text size, remembered per reader. Independent of the editor's
@@ -37,9 +37,8 @@ const MIN_SCALE := 0.8
 const MAX_SCALE := 1.6
 const SCALE_STEP := 0.1
 
-## The tracker the "Report a problem" button opens, derived from the repository the whole plugin
-## already points at so there is one address rather than two.
-const ISSUES_PATH := "/issues/new"
+## The one repository address and the issue forms (eventforge/report_links.gd).
+const LINKS = preload("res://addons/eventforge/report_links.gd")
 
 ## The words at the foot of every page. Constants because they are also translation keys.
 const PROMPT := "Was this page helpful?"
@@ -86,32 +85,31 @@ static func answer_line(answer: int) -> String:
 	return ""
 
 
-## The tracker URL a "Report a problem" opens, with the page already named in the title. Pure over
-## its inputs, so the suite pins the address and the prefill rather than trusting a click.
+## The address a "Report a problem" opens: the documentation form, with the page named in the title and
+## in the form's page field. Pure over its inputs, so the suite pins the address and the prefill rather
+## than trusting a click. `repo_url` is kept for callers that pass one; the address itself is the one
+## repository address in eventforge/report_links.gd.
 ##
-## The title is URI-encoded; the body deliberately is NOT prefilled with anything about the
-## reader's machine. This button opens a page - it never sends one - and a body full of collected
-## detail would make that promise harder to believe than it needs to be.
+## Only the page's name travels - nothing about the reader's machine or project. This button opens a
+## page; it never sends one.
 static func report_url(repo_url: String, page_title: String, doc_id: String) -> String:
-	var base: String = repo_url.strip_edges().trim_suffix("/")
-	if base.is_empty():
+	if repo_url.strip_edges().is_empty():
 		return ""
-	var title: String = "Manual: %s" % page_title.strip_edges()
-	if page_title.strip_edges().is_empty():
-		title = "Manual: %s" % doc_id.strip_edges()
-	return "%s%s?title=%s" % [base, ISSUES_PATH, title.uri_encode()]
+	var named: String = page_title.strip_edges()
+	if named.is_empty():
+		named = doc_id.strip_edges()
+	return LINKS.docs_url(named)
 
 
-## The URL behind "ask for a page about …" - the row a search with no answers ends on. It is the
-## SAME channel "Report a problem" uses, deliberately: a reader answering the documentation back has
-## one address, whether what they have to say is "this page is wrong" or "there is no page". It
-## opens the tracker with their search already in the title; it never submits anything.
+## The address behind "ask for a page about ..." - the row a search with no answers ends on. It opens the
+## SAME documentation form "Report a problem" does, deliberately: a reader answering the Manual back has
+## one place to do it, whether what they have to say is "this page is wrong" or "there is no page". The
+## search is named in the title and in the page field; nothing is submitted.
 static func ask_url(repo_url: String, query: String) -> String:
-	var base: String = repo_url.strip_edges().trim_suffix("/")
 	var wanted: String = query.strip_edges()
-	if base.is_empty() or wanted.is_empty():
+	if repo_url.strip_edges().is_empty() or wanted.is_empty():
 		return ""
-	return "%s%s?title=%s" % [base, ISSUES_PATH, ("Manual: no page about %s" % wanted).uri_encode()]
+	return LINKS.docs_url("no page yet - searched for: %s" % wanted, "Manual: no page about %s" % wanted)
 
 
 # ── Text size ─────────────────────────────────────────────────────────────────────────────────

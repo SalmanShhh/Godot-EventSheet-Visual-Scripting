@@ -401,11 +401,11 @@ static func _test_feedback_and_text_size() -> bool:
 	all_passed = _check("a yes says where it went",
 		EventSheetDocFeedback.answer_line(EventSheetDocFeedback.YES).contains("sent nowhere"),
 		true) and all_passed
-	# The tracker: the page named in the title, and nothing else prefilled.
+	# The tracker: the documentation form, the page named in the title and the page field, nothing else.
 	var url: String = EventSheetDocFeedback.report_url(
 		"https://example.invalid/project", "Working with Lists", "guide:GUIDE-WORKING-WITH-LISTS")
-	all_passed = _check("Report a problem opens a NEW issue on the project",
-		url, "https://example.invalid/project/issues/new?title=Manual%3A%20Working%20with%20Lists") and all_passed
+	all_passed = _check("Report a problem opens the documentation form with the page named",
+		url, "https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/issues/new?template=documentation.yml&title=Manual%3A%20Working%20with%20Lists&page=Working%20with%20Lists") and all_passed
 	all_passed = _check("a page with no title falls back to its id",
 		EventSheetDocFeedback.report_url("https://example.invalid/p", "", "reference:legend").contains(
 			"reference"), true) and all_passed

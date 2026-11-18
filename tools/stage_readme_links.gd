@@ -19,9 +19,9 @@
 @tool
 extends SceneTree
 
-## The public API holds the one repo URL every doc link is built from; loaded by path so this
-## tool never depends on the class cache being warm.
-const API_SCRIPT_PATH: String = "res://addons/eventsheet/api/eventsheets.gd"
+## The report-links file holds the one repo URL every doc link is built from (the public API reads it
+## from there); read by path so this tool never depends on the class cache being warm.
+const LINKS_SCRIPT_PATH: String = "res://addons/eventforge/report_links.gd"
 
 ## Link targets under this prefix are the ones that do not ship.
 const RELATIVE_PREFIX: String = "docs/"
@@ -78,13 +78,12 @@ static func count_links(text: String) -> int:
 	return _link_matcher().search_all(text).size()
 
 
-## The repo every doc link is built from, read out of the public API's source TEXT so there is
-## one spelling of it. Deliberately not `load()`ed: compiling the API pulls the whole editor
-## subtree into a staging step that only needs one string, and a parse error anywhere in the
-## editor would then break packaging.
+## The repo every doc link is built from, read out of the report-links file's source TEXT (the one place
+## the address is spelled; the public API's constant reads it from there). Deliberately not `load()`ed: a
+## staging step only needs one string, and a parse error anywhere in the editor would then break packaging.
 static func repository_url() -> String:
-	var declaration: RegEx = RegEx.create_from_string("(?m)^const\\s+DOCS_REPO_URL[^=]*=\\s*\"([^\"]+)\"")
-	var found: RegExMatch = declaration.search(_read(API_SCRIPT_PATH))
+	var declaration: RegEx = RegEx.create_from_string("(?m)^const\\s+REPO_URL[^=]*=\\s*\"([^\"]+)\"")
+	var found: RegExMatch = declaration.search(_read(LINKS_SCRIPT_PATH))
 	if found == null:
 		return ""
 	return found.get_string(1)

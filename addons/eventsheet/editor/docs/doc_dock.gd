@@ -439,7 +439,7 @@ func _open_current_online() -> void:
 
 
 func _on_link_activated(target: String) -> void:
-	_set_status("Opened %s in your browser." % target.get_file())
+	_set_status(load("res://addons/eventforge/report_links.gd").opened_line(target))
 
 
 ## "Go to first / next" on a reference entry. The Manual does not own the sheet, so it asks the

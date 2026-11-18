@@ -432,7 +432,7 @@ func _on_report_pressed() -> void:
 		_current_id)
 	if url.is_empty():
 		return
-	OS.shell_open(url)
+	EventSheetDocFeedback.LINKS.open(url)
 	link_activated.emit(url)
 
 
@@ -1499,7 +1499,7 @@ func _on_tree_selected() -> void:
 		if not ask.is_empty():
 			var url: String = EventSheetDocFeedback.ask_url(EventSheets.DOCS_REPO_URL, ask)
 			if not url.is_empty():
-				OS.shell_open(url)
+				EventSheetDocFeedback.LINKS.open(url)
 				link_activated.emit(url)
 			_fold_contents()
 			return
