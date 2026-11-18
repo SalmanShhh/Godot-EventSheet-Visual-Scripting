@@ -101,6 +101,10 @@ const SHOWCASE_DIR: String = "res://demo/showcase"
 const TAG_LIMIT: float = 110.0
 const NAME_FLOOR: float = 64.0
 const NAME_LIMIT: float = 230.0
+## What a name column keeps for its longest single word beyond the word itself (an icon and the cell's own margins), and the most it
+## will keep for one: a word wider than that is trimmed, with the whole name in the tooltip.
+const WORD_PAD: float = 20.0
+const WORD_LIMIT: float = 96.0
 const CELL_SLACK: float = 56.0
 const CELL_GAP: float = 14.0
 ## What a column may be squeezed to when the window is made smaller: a kind no wider than TAG_LEAST, a name no narrower than
@@ -545,6 +549,9 @@ func _fit_column(card: PanelContainer, list: Tree, section: Dictionary) -> void:
 	# the room than its words alone would earn.
 	card.size_flags_stretch_ratio = float(plan["ideal"]) * (TEMPLATE_WEIGHT if str(section.get("id", "")) == "templates" else 1.0)
 	list.set_column_custom_minimum_width(0, int(ceil(float(plan["name_floor"]))))
+	# A column does not widen for its text: a word wider than the column is trimmed (the row's tooltip holds it whole).
+	list.set_column_clip_content(0, true)
+	list.set_column_clip_content(1, true)
 	# The kind column keeps its words' width while the list has room, and gives way (to what it least needs, then to
 	# two lines) as the window is made smaller, so a narrow window wraps instead of pushing a column off its edge.
 	var fit_kind: Callable = func() -> void:
@@ -557,27 +564,47 @@ func _fit_column(card: PanelContainer, list: Tree, section: Dictionary) -> void:
 ## The plan for one column of `columns()`, its words measured in the language the page speaks now with `font` (the list's own).
 static func plan_for(section: Dictionary, font: Font, font_size: int, title_font_size: int) -> Dictionary:
 	var widest_name: float = 0.0
+	var widest_word: float = 0.0
 	var widest_tag: float = 0.0
 	for entry: Variant in section.get("entries", []):
 		var row: Dictionary = entry
 		widest_name = maxf(widest_name, font.get_string_size(EventSheetL10n.translate(str(row.get("label", ""))), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x)
+		widest_word = maxf(widest_word, _widest_word(EventSheetL10n.translate(str(row.get("label", ""))), font, font_size))
 		widest_tag = maxf(widest_tag, font.get_string_size(EventSheetL10n.translate(str(row.get("tag", ""))), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x)
 	if (section.get("entries", []) as Array).is_empty():
 		widest_name = font.get_string_size(EventSheetL10n.translate("Nothing here yet."), HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+		widest_word = _widest_word(EventSheetL10n.translate("Nothing here yet."), font, font_size)
 	var widest_title: float = font.get_string_size(EventSheetL10n.translate(str(section.get("title", ""))), HORIZONTAL_ALIGNMENT_LEFT, -1.0, title_font_size).x
-	var plan: Dictionary = column_plan(widest_name, widest_tag, widest_title)
+	var plan: Dictionary = column_plan(widest_name, widest_tag, widest_title, widest_word)
 	plan["widest_tag"] = widest_tag
 	return plan
+
+
+## The width of the widest single word of a text, in the font it is drawn in. A run of Chinese, Japanese or Korean letters
+## is not counted: those scripts break between any two letters, so they have no word that must be kept whole.
+static func _widest_word(text: String, font: Font, font_size: int) -> float:
+	var widest: float = 0.0
+	for word: String in text.split(" ", false):
+		var breakable: bool = false
+		for index: int in word.length():
+			if word.unicode_at(index) >= 0x2E80:
+				breakable = true
+				break
+		if not breakable:
+			widest = maxf(widest, font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x)
+	return widest
 
 
 ## How much room a column asks for, from the widest name and the widest kind it holds and the width of its title (all in
 ## pixels, as drawn): the kind column's width, the least the name column may shrink to, the least the whole column may
 ## shrink to, and the width it would like. Pure, so the suite pins the sums without a window.
-static func column_plan(widest_name: float, widest_tag: float, widest_title: float) -> Dictionary:
+static func column_plan(widest_name: float, widest_tag: float, widest_title: float, widest_word: float = 0.0) -> Dictionary:
 	var tag: float = minf(widest_tag, EventSheetPalette.scaled_f(TAG_LIMIT)) + (EventSheetPalette.scaled_f(CELL_GAP) if widest_tag > 0.0 else 0.0)
 	var tag_least: float = minf(tag, EventSheetPalette.scaled_f(TAG_LEAST) + (EventSheetPalette.scaled_f(CELL_GAP) if widest_tag > 0.0 else 0.0))
 	var slack: float = EventSheetPalette.scaled_f(CELL_SLACK)
-	var name_floor: float = minf(widest_name, EventSheetPalette.scaled_f(NAME_FLOOR))
+	# A name is never squeezed so far that a word of it must be cut: the column keeps room for its longest word.
+	var word_room: float = minf(widest_word + EventSheetPalette.scaled_f(WORD_PAD), EventSheetPalette.scaled_f(WORD_LIMIT)) if widest_word > 0.0 else 0.0
+	var name_floor: float = minf(widest_name, maxf(EventSheetPalette.scaled_f(NAME_FLOOR), word_room))
 	var minimum: float = maxf(widest_title + EventSheetPalette.scaled_f(LEAST_SLACK) * 0.7, tag_least + name_floor + EventSheetPalette.scaled_f(LEAST_SLACK))
 	var ideal: float = maxf(minimum, tag + minf(widest_name, EventSheetPalette.scaled_f(NAME_LIMIT)) + slack)
 	return {"tag": tag, "tag_least": tag_least, "name_floor": name_floor, "minimum": minimum, "ideal": ideal}
@@ -613,15 +640,16 @@ func _fill_list(list: Tree, entries: Array, shelf: String = "") -> void:
 		item.set_text(1, str(row.get("tag", "")))
 		item.set_tooltip_text(0, str(row.get("label", "")))
 		item.set_tooltip_text(1, str(row.get("tag", "")))
-		# A name or a kind too long for its column goes on to a second line, and the tooltip holds the whole of it.
-		item.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
-		item.set_autowrap_mode(1, TextServer.AUTOWRAP_WORD_SMART)
+		# A name or a kind too long for its column goes on to a second line at a space, never in the middle of a word; a word
+		# that cannot fit even alone is clipped at the column's edge, and the tooltip holds the whole of it.
+		item.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD)
+		item.set_autowrap_mode(1, TextServer.AUTOWRAP_WORD)
 		item.set_custom_color(1, EventSheetPopupUI.muted_text_color())
 		item.set_metadata(0, row)
 	if root.get_child_count() == 0:
 		var empty: TreeItem = list.create_item(root)
 		empty.set_text(0, "Nothing here yet.")
-		empty.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD_SMART)
+		empty.set_autowrap_mode(0, TextServer.AUTOWRAP_WORD)
 		empty.set_tooltip_text(0, "Nothing here yet.")
 		empty.set_custom_color(0, EventSheetPopupUI.muted_text_color())
 		empty.set_selectable(0, false)

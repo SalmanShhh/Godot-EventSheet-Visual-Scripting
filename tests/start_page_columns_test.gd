@@ -32,6 +32,11 @@ static func run() -> bool:
 	table.append(["a long kind is held to the limit, past which it wraps", long_kind["tag"], (EventSheetStartPage.TAG_LIMIT + EventSheetStartPage.CELL_GAP) * scale])
 	table.append(["a name is never asked to shrink below the floor", EventSheetStartPage.column_plan(900.0, 60.0, 40.0)["name_floor"], EventSheetStartPage.NAME_FLOOR * scale])
 	table.append(["a short name keeps all its words in the name column", EventSheetStartPage.column_plan(50.0, 60.0, 40.0)["name_floor"], 50.0])
+	table.append(["a column keeps room for its longest word, and the cell's margins", EventSheetStartPage.column_plan(400.0, 60.0, 40.0, 60.0)["name_floor"], (60.0 + EventSheetStartPage.WORD_PAD) * scale])
+	table.append(["but no more than the limit for one word", EventSheetStartPage.column_plan(400.0, 60.0, 40.0, 300.0)["name_floor"], EventSheetStartPage.WORD_LIMIT * scale])
+	table.append(["a short word does not lower the floor", EventSheetStartPage.column_plan(400.0, 60.0, 40.0, 10.0)["name_floor"], EventSheetStartPage.NAME_FLOOR * scale])
+	table.append(["a run of Japanese letters has no word to keep whole", EventSheetStartPage._widest_word("最初のイベントを作る", ThemeDB.fallback_font, 13), 0.0])
+	table.append(["and an English name's widest word is measured", EventSheetStartPage._widest_word("Add a behaviour to an object", ThemeDB.fallback_font, 13) > 40.0, true])
 	var wide_title: Dictionary = EventSheetStartPage.column_plan(10.0, 0.0, 300.0)
 	table.append(["a column is never narrower than its own title", float(wide_title["minimum"]) >= 300.0, true])
 	table.append(["what a column would like is never less than what it needs", float(some["ideal"]) >= float(some["minimum"]), true])
@@ -94,9 +99,9 @@ static func _row_pins(table: Array, sections: Array) -> void:
 			checked += 1
 			if item.get_tooltip_text(0) != item.get_text(0) or item.get_tooltip_text(1) != item.get_text(1):
 				without_tip += 1
-			if item.get_autowrap_mode(0) == TextServer.AUTOWRAP_OFF or item.get_autowrap_mode(1) == TextServer.AUTOWRAP_OFF:
+			if item.get_autowrap_mode(0) != TextServer.AUTOWRAP_WORD or item.get_autowrap_mode(1) != TextServer.AUTOWRAP_WORD:
 				without_wrap += 1
 		list.free()
 	table.append(["every row of every column was looked at (%d)" % checked, checked > 40, true])
 	table.append(["each carries its whole name and kind as a tooltip", without_tip, 0])
-	table.append(["and each wraps a long name or kind instead of cutting it", without_wrap, 0])
+	table.append(["and each wraps a long name or kind at its spaces, never in the middle of a word", without_wrap, 0])

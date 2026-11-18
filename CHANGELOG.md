@@ -12,6 +12,10 @@ Each time a list of Juice cards was drawn or changed, the Inspector read the pro
 
 A ring, or an arc that goes right round, now writes the stretches of each row that lie surely inside it in one go and skips the middle of its hole, instead of asking every pixel. A see-through colour laid over pixels that are all one colour is blended once and written across. The picture is the same pixel for pixel (thirty random drawings of rings, arcs, pies and cones are compared against the slow way). Two hundred big rings take about a tenth of the time. Pies, cones and an arc that goes only part of the way round still ask every pixel.
 
+### Fixed: the Start window keeps each word whole
+
+At its narrowest size the Start window could break a word between two letters ("Nothin" and "g"). A name or a kind now wraps at a space only, each name column keeps room for its longest word, and a column no longer widens for its text. A single word still wider than a column at the narrowest window is cut off at the column's edge, with the whole name in the row's tooltip.
+
 ### Fixed: a Juice Player whose script is marked `@tool` keeps the cards you edit
 
 When a Juice Player's script runs as a tool script, the list of cards is a typed list that refuses an ordinary one. A card removed, added, moved, duplicated, pasted or edited in the Inspector was announced and then quietly refused by the node, so the list drew the old cards again a frame later and the scene saved the old cards. The Inspector now hands the node a list of the type it holds, so every edit sticks and Ctrl+Z and Ctrl+Y take it back and put it back. A Juice Player on a plain script, which is what the shipped one is, was never affected.
