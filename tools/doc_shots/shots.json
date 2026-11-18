@@ -2782,7 +2782,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "8e875a2d78c60dedf762c6206d426b06e811627ce5906722d633a27a923aa435",
-				"reading": "34c6883d484cb3effa1f9e2941cfafa4aaa2ea0ec58f17b821d022a207b04d6f"
+				"reading": "55c55808e9954e7a96dc6c7a5abc8cdecfd499a5f8ae2a2c302875ec3403ad13"
 			},
 			"name": "tooldev-editor-verbs",
 			"rows": [
@@ -2944,7 +2944,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "c720c63d0db0a474c7c695e1bfc6948afe35f5291349782684329fa94528b461",
-				"reading": "c1d8505680446c4ce9b1eaf9f06e5eb79227a9ed8e7e202e2b94b0dd0cde017f"
+				"reading": "dc9816d0a9674e85601baf0a027f94419f9ca24c96cb3fba6d5ce9384a3d5fbd"
 			},
 			"name": "archive-unpack",
 			"rows": [
@@ -3000,7 +3000,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "17954c5d2a23e7daab8c32b0169e1a06d8965f66194f96dfa6d2dd5d975a9a8e",
-				"reading": "d8ee8c3ddc97e1a95ad791a1a7b4e8b8d0966b471ef97687c3d9b2b52e5996dd"
+				"reading": "e9f688b549517e6d7cdc3f2412325284dd685e76802546a4556212a1de8b8855"
 			},
 			"name": "asset-drop",
 			"rows": [
@@ -3360,7 +3360,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "f612f19338305531ecdea895b483ff7a43a84b0f529b9147e9d1d467155c8a19",
-				"reading": "d6ead1a581ba8e94e0c325573b2f26bcd023905ad06373c0fa7028444e188dc6"
+				"reading": "c4631598a286c438e2228ab4656985f14efc11c0441383d54492656fec2517e4"
 			},
 			"layout": "vertical",
 			"name": "layout-on-top-pause-pair",
@@ -3409,95 +3409,203 @@
 		},
 		{
 			"batch": "sheets3",
-			"before": [
+			"cleanup": [
+				{
+					"do": "delete_user",
+					"path": "res://tools/doc_shots/lamp_post.tres"
+				}
+			],
+			"crop": "rows",
+			"files": [
+				"res://tools/doc_shots/fixtures/lamp_post.tres.txt"
+			],
+			"fingerprint": {
+				"coarse": true,
+				"files": "976b4038bbe412eab96cbd41ca950cc7584a74f399343c2cc8263879a55131d2",
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "bf66491b66367acc3ebe376dc955f6b8aa65a33b1f1af1c28fd34b96fb699ee9"
+			},
+			"name": "migration-amber-row",
+			"steps": [
+				{
+					"do": "close_popups"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "copy_to_user",
+					"from": "res://tools/doc_shots/fixtures/lamp_post.tres.txt",
+					"to": "res://tools/doc_shots/lamp_post.tres"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tools/doc_shots/lamp_post.tres"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tools/doc_shots/lamp_post.tres"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/lamp_post.tres"
+				},
+				{
+					"do": "clear_status"
+				},
 				{
 					"do": "click_row",
 					"text": "flicker",
 					"x": 520.0
+				},
+				{
+					"do": "view_rows",
+					"from": 0.0,
+					"to": "@last"
 				}
 			],
-			"fingerprint": {
-				"godot": "4.7-stable (official)",
-				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "bf66491b66367acc3ebe376dc955f6b8aa65a33b1f1af1c28fd34b96fb699ee9",
-				"reading": "468e05a69e16e3199be93614a70959edf6e12d011ab417bb9f5af6f2f44e25e1"
-			},
-			"name": "migration-amber-row",
-			"rows": [
-				0.0,
-				"@last"
-			],
-			"source": "res://tests/fixtures/doc_shots/lamp_post.tres",
 			"target": "docs/images/migration-amber-row.png"
 		},
 		{
 			"batch": "sheets3",
 			"cleanup": [
 				{
+					"do": "delete_user",
+					"path": "res://tools/doc_shots/sentry.tres"
+				},
+				{
 					"do": "project_setting",
 					"name": "eventsheets/project/vocabulary_version",
 					"value": ""
 				}
 			],
+			"crop": "rows",
+			"files": [
+				"res://tools/doc_shots/fixtures/sentry.tres.txt"
+			],
 			"fingerprint": {
+				"coarse": true,
+				"files": "a12d3e12d7de0fe2f936988ac50da7cb1b3a886cc08ff1393c29f5087f409b51",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "37ef4abe91debaeabff98c56a15d143dc0408ec2fbe19263795abb5e7fda0abe",
-				"reading": "bbf1735d8ceca6c6e997198a066824f6811fe162333a80d8706ae2f23bdfe054"
+				"png": "37ef4abe91debaeabff98c56a15d143dc0408ec2fbe19263795abb5e7fda0abe"
 			},
 			"name": "migration-head-band",
-			"prelude": [
+			"steps": [
+				{
+					"do": "close_popups"
+				},
 				{
 					"do": "project_setting",
 					"name": "eventsheets/project/vocabulary_version",
 					"value": "0.14.0"
+				},
+				{
+					"do": "main_screen",
+					"value": "EventSheet"
+				},
+				{
+					"do": "copy_to_user",
+					"from": "res://tools/doc_shots/fixtures/sentry.tres.txt",
+					"to": "res://tools/doc_shots/sentry.tres"
+				},
+				{
+					"do": "open_sheet",
+					"path": "res://tools/doc_shots/sentry.tres"
+				},
+				{
+					"do": "wait_sheet",
+					"path": "res://tools/doc_shots/sentry.tres"
+				},
+				{
+					"do": "close_other_tabs",
+					"path": "res://tools/doc_shots/sentry.tres"
+				},
+				{
+					"do": "clear_status"
+				},
+				{
+					"do": "view_rows",
+					"from": 0.0,
+					"to": "@last"
 				}
 			],
-			"rows": [
-				0.0,
-				"@last"
-			],
-			"source": "res://tests/fixtures/doc_shots/sentry.tres",
 			"target": "docs/images/migration-head-band.png"
 		},
 		{
 			"batch": "sheets3",
 			"cleanup": [
 				{
+					"do": "delete_user",
+					"path": "res://tools/doc_shots/siren_post.tres"
+				},
+				{
 					"do": "project_setting",
 					"name": "eventsheets/project/vocabulary_version",
 					"value": ""
 				}
 			],
+			"files": [
+				"res://tools/doc_shots/fixtures/siren_post.tres.txt"
+			],
 			"fingerprint": {
+				"coarse": true,
+				"files": "0841d1cc278be80c6bd00d4cc9f77c33854d09dfdea45499d971346b6bd50eba",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "ef7ff447135d5cb12f20c6e5817038dec6be92e18d3f312d6153620854719396",
-				"reading": "9bc8627f12b5f73000849fe14813d1d4135513fa1359705665c608cb8d419c97"
+				"png": "f47a8f8bd3a42521c0c993dfe0585ad8ab5e2a4d71ea565c6da1d4a2d84d26e3"
 			},
 			"layout": "vertical",
 			"name": "successor-row-strip",
 			"parts": [
 				{
-					"before": [
+					"crop": "rows",
+					"steps": [
 						{
-							"do": "click_row",
-							"text": "stop sound",
-							"x": 520.0
-						}
-					],
-					"prelude": [
+							"do": "close_popups"
+						},
 						{
 							"do": "project_setting",
 							"name": "eventsheets/project/vocabulary_version",
 							"value": "0.14.0"
+						},
+						{
+							"do": "main_screen",
+							"value": "EventSheet"
+						},
+						{
+							"do": "copy_to_user",
+							"from": "res://tools/doc_shots/fixtures/siren_post.tres.txt",
+							"to": "res://tools/doc_shots/siren_post.tres"
+						},
+						{
+							"do": "open_sheet",
+							"path": "res://tools/doc_shots/siren_post.tres"
+						},
+						{
+							"do": "wait_sheet",
+							"path": "res://tools/doc_shots/siren_post.tres"
+						},
+						{
+							"do": "close_other_tabs",
+							"path": "res://tools/doc_shots/siren_post.tres"
+						},
+						{
+							"do": "clear_status"
+						},
+						{
+							"do": "click_row",
+							"text": "stop sound",
+							"x": 520.0
+						},
+						{
+							"do": "view_rows",
+							"from": 0.0,
+							"to": "@last"
 						}
-					],
-					"rows": [
-						0.0,
-						"@last"
-					],
-					"source": "res://tests/fixtures/doc_shots/siren_post.tres"
+					]
 				},
 				{
 					"crop": "rect",
@@ -3958,7 +4066,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
 				"png": "1b5ee99a8b648e547aee070f1155b72b69738dbc76e6359514243e5e4c96e8c1",
-				"reading": "a677aa23fe9b64d1c0f335799271ec5003bcdb33fd8a18c6887096e21f8f413b"
+				"reading": "cad4c0cc6a525c9d6411bac6d24bcf1bebba92a58cb4e68cb80ba3233dc04abc"
 			},
 			"height": 160.0,
 			"name": "group-breadcrumb",

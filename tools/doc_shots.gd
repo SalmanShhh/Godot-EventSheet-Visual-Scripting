@@ -148,6 +148,7 @@ func _take(shot: Dictionary) -> void:
 	var ok: bool = true
 	var pieces: Array[Image] = []
 	var parts: Array = shot.get("parts", [shot])
+	var stashed: PackedStringArray = PackedStringArray()
 	for part: Dictionary in parts:
 		_has_focus = false
 		if EventSheets._dock != null:
@@ -155,6 +156,7 @@ func _take(shot: Dictionary) -> void:
 			await _rest_toolbar()
 			EventSheets._dock._reset_lane_split()
 			EventSheets._dock._set_status("")
+		stashed.append_array(_unstash(str(part.get("source", ""))))
 		for step: Dictionary in _steps_of(part):
 			ok = await _step(step) and ok
 		if not bool(part.get("keep_mouse", false)) and not (str(part.get("crop", "")) in ["menus", "submenu", "popup"]):
@@ -170,6 +172,8 @@ func _take(shot: Dictionary) -> void:
 			pieces.append(image)
 	for step: Dictionary in shot.get("cleanup", []):
 		await _step(step)
+	for path: String in stashed:
+		_remove_stashed(path)
 	if ok:
 		var joined: Image = pieces[0] if pieces.size() == 1 else _join(pieces, str(shot.get("layout", "vertical")))
 		_save(shot, joined)
@@ -857,3 +861,24 @@ func _save(shot: Dictionary, cropped: Image) -> void:
 		var target: String = ProjectSettings.globalize_path("res://").path_join(str(shot["target"]))
 		DirAccess.make_dir_recursive_absolute(target.get_base_dir())
 		cropped.save_png(target)
+
+
+## A sheet resource kept as `<name>.tres.txt` (so the project's own scans never read a sample sheet as one of its
+## sheets) is put where the shot names it for the length of the shot. Returns the paths it wrote.
+func _unstash(path: String) -> PackedStringArray:
+	var written: PackedStringArray = PackedStringArray()
+	if path.is_empty() or FileAccess.file_exists(path) or not FileAccess.file_exists(path + ".txt"):
+		return written
+	var copy: FileAccess = FileAccess.open(path, FileAccess.WRITE)
+	copy.store_string(FileAccess.get_file_as_string(path + ".txt"))
+	copy.close()
+	written.append(path)
+	return written
+
+
+## Takes a stashed sheet away again, with the compiled script and the id files the editor wrote beside it.
+func _remove_stashed(path: String) -> void:
+	var base: String = path.get_basename()
+	for leftover: String in [path, base + "_generated.gd", base + "_generated.gd.uid"]:
+		if FileAccess.file_exists(leftover):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(leftover))

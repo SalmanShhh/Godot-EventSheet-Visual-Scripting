@@ -63,7 +63,7 @@ static func reading(sources: PackedStringArray) -> String:
 		var sheet: EventSheetResource = null
 		match path.get_extension():
 			"tres":
-				sheet = load(path) as EventSheetResource
+				sheet = _load_stashed(path)
 			"tscn":
 				sheet = EventSheetSceneSheet.build(path)
 			_:
@@ -144,3 +144,16 @@ static func _dump(value: Variant, depth: int = 0) -> String:
 			pairs.append("%s:%s" % [var_to_str(key), _dump(value[key], depth + 1)])
 		return "{%s}" % ",".join(pairs)
 	return var_to_str(value)
+
+
+## A sheet resource, read from the file or, when it is kept as `<name>.tres.txt`, from a copy of that text.
+static func _load_stashed(path: String) -> EventSheetResource:
+	if FileAccess.file_exists(path):
+		return load(path) as EventSheetResource
+	if not FileAccess.file_exists(path + ".txt"):
+		return null
+	var probe: String = "user://doc_shots_probe.tres"
+	var copy: FileAccess = FileAccess.open(probe, FileAccess.WRITE)
+	copy.store_string(FileAccess.get_file_as_string(path + ".txt"))
+	copy.close()
+	return ResourceLoader.load(probe, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
