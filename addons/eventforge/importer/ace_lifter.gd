@@ -5735,7 +5735,7 @@ static func _compose_reverse_entries(all_descriptors: Array) -> Array:
 			# now writes another way. Recorded here so the sort below can prefer the current verb
 			# whenever the two spell the same template - see the tie-break note there.
 			var superseded: bool = not descriptor.successor_map().is_empty()
-			entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size(), "assign_op": assign_op, "loop_control": loop_control, "decl_name": decl_name, "superseded": superseded, "variant": variant, "required_literal": _longest_literal_run(variant), "scope_trigger": str(TRIGGER_SCOPED_ACES.get(descriptor.ace_id, "")), "fold_floors": fold_floors_of.get(variant, {})})
+			entries.append({"provider": descriptor.provider_id, "ace_id": descriptor.ace_id, "kind": kind, "regex": regex, "literal_len": literal_len, "order": entries.size(), "assign_op": assign_op, "loop_control": loop_control, "decl_name": decl_name, "superseded": superseded, "variant": variant, "required_literal": _longest_literal_run(variant), "scope_trigger": str(TRIGGER_SCOPED_ACES.get(descriptor.ace_id, "")), "fold_floors": fold_floors_of.get(variant, {}), "dimension": _dimension_of(descriptor)})
 	entries = _without_colliding_folds(entries)
 	# Try SPECIFIC templates before generic catch-alls. The Core generics (SetVar `{var_name} = {value}`,
 	# CallFunction `{function_name}({args})`, …) use lazy `.+?` captures that match almost any
@@ -5761,7 +5761,38 @@ static func _compose_reverse_entries(all_descriptors: Array) -> Array:
 		if (a["fold_floors"] as Dictionary).is_empty() != (b["fold_floors"] as Dictionary).is_empty():
 			return (a["fold_floors"] as Dictionary).is_empty()
 		return a["order"] < b["order"])
+	_note_dimension_twins(entries)
 	return entries
+
+
+## Which dimension a verb is written for: "2d", "3d" or "" (either, or not about one). The node class it
+## names says first, then its id, then its picker category.
+static func _dimension_of(descriptor: ACEDescriptor) -> String:
+	for text: String in [descriptor.node_type, descriptor.ace_id, descriptor.category]:
+		if text.ends_with("3D") or text.contains("3D"):
+			return "3d"
+		if text.ends_with("2D") or text.contains("2D"):
+			return "2d"
+	return ""
+
+
+## A 2D verb and its 3D twin write the same line, and whichever registered first claims it. In the sorted
+## index, marks each such first-place 2D entry with the first 3D entry that writes the same template, so a
+## 3D file can read the line as the 3D verb. Entries are shared and read-only afterwards, so this is the
+## only place they are written to.
+static func _note_dimension_twins(entries: Array) -> void:
+	var first_of: Dictionary = {}
+	var first_3d_of: Dictionary = {}
+	for entry: Variant in entries:
+		var key: String = "%s|%s" % [str((entry as Dictionary)["kind"]), str((entry as Dictionary)["variant"])]
+		if not first_of.has(key):
+			first_of[key] = entry
+		if str((entry as Dictionary)["dimension"]) == "3d" and not first_3d_of.has(key):
+			first_3d_of[key] = entry
+	for key: Variant in first_of.keys():
+		var winner: Dictionary = first_of[key]
+		if str(winner["dimension"]) == "2d" and first_3d_of.has(key):
+			winner["twin_3d"] = {"provider": (first_3d_of[key] as Dictionary)["provider"], "ace_id": (first_3d_of[key] as Dictionary)["ace_id"]}
 
 
 static func _match_entry(line: String, reverse_entries: Array, kind: String, in_loop: bool = true, scope_trigger: String = "") -> Dictionary:
@@ -5862,6 +5893,10 @@ static func _match_entry(line: String, reverse_entries: Array, kind: String, in_
 				fold_refused = true
 		if fold_refused:
 			continue
+		# In a 3D file the same line read by the 2D verb that registered first is read by its 3D twin.
+		var twin: Dictionary = (entry as Dictionary).get("twin_3d", {})
+		if not twin.is_empty() and SpawnRunLift.host_is_3d():
+			return {"provider": twin["provider"], "ace_id": twin["ace_id"], "params": params, "folds_literals": not fold_floors.is_empty()}
 		return {"provider": (entry as Dictionary).get("provider"), "ace_id": (entry as Dictionary).get("ace_id"), "params": params, "folds_literals": not fold_floors.is_empty()}
 	return {}
 

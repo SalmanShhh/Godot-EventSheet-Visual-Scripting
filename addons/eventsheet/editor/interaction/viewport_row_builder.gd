@@ -20382,7 +20382,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 		# These are the rows a hand-written camera / emitter / collision line LIFTS to, so without
 		# these five the reading would depend on whether the lifter happened to claim the line - the
 		# one thing the shared grammar exists to prevent.
-		"MakeCameraCurrent":
+		"MakeCameraCurrent", "MakeCamera3DCurrent":
 			return EventSheetSentence.statement("%s.make_current()" % _ace_target(params_dict), context)
 		# ── lens hook ────────────────────────────────────────────────────────────────────────────
 		# The rows a hand-written effect / tilemap / camera line LIFTS to. Without these the reading
@@ -20505,7 +20505,7 @@ func grammar_action_sentence(action: ACEAction) -> Dictionary:
 				str(params_dict.get("target", "self"))], context)
 		"TurnAround":
 			return EventSheetSentence.statement("%s.rotate_y(PI)" % _ace_target(params_dict), context)
-		"SetRotationDeg":
+		"SetRotationDeg", "SetRotationDeg3D":
 			return EventSheetSentence.statement("%s.rotation_degrees = %s" % [
 				_ace_target(params_dict), str(params_dict.get("degrees", ""))], context)
 		"SetScale3D":

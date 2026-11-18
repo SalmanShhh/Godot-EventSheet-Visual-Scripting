@@ -108,6 +108,12 @@ static func note_host_class(host_class: String) -> void:
 	_host_is_3d = _is_3d(host_class)
 
 
+## Whether the file being read extends a 3D class: what the read handed over through `note_host_class`.
+## A host that is neither 3D nor named by the engine (a plain Node, a project class) answers no.
+static func host_is_3d() -> bool:
+	return _host_is_3d
+
+
 ## The row a run of statements means, or {} when nothing here claims it. `lines` is the function body
 ## as the lifter holds it, `index` the statement to try, `depth` its indentation.
 static func match_run(lines: PackedStringArray, index: int, depth: int) -> Dictionary:
