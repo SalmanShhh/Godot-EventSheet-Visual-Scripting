@@ -11,6 +11,21 @@ The bug form asks for what happened, what you expected, steps, a small sheet or 
 ### Fixed: an open sheet follows its file when the FileSystem dock renames, moves or deletes it
 
 Renaming or moving a sheet's file (or its folder) in Godot's FileSystem dock left the open tab on the old path, so the next Save wrote the OLD file back beside the renamed one, with the scene using the renamed one and the edits going to a file nothing used; after a folder rename Save could not write at all. The tab, its header, the saved session, the recently-closed list, the sheet's own file link and its backup ring now follow to the new path, with the unsaved edits and the undo history intact. Deleting the file closes a tab with nothing unsaved, as Godot's script editor does; a tab with unsaved edits stays open, a copy of the edits goes into Sheet Backups, and the tab lets go of the dead path so Save asks where to write. A file removed or renamed outside Godot is handled the same way once the editor rescans, and Save never writes back a file that has vanished since it was opened (it lets go of the dead path first and says so). The sheet's head band reads the new file name straight away. Only the open tabs are walked, so a folder move carrying many open sheets is one pass.
+### Fixed: a trigger's state name and a match arm's captures keep their room in a narrow lane
+
+A state machine's "On leaving STAGGER" and "On entering CHASE" shared their cell with the payload chips after them ("from state", "to state"), and in a narrow lane the chips took the room and the state name was drawn a letter to a line. A match arm's captured names (the `x` and `y` of `[var x, var y]`) were laid after the arm's sentence at their own width and ran on over the cell beside it. A cell now keeps room for its longest word and the object column before it. The chips that carry meaning (the values a trigger hands over, the names a match arm binds) are never left out: when they cannot stand beside their cell they stand on a line of their own under it and the row grows by that line. A chip that is only decoration and has no room is left out instead of drawn as a sliver.
+
+### Fixed: the cue after an undo step is one line
+
+"the steps below are the edit" filled whatever the other cells of its line left, and when that was a few pixels it wrapped a letter to a line in a row as tall as the sentence was long. It keeps its own width and gives up its tail with an ellipsis when the lane is short.
+
+### Fixed: a Cast Ray Into no longer says its own local "is not a variable"
+
+A ray written the way the engine's pages write it (`var sight := space_state.intersect_ray(query)`) opens as one Cast Ray Into row whose Into Variable is that line's own `var`. The sheet took the name for a variable it had failed to declare and hung a red note under the row. A name a row's own lines declare is now a name of its body.
+
+### Fixed: the picker's "%names in this scene" section finds the names of scenes saved by the current editor
+
+The current editor writes the scene-unique mark as a property line under the node (`unique_name_in_owner = true`); the reader only looked for the older spelling on the node's header, so a scene saved today listed no `%names`, and a row written on one stayed plain code. Both spellings are the same mark now.
 
 ### Fixed: a wrapped line of a note takes its full height
 

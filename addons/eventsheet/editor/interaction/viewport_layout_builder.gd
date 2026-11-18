@@ -280,6 +280,8 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 	if badge_reserve > 0.0:
 		flow_right_x = flow_right_anchor + badge_reserve + EventSheetPalette.SPAN_GAP
 		(NativeVariableMarks.badge_span(row_data).metadata as Dictionary)["badge_tiles_x"] = flow_right_anchor
+	# Where the chips that stand under their cell begin, per condition line (see STACKED_CHIP_KINDS).
+	var stacked_chip_x: Dictionary = {}
 	var comment_line_tops: Array[int] = []
 	var comment_line_counts: Array[int] = []
 	if is_comment_row:
@@ -381,12 +383,17 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 				# The look that nests by lines gives a mark its own cell and no reserved slot.
 				if EventSheetViewportRowMetrics.strip_mark_advance(span, event_style) >= 0.0:
 					span_width = EventSheetViewportRowMetrics.STRIP_MARK_CELL - 2.0
-			elif str(metadata.get("kind", "")) in ["condition", "trigger", "pick_filter"]:
+			elif EventSheetViewportRowMetrics.FILL_CONDITION_KINDS.has(str(metadata.get("kind", ""))):
 				# Minus whatever the payload chips after this cell need: a trigger cell that took the
 				# whole lane left them drawn as a sliver against the divider.
 				var trailing: float = _viewport._row_metrics_helper.condition_trailing_width(
-					row_data, int(metadata.get("line_index", 0)), font, font_size)
+					row_data, int(metadata.get("line_index", 0)), font, font_size, max_condition_right - span_x,
+					float(metadata.get("object_column_px", -1.0)))
 				var lane_room: float = max_condition_right - trailing - span_x
+				var cell_line: int = int(metadata.get("line_index", 0))
+				if _viewport._row_metrics_helper.condition_chips_stack(row_data, cell_line, font, font_size,
+						max_condition_right - span_x, float(metadata.get("object_column_px", -1.0))):
+					stacked_chip_x[cell_line] = span_x + 4.0
 				# A cell flagged natural_width keeps its measured size, so the chip after it reads
 				# straight on from its words ("Every physics tick, match state") instead of from the
 				# lane's far edge. Mirrors natural_width in the action lane.
@@ -394,7 +401,24 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 					lane_room = min(span_width, lane_room)
 				span_width = max(lane_room, _viewport.MIN_SPAN_WIDTH)
 			else:
+				# A chip after a condition that has no room left is not drawn: a sliver of it over the
+				# divider says less than nothing, and the cell before it has its words whole.
+				var chip_kind: String = str(metadata.get("kind", ""))
+				if EventSheetViewportRowMetrics.STACKED_CHIP_KINDS.has(chip_kind) and stacked_chip_x.has(int(metadata.get("line_index", 0))):
+					# The chip stands on the line under its cell, from the cell's own left edge.
+					var chip_line_index: int = int(metadata.get("line_index", 0))
+					span_x = float(stacked_chip_x[chip_line_index])
+					span_y = row_top + scale_pad + float(int(cond_line_tops.get(chip_line_index, chip_line_index))
+						+ int(cond_line_counts.get(chip_line_index, 1)) - 1) * line_height + 3.0
+				elif EventSheetViewportRowMetrics.TRAILING_CHIP_KINDS.has(chip_kind) and max_condition_right - span_x < minf(span_width, EventSheetViewportRowMetrics.TRAILING_CHIP_MIN_ROOM):
+					# A decoration with no room left is not drawn: a sliver of it over the divider says
+					# less than nothing, and the cell before it has its words whole.
+					span.rect = Rect2()
+					metadata["no_room"] = true
+					continue
 				span_width = max(min(span_width, max_condition_right - span_x), _viewport.MIN_SPAN_WIDTH)
+				if stacked_chip_x.has(int(metadata.get("line_index", 0))) and EventSheetViewportRowMetrics.STACKED_CHIP_KINDS.has(chip_kind):
+					stacked_chip_x[int(metadata.get("line_index", 0))] = span_x + span_width + 2.0 + _viewport._get_span_gap(span)
 		elif span_lane == "action" and action_lane_rect.size.x > 0.0:
 			var reserved_start: float = float(
 				action_line_reservations.get(
@@ -482,7 +506,7 @@ func get_or_build_row_layout(index: int, width: float, font: Font, font_size: in
 			var wrap_line: int = int(metadata.get("line_index", 0))
 			if span_lane == "action" and str(metadata.get("kind", "")) == "action" and not bool(metadata.get("natural_width", false)) and not bool(metadata.get("align_right", false)):
 				span_visual_lines = maxi(int(act_line_counts.get(wrap_line, 1)), 1)
-			elif span_lane != "action" and not bool(metadata.get("badge", false)) and str(metadata.get("kind", "")) in ["condition", "trigger", "pick_filter"]:
+			elif span_lane != "action" and not bool(metadata.get("badge", false)) and EventSheetViewportRowMetrics.FILL_CONDITION_KINDS.has(str(metadata.get("kind", ""))):
 				span_visual_lines = maxi(int(cond_line_counts.get(wrap_line, 1)), 1)
 		if span_visual_lines > 1:
 			metadata["comment_line_height"] = line_height

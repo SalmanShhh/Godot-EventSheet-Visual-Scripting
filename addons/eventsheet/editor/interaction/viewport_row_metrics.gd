@@ -400,11 +400,15 @@ func event_line_extents(row_data: EventRowData, width: float, font: Font, font_s
 					cond_badge_x[line] = badge_start + strip_advance
 			else:
 				var text_start: float = float(cond_text_x.get(line, float(cond_badge_x.get(line, condition_text_start_x))))
-				if str(metadata.get("kind", "")) in ["condition", "trigger", "pick_filter"]:
+				if FILL_CONDITION_KINDS.has(str(metadata.get("kind", ""))):
 					var available_c: float = maxf(
-						max_condition_right - condition_trailing_width(row_data, line, font, font_size) - text_start,
+						max_condition_right - condition_trailing_width(row_data, line, font, font_size,
+							max_condition_right - text_start,
+							object_column_override(metadata, condition_text_start_x, text_start)) - text_start,
 						_viewport.MIN_SPAN_WIDTH)
-					cond_count[line] = maxi(int(cond_count.get(line, 1)), _fill_cell_line_count(span, metadata, available_c + 2.0, font, font_size, object_column_override(metadata, condition_text_start_x, text_start)))
+					var chip_line: int = 1 if condition_chips_stack(row_data, line, font, font_size,
+						max_condition_right - text_start, object_column_override(metadata, condition_text_start_x, text_start)) else 0
+					cond_count[line] = maxi(int(cond_count.get(line, 1)), _fill_cell_line_count(span, metadata, available_c + 2.0, font, font_size, object_column_override(metadata, condition_text_start_x, text_start)) + chip_line)
 					cond_text_x[line] = text_start + available_c + 2.0 + _viewport._get_span_gap(span)
 				else:
 					var chip_width: float = maxf(minf(measured, max_condition_right - text_start), _viewport.MIN_SPAN_WIDTH)
@@ -486,7 +490,17 @@ static func strip_mark_advance(span: EventSheetSemanticSpan, event_style: EventS
 ## The chip kinds that sit AFTER a condition cell on its own line and must therefore be given room
 ## back out of it: a trigger's parameter chips, the ⟡ chip that names the pattern the event is, and the
 ## "match state" a switch says beside its trigger.
-const TRAILING_CHIP_KINDS: PackedStringArray = ["trigger_payload", "pattern_chip", "match_head"]
+const TRAILING_CHIP_KINDS: PackedStringArray = ["trigger_payload", "pattern_chip", "match_head", "match_binding"]
+## The condition-lane cells that fill what the chips after them leave, wrapping their words inside it.
+const FILL_CONDITION_KINDS: PackedStringArray = ["condition", "trigger", "pick_filter", "match_pattern"]
+## The least room a trailing chip is drawn in when it cannot have its own width: with less than this (or
+## less than its own width, when that is smaller) it is left out rather than drawn as a sliver over the
+## divider or the next cell.
+const TRAILING_CHIP_MIN_ROOM := 36.0
+## The chips whose words carry meaning (the values a trigger hands its handler, the names a match arm
+## binds). They are never left out: when they cannot stand beside their cell they stand on a line of
+## their own under it, and the row grows by that line.
+const STACKED_CHIP_KINDS: PackedStringArray = ["trigger_payload", "match_binding"]
 ## Room a documentation comment's paragraph mark takes before its first line's words (an upper bound: the
 ## layout measures the mark itself, the count only has to never be narrower than what is drawn).
 const COMMENT_MARK_ALLOWANCE := 26.0
@@ -505,8 +519,15 @@ const NativeRowMarks := preload("res://addons/eventsheet/editor/interaction/nati
 ## divider - so the cell gives exactly this much back and the chips sit beside it at their own size.
 ## Called by the height metrics AND the layout pass, for the same reason condition_right_limit is:
 ## the reserved width and the drawn width must never disagree.
-func condition_trailing_width(row_data: EventRowData, line_index: int, font: Font, font_size: int) -> float:
+##
+## `room` is the width from where the cell starts to the lane's right limit, when the caller knows it. The
+## chips never take so much of it that the cell is left narrower than its own longest word and the object
+## column in front of it: a name broken a letter to a line is worse than a payload chip left out.
+func condition_trailing_width(row_data: EventRowData, line_index: int, font: Font, font_size: int,
+		room: float = -1.0, column_override: float = -1.0) -> float:
 	if row_data == null:
+		return 0.0
+	if condition_chips_stack(row_data, line_index, font, font_size, room, column_override):
 		return 0.0
 	var total: float = 0.0
 	for span: EventSheetSemanticSpan in row_data.spans:
@@ -527,7 +548,58 @@ func condition_trailing_width(row_data: EventRowData, line_index: int, font: Fon
 	if total > 0.0:
 		var share: float = LANE_CHIP_SHARE if event_style != null and event_style.lane_chips_yield else LANE_CHIP_LIMIT
 		total = minf(total, _viewport.lane_width_for("condition", row_data.indent) * share)
+		if room >= 0.0:
+			total = minf(total, maxf(room - _cell_floor_width(row_data, line_index, font, font_size, column_override), 0.0))
 	return total
+
+
+## True when the meaningful chips of one condition line cannot stand beside their cell without leaving it
+## narrower than its longest word: they then stand on a line of their own under it. Asked by the height
+## metrics and the layout pass alike, with the same room, so the line is reserved where it is drawn.
+func condition_chips_stack(row_data: EventRowData, line_index: int, font: Font, font_size: int,
+		room: float, column_override: float) -> bool:
+	if row_data == null or room < 0.0:
+		return false
+	var natural: float = 0.0
+	var others: float = 0.0
+	for span: EventSheetSemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		var kind: String = str(metadata.get("kind", ""))
+		if not TRAILING_CHIP_KINDS.has(kind) or int(metadata.get("line_index", 0)) != line_index:
+			continue
+		var width: float = _viewport._row_builder._measure_span_width(span, span.text, font, font_size) + 2.0 \
+			+ maxf(_viewport._get_span_gap(span), EventSheetPalette.SPAN_GAP)
+		if STACKED_CHIP_KINDS.has(kind):
+			natural += width
+		else:
+			others += width
+	if natural <= 0.0:
+		return false
+	var event_style: EventSheetEventStyle = _viewport._get_event_style()
+	var share: float = LANE_CHIP_SHARE if event_style != null and event_style.lane_chips_yield else LANE_CHIP_LIMIT
+	var beside: float = minf(natural + others, _viewport.lane_width_for("condition", row_data.indent) * share)
+	beside = minf(beside, maxf(room - _cell_floor_width(row_data, line_index, font, font_size, column_override), 0.0))
+	return natural + others > beside
+
+
+## The narrowest the fill cell of one condition line may be left: its longest word plus everything the
+## renderer puts in front of the words (the object column and the cell's padding).
+func _cell_floor_width(row_data: EventRowData, line_index: int, font: Font, font_size: int, column_override: float) -> float:
+	for span: EventSheetSemanticSpan in row_data.spans:
+		if span == null or not (span.metadata is Dictionary):
+			continue
+		var metadata: Dictionary = span.metadata as Dictionary
+		if not FILL_CONDITION_KINDS.has(str(metadata.get("kind", ""))) or int(metadata.get("line_index", 0)) != line_index:
+			continue
+		var widest: float = 0.0
+		for word: String in span.text.split(" ", false):
+			widest = maxf(widest, font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x)
+		# What stands in front of the words is what a very wide cell takes off its own width.
+		var wide: float = 10000.0
+		return widest + (wide - _fill_text_wrap_width(metadata, wide, font, font_size, column_override))
+	return 0.0
 
 
 ## How far right a CONDITION-lane cell may reach: the lane divider, minus its padding. ONE function,
