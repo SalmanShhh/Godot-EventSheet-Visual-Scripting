@@ -33,6 +33,30 @@ func is_sheet_visually_empty() -> bool:
 	return true
 
 
+## True when the sheet holds nothing but its head band (and the "+ Add event" line) - a brand-new sheet.
+## It is its own state because those two rows stay on screen: the getting-started words go BELOW them
+## (`draw_empty_state` with a top), never over them and never as a widget inside a row. The first row or
+## variable the sheet gains makes this false, and the words are gone.
+func is_sheet_only_head_band() -> bool:
+	var head_rows: int = 0
+	for entry: Dictionary in _viewport._flat_rows:
+		var row_data: EventRowData = entry.get("row")
+		if row_data == null or _viewport._row_is_add_event_footer(row_data):
+			continue
+		if not row_data.row_uid.begins_with(EventSheetViewportRowBuilder.HEAD_BAND_UID_PREFIX):
+			return false
+		head_rows += 1
+	return head_rows > 0
+
+
+## Where the words below the rows start: the bottom edge of the last row, in canvas space.
+func rows_bottom() -> float:
+	var last: int = _viewport._flat_rows.size() - 1
+	if last < 0:
+		return 0.0
+	return _viewport.get_row_top(last) + _viewport.get_row_height(last)
+
+
 ## The call-to-action buttons for the current state, as {action, label} in draw order. Pure
 ## function of the sheet so tests can pin both states without a viewport:
 ## - no sheet loaded: one button that opens the starter-template menu (there is nowhere to put
@@ -70,7 +94,7 @@ func clear_cta_rects() -> void:
 ## instead of a dense top-left run-on of shortcuts that reads as clutter (and that a new user
 ## couldn't click anyway). Called from the viewport's _draw, so drawing is proxied through
 ## _viewport (the owning CanvasItem).
-func draw_empty_state(width: float) -> void:
+func draw_empty_state(width: float, top: float = 0.0, with_buttons: bool = true) -> void:
 	_cta_rects.clear()
 	var font: Font = _viewport._get_font()
 	var font_size: int = _viewport._get_font_size()
@@ -87,7 +111,7 @@ func draw_empty_state(width: float) -> void:
 	var max_w: float = max(width - 36.0, 1.0)
 	var heading_size: int = EventSheetPalette.resolve_font_size(font_size, 0, 2)
 	var tip_size: int = EventSheetPalette.resolve_font_size(font_size, -1)
-	var y: float = 52.0 + float(heading_size)
+	var y: float = top + (52.0 if top <= 0.0 else 40.0) + float(heading_size)
 	# Every line takes its colour from the live reading style, so a preset recolours the getting-started
 	# state along with the rows it sits where.
 	var reading_style: EventSheetReadingStyle = _viewport._get_reading_style()
@@ -98,8 +122,11 @@ func draw_empty_state(width: float) -> void:
 	y += float(font_size) + 16.0
 	_draw_centered_line(font, primary, font_size, center_x, y, max_w, secondary_color)
 	y += float(font_size) + 18.0
-	y = _draw_cta_buttons(font, font_size, center_x, y)
-	y += float(tip_size) + 22.0
+	if with_buttons:
+		y = _draw_cta_buttons(font, font_size, center_x, y)
+		y += float(tip_size) + 22.0
+	else:
+		y += float(tip_size) + 4.0
 	_draw_centered_line(font, tip, tip_size, center_x, y, max_w, muted_color)
 
 

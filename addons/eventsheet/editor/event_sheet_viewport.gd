@@ -2810,6 +2810,10 @@ func _draw() -> void:
 	_drag.draw_box_selection_overlay()
 	_draw_divider_guide(width)
 	_draw_param_cursor(font, font_size)
+	# A brand-new sheet shows its head row and the "+ Add event" line, and the getting-started words
+	# below them. Drawn here, after the rows, so they sit under the rows and never over them.
+	if not figure_mode and _empty_state_helper.is_sheet_only_head_band():
+		_empty_state_helper.draw_empty_state(width, _empty_state_helper.rows_bottom(), false)
 	_group_breadcrumb.draw(width, font, font_size)
 	# After the pinned parent strip, and under it: the strip owns the top edge whenever it is
 	# showing, so the links move down by its height rather than being drawn through it.
