@@ -11244,3 +11244,7 @@ Every sheet with no theme of its own now wears %s instead of %s. Edit > Undo in 
 Use %s for every sheet,%s をすべてのシートに使う
 Match the editor again,再びエディターに合わせる
 "%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.",%d 個の普通のスクリプトがコンソールに出力しており、書き出したリリース版でも実行されます（最初は %s）。一つずつは一覧しません。リリースを静かにしたいなら、その行を OS.is_debug_build() のテストで囲んでください。
+Getting ready...,準備中...
+about %d seconds,約%d秒
+about %d minutes,約%d分
+Check these %d scripts as sheets too,この%d個のスクリプトもシートとしてチェックする

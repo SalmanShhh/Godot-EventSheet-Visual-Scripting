@@ -11244,3 +11244,7 @@ Every sheet with no theme of its own now wears %s instead of %s. Edit > Undo in 
 Use %s for every sheet,将 %s 用于所有表
 Match the editor again,再次跟随编辑器
 "%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.",%d 个普通脚本在导出的发布版中仍会向控制台输出，第一个是 %s。它们不会逐个列出：如果发布版应保持安静，请把这些行包在 OS.is_debug_build() 判断里。
+Getting ready...,正在准备...
+about %d seconds,约 %d 秒
+about %d minutes,约 %d 分钟
+Check these %d scripts as sheets too,也将这 %d 个脚本作为表单检查

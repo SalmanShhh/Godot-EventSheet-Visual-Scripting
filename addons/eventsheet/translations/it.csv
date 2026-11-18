@@ -11244,3 +11244,7 @@ Every sheet with no theme of its own now wears %s instead of %s. Edit > Undo in 
 Use %s for every sheet,Usa %s per ogni foglio
 Match the editor again,Torna a seguire l'editor
 "%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.","%d script semplici scrivono sulla console dove una build esportata li esegue ancora, il primo è %s. Non sono elencati uno per uno: racchiudi le righe in un test OS.is_debug_build() se una release deve restare silenziosa."
+Getting ready...,Preparazione...
+about %d seconds,circa %d secondi
+about %d minutes,circa %d minuti
+Check these %d scripts as sheets too,Controlla anche questi %d script come fogli

@@ -11244,3 +11244,7 @@ Every sheet with no theme of its own now wears %s instead of %s. Edit > Undo in 
 Use %s for every sheet,%s 을(를) 모든 시트에 사용
 Match the editor again,다시 에디터를 따르기
 "%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.",일반 스크립트 %d개가 내보낸 릴리스 빌드에서도 실행되는 콘솔 출력을 합니다(첫 번째는 %s). 하나씩 나열하지 않습니다. 릴리스를 조용하게 하려면 그 줄을 OS.is_debug_build() 검사로 감싸세요.
+Getting ready...,준비 중...
+about %d seconds,약 %d초
+about %d minutes,약 %d분
+Check these %d scripts as sheets too,이 스크립트 %d개도 시트로 검사
