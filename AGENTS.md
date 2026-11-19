@@ -56,7 +56,10 @@ from `tools/build_help_bundle.gd`).
   (`interaction/derived_calls.gd` / `derived_properties.gd` / `reading_shapes.gd`) turn any known
   class's calls and property writes into rows with zero authoring; curated tables outrank derived
   rows visibly and upgrade them in place. The scene index (`importer/scene_connections.gd`) is
-  the ONE cached `.tscn` parse every scene-adjacent reader shares. A BEHAVIOR PACK being read is a
+  the ONE cached `.tscn` parse every scene-adjacent reader shares. The first read of its two project-wide
+  indexes (scenes by script, and each scene's root script) is made on a worker thread soon after the
+  editor's first scan (`importer/scene_index_prep.gd`) and handed to the first reader that asks; any file
+  change drops it and the reader builds as it always did. A BEHAVIOR PACK being read is a
   reading of its own, gathered by `arrange_pack_reading` over the finished row list: Settings and
   Verbs open, How it works and Internal state folded, a published verb read as the verb the picker
   offers rather than as a trigger. The whole of it is keyed off ONE fact, the pack name the sheet's

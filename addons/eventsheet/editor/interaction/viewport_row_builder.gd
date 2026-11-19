@@ -7934,13 +7934,7 @@ static func scene_root_of(scene_path: String) -> Dictionary:
 ## line, the uid first, and the shorter key used to read the uid as the id - which left every scene the
 ## editor had saved without a script to name its root object after.
 static func _quoted_attribute(line: String, key: String) -> String:
-	var marker: String = " %s=\"" % key
-	var start: int = line.find(marker)
-	if start < 0:
-		return ""
-	start += marker.length()
-	var end: int = line.find("\"", start)
-	return line.substr(start, end - start) if end > start else ""
+	return load(SCENE_ROOTS_PATH).quoted_attribute(line, key)
 
 
 ## The scenes whose ROOT carries each script, {script path: [{scene_path, root_name}, ...]}, every scene
@@ -7960,6 +7954,27 @@ static var scene_index_changed: Callable = Callable()
 ## open of the editor does not compile them.
 const SWEEP_PATH := "res://addons/eventforge/importer/background_sweep.gd"
 const FOLLOW_PATH := "res://addons/eventforge/importer/scene_index_follow.gd"
+## The sweep that reads each scene's head (also run on a worker by the idle read of the indexes), and the idle
+## read itself: loaded by path, so the editor's first open does not compile them.
+const SCENE_ROOTS_PATH := "res://addons/eventforge/importer/scene_root_sweep.gd"
+const SCENE_PREP_PATH := "res://addons/eventforge/importer/scene_index_prep.gd"
+
+
+## The idle read of the scene indexes, when it has been loaded at all (it is never loaded to be asked).
+static func _prep() -> Variant:
+	return load(SCENE_PREP_PATH) if ResourceLoader.has_cached(SCENE_PREP_PATH) else null
+
+
+## Whether the index of root objects is held (swept here, or taken from the idle read).
+static func scene_roots_index_built() -> bool:
+	return _script_scene_scanned
+
+
+## What the idle read holds is from before a change: it is dropped, and read again when the editor is quiet.
+static func _forget_prepared() -> void:
+	var prep: Variant = _prep()
+	if prep != null:
+		prep.invalidate()
 
 
 ## Drops the project-wide scene index outright, so the next question re-sweeps on the spot. A drop in the
@@ -7967,6 +7982,7 @@ const FOLLOW_PATH := "res://addons/eventforge/importer/scene_index_follow.gd"
 ## The editor does NOT use this when its filesystem changes - that is `refresh_scene_script_index`, which
 ## keeps answering while the new index is read.
 static func clear_scene_script_index() -> void:
+	_forget_prepared()
 	_script_scene_cache.clear()
 	_script_scene_all.clear()
 	_script_scene_scanned = false
@@ -7980,6 +7996,7 @@ static func clear_scene_script_index() -> void:
 ## the main thread, and the dock hears (`scene_index_changed`) if the new one differs. Without that (a
 ## headless run) it is the plain drop, which re-sweeps on the next question.
 static func refresh_scene_script_index() -> void:
+	_forget_prepared()
 	if not _script_scene_scanned:
 		return
 	if not _can_sweep_in_background():
@@ -7995,10 +8012,9 @@ static func start_scene_script_refresh() -> void:
 	if _scene_refresh != null:
 		_scene_refresh_again = true
 		return
+	var sweep: GDScript = load(SCENE_ROOTS_PATH)
 	_scene_refresh = load(SWEEP_PATH).new(func() -> Dictionary:
-		var found: Dictionary = {}
-		_sweep_scenes("res://", found)
-		return found)
+		return sweep.sweep_scenes_under("res://"))
 	_poll_scene_refresh()
 
 
@@ -8062,6 +8078,7 @@ static func _install_scene_index(found: Dictionary) -> bool:
 ## Follows a file or folder move in the index that is held. A no-op while nothing is held (the next question
 ## reads it from the files), and it never reads one: a rename must not cost a walk of the whole project.
 static func note_path_moved(old_path: String, new_path: String, is_folder: bool) -> void:
+	_forget_prepared()
 	if not _script_scene_scanned:
 		return
 	_scene_refresh_outdated = _scene_refresh != null
@@ -8075,80 +8092,18 @@ static func note_path_moved(old_path: String, new_path: String, is_folder: bool)
 ## filesystem changes, when it is read again (`refresh_scene_script_index`).
 static func scene_using_script(script_path: String) -> Dictionary:
 	if not _script_scene_scanned:
-		_install_scene_index(sweep_scenes_under("res://"))
+		# The idle read of the project, when it has finished (or is about to: it is waited for rather than
+		# done twice), is the answer; a project it has not read is read here, as it always was.
+		var prep: Variant = _prep()
+		var prepared: Variant = prep.take_roots() if prep != null else null
+		_install_scene_index(prepared if prepared is Dictionary else sweep_scenes_under("res://"))
 	return _script_scene_cache.get(script_path, {})
 
 
 ## Every scene under `directory_path` and the script its root carries, {script path: [{scene_path,
 ## root_name}, ...]}. Touches nothing but what it returns, so it can run on a worker.
 static func sweep_scenes_under(directory_path: String) -> Dictionary:
-	var found: Dictionary = {}
-	_sweep_scenes(directory_path, found)
-	return found
-
-
-static func _sweep_scenes(directory_path: String, found: Dictionary) -> void:
-	var directory: DirAccess = DirAccess.open(directory_path)
-	if directory == null:
-		return
-	# Name order, always - the listing arrives in filesystem order (near-alphabetical on NTFS, hash
-	# order on ext4), and when two scenes root the same script the FIRST one recorded names the
-	# object, so an unsorted walk labels the same script differently on different platforms.
-	var subdirectories: PackedStringArray = PackedStringArray()
-	var scene_names: PackedStringArray = PackedStringArray()
-	directory.list_dir_begin()
-	var entry: String = directory.get_next()
-	while not entry.is_empty():
-		if not entry.begins_with("."):
-			if directory.current_is_dir():
-				subdirectories.append(entry)
-			elif entry.get_extension().to_lower() == "tscn":
-				scene_names.append(entry)
-		entry = directory.get_next()
-	directory.list_dir_end()
-	subdirectories.sort()
-	scene_names.sort()
-	for scene_name: String in scene_names:
-		_record_scene_root_script(directory_path.path_join(scene_name), found)
-	for subdirectory: String in subdirectories:
-		_sweep_scenes(directory_path.path_join(subdirectory), found)
-
-
-## Records `script path -> {scene_path, root_name}` for one scene, when its ROOT node carries a
-## script. Only the root counts: a script on a child says nothing about what the scene IS.
-static func _record_scene_root_script(scene_path: String, found: Dictionary) -> void:
-	var handle: FileAccess = FileAccess.open(scene_path, FileAccess.READ)
-	if handle == null:
-		return
-	var script_ids: Dictionary = {}
-	var root_name: String = ""
-	var in_root: bool = false
-	while not handle.eof_reached():
-		var line: String = handle.get_line()
-		if line.begins_with("[ext_resource "):
-			if line.contains("type=\"Script\""):
-				script_ids[_quoted_attribute(line, "id")] = _quoted_attribute(line, "path")
-			continue
-		if line.begins_with("[node "):
-			if not root_name.is_empty():
-				break  # past the root; a child's script is not this scene's identity
-			root_name = _quoted_attribute(line, "name")
-			in_root = true
-			continue
-		if not in_root or not line.begins_with("script = ExtResource("):
-			continue
-		var id_start: int = line.find("\"")
-		var id_end: int = line.rfind("\"")
-		if id_start < 0 or id_end <= id_start:
-			break
-		var script_id: String = line.substr(id_start + 1, id_end - id_start - 1)
-		var script_path: String = str(script_ids.get(script_id, ""))
-		if not script_path.is_empty():
-			var users: Array = found.get(script_path, [])
-			users.append({"scene_path": scene_path, "root_name": root_name})
-			found[script_path] = users
-		break
-	handle.close()
+	return load(SCENE_ROOTS_PATH).sweep_scenes_under(directory_path)
 
 
 ## The prose of a line that is nothing but a `##` doc comment, "" for any other line - what an

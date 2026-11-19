@@ -56,6 +56,9 @@ static var index_changed: Callable = Callable()
 ## open of the editor does not compile them.
 const SWEEP_PATH := "res://addons/eventforge/importer/background_sweep.gd"
 const FOLLOW_PATH := "res://addons/eventforge/importer/scene_index_follow.gd"
+## The first read of both scene indexes, made in the editor's idle time (see that file). Loaded by path, and
+## only ever asked once something has loaded it.
+const PREP_PATH := "res://addons/eventforge/importer/scene_index_prep.gd"
 
 ## The ONE scene a read is about, while a whole scene is being opened as a sheet. Inside a scene
 ## view the question is a different one: not "what does this script's own scene say about it" but
@@ -104,8 +107,41 @@ static func scenes_using_script(script_path: String) -> PackedStringArray:
 ## this function may mark the index built, and it does so once it is - a half-filled index marked
 ## ready answers "no scene uses this" for every script the pass had not reached yet.
 static func _build_scene_script_index() -> void:
+	var prepared: Variant = _take_prepared()
+	if prepared is Dictionary:
+		_adopt_prepared(prepared)
+		return
 	_scenes_by_script = index_scenes(scene_paths())
 	_scenes_by_script_built = true
+
+
+## Whether the index of which scenes load which script is held (built here, or taken from the idle read).
+static func index_built() -> bool:
+	return _scenes_by_script_built
+
+
+## The idle read of the project, when it has been started and nothing has changed since: its scene list and index.
+## A read that is still under way is waited for rather than made twice. Null when there is none to give.
+static func _take_prepared() -> Variant:
+	if not ResourceLoader.has_cached(PREP_PATH):
+		return null
+	return load(PREP_PATH).take_connections()
+
+
+## Makes what the idle read brought the scene list and the index. The list is left alone when one was already
+## walked (the walk is the same either way), and the index is only marked built here, once it is whole.
+static func _adopt_prepared(prepared: Dictionary) -> void:
+	if not _scene_paths_scanned:
+		_scene_paths = prepared["paths"]
+		_scene_paths_scanned = true
+	_scenes_by_script = prepared["index"]
+	_scenes_by_script_built = true
+
+
+## What the idle read holds is from before a change: it is dropped, and read again when the editor is quiet.
+static func _forget_prepared() -> void:
+	if ResourceLoader.has_cached(PREP_PATH):
+		load(PREP_PATH).invalidate()
 
 
 ## Which scenes of `paths` load each script, {script path: [scene paths, in the order given]}. Touches
@@ -131,6 +167,7 @@ static func index_scenes(paths: PackedStringArray) -> Dictionary:
 ## paths are dropped (the next question works them out again, from the few scenes that name the script),
 ## and the list of scenes and the index of them keep their entries under the new names.
 static func note_path_moved(old_path: String, new_path: String, is_folder: bool) -> void:
+	_forget_prepared()
 	_index_refresh_outdated = _index_refresh != null
 	_cache.clear()
 	# Only a scene's own move (or a folder's) changes where scenes are; a script's never does.
@@ -145,6 +182,7 @@ static func note_path_moved(old_path: String, new_path: String, is_folder: bool)
 ## every scene - keeps answering while a worker thread reads it again, and `index_changed` is called if
 ## what arrives differs. Where no worker can be used (a headless run) this is `clear_cache`.
 static func files_changed() -> void:
+	_forget_prepared()
 	if not _scenes_by_script_built or not (Engine.is_editor_hint() and Engine.get_main_loop() is SceneTree):
 		clear_cache()
 		return
@@ -223,6 +261,7 @@ static func _finish_index_refresh(adopt: bool) -> void:
 ## scene files, and a held stamp would hand the old parse back. A re-read of the index that is still
 ## running is ended with it, since what it brings would answer for the files from before.
 static func clear_cache() -> void:
+	_forget_prepared()
 	_drop_derived()
 	_scenes_by_script = {}
 	_scenes_by_script_built = false
@@ -609,6 +648,14 @@ static func string_array_attribute(line: String, key: String) -> PackedStringArr
 ## be asked of every scene ("which one runs this script", "which spawner lists this scene").
 static func scene_paths() -> PackedStringArray:
 	if _scene_paths_scanned:
+		return _scene_paths
+	var prepared: Variant = _take_prepared()
+	if prepared is Dictionary:
+		_scene_paths = prepared["paths"]
+		_scene_paths_scanned = true
+		if not _scenes_by_script_built:
+			_scenes_by_script = prepared["index"]
+			_scenes_by_script_built = true
 		return _scene_paths
 	_scene_paths_scanned = true
 	_walk_scene_paths("res://", _scene_paths)

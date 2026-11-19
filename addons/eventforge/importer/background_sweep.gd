@@ -7,16 +7,24 @@ extends RefCounted
 ##
 ## The work is a Callable that touches no shared state (it reads files and returns a value); the answer
 ## is only ever looked at through `finish()`, after the task has ended. Constructing the object starts
-## the work, so `SWEEP.new(work)` is the whole call.
+## the work, so `SWEEP.new(work)` is the whole call. `SWEEP.new(work, true)` runs it on a thread of its
+## own instead of one of the pool's, which the editor's own work queues behind: a read that somebody may
+## wait for must not sit in that queue.
 
 var _task_id: int = -1
+var _thread: Thread = null
 var _work: Callable = Callable()
 var _answer: Variant = null
 
 
-func _init(work: Callable = Callable()) -> void:
+func _init(work: Callable = Callable(), own_thread: bool = false) -> void:
 	_work = work
-	if work.is_valid():
+	if not work.is_valid():
+		return
+	if own_thread:
+		_thread = Thread.new()
+		_thread.start(_run)
+	else:
 		_task_id = WorkerThreadPool.add_task(_run, false, "event sheet scene index")
 
 
@@ -26,11 +34,16 @@ func _run() -> void:
 
 ## Whether the work has ended. Never blocks.
 func is_done() -> bool:
+	if _thread != null:
+		return not _thread.is_alive()
 	return _task_id < 0 or WorkerThreadPool.is_task_completed(_task_id)
 
 
 ## Waits for the work if it has not ended, and returns what it computed.
 func finish() -> Variant:
+	if _thread != null:
+		_thread.wait_to_finish()
+		_thread = null
 	if _task_id >= 0:
 		WorkerThreadPool.wait_for_task_completion(_task_id)
 		_task_id = -1

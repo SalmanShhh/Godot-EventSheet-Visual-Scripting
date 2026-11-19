@@ -23,6 +23,10 @@ const EDITOR_INK_SAMPLE_ICON: String = "Node"
 ## How long after a theme notification the plugin icon is checked (see _schedule_plugin_icon_refresh).
 const PLUGIN_ICON_REFRESH_DELAY_SEC: float = 0.5
 const SETTINGS_HOVER_PATH: String = "res://addons/eventforge/editor/settings_hover_plugin.gd"
+## The first read of the project's scene indexes, made on a worker thread once the editor is quiet (loaded by
+## path), and how long after the editor's last filesystem change that is started.
+const SCENE_INDEX_PREP_PATH: String = "res://addons/eventforge/importer/scene_index_prep.gd"
+const SCENE_INDEX_IDLE_DELAY_SEC: float = 2.0
 
 # Cold-path helpers load BY PATH, not by class name: naming a global class in any function body
 # (or a var type) makes its whole dependency subtree - the importer, the compiler, the registry -
@@ -76,6 +80,8 @@ const UNSAVED_SHEETS_PATH: String = "res://addons/eventsheet/editor/dock/unsaved
 var _event_sheet_editor: Control = null
 ## A plugin icon check is waiting on its timer (see _schedule_plugin_icon_refresh).
 var _plugin_icon_refresh_pending: bool = false
+## A start of the idle read of the scene indexes is waiting on its timer (see _schedule_scene_index_read).
+var _scene_index_read_pending: bool = false
 ## The editor icon ink the plugin icon was last reimported for; never asked twice for the same one.
 var _plugin_icon_reimported_for: Color = Color(0.0, 0.0, 0.0, 0.0)
 var _export_integrity_plugin: EditorExportPlugin = null
@@ -217,6 +223,39 @@ func _refresh_plugin_icon_import() -> void:
 
 func _on_editor_theme_changed() -> void:
 	_schedule_plugin_icon_refresh()
+
+
+## A change to the project's files: what the idle read holds (or is reading) may be from before it, so it is
+## dropped, and read again once the files settle.
+func _on_files_changed_for_scene_index() -> void:
+	if ResourceLoader.has_cached(SCENE_INDEX_PREP_PATH):
+		load(SCENE_INDEX_PREP_PATH).invalidate()
+	_schedule_scene_index_read()
+
+
+## One start a little after the editor's files settle, folded from a burst of changes into the one timer.
+func _schedule_scene_index_read() -> void:
+	if _scene_index_read_pending or not is_inside_tree():
+		return
+	_scene_index_read_pending = true
+	get_tree().create_timer(SCENE_INDEX_IDLE_DELAY_SEC).timeout.connect(_on_scene_index_read_due)
+
+
+## Reads the project's scenes on a worker thread - unless the editor is still scanning, or an earlier read is
+## still going (it is looked at again later). What a read holds is dropped by any change, so the next quiet
+## moment reads again.
+func _on_scene_index_read_due() -> void:
+	_scene_index_read_pending = false
+	if not is_inside_tree():
+		return
+	var file_system: EditorFileSystem = get_editor_interface().get_resource_filesystem()
+	if file_system == null:
+		return
+	var prep: GDScript = load(SCENE_INDEX_PREP_PATH)
+	if file_system.is_scanning() or prep.running():
+		_schedule_scene_index_read()
+		return
+	prep.start()
 
 
 ## One check a little after the editor's theme settles, never a deferred call. A switch of the theme
@@ -671,6 +710,11 @@ func _enter_tree() -> void:
 	var scanned: EditorFileSystem = get_editor_interface().get_resource_filesystem()
 	if scanned != null and not scanned.filesystem_changed.is_connected(_schedule_plugin_icon_refresh):
 		scanned.filesystem_changed.connect(_schedule_plugin_icon_refresh)
+	# The first sheet opened in a session asks both scene indexes about every scene in the project; read once on a
+	# worker thread in the editor's first quiet moment, that is an answer waiting rather than a second of work.
+	_schedule_scene_index_read()
+	if scanned != null and not scanned.filesystem_changed.is_connected(_on_files_changed_for_scene_index):
+		scanned.filesystem_changed.connect(_on_files_changed_for_scene_index)
 	# A switch of the editor theme while the editor runs redraws the sheet resources' icon the same way.
 	var base: Control = get_editor_interface().get_base_control()
 	if base != null and not base.theme_changed.is_connected(_on_editor_theme_changed):
@@ -953,6 +997,11 @@ func _exit_tree() -> void:
 	var scanned_on_exit: EditorFileSystem = get_editor_interface().get_resource_filesystem()
 	if scanned_on_exit != null and scanned_on_exit.filesystem_changed.is_connected(_schedule_plugin_icon_refresh):
 		scanned_on_exit.filesystem_changed.disconnect(_schedule_plugin_icon_refresh)
+	if scanned_on_exit != null and scanned_on_exit.filesystem_changed.is_connected(_on_files_changed_for_scene_index):
+		scanned_on_exit.filesystem_changed.disconnect(_on_files_changed_for_scene_index)
+	# A read still under way when the editor unloads is joined, never left running.
+	if ResourceLoader.has_cached(SCENE_INDEX_PREP_PATH):
+		load(SCENE_INDEX_PREP_PATH).stop()
 	if _export_integrity_plugin != null:
 		remove_export_plugin(_export_integrity_plugin)
 		_export_integrity_plugin = null
