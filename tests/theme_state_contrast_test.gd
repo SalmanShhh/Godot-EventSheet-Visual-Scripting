@@ -111,15 +111,13 @@ static func _test_state_washes(name: String, style: EventSheetEditorStyle) -> bo
 		for lane: String in lanes:
 			var cell_ink: Color = lanes[lane][1] as Color
 			var washed_plate: Color = Wash.under_washes(_opaque(event_style, lanes[lane][0] as Color), washes)
-			var selected: Color = washed_plate.lerp(Color(cell_ink.r, cell_ink.g, cell_ink.b, 1.0), EventSheetRowRenderer.CHIP_SELECT_FILL_ALPHA)
+			# The renderer takes the lighter hold on a row that wears a state wash.
+			var hold: float = EventSheetRowRenderer.CHIP_SELECT_FILL_ALPHA if washes.is_empty() else EventSheetRowRenderer.CHIP_SELECT_FILL_ALPHA_STATED
+			var selected: Color = washed_plate.lerp(Color(cell_ink.r, cell_ink.g, cell_ink.b, 1.0), hold)
 			var words: Dictionary = {"sentence": [cell_ink, "the lane's text_color"], "object name": [event_style.object_label_color, "object_label_color"]}
 			if lane == "action":
 				words["action accent"] = [event_style.ace_action_accent_color, "ace_action_accent_color"]
 			for word: String in words:
-				# Editor Native takes its object name from the editor's own accent, the default look every guide picture shows;
-				# it is held to the bar on a plain row and left as the editor draws it under a state wash (2.3 to 2.9 to 1 there).
-				if name == "editor_native_theme.tres" and word == "object name" and combo != "a plain row":
-					continue
 				var selected_ratio: float = EventSheetEditorThemeDeriver.contrast_ratio(words[word][0] as Color, selected)
 				ok = SUPPORT.pin_value(TEST_NAME, "%s: the %s's %s reads on a selected cell of %s (%.1f to 1; the bar is %.1f; set %s)" % [name, lane, word, combo, selected_ratio, float(combos[combo][1]), words[word][1]],
 					selected_ratio >= float(combos[combo][1]), true) and ok

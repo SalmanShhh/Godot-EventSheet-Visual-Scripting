@@ -432,6 +432,9 @@ const SPAN_SELECT_OUTLINE_ALPHA := 0.95
 ## How much of its own ink a selected cell (a chip) takes over its plate: a lighter hold when several are selected.
 const CHIP_SELECT_FILL_ALPHA := 0.28
 const CHIP_SELECT_FILL_ALPHA_MULTI := 0.20
+## On a row that wears a state wash (an error, a line that cannot run, a firing event) the cell is already tinted, so the
+## selection takes the lighter hold too: the object name, which keeps its colour in every look, reads on the pair.
+const CHIP_SELECT_FILL_ALPHA_STATED := 0.20
 const SPAN_HOVER_OUTLINE_LIGHTEN := 0.28
 
 
@@ -2808,7 +2811,10 @@ func _draw_chip_selected_span(
 ) -> void:
 	# Flat selected cell: a stronger accent-tinted fill over the whole cell.
 	var accent: Color = metadata.get("text_color", TEXT_PRIMARY)
-	var fill: Color = Color(accent.r, accent.g, accent.b, CHIP_SELECT_FILL_ALPHA_MULTI if multi_select else CHIP_SELECT_FILL_ALPHA)
+	var strength: float = CHIP_SELECT_FILL_ALPHA_MULTI if multi_select else CHIP_SELECT_FILL_ALPHA
+	if not _plate_washes.is_empty():
+		strength = minf(strength, CHIP_SELECT_FILL_ALPHA_STATED)
+	var fill: Color = Color(accent.r, accent.g, accent.b, strength)
 	control.draw_rect(span.rect, fill, true)
 
 
