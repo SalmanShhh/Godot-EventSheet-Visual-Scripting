@@ -591,6 +591,23 @@ func _fit_column(card: PanelContainer, list: Tree, section: Dictionary) -> void:
 		list.set_column_custom_minimum_width(1, int(ceil(minf(float(plan["tag"]), room))))
 	fit_kind.call()
 	list.resized.connect(fit_kind)
+	# A list whose names wrap holds more than it first measures, and the engine's tree only shows its scroll bar once
+	# it has been asked to scroll - so a list cut at its foot looked complete. Asking it to keep its top row where it
+	# is, once it has its size and again whenever it is resized, makes the bar show the moment there is more to reach.
+	list.resized.connect(_settle_scroll.bind(list), CONNECT_DEFERRED)
+	_settle_scroll.call_deferred(list)
+
+
+## Keeps a list's top row where it is, which makes the tree measure its wrapped rows and show its scroll bar when they
+## do not all fit.
+static func _settle_scroll(list: Tree) -> void:
+	if not is_instance_valid(list) or list.get_root() == null:
+		return
+	var top: TreeItem = list.get_item_at_position(Vector2(4.0, 4.0))
+	if top == null:
+		top = list.get_root().get_first_child()
+	if top != null:
+		list.scroll_to_item(top)
 
 
 ## What a column needs to read: its kind as wide as it is drawn, a few words of a name on one line (or the whole name when

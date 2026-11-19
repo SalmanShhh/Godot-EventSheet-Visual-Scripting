@@ -11310,9 +11310,9 @@ Make an editor tool with an event sheet,Crea uno strumento dell'editor con un fo
 Your first networked game,Il tuo primo gioco in rete
 Read the editor's code as events,Leggi il codice dell'editor come eventi
 Add a word to the vocabulary,Aggiungi una parola al vocabolario
-%d min,%d minuti
-%d min · last step,%d minuti · ultimo passo
-%d min · step %d of %d,%d minuti · passo %d di %d
+%d min,%d min
+%d min · last step,%d min · ultimo passo
+%d min · step %d of %d,%d min · passo %d di %d
 %s · step %d of %d,%s · passo %d di %d
 "Six steps from an empty sheet to a rule that runs. Nothing here is a picture: you press the real buttons, in the sheet you have open.","Sei passi da un foglio vuoto a una regola che funziona. Qui niente è un'immagine: premi i pulsanti veri, nel foglio che hai aperto."
 "The editor reads GDScript you already have. Nothing is rewritten: what you open, you can save back byte for byte.",L'editor legge il GDScript che hai già. Nulla viene riscritto: ciò che apri puoi salvarlo di nuovo byte per byte.
