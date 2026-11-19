@@ -537,7 +537,8 @@ static func _test_english_left_in_stays_bounded() -> bool:
 	for locale: String in LOCALES:
 		var same: int = 0
 		for row: PackedStringArray in _read_rows("%s.csv" % locale):
-			if row.size() > 1 and row[0] == row[1]:
+			# "%d min" is the abbreviation Spanish, French and Italian write too, so a cell that says so is right, not English left in.
+			if row.size() > 1 and row[0] == row[1] and row[0] != "%d min":
 				same += 1
 		var ceiling: int = int(ENGLISH_EQUAL_CEILING.get(locale, 0))
 		if same > ceiling:
