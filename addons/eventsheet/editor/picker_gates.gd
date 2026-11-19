@@ -272,7 +272,7 @@ static func fix_text(gate: Dictionary) -> String:
 static func _filled(template: String, node_type: String) -> String:
 	var translated: String = EventSheetL10n.translate(template)
 	if translated.contains("%s"):
-		return translated % node_type
+		return EventSheetL10n.agree_article(translated % node_type, node_type)
 	return translated
 
 

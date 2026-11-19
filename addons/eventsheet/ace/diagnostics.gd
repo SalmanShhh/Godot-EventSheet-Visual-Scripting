@@ -125,7 +125,7 @@ static func _check_local_var(local: LocalVariable, sheet: EventSheetResource, di
 		return
 	var owner: String = EventSheetVariableOwners.shadowed_member_class(sheet, local.name)
 	if not owner.is_empty():
-		diagnostics.append(_make(local, "Variable \"%s\" shadows a %s member - rename it." % [local.name, owner], ""))
+		diagnostics.append(_make(local, EventSheetL10n.agree_article("Variable \"%s\" shadows a %s member - rename it." % [local.name, owner], owner), ""))
 
 
 ## Lints an ACE's ƒx (expression-hinted) params. Flags the OWNING event row (ACEs render as

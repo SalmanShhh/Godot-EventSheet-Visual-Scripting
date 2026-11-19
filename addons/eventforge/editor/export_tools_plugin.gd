@@ -43,6 +43,8 @@
 @tool
 extends EditorExportPlugin
 
+const Articles := preload("res://addons/eventforge/article_agreement.gd")
+
 ## The function name On Project Export compiles to. Part of the public seam: rename it and every
 ## already-generated tool script goes quiet, so it is frozen like an ace_id.
 const HOOK_FUNCTION: String = "_on_project_export"
@@ -106,7 +108,7 @@ static func run_hook_scripts(hook: String, arguments: Array, root: String, label
 		elif not declares(script, hook):
 			skipped = "%s mentions %s but declares no such function, so it was skipped." % [script_path, hook]
 		elif ClassDB.class_exists(script.get_instance_base_type()) and ClassDB.is_parent_class(script.get_instance_base_type(), "Node"):
-			skipped = "%s is a %s script, so it was skipped - %s" % [script_path, script.get_instance_base_type(), home]
+			skipped = Articles.agree_article("%s is a %s script, so it was skipped - %s" % [script_path, script.get_instance_base_type(), home], str(script.get_instance_base_type()))
 		var instance: Object = script.new() as Object if skipped.is_empty() else null
 		if skipped.is_empty() and instance == null:
 			skipped = "%s produced no instance - skipped. (An EditorScript can only be built while an editor is running.)" % script_path

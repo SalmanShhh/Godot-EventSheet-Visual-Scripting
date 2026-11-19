@@ -39,8 +39,8 @@ func apply(gate: Dictionary, definition: ACEDefinition, context: Dictionary) -> 
 ## the scene's history, not the sheet's), then carries on to the row's parameters dialog.
 func _add_node(node_type: String, definition: ACEDefinition, context: Dictionary) -> void:
 	if node_type.is_empty() or not ClassDB.class_exists(node_type) or not ClassDB.can_instantiate(node_type):
-		_dock._set_status(EventSheetL10n.translate("Can't add a %s here - add the node by hand in the Scene dock.")
-			% node_type, true)
+		_dock._set_status(EventSheetL10n.agree_article(EventSheetL10n.translate("Can't add a %s here - add the node by hand in the Scene dock.")
+			% node_type, node_type), true)
 		return
 	var scene_root: Node = EditorInterface.get_edited_scene_root() if Engine.is_editor_hint() else null
 	if scene_root == null:
@@ -60,8 +60,8 @@ func _add_node(node_type: String, definition: ACEDefinition, context: Dictionary
 	else:
 		scene_root.add_child(node)
 		node.owner = scene_root
-	_dock._set_status(EventSheetL10n.translate("Added a %s to %s - Ctrl+Z takes it back.")
-		% [node_type, scene_root.name], false)
+	_dock._set_status(EventSheetL10n.agree_article(EventSheetL10n.translate("Added a %s to %s - Ctrl+Z takes it back.")
+		% [node_type, scene_root.name], node_type), false)
 	_dock._on_ace_picker_selected(definition, context)
 
 

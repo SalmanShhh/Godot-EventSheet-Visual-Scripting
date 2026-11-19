@@ -15,6 +15,9 @@ A scene saved by the editor names each script it uses with a uid before the path
 ### Fixed: sheets that named a file moved twice in one moment follow it to its last place
 
 When two files in the FileSystem dock were moved one after the other in the same moment - a file renamed from A to B and then from B to C - the project is read once afterwards, and a sheet file that named A was respelled to B, a path nothing is at any more. The first move now carries on to where the file ended up, so such a sheet names C; sheets that named B follow too.
+### Fixed: a sentence that names a type says "an int", "an Array", "an Area2D"
+
+A function head's hover read "This function hands back a int." and the same slip sat in the cards for a node class, the Doctor's findings, the picker's "Add a ... to the scene", the variable name warnings and a few more. One helper now picks the article from how the name is said aloud (an int, an Array, an Area2D, an AABB, an HBoxContainer; a float, a String, a Node2D, a UDPServer), and every sentence that puts "a" before a type or class name goes through it. The sentences are still the same translation keys, so every language file keeps working and a translated sentence is left as it is.
 
 ### Faster: renaming or moving a sheet no longer holds the editor while the project is read
 

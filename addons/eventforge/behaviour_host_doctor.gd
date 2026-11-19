@@ -17,6 +17,8 @@
 class_name EventSheetBehaviourHostDoctor
 extends EventSheetDoctorSection
 
+const Articles := preload("res://addons/eventforge/article_agreement.gd")
+
 ## The id the section is registered under, and the id each finding is filed as. Frozen: the fix
 ## doors and the tests address a finding by its check id.
 const CHECK_ID := "behaviour-host"
@@ -65,16 +67,16 @@ static func report_for_scene(scene_path: String, text: String, behaviours: Dicti
 			actual = str(target.get("type", ""))
 			if actual.is_empty() or fits(actual, host_type):
 				continue
-			findings.append(_found(scene_path, node, "%s acts on a %s; it needs %s." % [
-				label, actual, EventSheetCompiler.host_phrase(host_type)], ""))
+			findings.append(_found(scene_path, node, Articles.agree_article("%s acts on a %s; it needs %s." % [
+				label, actual, EventSheetCompiler.host_phrase(host_type)], actual), ""))
 			continue
 		var parent: Dictionary = by_path.get(str(node["parent"]), {}) as Dictionary
 		actual = str(parent.get("type", ""))
 		if actual.is_empty() or fits(actual, host_type):
 			continue
 		var nearest: String = nearest_host(nodes, node, host_type)
-		findings.append(_found(scene_path, node, "%s is under a %s; it needs %s: put it under one, or set Acts on." % [
-			label, actual, EventSheetCompiler.host_phrase(host_type)], nearest))
+		findings.append(_found(scene_path, node, Articles.agree_article("%s is under a %s; it needs %s: put it under one, or set Acts on." % [
+			label, actual, EventSheetCompiler.host_phrase(host_type)], actual), nearest))
 	return findings
 
 

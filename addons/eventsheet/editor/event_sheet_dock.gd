@@ -8151,7 +8151,7 @@ func apply_collision_fix(finding: Dictionary, slot: String = "fix") -> String:
 		EventSheetCollisionFindings.FIX_ADD_SHAPE:
 			var added: Dictionary = EventSheetSceneCollisionFacts.add_shape(scene_path, node_path)
 			wrote = bool(added.get("ok", false))
-			said = EventSheetL10n.translate("%s now has a %s.") % [str(finding.get("node_name", "")), str(added.get("added", ""))] if wrote \
+			said = EventSheetL10n.agree_article(EventSheetL10n.translate("%s now has a %s.") % [str(finding.get("node_name", "")), str(added.get("added", ""))], str(added.get("added", ""))) if wrote \
 				else str(added.get("reason", ""))
 			_set_status(said, not wrote)
 		EventSheetCollisionFindings.FIX_SEE_THE_LAYER:

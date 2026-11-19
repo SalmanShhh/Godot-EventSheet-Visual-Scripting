@@ -869,7 +869,7 @@ static func scene_member_finding(value: String, scene_root: Node) -> Dictionary:
 		return {
 			"level": LEVEL_ERROR,
 			"head": EventSheetL10n.translate("%s has no %s.") % [node_label, member],
-			"body": body + " " + EventSheetL10n.translate("(%s is a %s, read from the scene.)") % [node_label, node_class_of(node)],
+			"body": body + " " + EventSheetL10n.agree_article(EventSheetL10n.translate("(%s is a %s, read from the scene.)") % [node_label, node_class_of(node)], node_class_of(node)),
 			"original": "",
 			"span": Vector2i(start, start + member.length()),
 			"reason": EventSheetL10n.translate("%s has no %s") % [node_label, member],

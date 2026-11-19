@@ -447,7 +447,7 @@ static func as_gdscript(card: Dictionary, player: Node = null) -> String:
 				return "var bus := AudioServer.get_bus_index(\"%s\")\nAudioServer.set_bus_effect_enabled(bus, %d, true)\nawait get_tree().create_timer(%s).timeout\nAudioServer.set_bus_effect_enabled(bus, %d, false)" % [bus, int(card.get("slot", 0)), seconds, int(card.get("slot", 0))]
 			var effect_class: Dictionary = {"muffle": ["AudioEffectLowPassFilter", "cutoff_hz", "20500.0"], "dive": ["AudioEffectAmplify", "volume_db", "0.0"], "wash": ["AudioEffectReverb", "wet", "0.0"]}
 			var entry: Array = effect_class.get(how, effect_class["muffle"])
-			return "# The bus must already carry a %s.\nvar bus := AudioServer.get_bus_index(\"%s\")\nvar effect: %s\nfor slot in AudioServer.get_bus_effect_count(bus):\n\tif AudioServer.get_bus_effect(bus, slot) is %s:\n\t\teffect = AudioServer.get_bus_effect(bus, slot)\neffect.%s = %s\nawait get_tree().create_timer(%s).timeout\neffect.%s = %s" % [entry[0], bus, entry[0], entry[0], entry[1], _n(card.get("to", 400.0)), seconds, entry[1], entry[2]]
+			return EventSheetL10n.agree_article("# The bus must already carry a %s.\nvar bus := AudioServer.get_bus_index(\"%s\")\nvar effect: %s\nfor slot in AudioServer.get_bus_effect_count(bus):\n\tif AudioServer.get_bus_effect(bus, slot) is %s:\n\t\teffect = AudioServer.get_bus_effect(bus, slot)\neffect.%s = %s\nawait get_tree().create_timer(%s).timeout\neffect.%s = %s" % [entry[0], bus, entry[0], entry[0], entry[1], _n(card.get("to", 400.0)), seconds, entry[1], entry[2]], str(entry[0]))
 		"chromatic_shake":
 			return _chromatic_shake_by_hand(card, seconds)
 		"spring":

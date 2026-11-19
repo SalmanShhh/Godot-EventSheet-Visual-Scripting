@@ -142,10 +142,10 @@ static func _class_sentence(type_name: String) -> String:
 		return ""
 	var base: String = str(ClassDB.get_parent_class(StringName(type_name)))
 	if ClassDB.is_parent_class(StringName(type_name), &"Node"):
-		return EventSheetL10n.translate("A %s: a node you place in the scene tree, one that extends %s.") % [type_name, base]
+		return EventSheetL10n.agree_article(EventSheetL10n.translate("A %s: a node you place in the scene tree, one that extends %s.") % [type_name, base], type_name)
 	if ClassDB.is_parent_class(StringName(type_name), &"Resource"):
-		return EventSheetL10n.translate("A %s: a resource, a piece of data Godot can save and load, one that extends %s.") % [type_name, base]
-	return EventSheetL10n.translate("A %s: an object that extends %s.") % [type_name, base]
+		return EventSheetL10n.agree_article(EventSheetL10n.translate("A %s: a resource, a piece of data Godot can save and load, one that extends %s.") % [type_name, base], type_name)
+	return EventSheetL10n.agree_article(EventSheetL10n.translate("A %s: an object that extends %s.") % [type_name, base], type_name)
 
 
 static func _enum_named(sheet: EventSheetResource, enum_name: String) -> EnumRow:

@@ -356,7 +356,7 @@ static func _test_a_touch_row_with_nothing_to_touch_says_what_to_add() -> bool:
 		EventSheetPickerGates.reason_text(gate),
 		"Nothing in this scene can touch anything yet - this row needs one: Area2D.") and passed
 	passed = _check("and the button IS the fix",
-		EventSheetPickerGates.fix_text(gate), "Add a Area2D to the scene") and passed
+		EventSheetPickerGates.fix_text(gate), "Add an Area2D to the scene") and passed
 	passed = _check("which the dock knows how to perform",
 		str(gate.get("fix_id", "")), "add_node") and passed
 	# The same entry on a scene that HAS an area is offered plainly - a wall that stays up after the

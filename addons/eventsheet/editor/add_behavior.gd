@@ -96,7 +96,7 @@ static func attach_node(pack: Dictionary, host: Node, values: Dictionary) -> Dic
 		message += _install_shipped_effect(str(shipped.get("shader", "")), host)
 	var requirement: String = host_requirement(pack)
 	if not requirement.is_empty() and not host.is_class(requirement):
-		message += " Note: this pack expects a %s - the Doctor will say so until it has one." % requirement
+		message += EventSheetL10n.agree_article(" Note: this pack expects a %s - the Doctor will say so until it has one." % requirement, requirement)
 	return {"ok": true, "message": message, "node": behavior}
 
 

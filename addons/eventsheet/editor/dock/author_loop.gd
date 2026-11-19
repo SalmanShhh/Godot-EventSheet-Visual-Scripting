@@ -205,7 +205,7 @@ static func attach_behavior(sheet: EventSheetResource, host: Node) -> Dictionary
 		EventSheetL10n.translate("Attach %s to %s") % [behavior.name, host.name])
 	var message: String = "Attached %s under %s." % [behavior.name, host.name]
 	if ClassDB.class_exists(sheet.host_class) and not host.is_class(sheet.host_class):
-		message += " Note: this behavior expects a %s host - it will warn in the scene." % sheet.host_class
+		message += EventSheetL10n.agree_article(" Note: this behavior expects a %s host - it will warn in the scene." % sheet.host_class, sheet.host_class)
 	return {"ok": true, "message": message}
 
 

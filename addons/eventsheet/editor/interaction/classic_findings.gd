@@ -142,8 +142,8 @@ static func _in_a_container(context: Dictionary, line: String, placements: Array
 		if culprit.is_empty():
 			continue
 		found.append(_finding(EventSheetMistakeFindings.KIND_CONTROL_IN_CONTAINER, context, culprit,
-			EventSheetL10n.translate("%s sits inside a %s, and a Container places its children itself: the next time it arranges them it moves this Control back, so this row seems to do nothing. To place it yourself, put the Control under a plain Control node instead; to change where it ends up inside the Container, change the Container's own settings or this Control's size flags and custom minimum size.") % [
-				culprit, container]))
+			EventSheetL10n.agree_article(EventSheetL10n.translate("%s sits inside a %s, and a Container places its children itself: the next time it arranges them it moves this Control back, so this row seems to do nothing. To place it yourself, put the Control under a plain Control node instead; to change where it ends up inside the Container, change the Container's own settings or this Control's size flags and custom minimum size.") % [
+				culprit, container], container)))
 		return
 
 
@@ -182,8 +182,8 @@ static func _tween_on_a_body(context: Dictionary, line: String, placements: Arra
 		var impulse: String = EventSheetL10n.translate("Apply Central Impulse (3D)") if body_class.ends_with("3D") \
 			else EventSheetL10n.translate("Apply Central Impulse")
 		found.append(_finding(EventSheetMistakeFindings.KIND_TWEEN_ON_BODY, context, body_name,
-			EventSheetL10n.translate("%s is a %s, which the physics engine moves every physics frame, so a Tween on its %s fights the engine: the body jitters, snaps back or is pushed through walls. Tween a child node instead (a Sprite2D, say), move the body with %s, or turn on Freeze on the body first so code may move it.") % [
-				body_name, body_class, property, impulse]))
+			EventSheetL10n.agree_article(EventSheetL10n.translate("%s is a %s, which the physics engine moves every physics frame, so a Tween on its %s fights the engine: the body jitters, snaps back or is pushed through walls. Tween a child node instead (a Sprite2D, say), move the body with %s, or turn on Freeze on the body first so code may move it.") % [
+				body_name, body_class, property, impulse], body_class)))
 		return
 
 
@@ -217,8 +217,8 @@ static func _behaviour_on_a_body(context: Dictionary, line: String, placements: 
 		var impulse: String = EventSheetL10n.translate("Apply Central Impulse (3D)") if parent_class.ends_with("3D") \
 			else EventSheetL10n.translate("Apply Central Impulse")
 		found.append(_finding(EventSheetMistakeFindings.KIND_BEHAVIOUR_ON_BODY, context, _name_of(parent, placement),
-			EventSheetL10n.translate("This behaviour sits under %s, a %s, and it writes its parent's %s every frame while the physics engine moves that body too, so the two fight: the body jitters, snaps back or is pushed through walls. Put the behaviour on a node that is not a physics body (the Sprite2D inside it, or a plain Node2D), or move the body with %s instead.") % [
-				_name_of(parent, placement), parent_class, property, impulse]))
+			EventSheetL10n.agree_article(EventSheetL10n.translate("This behaviour sits under %s, a %s, and it writes its parent's %s every frame while the physics engine moves that body too, so the two fight: the body jitters, snaps back or is pushed through walls. Put the behaviour on a node that is not a physics body (the Sprite2D inside it, or a plain Node2D), or move the body with %s instead.") % [
+				_name_of(parent, placement), parent_class, property, impulse], parent_class)))
 		return true
 	return false
 

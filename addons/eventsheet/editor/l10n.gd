@@ -265,6 +265,12 @@ static func counted(one: String, many: String, count: int) -> String:
 	return translate(many) % count
 
 
+## A sentence whose English template said "a %s", filled with a type or class name: "a int" becomes
+## "an int". The template (the translation key) is untouched; a translated sentence passes through.
+static func agree_article(sentence: String, type_name: String) -> String:
+	return load("res://addons/eventforge/article_agreement.gd").agree_article(sentence, type_name)
+
+
 ## Assigns the plugin's translation domain to a UI root (the dock, a detached window): every
 ## descendant Control's text/tooltip then auto-translates. Idempotent.
 static func apply_to(node: Node) -> void:

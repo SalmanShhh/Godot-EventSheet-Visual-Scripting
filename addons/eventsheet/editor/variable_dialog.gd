@@ -1601,7 +1601,7 @@ func _on_confirmed() -> void:
 	# A name that shadows a host-class member breaks the generated script: refuse it.
 	var shadow_owner: String = _shadow_owner(var_name)
 	if not shadow_owner.is_empty():
-		_name_warning.say(EventSheetL10n.translate("✗ \"%s\" shadows a %s member - pick another name.") % [var_name, shadow_owner])
+		_name_warning.say(EventSheetL10n.agree_article(EventSheetL10n.translate("✗ \"%s\" shadows a %s member - pick another name.") % [var_name, shadow_owner], shadow_owner))
 		_reopen()
 		return
 	_last_scope_key = current_scope_word()
@@ -2333,7 +2333,7 @@ func _refresh_name_warning() -> void:
 	var typed: String = _name_edit.text.strip_edges()
 	var owner: String = _shadow_owner(typed)
 	if not owner.is_empty():
-		_name_warning.say(EventSheetL10n.translate("⚠ \"%s\" shadows a %s member - rename to avoid a clash.") % [typed, owner], EventSheetPopupUI.TONE_WARNING)
+		_name_warning.say(EventSheetL10n.agree_article(EventSheetL10n.translate("⚠ \"%s\" shadows a %s member - rename to avoid a clash.") % [typed, owner], owner), EventSheetPopupUI.TONE_WARNING)
 	elif name_clashes(typed):
 		_name_warning.say(EventSheetL10n.translate("⚠ \"%s\" is already a variable here - pick another name.") % typed, EventSheetPopupUI.TONE_WARNING)
 	else:

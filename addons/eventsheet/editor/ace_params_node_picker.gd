@@ -395,7 +395,8 @@ func _describe_node(selected: TreeItem, uniqueable: bool = false) -> void:
 			EventSheetL10n.translate("Type a name, a class or a path - or group:, script: and scene: to search by group, by script or across every scene."))
 		_help_strip.set_reading("")
 		return
-	var body: String = EventSheetL10n.translate("A %s.") % selected.get_text(1) if not selected.get_text(1).is_empty() else ""
+	var picked_class: String = selected.get_text(1)
+	var body: String = EventSheetL10n.agree_article(EventSheetL10n.translate("A %s.") % picked_class, picked_class) if not picked_class.is_empty() else ""
 	if uniqueable:
 		body = ("%s %s" % [body, EventSheetL10n.translate("Make %%unique hands back %s, a handle that survives moving it.")
 			% ("%" + str(selected.get_text(0)).get_file())]).strip_edges()

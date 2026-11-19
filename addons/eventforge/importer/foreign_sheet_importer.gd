@@ -19,6 +19,8 @@
 class_name EventSheetForeignImporter
 extends RefCounted
 
+const Articles := preload("res://addons/eventforge/article_agreement.gd")
+
 ## The stable words an unmapped row leaves in the generated file. The project health check greps
 ## for exactly this, so changing it changes a shipped finding - deprecate, never re-spell.
 const UNMAPPED_MARKER: String = "Not mapped on import:"
@@ -526,7 +528,7 @@ static func _build_cell(source: Dictionary, context: Dictionary, wanted_kind: St
 		_reject(context, _cell_label(source, context), "No row here spells this yet.")
 		return {}
 	if str(entry.get("kind", "")) != wanted_kind and str(entry.get("kind", "")) != EventSheetForeignACEMap.KIND_TRIGGER:
-		_reject(context, _cell_label(source, context), "This reads as a %s here, not a %s." % [entry.get("kind", ""), wanted_kind])
+		_reject(context, _cell_label(source, context), Articles.agree_article(Articles.agree_article("This reads as a %s here, not a %s." % [entry.get("kind", ""), wanted_kind], str(entry.get("kind", ""))), wanted_kind))
 		return {}
 	var built: Dictionary = {
 		"ace": str(entry["ace"]),

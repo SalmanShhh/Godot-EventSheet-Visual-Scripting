@@ -472,7 +472,7 @@ static func blocks_for(kind: String, name: String) -> Array[Dictionary]:
 			return _pack_blocks(name)
 		KIND_CLASS:
 			return _rows_page(title_for(KIND_CLASS, name),
-				"Everything this sheet can ask of a %s, drawn from the vocabulary this editor has loaded." % name.strip_edges(),
+				EventSheetL10n.agree_article("Everything this sheet can ask of a %s, drawn from the vocabulary this editor has loaded." % name.strip_edges(), name.strip_edges()),
 				rows_from_definitions(ReadingDoors.api().class_vocabulary(name.strip_edges())), "")
 		KIND_SECTION:
 			return _rows_page(title_for(KIND_SECTION, name), _section_lead(name),

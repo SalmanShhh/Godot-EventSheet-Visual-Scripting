@@ -691,10 +691,10 @@ static func _wrong_node_types(rows: Array[Dictionary], scene: Dictionary, walk: 
 		var better: String = "" if on_self else _node_with_members(scene["tables"][0] as Dictionary, members)
 		var sentence: String
 		if on_self:
-			sentence = EventSheetL10n.translate("This node is a %s, which has no \"%s\" - the row asks it for one. Godot refuses the script (a parse error: not found in base self), so it does not load. Put this row on a node that has it, or pick another action.") % [actual_class, culprit]
+			sentence = EventSheetL10n.agree_article(EventSheetL10n.translate("This node is a %s, which has no \"%s\" - the row asks it for one. Godot refuses the script (a parse error: not found in base self), so it does not load. Put this row on a node that has it, or pick another action.") % [actual_class, culprit], actual_class)
 		else:
-			sentence = EventSheetL10n.translate("%s is a %s, which has no \"%s\" - the row asks it for one. Godot stops the function when the line runs (\"Invalid call. Nonexistent function\" for a method, \"Invalid assignment of property\" for a property). Point it at a node that has it, or pick another action.") % [
-				node_label, actual_class, culprit]
+			sentence = EventSheetL10n.agree_article(EventSheetL10n.translate("%s is a %s, which has no \"%s\" - the row asks it for one. Godot stops the function when the line runs (\"Invalid call. Nonexistent function\" for a method, \"Invalid assignment of property\" for a property). Point it at a node that has it, or pick another action.") % [
+				node_label, actual_class, culprit], actual_class)
 		var doors: Array = []
 		if not better.is_empty():
 			var better_class: String = str((scene["tables"][0]["paths"] as Dictionary).get(better.substr(1), ""))

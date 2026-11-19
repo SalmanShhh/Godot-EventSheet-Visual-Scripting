@@ -6671,7 +6671,7 @@ static func _keep_distance_travelled(lines: PackedStringArray, sheet: EventSheet
 		return
 	var velocity: String = _travelled_velocity(sheet)
 	if velocity.is_empty():
-		(result["warnings"] as Array).append("Distance Travelled: a %s has no velocity of its own, so the total stays at 0 - put this sheet on a CharacterBody or a RigidBody." % sheet.host_class)
+		(result["warnings"] as Array).append(load("res://addons/eventforge/article_agreement.gd").agree_article("Distance Travelled: a %s has no velocity of its own, so the total stays at 0 - put this sheet on a CharacterBody or a RigidBody." % sheet.host_class, sheet.host_class))
 	var source_map: Array = result.get("source_map", [])
 	var insert_index: int = lines.size()
 	for index: int in range(lines.size()):

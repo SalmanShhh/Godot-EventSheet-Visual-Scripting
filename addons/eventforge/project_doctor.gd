@@ -19,6 +19,7 @@
 class_name EventSheetProjectDoctor
 extends RefCounted
 
+const Articles := preload("res://addons/eventforge/article_agreement.gd")
 const ProjectFiles := preload("res://addons/eventforge/project_files.gd")
 const GdSheets := preload("res://addons/eventforge/doctor_gd_sheets.gd")
 const KnownSheets := preload("res://addons/eventforge/known_sheets.gd")
@@ -1968,8 +1969,8 @@ static func check_shadowed_variables(sheet_paths: PackedStringArray, findings: A
 				owner_class = ""
 			if not owner_class.is_empty():
 				_add(findings, "error", "shadowed-variable", sheet_path,
-					"Variable \"%s\" shadows a %s member - the %s can't load. Rename Everywhere… fixes every reference." % [
-						variable_name, owner_class, "script" if _is_script(sheet_path) else "generated script"])
+					Articles.agree_article("Variable \"%s\" shadows a %s member - the %s can't load. Rename Everywhere… fixes every reference." % [
+						variable_name, owner_class, "script" if _is_script(sheet_path) else "generated script"], owner_class))
 
 
 ## A generated vocabulary doc is a promise to the team - once one exists, the doctor

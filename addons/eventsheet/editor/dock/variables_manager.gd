@@ -505,7 +505,7 @@ func _on_variable_dialog_confirmed(
 	if scope == "global" and _dock._current_sheet != null:
 		var shadow_owner: String = EventSheetVariableOwners.shadowed_member_class(_dock._current_sheet, var_name)
 		if not shadow_owner.is_empty():
-			_dock._set_status("\"%s\" is already a %s member - pick another name (e.g. %s_value)." % [var_name, shadow_owner, var_name], true)
+			_dock._set_status(EventSheetL10n.agree_article("\"%s\" is already a %s member - pick another name (e.g. %s_value)." % [var_name, shadow_owner, var_name], shadow_owner), true)
 			return
 	var selected: Resource = context.get("selected_resource", _dock._active_view().get_selected_context().get("source_resource", null))
 	var original_name: String = str(context.get("original_name", ""))

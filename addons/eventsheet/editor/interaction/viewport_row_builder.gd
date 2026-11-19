@@ -4568,7 +4568,7 @@ func _function_head_card(event_function: EventFunction, role: String, editable: 
 	lines.append("%s: %s" % [function_kind_word(role), function_kind_note(role)])
 	var returns_word: String = CompilerSpellings.function_return_type_name(event_function)
 	if returns_word != "void":
-		lines.append(EventSheetL10n.translate("This function hands back a %s.") % returns_word)
+		lines.append(EventSheetL10n.agree_article(EventSheetL10n.translate("This function hands back a %s.") % returns_word, returns_word))
 	for tag: Array in function_tags(event_function):
 		lines.append("%s: %s" % [str(tag[0]), str(tag[1])])
 	return "\n".join(lines)

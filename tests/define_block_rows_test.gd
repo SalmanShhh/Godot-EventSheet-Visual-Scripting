@@ -25,6 +25,7 @@ static func run() -> bool:
 	sheet.functions.append(_make_function("is_dead", TYPE_BOOL, true, "", ""))
 	sheet.functions.append(_make_function("health_percent", TYPE_FLOAT, true, "Health %", ""))
 	sheet.functions.append(_make_function("recalc_cache", TYPE_NIL, false, "", ""))
+	sheet.functions.append(_make_function("item_count", TYPE_INT, true, "", ""))
 
 	var dock: EventSheetDock = EventSheetEditor.new() as EventSheetDock
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
@@ -33,7 +34,7 @@ static func run() -> bool:
 
 	# ── Inline: one Define row per function, at root level, NOT hidden behind a section header ──
 	var define_rows: Array[EventRowData] = _find_rows_by_uid_prefix(view, "define_fn_")
-	ok = _check("one inline Define row per function", define_rows.size(), 4) and ok
+	ok = _check("one inline Define row per function", define_rows.size(), 5) and ok
 	ok = _check("no 'Published verbs' section wrapper remains",
 		_find_row_by_uid_prefix(view, "published_verbs_") == null, true) and ok
 	ok = _check("the inline verb rows sit at root indent",
@@ -64,6 +65,7 @@ static func run() -> bool:
 			str(_span_meta(condition_row, 0, "hover_note")).contains("This function hands back a bool."), true],
 		["an expression's hover says its type",
 			str(_span_meta(expression_row, 0, "hover_note")).contains("This function hands back a float."), true],
+		["an int function says an int", str(_span_meta(define_rows[4] if define_rows.size() > 4 else null, 0, "hover_note")).contains("This function hands back an int."), true],
 		["no returns chip on the row", _row_has_span_text(condition_row, "returns bool"), false],
 		["a function in Add Action says so in the hover",
 			str(_span_meta(action_row, 0, "hover_note")).contains("In Add Action: Listed in Add Action"), true],

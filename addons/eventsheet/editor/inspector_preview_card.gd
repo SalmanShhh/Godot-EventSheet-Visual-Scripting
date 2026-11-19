@@ -295,7 +295,7 @@ static func _type_sentence(type_name: String) -> String:
 			return EventSheetL10n.translate("A texture.")
 		"Curve":
 			return EventSheetL10n.translate("A curve.")
-	return EventSheetL10n.translate("A %s value.") % type_name
+	return EventSheetL10n.agree_article(EventSheetL10n.translate("A %s value.") % type_name, type_name)
 
 
 static func _widget_sentence(attributes: Dictionary) -> String:
