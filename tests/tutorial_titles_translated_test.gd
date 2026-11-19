@@ -13,7 +13,8 @@ const SUPPORT := preload("res://tests/support.gd")
 const P := "tutorial_titles_translated_test"
 const FOLDER := "res://addons/eventsheet/translations"
 const LOCALES: Array[String] = ["de", "es", "fr", "it", "ja", "ko", "ru", "zh_CN"]
-const LINE_KEYS: Array[String] = ["%d min", "%d min · last step", "%d min · step %d of %d", "%s · step %d of %d"]
+const LINE_KEYS: Array[String] = ["%d min", "%d min · last step", "%d min · step %d of %d", "%s · step %d of %d",
+	"Next ▶", "Learning paths"]
 
 
 static func run() -> bool:
@@ -44,6 +45,14 @@ static func run() -> bool:
 		rows.append(["%s: the first tutorial's title is not the English one" % locale, shown != str(first.get("title", "")), true])
 		var page: Array[Dictionary] = EventSheetDocTutorials.step_blocks(str(first.get("id", "")), 0)
 		rows.append(["%s: the tutorial's own page is headed by the same title" % locale, str(page[0].get("text", "")), shown])
+		# Every button a step card draws is said in the language, the Next one beside Back and Skip.
+		for block: Dictionary in page:
+			for item: Variant in (block.get("items", []) as Array):
+				var label: String = str((item as Dictionary).get("label", ""))
+				rows.append(["%s: the step card's '%s' button has a row of its own" % [locale, label],
+					EventSheetL10n.translate(label) != label, true])
+		rows.append(["%s: the Manual's contents list says Learning paths in the language" % locale,
+			EventSheetL10n.translate(EventSheetDocTracks.PAGE_TITLE) != EventSheetDocTracks.PAGE_TITLE, true])
 		var listed: Array[Dictionary] = EventSheetDocTutorials.list_blocks()
 		rows.append(["%s: the list page says the same title" % locale, str(listed[2].get("text", "")), shown])
 		rows.append(["%s: the Manual's tree says the same title" % locale,

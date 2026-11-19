@@ -11323,3 +11323,5 @@ Add a word to the vocabulary,向词汇表添加一个词
 "Two copies of one project, playing together. Hosting, joining, a message, who runs what, and the button that starts both windows - every row here is one Godot call, so nothing you build in these ten minutes depends on this editor.",同一个项目的两份副本一起玩。创建主机、加入、一条消息、谁运行什么，以及同时启动两个窗口的按钮，这里的每一行都是一次 Godot 调用，所以你在这十分钟里搭建的东西都不依赖这个编辑器。
 "This editor is written in the language it reads. In its own repository the Start page offers This editor, and every file it is built from opens as a sheet - read-only, because saving one reloads the plugin you are using.",这个编辑器是用它自己能读的语言写成的。在它自己的仓库里，起始页会提供“本编辑器”，构成它的每个文件都能作为事件表打开，只读，因为保存其中任何一个都会重新加载你正在使用的插件。
 "Every row in every sheet comes from a word the vocabulary knows. Adding one is not a special ceremony: the modules that hold them are sheets too, and a new word is a new Define row in one of them.",每个事件表里的每一行，都来自词汇表里已有的一个词。添加新词没有什么特别的仪式：存放这些词的模块本身也是事件表，新词就是其中一个模块里新增的一行“定义”。
+Next ▶,下一步 ▶
+Learning paths,学习路径

@@ -11323,3 +11323,5 @@ Add a word to the vocabulary,語彙に単語を追加する
 "Two copies of one project, playing together. Hosting, joining, a message, who runs what, and the button that starts both windows - every row here is one Godot call, so nothing you build in these ten minutes depends on this editor.",1つのプロジェクトを2つ起動して、一緒に遊びます。ホスト、参加、メッセージ、誰が何を実行するか、そして両方のウィンドウを起動するボタン。ここにある行はどれもGodotの呼び出し1つなので、この10分で作るものはこのエディタに依存しません。
 "This editor is written in the language it reads. In its own repository the Start page offers This editor, and every file it is built from opens as a sheet - read-only, because saving one reloads the plugin you are using.",このエディタは、自分が読む言語で書かれています。エディタ自身のリポジトリでは、スタートページに「このエディタ」が表示され、それを構成するすべてのファイルがシートとして開きます。保存すると使用中のプラグインが再読み込みされるため、読み取り専用です。
 "Every row in every sheet comes from a word the vocabulary knows. Adding one is not a special ceremony: the modules that hold them are sheets too, and a new word is a new Define row in one of them.",どのシートのどの行も、語彙が知っている単語から作られています。単語を足すのに特別な手順はありません。それらを収めたモジュールもシートで、新しい単語はその中の新しい「定義」行になります。
+Next ▶,次へ ▶
+Learning paths,学習パス
