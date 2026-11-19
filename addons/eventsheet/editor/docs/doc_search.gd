@@ -440,6 +440,7 @@ static func search_all(query: String, sheet: EventSheetResource = null, limit: i
 	results.append_array(_vocabulary_hits(wanted, sheet))
 	results.append_array(_page_hits(query))
 	results.append_array(_reference_hits(wanted))
+	results.append_array(_tutorial_hits(wanted))
 	results.append_array(_glossary_hits(wanted))
 	results.append_array(_godot_word_hits(query))
 	results.append_array(_behavior_index_hits(wanted))
@@ -627,6 +628,25 @@ static func _reference_hits(wanted: String) -> Array[Dictionary]:
 			hits.append(_reference_row("behavior", title,
 				EventSheetDocReference.PACK_TREE_TITLE,
 				EventSheetDocReference.doc_id(EventSheetDocReference.KIND_PACK, pack_dir), score))
+	return hits
+
+
+## The hands-on tutorials, found by their title in the reader's language AND in English, so a title typed
+## either way lands on the tutorial. Substring and better only, like the other derived pages.
+static func _tutorial_hits(wanted: String) -> Array[Dictionary]:
+	var hits: Array[Dictionary] = []
+	for entry: Dictionary in EventSheetDocTutorials.tutorials():
+		var shown: String = EventSheetDocTutorials.title_of(entry)
+		var score: int = match_score(shown.to_lower(), wanted)
+		var english_score: int = match_score(str(entry.get("title", "")).to_lower(), wanted)
+		if score < 0 or (english_score >= 0 and english_score < score):
+			score = english_score
+		if score >= 0 and score <= 1:
+			hits.append({
+				"kind": "guide", "title": shown, "subtitle": EventSheetDocTutorials.PAGE_TITLE,
+				"doc_id": EventSheetDocTutorials.doc_id(str(entry.get("id", ""))), "anchor": "",
+				"definition": null, "used": 0, "score": score,
+			})
 	return hits
 
 

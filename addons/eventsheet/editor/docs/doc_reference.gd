@@ -235,7 +235,7 @@ static func title_for(kind: String, name: String) -> String:
 		KIND_PATTERN:
 			return EventSheetPatternVocabulary.words(name)
 		KIND_TUTORIAL:
-			return str(EventSheetDocTutorials.tutorial(name).get("title", ""))
+			return EventSheetDocTutorials.title_of(EventSheetDocTutorials.tutorial(name))
 		KIND_GLOSSARY:
 			return EventSheetDocGlossary.PAGE_TITLE
 		KIND_BEHAVIOR_INDEX:
@@ -305,7 +305,7 @@ static func breadcrumb(doc_id_text: String, title: String) -> PackedStringArray:
 			KIND_WHATS_NEW:
 				crumbs.append(EventSheetDocWhatsNew.PAGE_TITLE)
 			KIND_TUTORIALS, KIND_TUTORIAL:
-				crumbs.append(TUTORIALS_TREE_TITLE)
+				crumbs.append(EventSheetL10n.translate(TUTORIALS_TREE_TITLE))
 			KIND_PATTERNS, KIND_PATTERN:
 				crumbs.append(EventSheetPatternManual.PAGE_TITLE)
 			KIND_DICTIONARY:

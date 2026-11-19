@@ -11279,3 +11279,24 @@ The test run ended before it wrote a report. Run the tests from a terminal to se
 Ctrl+Z takes it out again.,Ctrl+Z снова уберёт это.
 %d found so far,найдено: %d
 the last checks,последние проверки
+Your first event,Ваше первое событие
+Open your own script as a sheet,Откройте свой скрипт как лист
+Add a behavior to an object,Добавьте поведение объекту
+Make a function and call it,Создайте функцию и вызовите её
+Make an editor tool with an event sheet,Сделайте утилиту для редактора на листе событий
+Your first networked game,Ваша первая сетевая игра
+Read the editor's code as events,Читайте код редактора как события
+Add a word to the vocabulary,Добавьте слово в словарь
+%d min,%d мин
+%d min · last step,%d мин · последний шаг
+%d min · step %d of %d,%d мин · шаг %d из %d
+%s · step %d of %d,%s · шаг %d из %d
+"Six steps from an empty sheet to a rule that runs. Nothing here is a picture: you press the real buttons, in the sheet you have open.",Шесть шагов от пустого листа до работающего правила. Здесь нет картинок: вы нажимаете настоящие кнопки в открытом листе.
+"The editor reads GDScript you already have. Nothing is rewritten: what you open, you can save back byte for byte.","Редактор читает GDScript, который у вас уже есть. Ничего не переписывается: то, что вы открыли, можно сохранить обратно байт в байт."
+"A behavior is a pack you attach to a node; it brings its own conditions, actions and expressions with it.","Поведение - это пакет, который вы прикрепляете к узлу; он приносит с собой собственные условия, действия и выражения."
+"A function is a named block of actions with typed parameters. It reads with its own name in the condition lane, and any row can call it.","Функция - это именованный блок действий с типизированными параметрами. Она читается под своим именем в колонке условий, и вызвать её может любая строка."
+"Most of what you know comes across unchanged. This walks the handful of words that are spelled differently here, with your hands on each one.","Большая часть того, что вы знаете, работает без изменений. Здесь вы пройдёте несколько слов, которые называются иначе, и попробуете каждое сами."
+"A tool is a sheet whose events run in the EDITOR, not in the game - a one-click chore, or a plugin that adds a dock and a Tools menu item. Same rows, same picker, a different moment.","Инструмент - это лист, события которого выполняются в РЕДАКТОРЕ, а не в игре: рутинная задача в один щелчок или плагин, добавляющий панель и пункт в меню «Инструменты». Те же строки, тот же выбор, другой момент."
+"Two copies of one project, playing together. Hosting, joining, a message, who runs what, and the button that starts both windows - every row here is one Godot call, so nothing you build in these ten minutes depends on this editor.","Две копии одного проекта, играющие вместе. Создание игры, подключение, сообщение, кто что выполняет и кнопка, запускающая оба окна - каждая строка здесь это один вызов Godot, поэтому ничто из созданного за эти десять минут не зависит от этого редактора."
+"This editor is written in the language it reads. In its own repository the Start page offers This editor, and every file it is built from opens as a sheet - read-only, because saving one reloads the plugin you are using.","Этот редактор написан на языке, который он читает. В его собственном репозитории стартовая страница предлагает «Этот редактор», и каждый файл, из которых он состоит, открывается как лист - только для чтения, потому что сохранение любого из них перезагружает плагин, которым вы пользуетесь."
+"Every row in every sheet comes from a word the vocabulary knows. Adding one is not a special ceremony: the modules that hold them are sheets too, and a new word is a new Define row in one of them.","Каждая строка в каждом листе происходит от слова, которое знает словарь. Добавить слово - не особый ритуал: модули, где они хранятся, тоже листы, а новое слово - это новая строка «Определить» в одном из них."

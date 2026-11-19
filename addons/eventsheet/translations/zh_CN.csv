@@ -11279,3 +11279,24 @@ The test run ended before it wrote a report. Run the tests from a terminal to se
 Ctrl+Z takes it out again.,Ctrl+Z 可再次移除。
 %d found so far,目前已发现 %d 项
 the last checks,最后的检查
+Your first event,你的第一个事件
+Open your own script as a sheet,将你自己的脚本作为事件表打开
+Add a behavior to an object,为对象添加行为
+Make a function and call it,创建一个函数并调用它
+Make an editor tool with an event sheet,用事件表制作编辑器工具
+Your first networked game,你的第一个联网游戏
+Read the editor's code as events,把编辑器的代码当作事件来阅读
+Add a word to the vocabulary,向词汇表添加一个词
+%d min,%d 分钟
+%d min · last step,%d 分钟 · 最后一步
+%d min · step %d of %d,%d 分钟 · 第 %d 步，共 %d 步
+%s · step %d of %d,%s · 第 %d 步，共 %d 步
+"Six steps from an empty sheet to a rule that runs. Nothing here is a picture: you press the real buttons, in the sheet you have open.",从空白事件表到一条能运行的规则，一共六步。这里没有任何图片：你要在已打开的事件表里按下真正的按钮。
+"The editor reads GDScript you already have. Nothing is rewritten: what you open, you can save back byte for byte.",编辑器会读取你已有的 GDScript。不会改写任何内容：你打开的文件，可以逐字节原样存回去。
+"A behavior is a pack you attach to a node; it brings its own conditions, actions and expressions with it.",行为是附加到节点上的一个包，自带它自己的条件、动作和表达式。
+"A function is a named block of actions with typed parameters. It reads with its own name in the condition lane, and any row can call it.",函数是一组带名字、参数有类型的动作。它以自己的名字出现在条件栏里，任何一行都可以调用它。
+"Most of what you know comes across unchanged. This walks the handful of words that are spelled differently here, with your hands on each one.",你已掌握的大部分内容可以原样沿用。这里带你过一遍那几个叫法不同的词，每一个都亲手试一试。
+"A tool is a sheet whose events run in the EDITOR, not in the game - a one-click chore, or a plugin that adds a dock and a Tools menu item. Same rows, same picker, a different moment.",工具是一张事件表，它的事件在编辑器里运行，而不是在游戏里运行：可以是一键完成的小杂务，也可以是添加面板和“工具”菜单项的插件。行相同，选择器相同，只是运行的时刻不同。
+"Two copies of one project, playing together. Hosting, joining, a message, who runs what, and the button that starts both windows - every row here is one Godot call, so nothing you build in these ten minutes depends on this editor.",同一个项目的两份副本一起玩。创建主机、加入、一条消息、谁运行什么，以及同时启动两个窗口的按钮，这里的每一行都是一次 Godot 调用，所以你在这十分钟里搭建的东西都不依赖这个编辑器。
+"This editor is written in the language it reads. In its own repository the Start page offers This editor, and every file it is built from opens as a sheet - read-only, because saving one reloads the plugin you are using.",这个编辑器是用它自己能读的语言写成的。在它自己的仓库里，起始页会提供“本编辑器”，构成它的每个文件都能作为事件表打开，只读，因为保存其中任何一个都会重新加载你正在使用的插件。
+"Every row in every sheet comes from a word the vocabulary knows. Adding one is not a special ceremony: the modules that hold them are sheets too, and a new word is a new Define row in one of them.",每个事件表里的每一行，都来自词汇表里已有的一个词。添加新词没有什么特别的仪式：存放这些词的模块本身也是事件表，新词就是其中一个模块里新增的一行“定义”。

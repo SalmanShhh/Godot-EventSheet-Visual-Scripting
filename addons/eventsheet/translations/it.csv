@@ -11279,3 +11279,24 @@ The test run ended before it wrote a report. Run the tests from a terminal to se
 Ctrl+Z takes it out again.,Ctrl+Z lo toglie di nuovo.
 %d found so far,%d trovati finora
 the last checks,gli ultimi controlli
+Your first event,Il tuo primo evento
+Open your own script as a sheet,Apri il tuo script come foglio
+Add a behavior to an object,Aggiungi un comportamento a un oggetto
+Make a function and call it,Crea una funzione e chiamala
+Make an editor tool with an event sheet,Crea uno strumento dell'editor con un foglio di eventi
+Your first networked game,Il tuo primo gioco in rete
+Read the editor's code as events,Leggi il codice dell'editor come eventi
+Add a word to the vocabulary,Aggiungi una parola al vocabolario
+%d min,%d minuti
+%d min · last step,%d minuti · ultimo passo
+%d min · step %d of %d,%d minuti · passo %d di %d
+%s · step %d of %d,%s · passo %d di %d
+"Six steps from an empty sheet to a rule that runs. Nothing here is a picture: you press the real buttons, in the sheet you have open.","Sei passi da un foglio vuoto a una regola che funziona. Qui niente è un'immagine: premi i pulsanti veri, nel foglio che hai aperto."
+"The editor reads GDScript you already have. Nothing is rewritten: what you open, you can save back byte for byte.",L'editor legge il GDScript che hai già. Nulla viene riscritto: ciò che apri puoi salvarlo di nuovo byte per byte.
+"A behavior is a pack you attach to a node; it brings its own conditions, actions and expressions with it.","Un comportamento è un pacchetto che colleghi a un nodo; porta con sé le proprie condizioni, azioni ed espressioni."
+"A function is a named block of actions with typed parameters. It reads with its own name in the condition lane, and any row can call it.",Una funzione è un blocco di azioni con un nome e parametri tipizzati. Si legge con il proprio nome nella colonna delle condizioni e qualsiasi riga può chiamarla.
+"Most of what you know comes across unchanged. This walks the handful of words that are spelled differently here, with your hands on each one.","Gran parte di ciò che sai resta valido. Qui passi in rassegna le poche parole che si scrivono diversamente, mettendo le mani su ciascuna."
+"A tool is a sheet whose events run in the EDITOR, not in the game - a one-click chore, or a plugin that adds a dock and a Tools menu item. Same rows, same picker, a different moment.","Uno strumento è un foglio i cui eventi vengono eseguiti nell'EDITOR, non nel gioco: una faccenda da un clic, oppure un plugin che aggiunge un pannello e una voce nel menu Strumenti. Stesse righe, stesso selettore, un altro momento."
+"Two copies of one project, playing together. Hosting, joining, a message, who runs what, and the button that starts both windows - every row here is one Godot call, so nothing you build in these ten minutes depends on this editor.","Due copie di un progetto che giocano insieme. Ospitare, unirsi, un messaggio, chi esegue cosa e il pulsante che avvia entrambe le finestre: ogni riga qui è una chiamata di Godot, quindi nulla di ciò che costruisci in questi dieci minuti dipende da questo editor."
+"This editor is written in the language it reads. In its own repository the Start page offers This editor, and every file it is built from opens as a sheet - read-only, because saving one reloads the plugin you are using.","Questo editor è scritto nel linguaggio che legge. Nel suo repository la pagina iniziale offre Questo editor, e ogni file di cui è fatto si apre come foglio, in sola lettura, perché salvarne uno ricarica il plugin che stai usando."
+"Every row in every sheet comes from a word the vocabulary knows. Adding one is not a special ceremony: the modules that hold them are sheets too, and a new word is a new Define row in one of them.","Ogni riga di ogni foglio nasce da una parola che il vocabolario conosce. Aggiungerne una non ha nulla di speciale: anche i moduli che le contengono sono fogli, e una parola nuova è una nuova riga Definisci in uno di essi."

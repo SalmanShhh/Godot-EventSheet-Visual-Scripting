@@ -11279,3 +11279,24 @@ The test run ended before it wrote a report. Run the tests from a terminal to se
 Ctrl+Z takes it out again.,Ctrl+Z le retire à nouveau.
 %d found so far,%d trouvés jusqu'ici
 the last checks,les dernières vérifications
+Your first event,Votre premier événement
+Open your own script as a sheet,Ouvrir votre propre script comme une feuille
+Add a behavior to an object,Ajouter un comportement à un objet
+Make a function and call it,Créer une fonction et l'appeler
+Make an editor tool with an event sheet,Créer un outil d'éditeur avec une feuille d'événements
+Your first networked game,Votre premier jeu en réseau
+Read the editor's code as events,Lire le code de l'éditeur comme des événements
+Add a word to the vocabulary,Ajouter un mot au vocabulaire
+%d min,%d minutes
+%d min · last step,%d minutes · dernière étape
+%d min · step %d of %d,%d minutes · étape %d sur %d
+%s · step %d of %d,%s · étape %d sur %d
+"Six steps from an empty sheet to a rule that runs. Nothing here is a picture: you press the real buttons, in the sheet you have open.","Six étapes pour passer d'une feuille vide à une règle qui s'exécute. Rien ici n'est une image : vous appuyez sur les vrais boutons, dans la feuille que vous avez ouverte."
+"The editor reads GDScript you already have. Nothing is rewritten: what you open, you can save back byte for byte.","L'éditeur lit le GDScript que vous avez déjà. Rien n'est réécrit : ce que vous ouvrez, vous pouvez le réenregistrer octet pour octet."
+"A behavior is a pack you attach to a node; it brings its own conditions, actions and expressions with it.","Un comportement est un pack que vous attachez à un nœud ; il apporte ses propres conditions, actions et expressions."
+"A function is a named block of actions with typed parameters. It reads with its own name in the condition lane, and any row can call it.","Une fonction est un bloc d'actions nommé, avec des paramètres typés. Elle se lit avec son propre nom dans la colonne des conditions, et n'importe quelle ligne peut l'appeler."
+"Most of what you know comes across unchanged. This walks the handful of words that are spelled differently here, with your hands on each one.","L'essentiel de ce que vous savez reste valable. Ici, vous passez en revue les quelques mots qui s'écrivent autrement, en manipulant chacun."
+"A tool is a sheet whose events run in the EDITOR, not in the game - a one-click chore, or a plugin that adds a dock and a Tools menu item. Same rows, same picker, a different moment.","Un outil est une feuille dont les événements s'exécutent dans l'ÉDITEUR, pas dans le jeu : une corvée en un clic, ou un plugin qui ajoute un dock et une entrée dans le menu Outils. Mêmes lignes, même sélecteur, un autre moment."
+"Two copies of one project, playing together. Hosting, joining, a message, who runs what, and the button that starts both windows - every row here is one Godot call, so nothing you build in these ten minutes depends on this editor.","Deux copies d'un même projet, qui jouent ensemble. Héberger, rejoindre, un message, qui exécute quoi, et le bouton qui lance les deux fenêtres - chaque ligne ici est un appel Godot, donc rien de ce que vous construisez en ces dix minutes ne dépend de cet éditeur."
+"This editor is written in the language it reads. In its own repository the Start page offers This editor, and every file it is built from opens as a sheet - read-only, because saving one reloads the plugin you are using.","Cet éditeur est écrit dans le langage qu'il lit. Dans son propre dépôt, la page de démarrage propose Cet éditeur, et chaque fichier dont il est fait s'ouvre comme une feuille - en lecture seule, car en enregistrer un recharge le plugin que vous utilisez."
+"Every row in every sheet comes from a word the vocabulary knows. Adding one is not a special ceremony: the modules that hold them are sheets too, and a new word is a new Define row in one of them.","Chaque ligne de chaque feuille vient d'un mot que le vocabulaire connaît. En ajouter un n'a rien d'une cérémonie : les modules qui les contiennent sont aussi des feuilles, et un nouveau mot est une nouvelle ligne Définir dans l'une d'elles."

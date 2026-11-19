@@ -568,6 +568,21 @@ static func remember_step(tutorial_id: String, index: int) -> void:
 	settings.set_project_metadata(PROGRESS_SECTION, PROGRESS_KEY, stored)
 
 
+## A tutorial's title and one-line lead in the reader's language. The English text is the key; a
+## tutorial added later with no row in a language reads in English there, never as a key.
+static func title_of(entry: Dictionary) -> String:
+	return EventSheetL10n.translate(str(entry.get("title", "")))
+
+
+static func lead_of(entry: Dictionary) -> String:
+	return EventSheetL10n.translate(str(entry.get("lead", "")))
+
+
+## "5 min" in the reader's language.
+static func minutes_label(minutes: int) -> String:
+	return EventSheetL10n.translate("%d min") % minutes
+
+
 ## The line the list prints under a tutorial's name, from the progress alone. Pure, so the suite
 ## pins the sentence rather than a screenshot of it.
 static func progress_label(tutorial_id: String, reached: int) -> String:
@@ -575,10 +590,10 @@ static func progress_label(tutorial_id: String, reached: int) -> String:
 	if total <= 0:
 		return ""
 	if reached <= 0:
-		return "%d min" % int(tutorial(tutorial_id).get("minutes", 0))
+		return minutes_label(int(tutorial(tutorial_id).get("minutes", 0)))
 	if reached >= total - 1:
-		return "%d min · last step" % int(tutorial(tutorial_id).get("minutes", 0))
-	return "%d min · step %d of %d" % [int(tutorial(tutorial_id).get("minutes", 0)), reached + 1, total]
+		return EventSheetL10n.translate("%d min · last step") % int(tutorial(tutorial_id).get("minutes", 0))
+	return EventSheetL10n.translate("%d min · step %d of %d") % [int(tutorial(tutorial_id).get("minutes", 0)), reached + 1, total]
 
 
 # ── The pages ─────────────────────────────────────────────────────────────────────────────────
@@ -594,10 +609,10 @@ static func list_blocks() -> Array[Dictionary]:
 	]
 	for entry: Dictionary in TUTORIALS:
 		var id: String = str(entry.get("id", ""))
-		var title: String = str(entry.get("title", ""))
+		var title: String = title_of(entry)
 		blocks.append({"kind": "heading", "level": 2, "text": title, "bbcode": title, "slug": id})
 		blocks.append({"kind": "paragraph", "bbcode": "%s\n[i]%s[/i]" % [
-			EventSheetDocMarkdown.escape_brackets(str(entry.get("lead", ""))),
+			EventSheetDocMarkdown.escape_brackets(lead_of(entry)),
 			progress_label(id, step_reached(id))]})
 		blocks.append({"kind": "button",
 			"label": "Start" if step_reached(id) <= 0 else "Carry on",
@@ -616,7 +631,7 @@ static func step_blocks(tutorial_id: String, index: int = -1) -> Array[Dictionar
 	var total: int = step_count(tutorial_id)
 	var at: int = clampi(index if index >= 0 else step_reached(tutorial_id), 0, maxi(total - 1, 0))
 	var current: Dictionary = step(tutorial_id, at)
-	var title: String = str(entry.get("title", ""))
+	var title: String = title_of(entry)
 	var blocks: Array[Dictionary] = [
 		{"kind": "heading", "level": 1, "text": title, "bbcode": title,
 			"slug": EventSheetDocMarkdown.slug(title)},
@@ -648,7 +663,7 @@ static func step_caption(tutorial_id: String, index: int) -> String:
 	var total: int = step_count(tutorial_id)
 	if total <= 0:
 		return ""
-	return "%s · step %d of %d" % [str(tutorial(tutorial_id).get("title", "")).to_upper(),
+	return EventSheetL10n.translate("%s · step %d of %d") % [title_of(tutorial(tutorial_id)).to_upper(),
 		clampi(index, 0, total - 1) + 1, total]
 
 

@@ -11279,3 +11279,24 @@ The test run ended before it wrote a report. Run the tests from a terminal to se
 Ctrl+Z takes it out again.,Strg+Z nimmt es wieder heraus.
 %d found so far,%d bisher gefunden
 the last checks,die letzten Prüfungen
+Your first event,Dein erstes Ereignis
+Open your own script as a sheet,Eigenes Skript als Blatt öffnen
+Add a behavior to an object,Einem Objekt ein Verhalten hinzufügen
+Make a function and call it,Eine Funktion erstellen und aufrufen
+Make an editor tool with an event sheet,Mit einem Ereignisblatt ein Editor-Werkzeug bauen
+Your first networked game,Dein erstes Netzwerkspiel
+Read the editor's code as events,Den Code des Editors als Ereignisse lesen
+Add a word to the vocabulary,Dem Wortschatz ein Wort hinzufügen
+%d min,%d Min.
+%d min · last step,%d Min. · letzter Schritt
+%d min · step %d of %d,%d Min. · Schritt %d von %d
+%s · step %d of %d,%s · Schritt %d von %d
+"Six steps from an empty sheet to a rule that runs. Nothing here is a picture: you press the real buttons, in the sheet you have open.","Sechs Schritte von einem leeren Blatt zu einer Regel, die läuft. Nichts hier ist ein Bild: Du drückst die echten Schaltflächen, in dem Blatt, das du offen hast."
+"The editor reads GDScript you already have. Nothing is rewritten: what you open, you can save back byte for byte.","Der Editor liest GDScript, das du schon hast. Nichts wird umgeschrieben: Was du öffnest, kannst du Byte für Byte zurückspeichern."
+"A behavior is a pack you attach to a node; it brings its own conditions, actions and expressions with it.","Ein Verhalten ist ein Paket, das du an einen Node hängst; es bringt eigene Bedingungen, Aktionen und Ausdrücke mit."
+"A function is a named block of actions with typed parameters. It reads with its own name in the condition lane, and any row can call it.","Eine Funktion ist ein benannter Block von Aktionen mit typisierten Parametern. Sie steht mit ihrem eigenen Namen in der Bedingungsspalte, und jede Zeile kann sie aufrufen."
+"Most of what you know comes across unchanged. This walks the handful of words that are spelled differently here, with your hands on each one.","Das meiste, was du kennst, gilt unverändert. Hier gehst du die wenigen Wörter durch, die hier anders heißen, und probierst jedes selbst aus."
+"A tool is a sheet whose events run in the EDITOR, not in the game - a one-click chore, or a plugin that adds a dock and a Tools menu item. Same rows, same picker, a different moment.","Ein Werkzeug ist ein Blatt, dessen Ereignisse im EDITOR laufen, nicht im Spiel - eine Aufgabe auf einen Klick oder ein Plugin, das ein Dock und einen Eintrag im Menü Werkzeuge hinzufügt. Gleiche Zeilen, gleiche Auswahl, ein anderer Zeitpunkt."
+"Two copies of one project, playing together. Hosting, joining, a message, who runs what, and the button that starts both windows - every row here is one Godot call, so nothing you build in these ten minutes depends on this editor.","Zwei Kopien eines Projekts, die zusammen spielen. Hosten, Beitreten, eine Nachricht, wer was ausführt, und die Schaltfläche, die beide Fenster startet - jede Zeile hier ist ein Godot-Aufruf, also hängt nichts, was du in diesen zehn Minuten baust, von diesem Editor ab."
+"This editor is written in the language it reads. In its own repository the Start page offers This editor, and every file it is built from opens as a sheet - read-only, because saving one reloads the plugin you are using.","Dieser Editor ist in der Sprache geschrieben, die er liest. In seinem eigenen Repository bietet die Startseite Dieser Editor an, und jede Datei, aus der er besteht, öffnet sich als Blatt - schreibgeschützt, denn Speichern lädt das Plugin neu, das du gerade benutzt."
+"Every row in every sheet comes from a word the vocabulary knows. Adding one is not a special ceremony: the modules that hold them are sheets too, and a new word is a new Define row in one of them.","Jede Zeile in jedem Blatt stammt aus einem Wort, das der Wortschatz kennt. Eines hinzuzufügen ist keine besondere Zeremonie: Die Module, die sie enthalten, sind ebenfalls Blätter, und ein neues Wort ist eine neue Definieren-Zeile in einem davon."

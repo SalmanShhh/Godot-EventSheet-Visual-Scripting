@@ -11279,3 +11279,24 @@ The test run ended before it wrote a report. Run the tests from a terminal to se
 Ctrl+Z takes it out again.,Ctrl+Z でもう一度取り除けます。
 %d found so far,ここまでに%d件
 the last checks,最後のチェック
+Your first event,最初のイベント
+Open your own script as a sheet,自分のスクリプトをシートとして開く
+Add a behavior to an object,オブジェクトにビヘイビアを追加する
+Make a function and call it,関数を作って呼び出す
+Make an editor tool with an event sheet,イベントシートでエディタツールを作る
+Your first networked game,最初のネットワークゲーム
+Read the editor's code as events,エディタのコードをイベントとして読む
+Add a word to the vocabulary,語彙に単語を追加する
+%d min,%d分
+%d min · last step,%d分 · 最後のステップ
+%d min · step %d of %d,%d分 · ステップ %d / %d
+%s · step %d of %d,%s · ステップ %d / %d
+"Six steps from an empty sheet to a rule that runs. Nothing here is a picture: you press the real buttons, in the sheet you have open.",空のシートから、動くルールまでの6ステップです。ここに画像はありません。開いているシートで、実際のボタンを押して進めます。
+"The editor reads GDScript you already have. Nothing is rewritten: what you open, you can save back byte for byte.",エディタは、すでにあるGDScriptを読み込みます。書き換えは行われず、開いたものはバイト単位でそのまま保存し直せます。
+"A behavior is a pack you attach to a node; it brings its own conditions, actions and expressions with it.",ビヘイビアはノードにアタッチするパックで、専用の条件・アクション・式が一緒に付いてきます。
+"A function is a named block of actions with typed parameters. It reads with its own name in the condition lane, and any row can call it.",関数は、型付きパラメーターを持つ、名前の付いたアクションのまとまりです。条件レーンに自分の名前で表示され、どの行からでも呼び出せます。
+"Most of what you know comes across unchanged. This walks the handful of words that are spelled differently here, with your hands on each one.",知っていることのほとんどは、そのまま通用します。ここでは、呼び方が違うごく少数の言葉を、実際に手を動かして確かめていきます。
+"A tool is a sheet whose events run in the EDITOR, not in the game - a one-click chore, or a plugin that adds a dock and a Tools menu item. Same rows, same picker, a different moment.",ツールは、イベントがゲームではエディタで実行されるシートです。ワンクリックで済む作業や、ドックとツールメニュー項目を追加するプラグインになります。行も選択画面も同じで、動くタイミングだけが違います。
+"Two copies of one project, playing together. Hosting, joining, a message, who runs what, and the button that starts both windows - every row here is one Godot call, so nothing you build in these ten minutes depends on this editor.",1つのプロジェクトを2つ起動して、一緒に遊びます。ホスト、参加、メッセージ、誰が何を実行するか、そして両方のウィンドウを起動するボタン。ここにある行はどれもGodotの呼び出し1つなので、この10分で作るものはこのエディタに依存しません。
+"This editor is written in the language it reads. In its own repository the Start page offers This editor, and every file it is built from opens as a sheet - read-only, because saving one reloads the plugin you are using.",このエディタは、自分が読む言語で書かれています。エディタ自身のリポジトリでは、スタートページに「このエディタ」が表示され、それを構成するすべてのファイルがシートとして開きます。保存すると使用中のプラグインが再読み込みされるため、読み取り専用です。
+"Every row in every sheet comes from a word the vocabulary knows. Adding one is not a special ceremony: the modules that hold them are sheets too, and a new word is a new Define row in one of them.",どのシートのどの行も、語彙が知っている単語から作られています。単語を足すのに特別な手順はありません。それらを収めたモジュールもシートで、新しい単語はその中の新しい「定義」行になります。
