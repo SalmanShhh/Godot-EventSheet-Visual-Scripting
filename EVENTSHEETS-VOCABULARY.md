@@ -4568,7 +4568,7 @@ Developer helper vocabulary (the everyday dev tools).
 - **Has Been True For** (`test: String, seconds: String`) - True once a test has held without a break for the whole stretch you name - standing still for two seconds, a button held for one, out of sight for five. The moment the test fails the count starts again from nothing. Needs a per-frame trigger, so every moment of it is seen.
 - **On The Frame Running Long** (`ms: String, frames: String`) - True on the ONE frame where the game has been over budget for the whole run you name, and quiet after that until a frame comes in under budget again. This is where a game turns its own effects down. Needs a per-frame trigger.
 - **On The Frame Recovered** (`ms: String, frames: String`) - True on the ONE frame where the game has run comfortably for the whole run you name, after having been over budget. This is where the effects go back on. It never fires before a long stretch has happened, so a game that started well hears nothing. Needs a per-frame trigger.
-- **Is In Monitors** (`name: String`) - True while a graph by this name is in the Debugger panel's Monitors tab, because Show In Monitors added it and nothing has removed it.
+- **Is In Monitors** (`name: String`) - True while a graph by this name is in the Debugger panel's Monitors tab (the performance graphs), because Show In Monitors added it and nothing has removed it.
 - **Is In Group** (`target: String, group: String`) - True when the given node currently belongs to the named group.
 - **Has Metadata** (`target: String, name: String`) - True when the object has metadata stored under the given key.
 - **Has Node** (`target: String, path: String`) - True when a node exists at the given path under this one.
@@ -4591,8 +4591,8 @@ Developer helper vocabulary (the everyday dev tools).
 - **Stop Measuring** (`named: String`) - Stops a named stopwatch and files the result, keeping the last, the average and the worst reading for that name.
 - **Log Measurements** - Prints every named measurement taken so far with its last, average and peak cost - the report you paste into a bug or a devlog.
 - **Clear Measurements** - Throws away every measurement recorded so far, so a fresh run starts from a clean slate.
-- **Show In Monitors** (`name: String, value: String`) - Puts your own number on a graph in Godot's Debugger panel, Monitors tab, under the name you give. Write it once, in On ready: the number is read fresh each time the graph updates, so it keeps moving with no row running every frame. It only shows while the game runs from the editor. A name with a slash files the graph under a heading - Game/Enemies is the Enemies graph under Game. The graph is taken away when this node leaves the game. Use a variable of this object rather than a temporary one, which would be frozen at the moment this row ran.
-- **Remove From Monitors** (`name: String`) - Takes a graph you added with Show In Monitors out of the Debugger panel's Monitors tab. Does nothing if there is no graph by that name.
+- **Show In Monitors** (`name: String, value: String`) - Puts your own number on a graph - the way to see what is making a game slow or lag - in Godot's Debugger panel, Monitors tab, beside the engine's own performance graphs, under the name you give. Write it once, in On ready: the number is read fresh each time the graph updates, so it keeps moving with no row running every frame. It only shows while the game runs from the editor. A name with a slash files the graph under a heading - Game/Enemies is the Enemies graph under Game. The graph is taken away when this node leaves the game. Use a variable of this object rather than a temporary one, which would be frozen at the moment this row ran.
+- **Remove From Monitors** (`name: String`) - Takes a graph you added with Show In Monitors out of the Debugger panel's Monitors tab, where Godot draws its performance graphs. Does nothing if there is no graph by that name.
 - **Add To Group** (`target: String, group: String`) - Tags a node into a named group so you can find or affect it later.
 - **Remove From Group** (`target: String, group: String`) - Untags a node from a named group when it should no longer belong.
 - **Call Method On Group** (`group: String, method: String`) - Calls the named method on every node in a group at once.
@@ -4612,7 +4612,7 @@ Developer helper vocabulary (the everyday dev tools).
 - **Last Measured (ms)** (`named: String`) - How many milliseconds the most recent run of a named measurement took.
 - **Average Measured (ms)** (`named: String`) - The mean cost in milliseconds across every run of a named measurement, which is the number to quote when you claim an optimization worked.
 - **Peak Measured (ms)** (`named: String`) - The worst run of a named measurement in milliseconds, which is usually the one the player felt.
-- **Custom Monitor Value** (`name: String`) - The number a Show In Monitors graph is showing right now. Check Is In Monitors first: asking for a name that is not there prints an error.
+- **Custom Monitor Value** (`name: String`) - The number a Show In Monitors graph in the Debugger panel's Monitors tab (the performance graphs) is showing right now. Check Is In Monitors first: asking for a name that is not there prints an error.
 - **Get First Node In Group** (`group: String`) - Returns the first node found in a named group, or nothing if empty.
 - **Count Nodes In Group** (`group: String`) - Returns how many nodes are currently in the named group.
 - **Sum In Group** (`group: String, property: String`) - Returns the total of a numeric property added up across every group member.
