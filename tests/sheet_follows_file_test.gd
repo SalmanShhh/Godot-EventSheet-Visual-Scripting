@@ -527,9 +527,9 @@ static func _the_plain_script_beside_a_sheet_follows_too() -> bool:
 
 
 ## A script with no class_name is named after the scene object it drives, which is read from an index of the
-## project's scene files. Godot rewrites those scenes for the new path in the same moment as the rename, so
-## the index must be read afresh then; one kept from before still answers for the old path, and the followed
-## tab fell back to the file's name while a tab opened now was named for the scene object.
+## project's scene files. A rename follows in that index at once, in place: the followed tab is named for the
+## scene object the way a tab opened now is, without the index being read from every scene in the project
+## while the frame waits (the editor rewrites those scenes a moment later and has the index read again).
 static func _a_followed_tab_is_named_by_the_rule_a_fresh_one_is() -> bool:
 	var editor: EventSheetEditor = _editor()
 	var folder: String = SUPPORT.own_folder("follow_title")
@@ -538,17 +538,21 @@ static func _a_followed_tab_is_named_by_the_rule_a_fresh_one_is() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	sheet.external_source_path = old_path
 	editor._open_sheet_in_tab(sheet, old_path)
-	# An index built before the rename, holding an answer that is no longer true.
-	EventSheetViewportRowBuilder._script_scene_cache = {"stale_marker": {"root_name": "Hero"}}
+	# An index built before the rename: a scene whose root is the script, and no scene for any other.
+	var entry: Dictionary = {"scene_path": "res://scenes/hero_scene.tscn", "root_name": "Hero"}
+	EventSheetViewportRowBuilder._script_scene_all = {old_path: [entry]}
+	EventSheetViewportRowBuilder._script_scene_cache = {old_path: entry}
 	EventSheetViewportRowBuilder._script_scene_scanned = true
-	var kept_before: bool = EventSheetViewportRowBuilder._script_scene_cache.has("stale_marker")
+	var named_before: String = EventSheetDock._format_sheet_title(sheet, old_path)
 	DirAccess.rename_absolute(old_path, new_path)
 	editor.follow_file_event("moved", old_path, new_path)
 	var passed: bool = SUPPORT.pins(TEST_NAME, [
-		["the scene index was in use before the rename", kept_before, true],
-		["a followed tab reads the scene files afresh", EventSheetViewportRowBuilder._script_scene_cache.has("stale_marker"), false],
-		["and is named by the file when no scene names it", EventSheetDock._format_sheet_title(sheet, new_path), "hero_brain"],
+		["the tab was named for the scene object before the rename", named_before, "Hero"],
+		["a followed tab is named for it still", EventSheetDock._format_sheet_title(sheet, new_path), "Hero"],
+		["the index holds the scene under the new path", EventSheetViewportRowBuilder.scene_using_script(new_path), entry],
+		["and nothing under the old", EventSheetViewportRowBuilder.scene_using_script(old_path), {}],
 	])
+	EventSheetViewportRowBuilder.clear_scene_script_index()
 	editor.free()
 	return passed
 

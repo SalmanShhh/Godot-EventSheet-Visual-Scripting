@@ -171,8 +171,8 @@ static func run() -> bool:
 	# that the two hooks name the droppers, and that both hooks are connected at all.
 	var dock_source: String = _read(DOCK_PATH)
 	var filesystem_hook: String = _function_body(dock_source, "func _on_translations_maybe_changed()")
-	all_passed = _check("the filesystem hook drops the scene index",
-		filesystem_hook.contains("EventSheetViewportRowBuilder.clear_scene_script_index()"), true) and all_passed
+	all_passed = _check("the filesystem hook has the scene index read again",
+		filesystem_hook.contains("EventSheetViewportRowBuilder.refresh_scene_script_index()"), true) and all_passed
 	all_passed = _check("the filesystem hook drops the Input Map read",
 		filesystem_hook.contains("EventSheetInputMapFacts.clear_cache()"), true) and all_passed
 	all_passed = _check("the filesystem hook drops what the scene said about its lights",
@@ -186,7 +186,7 @@ static func run() -> bool:
 	all_passed = _check("and the project-wide scan behind every sharing count",
 		filesystem_hook.contains("EventSheetProjectShareIndex.clear_cache()"), true) and all_passed
 	all_passed = _check("and the shared scene parse the lighting and effect reads sit on",
-		filesystem_hook.contains("EventSheetSceneConnections.clear_cache()"), true) and all_passed
+		filesystem_hook.contains("EventSheetSceneConnections.files_changed()"), true) and all_passed
 	all_passed = _check("and the listing of the project's own scripts",
 		filesystem_hook.contains("_clear_if_loaded(PROJECT_DOCTOR_PATH, \"clear_project_scripts\")"), true) and all_passed
 	all_passed = _check("and what a script the rows are aimed at declares",

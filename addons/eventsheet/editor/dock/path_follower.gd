@@ -18,10 +18,10 @@ extends RefCounted
 # path never carries it. The known-sheets record has its own follower (known_sheets.gd); this one is
 # about what is open on screen.
 
+## Where a path ends up when a file or folder moves, one rule for the tabs and the project's indexes.
+const MOVED_PATH: GDScript = preload("res://addons/eventforge/importer/moved_path.gd")
+
 var _dock: Control = null
-## The scene object each followed script was named after before the rename, by its new path, until the
-## scenes have been rewritten and the index of them is read again.
-var _scene_names: Dictionary = {}
 ## Moves waiting for the next read of the project's files, the read in flight, and the last status sentence
 ## said before the files' own sentence arrives.
 var _queued_moves: Array = []
@@ -38,15 +38,7 @@ func init(dock: Control) -> void:
 ## The path `path` becomes when `old_path` moves to `new_path`: a file maps only itself, a folder maps
 ## everything under it. `path` itself when nothing moved it.
 static func mapped(path: String, old_path: String, new_path: String, is_folder: bool) -> String:
-	if path.is_empty() or old_path.is_empty():
-		return path
-	var key: String = path.simplify_path()
-	if is_folder:
-		var from: String = old_path.simplify_path().trim_suffix("/") + "/"
-		if key.begins_with(from):
-			return new_path.simplify_path().trim_suffix("/") + "/" + key.trim_prefix(from)
-		return path
-	return new_path.simplify_path() if key == old_path.simplify_path() else path
+	return MOVED_PATH.mapped(path, old_path, new_path, is_folder)
 
 
 ## True when `path` is the removed file, or lies under the removed folder.
@@ -116,12 +108,15 @@ func _retarget(old_path: String, new_path: String, is_folder: bool) -> int:
 	if _dock == null or old_path.is_empty() or new_path.is_empty() or old_path == new_path:
 		return 0
 	_dock._sync_active_tab_state()
+	# The project's two scene indexes follow the move in place, whether or not a tab is open on the file:
+	# they are the same entries under their new names, so nothing is read and no frame waits for the project.
+	EventSheetViewportRowBuilder.note_path_moved(old_path, new_path, is_folder)
+	EventSheetSceneConnections.note_path_moved(old_path, new_path, is_folder)
 	var script_fate: Dictionary = {} if is_folder else _follow_generated_script(old_path, new_path)
 	var followed: int = 0
 	var last_name: String = ""
 	var pairs: Array = []
 	var changed_tabs: Array[Dictionary] = []
-	var scene_entries: Dictionary = {}
 	for tab: Dictionary in _dock._open_tabs:
 		var moved_from: String = str(tab.get("path", ""))
 		var sheet: EventSheetResource = tab.get("sheet") as EventSheetResource
@@ -140,7 +135,6 @@ func _retarget(old_path: String, new_path: String, is_folder: bool) -> int:
 				sheet.external_source_path = source_to
 			if resource_to != sheet.resource_path:
 				sheet.take_over_path(resource_to)
-		scene_entries[tab_to] = EventSheetViewportRowBuilder.scene_using_script(moved_from)
 		tab["path"] = tab_to
 		tab["mtime"] = FileAccess.get_modified_time(tab_to) if FileAccess.file_exists(tab_to) else 0
 		last_name = tab_to.get_file()
@@ -163,13 +157,10 @@ func _retarget(old_path: String, new_path: String, is_folder: bool) -> int:
 		var at: int = _dock._recent_closed_paths.find(str(pair[0]))
 		if at >= 0:
 			_dock._recent_closed_paths[at] = str(pair[1])
-	# A tab's title can be the name of the scene object the script sits on, read from the scene files; the
-	# scenes were just rewritten for the new path, so the index of them is read afresh and the followed tab
-	# is named by the same rule as one opened now.
-	EventSheetViewportRowBuilder.clear_scene_script_index()
-	_scene_names.merge(scene_entries, true)
-	_adopt_scene_names()
-	_read_titles_again_when_files_settle()
+	# A tab's title can be the name of the scene object the script sits on; the index of the scenes followed
+	# the move above, so the followed tab is named by the same rule as one opened now. The editor rewrites
+	# those scenes for the new path a moment later and then reports its files changed, which is when the
+	# dock has the index read again off the main thread.
 	_dock._refresh_tab_bar()
 	_dock._refresh_title_strip()
 	_rebuild_views(changed_tabs)
@@ -306,32 +297,6 @@ func _say_script_fate(fate: Dictionary, sheet_name: String, tail: String = "") -
 		_say_head(EventSheetL10n.translate("The sheet was renamed but its script %s was not. Rename the script too, or scenes keep running the old one.") % left, tail, true)
 		return true
 	return false
-
-
-## Godot rewrites the scenes that hold the renamed script after it has said the file moved, so the names the
-## tabs read from those scenes are read once more when the editor next reports its files changed.
-func _read_titles_again_when_files_settle() -> void:
-	if not Engine.is_editor_hint() or not Engine.has_singleton("EditorInterface"):
-		return
-	var files: EditorFileSystem = EditorInterface.get_resource_filesystem()
-	if files != null and not files.filesystem_changed.is_connected(_titles_after_files_settled):
-		files.filesystem_changed.connect(_titles_after_files_settled, CONNECT_ONE_SHOT)
-
-
-func _titles_after_files_settled() -> void:
-	if _dock == null:
-		return
-	EventSheetViewportRowBuilder.clear_scene_script_index()
-	_adopt_scene_names()
-	_scene_names.clear()
-	_dock._refresh_tab_bar()
-	_dock._refresh_title_strip()
-
-
-## A renamed script keeps the scene object it was named after until the scenes themselves say otherwise.
-func _adopt_scene_names() -> void:
-	for followed_path: Variant in _scene_names:
-		EventSheetViewportRowBuilder.adopt_scene_entry(str(followed_path), _scene_names[followed_path])
 
 
 ## Two sentences on one status line, or the first alone when there is no second.

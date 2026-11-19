@@ -45,6 +45,17 @@ static var _nodes_cache: Dictionary = {}
 ## project, which is what it was for every script anybody opened.
 static var _scenes_by_script: Dictionary = {}
 static var _scenes_by_script_built: bool = false
+## The re-read of that index being made off the main thread, whether another was asked for while it ran,
+## and the call the dock hangs on to hear that the one that arrived says something the old one did not.
+static var _index_refresh: RefCounted = null
+static var _index_refresh_again: bool = false
+## Set when a move is followed while a re-read is under way: what that read brings is from before the move.
+static var _index_refresh_outdated: bool = false
+static var index_changed: Callable = Callable()
+## The helpers that read the project off the main thread and follow a move; loaded by path, so the first
+## open of the editor does not compile them.
+const SWEEP_PATH := "res://addons/eventforge/importer/background_sweep.gd"
+const FOLLOW_PATH := "res://addons/eventforge/importer/scene_index_follow.gd"
 
 ## The ONE scene a read is about, while a whole scene is being opened as a sheet. Inside a scene
 ## view the question is a different one: not "what does this script's own scene say about it" but
@@ -93,8 +104,15 @@ static func scenes_using_script(script_path: String) -> PackedStringArray:
 ## this function may mark the index built, and it does so once it is - a half-filled index marked
 ## ready answers "no scene uses this" for every script the pass had not reached yet.
 static func _build_scene_script_index() -> void:
+	_scenes_by_script = index_scenes(scene_paths())
+	_scenes_by_script_built = true
+
+
+## Which scenes of `paths` load each script, {script path: [scene paths, in the order given]}. Touches
+## nothing but what it returns, so it can run on a worker thread.
+static func index_scenes(paths: PackedStringArray) -> Dictionary:
 	var index: Dictionary = {}
-	for scene_path: String in scene_paths():
+	for scene_path: String in paths:
 		var text: String = FileAccess.get_file_as_string(scene_path)
 		if text.is_empty():
 			continue
@@ -106,20 +124,118 @@ static func _build_scene_script_index() -> void:
 			if not users.has(scene_path):
 				users.append(scene_path)
 			index[referenced_path] = users
-	_scenes_by_script = index
-	_scenes_by_script_built = true
+	return index
 
 
-## Drops the cache. The editor calls this when the filesystem changes; tests call it between fixtures.
-## The parsed node lists and their stamps go too: a caller clearing this reader has just changed
-## scene files, and a held stamp would hand the old parse back.
+## Follows a file or folder move in what is held, and reads no file: the answers worked out for the old
+## paths are dropped (the next question works them out again, from the few scenes that name the script),
+## and the list of scenes and the index of them keep their entries under the new names.
+static func note_path_moved(old_path: String, new_path: String, is_folder: bool) -> void:
+	_index_refresh_outdated = _index_refresh != null
+	_cache.clear()
+	# Only a scene's own move (or a folder's) changes where scenes are; a script's never does.
+	if _scene_paths_scanned and (is_folder or old_path.get_extension().to_lower() == "tscn"):
+		_scene_paths = load(FOLLOW_PATH).scene_paths_after_move(_scene_paths, old_path, new_path, is_folder)
+	if _scenes_by_script_built:
+		_scenes_by_script = load(FOLLOW_PATH).scenes_after_move(_scenes_by_script, old_path, new_path, is_folder)
+
+
+## The editor's filesystem changed. Everything that is only an answer worked out from files is dropped,
+## as `clear_cache` does, but the index of which scenes load which script - the part that costs a read of
+## every scene - keeps answering while a worker thread reads it again, and `index_changed` is called if
+## what arrives differs. Where no worker can be used (a headless run) this is `clear_cache`.
+static func files_changed() -> void:
+	if not _scenes_by_script_built or not (Engine.is_editor_hint() and Engine.get_main_loop() is SceneTree):
+		clear_cache()
+		return
+	_drop_derived()
+	start_index_refresh()
+
+
+## Starts reading the index on a worker thread. Asked again while one is running, it is read once more
+## when the first arrives (the first may have begun before the change that prompted the second).
+static func start_index_refresh() -> void:
+	if _index_refresh != null:
+		_index_refresh_again = true
+		return
+	_index_refresh = load(SWEEP_PATH).new(func() -> Array:
+		var paths: PackedStringArray = PackedStringArray()
+		_walk_scene_paths("res://", paths)
+		paths.sort()
+		return [paths, index_scenes(paths)])
+	_poll_index_refresh()
+
+
+## Whether a re-read is under way.
+static func index_refresh_running() -> bool:
+	return _index_refresh != null
+
+
+## Waits for the re-read to arrive and takes it. A no-op when none is running. What the frame loop does the
+## moment the worker is done; a run with no frame loop (the test runner) calls it directly.
+static func finish_index_refresh() -> void:
+	_finish_index_refresh(true)
+
+
+static func _poll_index_refresh() -> void:
+	if _index_refresh == null:
+		return
+	if _index_refresh.is_done():
+		_finish_index_refresh(true)
+		return
+	var loop: SceneTree = Engine.get_main_loop() as SceneTree
+	if loop != null:
+		loop.process_frame.connect(_poll_index_refresh, CONNECT_ONE_SHOT)
+
+
+static func _finish_index_refresh(adopt: bool) -> void:
+	var refresh: RefCounted = _index_refresh
+	if refresh == null:
+		return
+	_index_refresh = null
+	var arrived: Array = refresh.finish()
+	var outdated: bool = _index_refresh_outdated
+	_index_refresh_outdated = false
+	if not adopt:
+		return
+	# A read that began before a move names the files as they were: what followed the move is kept, and the
+	# change the editor reports when its files settle is what is read next.
+	var changed: bool = false
+	if not outdated:
+		changed = not _scenes_by_script_built or not load(FOLLOW_PATH).scenes_match(_scenes_by_script, arrived[1])
+		_scenes_by_script = arrived[1]
+		_scenes_by_script_built = true
+		if not _scene_paths_scanned:
+			_scene_paths = arrived[0]
+			_scene_paths_scanned = true
+	if changed:
+		# What was worked out from the list that was just replaced is worked out again.
+		_cache.clear()
+	if _index_refresh_again:
+		_index_refresh_again = false
+		start_index_refresh()
+	if changed and index_changed.is_valid():
+		index_changed.call()
+
+
+## Drops the cache. The editor calls `files_changed` when the filesystem changes; tests call this between
+## fixtures. The parsed node lists and their stamps go too: a caller clearing this reader has just changed
+## scene files, and a held stamp would hand the old parse back. A re-read of the index that is still
+## running is ended with it, since what it brings would answer for the files from before.
 static func clear_cache() -> void:
+	_drop_derived()
+	_scenes_by_script = {}
+	_scenes_by_script_built = false
+	_index_refresh_again = false
+	_finish_index_refresh(false)
+
+
+## Everything `clear_cache` drops except the index of which scenes load which script.
+static func _drop_derived() -> void:
 	_cache.clear()
 	_nodes_cache.clear()
 	_scene_paths = PackedStringArray()
 	_scene_paths_scanned = false
-	_scenes_by_script = {}
-	_scenes_by_script_built = false
 	EventForgeFileStamp.forget_all()
 
 
@@ -495,7 +611,7 @@ static func scene_paths() -> PackedStringArray:
 	if _scene_paths_scanned:
 		return _scene_paths
 	_scene_paths_scanned = true
-	_collect_scene_paths("res://")
+	_walk_scene_paths("res://", _scene_paths)
 	# Path order, always. The directory walk hands files back in whatever order the filesystem
 	# keeps them - close to alphabetical on NTFS, hash order on ext4 - and every list derived
 	# from this one (a scan, a "worn by" sentence, a band's count) would inherit that difference
@@ -504,7 +620,7 @@ static func scene_paths() -> PackedStringArray:
 	return _scene_paths
 
 
-static func _collect_scene_paths(directory_path: String) -> void:
+static func _walk_scene_paths(directory_path: String, into: PackedStringArray) -> void:
 	var directory: DirAccess = DirAccess.open(directory_path)
 	if directory == null:
 		return
@@ -516,8 +632,8 @@ static func _collect_scene_paths(directory_path: String) -> void:
 			continue
 		var full_path: String = directory_path.path_join(entry)
 		if directory.current_is_dir():
-			_collect_scene_paths(full_path)
+			_walk_scene_paths(full_path, into)
 		elif entry.get_extension() == "tscn":
-			_scene_paths.append(full_path)
+			into.append(full_path)
 		entry = directory.get_next()
 	directory.list_dir_end()

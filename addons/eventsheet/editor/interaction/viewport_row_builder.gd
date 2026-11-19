@@ -7926,9 +7926,12 @@ static func scene_root_of(scene_path: String) -> Dictionary:
 	return {}
 
 
-## The value of a `key="value"` attribute inside one .tscn / .tres header line, "" when absent.
+## The value of a `key="value"` attribute inside one .tscn / .tres header line, "" when absent. The key is
+## preceded by a space, so `id="` never matches inside `uid="`: the editor writes both on an ext_resource
+## line, the uid first, and the shorter key used to read the uid as the id - which left every scene the
+## editor had saved without a script to name its root object after.
 static func _quoted_attribute(line: String, key: String) -> String:
-	var marker: String = "%s=\"" % key
+	var marker: String = " %s=\"" % key
 	var start: int = line.find(marker)
 	if start < 0:
 		return ""
@@ -7937,39 +7940,151 @@ static func _quoted_attribute(line: String, key: String) -> String:
 	return line.substr(start, end - start) if end > start else ""
 
 
+## The scenes whose ROOT carries each script, {script path: [{scene_path, root_name}, ...]}, every scene
+## that does and in the order the sweep met them. `_script_scene_cache` is the same index read one way:
+## the FIRST of each list, which is the scene that names the object.
+static var _script_scene_all: Dictionary = {}
 static var _script_scene_cache: Dictionary = {}
 static var _script_scene_scanned: bool = false
+## The refresh being read off the main thread, whether another was asked for while it ran, and the call
+## the dock hangs on to hear that an arrived index answers differently from the one it replaces.
+static var _scene_refresh: RefCounted = null
+static var _scene_refresh_again: bool = false
+## Set when a move is followed while a refresh is being read: what that read brings is from before the move.
+static var _scene_refresh_outdated: bool = false
+static var scene_index_changed: Callable = Callable()
+## The helpers that read the project off the main thread and follow a move; loaded by path, so the first
+## open of the editor does not compile them.
+const SWEEP_PATH := "res://addons/eventforge/importer/background_sweep.gd"
+const FOLLOW_PATH := "res://addons/eventforge/importer/scene_index_follow.gd"
 
 
-## Drops the project-wide scene index, so the next question re-sweeps. The dock calls this when the
-## editor's filesystem changes: a scene added, renamed, or re-parented to another script changes the
-## answer, and an index kept for the whole session would go on naming the object it used to be.
+## Drops the project-wide scene index outright, so the next question re-sweeps on the spot. A drop in the
+## middle of a refresh ends that refresh too: what it brings would answer for files from before the drop.
+## The editor does NOT use this when its filesystem changes - that is `refresh_scene_script_index`, which
+## keeps answering while the new index is read.
 static func clear_scene_script_index() -> void:
 	_script_scene_cache.clear()
+	_script_scene_all.clear()
 	_script_scene_scanned = false
+	_scene_refresh_again = false
+	_finish_scene_refresh(false)
 
 
-## Gives `script_path` the scene entry `entry` when the index knows no scene for it. A script that was just
-## renamed is named by its scene before Godot has finished rewriting that scene for the new path, so the
-## entry it had at its old path stands in until the index is read from the files again.
-static func adopt_scene_entry(script_path: String, entry: Dictionary) -> void:
-	if not entry.is_empty() and scene_using_script(script_path).is_empty():
-		_script_scene_cache[script_path] = entry
+## The editor's filesystem changed: a scene added, renamed, or re-parented to another script changes the
+## answer, and an index kept for the whole session would go on naming the object it used to be. Where a
+## worker thread can read the project, the index that is held keeps answering while a new one is read off
+## the main thread, and the dock hears (`scene_index_changed`) if the new one differs. Without that (a
+## headless run) it is the plain drop, which re-sweeps on the next question.
+static func refresh_scene_script_index() -> void:
+	if not _script_scene_scanned:
+		return
+	if not _can_sweep_in_background():
+		clear_scene_script_index()
+		return
+	start_scene_script_refresh()
+
+
+## Starts reading the project's scenes on a worker thread. A second ask while one is running is remembered
+## and read again when the first arrives, because the first may have begun before the change that
+## prompted the second.
+static func start_scene_script_refresh() -> void:
+	if _scene_refresh != null:
+		_scene_refresh_again = true
+		return
+	_scene_refresh = load(SWEEP_PATH).new(func() -> Dictionary:
+		var found: Dictionary = {}
+		_sweep_scenes("res://", found)
+		return found)
+	_poll_scene_refresh()
+
+
+## Whether a refresh is being read right now.
+static func scene_refresh_running() -> bool:
+	return _scene_refresh != null
+
+
+## Waits for the refresh to arrive and takes it. A no-op when none is running. What the frame loop does
+## the moment the worker is done; a run with no frame loop (the test runner) calls it directly.
+static func finish_scene_script_refresh() -> void:
+	_finish_scene_refresh(true)
+
+
+static func _can_sweep_in_background() -> bool:
+	return Engine.is_editor_hint() and Engine.get_main_loop() is SceneTree
+
+
+static func _poll_scene_refresh() -> void:
+	if _scene_refresh == null:
+		return
+	if _scene_refresh.is_done():
+		_finish_scene_refresh(true)
+		return
+	var loop: SceneTree = Engine.get_main_loop() as SceneTree
+	if loop != null:
+		loop.process_frame.connect(_poll_scene_refresh, CONNECT_ONE_SHOT)
+
+
+static func _finish_scene_refresh(adopt: bool) -> void:
+	var refresh: RefCounted = _scene_refresh
+	if refresh == null:
+		return
+	_scene_refresh = null
+	var found: Dictionary = refresh.finish()
+	var outdated: bool = _scene_refresh_outdated
+	_scene_refresh_outdated = false
+	if not adopt:
+		return
+	# A read that began before a move names the files as they were: the index that followed the move is
+	# kept, and the change the editor reports when its files settle is what is read next.
+	var changed: bool = false if outdated else _install_scene_index(found)
+	if _scene_refresh_again:
+		_scene_refresh_again = false
+		start_scene_script_refresh()
+	if changed and scene_index_changed.is_valid():
+		scene_index_changed.call()
+
+
+## Makes `found` the index, and says whether it answers differently from the one it replaces.
+static func _install_scene_index(found: Dictionary) -> bool:
+	var changed: bool = not _script_scene_scanned or not load(FOLLOW_PATH).rows_match(_script_scene_all, found)
+	_script_scene_all = found
+	_script_scene_cache = {}
+	for script_path: Variant in found:
+		_script_scene_cache[script_path] = (found[script_path] as Array)[0]
+	_script_scene_scanned = true
+	return changed
+
+
+## Follows a file or folder move in the index that is held. A no-op while nothing is held (the next question
+## reads it from the files), and it never reads one: a rename must not cost a walk of the whole project.
+static func note_path_moved(old_path: String, new_path: String, is_folder: bool) -> void:
+	if not _script_scene_scanned:
+		return
+	_scene_refresh_outdated = _scene_refresh != null
+	_install_scene_index(load(FOLLOW_PATH).rows_after_move(_script_scene_all, old_path, new_path, is_folder))
 
 
 ## The scene a script is attached to as its ROOT, as {scene_path, root_name} - what lets a script with
 ## no `class_name` still be named after the object it drives. {} when no scene in the project uses it
 ## that way. Built by ONE sweep of the project's .tscn files (a scene names its scripts in the
-## `[ext_resource]` lines at the very top, so only the head of each file is read) and kept until the
-## filesystem changes, which is when the dock drops it.
+## `[ext_resource]` lines at the very top, so only the head of each file is read), and kept until the
+## filesystem changes, when it is read again (`refresh_scene_script_index`).
 static func scene_using_script(script_path: String) -> Dictionary:
 	if not _script_scene_scanned:
-		_script_scene_scanned = true
-		_scan_scenes_for_scripts("res://")
+		_install_scene_index(sweep_scenes_under("res://"))
 	return _script_scene_cache.get(script_path, {})
 
 
-static func _scan_scenes_for_scripts(directory_path: String) -> void:
+## Every scene under `directory_path` and the script its root carries, {script path: [{scene_path,
+## root_name}, ...]}. Touches nothing but what it returns, so it can run on a worker.
+static func sweep_scenes_under(directory_path: String) -> Dictionary:
+	var found: Dictionary = {}
+	_sweep_scenes(directory_path, found)
+	return found
+
+
+static func _sweep_scenes(directory_path: String, found: Dictionary) -> void:
 	var directory: DirAccess = DirAccess.open(directory_path)
 	if directory == null:
 		return
@@ -7991,14 +8106,14 @@ static func _scan_scenes_for_scripts(directory_path: String) -> void:
 	subdirectories.sort()
 	scene_names.sort()
 	for scene_name: String in scene_names:
-		_record_scene_root_script(directory_path.path_join(scene_name))
+		_record_scene_root_script(directory_path.path_join(scene_name), found)
 	for subdirectory: String in subdirectories:
-		_scan_scenes_for_scripts(directory_path.path_join(subdirectory))
+		_sweep_scenes(directory_path.path_join(subdirectory), found)
 
 
 ## Records `script path -> {scene_path, root_name}` for one scene, when its ROOT node carries a
 ## script. Only the root counts: a script on a child says nothing about what the scene IS.
-static func _record_scene_root_script(scene_path: String) -> void:
+static func _record_scene_root_script(scene_path: String, found: Dictionary) -> void:
 	var handle: FileAccess = FileAccess.open(scene_path, FileAccess.READ)
 	if handle == null:
 		return
@@ -8025,8 +8140,10 @@ static func _record_scene_root_script(scene_path: String) -> void:
 			break
 		var script_id: String = line.substr(id_start + 1, id_end - id_start - 1)
 		var script_path: String = str(script_ids.get(script_id, ""))
-		if not script_path.is_empty() and not _script_scene_cache.has(script_path):
-			_script_scene_cache[script_path] = {"scene_path": scene_path, "root_name": root_name}
+		if not script_path.is_empty():
+			var users: Array = found.get(script_path, [])
+			users.append({"scene_path": scene_path, "root_name": root_name})
+			found[script_path] = users
 		break
 	handle.close()
 

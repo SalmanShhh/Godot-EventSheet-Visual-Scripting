@@ -28,6 +28,8 @@ const DOC_EXPLAIN_PATH := "res://addons/eventsheet/editor/docs/doc_explain.gd"
 const PROJECT_DOCTOR_PATH := "res://addons/eventforge/project_doctor.gd"
 const PROJECT_FILES_PATH := "res://addons/eventforge/project_files.gd"
 const MISTAKE_FINDINGS_PATH := "res://addons/eventsheet/editor/interaction/mistake_findings.gd"
+const PATH_FOLLOWER_PATH := "res://addons/eventsheet/editor/dock/path_follower.gd"
+const PATH_REFERENCES_PATH := "res://addons/eventsheet/editor/dock/path_references.gd"
 const MISTAKE_FIXES_PATH := "res://addons/eventsheet/editor/dock/mistake_fixes.gd"
 const SHEET_COMPILER_PATH := "res://addons/eventforge/compiler/sheet_compiler.gd"
 ## The Inspector drawer plugin, reached by path: naming its class here would compile it into the first open.
@@ -1057,6 +1059,15 @@ func _ready() -> void:
 		# record tells the open tabs; a change made outside Godot lands after the rescan, and an open tab
 		# whose file is gone is treated as deleted (a walk over the open tabs only).
 		load("res://addons/eventforge/known_sheets.gd").path_listener = follow_file_event
+		# The two scripts that follow a file are only loaded when the first file moves, which is a frame the
+		# user is waiting on; asking the engine for them now reads and compiles them on a worker thread, so
+		# that first move finds them ready.
+		ResourceLoader.load_threaded_request(PATH_FOLLOWER_PATH)
+		ResourceLoader.load_threaded_request(PATH_REFERENCES_PATH)
+		# The scene index is read again off the main thread after a filesystem change; when what arrives
+		# answers differently, the names that were built from the one before it are built again.
+		EventSheetViewportRowBuilder.scene_index_changed = _on_scene_index_changed
+		EventSheetSceneConnections.index_changed = _on_scene_index_changed
 		if filesystem != null and filesystem.has_signal("filesystem_changed") \
 				and not filesystem.is_connected("filesystem_changed", follow_file_event.bind("missing")):
 			filesystem.connect("filesystem_changed", follow_file_event.bind("missing"))
@@ -1101,6 +1112,15 @@ func _ready() -> void:
 		_sync_mcp_live_link.call_deferred()
 
 
+## The project's scene index arrived from a re-read and says something the one it replaced did not (a
+## scene added, removed, or given another script): everything worked out from the old answer is dropped
+## and the tab names are read again. A rename or move does not come here - the index followed it in place.
+func _on_scene_index_changed() -> void:
+	_on_translations_maybe_changed()
+	_refresh_tab_bar()
+	_refresh_title_strip()
+
+
 ## Editor filesystem ping: cheap fingerprint check inside; only a REAL translation-folder
 ## change reloads catalogs and re-translates the live UI (and redraws the canvas-drawn strings).
 func _on_translations_maybe_changed() -> void:
@@ -1129,7 +1149,7 @@ func _on_translations_maybe_changed() -> void:
 	# The project-wide scene index (which .tscn a script is the ROOT of) is what names an object on a
 	# row, a sheet title and a thumbnail, and it was built ONCE per session: a scene saved, added or
 	# re-pointed mid-session went on reading as the object it used to be until a restart.
-	EventSheetViewportRowBuilder.clear_scene_script_index()
+	EventSheetViewportRowBuilder.refresh_scene_script_index()
 	# A shared sheet's head names who includes it, and an included sheet's variables come off its
 	# file: both are file reads, dropped here so a saved includer shows on the next rebuild.
 	load("res://addons/eventsheet/editor/interaction/native_head_marks.gd").forget_includers()
@@ -1156,7 +1176,7 @@ func _on_translations_maybe_changed() -> void:
 	# without dropping the parse under them would re-derive yesterday's nodes. This clear takes the
 	# file stamps with it, which is what makes every by-file reader re-stat rather than trust a saved
 	# identity from before the change.
-	EventSheetSceneConnections.clear_cache()
+	EventSheetSceneConnections.files_changed()
 	# And the listing of the project's own scripts, which every health check and the share index walk
 	# (held by the walker and by the Doctor, so there is nothing to drop until something has loaded them).
 	_clear_if_loaded(PROJECT_FILES_PATH, "clear")
@@ -1416,7 +1436,7 @@ func _close_tab(index: int) -> void:
 ## `event` is moved, folder_moved, removed, folder_removed or missing.
 func follow_file_event(event: String, first: String = "", second: String = "") -> int:
 	if _path_follower == null:
-		_path_follower = load("res://addons/eventsheet/editor/dock/path_follower.gd").new()
+		_path_follower = load(PATH_FOLLOWER_PATH).new()
 		_path_follower.init(self)
 	return int(_path_follower.handle(event, first, second))
 
