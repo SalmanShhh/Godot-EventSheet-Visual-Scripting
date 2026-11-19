@@ -1861,6 +1861,10 @@ func _designer_move_variable_up(var_name: String) -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE:
+		# An audit's worker threads are joined before anything is torn down: one still running as the editor goes is a
+		# thread reading what is being freed. Loads nothing when no audit was ever run.
+		if ResourceLoader.has_cached(PROJECT_DOCTOR_PATH):
+			(load(PROJECT_DOCTOR_PATH) as GDScript).call("stop_workers")
 		# Disconnect the active theme style's `changed` signal + null the field. The live-reload
 		# binding is owned by EventSheetThemeManager, so its teardown lives there too.
 		_theme_manager.teardown_theme_binding()

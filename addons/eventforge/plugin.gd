@@ -919,10 +919,6 @@ func _maybe_show_welcome() -> void:
 
 ## Unregisters plugin services when the plugin is disabled.
 func _exit_tree() -> void:
-	# An audit's worker threads are joined before anything is torn down: one still running as the editor goes is a
-	# thread reading what is being freed.
-	if ResourceLoader.has_cached(PROJECT_DOCTOR_PATH):
-		(load(PROJECT_DOCTOR_PATH) as GDScript).call("stop_workers")
 	for menu: EventSheetContextMenu in _context_menus:
 		remove_context_menu_plugin(menu)
 	_context_menus.clear()
