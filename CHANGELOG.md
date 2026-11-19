@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Faster: renaming or moving a sheet no longer holds the editor while the project is read
+
+When a sheet or script is renamed or moved in the FileSystem dock, the plugin looks through the project's scripts and sheet files for ones that name the old path. That read ran on the editor's main thread: about a third of a second in a project of 2,000 files and about 1.7 seconds in one of 10,000, with the editor frozen meanwhile, and a selection of 50 files moved at once read the whole project 50 times (17 seconds at 2,000 files). The read now runs on the engine's worker threads, once for every move reported in the same moment, and the sentence that says how many sheets followed and how many of your scripts still name the old path arrives on the status line when it ends. The files found and respelled, and the count in the sentence, are the same as before.
+
 ### Fixed: the sheet's rich hover is a pale card in the light editor theme
 
 A hover that carries markup (a function described with bold, italic or coloured words, for example) was drawn on a fixed dark panel in every theme. In the light theme the words sat in the editor's pale label box inside a dark frame, so the card looked like a piece of the dark theme, and a colour written for a dark ground (a pale blue, a pure red) was only about 3 to 1 against the pale box. The card now sits on the editor's own tooltip panel, the same one the sheet's head card and the exported-variable card take, so it is pale in the light theme and dark in the dark one, with no second box and no frame of its own; the plain words take the editor's tooltip text colour, and every `[color=...]` the author wrote is kept as written when it already reads and moved just far enough toward black or white when it does not (4.5 to 1 on both grounds). Outside the editor the dark panel stands. Hovers without markup were never affected: Godot draws those itself.

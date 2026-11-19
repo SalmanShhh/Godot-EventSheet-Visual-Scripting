@@ -22,6 +22,13 @@ var _dock: Control = null
 ## The scene object each followed script was named after before the rename, by its new path, until the
 ## scenes have been rewritten and the index of them is read again.
 var _scene_names: Dictionary = {}
+## Moves waiting for the next read of the project's files, the read in flight, and the last status sentence
+## said before the files' own sentence arrives.
+var _queued_moves: Array = []
+var _read_scheduled: bool = false
+var _read_running: bool = false
+var _last_head: String = ""
+var _last_head_was_notice: bool = false
 
 
 func init(dock: Control) -> void:
@@ -141,6 +148,7 @@ func _retarget(old_path: String, new_path: String, is_folder: bool) -> int:
 			pairs.append([moved_from, tab_to])
 	var tail: String = _follow_references(old_path, new_path, is_folder)
 	if followed == 0:
+		_last_head = ""
 		if not _say_script_fate(script_fate, "", tail) and not tail.is_empty():
 			_dock._set_status(tail)
 		return 0
@@ -168,9 +176,9 @@ func _retarget(old_path: String, new_path: String, is_folder: bool) -> int:
 	_dock._persist_session()
 	if followed == 1:
 		if not _say_script_fate(script_fate, last_name, tail):
-			_dock._set_status(_joined(EventSheetL10n.translate("The open sheet follows %s to its new place.") % last_name, tail))
+			_say_head(EventSheetL10n.translate("The open sheet follows %s to its new place.") % last_name, tail)
 	else:
-		_dock._set_status(_joined(EventSheetL10n.translate("%d open sheets follow their files to their new place.") % followed, tail))
+		_say_head(EventSheetL10n.translate("%d open sheets follow their files to their new place.") % followed, tail)
 	return followed
 
 
@@ -290,12 +298,12 @@ func _say_script_fate(fate: Dictionary, sheet_name: String, tail: String = "") -
 	var left: String = str(fate.get("left", ""))
 	if not moved.is_empty():
 		if sheet_name.is_empty():
-			_dock._set_status(_joined(EventSheetL10n.translate("The script %s followed its sheet to its new place.") % moved.get_file(), tail))
+			_say_head(EventSheetL10n.translate("The script %s followed its sheet to its new place.") % moved.get_file(), tail)
 		else:
-			_dock._set_status(_joined(EventSheetL10n.translate("The open sheet follows %s to its new place, and its script %s goes with it.") % [sheet_name, moved.get_file()], tail))
+			_say_head(EventSheetL10n.translate("The open sheet follows %s to its new place, and its script %s goes with it.") % [sheet_name, moved.get_file()], tail)
 		return true
 	if not left.is_empty():
-		_dock._set_status_notice(_joined(EventSheetL10n.translate("The sheet was renamed but its script %s was not. Rename the script too, or scenes keep running the old one.") % left, tail))
+		_say_head(EventSheetL10n.translate("The sheet was renamed but its script %s was not. Rename the script too, or scenes keep running the old one.") % left, tail, true)
 		return true
 	return false
 
@@ -334,7 +342,9 @@ static func _joined(first: String, second: String) -> String:
 ## What else the plugin wrote down about the moved file follows it (path_references.gd): the editor's memory
 ## of the file, the paths in the open sheets and in the sheet files that are not open. Returns the sentence
 ## to add to the status line: the sheets that followed, and how many of the user's own scripts still name
-## the old path ("" when there is nothing to say).
+## the old path. "" when there is nothing to say, and also when the project's files are still being read:
+## inside a running editor that read happens off the main thread and the sentence arrives on the status line
+## when it ends (several moves in one moment share one read of the project).
 func _follow_references(old_path: String, new_path: String, is_folder: bool) -> String:
 	var extension: String = old_path.get_extension()
 	if not is_folder and extension != "gd" and extension != "tres":
@@ -354,15 +364,103 @@ func _follow_references(old_path: String, new_path: String, is_folder: bool) -> 
 			if _dock._active_tab_index >= 0 and _dock._open_tabs[_dock._active_tab_index] == tab:
 				_dock._dirty = true
 	# The project's files are only read for a path inside the project: nothing in it can name another place.
-	var found: Dictionary = references.scan(old_path, new_path, is_folder, open_paths) if old_path.begins_with("res://") 		else {"sheets": [], "scripts": []}
-	followed_sheets += references.write_sheets(found["sheets"], old_path, new_path, is_folder)
+	if not old_path.begins_with("res://"):
+		return _reference_sentence(followed_sheets, 0)
+	var move: Dictionary = {"old": old_path, "new": new_path, "folder": is_folder}
+	if not _dock.is_inside_tree():
+		var found: Dictionary = references.scan(old_path, new_path, is_folder, open_paths)
+		followed_sheets += references.write_sheets(found["sheets"], old_path, new_path, is_folder)
+		return _reference_sentence(followed_sheets, (found["scripts"] as Array).size())
+	_queued_moves.append({"move": move, "open": open_paths, "followed": followed_sheets})
+	if not _read_scheduled:
+		_read_scheduled = true
+		_start_read.call_deferred()
+	return ""
+
+
+## The two sentences about what followed: the sheets that name the old path, and the user's own scripts
+## that still do.
+func _reference_sentence(followed_sheets: int, script_count: int) -> String:
 	var sentences: PackedStringArray = PackedStringArray()
 	if followed_sheets > 0:
 		sentences.append(EventSheetL10n.translate("%d sheet(s) that name it follow it too.") % followed_sheets)
-	var leftover: String = references.leftover_sentence((found["scripts"] as Array).size())
+	var references: GDScript = load("res://addons/eventsheet/editor/dock/path_references.gd")
+	var leftover: String = references.leftover_sentence(script_count)
 	if not leftover.is_empty():
 		sentences.append(leftover)
 	return " ".join(sentences)
+
+
+## Starts one read of the project for every move queued so far (the FileSystem dock reports a selection of
+## many files as many moves in the same moment).
+func _start_read() -> void:
+	_read_scheduled = false
+	if _queued_moves.is_empty() or _read_running or not is_instance_valid(_dock):
+		return
+	var batch: Array = _queued_moves
+	_queued_moves = []
+	var moves: Array = []
+	var skip: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in batch:
+		moves.append(entry["move"])
+		skip.append_array(entry["open"] as PackedStringArray)
+	var references: GDScript = load("res://addons/eventsheet/editor/dock/path_references.gd")
+	_read_running = true
+	_finish_read(references, references.begin_scan(moves, skip), batch)
+
+
+func _finish_read(references: GDScript, job: Object, batch: Array) -> void:
+	while is_instance_valid(_dock) and _dock.is_inside_tree() and not job.is_done():
+		await _dock.get_tree().process_frame
+	var results: Array = job.finish()
+	_read_running = false
+	if not is_instance_valid(_dock):
+		return
+	var followed_sheets: int = 0
+	var script_paths: Dictionary = {}
+	for index: int in range(batch.size()):
+		var move: Dictionary = batch[index]["move"]
+		followed_sheets += int(batch[index]["followed"])
+		var sheets: Array = results[index]["sheets"]
+		# A sheet opened while the files were being read holds the old spelling in memory: it follows in
+		# memory like any open sheet, and its file is left for its own Save.
+		for tab: Dictionary in _dock._open_tabs:
+			if sheets.has(str(tab.get("path", ""))):
+				sheets.erase(str(tab.get("path", "")))
+				var tab_sheet: EventSheetResource = tab.get("sheet") as EventSheetResource
+				if references.follow_in_sheet(tab_sheet, str(move["old"]), str(move["new"]), bool(move["folder"])) > 0:
+					tab["dirty"] = true
+		followed_sheets += references.write_sheets(sheets, str(move["old"]), str(move["new"]), bool(move["folder"]))
+		for script_path: Variant in results[index]["scripts"]:
+			script_paths[script_path] = true
+	var tail: String = _reference_sentence(followed_sheets, script_paths.size())
+	if not tail.is_empty():
+		_say_tail(tail)
+	if not _queued_moves.is_empty():
+		_start_read()
+
+
+## Says a sentence with the files' own sentence after it, and remembers it, so a files' sentence that arrives
+## later can be put after it.
+func _say_head(head: String, tail: String, notice: bool = false) -> void:
+	_last_head = head
+	_last_head_was_notice = notice
+	if notice:
+		_dock._set_status_notice(_joined(head, tail))
+	else:
+		_dock._set_status(_joined(head, tail))
+
+
+## Puts the sentence that arrived late on the status line: after the sentence it belongs to when that is
+## still showing, alone when something else has replaced it.
+func _say_tail(tail: String) -> void:
+	var label: Label = _dock._status_label
+	if _last_head.is_empty() or label == null or not label.text.ends_with(_last_head):
+		_dock._set_status(tail)
+	elif _last_head_was_notice:
+		_dock._set_status_notice(_joined(_last_head, tail))
+	else:
+		_dock._set_status(_joined(_last_head, tail))
 
 
 # ── Delete ───────────────────────────────────────────────────────────────────

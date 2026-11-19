@@ -53,6 +53,7 @@ static func _all() -> bool:
 	passed = _the_plain_script_beside_a_sheet_follows_too() and passed
 	passed = _a_followed_tab_is_named_by_the_rule_a_fresh_one_is() and passed
 	passed = _what_the_plugin_wrote_down_follows_the_file() and passed
+	passed = _a_batch_of_moves_reads_the_project_once_and_answers_each_alone() and passed
 	return passed
 
 
@@ -599,4 +600,46 @@ static func _what_the_plugin_wrote_down_follows_the_file() -> bool:
 		["one sentence says how many scripts still name it and where to look", refs.leftover_sentence(2), "Scripts of yours that still name the old path: 2. Tools > Find in Project lists them."],
 	])
 	_drop_ring(includer)
+	return passed
+
+
+## Several moves reported in one moment share one read of the project's files, and each is answered exactly
+## as if it had been asked alone (the same files, in the same order), on worker threads or not.
+static func _a_batch_of_moves_reads_the_project_once_and_answers_each_alone() -> bool:
+	var refs: GDScript = load("res://addons/eventsheet/editor/dock/path_references.gd")
+	var root: String = SUPPORT.own_folder("follow_batch")
+	var sheet_head: String = "[gd_resource type=\"Resource\" script_class=\"EventSheetResource\" format=3]
+
+[resource]
+"
+	for index: int in range(40):
+		_write("%s/part_%02d.gd" % [root, index], "extends Node
+" + ("const A := preload(\"res://lib/%02d.tres\")
+" % index if index % 7 == 0 else "var x: int = %d
+" % index))
+	var includer: String = _write(root + "/includer.tres", sheet_head + "includes = Array[String]([\"res://lib/00.tres\", \"res://lib/03.tres\"])
+")
+	var elsewhere: String = _write(root + "/elsewhere.tres", sheet_head + "includes = Array[String]([\"res://lib/03.tres\"])
+")
+	var moves: Array = [
+		{"old": "res://lib/00.tres", "new": "res://lib/zero.tres", "folder": false},
+		{"old": "res://lib/03.tres", "new": "res://lib/three.tres", "folder": false},
+		{"old": "res://lib/14.tres", "new": "res://lib/fourteen.tres", "folder": false},
+		{"old": "res://lib/none.tres", "new": "res://lib/nothing.tres", "folder": false},
+		{"old": "res://lib", "new": "res://moved", "folder": true},
+	]
+	var skip: PackedStringArray = PackedStringArray([elsewhere])
+	var together: Array = refs.begin_scan(moves, skip, root).finish()
+	var alone: Array = []
+	for move: Dictionary in moves:
+		alone.append(refs.scan(move["old"], move["new"], move["folder"], skip, root))
+	var passed: bool = SUPPORT.pins(TEST_NAME, [
+		["every move in a batch is answered as if asked alone", together, alone],
+		["a move that names a script and a sheet finds both", [(together[0]["sheets"] as Array).size(), (together[0]["scripts"] as Array).size()], [1, 1]],
+		["a move nothing names finds nothing", together[3], {"sheets": [], "scripts": []}],
+		["a folder move finds every file naming a path under it", [(together[4]["sheets"] as Array).size(), (together[4]["scripts"] as Array).size()], [1, 6]],
+		["an open sheet is never listed", (together[1]["sheets"] as Array).has(elsewhere), false],
+		["the shared start of the needles", refs.needles_in_common(PackedStringArray(["res://lib/00.tres", "res://lib/03.tres"])), "res://lib/0"],
+		["no needles share nothing", refs.needles_in_common(PackedStringArray()), ""],
+	])
 	return passed
