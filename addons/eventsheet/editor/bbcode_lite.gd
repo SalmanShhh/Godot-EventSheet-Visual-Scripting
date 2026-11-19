@@ -10,7 +10,7 @@ extends RefCounted
 
 
 ## Segments: [{ "text": String, "color": Variant (Color or null), "bold": bool, "italic": bool }]
-static func parse(raw_text: String, base_color: Color = Color.WHITE) -> Array[Dictionary]:
+static func parse(raw_text: String, base_color: Color = Color.WHITE, keep_unpaired: bool = false) -> Array[Dictionary]:
 	var segments: Array[Dictionary] = []
 	var bold_depth: int = 0
 	var italic_depth: int = 0
@@ -29,6 +29,10 @@ static func parse(raw_text: String, base_color: Color = Color.WHITE) -> Array[Di
 		buffer += raw_text.substr(cursor, open_index - cursor)
 		var tag: String = raw_text.substr(open_index + 1, close_index - open_index - 1).strip_edges().to_lower()
 		var handled: bool = true
+		if keep_unpaired and not load("res://addons/eventsheet/editor/comment_markup.gd").is_paired_tag(tag, raw_text, close_index, bold_depth, italic_depth, color_stack.size()):
+			buffer += raw_text.substr(open_index, close_index - open_index + 1)
+			cursor = close_index + 1
+			continue
 		match tag:
 			"b":
 				_flush(segments, buffer, color_stack, bold_depth, italic_depth, base_color)
@@ -78,9 +82,9 @@ static func has_markup(raw_text: String) -> bool:
 
 
 ## Plain text with all recognized tags removed (clipboard/snippet-friendly).
-static func strip(raw_text: String) -> String:
+static func strip(raw_text: String, keep_unpaired: bool = false) -> String:
 	var plain: String = ""
-	for segment in parse(raw_text):
+	for segment in parse(raw_text, Color.WHITE, keep_unpaired):
 		plain += str(segment.get("text", ""))
 	return plain
 

@@ -4364,8 +4364,8 @@ static func friendly_template_line(event_function: EventFunction) -> String:
 ## [color=...]), the way a comment row draws them: the segments shape the pixels, the span keeps the
 ## raw text. Unchanged when the line carries no markup.
 static func _with_comment_markup(metadata: Dictionary, shown: String, color: Color) -> Dictionary:
-	if EventSheetBBCodeLite.has_markup(shown):
-		metadata["bbcode_segments"] = EventSheetBBCodeLite.parse(shown, color)
+	if EventSheetBBCodeLite.has_paired_markup(shown):
+		metadata["bbcode_segments"] = EventSheetBBCodeLite.parse(shown, color, true)
 	return metadata
 
 
@@ -9203,11 +9203,11 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
 		# BBCode-lite ([b]/[i]/[color=…]): segments shape the pixels; the RAW text stays
 		# the editing/serialization truth (no data loss on edit/copy).
 		var reading_line: String = comment_lines[line_index]
-		if EventSheetBBCodeLite.has_markup(comment_lines[line_index]):
-			line_metadata["bbcode_segments"] = EventSheetBBCodeLite.parse(comment_lines[line_index], line_color)
+		if EventSheetBBCodeLite.has_paired_markup(comment_lines[line_index]):
+			line_metadata["bbcode_segments"] = EventSheetBBCodeLite.parse(comment_lines[line_index], line_color, true)
 			# The doors are offsets into what is DRAWN, and a marked-up line draws its stripped text
 			# through the segment run - so that is the string they are found in.
-			reading_line = EventSheetBBCodeLite.strip(comment_lines[line_index])
+			reading_line = EventSheetBBCodeLite.strip(comment_lines[line_index], true)
 		_note_comment_doors(line_metadata, reading_line, door_table)
 		comment_spans.append(
 			_make_span(
@@ -9223,7 +9223,7 @@ func _build_comment_row(comment_row: CommentRow, indent: int) -> EventRowData:
 	# Nor does a marked-up paragraph: the row already draws it formatted, and its line would put the
 	# raw [b]...[/b] markup on the sheet.
 	if not comment_row.text.strip_edges().is_empty() and not note_look \
-			and not EventSheetBBCodeLite.has_markup(comment_row.text):
+			and not EventSheetBBCodeLite.has_paired_markup(comment_row.text):
 		comment_spans.append(_code_echo_span(
 			comment_row.echo_line(0),
 			{
@@ -15796,8 +15796,8 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 								"text_color": _viewport._get_event_style().comment_text_color if inline_is_note else action_style_meta.get("text_color", _viewport._get_reading_style().primary_text_color),
 								"object_label": "" if inline_is_literal_part else (_inline_block_label(inline_is_note, inline_literal) if inline_line_index == 0 else ""),
 								# A note marks its words up the way a comment row does ([b], [i]); code never does.
-								"bbcode_segments": EventSheetBBCodeLite.parse(inline_text, _viewport._get_event_style().comment_text_color)
-									if inline_is_note and EventSheetBBCodeLite.has_markup(inline_text) else []
+								"bbcode_segments": EventSheetBBCodeLite.parse(inline_text, _viewport._get_event_style().comment_text_color, true)
+									if inline_is_note and EventSheetBBCodeLite.has_paired_markup(inline_text) else []
 							}.merged(action_style_meta, true)
 						)
 					)
@@ -15848,9 +15848,9 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 							"text_color": _viewport._get_event_style().comment_text_color,
 							# Reading Mode: the note reads as an italic CAPTION - intent first, mechanics under
 							# it - and drops its # marker (the row is already visibly a comment). View state only.
-							"bbcode_segments": EventSheetBBCodeLite.parse("[i]%s[/i]" % action_comment_lines[comment_line_index], _viewport._get_event_style().comment_text_color) if _viewport.is_reading_mode()
-								else (EventSheetBBCodeLite.parse(action_comment_drawn, _viewport._get_event_style().comment_text_color)
-									if EventSheetBBCodeLite.has_markup(action_comment_drawn) else [])
+							"bbcode_segments": load("res://addons/eventsheet/editor/comment_markup.gd").italic_segments(action_comment_lines[comment_line_index], _viewport._get_event_style().comment_text_color) if _viewport.is_reading_mode()
+								else (EventSheetBBCodeLite.parse(action_comment_drawn, _viewport._get_event_style().comment_text_color, true)
+									if EventSheetBBCodeLite.has_paired_markup(action_comment_drawn) else [])
 							}.merged(action_style_meta, false))
 						)
 					)
