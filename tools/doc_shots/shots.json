@@ -427,8 +427,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "ddfe0daae2b09c5c03a012a1e35a164c6ec16c300d433ae7ec8c9724c3fc6d65",
-				"reading": "6ab1099ce0190991535b2f88c1223044a985e1ce31173da9188156642cb3f0c6"
+				"png": "beef55af974967740a7f3f960cc261aa9b4e4e1c8207ff2ed2eae1a5f4735abf",
+				"reading": "cc5501b23a5278f678c29881455a758c4d27d8c4e7987dd161e3a959430ff369"
 			},
 			"layout": "vertical",
 			"name": "editor-plugin-reading",
@@ -1346,7 +1346,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
 				"png": "88df0095393290f543f434ab6dcdd303e43027031216b90b468f2d857e53a29c",
-				"reading": "6ab1099ce0190991535b2f88c1223044a985e1ce31173da9188156642cb3f0c6"
+				"reading": "cc5501b23a5278f678c29881455a758c4d27d8c4e7987dd161e3a959430ff369"
 			},
 			"name": "this-editor-plugin-bar",
 			"rows": [
