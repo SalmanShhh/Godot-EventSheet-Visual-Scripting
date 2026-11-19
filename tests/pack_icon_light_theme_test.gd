@@ -59,7 +59,7 @@ static func run() -> bool:
 		["and the neutral grey, as a stroke too", EventSheetBehaviourLibraryWindow.inked_for_theme("<path stroke=\"#e0e0e0\"/>", true), "<path stroke=\"#5a5a5a\"/>"],
 		["a headless run is never light", EventSheetBehaviourLibraryWindow.editor_is_light(), false],
 	]) and ok
-	return _only_shipped_folders() and _shipped_sidecars() and _library_copy() and ok
+	return _only_shipped_folders() and _shipped_sidecars() and _library_copy() and _pings_read_nothing_unchanged() and ok
 
 
 ## The plugin looks after the icons of the packs it ships and no others, and a project with no
@@ -142,6 +142,56 @@ path=\"%s\"
 		["another import is left behind", FileAccess.file_exists(project + "/demo_pack/other.png.import"), false],
 		["an icon whose imported copy is not there yet is waiting", waiting, PackedStringArray([project + "/demo_pack/icon.svg"])],
 		["and not once it is", FLOW.unimported_files(project + "/demo_pack"), PackedStringArray()],
+	])
+
+
+## A file-change ping with nothing changed reads no import: the editor sends one after every save of
+## anything, and each used to read every pack icon's import as text on the main thread. A pack folder
+## that appears, or an import whose time is not the one kept, is still found and named.
+static func _pings_read_nothing_unchanged() -> bool:
+	var root: String = SUPPORT.own_path("pings")
+	var icon: String = root + "/big_number/icon.svg"
+	DirAccess.make_dir_recursive_absolute(root + "/big_number")
+	_write(icon, "<svg/>")
+	_write(icon + ".import", "[params]
+editor/scale_with_editor_scale=false
+editor/convert_colors_with_editor_theme=false
+")
+	IMPORTS.reads = 0
+	var first: Dictionary = IMPORTS.scan({}, root)
+	var after_first: int = IMPORTS.reads
+	IMPORTS.follow_the_editor_theme(first["owed"])
+	var fixed: Dictionary = IMPORTS.scan(first["checked"], root)
+	IMPORTS.reads = 0
+	var quiet: Dictionary = IMPORTS.scan(fixed["checked"], root)
+	var quiet_again: Dictionary = IMPORTS.scan(quiet["checked"], root)
+	var quiet_reads: int = IMPORTS.reads
+	# A pack folder that lands after the editor has settled.
+	DirAccess.make_dir_recursive_absolute(root + "/juice")
+	_write(root + "/juice/icon.svg", "<svg/>")
+	_write(root + "/juice/icon.svg.import", "[params]
+editor/convert_colors_with_editor_theme=false
+")
+	IMPORTS.reads = 0
+	var added: Dictionary = IMPORTS.scan(quiet_again["checked"], root)
+	var added_reads: int = IMPORTS.reads
+	# An import that changed since it was checked (its time is not the kept one) and has the flag off.
+	var stale: Dictionary = (quiet_again["checked"] as Dictionary).duplicate()
+	stale[icon] = 1
+	_write(icon + ".import", "[params]
+editor/convert_colors_with_editor_theme=false
+")
+	var turned_off: Dictionary = IMPORTS.scan(stale, root)
+	# An icon whose import the editor has not made yet is not remembered, so it is looked at again.
+	DirAccess.make_dir_recursive_absolute(root + "/camera_rail")
+	_write(root + "/camera_rail/icon.svg", "<svg/>")
+	return SUPPORT.pins(NAME, [
+		["the first look reads the import and names the icon", [first["owed"], after_first], [PackedStringArray([icon]), 1]],
+		["once the flag is on nothing is owed", fixed["owed"], PackedStringArray()],
+		["a ping with nothing changed reads no import", [quiet["owed"], quiet_again["owed"], quiet_reads], [PackedStringArray(), PackedStringArray(), 0]],
+		["a pack folder that appears is found by reading only its own import", [added["owed"], added_reads], [PackedStringArray([root + "/juice/icon.svg"]), 1]],
+		["an import changed since it was checked, flag off, is named again", (turned_off["owed"] as PackedStringArray).has(icon), true],
+		["an icon with no import yet is not remembered", (IMPORTS.scan({}, root)["checked"] as Dictionary).has(root + "/camera_rail/icon.svg"), false],
 	])
 
 

@@ -198,15 +198,15 @@ func _refresh_plugin_icon_import() -> void:
 		return
 	var ink: Color = editor_icon_ink(get_editor_interface().get_editor_theme())
 	var pack_icons: GDScript = load(PACK_ICON_IMPORTS_PATH)
-	# A pack that came from the behaviour library has an import with the flag off: turn it on, and
-	# import those icons again, whatever the theme did.
-	var to_import: PackedStringArray = pack_icons.follow_the_editor_theme(pack_icons.pack_icon_paths())
-	# Once per ink: a reimport that did not land in it (an importer told not to follow the editor's
-	# colours) is not asked again on every later theme notification, which kept the editor reimporting.
+	# A pack whose import has the flag off gets it on and is imported again; a worker reads the disk, not this frame.
+	pack_icons.follow_in_background(file_system)
+	var to_import: PackedStringArray = PackedStringArray()
+	# Once per ink, found in it or not (a reimport an importer told not to follow the editor's colours
+	# did not land in it is not asked again either), so a save does not read the icon's pixels back.
 	if not ink.is_equal_approx(_plugin_icon_reimported_for):
 		var imported: Texture2D = load(PLUGIN_ICON_PATH) as Texture2D
+		_plugin_icon_reimported_for = ink if imported != null else _plugin_icon_reimported_for
 		if imported != null and not is_in_ink(imported, ink):
-			_plugin_icon_reimported_for = ink
 			# The theme changed since the colours were baked: the pack and section icons are baked
 			# the same way, so they come with the plugin's own.
 			to_import = pack_icons.all_icon_paths()
