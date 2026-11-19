@@ -168,7 +168,10 @@ static func own_entries(sheet: EventSheetResource) -> Array[Dictionary]:
 	var resource_host: bool = EventSheetVariableSentence.is_resource_host(str(sheet.host_class))
 	var autoload: bool = not sheet.autoload_singleton_name().is_empty()
 	var nested: Array = []
-	EventSheetSelfExpressions.collect_tree_variables_into(sheet.events, nested)
+	# The walk lives in the expression picker's model, which only the picker needs; naming its class
+	# here would compile that whole file at the first open, so it is loaded by path when asked.
+	var self_expressions: GDScript = load("res://addons/eventsheet/editor/self_expressions.gd")
+	self_expressions.call("collect_tree_variables_into", sheet.events, nested)
 	for entry: Variant in nested:
 		if not (entry is LocalVariable):
 			continue
