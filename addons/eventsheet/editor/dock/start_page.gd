@@ -115,10 +115,23 @@ const TAG_LEAST: float = 80.0
 const LEAST_SLACK: float = 36.0
 ## How much more of the window than its words ask for the template column is given.
 const TEMPLATE_WEIGHT: float = 1.3
+## The least a column may be given before its words stop reading: its kind at its narrowest, then room for a few words of a
+## name on one line. A window too narrow to give every column that much puts the columns on more rows (the page scrolls
+## down) instead of squeezing them until a name breaks one word to a line.
+const READABLE_NAME: float = 96.0
+## What a column's card spends on its own frame and padding, beside the row's icon and gaps (CELL_SLACK).
+const CARD_PAD: float = 30.0
+## The least height a list keeps once the columns are on more than one row, so each still shows several entries.
+const LIST_LEAST_HEIGHT: float = 150.0
 
 var _dock: Control = null
 var _window: Window = null
-var _columns_row: HBoxContainer = null
+var _columns_scroll: ScrollContainer = null
+## The rows the columns sit in, one box on top of another; each holds as many columns as the window gives room to read.
+var _columns_stack: VBoxContainer = null
+var _cards: Array[PanelContainer] = []
+var _readable: PackedFloat32Array = PackedFloat32Array()
+var _laid_out_as: Array[int] = []
 var _lists: Array[Tree] = []
 var _strip: EventSheetPopupUI.HelpStrip = null
 var _opens_value: Label = null
@@ -465,19 +478,20 @@ func _build() -> void:
 	_window.min_size = Vector2i(EventSheetPalette.scaled(760), EventSheetPalette.scaled(420))
 	_window.close_requested.connect(_window.hide)
 	var outer: VBoxContainer = EventSheetPopupUI.form_box()
-	_columns_row = HBoxContainer.new()
-	_columns_row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(12.0)))
-	_columns_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_columns_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_columns_stack = VBoxContainer.new()
+	_columns_stack.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(12.0)))
+	_columns_stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_columns_stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	# The columns scroll inside the window when it is too short for them (a language whose words wrap to more
 	# lines asks for more height than the window's smallest size): the strip and the Open and Close buttons under
 	# them stay in view and in reach, instead of being pushed past the window's bottom edge.
-	var columns_scroll: ScrollContainer = ScrollContainer.new()
-	columns_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	columns_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	columns_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	columns_scroll.add_child(_columns_row)
-	outer.add_child(columns_scroll)
+	_columns_scroll = ScrollContainer.new()
+	_columns_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_columns_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_columns_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_columns_scroll.add_child(_columns_stack)
+	_columns_scroll.resized.connect(_arrange)
+	outer.add_child(_columns_scroll)
 	_strip = EventSheetPopupUI.help_strip("", "", "", "", EventSheetPalette.scaled_f(640.0))
 	_opens_value = _strip.add_line(EventSheetL10n.translate("OPENS"))
 	outer.add_child(_strip)
@@ -509,10 +523,13 @@ func _build() -> void:
 func _fill() -> void:
 	# Removed as well as freed: queue_free lands at the end of the frame, so a plain queue_free would
 	# leave the second open showing six columns for one frame before settling back to three.
-	for child: Node in _columns_row.get_children():
-		_columns_row.remove_child(child)
+	for child: Node in _columns_stack.get_children():
+		_columns_stack.remove_child(child)
 		child.queue_free()
 	_lists.clear()
+	_cards.clear()
+	_readable.clear()
+	_laid_out_as = []
 	_choose({})
 	var folders: PackedStringArray = showcase_folders()
 	for column: Variant in columns(folders, _dock.get_open_sheets_state().get("recent", []),
@@ -545,8 +562,9 @@ func _fill() -> void:
 		# Without these the cards shrink to their titles: an HBoxContainer hands out no space a
 		# child did not ask for. The template column is the one with the most to show.
 		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_columns_row.add_child(card)
+		_cards.append(card)
 		_fit_column(card, list, section)
+	_arrange()
 
 
 ## Gives a column the room its words ask for. The list is in the window by now, so its own font measures the
@@ -556,6 +574,8 @@ func _fill() -> void:
 func _fit_column(card: PanelContainer, list: Tree, section: Dictionary) -> void:
 	var plan: Dictionary = plan_for(section, list.get_theme_font("font"), list.get_theme_font_size("font_size"), EventSheetPalette.scaled(13))
 	card.custom_minimum_size.x = float(plan["minimum"])
+	_readable.append(readable_width(plan))
+	list.custom_minimum_size.y = EventSheetPalette.scaled_f(LIST_LEAST_HEIGHT)
 	# The template list is the long one: a name that wraps there costs a row in a list that scrolls, so it is given more of
 	# the room than its words alone would earn.
 	card.size_flags_stretch_ratio = float(plan["ideal"]) * (TEMPLATE_WEIGHT if str(section.get("id", "")) == "templates" else 1.0)
@@ -570,6 +590,78 @@ func _fit_column(card: PanelContainer, list: Tree, section: Dictionary) -> void:
 		list.set_column_custom_minimum_width(1, int(ceil(minf(float(plan["tag"]), room))))
 	fit_kind.call()
 	list.resized.connect(fit_kind)
+
+
+## What a column needs to read: its kind as wide as it is drawn, a few words of a name on one line (or the whole name when
+## it is shorter), the row's icon and gaps and the card's own frame - never less than the least the plan allows. Pure, so
+## the suite pins it without a window.
+static func readable_width(plan: Dictionary) -> float:
+	var name_room: float = clampf(float(plan["name"]), float(plan["name_floor"]), EventSheetPalette.scaled_f(READABLE_NAME))
+	return maxf(float(plan["minimum"]),
+		float(plan["tag"]) + name_room + EventSheetPalette.scaled_f(CELL_SLACK) + EventSheetPalette.scaled_f(CARD_PAD))
+
+
+## How many columns go on each row: the fewest rows that give every column (in the order they are listed) at least
+## its `readable` width in `room` pixels, the columns shared out evenly over those rows so no row is left with one
+## column beside a full one. A room not known yet (a window not laid out) keeps every column on one row.
+static func columns_per_row(readable: PackedFloat32Array, room: float, gap: float) -> Array[int]:
+	var count: int = readable.size()
+	var rows: Array[int] = []
+	if count == 0:
+		return rows
+	if room <= 0.0:
+		rows.append(count)
+		return rows
+	for row_count: int in range(1, count + 1):
+		var per_row: int = ceili(float(count) / float(row_count))
+		var fits: bool = true
+		var at: int = 0
+		while at < count:
+			var width: float = 0.0
+			var last: int = mini(at + per_row, count)
+			for index: int in range(at, last):
+				width += readable[index]
+			width += gap * float(last - at - 1)
+			if width > room:
+				fits = false
+				break
+			at = last
+		if fits or row_count == count:
+			rows = []
+			at = 0
+			while at < count:
+				rows.append(mini(per_row, count - at))
+				at += per_row
+			return rows
+	return rows
+
+
+## Puts the columns on rows to suit the window as it is now. Only a change in how many sit on each row moves anything.
+func _arrange() -> void:
+	if _columns_scroll == null or _cards.is_empty():
+		return
+	var scroll_bar_room: float = _columns_scroll.get_v_scroll_bar().get_combined_minimum_size().x
+	var gap: float = EventSheetPalette.scaled_f(12.0)
+	var rows: Array[int] = columns_per_row(_readable, _columns_scroll.size.x - scroll_bar_room, gap)
+	if rows == _laid_out_as:
+		return
+	_laid_out_as = rows
+	for old_row: Node in _columns_stack.get_children():
+		for card: PanelContainer in _cards:
+			if card.get_parent() == old_row:
+				old_row.remove_child(card)
+		_columns_stack.remove_child(old_row)
+		old_row.queue_free()
+	var at: int = 0
+	for row_size: int in rows:
+		var row: HBoxContainer = HBoxContainer.new()
+		row.add_theme_constant_override("separation", int(gap))
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		for index: int in range(at, at + row_size):
+			row.add_child(_cards[index])
+		_columns_stack.add_child(row)
+		at += row_size
 
 
 ## The plan for one column of `columns()`, its words measured in the language the page speaks now with `font` (the list's own).
@@ -588,6 +680,7 @@ static func plan_for(section: Dictionary, font: Font, font_size: int, title_font
 	var widest_title: float = font.get_string_size(EventSheetL10n.translate(str(section.get("title", ""))), HORIZONTAL_ALIGNMENT_LEFT, -1.0, title_font_size).x
 	var plan: Dictionary = column_plan(widest_name, widest_tag, widest_title, widest_word)
 	plan["widest_tag"] = widest_tag
+	plan["name"] = widest_name
 	return plan
 
 

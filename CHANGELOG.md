@@ -16,6 +16,10 @@ Choosing a node whose Juice Player holds 200 cards took about 400 ms, and adding
 
 Taking a card out of a band, with a card in front of it in the same band left open, drew the open card twice (one of the two stood for no card in the list). That list is now drawn by the path that carries every card to its place.
 
+### Fixed: a small Start window gives each column room to read instead of squeezing four side by side
+
+At 760 by 420 the Recent, Learn and This editor columns were so narrow that a name broke one word to a line ("This / is / the / editor's / own / project"). The Start window now asks what each column needs to read - its kind as wide as it is drawn, a few words of a name on a line, the row's icon and the card's frame - and when the window cannot give that to every column side by side it lays them out on more rows, shared out evenly (two and two, not three and one), and scrolls down to the rest; it never scrolls sideways and cuts nothing. At the default size, and wherever the columns fit, nothing moves.
+
 ### Fixed: square brackets in a comment are drawn as typed
 
 A comment such as `# a[b] and items[i]` was drawn as "a and items and": `[b]` and `[i]` looked like the bold and italic tags, so the brackets and what sat in them vanished. A comment is your own words, so only a tag closed later in the text is markup: `[b]bold[/b]` still makes bold, while `items[i]`, `a[b]`, `[0, 1]`, a lone `[url]` and an unclosed `[color=red]` are shown exactly as typed, in a comment row and in a note inside an event's actions, with the row's height and the find-in-sheet rectangle measured from the same text. The file's bytes never change.
