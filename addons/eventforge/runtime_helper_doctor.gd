@@ -30,7 +30,10 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 	scripts.sort()
 	# The library's class table is read once for the whole project, not once per script.
 	var index: Dictionary = HELPERS.class_files()
+	var turn: int = 0
 	for script_path: String in scripts:
+		turn += 1
+		await EventSheetProjectDoctor.breathe_every(turn)
 		if script_path.begins_with("res://addons/"):
 			continue
 		var lacking: PackedStringArray = HELPERS.lacking_for_text(EventSheetProjectDoctor.source_of(script_path),

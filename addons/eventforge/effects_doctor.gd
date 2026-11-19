@@ -87,7 +87,15 @@ static func ensure_registered() -> void:
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(scenes_with_effects(), own_paths(EventSheetProjectDoctor._project_scripts())))
+	var scripts: PackedStringArray = own_paths(EventSheetProjectDoctor._project_scripts())
+	# Opened as sheets first, on a worker, so the editor keeps drawing while the report reads them.
+	await EventSheetProjectDoctor.prefill_gate("effects-material", scripts, Callable(EventSheetEffectsDoctor, "_says_material"))
+	var sheets: PackedStringArray = _sheets_reaching_a_material(scripts)
+	await EventSheetProjectDoctor.prepare_sheets(sheets)
+	var scenes: PackedStringArray = scenes_with_effects()
+	if not scenes.is_empty() or not sheets.is_empty():
+		await EventSheetProjectDoctor.build_share_index_in_turns()
+	findings.append_array(report(scenes, scripts))
 
 
 ## Every scene of the project with a material worn in it, in path order. The substring sweep comes
@@ -145,11 +153,12 @@ static func report(scenes: PackedStringArray, scripts: PackedStringArray) -> Arr
 ## The scripts worth opening as sheets - the substring sweep, asked once so the two callers of it
 ## cannot drift. A project with no shaders and no material words pays one test per file and stops.
 static func _sheets_reaching_a_material(scripts: PackedStringArray) -> PackedStringArray:
-	var found: PackedStringArray = PackedStringArray()
-	for script_path: String in scripts:
-		if _says_any(EventSheetProjectDoctor.source_of(script_path), SHEET_WORDS):
-			found.append(script_path)
-	return found
+	return EventSheetProjectDoctor.gate("effects-material", scripts, Callable(EventSheetEffectsDoctor, "_says_material"))
+
+
+## Whether a script's text says a word that reaches a material.
+static func _says_material(text: String) -> bool:
+	return _says_any(text, SHEET_WORDS)
 
 
 ## What one script contributes: the four findings that need the rows as well as the scene. The script

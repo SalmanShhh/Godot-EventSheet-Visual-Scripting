@@ -11277,3 +11277,5 @@ the Load bindings row of the same pair,同一对中的“加载按键绑定”�
 The tests could not be started in a second copy of Godot.,无法在第二个 Godot 副本中启动测试。
 The test run ended before it wrote a report. Run the tests from a terminal to see why.,测试运行在写出报告之前就结束了。请在终端中运行测试以查看原因。
 Ctrl+Z takes it out again.,Ctrl+Z 可再次移除。
+%d found so far,目前已发现 %d 项
+the last checks,最后的检查

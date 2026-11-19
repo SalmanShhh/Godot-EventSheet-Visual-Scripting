@@ -113,7 +113,12 @@ static func ensure_registered() -> void:
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(EventSheetProjectDoctor._project_scripts()))
+	var scripts: PackedStringArray = EventSheetProjectDoctor._project_scripts()
+	# The scripts the report opens as sheets are opened first, on a worker, so the editor keeps drawing.
+	# Weighing the scripts is plain text work, so in the editor it is done on a worker thread first.
+	await EventSheetProjectDoctor.prefill_answer("spawning-ranked", scripts, func() -> PackedStringArray: return ranked(scripts))
+	await EventSheetProjectDoctor.prepare_sheets(ranked(scripts).slice(0, MEASURED_LIMIT))
+	findings.append_array(report(scripts))
 
 
 ## The whole section as findings, the summary first: how many scripts spawn and how many of them have
@@ -166,6 +171,10 @@ static func sheet_findings(script_path: String) -> Array[Dictionary]:
 ## survive a big project. Deterministic in both keys, so two audits of an unchanged project read the
 ## same.
 static func ranked(scripts: PackedStringArray) -> PackedStringArray:
+	# Weighing every script's text is the whole of this, and the audit asks it of the same scripts twice: held.
+	var held: Variant = EventSheetProjectDoctor.held_answer("spawning-ranked", scripts)
+	if held != null:
+		return (held as PackedStringArray).duplicate()
 	var scored: Array[Dictionary] = []
 	for script_path: String in scripts:
 		if _is_shipped(script_path):
@@ -173,7 +182,9 @@ static func ranked(scripts: PackedStringArray) -> PackedStringArray:
 		var weight: int = evidence(EventSheetProjectDoctor.source_of(script_path))
 		if weight > 0:
 			scored.append({"path": script_path, "weight": weight})
-	return _ordered_paths(scored, "weight", false)
+	var ordered: PackedStringArray = _ordered_paths(scored, "weight", false)
+	EventSheetProjectDoctor.hold_answer("spawning-ranked", scripts, ordered)
+	return ordered
 
 
 ## How much a script's own text says it could earn - a weight per rule whose shape it holds inside

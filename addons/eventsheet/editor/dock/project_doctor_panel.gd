@@ -72,11 +72,23 @@ var _running: bool = false
 ## True once the reader took the coverage note's door: this window's runs read every script as a sheet.
 var _every_script: bool = false
 var _cancel_requested: bool = false
+## The page being laid into the tree a few milliseconds a frame, so a long page never holds one frame; a
+## newer page (or a closed window) makes the older fill stop where it is.
+var _fill_generation: int = 0
+## When the page last began to be drawn during an audit, so findings arriving are drawn a few times a second
+## and not once per step.
+var _last_partial_draw_msec: int = 0
+## What one frame may spend laying rows into the tree.
+const FILL_BUDGET_USEC: int = 5000
 ## The selected finding's whole sentence, wrapped, under the list: a cell cuts a long one.
 var _whole_finding: PanelContainer = null
 var _whole_finding_text: Label = null
 ## Where each check's Learn more goes, found once a session: reading the whole Manual is not free.
 static var _learn_more_cache: Dictionary = {}
+## The Manual's pages as read for the lookups above, {page id: Markdown}, kept for the session once read.
+static var _learn_corpus: Dictionary = {}
+## True while a Learn more lookup runs on its thread: one at a time, as the Manual's lazy caches are built on it.
+static var _learn_busy: bool = false
 
 
 func init(dock: Control) -> void:
@@ -213,20 +225,31 @@ static func _button(text: String, pressed: Callable) -> Button:
 func _close() -> void:
 	# Closing the window stops an audit still running behind it.
 	_cancel_requested = true
+	_fill_generation += 1
 	_mark_page_as_read()
 	_doctor_window.hide()
 
 
 func _run_project_doctor() -> void:
 	if _running:
-		return
+		# An audit being stopped (the window was closed) finishes its step first; a new one waits for that rather
+		# than being dropped, so closing and opening the window at once still checks the project.
+		if not _cancel_requested or _dock == null or not _dock.is_inside_tree():
+			return
+		while _running:
+			await _dock.get_tree().process_frame
+		if _running or _doctor_window == null:
+			return
 	_running = true
 	_cancel_requested = false
 	_fix_pending = false
 	_set_running(true)
-	_doctor_tree.clear()
+	_fill_generation += 1
+	_last_partial_draw_msec = 0
 	_fixed_item = null
-	_doctor_tree.create_item()
+	await _clear_in_turns(_dock.get_tree(), _fill_generation)
+	if _doctor_tree.get_root() == null:
+		_doctor_tree.create_item()
 	# The audit is taken in slices of a few milliseconds with a frame between them, so the editor keeps
 	# drawing and the Cancel button works; the page is drawn again as findings come in. Extension-registered
 	# checks (EventSheets.register_doctor_check) report here exactly like built-ins, because the same
@@ -235,6 +258,14 @@ func _run_project_doctor() -> void:
 	# for the first time in this session (which takes a moment the window should not hide behind).
 	await _dock.get_tree().process_frame
 	await _dock.get_tree().process_frame
+	# The project is listed on a worker while the window says it is checking; begin() then finds the listing waiting.
+	await EventSheetProjectDoctor.prime_listing(_dock.get_tree(),
+		func() -> bool: return _cancel_requested or _doctor_window == null)
+	if _cancel_requested:
+		EventSheetProjectDoctor.drop_primed_listing()
+		_running = false
+		_set_running(false)
+		return
 	var session: Dictionary = EventSheetProjectDoctor.begin(_audit_options())
 	var report: Dictionary = await EventSheetProjectDoctor.run_sliced(session, _dock.get_tree(),
 		func() -> bool: return _cancel_requested or _doctor_window == null,
@@ -249,7 +280,7 @@ func _run_project_doctor() -> void:
 	# One store, so every page that wants to say what the Doctor found reads this run rather than
 	# starting one of its own.
 	set_doctor_findings(report.get("findings", []))
-	_draw_page(report.get("findings", []) as Array)
+	await _draw_page(report.get("findings", []) as Array)
 	_dock._set_status(_summary_label.text, int(report.get("errors", 0)) > 0)
 
 
@@ -266,25 +297,91 @@ func _audit_options() -> Dictionary:
 		"recent_paths": PackedStringArray(state.get("recent", []))}
 
 
-## Draws the page for the findings so far: worst first, and what is new against the last read.
+## Draws the page for the findings so far: worst first, and what is new against the last read. The rows go
+## into the tree a few milliseconds a frame (see `FILL_BUDGET_USEC`), so a page of thousands of findings
+## never holds a frame; the summary line is ready at once.
 func _draw_page(findings: Array) -> void:
-	_doctor_tree.clear()
-	_fixed_item = null
-	var root_item: TreeItem = _doctor_tree.create_item()
-	_page = EventSheetDoctorInbox.triage(findings, EventSheetDoctorInbox.load_seen())
-	fill_inbox(_doctor_tree, root_item, _page)
+	_fill_generation += 1
+	var mine: int = _fill_generation
+	var tree: SceneTree = _dock.get_tree() if _dock != null and _dock.is_inside_tree() else null
+	# Putting the findings in order is plain data work, so a long page is ordered on a worker thread.
+	var triaged: Array = []
+	if tree != null and findings.size() > 200:
+		triaged = await load("res://addons/eventforge/doctor_background.gd").run_work(
+			func() -> Array: return EventSheetDoctorInbox.triage(findings, EventSheetDoctorInbox.load_seen()), tree)
+		if mine != _fill_generation or _doctor_window == null or _doctor_tree == null:
+			return
+	else:
+		triaged = EventSheetDoctorInbox.triage(findings, EventSheetDoctorInbox.load_seen())
+	_page.assign(triaged)
 	_summary_label.text = EventSheetDoctorInbox.summary_line(_page)
+	await _clear_in_turns(tree, mine)
+	if mine != _fill_generation or _doctor_window == null or _doctor_tree == null:
+		return
+	_fixed_item = null
+	var root_item: TreeItem = _doctor_tree.get_root() if _doctor_tree.get_root() != null else _doctor_tree.create_item()
+	_fill_page(InboxFill.new(_doctor_tree, root_item, _page), mine, tree)
+
+
+## Lays a page's rows into the tree a few milliseconds a frame, until it is done or a newer page replaces it.
+func _fill_page(filler: InboxFill, mine: int, tree: SceneTree) -> void:
+	while not filler.step(FILL_BUDGET_USEC if tree != null else 0):
+		await tree.process_frame
+		if mine != _fill_generation or _doctor_window == null or _doctor_tree == null:
+			return
 	_on_finding_selected()
 
 
-## The progress line after each step, and the page again when something new has come in.
+## Empties the tree, a few milliseconds of rows a frame when it holds a long page: letting go of thousands of rows at
+## once is a frame of its own.
+func _clear_in_turns(tree: SceneTree, mine: int) -> void:
+	var root_item: TreeItem = _doctor_tree.get_root()
+	if root_item == null or tree == null:
+		_doctor_tree.clear()
+		return
+	var branch: TreeItem = root_item.get_first_child()
+	while branch != null:
+		var started: int = Time.get_ticks_usec()
+		var freed: int = 0
+		while branch.get_child_count() > 0:
+			branch.get_first_child().free()
+			freed += 1
+			if (freed & 15) == 0 and Time.get_ticks_usec() - started > FILL_BUDGET_USEC:
+				await tree.process_frame
+				if mine != _fill_generation or _doctor_window == null or _doctor_tree == null:
+					return
+				started = Time.get_ticks_usec()
+		branch = branch.get_next()
+	_doctor_tree.clear()
+
+
+## The progress line after each step, and the page again when something new has come in - a few times a
+## second at most, because every redraw lays the whole page out again.
 func _show_progress(session: Dictionary) -> void:
 	var progress: Vector2i = EventSheetProjectDoctor.progress_of(session)
-	_progress_label.text = EventSheetL10n.translate("Checking the project - step %d of %d") % [progress.x, progress.y]
 	var found: int = (session["findings"] as Array).size()
-	if found != int(_progress_label.get_meta("drawn", -1)) and _doctor_tree.get_selected() == null:
+	_progress_label.text = "%s - %s - %s" % [
+		EventSheetL10n.translate("Checking the project - step %d of %d") % [progress.x, progress.y],
+		_step_words(session), EventSheetL10n.translate("%d found so far") % found]
+	var now: int = Time.get_ticks_msec()
+	# A page of hundreds is drawn once, when the audit is done: laying it out again and again is the audit's own cost.
+	if found != int(_progress_label.get_meta("drawn", -1)) and found <= 300 and _doctor_tree.get_selected() == null 			and now - _last_partial_draw_msec >= 300 + found / 2:
 		_progress_label.set_meta("drawn", found)
+		_last_partial_draw_msec = now
 		_draw_page((session["findings"] as Array).duplicate())
+
+
+## What the audit is reading next, in words: the next step's name, which is a check's own id for most of them.
+## A step that only registers a section by its class name says nothing a reader could use, so it is skipped.
+func _step_words(session: Dictionary) -> String:
+	var steps: Array = session["steps"]
+	var next: int = mini(int(session["index"]), steps.size() - 1)
+	while next < steps.size():
+		var step_name: String = str((steps[next] as Array)[0])
+		if not step_name.begins_with("EventSheet") and step_name != "extension_checks":
+			return EventSheetDoctorInbox.label_for(step_name.replace("_", "-"))
+		next += 1
+	return EventSheetL10n.translate("the last checks")
 
 
 func _set_running(running: bool) -> void:
@@ -330,9 +427,40 @@ func _on_finding_selected() -> void:
 		row.set_custom_color(3, EventSheetPopupUI.accent_color())
 		row.set_tooltip_text(3, EventSheetL10n.translate("Applies this fix through undo, then re-runs the check."))
 		row.set_metadata(2, offer)
-	# The page that explains the problem and its fix, at its heading - the Manual's own search asked
-	# with the finding's words, so a check needs no entry anywhere to have one.
-	var learn: Dictionary = learn_more_for(finding as Dictionary)
+	_add_learn_row(item, finding as Dictionary)
+
+
+## The row under a finding that opens the page explaining it - the Manual's own search asked with the finding's
+## words, so a check needs no entry anywhere to have one. The first time a check is asked about, the Manual's
+## pages are read on a worker thread and the row appears a moment after the selection, so choosing a finding
+## never waits on the disk; once it is known the row is made at once.
+func _add_learn_row(item: TreeItem, finding: Dictionary) -> void:
+	var check: String = str(finding.get("check", "")).strip_edges()
+	if check.is_empty():
+		return
+	if not _learn_more_cache.has(check):
+		var tree: SceneTree = _dock.get_tree() if _dock != null and _dock.is_inside_tree() else null
+		if tree == null:
+			learn_more_for(finding)
+		else:
+			var job: LearnJob = LearnJob.new(finding)
+			if _learn_busy:
+				return
+			if not job.start():
+				learn_more_for(finding)
+			else:
+				_learn_busy = true
+				while job.is_running():
+					await tree.process_frame
+				var found: Dictionary = job.finish()
+				_learn_busy = false
+				_learn_more_cache[check] = found
+				if not (found.get("corpus_read", {}) as Dictionary).is_empty() and _learn_corpus.is_empty():
+					_learn_corpus = found["corpus_read"]
+				found.erase("corpus_read")
+		if not is_instance_valid(item) or item != _fixed_item or _doctor_window == null:
+			return
+	var learn: Dictionary = _learn_more_cache.get(check, {}) as Dictionary
 	if learn.is_empty():
 		return
 	var learn_row: TreeItem = _doctor_tree.create_item(item)
@@ -341,6 +469,46 @@ func _on_finding_selected() -> void:
 	learn_row.set_tooltip_text(3, EventSheetL10n.translate("Opens the Manual on the page that explains this finding and its fix."))
 	learn_row.set_metadata(2, learn)
 	item.collapsed = false
+
+
+## One Learn more lookup on a thread of its own: reads the Manual's pages and finds the page for one finding's
+## check. Only plain strings cross back; the cache is filled by whoever joins it.
+class LearnJob extends RefCounted:
+	var _thread: Thread = null
+	var _finding: Dictionary = {}
+	var _answer: Dictionary = {}
+
+
+	func _init(finding: Dictionary) -> void:
+		_finding = finding
+
+
+	func start() -> bool:
+		_thread = Thread.new()
+		if _thread.start(_run, Thread.PRIORITY_LOW) != OK:
+			_thread = null
+			return false
+		return true
+
+
+	func is_running() -> bool:
+		return _thread != null and _thread.is_alive()
+
+
+	func finish() -> Dictionary:
+		if _thread != null:
+			_thread.wait_to_finish()
+			_thread = null
+		return _answer
+
+
+	func _run() -> void:
+		var corpus: Dictionary = EventSheetProjectDoctorPanel._learn_corpus
+		if corpus.is_empty():
+			corpus = EventSheetProjectDoctorPanel.read_manual_pages()
+		var found: Dictionary = EventSheetProjectDoctorPanel.find_learn_more(_finding, corpus)
+		found["corpus_read"] = corpus
+		_answer = found
 
 
 ## Where a finding's Learn more goes: {doc_id, anchor, title}, or {} when the Manual has nothing
@@ -357,19 +525,40 @@ static func learn_more_for(finding: Dictionary, pages: Dictionary = {}) -> Dicti
 	if corpus.is_empty():
 		if _learn_more_cache.has(check):
 			return _learn_more_cache[check]
-		for page_id: String in EventSheetDocLibrary.page_ids():
-			corpus[page_id] = EventSheetDocLibrary.page_source(page_id)
+		corpus = _learn_corpus
+		if corpus.is_empty():
+			corpus = read_manual_pages()
+			_learn_corpus = corpus
+	var found: Dictionary = find_learn_more(finding, corpus, pages.is_empty())
+	if pages.is_empty():
+		_learn_more_cache[check] = found
+	return found
+
+
+## Every page of the Manual as {page id: Markdown}. Plain file reads, so a worker thread may run it.
+static func read_manual_pages() -> Dictionary:
+	var corpus: Dictionary = {}
+	for page_id: String in EventSheetDocLibrary.page_ids():
+		corpus[page_id] = EventSheetDocLibrary.page_source(page_id)
+	return corpus
+
+
+## The page for a finding's check among `corpus`, uncached: the page that names the check, else the guide's
+## own Doctor heading, else (for the shipped Manual only) a search of it. Touches no shared state, so a worker
+## thread may run it.
+static func find_learn_more(finding: Dictionary, corpus: Dictionary, ask_search: bool = true) -> Dictionary:
+	var check: String = str(finding.get("check", "")).strip_edges()
+	if check.is_empty():
+		return {}
 	var found: Dictionary = mention_in(corpus, check)
 	if found.is_empty():
 		found = doctor_heading_in(corpus, check)
-	if found.is_empty() and pages.is_empty():
+	if found.is_empty() and ask_search:
 		for result: Dictionary in EventSheetDocSearch.search(check.replace("-", " "), 5):
 			if not str(result.get("anchor", "")).is_empty():
 				found = {"doc_id": str(result.get("doc_id", "")), "anchor": str(result.get("anchor", "")),
 					"title": "%s · %s" % [str(result.get("title", "")), str(result.get("heading", ""))]}
 				break
-	if pages.is_empty():
-		_learn_more_cache[check] = found
 	return found
 
 
@@ -506,34 +695,73 @@ func _show_finding_row(finding: Dictionary) -> void:
 ## Static and given its tree for the same reason `fill` is: the window is not the only thing that can
 ## draw a page, and there is exactly one place that decides what a line looks like.
 static func fill_inbox(tree: Tree, root_item: TreeItem, page: Array[Dictionary]) -> void:
-	var branches: Dictionary = {}
-	for severity: String in EventSheetDoctorInbox.SEVERITY_ORDER:
-		var held: int = 0
-		var new_here: int = 0
-		for finding: Dictionary in page:
-			if str(finding.get("severity", "")) == severity:
-				held += 1
-				if bool(finding.get("is_new", false)):
-					new_here += 1
-		if held == 0:
-			continue
-		var branch: TreeItem = tree.create_item(root_item)
-		_mark(tree, branch, severity, new_here > 0)
-		branch.set_text(1, "%s (%d)" % [EventSheetDoctorInbox.severity_label(severity), held])
-		branch.set_custom_color(1, EventSheetPopupUI.tone_color(severity))
-		branch.set_text(3, EventSheetL10n.translate("%d new since you last looked.") % new_here
-			if new_here > 0 else "")
-		branch.set_selectable(0, false)
-		branch.set_selectable(1, false)
-		branches[severity] = branch
-	for finding: Dictionary in page:
+	var filler: InboxFill = InboxFill.new(tree, root_item, page)
+	filler.step(0)
+
+
+## One inbox page laid into a tree in turns: `step(budget_usec)` makes rows until the budget is spent and
+## answers whether the page is finished (a budget of 0 runs to the end). The rows are exactly those
+## `fill_inbox` has always made, so a page filled in many frames and one filled at once are the same page.
+class InboxFill extends RefCounted:
+	var _tree: Tree = null
+	var _page: Array[Dictionary] = []
+	var _branches: Dictionary = {}
+	var _cursor: int = 0
+	var _prepared: bool = false
+	var _root: TreeItem = null
+
+
+	func _init(tree: Tree, root_item: TreeItem, page: Array[Dictionary]) -> void:
+		_tree = tree
+		_root = root_item
+		_page = page
+
+
+	func step(budget_usec: int) -> bool:
+		var started: int = Time.get_ticks_usec()
+		if not _prepared:
+			_prepared = true
+			_make_branches()
+		while _cursor < _page.size():
+			_add_finding(_page[_cursor])
+			_cursor += 1
+			if budget_usec > 0 and (_cursor & 7) == 0 and Time.get_ticks_usec() - started >= budget_usec:
+				return _cursor >= _page.size()
+		return true
+
+
+	func _make_branches() -> void:
+		var held_by: Dictionary = {}
+		var new_by: Dictionary = {}
+		for finding: Dictionary in _page:
+			var severity: String = str(finding.get("severity", ""))
+			held_by[severity] = int(held_by.get(severity, 0)) + 1
+			if bool(finding.get("is_new", false)):
+				new_by[severity] = int(new_by.get(severity, 0)) + 1
+		for severity: String in EventSheetDoctorInbox.SEVERITY_ORDER:
+			var held: int = int(held_by.get(severity, 0))
+			var new_here: int = int(new_by.get(severity, 0))
+			if held == 0:
+				continue
+			var branch: TreeItem = _tree.create_item(_root)
+			EventSheetProjectDoctorPanel._mark(_tree, branch, severity, new_here > 0)
+			branch.set_text(1, "%s (%d)" % [EventSheetDoctorInbox.severity_label(severity), held])
+			branch.set_custom_color(1, EventSheetPopupUI.tone_color(severity))
+			branch.set_text(3, EventSheetL10n.translate("%d new since you last looked.") % new_here
+				if new_here > 0 else "")
+			branch.set_selectable(0, false)
+			branch.set_selectable(1, false)
+			_branches[severity] = branch
+
+
+	func _add_finding(finding: Dictionary) -> void:
 		var severity: String = str(finding.get("severity", "info"))
-		if not branches.has(severity):
-			continue
-		var item: TreeItem = tree.create_item(branches[severity])
-		_mark(tree, item, severity, bool(finding.get("is_new", false)))
+		if not _branches.has(severity):
+			return
+		var item: TreeItem = _tree.create_item(_branches[severity])
+		EventSheetProjectDoctorPanel._mark(_tree, item, severity, bool(finding.get("is_new", false)))
 		item.set_text(1, EventSheetDoctorInbox.label_for(str(finding.get("check", ""))))
-		item.set_text(2, _where(finding))
+		item.set_text(2, EventSheetProjectDoctorPanel._where(finding))
 		item.set_tooltip_text(2, str(finding.get("path")))
 		item.set_text(3, str(finding.get("message")))
 		item.set_metadata(0, str(finding.get("path", "")))

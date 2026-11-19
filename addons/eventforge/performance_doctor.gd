@@ -70,14 +70,8 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 	var busy: PackedStringArray = PackedStringArray(swept.get("busy", PackedStringArray()))
 	# The scripts the report is about to open are opened here a turn at a time, so the editor draws
 	# between them; the report then finds each one held for the audit.
-	var opened: int = 0
 	if not busy.is_empty():
-		for script_path: String in _smallest_first(busy):
-			if opened >= MEASURED_LIMIT:
-				break
-			await EventSheetProjectDoctor.breathe()
-			EventSheetProjectDoctor.sheet_of(script_path)
-			opened += 1
+		await EventSheetProjectDoctor.prepare_sheets(_smallest_first(busy).slice(0, MEASURED_LIMIT))
 	findings.append_array(await report_in_turns(busy))
 	if not bool(swept.get("handles_trouble", true)) and _still_asking():
 		findings.append(_finding("info", CHECK_NO_REPORT, "",

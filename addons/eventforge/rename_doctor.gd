@@ -51,7 +51,11 @@ static func ensure_registered() -> void:
 ## sheets - which is nearly all of them - are added from the witness, which is where the only files
 ## that can answer this question are named.
 static func check(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(corpus(sheet_paths, EventSheetRenameEvidence.watched_paths())))
+	var read: PackedStringArray = corpus(sheet_paths, EventSheetRenameEvidence.watched_paths())
+	# Opened as sheets first, on a worker, so the editor keeps drawing while the report reads them.
+	await EventSheetProjectDoctor.prepare_resource_sheets(read, true)
+	await EventSheetProjectDoctor.prepare_sheets(read)
+	findings.append_array(report(read))
 
 
 ## What one run reads: the stored sheets it was handed, plus every file this session watched a save
@@ -118,5 +122,5 @@ static func _scene_of(script_path: String) -> String:
 ## already is, and anything else is opened through the importer the way the editor opens it.
 static func _opened(path: String) -> EventSheetResource:
 	if path.get_extension().to_lower() == "tres":
-		return ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
+		return EventSheetProjectDoctor.opened_fresh(path)
 	return EventSheetProjectDoctor.sheet_of(path)

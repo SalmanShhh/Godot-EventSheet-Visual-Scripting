@@ -69,10 +69,8 @@ static func check(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -
 	var scripts: PackedStringArray = own_paths(EventSheetProjectDoctor._project_scripts())
 	# Opened here a turn at a time (the audit below finds each one held), so the editor draws between them.
 	var read: PackedStringArray = corpus(own_sheets, scripts)
-	for path: String in read:
-		await EventSheetProjectDoctor.breathe()
-		if path.get_extension().to_lower() == "gd":
-			_opened(path)
+	await EventSheetProjectDoctor.prepare_resource_sheets(read, true)
+	await EventSheetProjectDoctor.prepare_sheets(read)
 	var audited: Dictionary = _audit(read, {},
 		sample_note(own_sheets, scripts))
 	var said: Array[Dictionary] = []
@@ -260,7 +258,7 @@ static func _audit(paths: PackedStringArray, vocabulary: Dictionary,
 ## already is, and anything else is opened through the importer the way the editor opens it.
 static func _opened(path: String) -> EventSheetResource:
 	if path.get_extension().to_lower() == "tres":
-		return ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
+		return EventSheetProjectDoctor.opened_fresh(path)
 	return EventSheetProjectDoctor.sheet_of(path)
 
 

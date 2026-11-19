@@ -41,7 +41,10 @@ static func ensure_registered() -> void:
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(scene_editing_tools()))
+	var scripts: PackedStringArray = scene_editing_tools()
+	# Opened as sheets first, on a worker, so the editor keeps drawing while the report reads them.
+	await EventSheetProjectDoctor.prepare_sheets(scripts)
+	findings.append_array(report(scripts))
 
 
 ## Every script in the project that is a tool AND works on the scene the editor has open, in path

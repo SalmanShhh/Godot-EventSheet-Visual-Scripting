@@ -574,7 +574,7 @@ static func check_tidiness(sheet_paths: PackedStringArray, findings: Array[Dicti
 	for sheet_path: String in sheet_paths:
 		if sheet_path.get_extension().to_lower() == "gd":
 			continue  # A script's function or signal is a public offer to code that may call it from anywhere.
-		var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+		var sheet: EventSheetResource = EventSheetProjectDoctor.sheet_at(sheet_path)
 		if sheet == null:
 			continue
 		var corpus: String = EventSheetProjectDoctor._sheet_usage_text(sheet)

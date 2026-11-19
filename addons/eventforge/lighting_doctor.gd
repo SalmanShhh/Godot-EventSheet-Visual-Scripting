@@ -56,7 +56,15 @@ static func ensure_registered() -> void:
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(lit_scenes(), EventSheetProjectDoctor._project_scripts()))
+	var scripts: PackedStringArray = EventSheetProjectDoctor._project_scripts()
+	# The scripts that reach the environment are opened as sheets first, on a worker, so the editor keeps drawing.
+	await EventSheetProjectDoctor.prefill_gate("lighting-environment", scripts, Callable(EventSheetLightingDoctor, "reaches_the_environment"))
+	var reaching: PackedStringArray = EventSheetProjectDoctor.gate("lighting-environment", scripts, Callable(EventSheetLightingDoctor, "reaches_the_environment"))
+	await EventSheetProjectDoctor.prepare_sheets(reaching)
+	var scenes: PackedStringArray = lit_scenes()
+	if not scenes.is_empty():
+		await EventSheetProjectDoctor.build_share_index_in_turns()
+	findings.append_array(report(scenes, scripts))
 
 
 ## Every scene of the project with lighting in it, in path order: a light, the CanvasModulate a
@@ -112,7 +120,8 @@ static func report(scenes: PackedStringArray, scripts: PackedStringArray) -> Arr
 			worst_path = scene_path
 		troubled += 1
 		findings.append_array(_filed(scene_path, found, CHECK_FOR_KIND, CHECK_ID))
-	for script_path: String in scripts:
+	# Only the scripts that reach the environment can say anything, and the answer is held for the audit.
+	for script_path: String in EventSheetProjectDoctor.gate("lighting-environment", scripts, Callable(EventSheetLightingDoctor, "reaches_the_environment")):
 		findings.append_array(sheet_findings(script_path))
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
 		EventSheetL10n.translate("Lighting: %d lit scene(s), %d with something that will not show at run time.") % [

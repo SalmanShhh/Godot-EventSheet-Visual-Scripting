@@ -352,7 +352,19 @@ static func _lift_body_reading_comments(sheet: EventSheetResource, source: Strin
 ## Two-pass: the full lift (events + sheet functions + trailing comments) is tried first;
 ## if its byte-verify fails (e.g. annotations we can't regenerate), the event-only lift is
 ## retried so files keep at least the coverage older versions had.
+## Every lift takes this: the lifter keeps its working state in statics, so two lifts never run at once - the one
+## on the editor's own thread waits for the Project Doctor's worker, and the reverse. A mutex here is re-entrant.
+static var _lift_lock: Mutex = Mutex.new()
+
+
 static func attempt_lift(sheet: EventSheetResource, source: String, lift_functions: bool = true) -> bool:
+	_lift_lock.lock()
+	var lifted: bool = _attempt_lift_locked(sheet, source, lift_functions)
+	_lift_lock.unlock()
+	return lifted
+
+
+static func _attempt_lift_locked(sheet: EventSheetResource, source: String, lift_functions: bool = true) -> bool:
 	lift_attempts += 1
 	# Only the OUTER pass owns the progress counters - the event-only retry below re-enters this
 	# function and must not restart the bar the user is watching. The body has many early returns

@@ -55,12 +55,22 @@ static func ensure_registered() -> void:
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	var sources: Array[Dictionary] = []
-	for script_path: String in EventSheetProjectDoctor._project_scripts():
-		var source: String = EventSheetProjectDoctor.source_of(script_path)
-		if _says_any(source, DAMAGE_WORDS):
-			sources.append({"path": script_path, "source": source})
-	findings.append_array(report(sources, EventForgeDamageTypeFacts.project_type_names(),
-		EventForgeDamageTypeFacts.has_any_set()))
+	# Plain text in and findings out, so in the editor both halves run on a worker thread.
+	for script_path: Variant in await EventSheetProjectDoctor.in_batches(EventSheetProjectDoctor._project_scripts(), _saying_damage_among):
+		sources.append({"path": str(script_path), "source": EventSheetProjectDoctor.source_of(str(script_path))})
+	var declared: PackedStringArray = EventForgeDamageTypeFacts.project_type_names()
+	var any_set: bool = EventForgeDamageTypeFacts.has_any_set()
+	findings.append_array(await EventSheetProjectDoctor.in_background(func() -> Array[Dictionary]:
+		return report(sources, declared, any_set)))
+
+
+## The scripts among `paths` whose text says a word of typed damage, in the order given.
+static func _saying_damage_among(paths: PackedStringArray) -> Array:
+	var found: Array = []
+	for script_path: String in paths:
+		if _says_any(EventSheetProjectDoctor.source_of(script_path), DAMAGE_WORDS):
+			found.append(script_path)
+	return found
 
 
 ## The whole section as findings, the summary first. Pure over its corpus - a list of

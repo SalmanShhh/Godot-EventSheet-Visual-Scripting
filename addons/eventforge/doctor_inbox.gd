@@ -72,12 +72,20 @@ static func triage(findings: Array, seen: PackedStringArray) -> Array[Dictionary
 	for finding: Variant in findings:
 		if finding is Dictionary:
 			sorted.append((finding as Dictionary).duplicate())
-	sorted.sort_custom(_before)
-	var out: Array[Dictionary] = []
+	# Each finding's sort key is built once, not on every comparison of the sort.
+	var keyed: Array[Array] = []
 	for finding: Dictionary in sorted:
-		var entry: Dictionary = finding.duplicate()
-		entry["identity"] = identity(finding)
-		entry["is_new"] = not seen.has(str(entry["identity"]))
+		keyed.append([_severity_rank(str(finding.get("severity", "info"))), _sort_key(finding), finding])
+	keyed.sort_custom(_keyed_before)
+	# The identities of the last read as a set: a list asked "has" once per finding is quadratic.
+	var read_before: Dictionary = {}
+	for identity_text: String in seen:
+		read_before[identity_text] = true
+	var out: Array[Dictionary] = []
+	for held: Array in keyed:
+		var entry: Dictionary = (held[2] as Dictionary).duplicate()
+		entry["identity"] = identity(held[2] as Dictionary)
+		entry["is_new"] = not read_before.has(str(entry["identity"]))
 		out.append(entry)
 	return out
 
@@ -143,9 +151,11 @@ static func summary_line(triaged: Array[Dictionary]) -> String:
 ## Every identity on the page, sorted - what is written down when a reader has looked.
 static func identities_of(triaged: Array[Dictionary]) -> PackedStringArray:
 	var out: PackedStringArray = PackedStringArray()
+	var held: Dictionary = {}
 	for finding: Dictionary in triaged:
 		var found: String = str(finding.get("identity", identity(finding)))
-		if not out.has(found):
+		if not held.has(found):
+			held[found] = true
 			out.append(found)
 	out.sort()
 	return out
@@ -174,6 +184,13 @@ static func save_seen(identities: PackedStringArray, store_path: String = SEEN_P
 static func forget_seen(store_path: String = SEEN_PATH) -> void:
 	if FileAccess.file_exists(store_path):
 		DirAccess.remove_absolute(store_path)
+
+
+## `_before` over [severity rank, sort key, finding] triples whose keys were built once.
+static func _keyed_before(left: Array, right: Array) -> bool:
+	if int(left[0]) != int(right[0]):
+		return int(left[0]) < int(right[0])
+	return str(left[1]) < str(right[1])
 
 
 static func _before(left: Dictionary, right: Dictionary) -> bool:

@@ -11277,3 +11277,5 @@ the Load bindings row of the same pair,строка «Загрузить при�
 The tests could not be started in a second copy of Godot.,Не удалось запустить тесты во второй копии Godot.
 The test run ended before it wrote a report. Run the tests from a terminal to see why.,"Прогон тестов завершился, не записав отчёт. Запустите тесты из терминала, чтобы узнать причину."
 Ctrl+Z takes it out again.,Ctrl+Z снова уберёт это.
+%d found so far,найдено: %d
+the last checks,последние проверки

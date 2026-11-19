@@ -46,6 +46,19 @@ static func all_scripts() -> PackedStringArray:
 	return _all_scripts
 
 
+## The listing a Doctor audit holds for its own length (see project_listing.gd): while there is one, a walk is a
+## filter over it. Null outside an audit, so a walk always sees the folder as it is.
+static var _held: RefCounted = null
+
+
+static func hold(listing: RefCounted) -> void:
+	_held = listing
+
+
+static func held_listing() -> RefCounted:
+	return _held
+
+
 ## Forgets the held list, so the next ask walks the directories again.
 static func clear() -> void:
 	_all_scripts = PackedStringArray()
@@ -59,6 +72,8 @@ static func clear() -> void:
 ## NTFS, hash order on ext4), and every list derived from this one - a finding order, a "first
 ## user" pick, a band's count - would otherwise reorder itself between two machines.
 static func walk(skipped_directories: PackedStringArray, keeps: Callable) -> PackedStringArray:
+	if _held != null:
+		return _held.walk(skipped_directories, keeps)
 	var found: PackedStringArray = PackedStringArray()
 	var pending: PackedStringArray = PackedStringArray(["res://"])
 	while not pending.is_empty():

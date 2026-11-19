@@ -82,7 +82,10 @@ static func ensure_registered() -> void:
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(EventSheetProjectDoctor._project_scripts()))
+	var scripts: PackedStringArray = EventSheetProjectDoctor._project_scripts()
+	# The scripts the report opens as sheets are opened first, on a worker, so the editor keeps drawing.
+	await EventSheetProjectDoctor.prepare_sheets(ranked(scripts).slice(0, MEASURED_LIMIT))
+	findings.append_array(report(scripts))
 
 
 ## The whole section as findings, the summary first: how many scripts wait on a touch, how many were

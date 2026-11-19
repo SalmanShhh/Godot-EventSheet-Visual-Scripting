@@ -83,13 +83,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 	# The sheets the report is about to open are opened here, one turn each, so the editor draws between
 	# them; the report then finds each one already held for the audit.
 	var scripts: PackedStringArray = EventSheetProjectDoctor._project_scripts()
-	var opened: int = 0
-	for script_path: String in ranked(scripts):
-		if opened >= MEASURED_LIMIT:
-			break
-		await EventSheetProjectDoctor.breathe()
-		EventSheetProjectDoctor.sheet_of(script_path)
-		opened += 1
+	await EventSheetProjectDoctor.prepare_sheets(ranked(scripts).slice(0, MEASURED_LIMIT))
 	findings.append_array(await report_in_turns(scripts))
 
 

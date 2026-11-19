@@ -145,9 +145,29 @@ func _refresh_put_back() -> void:
 	_project_put_back_line.text = line
 
 
+## The `.tres` sheets a Project Doctor audit already found for itself, on a worker, for the length of that
+## audit - see `hold_sheets`. Empty and unused otherwise, so every other asker sees the folder as it is.
+static var _held_sheets: PackedStringArray = PackedStringArray()
+static var _holds_sheets: bool = false
+
+
+## Hands `list_project_sheets` its answer for one audit, so the audit does not load every `.tres` of the
+## project on the main thread to ask each what it is.
+static func hold_sheets(sheet_paths: PackedStringArray) -> void:
+	_held_sheets = sheet_paths
+	_holds_sheets = true
+
+
+static func release_held_sheets() -> void:
+	_held_sheets = PackedStringArray()
+	_holds_sheets = false
+
+
 ## Every .tres EventSheetResource under res:// (skips .godot and addons internals). `.tres` ONLY: a
 ## walk that means every sheet wants list_all_project_sheets() below.
 static func list_project_sheets() -> PackedStringArray:
+	if _holds_sheets:
+		return _held_sheets.duplicate()
 	var sheet_paths: PackedStringArray = PackedStringArray()
 	var pending: PackedStringArray = PackedStringArray(["res://"])
 	while not pending.is_empty():

@@ -71,7 +71,21 @@ static func ensure_registered() -> void:
 ## inside res://. `sheet_paths` is deliberately unused - it finds only `.tres` sheets while `.gd` is
 ## the default sheet format, and this page is about hand-written GDScript above all.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(await report_in_turns(EventSheetDoctorSection.own_paths(EventSheetProjectDoctor._project_scripts())))
+	var scripts: PackedStringArray = EventSheetDoctorSection.own_paths(EventSheetProjectDoctor._project_scripts())
+	# The few scripts the page reads are read first, on a worker, so the editor keeps drawing.
+	var sorted: PackedStringArray = scripts.duplicate()
+	sorted.sort()
+	var first: PackedStringArray = PackedStringArray()
+	var turn: int = 0
+	for script_path: String in sorted:
+		turn += 1
+		await EventSheetProjectDoctor.breathe_every(turn)
+		if first.size() >= SCRIPTS_READ_LIMIT:
+			break
+		if not EventSheetProjectDoctor.source_of(script_path).strip_edges().is_empty():
+			first.append(script_path)
+	await EventSheetProjectDoctor.prepare_readings(first)
+	findings.append_array(await report_in_turns(scripts))
 
 
 ## The whole page for a list of scripts, as findings. Pure over the paths, so a test can hand it a
@@ -118,7 +132,7 @@ static func report_in_turns(script_paths: PackedStringArray) -> Array[Dictionary
 			continue
 		await EventSheetProjectDoctor.breathe()
 		read += 1
-		var reading: Dictionary = EventSheetLiftReading.read(source, script_path)
+		var reading: Dictionary = EventSheetProjectDoctor.reading_of(source, script_path)
 		var coverage: Dictionary = reading.get("coverage", {}) as Dictionary
 		read_lines += int(coverage.get("read_lines", 0))
 		total_lines += int(coverage.get("total_lines", 0))

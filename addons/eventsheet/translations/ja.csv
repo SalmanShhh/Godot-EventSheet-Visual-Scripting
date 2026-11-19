@@ -11277,3 +11277,5 @@ the Load bindings row of the same pair,同じペアのバインドを読み込�
 The tests could not be started in a second copy of Godot.,2つ目のGodotでテストを開始できませんでした。
 The test run ended before it wrote a report. Run the tests from a terminal to see why.,レポートが書き込まれる前にテストの実行が終了しました。ターミナルからテストを実行して原因を確認してください。
 Ctrl+Z takes it out again.,Ctrl+Z でもう一度取り除けます。
+%d found so far,ここまでに%d件
+the last checks,最後のチェック

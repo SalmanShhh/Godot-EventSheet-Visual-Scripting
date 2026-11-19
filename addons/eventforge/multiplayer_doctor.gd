@@ -46,7 +46,10 @@ static func ensure_registered() -> void:
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(await networked_scripts()))
+	var scripts: PackedStringArray = await networked_scripts()
+	# Opened as sheets first, on a worker, so the editor keeps drawing while the report reads them.
+	await EventSheetProjectDoctor.prepare_sheets(scripts)
+	findings.append_array(report(scripts))
 
 
 ## Every script in the project that says something about the network, in path order. Excludes the
@@ -58,10 +61,16 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 ## would let the corpus and the coverage number disagree.
 static func networked_scripts() -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
-	var looked: int = 0
-	for script_path: String in EventSheetProjectDoctor._project_scripts():
-		looked += 1
-		await EventSheetProjectDoctor.breathe_every(looked)
+	# Plain text in and paths out, so in the editor the sweep runs on a worker thread a batch at a time.
+	found.append_array(PackedStringArray(await EventSheetProjectDoctor.in_batches(
+		EventSheetProjectDoctor._project_scripts(), _networked_among)))
+	return found
+
+
+## The scripts among `paths` with a line that says something about the network, in the order given.
+static func _networked_among(paths: PackedStringArray) -> Array:
+	var found: Array = []
+	for script_path: String in paths:
 		for line: String in EventSheetProjectDoctor.source_of(script_path).split("\n"):
 			if EventForgeMultiplayerLift.is_networking_line(line):
 				found.append(script_path)

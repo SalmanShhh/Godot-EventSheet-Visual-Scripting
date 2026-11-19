@@ -63,7 +63,10 @@ static func ensure_registered() -> void:
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	var sources: Array[Dictionary] = []
+	var turn: int = 0
 	for script_path: String in EventSheetProjectDoctor._project_scripts():
+		turn += 1
+		await EventSheetProjectDoctor.breathe_every(turn)
 		var source: String = EventSheetProjectDoctor.source_of(script_path)
 		if not _says_any(source, TREE_WORDS):
 			continue

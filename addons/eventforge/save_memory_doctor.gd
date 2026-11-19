@@ -58,7 +58,10 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 	if save_pack_is_registered():
 		return
 	var paths: PackedStringArray = PackedStringArray()
+	var turn: int = 0
 	for script_path: String in EventSheetProjectDoctor._project_scripts():
+		turn += 1
+		await EventSheetProjectDoctor.breathe_every(turn)
 		if _is_shipped(script_path):
 			continue
 		if _says_any(EventSheetProjectDoctor.source_of(script_path), SHEET_WORDS):

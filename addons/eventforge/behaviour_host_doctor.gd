@@ -36,7 +36,10 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 	var scenes: PackedStringArray = EventSheetProjectDoctor._list_files_with_extension("tscn")
 	scenes.sort()
 	var behaviours: Dictionary = {}
+	var turn: int = 0
 	for scene_path: String in scenes:
+		turn += 1
+		await EventSheetProjectDoctor.breathe_every(turn)
 		var text: String = EventSheetProjectDoctor.source_of(scene_path)
 		# One substring test decides whether a scene can hold a behaviour at all.
 		if not text.contains("[ext_resource type=\"Script\""):

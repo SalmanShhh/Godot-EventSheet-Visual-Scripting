@@ -54,7 +54,12 @@ static func ensure_registered() -> void:
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(scripts_naming_a_player()))
+	await EventSheetProjectDoctor.prefill_gate("feedback-player", own_paths(EventSheetProjectDoctor._project_scripts()),
+		Callable(EventSheetFeedbackDoctor, "_names_a_player"))
+	var scripts: PackedStringArray = scripts_naming_a_player()
+	# Opened as sheets first, on a worker, so the editor keeps drawing while the report reads them.
+	await EventSheetProjectDoctor.prepare_sheets(scripts)
+	findings.append_array(report(scripts))
 	findings.append_array(card_findings(scenes_with_cards()))
 
 
@@ -84,12 +89,13 @@ static func card_findings(scenes: PackedStringArray) -> Array[Dictionary]:
 ## Every script in the project that addresses a Juice Player, in path order. Excludes the
 ## plugin's own code and its packs, like every other Doctor corpus.
 static func scripts_naming_a_player() -> PackedStringArray:
-	var found: PackedStringArray = PackedStringArray()
-	for script_path: String in own_paths(EventSheetProjectDoctor._project_scripts()):
-		var source: String = EventSheetProjectDoctor.source_of(script_path)
-		if source.contains(PLAYER_WORDS[0]) or source.contains(PLAYER_WORDS[1]):
-			found.append(script_path)
-	return found
+	return EventSheetProjectDoctor.gate("feedback-player", own_paths(EventSheetProjectDoctor._project_scripts()),
+		Callable(EventSheetFeedbackDoctor, "_names_a_player"))
+
+
+## Whether a script's text addresses a Juice Player.
+static func _names_a_player(source: String) -> bool:
+	return source.contains(PLAYER_WORDS[0]) or source.contains(PLAYER_WORDS[1])
 
 
 ## The whole section as findings, the summary first: how many sheets play a beat through a player,

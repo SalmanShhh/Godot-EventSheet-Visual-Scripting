@@ -26,7 +26,10 @@ static func ensure_registered() -> void:
 ## The section, with the contract every registered check has: append findings, never write inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	var watched: Dictionary = {}
+	var turn: int = 0
 	for script_path: String in own_paths(EventSheetProjectDoctor._project_scripts()):
+		turn += 1
+		await EventSheetProjectDoctor.breathe_every(turn)
 		var source: String = EventSheetProjectDoctor.source_of(script_path)
 		if not source.contains("PackedScene") or not source.contains(".instantiate()"):
 			continue
@@ -35,7 +38,10 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 			watched[script_path] = empty.keys()
 	if watched.is_empty():
 		return
+	var turn_2: int = 0
 	for scene_path: String in EventSheetProjectDoctor._list_files_with_extension("tscn"):
+		turn_2 += 1
+		await EventSheetProjectDoctor.breathe_every(turn_2)
 		if scene_path.begins_with(PLUGIN_DIRECTORY):
 			continue
 		var text: String = EventSheetProjectDoctor.source_of(scene_path)

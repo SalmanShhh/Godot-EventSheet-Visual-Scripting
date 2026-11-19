@@ -43,7 +43,10 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 	var pattern: RegEx = RegEx.create_from_string(_DECLARATION)
 	var user_classes: Dictionary = {}
 	var looked: int = 0
+	var turn: int = 0
 	for script_path: String in EventSheetProjectDoctor._project_scripts():
+		turn += 1
+		await EventSheetProjectDoctor.breathe_every(turn)
 		if _is_shipped(script_path):
 			continue
 		looked += 1
@@ -69,7 +72,10 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 			if EventSheetPackLibrary.in_project(folder):
 				held_packs[declared] = PACK_DIRECTORY.path_join(folder)
 	var helpers: Dictionary = load("res://addons/eventforge/runtime_helpers.gd").class_files()
+	var turn_2: int = 0
 	for declared: String in helpers:
+		turn_2 += 1
+		await EventSheetProjectDoctor.breathe_every(turn_2)
 		library_names[declared] = str(helpers[declared])
 		if FileAccess.file_exists(PACK_DIRECTORY.path_join(str(helpers[declared]))):
 			held_packs[declared] = PACK_DIRECTORY.path_join(str(helpers[declared]))

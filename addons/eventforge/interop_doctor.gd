@@ -52,7 +52,18 @@ static func ensure_registered() -> void:
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(own_paths(ReadingDoors.doctor()._project_scripts())))
+	var scripts: PackedStringArray = own_paths(ReadingDoors.doctor()._project_scripts())
+	# The few scripts the report measures are opened as sheets first, on a worker, so the editor keeps drawing.
+	var sized: Array[Dictionary] = []
+	var turn: int = 0
+	for script_path: String in scripts:
+		turn += 1
+		await ReadingDoors.doctor().breathe_every(turn)
+		var text: String = ReadingDoors.doctor().source_of(script_path)
+		if not _marked_in(text):
+			sized.append({"path": script_path, "size": text.length()})
+	await ReadingDoors.doctor().prepare_sheets(_ordered_paths(sized, "size", true).slice(0, MEASURED_LIMIT))
+	findings.append_array(report(scripts))
 
 
 ## Whether this file carries the mark that keeps it code. Read off the file, so it is the same answer

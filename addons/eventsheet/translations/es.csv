@@ -11277,3 +11277,5 @@ the Load bindings row of the same pair,la fila Cargar controles del mismo par
 The tests could not be started in a second copy of Godot.,No se pudieron iniciar las pruebas en una segunda copia de Godot.
 The test run ended before it wrote a report. Run the tests from a terminal to see why.,La ejecución de las pruebas terminó antes de escribir un informe. Ejecuta las pruebas desde una terminal para ver el motivo.
 Ctrl+Z takes it out again.,Ctrl+Z lo quita de nuevo.
+%d found so far,%d encontrados hasta ahora
+the last checks,las últimas comprobaciones

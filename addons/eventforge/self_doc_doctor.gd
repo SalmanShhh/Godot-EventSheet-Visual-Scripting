@@ -53,7 +53,10 @@ static func check(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -
 	var sorted: PackedStringArray = sheet_paths.duplicate()
 	sorted.sort()
 	var read: int = 0
+	var turn: int = 0
 	for sheet_path: String in sorted:
+		turn += 1
+		await EventSheetProjectDoctor.breathe_every(turn)
 		if read >= SHEETS_READ_LIMIT:
 			findings.append(_finding("info", CHECK_ID, "",
 				EventSheetL10n.translate("Descriptions: %d sheet(s) read of %d. Open the rest and the page will have them too.") % [

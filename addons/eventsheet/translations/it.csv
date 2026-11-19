@@ -11277,3 +11277,5 @@ the Load bindings row of the same pair,la riga Carica i tasti della stessa coppi
 The tests could not be started in a second copy of Godot.,Non è stato possibile avviare i test in una seconda copia di Godot.
 The test run ended before it wrote a report. Run the tests from a terminal to see why.,L'esecuzione dei test è terminata prima di scrivere un rapporto. Esegui i test da un terminale per vedere il motivo.
 Ctrl+Z takes it out again.,Ctrl+Z lo toglie di nuovo.
+%d found so far,%d trovati finora
+the last checks,gli ultimi controlli

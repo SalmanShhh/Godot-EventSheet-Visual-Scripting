@@ -67,6 +67,20 @@ static var _audited_sheets: Dictionary = {}
 
 ## The step of a sliced audit in hand, for whoever measures where a frame went. Empty between audits.
 static var current_step: String = ""
+## The project's folders and which `.tres` files are sheets, listed on a worker ahead of `begin()` - see `prime_listing`.
+static var _primed: Dictionary = {}
+## The caller's "stop now" question for the sliced audit in hand, so a wait inside a check can honour it.
+static var _cancel_check: Callable = Callable()
+const BACKGROUND_PATH: String = "res://addons/eventforge/doctor_background.gd"
+const SHEET_PREFETCH_PATH: String = "res://addons/eventforge/doctor_sheet_prefetch.gd"
+
+## Where the last finished audit's time went, {step id: microseconds}: for whoever measures an audit.
+static var last_timings: Dictionary = {}
+## For whoever measures an audit: with `trace_slow` on, every stretch of main-thread work between two offers of a
+## frame (or a step's start and end) that took over 50 ms is listed with the step it was in and where it ended.
+static var trace_slow: bool = false
+static var slow_segments: Array[Dictionary] = []
+static var _last_mark_usec: int = 0
 ## How many times a section offered the editor a frame, for a test that pins that a section gives one per script it reads.
 static var breathe_calls: int = 0
 
@@ -102,6 +116,309 @@ static func unregister_check(check_id: String) -> void:
 			_extension_checks.remove_at(index)
 
 
+## Lists the project on a worker thread before `begin()`, for an editor that must keep drawing: a coroutine
+## (await it). The listing is picked up by the `begin()` that follows and let go of when the audit ends, so
+## the answers are the folder's as of this moment and a walk outside an audit is never served from it.
+static func prime_listing(tree: SceneTree, cancelled: Callable) -> void:
+	_primed = await load(BACKGROUND_PATH).list_project(tree, cancelled)
+
+
+## The `.tres` sheets held for one audit, {path: sheet}, beside the `.gd` ones in `_sheet_cache`.
+static var _resource_sheets: Dictionary = {}
+## The same, each read fresh from the file past the loader's cache, for the sections that judge what is on disk.
+static var _fresh_sheets: Dictionary = {}
+
+
+## A `.tres` sheet read fresh from its file (never the loader's cached copy, which may hold edits not yet saved),
+## the one `prepare_resource_sheets(paths, true)` already read when there is one.
+static func opened_fresh(path: String) -> EventSheetResource:
+	if _fresh_sheets.has(path):
+		return _fresh_sheets[path] as EventSheetResource
+	return ResourceLoader.load(path, "", ResourceLoader.CACHE_MODE_IGNORE) as EventSheetResource
+
+
+## Loads `.tres` sheets with the engine's own threaded loader while the editor keeps drawing: a coroutine. Loading
+## a thousand of them on the main thread is seconds in one frame. Outside a sliced audit it does nothing and
+## `sheet_at` loads each one itself.
+static func prepare_resource_sheets(paths: PackedStringArray, fresh: bool = false) -> void:
+	if _frame_source == null or not _run_in_progress:
+		return
+	var held: Dictionary = _fresh_sheets if fresh else _resource_sheets
+	var mode: int = ResourceLoader.CACHE_MODE_IGNORE if fresh else ResourceLoader.CACHE_MODE_REUSE
+	var wanted: PackedStringArray = PackedStringArray()
+	for path: String in paths:
+		if path.begins_with("res://") and path.get_extension() == "tres" and not held.has(path):
+			wanted.append(path)
+	var at: int = 0
+	while at < wanted.size():
+		var batch: PackedStringArray = wanted.slice(at, at + 48)
+		at += 48
+		var requested: PackedStringArray = PackedStringArray()
+		for path: String in batch:
+			if ResourceLoader.load_threaded_request(path, "", false, mode) == OK:
+				requested.append(path)
+		var waiting: bool = true
+		while waiting:
+			waiting = false
+			for path: String in requested:
+				var status: int = ResourceLoader.load_threaded_get_status(path)
+				if status == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+					waiting = true
+					break
+			if waiting:
+				await _frame_source.process_frame
+				_last_mark_usec = Time.get_ticks_usec()
+		for path: String in requested:
+			# Every one has finished (loaded or failed): this takes the result and does not wait.
+			var loaded: Resource = ResourceLoader.load_threaded_get(path)
+			held[path] = loaded as EventSheetResource
+		if _cancel_check.is_valid() and bool(_cancel_check.call()):
+			return
+		await breathe()
+
+
+## The readings the Reading page asked for ahead of time, {path: reading}; held for one audit like the sheets are.
+static var _reading_cache: Dictionary = {}
+
+
+## `prepare_sheets` for the Reading page's own reader, which reads a script line by line instead of keeping its sheet.
+static func prepare_readings(paths: PackedStringArray) -> void:
+	if _frame_source == null or not _run_in_progress:
+		return
+	var wanted: PackedStringArray = PackedStringArray()
+	for path: String in paths:
+		if not _reading_cache.has(path):
+			wanted.append(path)
+	if wanted.is_empty():
+		return
+	var read: Dictionary = await load(SHEET_PREFETCH_PATH).open_all(wanted, _frame_source, _cancel_check, "reading")
+	_last_mark_usec = Time.get_ticks_usec()
+	for path: Variant in read:
+		_reading_cache[str(path)] = read[path]
+
+
+## The reading of one script's text: the one prepared on a worker when there is one, else made here.
+static func reading_of(source: String, script_path: String) -> Dictionary:
+	if _reading_cache.has(script_path):
+		return _reading_cache[script_path] as Dictionary
+	return EventSheetLiftReading.read(source, script_path)
+
+
+## `work` run on a worker thread while the editor keeps drawing, for a stretch of the audit that is nothing but
+## plain data in and plain data out (it must not touch the scene tree, a resource or an editor object): a coroutine,
+## answering what `work` answers. Outside a sliced audit it simply calls it.
+static func in_background(work: Callable) -> Variant:
+	if _frame_source == null:
+		return work.call()
+	var answer: Variant = await load(BACKGROUND_PATH).run_work(work, _frame_source)
+	_last_mark_usec = Time.get_ticks_usec()
+	return answer
+
+
+## Which of `paths` a pure question about a script's text says yes to, held for the length of one audit under `key`
+## (two askers of the same question over the same paths pay once). `predicate` takes the text and answers a bool and
+## must touch nothing but that text. Outside an audit nothing is held.
+static var _gate_memo: Dictionary = {}
+
+
+static func gate(key: String, paths: PackedStringArray, predicate: Callable) -> PackedStringArray:
+	var token: String = "%s|%d" % [key, hash(paths)]
+	if _run_in_progress and _gate_memo.has(token):
+		return (_gate_memo[token] as PackedStringArray).duplicate()
+	var found: PackedStringArray = PackedStringArray()
+	for path: String in paths:
+		if predicate.call(source_of(path)):
+			found.append(path)
+	if _run_in_progress:
+		_gate_memo[token] = found.duplicate()
+	return found
+
+
+## An answer an audit has already worked out for one question over one list of paths, or null. Held for the length of
+## one audit, like a gate's; outside an audit there is none.
+static func held_answer(key: String, paths: PackedStringArray) -> Variant:
+	if not _run_in_progress:
+		return null
+	return _gate_memo.get("%s|%d" % [key, hash(paths)], null)
+
+
+static func hold_answer(key: String, paths: PackedStringArray, answer: Variant) -> void:
+	if _run_in_progress:
+		_gate_memo["%s|%d" % [key, hash(paths)]] = answer
+
+
+## `work` (a Callable answering a value over plain data only) run on a worker thread and its answer held under `key`
+## and `paths`, ahead of the question that will ask it: a coroutine; outside a sliced audit it does nothing.
+static func prefill_answer(key: String, paths: PackedStringArray, work: Callable) -> void:
+	if _frame_source == null or not _run_in_progress or held_answer(key, paths) != null:
+		return
+	var answer: Variant = await in_background(work)
+	if _cancel_check.is_valid() and bool(_cancel_check.call()):
+		return
+	hold_answer(key, paths, answer)
+
+
+## `gate`'s answer made ahead of the question on a worker thread, so the section that asks it finds it held: a coroutine.
+static func prefill_gate(key: String, paths: PackedStringArray, predicate: Callable) -> void:
+	if _frame_source == null or not _run_in_progress:
+		return
+	var token: String = "%s|%d" % [key, hash(paths)]
+	if _gate_memo.has(token):
+		return
+	var found: Array = await in_batches(paths, func(batch: PackedStringArray) -> Array:
+		var yes: Array = []
+		for path: String in batch:
+			if predicate.call(source_of(path)):
+				yes.append(path)
+		return yes)
+	if _cancel_check.is_valid() and bool(_cancel_check.call()):
+		return
+	_gate_memo[token] = PackedStringArray(found)
+
+
+## `work` (a Callable taking a PackedStringArray and answering an Array, over plain data only) asked of `paths` a
+## batch at a time, the answers joined in order: the same answer as asking it of all of them at once. In the editor
+## each batch runs on a worker thread, as long as takes about a frame's worth of several frames, and the frames go on
+## between them; elsewhere it is one call. A coroutine.
+static func in_batches(paths: PackedStringArray, work: Callable) -> Array:
+	if _frame_source == null:
+		return work.call(paths)
+	var joined: Array = []
+	var at: int = 0
+	var batch_files: int = 32
+	while at < paths.size():
+		if _cancel_check.is_valid() and bool(_cancel_check.call()):
+			break
+		var upto: int = mini(at + batch_files, paths.size())
+		var batch: PackedStringArray = paths.slice(at, upto)
+		var started: int = Time.get_ticks_usec()
+		joined.append_array(await in_background(func() -> Array: return work.call(batch)))
+		var spent: int = maxi(Time.get_ticks_usec() - started, 1)
+		batch_files = clampi(int(float(upto - at) * 60000.0 / float(spent)), 8, 2000)
+		at = upto
+	return joined
+
+
+## Whether the texts of the project's scripts and scenes have been read on workers for this audit.
+static var _texts_preloaded: bool = false
+## A clear of the audit's caches that arrived during the audit and was set aside.
+static var _clear_owed: bool = false
+
+
+## Reads every script, scene and resource text of the project on a few worker threads, once per audit, and holds
+## them for `source_of`: a coroutine. Outside a sliced audit it does nothing and each text is read when asked.
+static func _preload_texts() -> void:
+	if _frame_source == null or _texts_preloaded:
+		return
+	_texts_preloaded = true
+	# A copy: a packed array is shared by reference, and the scripts list is the audit's own.
+	var wanted: PackedStringArray = _project_scripts().duplicate()
+	wanted.append_array(_list_files_with_extension("tscn"))
+	wanted.append_array(_list_files_with_extension("tres"))
+	var texts: Dictionary = await load(BACKGROUND_PATH).read_texts(wanted, _frame_source, _cancel_check)
+	_last_mark_usec = Time.get_ticks_usec()
+	for path: Variant in texts:
+		_source_cache[str(path)] = texts[path]
+
+
+## Whether a script starts with the compiler's banner. A text already held answers "no" for certain; a "yes" is
+## confirmed on the file's own first bytes, as it always was, so a file with a byte-order mark answers as before.
+static func _has_banner(script_path: String) -> bool:
+	if _source_cache.has(script_path) and not str(_source_cache[script_path]).begins_with(KnownSheets.SHEET_BANNER):
+		return false
+	return KnownSheets.has_banner(script_path)
+
+
+## The index of which scenes load which scripts, built a scene at a time from the texts the audit already holds. A
+## coroutine; outside a sliced audit it does nothing and the first question builds it.
+static func _build_scene_index() -> void:
+	if _frame_source == null:
+		return
+	if EventSheetSceneConnections._scenes_by_script_built:
+		return
+	# The pass over every scene touches nothing but what it returns, so it runs on a worker thread.
+	var paths: PackedStringArray = EventSheetSceneConnections.scene_paths()
+	var index: Dictionary = await in_background(func() -> Dictionary: return EventSheetSceneConnections.index_scenes(paths))
+	# Marked built only once the whole index is in: a half-filled one would answer "no scene uses this".
+	EventSheetSceneConnections._scenes_by_script = index
+	EventSheetSceneConnections._scenes_by_script_built = true
+
+
+## Builds the project share index (what holds what, and who calls what) a slice at a time, for a section that
+## is about to ask it a question it would otherwise build whole inside one frame. A coroutine; outside a
+## sliced audit it does nothing, and the question builds the index itself.
+static func build_share_index_in_turns() -> void:
+	if _frame_source == null:
+		return
+	EventSheetProjectShareIndex.request(false)
+	while not EventSheetProjectShareIndex.advance(4):
+		await breathe()
+		if _cancel_check.is_valid() and bool(_cancel_check.call()):
+			return
+
+
+## Opens `paths` as sheets ahead of the checks that are about to ask for them (`sheet_of`), on a worker, while the
+## editor keeps drawing: a coroutine (await it). Outside a sliced audit it does nothing and `sheet_of` opens each
+## one itself, which is the same answer. Lifting a big script is the longest single thing an audit does, and run
+## inline it holds a frame for all of it.
+static func prepare_sheets(paths: PackedStringArray) -> void:
+	if _frame_source == null or not _run_in_progress:
+		return
+	var wanted: PackedStringArray = PackedStringArray()
+	var seen: Dictionary = {}
+	for path: String in paths:
+		if path.begins_with("res://") and path.get_extension() == "gd" and not _sheet_cache.has(path) and not seen.has(path):
+			seen[path] = true
+			wanted.append(path)
+	if wanted.is_empty():
+		return
+	var opened: Dictionary = await load(SHEET_PREFETCH_PATH).open_all(wanted, _frame_source, _cancel_check)
+	_last_mark_usec = Time.get_ticks_usec()
+	for path: Variant in opened:
+		_sheet_cache[str(path)] = opened[path]
+
+
+## Takes up the listing `prime_listing` made, for the audit `begin()` is opening.
+static func _adopt_primed_listing() -> void:
+	if _primed.is_empty():
+		return
+	ProjectFiles.hold(load("res://addons/eventforge/project_listing.gd").new(_primed["listing"] as Array))
+	var verdicts: Dictionary = _primed["verdicts"]
+	var paths: Array = verdicts.keys()
+	paths.sort()
+	var sheets: PackedStringArray = PackedStringArray()
+	for path: Variant in paths:
+		var verdict: int = int(verdicts[path])
+		# A header that cannot say is asked of the loader, as the listing always did for every file.
+		if verdict == 1 or (verdict == -1 and load(str(path)) is EventSheetResource):
+			sheets.append(str(path))
+	EventSheetProjectFind.hold_sheets(sheets)
+	_primed = {}
+
+
+## Drops a listing made ahead of an audit that then did not start.
+static func drop_primed_listing() -> void:
+	_primed = {}
+
+
+## Lets go of what an audit held for its own length.
+static func _release_listing() -> void:
+	ProjectFiles.hold(null)
+	# The editor's filesystem hook fired during the audit and was ignored: what it would have dropped is dropped now.
+	if _clear_owed:
+		_clear_owed = false
+		_run_in_progress = false
+		clear_project_scripts(true)
+		ProjectFiles.clear()
+		EventSheetSceneConnections.clear_cache()
+	EventSheetProjectFind.release_held_sheets()
+	_primed = {}
+	_reading_cache.clear()
+	_resource_sheets.clear()
+	_fresh_sheets.clear()
+	_gate_memo.clear()
+
+
 ## Full audit over every sheet in the project. Returns
 ## {findings: Array[Dictionary{severity, check, path, message}], errors, warnings, infos}.
 static func run(options: Dictionary = {}) -> Dictionary:
@@ -127,7 +444,9 @@ static func begin(options: Dictionary = {}) -> Dictionary:
 	var steps: Array = []
 	# One listing of the project's scripts serves the whole audit; dropping it here is what makes an
 	# audit see files that appeared since the last one.
-	clear_project_scripts()
+	clear_project_scripts(true)
+	_texts_preloaded = false
+	_adopt_primed_listing()
 	# And the answers DERIVED from the project's scenes: the collision layer census, the members of a
 	# group, and which collidables a script sits on. The parse under them refreshes by file stamp, so
 	# holding the derived answers over it is the inversion that has bitten this plugin before - an
@@ -165,6 +484,9 @@ static func begin(options: Dictionary = {}) -> Dictionary:
 	var known_only: bool = bool(options.get("known_only", false)) and not bool(options.get("every_script", false))
 	var context: Dictionary = {"sheet_paths": tres_paths}
 	steps.append(["which_scripts_are_sheets", func() -> void:
+		# In an editor the files are read by a few workers first, so the banner of each script is found in the text
+		# already held and not by opening ten thousand files here.
+		await _preload_texts()
 		var script_sheets: PackedStringArray = candidates
 		if known_only:
 			script_sheets = await _known_among_sliced(candidates, options)
@@ -178,11 +500,23 @@ static func begin(options: Dictionary = {}) -> Dictionary:
 	# The texts the checks below ask for, read a few at a time: most checks begin by asking for the same
 	# files, and reading them here (held for the audit, see `source_of`) keeps each of those checks short.
 	steps.append(["read_scripts", func() -> void:
+		# In an editor the files are read by a few workers while the frames go on; every one is then held and the
+		# loop below only finds it there. Without a frame source (the command line, a test) it reads each itself.
+		await _preload_texts()
+		if _frame_source != null and _cancel_check.is_valid() and bool(_cancel_check.call()):
+			return
 		var count: int = 0
 		for script_path: String in _project_scripts():
 			source_of(script_path)
 			count += 1
 			await breathe_every(count)])
+	# The sheets the checks below read rows of, opened on a worker (see `prepare_sheets`).
+	steps.append(["open_sheets", func() -> void:
+		await prepare_resource_sheets(context["sheet_paths"])
+		await prepare_sheets(context["sheet_paths"])])
+	# Which scene runs which script, built a scene at a time: a good many sections ask it and the first to would build
+	# it in one go.
+	steps.append(["scene_index", func() -> void: await _build_scene_index()])
 	steps.append(["generated_outputs", func() -> void: check_generated_outputs(context["sheet_paths"], findings)])
 	steps.append(["debug_residue", func() -> void: check_debug_residue(context["sheet_paths"], findings)])
 	steps.append(["autoload_registration", func() -> void: check_autoload_registration(context["sheet_paths"], findings)])
@@ -220,15 +554,15 @@ static func begin(options: Dictionary = {}) -> Dictionary:
 	steps.append(["orphaned_provider_calls", func() -> void: check_orphaned_provider_calls(context["sheet_paths"], findings)])
 	steps.append(["sheet_signal_declarations", func() -> void: check_sheet_signal_declarations(context["sheet_paths"], findings)])
 	steps.append(["pattern_smells", func() -> void: check_pattern_smells(context["sheet_paths"], findings)])
-	steps.append(["unresolved_conflicts", func() -> void: check_unresolved_conflicts(findings)])
+	steps.append(["unresolved_conflicts", func() -> void: await in_background(func() -> void: check_unresolved_conflicts(findings))])
 	# What a merge leaves behind once the markers are gone: two rows that mint the same baked local
 	# in one scope. Beside the conflict sweep because it is the same event seen a step later.
-	steps.append(["duplicate_local_tokens", func() -> void: check_duplicate_local_tokens(findings)])
+	steps.append(["duplicate_local_tokens", func() -> void: await in_background(func() -> void: check_duplicate_local_tokens(findings))])
 	# And the setting that makes such merges routine instead of rare. A note, and the last word on it
 	# is a line the reader commits themselves.
 	steps.append(["sheet_line_endings", func() -> void: check_sheet_line_endings(findings)])
-	steps.append(["shared_sheet_includes", func() -> void: check_shared_sheet_includes(findings)])
-	steps.append(["blocking_waits", func() -> void: check_blocking_waits(context["sheet_paths"], findings)])
+	steps.append(["shared_sheet_includes", func() -> void: await in_background(func() -> void: check_shared_sheet_includes(findings))])
+	steps.append(["blocking_waits", func() -> void: await in_background(func() -> void: check_blocking_waits(context["sheet_paths"], findings))])
 	steps.append(["hierarchy_footguns", func() -> void: await check_hierarchy_footguns(context["sheet_paths"], findings)])
 	steps.append(["vocabulary_doc", func() -> void: check_vocabulary_doc(findings)])
 	steps.append(["pack_reading", func() -> void: check_pack_reading(findings)])
@@ -239,11 +573,11 @@ static func begin(options: Dictionary = {}) -> Dictionary:
 	steps.append(["imported_rows", func() -> void: check_imported_rows(context["sheet_paths"], findings)])
 	steps.append(["task_notes", func() -> void: await check_task_notes(findings)])
 	steps.append(["menu_ids", func() -> void: check_menu_ids(findings)])
-	steps.append(["game_modes", func() -> void: check_game_modes(findings)])
-	steps.append(["object_states", func() -> void: check_object_states(findings)])
-	steps.append(["animation_method_tracks", func() -> void: check_animation_method_tracks(findings)])
+	steps.append(["game_modes", func() -> void: await check_game_modes(findings)])
+	steps.append(["object_states", func() -> void: await check_object_states(findings)])
+	steps.append(["animation_method_tracks", func() -> void: await in_background(func() -> void: check_animation_method_tracks(findings))])
 	steps.append(["plugin_reading_health", func() -> void: check_plugin_reading_health(findings)])
-	steps.append(["facing_follows", func() -> void: check_facing_follows(context["sheet_paths"], findings)])
+	steps.append(["facing_follows", func() -> void: await in_background(func() -> void: check_facing_follows(context["sheet_paths"], findings))])
 	steps.append(["skill_trees", func() -> void: check_skill_trees(findings)])
 	steps.append(["raw_error_notes", func() -> void: check_raw_error_notes(context["sheet_paths"], findings)])
 	# The tidiness sweep: what is declared but dead, said twice, or typed three times. Advisory
@@ -414,19 +748,25 @@ static func step(session: Dictionary) -> bool:
 ## through `breathe`, so a section that walks every script of a big project does not hold a frame.
 static func run_sliced(session: Dictionary, tree: SceneTree, cancelled: Callable, on_progress: Callable) -> Dictionary:
 	_frame_source = tree
+	_cancel_check = cancelled
 	_spent_slice = true
 	var steps: Array = session["steps"]
 	while int(session["index"]) < steps.size():
 		if cancelled.is_valid() and bool(cancelled.call()):
 			_frame_source = null
+			_cancel_check = Callable()
 			_run_in_progress = false
 			_audited_sheets = {}
+			_release_listing()
 			return {}
 		var entry: Array = steps[int(session["index"])]
 		session["current"] = str(entry[0])
 		current_step = str(entry[0])
 		var started: int = Time.get_ticks_usec()
+		_last_mark_usec = started
 		await (entry[1] as Callable).call()
+		if trace_slow and _last_mark_usec > 0 and Time.get_ticks_usec() - _last_mark_usec > 50000:
+			slow_segments.append({"step": current_step, "ms": (Time.get_ticks_usec() - _last_mark_usec) / 1000.0, "where": "end of step"})
 		var timings: Dictionary = session["timings"]
 		timings[entry[0]] = int(timings.get(entry[0], 0)) + Time.get_ticks_usec() - started
 		session["index"] = int(session["index"]) + 1
@@ -436,6 +776,7 @@ static func run_sliced(session: Dictionary, tree: SceneTree, cancelled: Callable
 		if wait != null:
 			await wait
 	_frame_source = null
+	_cancel_check = Callable()
 	current_step = ""
 	return finish(session)
 
@@ -448,6 +789,8 @@ static func breathe() -> Variant:
 	if _frame_source == null:
 		return null
 	var now: int = Time.get_ticks_usec()
+	if trace_slow:
+		_note_segment(now)
 	if _spent_slice:
 		# The first look after a frame began: a fresh slice starts now.
 		_spent_slice = false
@@ -456,6 +799,7 @@ static func breathe() -> Variant:
 	if now < _slice_end_usec:
 		return null
 	_spent_slice = true
+	_last_mark_usec = 0
 	return _frame_source.process_frame
 
 
@@ -470,13 +814,34 @@ static func sliced_findings(sources: Dictionary, finders: Array) -> Array[Dictio
 	var keys: Array = sources.keys()
 	keys.sort()
 	var at: int = 0
+	# A slice is twelve files to begin with and then as many as take about a slice's worth of time: twelve small
+	# scripts are nothing and twelve very large ones are most of a second, and the answer does not depend on where
+	# the slices fall (each finder judges each file on its own text).
+	var slice_files: int = 12
+	# In the editor a slice runs on a worker thread, so it can be a good deal longer than a frame's share.
+	var slice_target_usec: int = 60000 if _frame_source != null else SLICE_USEC / 2
 	while at < keys.size():
+		if _frame_source != null and _cancel_check.is_valid() and bool(_cancel_check.call()):
+			break
 		var slice: Dictionary = {}
-		for index: int in range(at, mini(at + 12, keys.size())):
+		var upto: int = mini(at + slice_files, keys.size())
+		for index: int in range(at, upto):
 			slice[keys[index]] = sources[keys[index]]
-		for number: int in range(finders.size()):
-			(answers[number] as Array).append_array((finders[number] as Callable).call(slice))
-		at += 12
+		var started: int = Time.get_ticks_usec()
+		if _frame_source != null:
+			var worked: Array = await in_background(func() -> Array:
+				var parts: Array = []
+				for finder: Callable in finders:
+					parts.append(finder.call(slice))
+				return parts)
+			for number: int in range(finders.size()):
+				(answers[number] as Array).append_array(worked[number])
+		else:
+			for number: int in range(finders.size()):
+				(answers[number] as Array).append_array((finders[number] as Callable).call(slice))
+		var spent: int = maxi(Time.get_ticks_usec() - started, 1)
+		slice_files = clampi(int(float(upto - at) * float(slice_target_usec) / float(spent)), 1, 400 if _frame_source != null else 48)
+		at = upto
 		await breathe()
 	var all: Array[Dictionary] = []
 	for answer: Variant in answers:
@@ -484,10 +849,27 @@ static func sliced_findings(sources: Dictionary, finders: Array) -> Array[Dictio
 	return all
 
 
-## `breathe()` for a loop that counts its turns: looks at the clock only every 16th, which is cheap
-## enough to leave inside the tightest loop.
-static func breathe_every(turn: int) -> Variant:
-	return breathe() if (turn & 15) == 0 else null
+## Lets a helper report main-thread work of its own that no offer of a frame brackets, when an audit is being traced.
+static func note_main_work(what: String, usec: int) -> void:
+	if trace_slow and usec > 50000:
+		slow_segments.append({"step": current_step, "ms": usec / 1000.0, "where": what})
+
+
+static func _note_segment(now: int) -> void:
+	if _last_mark_usec > 0 and now - _last_mark_usec > 50000:
+		var stack: Array = get_stack()
+		var where: String = ""
+		for depth: int in range(1, mini(4, stack.size())):
+			where += "%s:%d " % [str((stack[depth] as Dictionary).get("source", "")).get_file(), int((stack[depth] as Dictionary).get("line", 0))]
+		slow_segments.append({"step": current_step, "ms": (now - _last_mark_usec) / 1000.0, "where": where})
+	_last_mark_usec = now
+
+
+## `breathe()` for a loop that counts its turns. It used to look at the clock only every 16th turn, which a loop of
+## small files never notices and a loop of big ones (a turn of ten milliseconds, sixteen of them between looks)
+## answers a long way too late; a clock read is a few tens of nanoseconds, so it looks every turn.
+static func breathe_every(_turn: int) -> Variant:
+	return breathe()
 
 
 ## How many steps are listed and how many are done: what a progress line says.
@@ -502,12 +884,14 @@ static func finish(session: Dictionary) -> Dictionary:
 	# The report is complete, so the texts the checks shared are dead weight - a dock that ran the
 	# audit once should not carry the project's source for the rest of the session.
 	_run_in_progress = false
+	_release_listing()
 	# Counted BEFORE the caches are dropped, because the cache IS the count: one entry per distinct
 	# script this audit opened as a sheet, null results included. Against it, how many times the
 	# importer was actually asked. Equal means every script was opened once, which is the whole of
 	# this audit's performance story; a difference is a section that went round the sharing. The
 	# suite pins them as equal, and that pin costs no wall clock and so cannot flap on a slow runner.
 	var sheets_opened: int = _sheet_cache.size()
+	last_timings = (session["timings"] as Dictionary).duplicate()
 	var importer_calls: int = EventSheetGDScriptImporter.external_imports - importer_calls_before
 	_audited_sheets = {}
 	_source_cache.clear()
@@ -2594,7 +2978,21 @@ static func _collect_usage_text(rows: Array, into: PackedStringArray) -> void:
 ## skip most real projects while looking like it works - and because a hand-written script that names
 ## a missing control is exactly as broken as a generated one.
 static func check_unknown_input_actions(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	for script_path: String in _list_files_with_extension("gd"):
+	_report_unknown_input_actions(_missing_actions_among(_list_files_with_extension("gd")), findings)
+
+
+## The same check in the editor: the scripts' text is read for control names on a worker thread, a batch at a time,
+## and the findings (which open a sheet for the few that earn one) are made here.
+static func check_unknown_input_actions_in_turns(findings: Array[Dictionary]) -> void:
+	var missing_by_script: Array = await in_batches(_list_files_with_extension("gd"), _missing_actions_among)
+	_report_unknown_input_actions(missing_by_script, findings)
+
+
+## The scripts among `paths` that name a control the Input Map does not have, as [[path, the names], ...]. Plain
+## text and the project's settings in, so a worker thread may ask it.
+static func _missing_actions_among(paths: PackedStringArray) -> Array:
+	var found: Array = []
+	for script_path: String in paths:
 		# A pack's script names the controls a game is expected to add when it uses that pack, and is
 		# not the reader's to fix: the finding belongs on the game's own scripts.
 		if script_path.begins_with("res://eventsheet_addons/"):
@@ -2609,8 +3007,15 @@ static func check_unknown_input_actions(_sheet_paths: PackedStringArray, finding
 					and not ProjectSettings.has_setting("input/%s" % action_name) \
 					and not missing.has(action_name):
 				missing.append(action_name)
-		if missing.is_empty():
-			continue
+		if not missing.is_empty():
+			found.append([script_path, missing])
+	return found
+
+
+static func _report_unknown_input_actions(missing_by_script: Array, findings: Array[Dictionary]) -> void:
+	for entry: Variant in missing_by_script:
+		var script_path: String = str((entry as Array)[0])
+		var missing: PackedStringArray = (entry as Array)[1]
 		_add(findings, "warning", "unknown-input-action", script_path,
 			"This script names %d control(s) the Input Map does not have (%s) - the key will never fire and nothing will say so. Add it in Project ▸ Input Map, or fix the spelling." % [
 				missing.size(), ", ".join(missing)])
@@ -3313,7 +3718,15 @@ static func _project_scripts() -> PackedStringArray:
 ## Forgets the walk above, so the next ask lists the directories again. Called at the top of a run
 ## and from the editor's filesystem hook. The texts those files hold go with it, for the same reason
 ## and under the same contract.
-static func clear_project_scripts() -> void:
+##
+## An audit in progress keeps the files it began with: the editor's filesystem hook arrives as often as a file is
+## saved, and dropping what an audit has read half way through would make every later check read it all again.
+## The next audit starts from a clean slate (`begin` forces it).
+static func clear_project_scripts(force: bool = false) -> void:
+	if _run_in_progress and not force:
+		_clear_owed = true
+		return
+	_clear_owed = false
 	GdSheets.forget()
 	_project_scripts_cache = PackedStringArray()
 	_project_scripts_walked = false
@@ -3321,6 +3734,7 @@ static func clear_project_scripts() -> void:
 	ProjectFiles.clear()
 	_source_cache.clear()
 	_sheet_cache.clear()
+	_resource_sheets.clear()
 	_margin_cache.clear()
 
 
@@ -3387,7 +3801,14 @@ static func _is_script(sheet_path: String) -> bool:
 static func sheet_at(sheet_path: String) -> EventSheetResource:
 	if _is_script(sheet_path):
 		return sheet_of(sheet_path)
-	return load(sheet_path) as EventSheetResource
+	# A `.tres` sheet is held for the audit as a `.gd` one is: a resource nobody holds is freed, and the next of the
+	# forty checks that asks for it would read the file again.
+	if _resource_sheets.has(sheet_path):
+		return _resource_sheets[sheet_path] as EventSheetResource
+	var sheet: EventSheetResource = load(sheet_path) as EventSheetResource
+	if _run_in_progress and sheet_path.begins_with("res://"):
+		_resource_sheets[sheet_path] = sheet
+	return sheet
 
 
 ## The margin number of one event, asked only when a finding is about to name it: numbering the margin
@@ -4038,6 +4459,11 @@ static func check_menu_ids(findings: Array[Dictionary]) -> void:
 ## engine's own guide says so) and it is where the modes band offers to declare them - so this costs
 ## one open per autoload rather than a walk of the project.
 static func check_game_modes(findings: Array[Dictionary]) -> void:
+	var declaring: PackedStringArray = PackedStringArray()
+	for script_path: String in EventSheetModeFacts.autoload_scripts():
+		if source_of(script_path).contains("enum %s" % EventSheetModeFacts.ENUM_NAME):
+			declaring.append(script_path)
+	await prepare_sheets(declaring)
 	for script_path: String in EventSheetModeFacts.autoload_scripts():
 		if not source_of(script_path).contains("enum %s" % EventSheetModeFacts.ENUM_NAME):
 			continue
@@ -4059,6 +4485,11 @@ static func check_game_modes(findings: Array[Dictionary]) -> void:
 ## cached walk every other script-reading check here shares, and the gate below is a match over text
 ## that walk already holds - so an object that declares no states costs nothing.
 static func check_object_states(findings: Array[Dictionary]) -> void:
+	var declaring: PackedStringArray = PackedStringArray()
+	for script_path: String in _project_scripts():
+		if _declares_state_enum(source_of(script_path)):
+			declaring.append(script_path)
+	await prepare_sheets(declaring)
 	for script_path: String in _project_scripts():
 		if not _declares_state_enum(source_of(script_path)):
 			continue
@@ -4491,7 +4922,7 @@ static func _known_among_sliced(candidates: PackedStringArray, options: Dictiona
 		open[path.simplify_path()] = true
 	var record: Dictionary = KnownSheets.recorded()
 	for script_path: String in candidates:
-		if open.has(script_path) or record.has(script_path) or KnownSheets.has_banner(script_path):
+		if open.has(script_path) or record.has(script_path) or _has_banner(script_path):
 			known.append(script_path)
 		looked += 1
 		await breathe_every(looked)

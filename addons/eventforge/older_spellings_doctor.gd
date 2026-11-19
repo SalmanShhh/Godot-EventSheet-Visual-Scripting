@@ -27,7 +27,10 @@ static func ensure_registered() -> void:
 
 ## The section, with the contract every registered check has: append findings, never write inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	var turn: int = 0
 	for script_path: String in own_paths(EventSheetProjectDoctor._project_scripts()):
+		turn += 1
+		await EventSheetProjectDoctor.breathe_every(turn)
 		var source: String = EventSheetProjectDoctor.source_of(script_path)
 		var counted: int = older_lines(source)
 		if counted > 0:

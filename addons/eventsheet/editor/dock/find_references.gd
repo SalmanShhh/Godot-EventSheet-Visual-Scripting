@@ -112,6 +112,12 @@ static func _find_in_unopened_scripts(symbol: String, seen: Dictionary) -> Array
 ## same order. Plugin code and the import cache are skipped: `res://addons` is this plugin and other
 ## people's plugins, and neither is a sheet the reader wrote.
 static func project_scripts(root: String = "res://") -> PackedStringArray:
+	# During an audit that already listed the project on a worker, the answer is a filter over that listing.
+	var held: RefCounted = load("res://addons/eventforge/project_files.gd").held_listing()
+	if root == "res://" and held != null:
+		return held.files_where(
+			func(directory_path: String) -> bool: return not directory_path.begins_with("res://addons"),
+			func(file_path: String) -> bool: return file_path.get_extension() == "gd")
 	var found: PackedStringArray = PackedStringArray()
 	var directories: Array[String] = [root]
 	while not directories.is_empty():

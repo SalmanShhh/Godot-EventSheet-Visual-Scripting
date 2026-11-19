@@ -28,6 +28,12 @@ extends RefCounted
 ## The lifted-sheet memory, by path so the first open of a session compiles it only when a file is read.
 const LIFT_CACHE_PATH: String = "res://addons/eventforge/importer/lift_cache.gd"
 
+## Set while the Project Doctor is opening scripts on a worker of its own: called by `start()` so the
+## reader's open takes the lifter first (the Doctor's worker stops and carries on once this one is done).
+static var preempt_background: Callable = Callable()
+## The job most recently started, to answer `lifting_now`.
+static var _latest: WeakRef = null
+
 var _thread: Thread = null
 var _path: String = ""
 var _source_lines: int = 0
@@ -53,12 +59,20 @@ static func warm_registries() -> void:
 	EventSheetActionCodegen._apply_template("{warm}", {"warm": ""})
 
 
+## Whether a job of this kind has its worker running right now: what anything else that wants the lifter waits on.
+static func lifting_now() -> bool:
+	var job: Object = _latest.get_ref() if _latest != null else null
+	return job != null and (job as EventSheetOpenJob)._thread != null and (job as EventSheetOpenJob)._thread.is_alive()
+
+
 ## Starts the import. Returns false when the file is missing or a job is already running.
 func start(path: String) -> bool:
 	if _thread != null:
 		return false
 	if not FileAccess.file_exists(path):
 		return false
+	if preempt_background.is_valid():
+		preempt_background.call()
 	_path = path
 	_sheet = null
 	_canceled = false
@@ -68,6 +82,7 @@ func start(path: String) -> bool:
 	warm_registries()
 	EventSheetACELifter.reset_progress()
 	EventSheetACELifter.progress_phase = "reading"
+	_latest = weakref(self)
 	_started_msec = Time.get_ticks_msec()
 	_thread = Thread.new()
 	if _thread.start(_run) != OK:

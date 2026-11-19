@@ -103,7 +103,10 @@ static func ensure_registered() -> void:
 ## res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	var sources: Array[Dictionary] = []
+	var turn: int = 0
 	for script_path: String in EventSheetProjectDoctor._project_scripts():
+		turn += 1
+		await EventSheetProjectDoctor.breathe_every(turn)
 		var source: String = EventSheetProjectDoctor.source_of(script_path)
 		if _says_difficulty(source):
 			sources.append({"path": script_path, "source": source})

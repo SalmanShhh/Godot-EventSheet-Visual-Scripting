@@ -11261,3 +11261,5 @@ Scripts of yours that still name the old path: %d. Tools > Find in Project lists
 The tests could not be started in a second copy of Godot.,
 The test run ended before it wrote a report. Run the tests from a terminal to see why.,
 Ctrl+Z takes it out again.,
+%d found so far,
+the last checks,
