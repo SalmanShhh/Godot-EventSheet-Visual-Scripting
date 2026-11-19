@@ -9,7 +9,13 @@
 @tool
 extends SceneTree
 
-# {name: {bg, bg_alt, surface, line, fg, comment, cool, warm, signature, yellow}}
+# {name: {bg, bg_alt, surface, line, fg, comment, cool, warm, signature, yellow}}, plus the optional hand choices:
+#   firing     the hue of the firing-row wash and its margin number, where the shared rule's lightened cool would lift a
+#              cell until its words fall under the bar (the wash is a flood of the hue, not a thin bar)
+#   variable   the hue of a variable row's wash and its scope word, where the signature hue would make a declaration look
+#              like an error row (hot pink) or would not read on the wash
+#   cool_text, warm_text   the ink of a condition / action sentence where the palette's own accent reads too faintly on
+#              its lane (a pale palette's accents are made for large marks, not for a line of words)
 const PALETTES: Dictionary = {
 	"dracula": {
 		"bg": "#282a36", "bg_alt": "#2c2f3d", "surface": "#44475a", "line": "#191a21",
@@ -19,22 +25,26 @@ const PALETTES: Dictionary = {
 	"nord": {
 		"bg": "#2e3440", "bg_alt": "#333a47", "surface": "#3b4252", "line": "#272c36",
 		"fg": "#eceff4", "comment": "#616e88", "cool": "#88c0d0", "warm": "#a3be8c",
-		"signature": "#81a1c1", "yellow": "#ebcb8b"
+		"signature": "#81a1c1", "yellow": "#ebcb8b",
+		"firing": "#81a1c1"
 	},
 	"gruvbox_dark": {
 		"bg": "#282828", "bg_alt": "#2e2c2a", "surface": "#3c3836", "line": "#1d2021",
 		"fg": "#ebdbb2", "comment": "#928374", "cool": "#83a598", "warm": "#b8bb26",
-		"signature": "#fe8019", "yellow": "#fabd2f"
+		"signature": "#fe8019", "yellow": "#fabd2f",
+		"firing": "#689d6a"
 	},
 	"monokai": {
 		"bg": "#272822", "bg_alt": "#2c2d26", "surface": "#3e3d32", "line": "#1e1f1c",
 		"fg": "#f8f8f2", "comment": "#75715e", "cool": "#66d9ef", "warm": "#a6e22e",
-		"signature": "#f92672", "yellow": "#e6db74"
+		"signature": "#f92672", "yellow": "#e6db74",
+		"variable": "#ae81ff"
 	},
 	"solarized_light": {
 		"bg": "#fdf6e3", "bg_alt": "#f5eed9", "surface": "#eee8d5", "line": "#d9d2c2",
 		"fg": "#657b83", "comment": "#93a1a1", "cool": "#268bd2", "warm": "#859900",
-		"signature": "#6c71c4", "yellow": "#b58900"
+		"signature": "#6c71c4", "yellow": "#b58900",
+		"cool_text": "#155a8f", "warm_text": "#485800", "variable": "#5256a8"
 	},
 	"catppuccin_mocha": {
 		"bg": "#1e1e2e", "bg_alt": "#232336", "surface": "#313244", "line": "#11111b",
@@ -442,7 +452,7 @@ func _build_style(palette: Dictionary, theme_name: String) -> EventSheetEditorSt
 	event_style.head_bar_color = bg.lerp(surface, 0.6)
 
 	var condition_style: EventSheetElementStyle = EventSheetElementStyle.new()
-	condition_style.text_color = cool
+	condition_style.text_color = Color(str(palette.get("cool_text", palette.get("cool"))))
 	condition_style.chip_background_color = Color(cool.r, cool.g, cool.b, 0.08)
 	condition_style.chip_border_color = Color(cool.r, cool.g, cool.b, 0.20)
 	condition_style.chip_hover_color = Color(cool.r, cool.g, cool.b, 0.30)
@@ -450,7 +460,7 @@ func _build_style(palette: Dictionary, theme_name: String) -> EventSheetEditorSt
 	condition_style.badge_foreground_color = cool
 
 	var action_style: EventSheetElementStyle = EventSheetElementStyle.new()
-	action_style.text_color = warm
+	action_style.text_color = Color(str(palette.get("warm_text", palette.get("warm"))))
 	action_style.chip_background_color = Color(warm.r, warm.g, warm.b, 0.08)
 	action_style.chip_border_color = Color(warm.r, warm.g, warm.b, 0.20)
 	action_style.chip_hover_color = Color(warm.r, warm.g, warm.b, 0.30)
@@ -465,6 +475,16 @@ func _build_style(palette: Dictionary, theme_name: String) -> EventSheetEditorSt
 	# rather than listed again per palette: one rule, so a new token reaches all six presets the day
 	# it ships instead of leaving them on EventForge's own dark marks.
 	EventSheetThemeDerivation.fill_derived_tokens(style)
+	if palette.has("variable"):
+		var variable_hue: Color = Color(str(palette["variable"]))
+		var reading: EventSheetReadingStyle = style.get_reading_style()
+		reading.variable_row_wash_color = Color(variable_hue.r, variable_hue.g, variable_hue.b, reading.variable_row_wash_color.a)
+		reading.variable_row_wash_end_color = reading.variable_row_wash_color
+		reading.variable_row_rule_color = Color(variable_hue.r, variable_hue.g, variable_hue.b, reading.variable_row_rule_color.a)
+	if palette.has("firing"):
+		var firing: Color = Color(str(palette["firing"]))
+		style.get_reading_style().firing_stripe_color = firing
+		style.get_reading_style().debugger_accent_color = firing
 	var native: Dictionary = NATIVE.get(theme_name, {})
 	for token_name: String in native:
 		if token_name == "active_tab_edge_color":

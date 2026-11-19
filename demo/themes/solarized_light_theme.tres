@@ -9,7 +9,7 @@
 
 [sub_resource type="Resource" id="Resource_nshws"]
 script = ExtResource("1_if1pv")
-text_color = Color(0.52156866, 0.6, 0, 1)
+text_color = Color(0.28235295, 0.34509805, 0, 1)
 chip_background_color = Color(0.52156866, 0.6, 0, 0.08)
 chip_border_color = Color(0.52156866, 0.6, 0, 0.2)
 chip_hover_color = Color(0.52156866, 0.6, 0, 0.3)
@@ -69,7 +69,7 @@ anatomy_knob_pill_foreground_color = Color(0.27549016, 0.60803926, 0.8335294, 1)
 
 [sub_resource type="Resource" id="Resource_28t4o"]
 script = ExtResource("1_if1pv")
-text_color = Color(0.14901961, 0.54509807, 0.8235294, 1)
+text_color = Color(0.08235294, 0.3529412, 0.56078434, 1)
 chip_background_color = Color(0.14901961, 0.54509807, 0.8235294, 0.08)
 chip_border_color = Color(0.14901961, 0.54509807, 0.8235294, 0.2)
 chip_hover_color = Color(0.14901961, 0.54509807, 0.8235294, 0.3)
@@ -180,10 +180,6 @@ variable_group_border_color = Color(0, 0, 0, 0)
 
 [sub_resource type="Resource" id="Resource_5y1iu"]
 script = ExtResource("4_th4rs")
-heading_color = Color(0.15297252, 0.15997642, 0.17241567, 1)
-page_muted_text_color = Color(0.5543215, 0.5448471, 0.515702, 1)
-note_color = Color(0.40941176, 0.3335294, 0.20294118, 1)
-table_hairline_color = Color(0.08, 0.09, 0.11, 0.16)
 
 [sub_resource type="Resource" id="Resource_iikit"]
 script = ExtResource("5_ns4ff")
@@ -232,9 +228,9 @@ drag_bubble_background_color = Color(0.94215685, 0.9180392, 0.8435294, 1)
 drag_bubble_text_color = Color(0.11648625, 0.12498826, 0.14120787, 1)
 text_selection_color = Color(0.42352942, 0.44313726, 0.76862746, 0.3)
 default_chip_plate_color = Color(0.08, 0.09, 0.11, 0.035)
-variable_row_wash_color = Color(0.42352942, 0.44313726, 0.76862746, 0.13)
-variable_row_rule_color = Color(0.42352942, 0.44313726, 0.76862746, 0.85)
-variable_row_wash_end_color = Color(0.42352942, 0.44313726, 0.76862746, 0.13)
+variable_row_wash_color = Color(0.32156864, 0.3372549, 0.65882355, 0.13)
+variable_row_rule_color = Color(0.32156864, 0.3372549, 0.65882355, 0.85)
+variable_row_wash_end_color = Color(0.32156864, 0.3372549, 0.65882355, 0.13)
 color_swatch_border_color = Color(0.08, 0.09, 0.11, 0.55)
 
 [resource]

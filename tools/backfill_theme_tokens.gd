@@ -35,7 +35,10 @@ func _init() -> void:
 				print("[backfill_theme_tokens] skip (not an editor style): %s" % path)
 				continue
 			var filled: int = _fill_unstated(style, path)
-			var error: Error = ResourceSaver.save(style, path)
+			# A file with nothing to fill is left exactly as it is: re-saving it would only rewrite it in the engine's own
+			# spelling (dropping every line that equals a default), which is a change nobody asked for and a second tool's
+			# opinion of the same file.
+			var error: Error = ResourceSaver.save(style, path) if filled > 0 else OK
 			print("[backfill_theme_tokens] %s: %d token(s) filled (%d)" % [path, filled, error])
 			updated += 1
 	print("[backfill_theme_tokens] presets brought forward: %d" % updated)

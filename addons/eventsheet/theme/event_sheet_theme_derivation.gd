@@ -163,10 +163,13 @@ static func fill_derived_tokens(style: EventSheetEditorStyle) -> EventSheetEdito
 
 	# ── The Manual: headings and quiet words follow the theme; the rest keeps no opinion, so a
 	# reader who never opens the Theme Editor still gets help that matches their editor ──
-	manual.heading_color = reading.primary_text_color
-	manual.page_muted_text_color = reading.muted_text_color
-	manual.table_hairline_color = Color(ink.r, ink.g, ink.b, 0.16)
-	manual.note_color = _warning_for(background)
+	# The theme's own ink is only right on a page with the theme's own paper; on the editor's page a dark theme's near-white
+	# heading (or a pale theme's dark one) cannot be seen, so with no paper these stay clear and follow the editor.
+	var paper: bool = EventSheetManualStyle.has_opinion(manual.page_background_color)
+	manual.heading_color = reading.primary_text_color if paper else Color(0.0, 0.0, 0.0, 0.0)
+	manual.page_muted_text_color = reading.muted_text_color if paper else Color(0.0, 0.0, 0.0, 0.0)
+	manual.table_hairline_color = Color(ink.r, ink.g, ink.b, 0.16) if paper else Color(0.0, 0.0, 0.0, 0.0)
+	manual.note_color = _warning_for(background) if paper else Color(0.0, 0.0, 0.0, 0.0)
 	return style
 
 

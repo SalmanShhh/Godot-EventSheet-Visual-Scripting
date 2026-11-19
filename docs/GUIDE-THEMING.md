@@ -143,6 +143,8 @@ Every Manual token starts with **no opinion** (alpha zero), which means "follow 
 A reader who never picks a theme keeps help that looks like the rest of their Godot editor;
 give a token an alpha and it takes over.
 
+The bundled themes follow that rule too: only a theme that gives the Manual a paper of its own (High Contrast) also states the Manual's heading, quiet-word and rule colours. The others leave them clear, because a dark theme's near-white heading on a light editor's page - or a pale theme's dark one on a dark editor's - would be a heading nobody can see.
+
 Two surfaces stayed as they were on purpose. A negated condition's `not` mark already had its
 own token (`invert_marker_color`) - one red for "this condition is turned around", wherever it
 appears. And the debugger's hit-count chips in the event-number margin are lens chrome
@@ -349,6 +351,8 @@ sheet and its cells are authored: each preset's own file has to state every colo
 reading marks, the bars around the sheet and the Manual are derived: each preset either states them
 or carries exactly what the shared rule below derives for it, so a new colour reaches all ten
 presets the day it ships instead of leaving nine of them in someone else's palette.
+
+A second gate holds every bundled theme to the states a row can be in: for each one, the sentence of each lane still reads over an error, cannot-run or firing wash, those washes are told from a plain cell, and a variable's scope word reads on its row. A theme whose hue would fail one of these is fixed in that theme (the six generated from well-known palettes carry the fix in their builder).
 
 ## Bringing an older preset forward
 

@@ -137,7 +137,8 @@ static func _test_every_preset_is_current_with_the_rule() -> bool:
 				if section.get(token_name) != derived_sections[index].get(token_name):
 					stale.append(token_name)
 			index += 1
-		ok = _check("%s is current with the shared rule (stale: %s)" % [preset_path.get_file(), str(stale)],
+		# The label names the theme and each setting, and the tool that fills them (it states only what the file leaves out).
+		ok = _check("%s leaves %s unstated with a value the shared rule would not give it - run tools/backfill_theme_tokens.gd (stale: %s)" % [preset_path.get_file(), str(stale.size()), str(stale)],
 			stale, [] as Array[String]) and ok
 	return ok
 

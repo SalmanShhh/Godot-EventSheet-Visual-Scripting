@@ -254,13 +254,10 @@ anatomy_knob_pill_foreground_color = Color(0.5015687, 0.67823535, 0.834902, 1)
 [sub_resource type="Resource" id="Resource_manual"]
 script = ExtResource("5_manual")
 page_background_color = Color(0, 0, 0, 0)
-heading_color = Color(0.8890588, 0.8982588, 0.9166589, 1)
 page_muted_text_color = Color(0.649924, 0.65369064, 0.6612239, 1)
 search_hit_color = Color(0, 0, 0, 0)
 contents_active_background_color = Color(0, 0, 0, 0)
 contents_active_text_color = Color(0, 0, 0, 0)
-note_color = Color(0.9098039, 0.7411765, 0.4509804, 1)
-table_hairline_color = Color(0.95, 0.96, 0.98, 0.16)
 
 [resource]
 script = ExtResource("6_editor")
