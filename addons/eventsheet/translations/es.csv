@@ -11276,3 +11276,4 @@ the Load bindings row of the same pair,la fila Cargar controles del mismo par
 "Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.","Scripts tuyos que aún nombran la ruta antigua: %d. Herramientas > Buscar en el proyecto los lista."
 The tests could not be started in a second copy of Godot.,No se pudieron iniciar las pruebas en una segunda copia de Godot.
 The test run ended before it wrote a report. Run the tests from a terminal to see why.,La ejecución de las pruebas terminó antes de escribir un informe. Ejecuta las pruebas desde una terminal para ver el motivo.
+Ctrl+Z takes it out again.,Ctrl+Z lo quita de nuevo.

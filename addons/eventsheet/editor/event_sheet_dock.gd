@@ -8493,6 +8493,12 @@ func _save_with_project_texts(texts: Dictionary, expected: Dictionary) -> bool:
 	if _dirty:
 		return false
 	_write_project_texts(texts)
+	# A step that writes the open sheet's OWN file (an include written into the script) changes what the
+	# head's Include lines and the forwarding rows read from that file, and the rows were drawn before the
+	# file was written: draw them again from the file as it now is.
+	if _current_sheet != null and not str(_current_sheet.external_source_path).is_empty() \
+			and texts.has(str(_current_sheet.external_source_path)):
+		_refresh_after_edit()
 	return true
 
 

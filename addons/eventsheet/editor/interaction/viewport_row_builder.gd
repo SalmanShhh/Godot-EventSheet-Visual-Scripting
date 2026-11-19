@@ -2932,7 +2932,10 @@ func _includes_of(sheet: EventSheetResource) -> Array[Dictionary]:
 	var path: String = str(sheet.external_source_path) if sheet != null else ""
 	if path.is_empty() or not FileAccess.file_exists(path):
 		return []
-	var stamp: String = "%s@%d" % [path, FileAccess.get_modified_time(path)]
+	# The size is part of the stamp: the clock keeps whole seconds, and an include written and taken out again within
+	# one second leaves the same time on a file whose text is not the same.
+	var probe: FileAccess = FileAccess.open(path, FileAccess.READ)
+	var stamp: String = "%s@%d@%d" % [path, FileAccess.get_modified_time(path), probe.get_length() if probe != null else -1]
 	if stamp != _includes_stamp:
 		_includes_stamp = stamp
 		_includes_cache = EventSheetSharedSheets.includes_of_source(FileAccess.get_file_as_string(path))

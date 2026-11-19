@@ -113,20 +113,35 @@ func include_shared_sheet(path: String) -> Dictionary:
 		_dock._set_status(str(refusal["error"]), true)
 		return refusal
 	_dock._sheet_io._on_save_requested()
-	var result: Dictionary = EventSheetSharedSheets.apply_include(
-		FileAccess.get_file_as_string(target), FileAccess.get_file_as_string(path), path)
+	var before_text: String = FileAccess.get_file_as_string(target)
+	var result: Dictionary = EventSheetSharedSheets.apply_include(before_text, FileAccess.get_file_as_string(path), path)
 	if not bool(result["ok"]):
 		_dock._set_status(str(result["error"]), true)
 		return result
-	EventSheetBackups.backup_sheet(target)
-	var file: FileAccess = FileAccess.open(target, FileAccess.WRITE)
-	if file == null:
+	var after_text: String = str(result["text"])
+	# The script as it reads WITH the include, lifted from the new text without writing a byte, so the step
+	# below can swap it in. The include is one undoable edit like any other: the funnel keeps the sheet as it
+	# was and as it becomes, and writes the file as it was or as it becomes with each Undo and Redo.
+	var included: EventSheetResource = load("res://addons/eventforge/importer/gdscript_importer.gd").new().import_external_source(
+		after_text, true, target)
+	if included == null:
 		_dock._set_status(EventSheetL10n.translate("Could not write %s.") % target.get_file(), true)
 		return {"ok": false, "error": "write failed"}
-	file.store_string(str(result["text"]))
-	file.close()
+	included.external_source_path = target
+	included.read_only = false
+	included.autoload_mode = _dock._current_sheet.autoload_mode
+	included.autoload_name = _dock._current_sheet.autoload_name
+	if _dock._current_sheet.editor_style != null:
+		included.editor_style = _dock._current_sheet.editor_style
+	EventSheetBackups.backup_sheet(target)
+	var changed: bool = _dock._perform_undoable_sheet_edit("Include Shared Sheet", func() -> bool:
+		_dock._current_sheet = included
+		return true,
+		{target: {"before": before_text, "after": after_text}})
+	if not changed or FileAccess.get_file_as_string(target) != after_text:
+		_dock._set_status(EventSheetL10n.translate("Could not write %s.") % target.get_file(), true)
+		return {"ok": false, "error": "write failed"}
 	_dock._set_status(EventSheetL10n.translate("Included %s %s.") % [path.get_file(),
 		EventSheetL10n.translate(EventSheetSharedSheets.wiring_words(str(result["wiring"])))]
-		+ " " + EventSheetL10n.translate("Ctrl+Z does not take an include out, and the version before it is in Sheet Backups."))
-	_dock._load_sheet_from_path(target)
+		+ " " + EventSheetL10n.translate("Ctrl+Z takes it out again."))
 	return result

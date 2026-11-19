@@ -11276,3 +11276,4 @@ the Load bindings row of the same pair,같은 쌍의 바인딩 불러오기 행
 "Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.","이전 경로를 아직 가리키는 내 스크립트: %d개. 도구 > 프로젝트에서 찾기에서 볼 수 있습니다."
 The tests could not be started in a second copy of Godot.,두 번째 Godot 사본에서 테스트를 시작할 수 없었습니다.
 The test run ended before it wrote a report. Run the tests from a terminal to see why.,보고서를 쓰기 전에 테스트 실행이 끝났습니다. 터미널에서 테스트를 실행해 이유를 확인하세요.
+Ctrl+Z takes it out again.,Ctrl+Z로 다시 뺄 수 있습니다.
