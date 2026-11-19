@@ -82,6 +82,12 @@ var _last_partial_draw_msec: int = 0
 const FILL_BUDGET_USEC: int = 5000
 ## The selected finding's whole sentence, wrapped, under the list: a cell cuts a long one.
 var _whole_finding: PanelContainer = null
+## The search box above the list, the words it holds, and the debounce that keeps a burst of keys to one pass.
+var _search: LineEdit = null
+var _filter_words: PackedStringArray = PackedStringArray()
+var _filter_generation: int = 0
+## Each branch's fold state as it was before a filter began, to put back when the box is emptied.
+var _folds_before_filter: Dictionary = {}
 var _whole_finding_text: Label = null
 ## Where each check's Learn more goes, found once a session: reading the whole Manual is not free.
 static var _learn_more_cache: Dictionary = {}
@@ -165,6 +171,14 @@ func _build() -> void:
 	progress_row.add_child(_cancel_button)
 	box.add_child(progress_row)
 	_progress_label.set_meta("row", progress_row)
+	_search = LineEdit.new()
+	_search.placeholder_text = EventSheetL10n.translate("Search the findings")
+	_search.right_icon = EventSheetPopupUI._editor_icon("Search")
+	_search.clear_button_enabled = true
+	_search.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_search.text_changed.connect(_on_search_changed)
+	_search.gui_input.connect(_on_search_key)
+	box.add_child(_search)
 	_doctor_tree = inbox_tree()
 	# Deferred: a Tree refuses to create items while it is handling the click that selected one, so
 	# the fix and Learn more rows under a finding are built once that click is over.
@@ -193,7 +207,7 @@ func _build() -> void:
 	var read_button: Button = _button(EventSheetL10n.translate("Mark All as Read"), func() -> void:
 		_mark_page_as_read()
 		_run_project_doctor())
-	read_button.tooltip_text = EventSheetL10n.translate("Writes down what is on this page, so the next audit marks only what appeared after it.")
+	read_button.tooltip_text = EventSheetL10n.translate("Writes down what is on this page, so the next audit marks only what appeared after it. It means the whole page, not only what the search shows.")
 	buttons.add_child(read_button)
 	var gap: Control = Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -205,6 +219,11 @@ func _build() -> void:
 	buttons.add_child(_open_button)
 	box.add_child(buttons)
 	_doctor_window.add_child(EventSheetPopupUI.window_body(box))
+	# Added after the body so its unhandled keys are asked first: Escape then empties the search box before the body
+	# takes it as "close", and Ctrl+F reaches the box from wherever the focus is.
+	var keys: KeyCatcher = KeyCatcher.new()
+	keys.handler = _on_window_key
+	_doctor_window.add_child(keys)
 	_dock.add_child(_doctor_window)
 
 
@@ -326,7 +345,9 @@ func _draw_page(findings: Array) -> void:
 		return
 	_fixed_item = null
 	var root_item: TreeItem = _doctor_tree.get_root() if _doctor_tree.get_root() != null else _doctor_tree.create_item()
-	_fill_page(InboxFill.new(_doctor_tree, root_item, _page), mine, tree)
+	var filler: InboxFill = InboxFill.new(_doctor_tree, root_item, _page)
+	filler.hide_unless = _row_shown
+	_fill_page(filler, mine, tree)
 
 
 ## Lays a page's rows into the tree a few milliseconds a frame, until it is done or a newer page replaces it.
@@ -335,6 +356,7 @@ func _fill_page(filler: InboxFill, mine: int, tree: SceneTree) -> void:
 		await tree.process_frame
 		if mine != _fill_generation or _doctor_window == null or _doctor_tree == null:
 			return
+	_apply_filter(true)
 	_on_finding_selected()
 
 
@@ -715,6 +737,8 @@ class InboxFill extends RefCounted:
 	var _cursor: int = 0
 	var _prepared: bool = false
 	var _root: TreeItem = null
+	## Asked of each new row: false hides it (the search box's words).
+	var hide_unless: Callable = Callable()
 
 
 	func _init(tree: Tree, root_item: TreeItem, page: Array[Dictionary]) -> void:
@@ -772,8 +796,11 @@ class InboxFill extends RefCounted:
 		item.set_text(3, str(finding.get("message")))
 		item.set_metadata(0, str(finding.get("path", "")))
 		item.set_metadata(1, finding)
+		item.set_meta("haystack", EventSheetDoctorInbox.haystack_of(item.get_text(1), item.get_text(2), item.get_text(3)))
 		item.set_tooltip_text(3, "%s\n\n%s" % [str(finding.get("message")),
 			EventSheetL10n.translate("Double-click to open this sheet.")])
+		if hide_unless.is_valid() and not bool(hide_unless.call(item)):
+			item.visible = false
 
 
 ## The mark a line leads with: nothing when the line was here last time, and one small accent dot
@@ -886,3 +913,114 @@ func _show_script_line(path: String, line: int) -> void:
 		var resource: Resource = instance_from_id(int(str((entry as Dictionary).get("uid", "0")))) as Resource
 		if resource != null and (view.select_resource(resource) or view.reveal_resource(resource)):
 			return
+
+
+## Hands the window's keys that nothing else took to the panel, so Ctrl+F and Escape work wherever the focus is.
+class KeyCatcher extends Node:
+	var handler: Callable = Callable()
+
+
+	func _unhandled_key_input(event: InputEvent) -> void:
+		if handler.is_valid():
+			handler.call(event)
+
+
+## Whether a finding's row is shown by the words typed in the search box.
+func _row_shown(item: TreeItem) -> bool:
+	var held: Variant = item.get_meta("haystack", null)
+	if held == null:
+		held = EventSheetDoctorInbox.haystack_of(item.get_text(1), item.get_text(2), item.get_text(3))
+		item.set_meta("haystack", held)
+	return EventSheetDoctorInbox.shown_in(_filter_words, str(held))
+
+
+func _on_search_changed(typed: String) -> void:
+	# A burst of keys is one pass, a moment after the last: the pass walks every row of the list.
+	_filter_generation += 1
+	var mine: int = _filter_generation
+	if _dock == null or not _dock.is_inside_tree():
+		_filter_words = EventSheetDoctorInbox.filter_words(typed)
+		_apply_filter(false)
+		return
+	await _dock.get_tree().create_timer(0.12).timeout
+	if mine != _filter_generation or _search == null:
+		return
+	_filter_words = EventSheetDoctorInbox.filter_words(_search.text)
+	_apply_filter(false)
+
+
+## Shows the rows the words match and hides the rest, hides a branch none of whose rows are shown, keeps the branches
+## that are shown unfolded while a filter is on and puts every fold back when it is emptied, and says how many are shown
+## out of how many. Nothing is rebuilt, so the selection and the scroll are where they were.
+func _apply_filter(_after_fill: bool) -> void:
+	if _doctor_tree == null or _doctor_tree.get_root() == null:
+		return
+	var filtering: bool = not _filter_words.is_empty()
+	if filtering and _folds_before_filter.is_empty():
+		var index: int = 0
+		for branch: TreeItem in _doctor_tree.get_root().get_children():
+			_folds_before_filter[index] = branch.collapsed
+			index += 1
+	var shown: int = 0
+	var total: int = 0
+	var branch_index: int = 0
+	for branch: TreeItem in _doctor_tree.get_root().get_children():
+		var branch_shown: int = 0
+		for item: TreeItem in branch.get_children():
+			total += 1
+			var yes: bool = _row_shown(item)
+			if item.visible != yes:
+				item.visible = yes
+			if yes:
+				branch_shown += 1
+		shown += branch_shown
+		branch.visible = branch_shown > 0 or not filtering
+		if filtering:
+			branch.collapsed = false
+		elif _folds_before_filter.has(branch_index):
+			branch.collapsed = bool(_folds_before_filter[branch_index])
+		branch_index += 1
+	if not filtering:
+		_folds_before_filter.clear()
+	if _summary_label != null and not _page.is_empty():
+		var base: String = EventSheetDoctorInbox.summary_line(_page)
+		_summary_label.text = base if not filtering else "%s %s" % [base, EventSheetL10n.translate("Showing %d of %d.") % [shown, total]]
+
+
+## Ctrl+F goes to the search box; Escape empties it first and closes the window only when it is already empty.
+func _on_window_key(event: InputEvent) -> void:
+	var key: InputEventKey = event as InputEventKey
+	if key == null or not key.pressed or _search == null:
+		return
+	if key.keycode == KEY_F and (key.ctrl_pressed or key.meta_pressed):
+		_search.grab_focus()
+		_search.select_all()
+		_doctor_window.set_input_as_handled()
+	elif key.keycode == KEY_ESCAPE:
+		if not _search.text.is_empty():
+			_search.clear()
+			_filter_generation += 1
+			_filter_words = PackedStringArray()
+			_apply_filter(false)
+		else:
+			_close()
+		_doctor_window.set_input_as_handled()
+
+
+## Up and Down from the search box move into the list.
+func _on_search_key(event: InputEvent) -> void:
+	var key: InputEventKey = event as InputEventKey
+	if key != null and key.pressed and key.keycode == KEY_ESCAPE:
+		# The box is the one that has the key: it empties first, and the window closes when it is already empty.
+		_on_window_key(event)
+		_search.accept_event()
+		return
+	if key == null or not key.pressed or (key.keycode != KEY_DOWN and key.keycode != KEY_UP):
+		return
+	_doctor_tree.grab_focus()
+	for branch: TreeItem in _doctor_tree.get_root().get_children():
+		for item: TreeItem in branch.get_children():
+			if item.visible and item.is_selectable(1):
+				item.select(1)
+				_doctor_tree.scroll_to_item(item)
+				return

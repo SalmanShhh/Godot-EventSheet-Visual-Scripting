@@ -4,10 +4,6 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
-### Changed: the Reading findings are written as sentences
-
-A shape finding now says how many lines show as code instead of as rows and quotes the first real line as the example, instead of a placeholder pattern; "more like it" and the tail counts agree with one and many in all nine languages. The Interop line no longer sets "100%" beside "still code": it says what share of its lines show as rows and, separately, how many functions are shown as rows and how many are kept as code blocks. The window's summary line reads "2 errors, 3 warnings, 1 note". The command-line verdict line is unchanged. Findings are remembered as read by what they are about, not by their wording, so nothing reworded is reported as new.
-
 ### Changed: the tutorials read in the editor's language in the Start window and the Manual
 
 The Learn column of the Start window listed the tutorials in English in a translated editor, because their titles and leads were data with no translation rows. All nine tutorial titles and one-line leads, and the minutes and step lines ("5 min", "step 2 of 6"), now have a row in the template and a real translation in all eight languages (the wording of the neighbouring rows: event, sheet, behaviour, action, condition, function). The same title is shown by the Start window, the Manual's contents list, the list of tutorials, a tutorial's own heading and caption, and the breadcrumb, so a title is never in one language one click later. The Manual's search now finds a tutorial by its title in the editor's language and by the English one. A tutorial added later with no row reads in English, never as a key. The step texts inside a tutorial stay English (about 1,600 words in 50 steps across the nine tutorials). A new test pins a row for every title and lead in all nine files.
@@ -47,6 +43,14 @@ The long single stretches of main-thread work the audit still had are now taken 
 ### Fixed: a Reading line in the Check the project window opens its sheet on the row that holds the line
 
 Opening a Reading line finding opened the file at the top of the sheet. It now selects the row that wrote that line, by the same source map an error in the running game uses, and unfolds the block it sits in.
+
+### Added: a search box in the Check the project window
+
+Above the list, one box filters the findings to those whose Section, Where or Finding text holds every word typed, in any order and any case, in the language shown. Sections with nothing left are hidden and the ones that remain stay open; emptying the box puts the list back as it was, with its folds, selection and scroll. The summary line says how many are shown out of how many while a filter is on, and findings that arrive while a check is still running obey it. Ctrl+F goes to the box; Escape empties it first and closes the window only when it is already empty; Up and Down move from the box into the list. Mark All as Read still means the whole page.
+
+### Changed: the Reading findings are written as sentences
+
+A shape finding now says how many lines show as code instead of as rows and quotes the first real line as the example, instead of a placeholder pattern; "more like it" and the tail counts agree with one and many in all nine languages. The Interop line no longer sets "100%" beside "still code": it says what share of its lines show as rows and, separately, how many functions are shown as rows and how many are kept as code blocks. The window's summary line reads "2 errors, 3 warnings, 1 note". The command-line verdict line is unchanged. Findings are remembered as read by what they are about, not by their wording, so nothing reworded is reported as new.
 
 ### Changed: the editor's first open compiles about 500 fewer lines
 
