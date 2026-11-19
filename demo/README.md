@@ -108,6 +108,10 @@ plugin's discovery) opens the flagship; the others are right there in the folder
   controller pack anywhere: the sheet writes gravity and the move, the kit writes the ledge, the
   wall, the ladder, the vault and the water - including **Float**, the buoyancy that holds a swimmer
   under the surface instead of on the floor.
+- **`object_pooling/` - Object Pooling (made once, given out again).** A fountain throws about a hundred
+  and twenty sparks a second. Press Space to switch the Object Pool on and off and read the strip at the
+  foot of the screen: with the pool, nodes made stops at about a hundred and fifty; without it, every
+  spark is a new node and the count climbs. A spark's own `reset` makes a reused one fresh.
 
 Open any showcase's `.gd` as a sheet to see the whole thing as a handful of event rows - the `.gd` IS the sheet, there is no `.tres` companion.
 Regenerate them all with `godot --headless --script tools/build_examples.gd`.
@@ -151,6 +155,7 @@ Regenerate them all with `godot --headless --script tools/build_examples.gd`.
 | `showcase/skate_park_3d/` | **Skate Park 3D** - the same run on a surface: gravity projected onto the floor normal, the board kept flat on it, a named moment for leaving the bank, and a Path3D rail |
 | `showcase/traversal_course/` | **Traversal Course** - ledge grab and mantle, wall slide and wall jump, a marked ladder, a vault and a pool, with four self-driving actors demonstrating each one |
 | `showcase/traversal_course_3d/` | **Traversal Course 3D** - the same five moves in metres on CharacterBody3D, with no controller pack: the sheet writes gravity and the move, the kit writes the rest |
+| `showcase/object_pooling/` | **Object Pooling** - a fountain of short-lived sparks with a nodes-made against nodes-reused count and a key to switch the Object Pool off, so the difference is a number |
 | `themes/` | Nine bundled themes: Dracula, Nord, Gruvbox Dark, Monokai, Solarized Light, Catppuccin Mocha, high-contrast, soft-light, + the designer template |
 | `demo_project.godot` | Rename to `project.godot` only for standalone use (rename back afterwards) |
 

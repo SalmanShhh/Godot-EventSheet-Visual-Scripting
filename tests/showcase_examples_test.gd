@@ -352,6 +352,20 @@ static func run() -> bool:
 	# water and ladder row silently never fires.
 	passed = _check("the ladder and the pool keep their groups in the packed scene",
 		FileAccess.get_file_as_string("res://demo/showcase/traversal_course/traversal_course.tscn").count("groups=["), 2) and passed
+	passed = _check_sheet("object_pooling", "res://demo/showcase/object_pooling/object_pooling.gd", [
+		"class_name ObjectPoolingDemo",
+		"$ObjectPool.create_pool(\"sparks\", \"res://demo/showcase/object_pooling/spark.tscn\", 0)",
+		"$ObjectPool.spawn(\"sparks\")",
+		"$ObjectPool.despawn(spark)",
+		"spark.expired.is_connected(retire_spark)",
+	]) and passed
+	passed = _check_sheet("object_pooling spark", "res://demo/showcase/object_pooling/spark.gd", [
+		"class_name PoolSpark",
+		"func reset() -> void:",
+		"expired.emit(self)",
+	]) and passed
+	passed = _check_scene("object_pooling scene carries the pool and the fountain",
+		"res://demo/showcase/object_pooling/object_pooling.tscn", ["ObjectPool", "Fountain", "Info"]) and passed
 	passed = _check_sheet("traversal_course_3d", "res://demo/showcase/traversal_course_3d/traversal_course_3d.gd", [
 		"class_name TraversalCourse3DDemo",
 		"$Climber/Traversal.grab_ledge()",

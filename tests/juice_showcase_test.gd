@@ -83,7 +83,7 @@ static func _scene_pins() -> bool:
 		["there are five players", players, 5],
 		["every list is saved as the typed list the export holds", untyped, 0],
 		["every family is seen at least once", ",".join(missing), ""],
-		["the showcase count does not move", folders, 31],
+		["the showcase count does not move", folders, 32],
 	])
 
 

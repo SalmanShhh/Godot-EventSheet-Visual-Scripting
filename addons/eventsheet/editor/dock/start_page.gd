@@ -39,6 +39,7 @@ const SHOWCASE_KINDS: Dictionary = {
 	"input_rebind": "Systems",
 	"inspector_playground": "Toy",
 	"menu_starter": "Menus",
+	"object_pooling": "Systems",
 	"mirror_and_flip": "Toy",
 	"options_and_quick_save": "Systems",
 	"path_chase": "Platformer",

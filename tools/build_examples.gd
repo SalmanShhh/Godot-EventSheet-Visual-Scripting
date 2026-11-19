@@ -86,6 +86,7 @@ func _init() -> void:
 	all_ok = _build_traversal_course() and all_ok
 	all_ok = _build_traversal_course_3d() and all_ok
 	all_ok = _build_combo_fighter() and all_ok
+	all_ok = _build_object_pooling() and all_ok
 	for path: String in UID_SIDECARS.changed_since(sidecars):
 		push_error("[build_examples] the build changed %s - put back as it was" % path)
 		all_ok = false
@@ -7160,3 +7161,190 @@ func _fighter_move(clip_name: String, offset: Vector2, tint: Color, length: floa
 		move.track_set_path(calls, ".")
 		move.track_insert_key(calls, 0.35, {"method": &"_on_hit_frame", "args": []})
 	return move
+
+
+# ── 32. Object Pooling - many short-lived things, made once and given out again ──────────────
+#
+# A fountain throws about a hundred and twenty sparks a second and each one lives a little over a
+# second. With pooling on, the sparks come from the Object Pool pack: the first second makes a
+# hundred and fifty or so, and after that every spark is one that expired a moment ago. With
+# pooling off, every spark is a new node that is freed when it expires. The strip at the foot of the
+# screen counts both ways of working, so the difference is a number and not a feeling.
+
+const POOLING_DIR := "res://demo/showcase/object_pooling"
+const OBJECT_POOL := "res://eventsheet_addons/object_pool/object_pool_addon.gd"
+
+
+func _build_object_pooling() -> bool:
+	if not _build_pooling_spark_sheet():
+		return false
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Node2D"
+	sheet.custom_class_name = "ObjectPoolingDemo"
+	sheet.emit_live_values = false
+	sheet.variables = {
+		"pooling": {"type": "bool", "default": true, "exported": false,
+			"description": "True while sparks come from the pool; false while every spark is a new node that is freed when it expires."},
+		"sparks_spawned": {"type": "int", "default": 0, "exported": false,
+			"description": "Sparks asked for since pooling was last switched."},
+		"nodes_made": {"type": "int", "default": 0, "exported": false,
+			"description": "Sparks that had to be built new since pooling was last switched; the rest were given out again."},
+		"spark_burst": {"type": "int", "default": 2, "exported": true,
+			"description": "How many sparks the fountain throws on every physics frame.",
+			"attributes": {"range": {"min": "0", "max": "10", "step": "1"}}},
+		"fountain_time": {"type": "float", "default": 0.0, "exported": false,
+			"description": "Seconds the fountain has been sweeping, which is where along the floor it stands."}
+	}
+	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
+	sheet.class_description = "[b]Object Pooling[/b] - a fountain throws about a hundred and twenty sparks a second, and each spark lives a little over a second. Press Space to switch pooling on and off and watch the strip at the foot of the screen: with pooling on, the first second makes about a hundred and fifty sparks and every spark after that is one that expired a moment ago, so nodes made stops climbing; with pooling off, every spark is a new node that is freed when it expires, so nodes made climbs for as long as you watch. A reused spark is put back to a fresh one by its own reset function, which the pool calls on every spawn. In your own project the Object Pool pack is the ObjectPool autoload, so the rows read ObjectPool.spawn(); here it sits as a child node of the same name, so they read $ObjectPool.spawn(), and a spark is handed back with Despawn because the Retire rows look for the autoload."
+
+	var scene_member: RawCodeRow = RawCodeRow.new()
+	scene_member.code = "## The spark scene, used to build a new spark when pooling is off.\nconst SPARK_SCENE: PackedScene = preload(\"%s/spark.tscn\")" % POOLING_DIR
+	sheet.events.append(scene_member)
+
+	_helper(sheet, "spawn_spark", "Gives the fountain one spark: out of the pool while pooling is on, a new node while it is off. Counts it, puts it at the fountain, throws it, and listens for its end once.", [], [
+		"var spark: PoolSpark",
+		"sparks_spawned += 1",
+		"if pooling:",
+		"\t# An empty stash is the one case where Spawn has to build a new node.",
+		"\tif $ObjectPool.free_count(\"sparks\") == 0:",
+		"\t\tnodes_made += 1",
+		"\tspark = $ObjectPool.spawn(\"sparks\") as PoolSpark",
+		"else:",
+		"\tnodes_made += 1",
+		"\tspark = SPARK_SCENE.instantiate() as PoolSpark",
+		"\tadd_child(spark)",
+		"spark.position = $Fountain.position",
+		"spark.drift = Vector2(randf_range(-140.0, 140.0), randf_range(-520.0, -300.0))",
+		"# A pooled spark keeps its connections between lives, so connect only if it is not already.",
+		"if not spark.expired.is_connected(retire_spark):",
+		"\tspark.expired.connect(retire_spark)",
+	])
+	_helper(sheet, "retire_spark", "Puts an expired spark away: back to the pool if the pool gave it out, freed if it was built new.",
+		[["spark", "PoolSpark"]], [
+		"if spark.has_meta(&\"__pool__\"):",
+		"\t$ObjectPool.despawn(spark)",
+		"else:",
+		"\tspark.queue_free()",
+	])
+
+	var ready_row: EventRow = EventRow.new()
+	ready_row.trigger_provider_id = "Core"
+	ready_row.trigger_id = "OnReady"
+	ready_row.actions.append(_node_call("ObjectPoolAddon", "ObjectPool", "create_pool",
+		{"pool_name": "\"sparks\"", "scene_path": "\"%s/spark.tscn\"" % POOLING_DIR, "prewarm": "0"}))
+	sheet.events.append(ready_row)
+
+	var throw: EventRow = EventRow.new()
+	throw.trigger_provider_id = "Core"
+	throw.trigger_id = "OnPhysicsProcess"
+	throw.actions.append(_raw("\n".join(PackedStringArray([
+		"fountain_time += delta",
+		"$Fountain.position = Vector2(576.0 + sin(fountain_time) * 320.0, 540.0)",
+		"for _i: int in spark_burst:",
+		"\tspawn_spark()",
+	]))))
+	sheet.events.append(throw)
+
+	var switch_row: EventRow = EventRow.new()
+	switch_row.trigger_provider_id = "Core"
+	switch_row.trigger_id = "OnProcess"
+	switch_row.conditions.append(_condition("Core", "IsActionJustPressed", "Input.is_action_just_pressed(&{action})", {"action": "\"ui_accept\""}))
+	switch_row.actions.append(_action("Core", "ToggleVar", "{var_name} = not {var_name}", {"var_name": "pooling"}))
+	switch_row.actions.append(_action("Core", "SetVar", "{var_name} = {value}", {"var_name": "sparks_spawned", "value": "0"}))
+	switch_row.actions.append(_action("Core", "SetVar", "{var_name} = {value}", {"var_name": "nodes_made", "value": "0"}))
+	sheet.events.append(switch_row)
+
+	var strip: EventRow = EventRow.new()
+	strip.trigger_provider_id = "Core"
+	strip.trigger_id = "OnProcess"
+	strip.actions.append(_action("Core", "SetTextFormatted", "{target}.text = {template} % [{args}]",
+		{"target": "$HUD/Info", "template": "\"pooling %s    sparks spawned %d    nodes made %d    nodes reused %d    nodes in the game %d\"",
+			"args": "\"ON\" if pooling else \"OFF\", sparks_spawned, nodes_made, sparks_spawned - nodes_made, int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))"}))
+	sheet.events.append(strip)
+
+	if not _compile(sheet, "%s/object_pooling.tres" % POOLING_DIR, "%s/object_pooling.gd" % POOLING_DIR):
+		return false
+
+	var root: Node2D = Node2D.new()
+	root.name = "ObjectPooling"
+	root.set_script(load("%s/object_pooling.gd" % POOLING_DIR))
+	_attach_behavior(root, "ObjectPool", OBJECT_POOL, root)
+	var fountain: Sprite2D = Sprite2D.new()
+	fountain.name = "Fountain"
+	fountain.texture = _make_texture()
+	fountain.scale = Vector2(0.5, 0.5)
+	fountain.modulate = Color(0.45, 0.8, 0.95, 1.0)
+	fountain.position = Vector2(576.0, 540.0)
+	root.add_child(fountain)
+	fountain.owner = root
+	var hud_layer: CanvasLayer = CanvasLayer.new()
+	hud_layer.name = "HUD"
+	root.add_child(hud_layer)
+	hud_layer.owner = root
+	var title: Label = Label.new()
+	title.name = "Title"
+	title.position = Vector2(24.0, 18.0)
+	title.add_theme_font_size_override("font_size", 20)
+	title.text = "Space switches pooling on and off"
+	hud_layer.add_child(title)
+	title.owner = root
+	var info: Label = Label.new()
+	info.name = "Info"
+	info.position = Vector2(24.0, 596.0)
+	info.add_theme_font_size_override("font_size", 20)
+	info.text = "pooling ON    sparks spawned 0    nodes made 0    nodes reused 0    nodes in the game 0"
+	hud_layer.add_child(info)
+	info.owner = root
+	return _save_scene(root, "%s/object_pooling.tscn" % POOLING_DIR)
+
+
+## The spark: a sprite that flies, falls, fades, and says so once when its life is up. Its reset
+## function is what the pool calls on every spawn, and the one place that makes a reused spark new.
+func _build_pooling_spark_sheet() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Sprite2D"
+	sheet.custom_class_name = "PoolSpark"
+	sheet.emit_live_values = false
+	sheet.class_description = "One spark of the fountain. It flies, falls and fades for its lifetime, then says expired once. reset puts a used spark back to a fresh one: the pool calls it every time it hands the spark out again."
+	sheet.variables = {
+		"drift": {"type": "Vector2", "default": Vector2.ZERO, "exported": false,
+			"description": "How fast the spark is moving, in pixels a second; the fountain sets it as the spark is thrown."},
+		"age": {"type": "float", "default": 0.0, "exported": false,
+			"description": "Seconds this spark has been alive. A reused spark starts again from 0 in reset."},
+		"lifetime": {"type": "float", "default": 1.2, "exported": true,
+			"description": "Seconds a spark lives before it expires."},
+		"gravity": {"type": "float", "default": 420.0, "exported": true,
+			"description": "How hard the spark is pulled down, in pixels a second every second."}
+	}
+	var expired_signal: SignalRow = SignalRow.new()
+	expired_signal.signal_name = "expired"
+	expired_signal.params = PackedStringArray(["spark: PoolSpark"])
+	expired_signal.leading_lines = PackedStringArray(["## Said once, when this spark has lived its whole life."])
+	_helper(sheet, "reset", "Makes a used spark fresh again: it has not aged, and it is fully lit and full size. The pool calls this each time it gives the spark out.", [], [
+		"age = 0.0",
+		"modulate.a = 1.0",
+		"scale = Vector2(0.18, 0.18)",
+	])
+	var fly: EventRow = EventRow.new()
+	fly.trigger_provider_id = "Core"
+	fly.trigger_id = "OnProcess"
+	fly.actions.append(_raw("\n".join(PackedStringArray([
+		"age += delta",
+		"drift.y += gravity * delta",
+		"position += drift * delta",
+		"modulate.a = 1.0 - age / lifetime",
+		"if age >= lifetime:",
+		"\texpired.emit(self)",
+	]))))
+	sheet.events.append(fly)
+	sheet.events.append(expired_signal)
+	if not _compile(sheet, "%s/spark.tres" % POOLING_DIR, "%s/spark.gd" % POOLING_DIR):
+		return false
+	var spark: Sprite2D = Sprite2D.new()
+	spark.name = "Spark"
+	spark.texture = _make_texture()
+	spark.scale = Vector2(0.18, 0.18)
+	spark.modulate = Color(1.0, 0.72, 0.25, 1.0)
+	spark.set_script(load("%s/spark.gd" % POOLING_DIR))
+	return _save_scene(spark, "%s/spark.tscn" % POOLING_DIR)
