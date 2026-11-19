@@ -94,6 +94,7 @@ Every page below also ships inside the editor: open **Menu > Manual**, or press 
 
 - [Engine-Level ACEs](REFERENCE-ENGINE-ACES.md) - the vocabulary that drives the engine itself: graphics settings, world gravity, audio mixing, runtime meshes, camera FOV, animation playback, gradients and curves.
 - [MCP Server](REFERENCE-MCP-SERVER.md) - the AI-tooling protocol (list, read, compile, lint, snippets, doctor).
+- [Is My Game Slow?](GUIDE-IS-MY-GAME-SLOW-MEASURE-IT-THEN-FIX-IT.md) - telling there is a problem, Godot's own Debugger tools and what each answers, timing your own logic, your own numbers in the Monitors tab, the Doctor's Performance section, then the usual fixes with the shipped tool for each.
 - [Performance](REFERENCE-PERFORMANCE.md) - frame-spreading and time-budgeting.
 - [GDScript Basics Coverage](GDSCRIPT-BASICS-COVERAGE.md) - every fundamental on Godot's basics page, as sheet rows (the release-bar receipt).
 
@@ -155,8 +156,9 @@ Your game is going to be played by more than one person at a time.
 
 The game works and now it has to keep working with everything on screen at once.
 
-1. [Performance](REFERENCE-PERFORMANCE.md)
-2. [Composition and Systems](GUIDE-COMPOSITION-SYSTEMS.md)
-3. [Working with Lists (Arrays)](GUIDE-WORKING-WITH-LISTS.md)
-4. [Seeing What Is There (Raycasting)](GUIDE-SEEING-WHAT-IS-THERE-RAYCASTING.md)
-5. [Randomness and Procedural Generation](GUIDE-PROCEDURAL-GENERATION.md)
+1. [Is My Game Slow?](GUIDE-IS-MY-GAME-SLOW-MEASURE-IT-THEN-FIX-IT.md)
+2. [Performance](REFERENCE-PERFORMANCE.md)
+3. [Composition and Systems](GUIDE-COMPOSITION-SYSTEMS.md)
+4. [Working with Lists (Arrays)](GUIDE-WORKING-WITH-LISTS.md)
+5. [Seeing What Is There (Raycasting)](GUIDE-SEEING-WHAT-IS-THERE-RAYCASTING.md)
+6. [Randomness and Procedural Generation](GUIDE-PROCEDURAL-GENERATION.md)

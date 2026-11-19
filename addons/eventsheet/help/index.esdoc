@@ -25,7 +25,7 @@
 "ids": ["GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR", "GUIDE-TOP-DOWN-SHOOTER-TUTORIAL", "REFERENCE-GLOSSARY"],
 "title": "Coming from another event-sheet editor"
 }, {
-"ids": ["REFERENCE-ENGINE-ACES", "REFERENCE-MCP-SERVER", "REFERENCE-PERFORMANCE", "GDSCRIPT-BASICS-COVERAGE"],
+"ids": ["REFERENCE-ENGINE-ACES", "REFERENCE-MCP-SERVER", "GUIDE-IS-MY-GAME-SLOW-MEASURE-IT-THEN-FIX-IT", "REFERENCE-PERFORMANCE", "GDSCRIPT-BASICS-COVERAGE"],
 "title": "Reference"
 }, {
 "ids": ["Modules/README"],
@@ -181,6 +181,7 @@
 "GUIDE-FIGHTING-GAME-COMBOS-CANCEL-WINDOWS-AND-HIT-STOP": "Fighting-Game Combos, Cancel Windows And Hit-Stop",
 "GUIDE-FILES-AND-FOLDERS": "Files and Folders - Where a Game May Write, and What It May Trust",
 "GUIDE-HOW-CODE-READS": "How your code reads: curated sentences, derived rows, and honest code",
+"GUIDE-IS-MY-GAME-SLOW-MEASURE-IT-THEN-FIX-IT": "Is my game slow? Measure it, then fix it",
 "GUIDE-LET-PLAYERS-REBIND-THE-CONTROLS": "Let players rebind the controls",
 "GUIDE-LIGHTING-YOUR-GAME": "Lighting your game",
 "GUIDE-MAKE-A-BEHAVIOUR-WITHOUT-CODE": "Make a Behaviour Without Writing Code",
@@ -287,7 +288,7 @@
 "title": "Multiplayer"
 }, {
 "blurb": "The game works and now it has to keep working with everything on screen at once.",
-"ids": ["REFERENCE-PERFORMANCE", "GUIDE-COMPOSITION-SYSTEMS", "GUIDE-WORKING-WITH-LISTS", "GUIDE-SEEING-WHAT-IS-THERE-RAYCASTING", "GUIDE-PROCEDURAL-GENERATION"],
+"ids": ["GUIDE-IS-MY-GAME-SLOW-MEASURE-IT-THEN-FIX-IT", "REFERENCE-PERFORMANCE", "GUIDE-COMPOSITION-SYSTEMS", "GUIDE-WORKING-WITH-LISTS", "GUIDE-SEEING-WHAT-IS-THERE-RAYCASTING", "GUIDE-PROCEDURAL-GENERATION"],
 "title": "Performance"
 }],
 "unlisted": [],

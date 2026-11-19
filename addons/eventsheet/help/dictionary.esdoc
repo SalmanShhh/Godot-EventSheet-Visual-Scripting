@@ -56,6 +56,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `add_command` | [Add Command](ace:Core/AddCommandPaletteCommand) | Editor Tools: Panels & menus | Vocabulary |
 | `add_control_to_bottom_panel` | [Add Bottom Panel](ace:Core/AddBottomPanel) | Editor Tools: Panels & menus | Vocabulary |
 | `add_control_to_dock` | [Add Dock](ace:Core/AddEditorDock) | Editor Tools: Panels & menus | Vocabulary |
+| `add_custom_monitor` | [Show In Monitors](ace:Core/ShowInMonitors) | Debug | Vocabulary |
 | `add_custom_type` | [Add Object Type](ace:Core/AddEditorObjectType) | Editor Tools: Panels & menus | Vocabulary |
 | `add_do_method` | [Add Node (Undoable)](ace:Core/AddNodeUndoable) | Editor Tools: Undo history | Vocabulary |
 | `add_do_property` | [Set Property (Undoable)](ace:Core/SetPropertyUndoable) | Editor Tools: Undo history | Vocabulary |
@@ -396,6 +397,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `get_current_play_position` | [Time In State](ace:Core/AnimationTimeInState) | Animation | Vocabulary |
 | `get_current_rendering_method` | [Renderer Is](ace:Core/RenderingRendererIs) | Rendering | Vocabulary |
 | `get_custom_data` | [Tile Has Custom Data](ace:Core/TileMapTileHasCustomData) | Tilemap | Vocabulary |
+| `get_custom_monitor` | [Custom Monitor Value](ace:Core/CustomMonitorValue) | Debug | Vocabulary |
 | `get_date_string_from_system` | [Date: Today](ace:Core/GetSystemDate) | Utility: Time | Vocabulary |
 | `get_datetime_dict_from_system` | [Date: Hour](ace:Core/DateHour) | Time | Vocabulary |
 | `get_datetime_dict_from_unix_time` | [Date Parts](ace:Core/DateParts) | Translation | Vocabulary |
@@ -559,6 +561,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `has_all` | [Has All Keys](ace:Core/DictHasAllKeys) | Variables: Dictionary | Vocabulary |
 | `has_animation` | [Has Animation](ace:Core/HasAnimation) | Animation | Vocabulary |
 | `has_char` | [Font Can Show](ace:Core/FontCanShow) | UI | Vocabulary |
+| `has_custom_monitor` | [Is In Monitors](ace:Core/IsInMonitors) | Debug | Vocabulary |
 | `has_feature` | [Is On Web](ace:Core/IsOnWebPlatform) | Platform | Vocabulary |
 | `has_focus` | [Has Focus](ace:Core/HasFocus) | UI | Vocabulary |
 | `has_meta` | [Has Metadata](ace:Core/HasMeta) | Metadata | Vocabulary |
@@ -848,6 +851,7 @@ The **Reads as** name links to the row's own page, where Show GDScript prints th
 | `remove_child` | [Remove Child](ace:Core/RemoveChild) | Nodes | Vocabulary |
 | `remove_control_from_bottom_panel` | [Remove Bottom Panel](ace:Core/RemoveBottomPanel) | Editor Tools: Panels & menus | Vocabulary |
 | `remove_control_from_docks` | [Remove Dock](ace:Core/RemoveEditorDock) | Editor Tools: Panels & menus | Vocabulary |
+| `remove_custom_monitor` | [Remove From Monitors](ace:Core/RemoveFromMonitors) | Debug | Vocabulary |
 | `remove_custom_type` | [Remove Object Type](ace:Core/RemoveEditorObjectType) | Editor Tools: Panels & menus | Vocabulary |
 | `remove_exception` | [Stop Ignoring Node In RayCast (2D)](ace:Core/RayCast2DRemoveException) | Raycast 2D | Vocabulary |
 | `remove_from_group` | [Remove From Group](ace:Core/RemoveFromGroup) | Groups | Vocabulary |
