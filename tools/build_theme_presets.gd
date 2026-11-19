@@ -14,8 +14,11 @@ extends SceneTree
 #              cell until its words fall under the bar (the wash is a flood of the hue, not a thin bar)
 #   variable   the hue of a variable row's wash and its scope word, where the signature hue would make a declaration look
 #              like an error row (hot pink) or would not read on the wash
-#   cool_text, warm_text   the ink of a condition / action sentence where the palette's own accent reads too faintly on
+#   cool_text, warm_text, yellow_text   the ink of a condition / action sentence and of an object name (yellow_text) where the palette's own accent reads too faintly on
 #              its lane (a pale palette's accents are made for large marks, not for a line of words)
+## What the word on a pattern chip must keep on the chip's plate (a little over the contrast test's own bar).
+const PATTERN_CHIP_BAR: float = 3.15
+
 const PALETTES: Dictionary = {
 	"dracula": {
 		"bg": "#282a36", "bg_alt": "#2c2f3d", "surface": "#44475a", "line": "#191a21",
@@ -31,7 +34,7 @@ const PALETTES: Dictionary = {
 	"gruvbox_dark": {
 		"bg": "#282828", "bg_alt": "#2e2c2a", "surface": "#3c3836", "line": "#1d2021",
 		"fg": "#ebdbb2", "comment": "#928374", "cool": "#83a598", "warm": "#b8bb26",
-		"signature": "#fe8019", "yellow": "#fabd2f",
+		"signature": "#fe8019", "yellow": "#fabd2f", "cool_text": "#92b0a4",
 		"firing": "#689d6a"
 	},
 	"monokai": {
@@ -44,7 +47,7 @@ const PALETTES: Dictionary = {
 		"bg": "#fdf6e3", "bg_alt": "#f5eed9", "surface": "#eee8d5", "line": "#d9d2c2",
 		"fg": "#657b83", "comment": "#93a1a1", "cool": "#268bd2", "warm": "#859900",
 		"signature": "#6c71c4", "yellow": "#b58900",
-		"cool_text": "#155a8f", "warm_text": "#485800", "variable": "#5256a8"
+		"cool_text": "#155a8f", "warm_text": "#485800", "yellow_text": "#6d5200", "variable": "#5256a8"
 	},
 	"catppuccin_mocha": {
 		"bg": "#1e1e2e", "bg_alt": "#232336", "surface": "#313244", "line": "#11111b",
@@ -389,6 +392,7 @@ func _build_style(palette: Dictionary, theme_name: String) -> EventSheetEditorSt
 	var warm: Color = Color(str(palette.get("warm")))
 	var signature: Color = Color(str(palette.get("signature")))
 	var yellow: Color = Color(str(palette.get("yellow")))
+	var yellow_text: Color = Color(str(palette.get("yellow_text", palette.get("yellow"))))
 	var dark: bool = bg.v < 0.5
 
 	var event_style: EventSheetEventStyle = EventSheetEventStyle.new()
@@ -416,7 +420,7 @@ func _build_style(palette: Dictionary, theme_name: String) -> EventSheetEditorSt
 	event_style.column_header_background_color = surface
 	event_style.column_header_conditions_color = cool
 	event_style.column_header_actions_color = warm
-	event_style.object_label_color = yellow
+	event_style.object_label_color = yellow_text
 	event_style.value_highlight_color = cool
 	event_style.behavior_accent_color = signature
 	event_style.cell_hover_color = Color(fg.r, fg.g, fg.b, 0.12)
@@ -432,7 +436,7 @@ func _build_style(palette: Dictionary, theme_name: String) -> EventSheetEditorSt
 	# the theme it claims to be - which is exactly what happened the first time these were added by a
 	# one-shot backfill instead of by the builder.
 	event_style.language_block_accent_color = signature
-	event_style.ace_action_accent_color = yellow
+	event_style.ace_action_accent_color = yellow_text
 	event_style.ace_condition_accent_color = cool
 	event_style.ace_expression_accent_color = signature
 	event_style.ace_action_badge_background_color = bg.lerp(yellow, 0.28)
@@ -475,6 +479,17 @@ func _build_style(palette: Dictionary, theme_name: String) -> EventSheetEditorSt
 	# rather than listed again per palette: one rule, so a new token reaches all six presets the day
 	# it ships instead of leaving them on EventForge's own dark marks.
 	EventSheetThemeDerivation.fill_derived_tokens(style)
+	# The word on a pattern chip is the reading's muted tone, a note beside the row; where that falls under the bar
+	# on the chip's plate (a pale palette, a cool grey), it is walked toward the primary text just far enough.
+	var chip_reading: EventSheetReadingStyle = style.get_reading_style()
+	var chip_plate: Color = event_style.row_background_color.lerp(Color(chip_reading.resolved_pattern_chip_background(), 1.0), chip_reading.resolved_pattern_chip_background().a)
+	var chip_word: Color = chip_reading.resolved_pattern_chip_foreground()
+	if EventSheetEditorThemeDeriver.contrast_ratio(chip_word, chip_plate) < PATTERN_CHIP_BAR:
+		for step: int in range(1, 101):
+			var walked: Color = Color(chip_word.lerp(chip_reading.primary_text_color, step * 0.01), 1.0)
+			if EventSheetEditorThemeDeriver.contrast_ratio(walked, chip_plate) >= PATTERN_CHIP_BAR:
+				chip_reading.pattern_chip_foreground_color = walked
+				break
 	if palette.has("variable"):
 		var variable_hue: Color = Color(str(palette["variable"]))
 		var reading: EventSheetReadingStyle = style.get_reading_style()

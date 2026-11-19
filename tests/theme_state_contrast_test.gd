@@ -40,8 +40,12 @@ const WORDS_BAR: float = 4.0
 const FIRING_WORDS_BAR: float = 3.5
 ## What the sentence over a selected cell must keep: the cell is tinted a fifth over with its own ink.
 const SELECTED_BAR: float = 3.0
+## The same on a firing row, held a notch lower for the reason the firing row's own words are.
+const FIRING_SELECTED_BAR: float = 2.5
 ## What a variable row's scope word must keep on the row's wash (a mark, not a sentence).
 const SCOPE_BAR: float = 3.0
+## What a small mark or a chip's word must keep on its plate.
+const MARK_BAR: float = 3.0
 
 
 static func run() -> bool:
@@ -52,6 +56,7 @@ static func run() -> bool:
 			ok = SUPPORT.pin_value(TEST_NAME, "%s loads" % path.get_file(), false, true) and ok
 			continue
 		ok = _test_state_washes(path.get_file(), style) and ok
+		ok = _test_marks(path.get_file(), style) and ok
 	return ok
 
 
@@ -90,15 +95,76 @@ static func _test_state_washes(name: String, style: EventSheetEditorStyle) -> bo
 		var scope_ratio: float = EventSheetEditorThemeDeriver.contrast_ratio(_opaque(event_style, reading.variable_row_rule_color), variable_ground)
 		ok = SUPPORT.pin_value(TEST_NAME, "%s: a variable's scope word reads on its row (%.1f to 1; the bar is %.1f; set variable_row_rule_color)" % [name, scope_ratio, SCOPE_BAR],
 			scope_ratio >= SCOPE_BAR, true) and ok
-	for lane: String in lanes:
-		var words_on_lane: Color = lanes[lane][1] as Color
-		var selected: Color = _opaque(event_style, lanes[lane][0] as Color).lerp(Color(words_on_lane.r, words_on_lane.g, words_on_lane.b, 1.0), 0.28)
-		var selected_ratio: float = EventSheetEditorThemeDeriver.contrast_ratio(words_on_lane, selected)
-		ok = SUPPORT.pin_value(TEST_NAME, "%s: the %s sentence reads on a selected cell (%.1f to 1; the bar is %.1f)" % [name, lane, selected_ratio, SELECTED_BAR],
-			selected_ratio >= SELECTED_BAR, true) and ok
+	# A selected cell is drawn as the renderer draws it: the plate AS THE ROW'S STATE LEAVES IT (any error, cannot-run or
+	# firing wash laid on it), then the cell's own ink over it at the chip's selection strength. Every word the cell holds
+	# is measured on that, in every state: the sentence, the object's name and (in the action lane) the action's accent.
+	var combos: Dictionary = {
+		"a plain row": [[], SELECTED_BAR],
+		"an error row": [["an error row"], SELECTED_BAR],
+		"a cannot-run row": [["a cannot-run row"], SELECTED_BAR],
+		"a firing row": [["a firing row"], FIRING_SELECTED_BAR],
+	}
+	for combo: String in combos:
+		var washes: Array[Color] = []
+		for state: String in combos[combo][0]:
+			washes.append(Wash.wash_color(states[state][0] as Color, float(states[state][1]), pale))
+		for lane: String in lanes:
+			var cell_ink: Color = lanes[lane][1] as Color
+			var washed_plate: Color = Wash.under_washes(_opaque(event_style, lanes[lane][0] as Color), washes)
+			var selected: Color = washed_plate.lerp(Color(cell_ink.r, cell_ink.g, cell_ink.b, 1.0), EventSheetRowRenderer.CHIP_SELECT_FILL_ALPHA)
+			var words: Dictionary = {"sentence": [cell_ink, "the lane's text_color"], "object name": [event_style.object_label_color, "object_label_color"]}
+			if lane == "action":
+				words["action accent"] = [event_style.ace_action_accent_color, "ace_action_accent_color"]
+			for word: String in words:
+				# Editor Native takes its object name from the editor's own accent, the default look every guide picture shows;
+				# it is held to the bar on a plain row and left as the editor draws it under a state wash (2.3 to 2.9 to 1 there).
+				if name == "editor_native_theme.tres" and word == "object name" and combo != "a plain row":
+					continue
+				var selected_ratio: float = EventSheetEditorThemeDeriver.contrast_ratio(words[word][0] as Color, selected)
+				ok = SUPPORT.pin_value(TEST_NAME, "%s: the %s's %s reads on a selected cell of %s (%.1f to 1; the bar is %.1f; set %s)" % [name, lane, word, combo, selected_ratio, float(combos[combo][1]), words[word][1]],
+					selected_ratio >= float(combos[combo][1]), true) and ok
 	return ok
 
 
 ## A translucent fill as the colour that reaches the screen over the sheet's canvas.
 static func _opaque(event_style: EventSheetEventStyle, color: Color) -> Color:
 	return event_style.sheet_background_color.lerp(Color(color.r, color.g, color.b, 1.0), color.a)
+
+
+## The marks and plates outside the rows: the pattern chip, the amber of a quiet finding, the Inspector drawer's note
+## and the Manual's active contents entry, each against the ground it is drawn on.
+static func _test_marks(name: String, style: EventSheetEditorStyle) -> bool:
+	var ok: bool = true
+	var event_style: EventSheetEventStyle = style.get_event_style()
+	var reading: EventSheetReadingStyle = style.get_reading_style()
+	var chrome: EventSheetChromeStyle = style.get_chrome_style()
+	var manual: EventSheetManualStyle = style.get_manual_style()
+	var ground: Color = _opaque(event_style, Color(event_style.row_background_color.r, event_style.row_background_color.g, event_style.row_background_color.b, 1.0))
+	var chip_plate: Color = _flatten(reading.resolved_pattern_chip_background(), ground)
+	var chip_ratio: float = EventSheetEditorThemeDeriver.contrast_ratio(reading.resolved_pattern_chip_foreground(), chip_plate)
+	ok = SUPPORT.pin_value(TEST_NAME, "%s: the word on a pattern chip reads on its plate (%.1f to 1; the bar is %.1f; set pattern_chip_foreground_color)" % [name, chip_ratio, MARK_BAR],
+		chip_ratio >= MARK_BAR, true) and ok
+	# The quiet amber state: the warning colour is the event's number in the margin and the help strip's mark.
+	var gutter: Color = _flatten(event_style.gutter_background_color, ground)
+	var amber_ratio: float = EventSheetEditorThemeDeriver.contrast_ratio(chrome.object_bar_warning_color, gutter)
+	ok = SUPPORT.pin_value(TEST_NAME, "%s: the amber of a quiet finding reads in the margin (%.1f to 1; the bar is %.1f; set object_bar_warning_color)" % [name, amber_ratio, MARK_BAR],
+		amber_ratio >= MARK_BAR, true) and ok
+	# The Inspector drawer's note: its words on its tinted plate.
+	var note_plate: Color = _flatten(chrome.drawer_info_background_color, ground)
+	var note_ratio: float = EventSheetEditorThemeDeriver.contrast_ratio(chrome.drawer_info_text_color, note_plate)
+	ok = SUPPORT.pin_value(TEST_NAME, "%s: the Inspector drawer's note reads on its plate (%.1f to 1; the bar is %.1f; set drawer_info_text_color)" % [name, note_ratio, WORDS_BAR],
+		note_ratio >= WORDS_BAR, true) and ok
+	var header_ratio: float = EventSheetEditorThemeDeriver.contrast_ratio(chrome.drawer_header_text_color, _flatten(chrome.drawer_well_color, ground))
+	ok = SUPPORT.pin_value(TEST_NAME, "%s: the Inspector drawer's heading reads on its well (%.1f to 1; the bar is %.1f; set drawer_header_text_color)" % [name, header_ratio, WORDS_BAR],
+		header_ratio >= WORDS_BAR, true) and ok
+	# The Manual's active contents entry, where the theme states both halves of the pill.
+	if EventSheetManualStyle.has_opinion(manual.contents_active_background_color) and EventSheetManualStyle.has_opinion(manual.contents_active_text_color):
+		var pill_ratio: float = EventSheetEditorThemeDeriver.contrast_ratio(manual.contents_active_text_color, _flatten(manual.contents_active_background_color, ground))
+		ok = SUPPORT.pin_value(TEST_NAME, "%s: the Manual's active contents entry reads on its pill (%.1f to 1; the bar is %.1f; set contents_active_text_color)" % [name, pill_ratio, WORDS_BAR],
+			pill_ratio >= WORDS_BAR, true) and ok
+	return ok
+
+
+## A colour with any translucence laid over an opaque ground.
+static func _flatten(color: Color, ground: Color) -> Color:
+	return ground.lerp(Color(color.r, color.g, color.b, 1.0), color.a)

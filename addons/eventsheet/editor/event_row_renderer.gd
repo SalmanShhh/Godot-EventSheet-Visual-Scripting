@@ -429,6 +429,9 @@ const SELECTION_OUTLINE_ALPHA := 0.92
 const SELECTION_OUTLINE_WIDTH := 2
 const SPAN_SELECT_OUTLINE_LIGHTEN := 0.3
 const SPAN_SELECT_OUTLINE_ALPHA := 0.95
+## How much of its own ink a selected cell (a chip) takes over its plate: a lighter hold when several are selected.
+const CHIP_SELECT_FILL_ALPHA := 0.28
+const CHIP_SELECT_FILL_ALPHA_MULTI := 0.20
 const SPAN_HOVER_OUTLINE_LIGHTEN := 0.28
 
 
@@ -2805,7 +2808,7 @@ func _draw_chip_selected_span(
 ) -> void:
 	# Flat selected cell: a stronger accent-tinted fill over the whole cell.
 	var accent: Color = metadata.get("text_color", TEXT_PRIMARY)
-	var fill: Color = Color(accent.r, accent.g, accent.b, 0.20 if multi_select else 0.28)
+	var fill: Color = Color(accent.r, accent.g, accent.b, CHIP_SELECT_FILL_ALPHA_MULTI if multi_select else CHIP_SELECT_FILL_ALPHA)
 	control.draw_rect(span.rect, fill, true)
 
 

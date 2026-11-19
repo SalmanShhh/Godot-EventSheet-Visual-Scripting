@@ -352,7 +352,7 @@ static func _test_theme_home() -> bool:
 	var viewport: EventSheetViewport = _figure_viewport(_sheet_with(1, false))
 	viewport.apply_editor_style(style)
 	all_passed = _check("the theme's orange object label survives the move",
-		viewport._get_event_style().object_label_color, Color(0.847059, 0.639216, 0.352941)) and all_passed
+		viewport._get_event_style().object_label_color, Color(0.8929413, 0.7474512, 0.5470587)) and all_passed
 	all_passed = _check("the theme's green value highlight survives the move",
 		viewport._get_event_style().value_highlight_color, Color(0.623529, 0.831373, 0.478431)) and all_passed
 	# The point of the move: a plugin-only install had ZERO theme presets, because the bundled

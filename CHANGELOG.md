@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the words of a selected cell read in every bundled theme, in every state a row can be in
+
+The contrast check measured the words of a selected cell on a tint of the cell's own ink, which is not what is drawn: a selected cell is that ink laid over the plate after any error, cannot-run or firing wash. It now measures what is drawn (the sentence, the object's name and the action's accent, on a plain, an error, a cannot-run and a firing row, in every bundled theme) and the themes it flagged are fixed in their own source. Solarized Light's object names and action accent (a yellow that read at 1.2 to 1 on a selected firing cell) are now a deep olive-brown; the object names of Designer Template, Soft Light, High Contrast, Classic Sheet and Mockup Slate are a step lighter; Gruvbox Dark's condition words a step lighter. The preset builder holds the two palette cases (`yellow_text`, `cool_text`), so a regenerated preset keeps them. The same check now covers the word on a pattern chip (a chip word that fell just under the bar is walked toward the primary text by the preset builder, and set by hand in Classic Sheet), the amber of a quiet finding in the margin, the Inspector drawer's note and heading, and the Manual's active contents entry where a theme states it. Editor Native follows the editor's own accent for object names and is held to the bar on a plain row only. No setting is renamed or removed; a theme saved from any of them loads and saves as before.
+
 ### Changed: the editor's first open compiles about 500 fewer lines
 
 The walk of the sheet's variables into the object's members no longer names the expression picker's model in code, so that file (512 lines) is loaded when the picker asks for it instead of when the first sheet opens. Nothing a person sees changes; it gives the first-open budget room again.
