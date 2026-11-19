@@ -5669,6 +5669,9 @@ func _make_custom_tooltip(for_text: String) -> Object:
 	return _tooltip_helper.build_custom_tooltip(for_text)
 
 
+## What Godot shows on hover. Text from the user's sheet and code is written here with each "[" hidden
+## (EventSheetBBCodeLite.literal), so the plugin's own tags are the only markup in the string; the card
+## that shows it (build_custom_tooltip) writes the hidden brackets back as brackets.
 func _get_tooltip(at_position: Vector2) -> String:
 	# While something is carried the ghost is the only thing that talks.
 	if _drag_motion.active:
@@ -5695,7 +5698,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 	# more than the codegen preview).
 	var hovered_error_row: EventRowData = _row_at(int(hit.get("row_index", -1)))
 	if hovered_error_row != null and not hovered_error_row.error_message.is_empty():
-		return "⚠ %s" % hovered_error_row.error_message
+		return "⚠ %s" % EventSheetBBCodeLite.literal(hovered_error_row.error_message)
 	# The quiet amber state is deliberately NOT read here. A row that runs and cannot do what it says
 	# wears the stripe and nothing else: the sheet's only signal is that state, and the words live in
 	# the Doctor's triage inbox and in the row's help strip once the row is selected. A tooltip would
@@ -5766,8 +5769,8 @@ func _get_tooltip(at_position: Vector2) -> String:
 				# left both on the span when it built it.
 				var derived_words: String = str(metadata.get("derived_doc", "")).strip_edges()
 				if derived_words.is_empty():
-					return (raw_source as RawCodeRow).code
-				return "%s\n\n%s" % [derived_words, (raw_source as RawCodeRow).code]
+					return EventSheetBBCodeLite.literal((raw_source as RawCodeRow).code)
+				return "%s\n\n%s" % [derived_words, EventSheetBBCodeLite.literal((raw_source as RawCodeRow).code)]
 	# An EXPORTED variable row hovers as a live mock of its Inspector (drawers, decor, grouping) -
 	# the payload stages here and _tooltip_helper.build_custom_tooltip swaps the sentinel for the preview card.
 	if kind == "variable":
@@ -5793,12 +5796,13 @@ func _get_tooltip(at_position: Vector2) -> String:
 		if row_data != null and ace_owner(row_data.source_resource) != null:
 			# LEAD the tooltip with the whole event read as one plain-English sentence
 			# (built from the same descriptors the cells draw), then the hovered cell's own description.
-			var sentence: String = _row_builder.row_sentence(ace_owner(row_data.source_resource))
+			var sentence: String = _row_builder.row_sentence(ace_owner(row_data.source_resource), true)
 			# A pattern reading is a claim spanning several lines, so every row of the event
 			# that owns one carries the evidence for it right under the sentence: which pattern, and
 			# the exact source lines that were the grounds for saying so.
 			var evidence_line: String = EventSheetViewportTooltipHelper.pattern_evidence_line(
 				_sheet, ace_owner(row_data.source_resource).event_uid) if patterns_lens_enabled() else ""
+			evidence_line = EventSheetBBCodeLite.literal(evidence_line)
 			if not evidence_line.is_empty():
 				sentence = "%s\n%s" % [sentence, evidence_line] if not sentence.is_empty() else evidence_line
 			var sentence_prefix: String = "%s\n\n" % sentence if not sentence.is_empty() else ""
@@ -5811,7 +5815,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 			# hover is the whole thing, so the shorter reading never costs the reader an entry.
 			var literal_hover: String = str(metadata.get("literal_full_text", ""))
 			if not literal_hover.is_empty():
-				return sentence_prefix + literal_hover
+				return sentence_prefix + EventSheetBBCodeLite.literal(literal_hover)
 			var create_indices: Array = metadata.get("create_object_indices", []) as Array
 			if not create_indices.is_empty():
 				var create_lines: PackedStringArray = PackedStringArray()
@@ -5821,6 +5825,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 						continue
 					var created_code: String = _tooltip_helper.codegen_preview_for(created.provider_id, created.ace_id,
 						created.params if not created.params.is_empty() else created.parameters)
+					created_code = EventSheetBBCodeLite.literal(created_code)
 					if not created_code.strip_edges().is_empty():
 						create_lines.append(created_code)
 				# A scene instance is a hierarchy somebody already built, so the row that makes
@@ -5830,7 +5835,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 				var made_scene: PackedStringArray = EventSheetObjectFacts.scene_tree_lines(
 					str(metadata.get("create_object_scene", "")))
 				var made_text: String = "" if made_scene.is_empty() else "\n\n%s\n%s" % [
-					EventSheetL10n.translate("What it makes:"), "\n".join(made_scene)]
+					EventSheetL10n.translate("What it makes:"), EventSheetBBCodeLite.literal("\n".join(made_scene))]
 				if not create_lines.is_empty():
 					return sentence_prefix + "GDScript:\n%s%s" % ["\n".join(create_lines), made_text]
 			var ace_resource: Resource = _resolve_ace_resource(row_data.source_resource, kind, int(metadata.get("ace_index", -1)))
@@ -5861,7 +5866,7 @@ func _get_tooltip(at_position: Vector2) -> String:
 				var a: ACEAction = ace_resource as ACEAction
 				code = _tooltip_helper.codegen_preview_for(a.provider_id, a.ace_id, a.params if not a.params.is_empty() else a.parameters)
 			if not code.strip_edges().is_empty():
-				return sentence_prefix + "GDScript:\n%s" % code
+				return sentence_prefix + "GDScript:\n%s" % EventSheetBBCodeLite.literal(code)
 			# Nothing else to say → at least the sentence (a trigger cell with no ACE description).
 			if not sentence_prefix.is_empty():
 				return sentence.strip_edges()
@@ -5879,13 +5884,13 @@ func _get_tooltip(at_position: Vector2) -> String:
 	var raw_row_data: EventRowData = _row_at(int(hit.get("row_index", -1)))
 	if raw_row_data != null and raw_row_data.source_resource is RawCodeRow:
 		var raw_block: RawCodeRow = raw_row_data.source_resource as RawCodeRow
-		var first_line: String = raw_block.code.split("\n")[0] if not raw_block.code.is_empty() else ""
+		var first_line: String = EventSheetBBCodeLite.literal(raw_block.code.split("\n")[0]) if not raw_block.code.is_empty() else ""
 		var tip: String = "GDScript (verbatim):\n%s\nEmitted as-is into the generated script - select to highlight its lines in the GDScript panel." % first_line
 		if not raw_block.note.strip_edges().is_empty():
-			tip = "%s - %s\n%s" % [raw_block.note, "GDScript (verbatim)", tip.split("\n", true, 1)[1] if tip.contains("\n") else tip]
+			tip = "%s - %s\n%s" % [EventSheetBBCodeLite.literal(raw_block.note),"GDScript (verbatim)", tip.split("\n", true, 1)[1] if tip.contains("\n") else tip]
 		# Import triage: when a line couldn't lift into a structured ACE, say why right here.
 		if not raw_block.lift_note.strip_edges().is_empty():
-			tip += "\n⚠ Stayed as code: %s" % raw_block.lift_note
+			tip += "\n⚠ Stayed as code: %s" % EventSheetBBCodeLite.literal(raw_block.lift_note)
 		# A block kept as code on purpose says why, so it is never mistaken for one the reader missed.
 		var on_purpose: String = EventSheetValueLiteralRows.code_on_purpose(raw_block.code,
 			_inside_long_text(int(hit.get("row_index", -1))))

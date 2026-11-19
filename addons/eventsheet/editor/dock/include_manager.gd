@@ -199,7 +199,7 @@ func _refresh_include_preview() -> void:
 	_strip.set_line(_adds_value, adds_line(summary))
 	if not bool(summary.get("valid", false)):
 		var error_colour: String = EventSheetPopupUI.tone_color(EventSheetPopupUI.TONE_ERROR).to_html(false)
-		_include_preview.text = "[color=#%s]%s[/color]\n%s" % [error_colour, path, str(summary.get("error", ""))]
+		_include_preview.text = "[color=#%s]%s[/color]\n%s" % [error_colour, EventSheetBBCodeLite.escape(path), EventSheetBBCodeLite.escape(str(summary.get("error", "")))]
 		_strip.show_note(path.get_file(), EventSheetL10n.translate("This include is missing or is not a sheet - Remove takes it off the list."),
 			EventSheetPopupUI.TONE_ERROR)
 		return
@@ -209,9 +209,9 @@ func _refresh_include_preview() -> void:
 	var variables: Array = summary.get("variables", [])
 	var class_line: String = ("class %s\n" % str(summary.get("class"))) if str(summary.get("class", "")) != "" else ""
 	_include_preview.text = EventSheetL10n.translate("[b]%s[/b]\n%s\nEvents: %d\nFunctions: %s\nVariables: %s") % [
-		path, class_line, int(summary.get("events", 0)),
-		", ".join(PackedStringArray(functions)) if not functions.is_empty() else EventSheetL10n.translate("(none)"),
-		", ".join(PackedStringArray(variables)) if not variables.is_empty() else EventSheetL10n.translate("(none)")]
+		EventSheetBBCodeLite.escape(path), EventSheetBBCodeLite.escape(class_line), int(summary.get("events", 0)),
+		EventSheetBBCodeLite.escape(", ".join(PackedStringArray(functions))) if not functions.is_empty() else EventSheetL10n.translate("(none)"),
+		EventSheetBBCodeLite.escape(", ".join(PackedStringArray(variables))) if not variables.is_empty() else EventSheetL10n.translate("(none)")]
 	var included: EventSheetResource = load(path) as EventSheetResource
 	if _include_preview_viewport != null and included != null:
 		_include_preview_viewport.set_sheet(included)  # read-only provenance view

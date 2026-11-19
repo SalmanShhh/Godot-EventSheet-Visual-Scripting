@@ -8915,7 +8915,7 @@ func _build_group_row(group: EventGroup, indent: int) -> EventRowData:
 			"edit_kind": "group_description",
 			"line_index": 0,
 			"elide": true,
-			"hover_note": group.description,
+			"hover_note": EventSheetBBCodeLite.literal(group.description),
 			"text_color": event_style.comment_text_color
 		}))
 	# Who runs this group, as ONE muted word beside the name. Everyone says nothing: the head
@@ -13425,7 +13425,7 @@ func _build_variable_row(
 	var entry_count: int = int(options.get("entry_count", -1))
 	if entry_count >= 0:
 		value_meta["edit_text"] = value_text
-		value_meta["hover_note"] = value_text
+		value_meta["hover_note"] = EventSheetBBCodeLite.literal(value_text)
 		value_text = EventSheetL10n.translate("1 entry") if entry_count == 1 else EventSheetL10n.translate("%d entries") % entry_count
 	if not hide_value:
 		row_data.spans.append(
@@ -19151,7 +19151,10 @@ const _FRIENDLY_TRIGGER := {
 ## draw (the _base formatters, which don't touch the bbcode render flag), so it can NEVER disagree with
 ## the row. In-flow RawCode actions have no descriptor, so they summarise honestly as "then N lines of
 ## code" - the sentence never invents prose for raw statements. "" when there is nothing to say.
-func row_sentence(event_row: EventRow) -> String:
+## `literal` asks for the sentence the hover carries: every "[" the user wrote hidden (EventSheetBBCodeLite.literal) so
+## a code fragment such as items[i] can never be read as a tag by the card it is shown in. Without it the
+## sentence is plain text, the user's brackets as written (the clipboard copy reads it so).
+func row_sentence(event_row: EventRow, literal: bool = false) -> String:
 	if event_row == null:
 		return ""
 	var head: String = _sentence_head(event_row)
@@ -19170,10 +19173,41 @@ func row_sentence(event_row: EventRow) -> String:
 		clauses.append("If %s" % conditions_clause)
 	if not actions_clause.is_empty():
 		clauses.append(actions_clause)
-	# The hover is plain text: a descriptor that emphasises its values (Keep [b]hp[/b] between ...)
-	# drew its tags as letters there.
+	# Each piece already had its descriptor's own tags removed (see _plain_words), so what is joined here is
+	# plain words and the user's own text.
 	var sentence: String = " - ".join(clauses)
-	return EventSheetBBCodeLite.strip(sentence) if EventSheetBBCodeLite.has_markup(sentence) else sentence
+	return EventSheetBBCodeLite.literal(sentence) if literal else sentence
+
+
+## One descriptor's words for the sentence with the descriptor's OWN markup removed (Keep [b]{hp}[/b] between ...)
+## and the user's text left alone: a value typed into a styled slot (`items[i]`, `[1, 2, 3]`) reads as written. The
+## template's markup is known from the flag the formatter raises, and where each value landed from its ranges.
+func _plain_words(formatter: Callable) -> String:
+	_pending_display_bbcode = false
+	_pending_param_ranges = {}
+	var text: String = str(formatter.call())
+	var carried_markup: bool = _pending_display_bbcode
+	var recorded: Dictionary = _pending_param_ranges
+	_pending_display_bbcode = false
+	_pending_param_ranges = {}
+	if not carried_markup:
+		return text
+	var substituted: String = str(recorded.get("text", ""))
+	var at: int = text.find(substituted) if not substituted.is_empty() else -1
+	if at < 0:
+		return EventSheetBBCodeLite.strip(text)
+	var plain: String = ""
+	var cursor: int = 0
+	for entry: Variant in recorded.get("ranges", []) as Array:
+		var start: int = int((entry as Array)[0])
+		var length: int = int((entry as Array)[1])
+		if start < cursor or start + length > substituted.length():
+			continue
+		plain += EventSheetBBCodeLite.strip(substituted.substr(cursor, start - cursor))
+		plain += substituted.substr(start, length)
+		cursor = start + length
+	plain += EventSheetBBCodeLite.strip(substituted.substr(cursor))
+	return EventSheetBBCodeLite.strip(text.substr(0, at)) + plain + EventSheetBBCodeLite.strip(text.substr(at + substituted.length()))
 
 
 func _sentence_head(event_row: EventRow) -> String:
@@ -19191,12 +19225,12 @@ func _sentence_head(event_row: EventRow) -> String:
 
 func _sentence_trigger(event_row: EventRow) -> String:
 	if event_row.trigger != null:
-		return _format_condition_descriptor_base(event_row.trigger)
+		return _plain_words(_format_condition_descriptor_base.bind(event_row.trigger))
 	if not event_row.trigger_id.is_empty():
 		return str(_FRIENDLY_TRIGGER.get(event_row.trigger_id, event_row.trigger_id.capitalize()))
 	var inline_index: int = _find_inline_trigger_condition_index(event_row)
 	if inline_index >= 0 and inline_index < event_row.conditions.size():
-		return _format_condition_descriptor_base(event_row.conditions[inline_index])
+		return _plain_words(_format_condition_descriptor_base.bind(event_row.conditions[inline_index]))
 	return ""
 
 
@@ -19209,7 +19243,7 @@ func _sentence_conditions(event_row: EventRow) -> String:
 		var condition: ACECondition = event_row.conditions[condition_index]
 		if condition == null:
 			continue
-		var text: String = _format_condition_descriptor_base(condition)
+		var text: String = _plain_words(_format_condition_descriptor_base.bind(condition))
 		if condition.negated:
 			text = "not " + text
 		texts.append(text)
@@ -19224,7 +19258,7 @@ func _sentence_actions(event_row: EventRow) -> String:
 	var raw_lines: int = 0
 	for action_variant: Variant in event_row.actions:
 		if action_variant is ACEAction:
-			descriptors.append(_format_action_descriptor_base(action_variant as ACEAction))
+			descriptors.append(_plain_words(_format_action_descriptor_base.bind(action_variant as ACEAction)))
 		elif action_variant is RawCodeRow:
 			var code: String = (action_variant as RawCodeRow).code.strip_edges()
 			if not code.is_empty():

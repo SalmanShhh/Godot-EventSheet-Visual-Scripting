@@ -48,20 +48,25 @@ func build_custom_tooltip(for_text: String) -> Object:
 		if _pending_inspector_preview.is_empty() or ReadingDoors.inspector_preview_card() == null:
 			return Control.new()
 		return build_inspector_preview_tooltip(_pending_inspector_preview)
-	if not EventSheetBBCodeLite.has_markup(for_text):
-		return null
-	return build_markup_tooltip(for_text)
+	# The plugin's own tags are the only markup: a bold, italic or colour tag that is closed later. Text from
+	# the user's sheet arrives with its brackets hidden, so it is never one; a hover that carries such text and
+	# no markup of the plugin's is drawn as a plain card, so the brackets are written back and shown as written.
+	if EventSheetBBCodeLite.has_paired_markup(for_text):
+		return build_markup_tooltip(for_text)
+	if for_text.contains(EventSheetBBCodeLite.literal_mark):
+		return build_markup_tooltip(for_text, null, false)
+	return null
 
 
-## The styled card for a tooltip that carries markup. `theme` stands in for the editor's own (tests pass
+## The card for a tooltip that carries markup (`styled`), or the same card drawn plain when its text is the user's alone. `theme` stands in for the editor's own (tests pass
 ## one; null asks the editor, and outside the editor the dark panel stands).
-static func build_markup_tooltip(for_text: String, theme: Theme = null) -> PanelContainer:
+static func build_markup_tooltip(for_text: String, theme: Theme = null, styled: bool = true) -> PanelContainer:
 	var panel := PanelContainer.new()
 	var style: StyleBoxFlat = tooltip_style(8.0, theme)
 	panel.add_theme_stylebox_override("panel", style)
 	var ground: Color = Color(style.bg_color, 1.0)
 	var rich := RichTextLabel.new()
-	rich.bbcode_enabled = true
+	rich.bbcode_enabled = styled
 	rich.fit_content = true
 	rich.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	rich.custom_minimum_size = Vector2(300.0, 0.0)
@@ -70,7 +75,10 @@ static func build_markup_tooltip(for_text: String, theme: Theme = null) -> Panel
 	rich.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
 	rich.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 	rich.add_theme_color_override("default_color", tooltip_text_ink(ground, theme))
-	rich.text = ink_markup(for_text, ground)
+	if styled:
+		rich.text = EventSheetBBCodeLite.to_rich(ink_markup(for_text, ground))
+	else:
+		rich.text = EventSheetBBCodeLite.unliteral(for_text)
 	panel.add_child(rich)
 	return panel
 

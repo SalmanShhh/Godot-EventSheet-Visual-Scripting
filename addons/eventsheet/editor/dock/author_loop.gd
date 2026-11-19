@@ -108,13 +108,13 @@ static func publish_surface_text(surface: Dictionary) -> String:
 			continue
 		sections.append("[b]%s[/b]" % bucket.capitalize())
 		for entry: Dictionary in entries:
-			var line: String = "  • %s" % str(entry.get("name", ""))
+			var line: String = "  • %s" % EventSheetBBCodeLite.escape(str(entry.get("name", "")))
 			if not str(entry.get("params", "")).is_empty():
-				line += " (%s)" % str(entry.get("params"))
+				line += " (%s)" % EventSheetBBCodeLite.escape(str(entry.get("params")))
 			if not str(entry.get("category", "")).is_empty():
-				line += "   [%s]" % str(entry.get("category"))
+				line += "   [%s]" % EventSheetBBCodeLite.escape(str(entry.get("category")))
 			if bucket == "properties":
-				line = "  • %s: %s = %s" % [str(entry.get("name")), str(entry.get("type")), str(entry.get("default"))]
+				line = "  • %s: %s = %s" % [EventSheetBBCodeLite.escape(str(entry.get("name"))), EventSheetBBCodeLite.escape(str(entry.get("type"))), EventSheetBBCodeLite.escape(str(entry.get("default")))]
 			sections.append(line)
 	if sections.is_empty():
 		return "Nothing published yet - expose a function as an ACE, or annotate a signal with @ace_trigger."

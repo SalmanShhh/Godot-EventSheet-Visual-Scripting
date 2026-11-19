@@ -94,3 +94,37 @@ static func _flush(segments: Array[Dictionary], buffer: String, color_stack: Arr
 		"bold": bold_depth > 0,
 		"italic": italic_depth > 0
 	})
+
+
+## The stand-in for "[" in text from the user's sheet or code that travels inside a string with the plugin's own
+## markup (a hover card): a private-use character nobody types, written back as a bracket (`unliteral`) or as
+## Godot's escaped bracket (`to_rich`) when the text is shown, so it always reads as written.
+static var literal_mark: String = char(0xE000)
+
+
+static func literal(text: String) -> String:
+	return text.replace("[", literal_mark)
+
+
+static func unliteral(text: String) -> String:
+	return text.replace(literal_mark, "[")
+
+
+static func to_rich(text: String) -> String:
+	return text.replace(literal_mark, "[lb]")
+
+
+## True when the text carries markup the plugin could have written: a bold, italic or colour tag CLOSED later
+## in the text. `items[i]` holds an opening-looking tag and no closing one; the plugin's own tags come in pairs.
+static func has_paired_markup(raw_text: String) -> bool:
+	var lowered: String = raw_text.to_lower()
+	for pair: Array in [["[b]", "[/b]"], ["[i]", "[/i]"], ["[color=", "[/color]"]]:
+		var opened: int = lowered.find(str(pair[0]))
+		if opened >= 0 and lowered.find(str(pair[1]), opened) >= 0:
+			return true
+	return false
+
+
+## `text` safe inside a RichTextLabel with BBCode on: every "[" written as Godot's own escape.
+static func escape(text: String) -> String:
+	return text.replace("[", "[lb]")

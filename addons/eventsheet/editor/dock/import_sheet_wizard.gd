@@ -271,13 +271,13 @@ func report_text() -> String:
 	if _imported.is_empty():
 		return "Pick a file to see what comes across."
 	var report: Dictionary = _imported["report"] as Dictionary
-	var lines: PackedStringArray = PackedStringArray(["[b]%s[/b]" % EventSheetForeignImporter.report_summary(report)])
+	var lines: PackedStringArray = PackedStringArray(["[b]%s[/b]" % EventSheetBBCodeLite.escape(EventSheetForeignImporter.report_summary(report))])
 	for entry: Dictionary in report["unmapped"] as Array:
-		lines.append("Switched off: [b]%s[/b] - %s" % [entry["label"], entry["reason"]])
+		lines.append("Switched off: [b]%s[/b] - %s" % [EventSheetBBCodeLite.escape(str(entry["label"])), EventSheetBBCodeLite.escape(str(entry["reason"]))])
 	for entry: Dictionary in report["flagged"] as Array:
-		lines.append("Check by hand: [b]%s[/b] - %s" % [entry["label"], entry["reason"]])
+		lines.append("Check by hand: [b]%s[/b] - %s" % [EventSheetBBCodeLite.escape(str(entry["label"])), EventSheetBBCodeLite.escape(str(entry["reason"]))])
 	for note: String in report["notes"] as Array:
-		lines.append("Note: %s" % note)
+		lines.append("Note: %s" % EventSheetBBCodeLite.escape(note))
 	return "\n".join(lines)
 
 
@@ -289,7 +289,7 @@ func _refresh(error: String = "") -> void:
 	_band.show_row("", "" if sheet_name.is_empty() else "%s → %s.gd" % [sheet_name, sheet_name.to_snake_case()],
 		"" if _imported.is_empty() else EventSheetForeignImporter.report_summary(_imported["report"] as Dictionary))
 	if not error.is_empty():
-		_report_label.text = error
+		_report_label.text = EventSheetBBCodeLite.escape(error)
 		_preview.text = ""
 		_save_button.disabled = true
 		return
