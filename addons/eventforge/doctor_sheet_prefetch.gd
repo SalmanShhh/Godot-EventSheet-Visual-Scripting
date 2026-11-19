@@ -94,6 +94,8 @@ func begin(paths: PackedStringArray, open_job_class: GDScript, mode: String = "s
 	_done = 0
 	_stop = false
 	_joined = false
+	if EventSheetACELifter.lift_lock == null:
+		EventSheetACELifter.lift_lock = Mutex.new()
 	# Built here on the main thread, so the worker only ever reads them.
 	var warmed: int = Time.get_ticks_usec()
 	open_job_class.warm_registries()

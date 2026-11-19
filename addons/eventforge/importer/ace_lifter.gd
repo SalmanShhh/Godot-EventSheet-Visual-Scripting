@@ -352,15 +352,20 @@ static func _lift_body_reading_comments(sheet: EventSheetResource, source: Strin
 ## Two-pass: the full lift (events + sheet functions + trailing comments) is tried first;
 ## if its byte-verify fails (e.g. annotations we can't regenerate), the event-only lift is
 ## retried so files keep at least the coverage older versions had.
-## Every lift takes this: the lifter keeps its working state in statics, so two lifts never run at once - the one
-## on the editor's own thread waits for the Project Doctor's worker, and the reverse. A mutex here is re-entrant.
-static var _lift_lock: Mutex = Mutex.new()
+## Taken by every lift once the Project Doctor has started a worker that lifts (it makes it, see
+## doctor_sheet_prefetch.gd): the lifter keeps its working state in statics, so two lifts never run at once - the one
+## on the editor's own thread waits for the worker, and the reverse. A mutex here is re-entrant. Null until then, so
+## a process that never lifts on a second thread (the command line, the tests) makes and frees none.
+static var lift_lock: Mutex = null
 
 
 static func attempt_lift(sheet: EventSheetResource, source: String, lift_functions: bool = true) -> bool:
-	_lift_lock.lock()
+	var lock: Mutex = lift_lock
+	if lock == null:
+		return _attempt_lift_locked(sheet, source, lift_functions)
+	lock.lock()
 	var lifted: bool = _attempt_lift_locked(sheet, source, lift_functions)
-	_lift_lock.unlock()
+	lock.unlock()
 	return lifted
 
 
