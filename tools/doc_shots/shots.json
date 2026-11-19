@@ -1,7 +1,7 @@
 {
 	"kept": {
 		"docs/images/combo-fighter-showcase.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
-		"docs/images/custom-monitors-running.png": "a crop of Godot's own Debugger panel on its Monitors tab while a small scratch game ran, with two graphs that a Show In Monitors row added; the editor's window and the game's frame timing differ on every run, so it cannot be byte-stable, and nothing in this plugin draws it",
+		"docs/images/custom-monitors-running.png": "a crop of Godot's own Debugger panel on its Monitors tab while a small throwaway game ran, with two graphs that a Show In Monitors row added; the editor's window and the game's frame timing differ on every run, so it cannot be byte-stable, and nothing in this plugin draws it",
 		"docs/images/draw-lab-paste.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
 		"docs/images/hierarchy-playground.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
 		"docs/images/look-sheet-7-text.png": "the picture is Godot's own script editor with the file open, and which files the editor lists beside it and how far its list is scrolled differ from one run to the next (two runs wrote different bytes), so it cannot be byte-stable; the old picture stays and the guide text beside it is still true",
