@@ -577,6 +577,9 @@ class CardListProperty:
 
 	func _init(spec: Dictionary) -> void:
 		_list = load(EventSheetAttributeDrawers.CARD_LIST_DRAWER_PATH).new(spec)
+		# A long list is drawn the first screenful at once and the rest in the frames after, so choosing the node that
+		# holds it does not hold the editor.
+		_list.set("progressive", true)
 		_list.connect("value_changed", _on_changed)
 		# The list sits in a quiet panel in the value column's width, with no outline.
 		var panel: PanelContainer = PanelContainer.new()

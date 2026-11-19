@@ -134,13 +134,13 @@ static func node_field(drawer: Control, card: Dictionary, field: Dictionary, wri
 			shown.tooltip_text = str(relative)
 			finding.text = missing_note(edited, {key: relative}, key)
 			finding.visible = not finding.text.is_empty()
-			drawer.call("rebuild_soon"), types, current))
+			drawer.call("rebuild_soon", index), types, current))
 	line.add_child(pick)
 	var clear: Button = EventSheetLookStyle.icon_button(&"Remove", "✕", EventSheetL10n.translate("Clear the node."))
 	clear.disabled = not bool(drawer.get("editable")) or str(card.get(key, "")).is_empty()
 	clear.pressed.connect(func() -> void:
 		drawer.call("erase_card_key", index, key)
-		drawer.call("rebuild_soon"))
+		drawer.call("rebuild_soon", index))
 	line.add_child(clear)
 	box.add_child(line)
 	box.add_child(finding)
@@ -149,7 +149,7 @@ static func node_field(drawer: Control, card: Dictionary, field: Dictionary, wri
 
 ## A property field: the property's name in a read-only box and Godot's own property picker behind Pick.
 ## The property belongs to the node the card picked (or the object the player is under), under `node_key`.
-static func property_field(drawer: Control, card: Dictionary, field: Dictionary, write: Callable, _index: int) -> Control:
+static func property_field(drawer: Control, card: Dictionary, field: Dictionary, write: Callable, index: int) -> Control:
 	var key: String = str(field.get("key", ""))
 	var edited: Object = drawer.call("edited_object")
 	var line: HBoxContainer = HBoxContainer.new()
@@ -174,7 +174,7 @@ static func property_field(drawer: Control, card: Dictionary, field: Dictionary,
 				return
 			shown.text = text
 			write.call(text)
-			drawer.call("rebuild_soon"), PackedInt32Array(), str(card.get(key, ""))))
+			drawer.call("rebuild_soon", index), PackedInt32Array(), str(card.get(key, ""))))
 	line.add_child(pick)
 	return line
 
@@ -282,7 +282,7 @@ static func from_field(drawer: Control, card: Dictionary, field: Dictionary, wri
 		else:
 			var sample: Variant = sample_for(drawer, card, field)
 			drawer.call("write_card_key", index, key, sample if sample != null else 0.0)
-		drawer.call("rebuild_soon"))
+		drawer.call("rebuild_soon", index))
 	return box
 
 
@@ -338,7 +338,7 @@ static func choices_field(drawer: Control, card: Dictionary, field: Dictionary, 
 			if more is Dictionary:
 				for more_key: Variant in more:
 					drawer.call("write_card_key", index, str(more_key), more[more_key])
-			drawer.call("rebuild_soon"))
+			drawer.call("rebuild_soon", index))
 	return choice
 
 
@@ -430,7 +430,7 @@ static func optional_color_field(drawer: Control, card: Dictionary, field: Dicti
 			var finder: Variant = field.get("sample")
 			var sample: Variant = (finder as Callable).call(card, drawer.call("edited_object")) if finder is Callable else Color.WHITE
 			write.call(sample if sample is Color else Color.WHITE)
-			drawer.call("rebuild_soon"))
+			drawer.call("rebuild_soon", index))
 		line.add_child(start)
 		return line
 	var picker: ColorPickerButton = ColorPickerButton.new()
@@ -445,7 +445,7 @@ static func optional_color_field(drawer: Control, card: Dictionary, field: Dicti
 	clear.disabled = not editable
 	clear.pressed.connect(func() -> void:
 		drawer.call("erase_card_key", index, key)
-		drawer.call("rebuild_soon"))
+		drawer.call("rebuild_soon", index))
 	line.add_child(clear)
 	return line
 
