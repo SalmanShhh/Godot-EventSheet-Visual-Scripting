@@ -293,10 +293,7 @@ func _label(text: String, color: Color, wrap_width: float) -> Label:
 
 ## The editor's own tooltip panel, with the card's air and corners; a plain panel outside the editor.
 func _card_style() -> StyleBox:
-	var style: StyleBoxFlat = null
-	var theme: Theme = EventSheetPopupUI.editor_theme()
-	if theme != null and theme.has_stylebox("panel", "TooltipPanel"):
-		style = theme.get_stylebox("panel", "TooltipPanel").duplicate() as StyleBoxFlat
+	var style: StyleBoxFlat = EventSheetViewportTooltipHelper.editor_tooltip_style()
 	if style == null:
 		style = StyleBoxFlat.new()
 		style.bg_color = EventSheetPopupUI.panel_fill()

@@ -6,6 +6,10 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Fixed: the sheet's rich hover is a pale card in the light editor theme
+
+A hover that carries markup (a function described with bold, italic or coloured words, for example) was drawn on a fixed dark panel in every theme. In the light theme the words sat in the editor's pale label box inside a dark frame, so the card looked like a piece of the dark theme, and a colour written for a dark ground (a pale blue, a pure red) was only about 3 to 1 against the pale box. The card now sits on the editor's own tooltip panel, the same one the sheet's head card and the exported-variable card take, so it is pale in the light theme and dark in the dark one, with no second box and no frame of its own; the plain words take the editor's tooltip text colour, and every `[color=...]` the author wrote is kept as written when it already reads and moved just far enough toward black or white when it does not (4.5 to 1 on both grounds). Outside the editor the dark panel stands. Hovers without markup were never affected: Godot draws those itself.
+
 ### Fixed: the hover card of an exported variable is readable in the light editor theme
 
 The card that opens when you rest the pointer on an exported variable was a dark panel in every theme, with the words inside it inked for the paler fill the card itself takes from the editor, so in the light theme the small caption and the plain sentence were grey on dark grey and the caption all but disappeared. The card now sits on the editor's own tooltip panel, as the sheet's head card does, and takes that panel's fill, so it is pale in the light theme and dark in the dark one; the note line under the field is moved just far enough from the Inspector's quiet grey to keep the same contrast as the sentence (about 4.6 to 1 in both themes, where it was 4.0 and 3.2). Nothing was cut off: the line at the top of the old light picture was the caption, inked too close to its ground to see. The guide's picture of the card is retaken.

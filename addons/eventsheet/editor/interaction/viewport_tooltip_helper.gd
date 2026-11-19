@@ -17,6 +17,9 @@ const ReadingDoors := preload("res://addons/eventsheet/editor/interaction/readin
 ## and swaps in the live Inspector-preview card instead of a text tooltip. Never shown to the user.
 const INSPECTOR_PREVIEW_SENTINEL: String = "eventsheet:inspector_preview"
 
+## The contrast every word of a tooltip keeps against the panel it is drawn on.
+const MARKUP_CONTRAST: float = 4.5
+
 var _viewport: Control = null
 # The variable payload staged by _get_tooltip for the sentinel's _make_custom_tooltip call that
 # immediately follows it ({name, type_name, default_text, attributes, constant}).
@@ -47,22 +50,103 @@ func build_custom_tooltip(for_text: String) -> Object:
 		return build_inspector_preview_tooltip(_pending_inspector_preview)
 	if not EventSheetBBCodeLite.has_markup(for_text):
 		return null
+	return build_markup_tooltip(for_text)
+
+
+## The styled card for a tooltip that carries markup. `theme` stands in for the editor's own (tests pass
+## one; null asks the editor, and outside the editor the dark panel stands).
+static func build_markup_tooltip(for_text: String, theme: Theme = null) -> PanelContainer:
 	var panel := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.11, 0.11, 0.13, 0.98)
-	style.border_color = Color(1.0, 1.0, 1.0, 0.16)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.set_content_margin_all(8.0)
+	var style: StyleBoxFlat = tooltip_style(8.0, theme)
 	panel.add_theme_stylebox_override("panel", style)
+	var ground: Color = Color(style.bg_color, 1.0)
 	var rich := RichTextLabel.new()
 	rich.bbcode_enabled = true
 	rich.fit_content = true
 	rich.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	rich.custom_minimum_size = Vector2(300.0, 0.0)
-	rich.text = for_text
+	# The panel is the card; the label draws no fill or frame of its own (the editor's label box is a
+	# second, differently toned panel that showed as a rim inside this one).
+	rich.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
+	rich.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	rich.add_theme_color_override("default_color", tooltip_text_ink(ground, theme))
+	rich.text = ink_markup(for_text, ground)
 	panel.add_child(rich)
 	return panel
+
+
+## The editor's own tooltip panel, a copy the caller may change; null outside the editor (no editor
+## theme to ask), so a pale card in the light theme and a dark one in the dark theme comes from the
+## theme and nothing here knows which one is on.
+static func editor_tooltip_style(theme: Theme = null) -> StyleBoxFlat:
+	if theme == null:
+		theme = EventSheetPopupUI.editor_theme()
+	if theme != null and theme.has_stylebox("panel", "TooltipPanel"):
+		return theme.get_stylebox("panel", "TooltipPanel").duplicate() as StyleBoxFlat
+	return null
+
+
+## The panel every card of the sheet's hover draws on: the editor's tooltip panel with `margin` of
+## air, or, outside the editor, a dark panel with a hairline.
+static func tooltip_style(margin: float, theme: Theme = null) -> StyleBoxFlat:
+	var style: StyleBoxFlat = editor_tooltip_style(theme)
+	if style == null:
+		style = StyleBoxFlat.new()
+		style.bg_color = Color(0.11, 0.11, 0.13, 0.98)
+		style.border_color = Color(1.0, 1.0, 1.0, 0.16)
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(4)
+	style.set_content_margin_all(margin)
+	return style
+
+
+## The ink a tooltip's plain words are drawn in: the editor's own tooltip text colour, moved only as far
+## as keeps it readable on `ground`.
+static func tooltip_text_ink(ground: Color, theme: Theme = null) -> Color:
+	var ink: Color = Color(0.88, 0.89, 0.92)
+	if theme == null:
+		theme = EventSheetPopupUI.editor_theme()
+	if theme != null and theme.has_color("font_color", "TooltipLabel"):
+		ink = theme.get_color("font_color", "TooltipLabel")
+	elif theme != null and theme.has_color("font_color", "Label"):
+		ink = theme.get_color("font_color", "Label")
+	return _readable_ink(ink, Color(ground, 1.0))
+
+
+## `raw` with every `[color=...]` tag re-written to a colour that reads on `ground`: the author's own
+## colour when it already does, otherwise that colour moved toward black or white just far enough.
+## A pale green written for a dark panel therefore stays pale on it and goes deeper on a pale one.
+## A colour Godot cannot read is left as written.
+static func ink_markup(raw: String, ground: Color) -> String:
+	var opaque: Color = Color(ground, 1.0)
+	var pattern: RegEx = RegEx.new()
+	pattern.compile("\\[color=([^\\]]+)\\]")
+	var result: String = ""
+	var cursor: int = 0
+	for found: RegExMatch in pattern.search_all(raw):
+		var written: Color = Color.from_string(found.get_string(1).strip_edges(), Color(-1.0, -1.0, -1.0, -1.0))
+		result += raw.substr(cursor, found.get_start() - cursor)
+		cursor = found.get_end()
+		if written.a < 0.0:
+			result += found.get_string()
+			continue
+		result += "[color=#%s]" % _readable_ink(written, opaque).to_html(false)
+	return result + raw.substr(cursor)
+
+
+## `ink` moved toward black or white, whichever the `ground` is further from, only as far as it keeps
+## MARKUP_CONTRAST (WCAG ratio) against it; an ink that already does is returned as it is. Kept here
+## rather than borrowed from the look code so a hover does not pull that code into the first open.
+static func _readable_ink(ink: Color, ground: Color) -> Color:
+	var target: Color = Color.BLACK if ground.get_luminance() > 0.4 else Color.WHITE
+	var ground_light: float = ground.srgb_to_linear().get_luminance()
+	var result: Color = Color(ink, 1.0)
+	for step: int in 60:
+		var light: float = result.srgb_to_linear().get_luminance()
+		if (maxf(light, ground_light) + 0.05) / (minf(light, ground_light) + 0.05) >= MARKUP_CONTRAST:
+			break
+		result = result.lerp(target, 0.03)
+	return Color(result, ink.a)
 
 
 ## The hover card for an exported variable: the live Inspector mock (decor, grouping, widget miniature,
@@ -72,17 +156,7 @@ static func build_inspector_preview_tooltip(payload: Dictionary) -> Control:
 	var panel := PanelContainer.new()
 	# The editor's own tooltip panel, the way the sheet's head card takes it, so the card is pale in the
 	# light theme and dark in the dark one; outside the editor the dark panel stands.
-	var style: StyleBoxFlat = null
-	var theme: Theme = EventSheetPopupUI.editor_theme()
-	if theme != null and theme.has_stylebox("panel", "TooltipPanel"):
-		style = theme.get_stylebox("panel", "TooltipPanel").duplicate() as StyleBoxFlat
-	if style == null:
-		style = StyleBoxFlat.new()
-		style.bg_color = Color(0.11, 0.11, 0.13, 0.98)
-		style.border_color = Color(1.0, 1.0, 1.0, 0.16)
-		style.set_border_width_all(1)
-		style.set_corner_radius_all(4)
-	style.set_content_margin_all(6.0)
+	var style: StyleBoxFlat = tooltip_style(6.0)
 	panel.add_theme_stylebox_override("panel", style)
 	var card: Variant = ReadingDoors.inspector_preview_card().new()
 	card.lay_on(style.bg_color)
