@@ -3525,7 +3525,9 @@ func _compute_group_bracket_strokes(width: float) -> Array:
 		if row_data.disabled:
 			strokes.append({"kind": "fill", "part": "backdrop", "rect": Rect2(left, top, width - left, height),
 				"color": reading_style.disabled_row_color})
-		var ink: Color = Color(accent.r, accent.g, accent.b, EventSheetRowRenderer.REGION_RULE_ALPHA)
+		# A group's rule is structure, not an accent: the theme's own neutral guide colour, whatever
+		# colour the group's bar wears.
+		var ink: Color = reading_style.tree_guide_color
 		if row_data.row_type == EventRowData.RowType.REGION:
 			strokes.append({"kind": "dash", "part": "dash",
 				"rect": Rect2(left, top, EventSheetGroupFacts.BRACKET_WIDTH, height), "color": ink})

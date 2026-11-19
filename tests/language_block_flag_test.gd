@@ -1,6 +1,6 @@
 # EventForge - LANGUAGE blocks read slightly visually distinct from regular ACE events: rows that render a
 # GDScript construct (a data-class holder, a methods-class, a host binding, a lifted switch case, a collapsed
-# function) carry EventRowData.language_block, which the renderer draws as a quiet accent stripe + faint wash
+# function) carry EventRowData.language_block, which the renderer draws as a quiet accent wash
 # in the theme's `language_block_accent_color`. Pins: the flag on every built-in language block (headers AND
 # their child rows), a regular ACE event NOT flagged, the theme token present on EventSheetEventStyle and set
 # in every bundled preset, and the public EventSheets.mark_language_block chaining helper for custom blocks.

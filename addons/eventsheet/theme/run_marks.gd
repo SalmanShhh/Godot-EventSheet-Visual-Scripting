@@ -14,12 +14,11 @@ const READABLE_INK_PATH := "res://addons/eventsheet/theme/readable_ink.gd"
 const RESTING_FILL_ALPHA: float = 0.12
 const LOUD_FILL_ALPHA: float = 0.18
 const BORDER_ALPHA: float = 0.34
-const RAIL_ALPHA: float = 0.45
 
 
 ## The look of one row's count chip and margin number for the run so far. `resting` is the margin number's
-## own colour and `ground` the margin's fill. Returns {fill, border, text, rail, cold}: `text` is the ink for
-## the chip and the number, `cold` is true for a row that has not fired once (it also gets the rail).
+## own colour and `ground` the margin's fill. Returns {fill, border, text, cold}: `text` is the ink for
+## the chip and the number, `cold` is true for a row that has not fired once (its number and chip are red).
 static func marks_for(hit_uid: String, resting: Color, reading: EventSheetReadingStyle, warning: Color, ground: Color) -> Dictionary:
 	var calls: int = EventSheetRunProfile.calls_for(hit_uid)
 	var band: String = EventSheetRunProfile.cost_band(hit_uid)
@@ -42,7 +41,6 @@ static func marks_for(hit_uid: String, resting: Color, reading: EventSheetReadin
 		"fill": Color(hue, fill_alpha),
 		"border": Color(hue, BORDER_ALPHA),
 		"text": ink.move(Color(hue, 1.0), [floor, ground]),
-		"rail": Color(hue, RAIL_ALPHA),
 		"cold": cold,
 	}
 

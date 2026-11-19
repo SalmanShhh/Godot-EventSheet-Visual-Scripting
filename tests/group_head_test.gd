@@ -160,8 +160,9 @@ static func _test_counts() -> bool:
 # ── 3. The bracket ──
 
 
-## The sheet really paints each body's tick, in the group's own colour, and an off group keeps its
-## bar and tick over the faded backdrop - read from what the viewport hands its draw call.
+## The sheet really paints each body's bar and tick, in the theme's neutral guide colour whatever
+## colour the group's own bar wears, and an off group keeps its bar and tick over the faded backdrop -
+## read from what the viewport hands its draw call.
 static func _test_painted_ticks() -> bool:
 	var sheet: EventSheetResource = EventSheetResource.new()
 	var combat: EventGroup = _group("Combat", "")
@@ -177,14 +178,14 @@ static func _test_painted_ticks() -> bool:
 	dock.set_undo_redo_manager(EventSheetEditorTest.FakeEditorUndoRedoManager.new())
 	dock.setup(sheet)
 	var painted: Array = []
+	var guide: String = dock._active_view()._get_reading_style().tree_guide_color.to_html(false)
 	for stroke: Dictionary in dock._active_view().group_bracket_strokes(800.0):
 		var ink: Color = stroke["color"] as Color
 		painted.append([str(stroke["part"]), ink.to_html(false) if str(stroke["part"]) != "backdrop" else "faded"])
 	dock.free()
 	return SUPPORT.pins("group_head_test", [
-		["each body paints its bar and the tick at its foot in its own colour; an off group keeps both",
-			painted, [["bar", "d9534f"], ["tick", "d9534f"], ["backdrop", "faded"], ["bar", "3c8dbc"],
-				["tick", "3c8dbc"]]],
+		["each body paints its bar and the tick at its foot in the neutral guide colour; an off group keeps both",
+			painted, [["bar", guide], ["tick", guide], ["backdrop", "faded"], ["bar", guide], ["tick", guide]]],
 	])
 
 

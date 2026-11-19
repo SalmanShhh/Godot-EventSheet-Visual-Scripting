@@ -68,7 +68,13 @@ const COLOUR_CHECK_DARK := Color(0.7, 0.7, 0.7, 1.0)
 const COLOUR_HDR_MARK := Color(1.0, 1.0, 1.0, 0.95)
 const COLOUR_HDR_MARK_EDGE := Color(0.0, 0.0, 0.0, 0.7)
 # The rule down the left edge of a variable row, in logical pixels.
-const VARIABLE_ROW_RULE_WIDTH := 2.0
+const VARIABLE_ROW_RULE_WIDTH := 1.0
+
+## The washes that now carry a state a stripe used to share with them: how strongly a flagged row, a
+## row firing right now and a language block are tinted over their lanes.
+const ERROR_WASH_ALPHA := 0.12
+const FIRING_WASH_ALPHA := 0.22
+const LANGUAGE_BLOCK_WASH_ALPHA := 0.08
 ## How much of a variable card's row the card fills: 28 px of the 32 the row takes, the rest the gap.
 const VARIABLE_CARD_FILL := 28.0 / 32.0
 ## How much of the variable rule's colour a block-closing hairline keeps - a whisper of the same
@@ -853,6 +859,10 @@ func draw_row(control: CanvasItem, layout: Dictionary, row_data: EventRowData, f
 	_gutter_attention_ink = Color(0.0, 0.0, 0.0, 0.0)
 	if is_event_row and not row_data.attention_note.is_empty() and row_data.error_message.is_empty():
 		_gutter_attention_ink = reading_style.error_stripe_color if row_data.attention_severe else EventSheetActiveTheme.chrome().object_bar_warning_color
+	elif is_event_row and not row_data.error_message.is_empty():
+		_gutter_attention_ink = reading_style.error_stripe_color
+	if is_event_row and (row_data.firing or row_data.firing_intensity > 0.0) and row_data.error_message.is_empty() and row_data.attention_note.is_empty():
+		_gutter_attention_ink = Color(reading_style.firing_stripe_color, 1.0)
 	if not local_on_sheet:
 		_draw_gutter(control, gutter_rect, gutter_number, breakpoint_enabled, row_data.bookmark_enabled, font, font_size, event_style, hit_uid, reading_style,
 			is_event_row and row_data.selected, gutter_band, first_line_height)
@@ -878,11 +888,11 @@ func draw_row(control: CanvasItem, layout: Dictionary, row_data: EventRowData, f
 				group_text, group_box.y, font, font_size - 1,
 				event_style.gutter_text_color if event_style != null else EventSheetPalette.COLOR_GUTTER_TEXT)
 	elif row_data.row_type == EventRowData.RowType.REGION:
-		# A region is a FOLD MARK, not a chapter bar: the faintest wash of its own colour and a
-		# solid 2px rule on the head, and nothing but that rule on the closing tick, so the fences
+		# A region is a FOLD MARK, not a chapter bar: the faintest wash of its own colour and the
+		# neutral guide rule on the head, and nothing but that rule on the closing tick, so the fences
 		# read as the two lines of the file they are.
 		_draw_region_row_chrome(control, row_rect, row_data.custom_color,
-			EventSheetRegionFacts.is_closing_fence(row_data.source_resource), event_style)
+			EventSheetRegionFacts.is_closing_fence(row_data.source_resource), event_style, reading_style.tree_guide_color)
 	elif row_data.row_type == EventRowData.RowType.COMMENT and event_style != null:
 		# Per-comment colors (event-sheet parity): the row's custom tint wins over the theme token.
 		var comment_bg: Color = row_data.custom_color if row_data.custom_color.a > 0.01 else event_style.comment_row_background_color
@@ -918,13 +928,10 @@ func draw_row(control: CanvasItem, layout: Dictionary, row_data: EventRowData, f
 	else:
 		var section_bg: Color = section_fill(event_style, alternating)
 		# A row may carry a faint role tint (a published-verb Define row washed by its ACE kind): blend it
-		# over the base so the block reads as its kind - an event block - then a left accent
-		# bar in the same hue drives the cue home. custom_color.a == 0 rows are untouched.
+		# over the base so the block reads as its kind - an event block. custom_color.a == 0 rows are untouched.
 		if row_data.custom_color.a > 0.01:
 			section_bg = section_bg.lerp(Color(row_data.custom_color.r, row_data.custom_color.g, row_data.custom_color.b, section_bg.a), row_data.custom_color.a)
 		control.draw_rect(row_rect, section_bg, true)
-		if row_data.custom_color.a > 0.01:
-			control.draw_rect(Rect2(row_rect.position, Vector2(3.0, row_rect.size.y)), Color(row_data.custom_color.r, row_data.custom_color.g, row_data.custom_color.b, 0.9), true)
 	if row_data.outline_color.a > 0.01 and row_data.outline_dashed:
 		_draw_dashed_outline(control, row_rect.grow(-1.5), row_data.outline_color)
 	elif row_data.outline_color.a > 0.01 and row_data.outline_radius <= 0.0:
@@ -999,53 +1006,47 @@ func draw_row(control: CanvasItem, layout: Dictionary, row_data: EventRowData, f
 		EventSheetViewportGuideLines.draw_guides(control, row_rect, row_data.indent, reading_style.tree_guide_color, row_indent_width)
 	if row_data.language_block:
 		# A LANGUAGE block (a data-class holder, a methods-class, a host binding, a lifted switch case...)
-		# reads as an event row but is not a regular ACE event: a quiet indigo left stripe + faint wash mark
-		# the whole block without dimming it. Error / firing stripes below draw over it, so they still win.
+		# reads as an event row but is not a regular ACE event: a quiet indigo wash marks the whole block
+		# without dimming it. The error and firing washes below draw over it, so they still win.
 		var language_accent: Color = (
 			event_style.language_block_accent_color
 			if event_style != null
 			else EventSheetPalette.COLOR_LANGUAGE_BLOCK
 		)
-		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), Color(language_accent.r, language_accent.g, language_accent.b, 0.75), true)
-		control.draw_rect(row_fill_rect, Color(language_accent.r, language_accent.g, language_accent.b, 0.05), true)
+		control.draw_rect(row_fill_rect, Color(language_accent.r, language_accent.g, language_accent.b, LANGUAGE_BLOCK_WASH_ALPHA), true)
 	if row_data.frame_color.a > 0.01:
 		# One block drawn across its rows (an inner class and its fields): the block's own fill over
 		# the lanes, so the class reads as one panel, and its edges at the head row's indent.
 		NativeHeadMarks.draw_block_frame(control, row_data,
 			NativeHeadMarks.block_frame_rect(row_rect, gutter_rect, row_data.frame_indent, row_indent_width))
 	if is_event_row and row_data.custom_color.a > 0.01:
-		# A published verb's Define row is washed by its ACE KIND: a left accent bar plus a faint tint over
-		# the whole block. Drawn AFTER the lane fills (the same place the language-block cue draws) so the
-		# kind reads across both lanes instead of hiding under them. Error / firing stripes draw after this,
-		# so they still win. Regular event rows carry no custom_color and are untouched.
+		# A published verb's Define row is washed by its ACE KIND: a faint tint over the whole block. Drawn
+		# AFTER the lane fills (the same place the language-block cue draws) so the kind reads across both
+		# lanes instead of hiding under them. The error and firing washes draw after this, so they still
+		# win. Regular event rows carry no custom_color and are untouched.
 		# The wash STRENGTH is the alpha the builder already baked in from the theme's
 		# verb_row_tint_strength - read it back rather than keeping a second literal here that could
 		# drift out of step with the one the caption band is derived from.
-		var role_accent: Color = row_data.custom_color
-		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), Color(role_accent.r, role_accent.g, role_accent.b, 0.9), true)
-		control.draw_rect(row_fill_rect, role_accent, true)
+		control.draw_rect(row_fill_rect, row_data.custom_color, true)
 	if not row_data.error_message.is_empty():
-		# Error → row deep-link: a red left stripe + faint wash flag the offending row (the
-		# message shows in the row tooltip). A fixed error red - not yet a theme token.
-		var error_stripe: Color = reading_style.error_stripe_color
-		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), error_stripe, true)
-		control.draw_rect(row_fill_rect, Color(error_stripe.r, error_stripe.g, error_stripe.b, 0.08), true)
+		# Error → row deep-link: a red wash over the offending row and its number in red in the margin
+		# (the message shows in the row tooltip). The red is the theme's error colour.
+		var error_ink: Color = reading_style.error_stripe_color
+		control.draw_rect(row_fill_rect, Color(error_ink.r, error_ink.g, error_ink.b, ERROR_WASH_ALPHA), true)
 	elif row_data.attention_severe and not row_data.attention_note.is_empty():
-		# The quiet RED state: a finding that says the line cannot run. The same stripe and wash an
-		# error mark wears, with the thin inset the amber state wears, and still nothing drawn inside
-		# the row - the sentence is the help strip's and the Doctor's. Drawn over the selection fill
-		# below like the amber one, so selecting the row does not wash it away.
+		# The quiet RED state: a finding that says the line cannot run. The same wash an error mark
+		# wears and the number in red in the margin, and still nothing drawn inside the row - the
+		# sentence is the help strip's and the Doctor's. Drawn over the selection fill below like the
+		# amber one, so selecting the row does not wash it away.
 		var severe_red: Color = reading_style.error_stripe_color
-		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), severe_red, true)
 		control.draw_rect(row_fill_rect, Color(severe_red.r, severe_red.g, severe_red.b, 0.10), true)
 	if row_data.firing or row_data.firing_intensity > 0.0:
-		# Live event trace: a cyan left stripe + faint wash on events firing right now (debug
-		# run), PULSING - the intensity decays after each fire so a one-shot reads as a fading
-		# flash while a sustained fire holds full glow (a bare firing flag paints at full).
+		# Live event trace: a cyan wash on events firing right now (debug run) and the number in the
+		# margin in the same cyan, PULSING - the intensity decays after each fire so a one-shot reads
+		# as a fading flash while a sustained fire holds full glow (a bare firing flag paints at full).
 		var pulse: float = maxf(row_data.firing_intensity, 1.0 if row_data.firing and row_data.firing_intensity <= 0.0 else 0.0)
 		var firing_stripe: Color = reading_style.firing_stripe_color
-		control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), Color(firing_stripe.r, firing_stripe.g, firing_stripe.b, pulse), true)
-		control.draw_rect(row_fill_rect, Color(firing_stripe.r, firing_stripe.g, firing_stripe.b, 0.10 * pulse), true)
+		control.draw_rect(row_fill_rect, Color(firing_stripe.r, firing_stripe.g, firing_stripe.b, FIRING_WASH_ALPHA * pulse), true)
 	# A theme that marks a selected event by its gutter and frame alone (selection_as_outline) washes
 	# nothing over the lanes: the filled gutter below and the frame drawn over the card say it.
 	var outline_only: bool = row_data.row_type == EventRowData.RowType.EVENT and event_style != null \
@@ -1074,7 +1075,7 @@ func draw_row(control: CanvasItem, layout: Dictionary, row_data: EventRowData, f
 		if row_data.row_type != EventRowData.RowType.EVENT and not in_run:
 			_draw_row_outline(control, row_rect, selection_fill, SELECTION_OUTLINE_LIGHTEN, SELECTION_OUTLINE_ALPHA)
 	if row_data.attention_severe and not row_data.attention_note.is_empty() and row_data.error_message.is_empty():
-		# Red state: the wash and stripe above and the red number in the margin say it; no frame is drawn.
+		# Red state: the wash above and the red number in the margin say it; no frame is drawn.
 		pass
 	elif not row_data.attention_note.is_empty() and row_data.error_message.is_empty():
 		# The quiet amber state: a faint warning-colour tint over the row and the event's number in the
@@ -1303,16 +1304,14 @@ func _gutter_number_color(marks: Dictionary) -> Color:
 
 
 ## The Event Trace's tally for one row, as a chip in the bottom half of the gutter cell: a muted
-## count, warm when the row is among the run's busiest, and a dim left rail plus x0 when the row
+## count, warm when the row is among the run's busiest, and x0 when the row
 ## has not fired once since Run. The exact number is one hover away (the gutter tooltip) - at this
 ## width the chip is a glance, not a readout.
 func _draw_hit_count_chip(control: CanvasItem, gutter_rect: Rect2, hit_uid: String, font: Font, font_size: int, marks: Dictionary) -> void:
 	var fill: Color = marks["fill"]
 	var border: Color = marks["border"]
 	var text_color: Color = marks["text"]
-	if bool(marks["cold"]):
-		# The never-fired rail: a hollow bar down the margin, so a cold row is findable by scrolling past it.
-		control.draw_rect(Rect2(gutter_rect.position.x, gutter_rect.position.y + 1.0, 2.0, gutter_rect.size.y - 2.0), marks["rail"], true)
+	# A row that has not fired once is told by its red number and its x0 chip, not by a bar.
 	var chip_rect := Rect2(
 		gutter_rect.position.x + HIT_CHIP_INSET,
 		gutter_rect.get_center().y + 1.0,
@@ -1687,7 +1686,6 @@ func _draw_group_row_chrome(control: CanvasItem, row_rect: Rect2, fold_rect: Rec
 	# top/bottom accent hairlines inset by the radius so they don't overhang the rounded corners.
 	var group_radius: int = event_style.group_corner_radius if event_style != null else 0
 	_draw_rounded_rect(control, row_rect, bg, group_radius, group_radius, group_radius, group_radius)
-	control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 3.0, row_rect.size.y), accent, true)
 	control.draw_rect(Rect2(row_rect.position.x + group_radius, row_rect.position.y, row_rect.size.x - 2.0 * group_radius, 1.0), accent.darkened(0.28), true)
 	control.draw_rect(Rect2(row_rect.position.x + group_radius, row_rect.end.y - 1.0, row_rect.size.x - 2.0 * group_radius, 1.0), accent.darkened(0.38), true)
 	if fold_rect.size != Vector2.ZERO:
@@ -1695,10 +1693,11 @@ func _draw_group_row_chrome(control: CanvasItem, row_rect: Rect2, fold_rect: Rec
 
 
 ## A region fence's chrome. The opener wears the faintest wash of the region's own colour and
-## a solid rule at its left edge; the closing tick wears the rule alone, over nothing, so it reads
-## as the end of the dashed rule running down the body rather than as another row.
+## a hairline in the theme's neutral guide colour at its left edge; the closing tick wears the
+## hairline alone, over nothing, so it reads as the end of the dashed rule running down the body
+## rather than as another row.
 func _draw_region_row_chrome(control: CanvasItem, row_rect: Rect2, accent: Color, closing: bool,
-		event_style: EventSheetEventStyle = null) -> void:
+		event_style: EventSheetEventStyle = null, rule: Color = EventSheetPalette.COLOR_TREE_GUIDE) -> void:
 	var ink: Color = accent
 	if ink.a <= 0.01:
 		ink = event_style.behavior_accent_color if event_style != null else EventSheetPalette.COLOR_GROUP_ACCENT
@@ -1706,7 +1705,7 @@ func _draw_region_row_chrome(control: CanvasItem, row_rect: Rect2, accent: Color
 		control.draw_rect(row_rect, Color(ink.r, ink.g, ink.b, REGION_ROW_WASH_ALPHA), true)
 	control.draw_rect(
 		Rect2(row_rect.position.x, row_rect.position.y, EventSheetGroupFacts.BRACKET_WIDTH, row_rect.size.y),
-		Color(ink.r, ink.g, ink.b, REGION_RULE_ALPHA),
+		rule,
 		true
 	)
 
@@ -2721,10 +2720,9 @@ static func _draw_add_affordance_pill(control: CanvasItem, rect: Rect2, accent: 
 	pill.border_color = Color(accent.r, accent.g, accent.b, 0.55 if hovered else 0.28)
 	control.draw_style_box(pill, rect.grow_individual(7.0, 1.0, 7.0, 1.0))
 
-# Calm, theme-neutral GDScript-cell tint: a very faint desaturated wash + a muted left stripe, so a
-# code cell reads as "this is code" without the saturated blue that fought the editor theme.
-const CODE_CELL_BG := Color(0.62, 0.64, 0.68, 0.05)
-const CODE_CELL_STRIPE := Color(0.56, 0.58, 0.63, 0.38)
+# Calm, theme-neutral GDScript-cell tint: a faint desaturated wash, so a code cell reads as "this is
+# code" without the saturated blue that fought the editor theme.
+const CODE_CELL_BG := Color(0.62, 0.64, 0.68, 0.09)
 
 
 ## Groups consecutive multi-line block spans (block_lines>1, starting at block_line 0)
@@ -2755,13 +2753,12 @@ static func resolve_block_groups(spans: Array) -> Dictionary:
 	return {"unions": unions, "heads": heads}
 
 
-## One merged cell for a multi-line block. In-flow GDScript additionally gets a code
-## stripe + cool tint, so "this cell is code" reads at a glance (user call: it must be
+## One merged cell for a multi-line block. In-flow GDScript additionally gets a cool
+## tint, so "this cell is code" reads at a glance (user call: it must be
 ## visually obvious when an action is just GDScript).
 func _draw_block_cell(control: CanvasItem, rect: Rect2, metadata: Dictionary) -> void:
 	if bool(metadata.get("code_cell", false)):
 		control.draw_rect(rect, CODE_CELL_BG, true)
-		control.draw_rect(Rect2(rect.position.x, rect.position.y, 2.0, rect.size.y), CODE_CELL_STRIPE, true)
 		return
 	var bg: Color = metadata.get("chip_bg", _fallback_reading_style().default_chip_plate_color)
 	control.draw_rect(rect, bg, true)
@@ -2780,11 +2777,10 @@ func _draw_chip_selected_span(
 	selection_fill: Color,
 	multi_select: bool
 ) -> void:
-	# Flat selected cell: a stronger accent-tinted fill plus a left accent bar (event-sheet cue).
+	# Flat selected cell: a stronger accent-tinted fill over the whole cell.
 	var accent: Color = metadata.get("text_color", TEXT_PRIMARY)
-	var fill: Color = Color(accent.r, accent.g, accent.b, 0.16 if multi_select else 0.22)
+	var fill: Color = Color(accent.r, accent.g, accent.b, 0.20 if multi_select else 0.28)
 	control.draw_rect(span.rect, fill, true)
-	control.draw_rect(Rect2(span.rect.position.x, span.rect.position.y, 2.0, span.rect.size.y), accent, true)
 
 
 func _draw_drag_feedback(
@@ -2857,7 +2853,7 @@ func _draw_variable_row_wash(control: CanvasItem, row_rect: Rect2, reading: Even
 		)
 	control.draw_rect(
 		Rect2(row_rect.position, Vector2(VARIABLE_ROW_RULE_WIDTH, row_rect.size.y)),
-		reading.variable_row_rule_color,
+		reading.tree_guide_color,
 		true
 	)
 
@@ -3154,7 +3150,6 @@ func _draw_debug_overlay(control: CanvasItem, row_rect: Rect2, font: Font, font_
 	var live_ink: Color = load(RUN_MARKS_PATH).live_ink(reading, row_ground) if row_ground.a > 0.0 else live
 	var badge_width: float = font.get_string_size(debug_text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size - 1).x + 10.0
 	var badge_rect := Rect2(row_rect.end.x - badge_width - 8.0, row_rect.position.y + 5.0, badge_width, row_rect.size.y - 10.0)
-	control.draw_rect(Rect2(row_rect.position.x, row_rect.position.y, 4.0, row_rect.size.y), live, true)
 	control.draw_rect(badge_rect, Color(live, 0.14), true)
 	var baseline_y: float = badge_rect.position.y + (badge_rect.size.y * ROW_VERTICAL_CENTER_RATIO) + ((font_size - 1) * FONT_BASELINE_OFFSET_RATIO)
 	_draw_text(control, Vector2(badge_rect.position.x + 5.0, baseline_y), debug_text, -1.0, font, font_size - 1, live_ink)
