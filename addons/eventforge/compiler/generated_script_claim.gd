@@ -53,15 +53,20 @@ static func is_output_of(script_path: String, sheet_path: String) -> bool:
 
 
 ## True when the compiler may write `script_path` for the sheet at `sheet_path`: there is no file yet, it
-## is this sheet's own output, or it is the compiler's output for a sheet that is no longer there (the
-## folder was moved outside Godot), which nothing else can claim.
+## is this sheet's own output, or it is the compiler's output for a sheet that cannot claim it. A sheet
+## claims a script only when the script sits where that sheet writes its own (beside it, with the generated
+## suffix or the plain name), so a script whose "# Source:" names a sheet that is gone (the folder was moved
+## outside Godot) or a sheet in another folder (the folder was copied) is a stale copy the plugin made and
+## is refreshed.
 static func may_write(script_path: String, sheet_path: String) -> bool:
 	if not FileAccess.file_exists(script_path):
 		return true
 	if is_output_of(script_path, sheet_path):
 		return true
 	var named: String = source_of(script_path)
-	return not named.is_empty() and named != sheet_path and not FileAccess.file_exists(named)
+	if named.is_empty() or named == sheet_path:
+		return false
+	return not FileAccess.file_exists(named) or not is_companion_of(script_path, named)
 
 
 ## True when `script_path` is one of the two scripts a resource sheet at `sheet_path` writes beside itself:

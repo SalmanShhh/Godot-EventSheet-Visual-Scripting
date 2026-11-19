@@ -4819,7 +4819,7 @@ func _register_autoload_entry(sheet: EventSheetResource, sheet_path: String, omi
 		return "An autoload named \"%s\" already exists and points elsewhere - pick another name." % autoload_name
 	var compile_result: Dictionary = load(SHEET_COMPILER_PATH).compile(sheet, output_path, omit_banner)
 	if not bool(compile_result.get("success", false)):
-		return "Autoload not registered: the sheet doesn't compile (%s)." % str(compile_result.get("errors"))
+		return load("res://addons/eventforge/failure_words.gd").compile_problem(compile_result, "Autoload not registered: the sheet doesn't compile.")
 	ProjectSettings.set_setting(setting_name, target_value)
 	if Engine.is_editor_hint():
 		ProjectSettings.save()

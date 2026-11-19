@@ -193,7 +193,7 @@ static func attach_behavior(sheet: EventSheetResource, host: Node) -> Dictionary
 		return {"ok": false, "message": "Save the sheet first - the behavior attaches by its compiled script."}
 	var compile_result: Dictionary = EventSheetCompiler.compile(sheet, script_path)
 	if not bool(compile_result.get("success", false)):
-		return {"ok": false, "message": "The sheet doesn't compile: %s" % str(compile_result.get("errors"))}
+		return {"ok": false, "message": load("res://addons/eventforge/failure_words.gd").compile_problem(compile_result, "The sheet doesn't compile.")}
 	if script_path.is_empty():
 		script_path = EventSheetCompiler._resolve_output_path(sheet, "")
 	var behavior: Node = Node.new()

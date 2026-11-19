@@ -392,7 +392,7 @@ func _tool_compile_sheet(arguments: Dictionary) -> Dictionary:
 		"success": bool(result.get("success", false)),
 		"errors": result.get("errors", []),
 		"warnings": result.get("warnings", []),
-		"wrote_file": write_output,
+		"wrote_file": write_output and bool(result.get("success", false)),
 		"output": str(result.get("output", ""))
 	}
 

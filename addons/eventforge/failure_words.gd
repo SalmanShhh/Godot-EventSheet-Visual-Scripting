@@ -48,3 +48,14 @@ static func compile_failed(errors: Array, path: String) -> String:
 	if errors.size() == 1 and str(errors[0]) == write_blocked(path):
 		return str(errors[0])
 	return "This sheet doesn't compile yet - fix the error, then save again. (%s)" % ", ".join(PackedStringArray(errors))
+
+
+## What to say when a compile of a sheet did not go through, for every caller that is not a Save. A script
+## that is not this sheet's own is not written, and then the one sentence about that file is the whole
+## answer (nothing is wrong with a row, so "doesn't compile" would be false); any other failure keeps the
+## caller's lead and the compiler's errors after it.
+static func compile_problem(compile_result: Dictionary, lead: String) -> String:
+	var errors: Array = compile_result.get("errors", [])
+	if not str(compile_result.get("refused_path", "")).is_empty() and not errors.is_empty():
+		return str(errors[0])
+	return "%s (%s)" % [lead, ", ".join(PackedStringArray(errors))]

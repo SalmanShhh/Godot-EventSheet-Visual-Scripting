@@ -156,7 +156,9 @@ static func _look_at(full_path: String, needle: String, old_path: String, new_pa
 	if not text.contains(needle):
 		return
 	if extension == "tres":
-		if not skip.has(full_path) and respelled(text, old_path, new_path, is_folder) != text:
+		# Only an event sheet holds a path field the plugin wrote; a resource of the user's own that happens to
+		# have a property of the same name is theirs and is left alone.
+		if not skip.has(full_path) and is_sheet_text(text) and respelled(text, old_path, new_path, is_folder) != text:
 			(found["sheets"] as Array).append(full_path)
 	elif CLAIM.source_of(full_path).is_empty():
 		(found["scripts"] as Array).append(full_path)
@@ -186,3 +188,10 @@ static func leftover_sentence(count: int) -> String:
 	if count <= 0:
 		return ""
 	return EventSheetL10n.translate("Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.") % count
+
+
+## True when the text of a .tres is an event sheet: its first lines name the sheet class or its script, as
+## the export pass reads them.
+static func is_sheet_text(text: String) -> bool:
+	var head: String = text.left(600)
+	return head.contains("EventSheetResource") or head.contains("event_sheet.gd")

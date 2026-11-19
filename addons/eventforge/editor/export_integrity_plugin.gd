@@ -43,7 +43,11 @@ static func recompile_all_sheets(root: String = "res://") -> Dictionary:
 		else:
 			report["failed"] = int(report["failed"]) + 1
 			(report["failures"] as Array).append(sheet_path)
-			push_error("[Godot EventSheets] sheet failed to compile at export: %s - %s" % [sheet_path, str(result.get("errors", []))])
+			if str(result.get("refused_path", "")).is_empty():
+				push_error("[Godot EventSheets] sheet failed to compile at export: %s - %s" % [sheet_path, str(result.get("errors", []))])
+			else:
+				# Nothing is wrong with the sheet: a script of the same name is not its own, so it was left alone.
+				push_error("[Godot EventSheets] at export, %s" % str((result.get("errors", []) as Array)[0]))
 	return report
 
 
