@@ -354,9 +354,9 @@
 			"batch": "sheets",
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
-				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "6d43168a65bcf91622da02e6fd69669b4c1cc905c5fcb764bcf6cad67c277f4d",
-				"reading": "7e2c6d6c2d77f34acf79104b1c84c0d8002d2f10b62f82425ad733461d18ef74"
+				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
+				"png": "ddfe0daae2b09c5c03a012a1e35a164c6ec16c300d433ae7ec8c9724c3fc6d65",
+				"reading": "6ab1099ce0190991535b2f88c1223044a985e1ce31173da9188156642cb3f0c6"
 			},
 			"layout": "vertical",
 			"name": "editor-plugin-reading",
@@ -1272,9 +1272,9 @@
 				"coarse": true,
 				"files": "f3a57bc0485015d61b6188d3742cce889ff29bcb2ae602dd12115becaa48aa61",
 				"godot": "4.7-stable (official)",
-				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
 				"png": "88df0095393290f543f434ab6dcdd303e43027031216b90b468f2d857e53a29c",
-				"reading": "7e2c6d6c2d77f34acf79104b1c84c0d8002d2f10b62f82425ad733461d18ef74"
+				"reading": "6ab1099ce0190991535b2f88c1223044a985e1ce31173da9188156642cb3f0c6"
 			},
 			"name": "this-editor-plugin-bar",
 			"rows": [
