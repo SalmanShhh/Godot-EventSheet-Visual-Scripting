@@ -6,6 +6,8 @@
 		"docs/images/look-sheet-7-text.png": "the picture is Godot's own script editor with the file open, and which files the editor lists beside it and how far its list is scrolled differ from one run to the next (two runs wrote different bytes), so it cannot be byte-stable; the old picture stays and the guide text beside it is still true",
 		"docs/images/menu-starter.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
 		"docs/images/mirror-and-flip-showcase.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
+		"docs/images/object-pooling-off.png": "a running-game frame with no editor in it, taken by a throwaway harness that runs the showcase scene for 1200 physics frames; its showcase scene has not changed since it was taken",
+		"docs/images/object-pooling-on.png": "a running-game frame with no editor in it, taken by a throwaway harness that runs the showcase scene for 600 physics frames; its showcase scene has not changed since it was taken",
 		"docs/images/open-progress-strip.png": "the strip exists only while a file is being read (dock/open_progress.gd), so the picture is a race against the machine: how many rows are painted when the frame is taken changes with the machine's speed and load, and no wait or step can fix a frame count, so it cannot be byte-stable; the old picture stays and the guide text it illustrates is still true",
 		"docs/images/pin-modes-showcase.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
 		"docs/images/raycast-lab-3d.png": "a running-game frame with no editor in it; its showcase scene has not changed since it was taken",
@@ -10174,6 +10176,38 @@
 			"name": "interop-convert-menu",
 			"source": "res://tools/doc_shots/fixtures/arena_hazard.gd",
 			"target": "docs/images/interop-convert-menu.png"
+		},
+		{
+			"batch": "pooling",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "de4a680f64f339d1c11a4e1bd3048fce252a21709b41a05b17e7b4f8018cece3",
+				"reading": "4a0e646a466ccc86ef8c3e1a6951875d9a28572236ebff240d8d10527f544640"
+			},
+			"name": "object-pooling-sheet",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://demo/showcase/object_pooling/object_pooling.gd",
+			"target": "docs/images/object-pooling-sheet.png"
+		},
+		{
+			"batch": "pooling",
+			"fingerprint": {
+				"godot": "4.7-stable (official)",
+				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
+				"png": "ae64ebf6aa730c65f508a29f1f3728b2c1ba19f50b60fe44e8e55775215a6a74",
+				"reading": "fc7674acfa861c91886ff7ff664340fa3962efb9843eb4f35689c543e2227c9c"
+			},
+			"name": "object-pooling-spark",
+			"rows": [
+				0.0,
+				"@last"
+			],
+			"source": "res://demo/showcase/object_pooling/spark.gd",
+			"target": "docs/images/object-pooling-spark.png"
 		}
 	],
 	"window": [
