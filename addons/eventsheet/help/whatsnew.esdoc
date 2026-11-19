@@ -46,6 +46,14 @@ The long single stretches of main-thread work the audit still had are now taken 
 
 Opening a Reading line finding opened the file at the top of the sheet. It now selects the row that wrote that line, by the same source map an error in the running game uses, and unfolds the block it sits in.
 
+### Added: a search box in the Check the project window
+
+Above the list, one box filters the findings to those whose Section, Where or Finding text holds every word typed, in any order and any case, in the language shown. Sections with nothing left are hidden and the ones that remain stay open; emptying the box puts the list back as it was, with its folds, selection and scroll. The summary line says how many are shown out of how many while a filter is on, and findings that arrive while a check is still running obey it. Ctrl+F goes to the box; Escape empties it first and closes the window only when it is already empty; Up and Down move from the box into the list. Mark All as Read still means the whole page.
+
+### Changed: the Reading findings are written as sentences
+
+A shape finding now says how many lines show as code instead of as rows and quotes the first real line as the example, instead of a placeholder pattern; \"more like it\" and the tail counts agree with one and many in all nine languages. The Interop line no longer sets \"100%\" beside \"still code\": it says what share of its lines show as rows and, separately, how many functions are shown as rows and how many are kept as code blocks. The window's summary line reads \"2 errors, 3 warnings, 1 note\". The command-line verdict line is unchanged. Findings are remembered as read by what they are about, not by their wording, so nothing reworded is reported as new.
+
 ### Changed: the editor's first open compiles about 500 fewer lines
 
 The walk of the sheet's variables into the object's members no longer names the expression picker's model in code, so that file (512 lines) is loaded when the picker asks for it instead of when the first sheet opens. Nothing a person sees changes; it gives the first-open budget room again.
