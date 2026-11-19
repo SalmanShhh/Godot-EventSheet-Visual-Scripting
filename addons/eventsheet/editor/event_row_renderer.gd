@@ -75,6 +75,8 @@ const VARIABLE_ROW_RULE_WIDTH := 1.0
 const ERROR_WASH_ALPHA := 0.12
 const FIRING_WASH_ALPHA := 0.22
 const LANGUAGE_BLOCK_WASH_ALPHA := 0.08
+## The cannot-run wash (a finding that says the line cannot run).
+const CANNOT_RUN_WASH_ALPHA := 0.10
 ## How much of a variable card's row the card fills: 28 px of the 32 the row takes, the rest the gap.
 const VARIABLE_CARD_FILL := 28.0 / 32.0
 ## How much of the variable rule's colour a block-closing hairline keeps - a whisper of the same
@@ -114,6 +116,8 @@ const DOOR_RULE_WIDTH := 1.0
 # One shared plate StyleBox (this draws once per icon per frame on a virtualized canvas -
 # never allocate it inside the draw loop).
 static var _icon_plate_styles: Dictionary = {}
+## The state wash helper, loaded by path the first time a row wears a state (it is no part of the first open).
+static var _wash_helper: Object = null
 # The variable cards' boxes, one per fill / edge / radius (a handful per session).
 static var _variable_card_boxes: Dictionary = {}
 
@@ -123,6 +127,9 @@ static var _variable_card_boxes: Dictionary = {}
 var show_event_numbers: bool = true
 ## The ink of the event's number while the row has a finding (amber, red when severe); clear = the margin's own.
 var _gutter_attention_ink: Color = Color(0.0, 0.0, 0.0, 0.0)
+## The washes the row being drawn wears (an error, a line that cannot run, a row firing), kept so the cell plates drawn
+## AFTER them can take the same tint: a plate is opaque, and a wash laid under it never shows through.
+var _plate_washes: Array[Color] = []
 ## Stamped the same way: the Event Trace hit-count lens (View > Row Hit Counts, ships OFF).
 ## While false NOTHING below is drawn and the gutter paints exactly as it always has.
 var show_hit_counts: bool = false
@@ -1028,25 +1035,33 @@ func draw_row(control: CanvasItem, layout: Dictionary, row_data: EventRowData, f
 		# verb_row_tint_strength - read it back rather than keeping a second literal here that could
 		# drift out of step with the one the caption band is derived from.
 		control.draw_rect(row_fill_rect, row_data.custom_color, true)
+	# Whether the cells of this sheet sit on a pale ground, where a state wash has to be deeper to be seen at all.
+	var stated: bool = not row_data.error_message.is_empty() or row_data.firing or row_data.firing_intensity > 0.0 \
+		or (row_data.attention_severe and not row_data.attention_note.is_empty())
+	var pale_ground: bool = stated and _wash().is_pale_ground(event_style)
+	_plate_washes.clear()
 	if not row_data.error_message.is_empty():
 		# Error → row deep-link: a red wash over the offending row and its number in red in the margin
 		# (the message shows in the row tooltip). The red is the theme's error colour.
 		var error_ink: Color = reading_style.error_stripe_color
-		control.draw_rect(row_fill_rect, Color(error_ink.r, error_ink.g, error_ink.b, ERROR_WASH_ALPHA), true)
+		control.draw_rect(row_fill_rect, _wash().wash_color(error_ink, ERROR_WASH_ALPHA, pale_ground), true)
+		_plate_washes.append(_wash().wash_color(error_ink, ERROR_WASH_ALPHA, pale_ground))
 	elif row_data.attention_severe and not row_data.attention_note.is_empty():
 		# The quiet RED state: a finding that says the line cannot run. The same wash an error mark
 		# wears and the number in red in the margin, and still nothing drawn inside the row - the
 		# sentence is the help strip's and the Doctor's. Drawn over the selection fill below like the
 		# amber one, so selecting the row does not wash it away.
 		var severe_red: Color = reading_style.error_stripe_color
-		control.draw_rect(row_fill_rect, Color(severe_red.r, severe_red.g, severe_red.b, 0.10), true)
+		control.draw_rect(row_fill_rect, _wash().wash_color(severe_red, CANNOT_RUN_WASH_ALPHA, pale_ground), true)
+		_plate_washes.append(_wash().wash_color(severe_red, CANNOT_RUN_WASH_ALPHA, pale_ground))
 	if row_data.firing or row_data.firing_intensity > 0.0:
 		# Live event trace: a cyan wash on events firing right now (debug run) and the number in the
 		# margin in the same cyan, PULSING - the intensity decays after each fire so a one-shot reads
 		# as a fading flash while a sustained fire holds full glow (a bare firing flag paints at full).
 		var pulse: float = maxf(row_data.firing_intensity, 1.0 if row_data.firing and row_data.firing_intensity <= 0.0 else 0.0)
 		var firing_stripe: Color = reading_style.firing_stripe_color
-		control.draw_rect(row_fill_rect, Color(firing_stripe.r, firing_stripe.g, firing_stripe.b, FIRING_WASH_ALPHA * pulse), true)
+		control.draw_rect(row_fill_rect, _wash().wash_color(firing_stripe, FIRING_WASH_ALPHA * pulse, pale_ground), true)
+		_plate_washes.append(_wash().wash_color(firing_stripe, FIRING_WASH_ALPHA * pulse, pale_ground))
 	# A theme that marks a selected event by its gutter and frame alone (selection_as_outline) washes
 	# nothing over the lanes: the filled gutter below and the frame drawn over the card say it.
 	var outline_only: bool = row_data.row_type == EventRowData.RowType.EVENT and event_style != null \
@@ -1602,6 +1617,7 @@ func draw_cell_line(control: CanvasItem, row_data: EventRowData, lane: String, r
 	var event_style: EventSheetEventStyle = editor_style.get_event_style() if editor_style != null else null
 	var reading_style: EventSheetReadingStyle = editor_style.get_reading_style() if editor_style != null \
 		else _fallback_reading_style()
+	_plate_washes.clear()
 	var lane_color: Color = EventSheetPalette.COLOR_LANE_ACTIONS if lane == "action" else EventSheetPalette.COLOR_LANE_CONDITIONS
 	if event_style != null:
 		lane_color = event_style.action_lane_color if lane == "action" else event_style.condition_lane_color
@@ -2629,7 +2645,15 @@ func _draw_chip_span(control: CanvasItem, span: EventSheetSemanticSpan, metadata
 	# Flat event-sheet/GDevelop-style cell with softly rounded corners (the radius is the
 	# theme's cell_corner_radius token; 0 = the classic square cell).
 	var bg: Color = metadata.get("chip_bg", _fallback_reading_style().default_chip_plate_color)
+	if not _plate_washes.is_empty():
+		bg = _wash().under_washes(bg, _plate_washes)
 	_draw_rounded_rect(control, span.rect, bg, cell_radius, cell_radius, cell_radius, cell_radius)
+
+
+static func _wash() -> Object:
+	if _wash_helper == null:
+		_wash_helper = load("res://addons/eventsheet/editor/state_wash.gd")
+	return _wash_helper
 
 
 ## Whether an event shows its add door under one lane: while the pointer is on the event, while it is
@@ -2761,6 +2785,8 @@ func _draw_block_cell(control: CanvasItem, rect: Rect2, metadata: Dictionary) ->
 		control.draw_rect(rect, CODE_CELL_BG, true)
 		return
 	var bg: Color = metadata.get("chip_bg", _fallback_reading_style().default_chip_plate_color)
+	if not _plate_washes.is_empty():
+		bg = _wash().under_washes(bg, _plate_washes)
 	control.draw_rect(rect, bg, true)
 
 

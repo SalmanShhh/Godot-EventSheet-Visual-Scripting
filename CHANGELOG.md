@@ -15,6 +15,11 @@ A scene saved by the editor names each script it uses with a uid before the path
 ### Fixed: sheets that named a file moved twice in one moment follow it to its last place
 
 When two files in the FileSystem dock were moved one after the other in the same moment - a file renamed from A to B and then from B to C - the project is read once afterwards, and a sheet file that named A was respelled to B, a path nothing is at any more. The first move now carries on to where the file ended up, so such a sheet names C; sheets that named B follow too.
+
+### Fixed: a firing, flagged or cannot-run row reads over white cells in the light theme
+
+With the coloured bars gone, a row that is firing while the game runs, a row that is flagged and a row that cannot run are told by a wash and a coloured number. In a light sheet the cells are opaque white plates painted after the wash, so only the gaps between cells changed and the row was easy to miss. The cell plates now take the same wash, and on a pale sheet the wash is drawn from a deeper hue at a stronger strength, so the three states read over white as plainly as they do on a dark sheet; every word keeps at least 4.5 to 1 against the washed cell. No bar, outline or edge mark comes back, and the dark sheets keep their strengths (their plates take the tint too, so a firing row reads as one block there as well).
+
 ### Fixed: the Start window's Open and Close buttons stay in reach at its smallest size
 
 Made as small as it goes (760 by 420, or 1140 by 630 on a 150 percent display), the Start window in Spanish, French or Russian asked its columns for more height than the window has, so the "this entry" strip, the Show-this-page box and the Close and Open buttons were pushed past the bottom edge, out of reach of the mouse and the keyboard. The columns now scroll inside the window, so the strip and the buttons are always in view. Checked in the real editor, dark and light, in English and the eight shipped translations, at 760 by 420, 900 by 520, 1000 by 560 and the default size, and on a 1366 by 768 screen at 150 percent.
