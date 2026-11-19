@@ -851,3 +851,38 @@ func _open_activated_finding() -> void:
 	_dock._navigate.open_or_focus(path)
 	_doctor_window.hide()
 	_dock._set_status(EventSheetL10n.translate("Opened %s from the Project Doctor.") % path.get_file())
+	var line: int = reading_line_of(item.get_metadata(1) as Dictionary)
+	if line > 0:
+		_show_script_line(path, line)
+
+
+## The line of its script a Reading finding is about, 0 for any other finding and for one that counts lines instead of
+## naming one. The Reading section files each of its lines under the id "reading-line" with "path:line" as its subject.
+static func reading_line_of(finding: Dictionary) -> int:
+	if str(finding.get("check", "")) != "reading-line":
+		return 0
+	var subject: String = str(finding.get("subject", ""))
+	var colon: int = subject.rfind(":")
+	if colon < 0 or not subject.substr(colon + 1).is_valid_int():
+		return 0
+	return maxi(int(subject.substr(colon + 1)), 0)
+
+
+## Selects, in the sheet just opened, the row that holds the script's `line`: the same lookup an error in the running
+## game uses (the sheet's source map says which row wrote each line, most specific first), and the same way of reaching
+## a row inside a folded block (`reveal_resource` unfolds what holds it). A coroutine: the sheet may still be opening
+## on a worker.
+func _show_script_line(path: String, line: int) -> void:
+	while _dock._sheet_io.get("_open_job") != null:
+		await _dock.get_tree().process_frame
+	var sheet: EventSheetResource = _dock._current_sheet
+	var view: EventSheetViewport = _dock._active_view()
+	if sheet == null or view == null or _dock._current_sheet_path != path:
+		return
+	var mapped: Dictionary = EventSheetRuntimeErrorLocator.source_map_for(sheet, bool(_dock._dirty))
+	if bool(mapped.get("stale", false)):
+		return
+	for entry: Variant in EventSheetLineRowMapper.entries_for_line(mapped.get("map", []), line):
+		var resource: Resource = instance_from_id(int(str((entry as Dictionary).get("uid", "0")))) as Resource
+		if resource != null and (view.select_resource(resource) or view.reveal_resource(resource)):
+			return
