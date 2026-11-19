@@ -12,6 +12,10 @@ The card that opens when you rest the pointer on an exported variable was a dark
 
 Right-clicking a hand-written call such as `$Enemy.take_damage(25.0)` is meant to offer "Convert to Enemy ▸ Take Damage" when the call matches one of your project's actions, but it never did for a class that lives in a scene: the action it would convert to carries one extra "On node" field (the receiver), so its field count never equalled the call's argument count and the match was always refused. The offer now counts the arguments without that receiver field, and converting fills "On node" with the receiver the call already had and the other fields with its arguments, so the row writes exactly the line it replaced. The matching rules are unchanged: one candidate or none, a plain reference as the receiver, and the argument count must agree. The guide's picture of this menu is retaken from a real right click on the action cell.
 
+### Fixed: the Doctor window marks a new finding with one dot, and no coloured bar
+
+Every finding in the "Check the project" window, and each severity group's own line, wore a coloured bar down its left edge, and the dot that said a line was new sat on top of the first letter of the section word beside it. The bar is gone. A line that was not here last time leads with one small dot in the accent colour, drawn against the side of its own column with clear space before the section word; a line you have already seen leads with nothing, and its words start in exactly the same place, so marking the page as read does not move any text. How serious a finding is stays with its group heading and the heading's colour. The mark is still drawn, not a control, so a large project's page stays as light as before.
+
 ### Fixed: renaming a sheet's file leaves nothing of the old name behind
 
 Four things the first rename work left over now follow the rename in the same moment the tab does.

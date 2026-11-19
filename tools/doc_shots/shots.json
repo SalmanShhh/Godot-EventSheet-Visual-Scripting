@@ -8051,7 +8051,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "9fa4fcaae988c5187c90c5ef722805274a98afc42ab77dce17db0b21de70d0aa"
+				"png": "35322c59577c9ee8961fc821d1a188787d1286331fe35b1f34b3f1f2e86da5bc"
 			},
 			"name": "collisions-doctor-report",
 			"steps": [
@@ -8093,7 +8093,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "76a9d88a9f20939d545802433f0562ea99e1a1cf5c13357581de52c940c7b3e1"
+				"png": "eb600ce1e96d1cca021168858d0bebadd6c66511bd863ba74094a97df62e693d"
 			},
 			"name": "doctor-reading-page",
 			"steps": [
@@ -8133,7 +8133,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "2aae00562570567629849a89c1e647f3f3a7aa88ebf5e446ff1d3c6ddc6944d4"
+				"png": "47fcab0ecec647780249784e4dcfec89ff70aa78a5e04998781a0fb455e1491a"
 			},
 			"name": "doctor-tidiness-findings",
 			"steps": [
@@ -8173,7 +8173,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "201f92f0518a2439f31f56c754363d6048305b2a874c9420067ac1245364d5d4"
+				"png": "84b6a0006a8bb92c8e5bdf2355ee56b5c86032cd54e57b9bb22d781d895ce133"
 			},
 			"name": "migration-doctor-inbox",
 			"steps": [
@@ -8215,7 +8215,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "b73131c09ff7b49bc763ecb4cd097202b3c477f0f3200010efadfdc78830c821"
+				"png": "8ed011ad74e6f8d040ee4a61befac1d7b35edc8f5ce32483ef0ed479b66c4624"
 			},
 			"name": "scenes-trust-inbox",
 			"steps": [
@@ -8257,7 +8257,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "85edb0686f9ecbf61d1cc4d0cf920731f4c4b377190973ca498e86e8f687153f"
+				"png": "e8a3775d4f73d3631d37e172eeaead986010eeda8b7fa72dcd41ec380af51ed8"
 			},
 			"name": "watch-never-stops",
 			"steps": [

@@ -30,7 +30,7 @@ static func clear_doctor_findings() -> void:
 #
 # The page itself is decided by EventSheetDoctorInbox, which is pure and headless, so the ordering
 # and the new-since-last-look mark are pinned by tests rather than by looking at the window. This
-# class only draws it: a finding is a coloured edge plus one sentence, a double-click opens the sheet
+# class only draws it: a finding is one sentence, a double-click opens the sheet
 # it is about, and the selected finding's fixes open as rows under it - the only door a fix has.
 #
 # The dock keeps a thin _open_project_doctor() delegate for the Tools menu; this class parents its
@@ -196,11 +196,11 @@ func _build() -> void:
 	_dock.add_child(_doctor_window)
 
 
-## The inbox's four columns: the mark (a severity edge and a new dot, read before a word is), the
+## The inbox's four columns: the mark (a dot on a line that is new, read before a word is), the
 ## section, where, and the finding. Static so a preview draws the same tree the window does.
 static func inbox_tree() -> Tree:
 	return EventSheetPopupUI.table(PackedStringArray(["", EventSheetL10n.translate("Section"),
-		EventSheetL10n.translate("Where"), EventSheetL10n.translate("Finding")]), 0.0, {0: 26.0, 1: 190.0, 2: 170.0})
+		EventSheetL10n.translate("Where"), EventSheetL10n.translate("Finding")]), 0.0, {0: 42.0, 1: 190.0, 2: 170.0})
 
 
 static func _button(text: String, pressed: Callable) -> Button:
@@ -501,8 +501,7 @@ func _show_finding_row(finding: Dictionary) -> void:
 
 
 ## The front page as rows of a Tree: one branch per severity, worst first, each finding under it with
-## its section, its file and its words. Every line leads with its mark: an edge in the severity's
-## colour, and a dot on the ones that were not here last time.
+## its section, its file and its words. A line that was not here last time leads with a dot.
 ##
 ## Static and given its tree for the same reason `fill` is: the window is not the only thing that can
 ## draw a page, and there is exactly one place that decides what a line looks like.
@@ -543,20 +542,35 @@ static func fill_inbox(tree: Tree, root_item: TreeItem, page: Array[Dictionary])
 			EventSheetL10n.translate("Double-click to open this sheet.")])
 
 
-## The mark a line leads with: a severity edge down the left of the cell and, when the line is new
-## since the last look, the accent dot beside it. Drawn rather than typed, so it reads before a word.
+## The mark a line leads with: nothing when the line was here last time, and one small accent dot
+## when it is new since the last look. Drawn rather than typed, so it reads before a word, and drawn
+## inside its own column so a read line's words start exactly where an unread line's do. There is no
+## edge and no tint: the branch a line sits under already says how serious it is.
 static func _mark(tree: Tree, item: TreeItem, severity: String, is_new: bool) -> void:
-	var edge: Color = EventSheetPopupUI.tone_color(severity)
 	item.set_cell_mode(0, TreeItem.CELL_MODE_CUSTOM)
 	item.set_metadata(3, is_new)
 	item.set_tooltip_text(0, EventSheetL10n.translate("New since you last looked.") if is_new
 		else EventSheetDoctorInbox.severity_label(severity))
+	if not is_new:
+		return
 	item.set_custom_draw_callback(0, func(_drawn: TreeItem, rect: Rect2) -> void:
-		var width: float = EventSheetPalette.scaled_f(3.0)
-		tree.draw_rect(Rect2(rect.position, Vector2(width, rect.size.y)), edge)
-		if is_new:
-			tree.draw_circle(rect.position + Vector2(width + EventSheetPalette.scaled_f(9.0), rect.size.y / 2.0),
-				EventSheetPalette.scaled_f(3.5), EventSheetPopupUI.accent_color()))
+		for shape: Dictionary in mark_shapes(rect, true):
+			tree.draw_circle(shape["center"] as Vector2, float(shape["radius"]), EventSheetPopupUI.accent_color()))
+
+
+## What the mark draws in a cell of `rect`: for a new line one dot, for a read line nothing. The dot
+## sits against the cell's right side, the side next to the section word, with a clear gap on both
+## sides of it, so it lines up down the column whatever depth the row is indented to and never
+## reaches the word. Plain data so a test can pin it without a drawing surface.
+static func mark_shapes(rect: Rect2, is_new: bool) -> Array[Dictionary]:
+	var shapes: Array[Dictionary] = []
+	if not is_new:
+		return shapes
+	var radius: float = EventSheetPalette.scaled_f(3.0)
+	var gap: float = EventSheetPalette.scaled_f(6.0)
+	shapes.append({"kind": "circle", "radius": radius,
+		"center": Vector2(rect.end.x - gap - radius, rect.position.y + rect.size.y / 2.0)})
+	return shapes
 
 
 ## A finding about one row names it the way the margin, the bookmarks and the Find results name it -
