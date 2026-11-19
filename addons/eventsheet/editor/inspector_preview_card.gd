@@ -20,18 +20,20 @@ const CAPTION_CONTRAST: float = 5.5
 var _rows: VBoxContainer = null
 var _sentence_label: Label = null
 var _caption: Label = null
+## The fill the card's words are drawn on (their ink is chosen against it).
+var _ground: Color = Color.BLACK
+## The Inspector's note line under the field, when the preview has one (re-inked when the fill changes).
+var _note: Label = null
 
 
 func _init() -> void:
 	var panel_box: StyleBoxFlat = EventSheetPopupUI.inset_panel_stylebox()
 	add_theme_stylebox_override("panel", panel_box)
-	var ground: Color = Color(panel_box.bg_color, 1.0)
 	var column := VBoxContainer.new()
 	add_child(column)
 	_caption = Label.new()
 	_caption.text = EventSheetL10n.translate("Inspector preview")
 	_caption.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
-	_caption.add_theme_color_override("font_color", reading_ink(EventSheetLookStyle.quiet(), ground, CAPTION_CONTRAST))
 	column.add_child(_caption)
 	# A wide preview (a table of many columns) is drawn smaller to fit the card, down to a floor where it is
 	# still readable; only a table wider than that scrolls sideways. Neither widens the window.
@@ -45,8 +47,28 @@ func _init() -> void:
 	_sentence_label = Label.new()
 	_sentence_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_sentence_label.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
-	_sentence_label.add_theme_color_override("font_color", reading_ink(EventSheetLookStyle.ink(), ground))
 	column.add_child(_sentence_label)
+	_ink_for(Color(panel_box.bg_color, 1.0))
+
+
+## The caption and the plain sentence in ink that keeps its contrast on `ground`.
+func _ink_for(ground: Color) -> void:
+	_ground = ground
+	if _note != null and is_instance_valid(_note):
+		_note.add_theme_color_override("font_color", reading_ink(EventSheetLookStyle.quiet(), ground))
+	_caption.add_theme_color_override("font_color", reading_ink(EventSheetLookStyle.quiet(), ground, CAPTION_CONTRAST))
+	_sentence_label.add_theme_color_override("font_color", reading_ink(EventSheetLookStyle.ink(), ground))
+
+
+## Lays the card on `ground` with no border of its own, for a card that sits inside a panel that already
+## has one (the hover card): the card takes the panel's fill, so its words are read against the colour
+## they are really drawn on, in the light editor theme as in the dark one.
+func lay_on(ground: Color) -> void:
+	var flat: StyleBoxFlat = StyleBoxFlat.new()
+	flat.bg_color = Color(ground, 1.0)
+	flat.set_corner_radius_all(4)
+	add_theme_stylebox_override("panel", flat)
+	_ink_for(Color(ground, 1.0))
 
 
 ## Draws its one child at a scale that makes it fit the width it is given, never below `FLOOR_SCALE`. Its own
@@ -172,7 +194,12 @@ func update_preview(variable_name: String, type_name: String, default_text: Stri
 	# The words about the field sit under it, as the Inspector draws them.
 	var info_text: String = str(attributes.get("info", ""))
 	if not info_text.is_empty():
-		_rows.add_child(EventSheetDrawerWidgets.build_info_panel(info_text))
+		var note: Control = EventSheetDrawerWidgets.build_info_panel(info_text)
+		# The Inspector's own quiet ink, moved only as far as keeps it readable on the card's fill.
+		if note is Label:
+			_note = note as Label
+			_note.add_theme_color_override("font_color", reading_ink(EventSheetLookStyle.quiet(), _ground))
+		_rows.add_child(note)
 	if bool(attributes.get("required", false)):
 		# Mocked in its shown state (target-less) - the point is what the warning looks like.
 		_rows.add_child(EventSheetDrawerWidgets.RequiredBadge.new())

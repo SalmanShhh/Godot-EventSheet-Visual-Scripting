@@ -70,14 +70,22 @@ func build_custom_tooltip(for_text: String) -> Object:
 ## identical card through EventSheets.build_inspector_preview.
 static func build_inspector_preview_tooltip(payload: Dictionary) -> Control:
 	var panel := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.11, 0.11, 0.13, 0.98)
-	style.border_color = Color(1.0, 1.0, 1.0, 0.16)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
+	# The editor's own tooltip panel, the way the sheet's head card takes it, so the card is pale in the
+	# light theme and dark in the dark one; outside the editor the dark panel stands.
+	var style: StyleBoxFlat = null
+	var theme: Theme = EventSheetPopupUI.editor_theme()
+	if theme != null and theme.has_stylebox("panel", "TooltipPanel"):
+		style = theme.get_stylebox("panel", "TooltipPanel").duplicate() as StyleBoxFlat
+	if style == null:
+		style = StyleBoxFlat.new()
+		style.bg_color = Color(0.11, 0.11, 0.13, 0.98)
+		style.border_color = Color(1.0, 1.0, 1.0, 0.16)
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(4)
 	style.set_content_margin_all(6.0)
 	panel.add_theme_stylebox_override("panel", style)
 	var card: Variant = ReadingDoors.inspector_preview_card().new()
+	card.lay_on(style.bg_color)
 	card.custom_minimum_size = Vector2(320.0, 0.0)
 	card.update_preview(
 		str(payload.get("name", "")),

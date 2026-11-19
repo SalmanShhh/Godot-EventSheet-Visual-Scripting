@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the hover card of an exported variable is readable in the light editor theme
+
+The card that opens when you rest the pointer on an exported variable was a dark panel in every theme, with the words inside it inked for the paler fill the card itself takes from the editor, so in the light theme the small caption and the plain sentence were grey on dark grey and the caption all but disappeared. The card now sits on the editor's own tooltip panel, as the sheet's head card does, and takes that panel's fill, so it is pale in the light theme and dark in the dark one; the note line under the field is moved just far enough from the Inspector's quiet grey to keep the same contrast as the sentence (about 4.6 to 1 in both themes, where it was 4.0 and 3.2). Nothing was cut off: the line at the top of the old light picture was the caption, inked too close to its ground to see. The guide's picture of the card is retaken.
+
 ### Fixed: "Convert to <your action>" is offered for a call on a scene class
 
 Right-clicking a hand-written call such as `$Enemy.take_damage(25.0)` is meant to offer "Convert to Enemy ▸ Take Damage" when the call matches one of your project's actions, but it never did for a class that lives in a scene: the action it would convert to carries one extra "On node" field (the receiver), so its field count never equalled the call's argument count and the match was always refused. The offer now counts the arguments without that receiver field, and converting fills "On node" with the receiver the call already had and the other fields with its arguments, so the row writes exactly the line it replaced. The matching rules are unchanged: one candidate or none, a plain reference as the receiver, and the argument count must agree. The guide's picture of this menu is retaken from a real right click on the action cell.

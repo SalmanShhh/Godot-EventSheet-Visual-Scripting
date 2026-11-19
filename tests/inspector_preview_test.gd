@@ -14,6 +14,7 @@ const SUPPORT := preload("res://tests/support.gd")
 static func run() -> bool:
 	var ok: bool = true
 	ok = _test_the_hover_marker_is_never_shown_as_text() and ok
+	ok = _test_the_hover_card_reads_on_any_fill() and ok
 	ok = _pin("plain exported int", "int", {}, true, false,
 		"A whole number.") and ok
 	ok = _pin("range + progress bar + grouping", "int",
@@ -156,4 +157,33 @@ static func _test_the_hover_marker_is_never_shown_as_text() -> bool:
 		if answer is Node:
 			(answer as Node).free()
 	viewport.free()
+	return ok
+
+
+## The hover card lays itself on the fill of the panel it sits in, so every word of it is read against the
+## colour it is drawn on - a pale panel in the light editor theme as much as a dark one in the dark theme -
+## and no line of it is clipped by the card.
+static func _test_the_hover_card_reads_on_any_fill() -> bool:
+	var ok: bool = true
+	for ground: Color in [Color(1.0, 1.0, 1.0), Color(0.93, 0.93, 0.95), Color(0.1, 0.1, 0.12), Color.BLACK]:
+		var card: EventSheetInspectorPreviewCard = EventSheetInspectorPreviewCard.new()
+		card.custom_minimum_size = Vector2(320.0, 0.0)
+		card.update_preview("health", "int", "100", {"range": {"min": "0", "max": "100"}, "drawer": "progress_bar",
+			"group": "Combat", "info": "Shared by every fighter - edits affect all of them."}, true, false)
+		card.lay_on(ground)
+		card.fit_text_to(300.0)
+		var seen: int = 0
+		for node: Node in card.find_children("*", "Label", true, false):
+			var label: Label = node as Label
+			if not label.has_theme_color_override("font_color"):
+				continue
+			seen += 1
+			var ratio: float = EventSheetLookStyle.contrast_ratio(label.get_theme_color("font_color"), ground)
+			ok = SUPPORT.check("inspector_preview_test", "'%s' keeps its contrast on %s (%.1f)" % [label.text.left(18), ground.to_html(), ratio],
+				ratio >= EventSheetInspectorPreviewCard.READABLE_CONTRAST, true) and ok
+		ok = SUPPORT.check("inspector_preview_test", "the card's own words are all inked for the fill %s" % ground.to_html(), seen >= 3, true) and ok
+		var panel: StyleBoxFlat = card.get_theme_stylebox("panel") as StyleBoxFlat
+		ok = SUPPORT.check("inspector_preview_test", "the card takes the panel's fill %s" % ground.to_html(), panel.bg_color, Color(ground, 1.0)) and ok
+		ok = SUPPORT.check("inspector_preview_test", "and draws no border of its own", panel.border_width_left, 0) and ok
+		card.free()
 	return ok
