@@ -89,7 +89,7 @@ Everything else is in the **[documentation index](docs/README.md)** and inside t
 - **Any script opens as a sheet** - handlers as triggers, input branches as events, signal wiring as triggers; every reading is gated by saving back the same bytes.
 - **2,332 native ACEs** (111 triggers) across scenes, spawning, tweens, audio, cameras, lights, shaders, collisions, raycasts, files, multiplayer, UI, particles, tilemaps and input.
 - **140 behavior packs**, all authored as event sheets: movement, AI, combat, narrative, drawing, lighting, shaders. See [docs/Addons/](docs/Addons/README.md).
-- **Your own code is vocabulary** - the picker lists your classes and autoloads as actions, conditions and expressions with zero setup.
+- **Your own code is vocabulary** - the picker lists your classes and autoloads as actions, conditions and expressions with zero setup, and a call you wrote by hand (`$Enemy.take_damage(25.0)`) offers to become the matching row from the right-click menu.
 - **Mistakes caught as you type** - type checking with Godot's own analyzer, autocomplete that follows the code, and checks for the errors Godot only reports when the game runs.
 
   <picture>
@@ -97,7 +97,7 @@ Everything else is in the **[documentation index](docs/README.md)** and inside t
 	<img alt="The parameters window with a string typed where a number belongs: the exact span is underlined and a plain sentence plus Godot's own words explain why it would be refused." src="docs/previews/editor-type-check.png">
   </picture>
 
-- **Tooling** - Project Doctor (dock, CLI, CI), live debugging, Save Studio, Translation Studio (nine editor languages), the Manual inside the editor, a public [`EventSheets` API](docs/GUIDE-BUILDING-ON-EVENTSHEETS.md) and an opt-in MCP server.
+- **Tooling** - Project Doctor (dock, CLI, CI), live debugging, Tools > Run Tests for your test sheets (they run in a second copy of Godot and report back in the same window), Save Studio, Translation Studio (nine editor languages), the Manual inside the editor, a public [`EventSheets` API](docs/GUIDE-BUILDING-ON-EVENTSHEETS.md) and an opt-in MCP server.
 - **Updating never rewrites your sheets** - a superseded row keeps working forever and carries the address of its replacement. ([guide](docs/GUIDE-UPDATING-AND-REFACTORING.md))
 
 ## Current status
@@ -113,7 +113,7 @@ The latest tagged release is **`v0.20.0` - "Feel Native"** ([release notes](http
 - **The everyday object rows**, a correct on-screen check, and Godot groups in place of marks.
 - **Fewer panels.** The plugin panels that repeated Godot's own docks are gone, and a Doctor check warns when a behaviour sits under the wrong kind of node (with an optional "Acts on").
 - **More of your code opens as rows**, plus stacks, queues and lists of instances, Godot's own drawing calls as actions, and your own functions editing like events.
-- **Saving never costs you a script.** A sheet saved as a resource writes its script beside it, and the plugin now writes over a script only when it can prove it wrote that script for the same sheet; one you wrote, or one another sheet made, is left exactly as it was and one sentence says what to do. The same rule holds for `EventSheets.compile()`, the export pass and the MCP compile tool.
+- **Saving never costs you a script.** A sheet saved as a resource writes its script beside it, and the plugin now writes over a script only when it can prove it wrote that script for the same sheet; one you wrote, or one another sheet made, is left exactly as it was and one sentence says what to do (a script an older version wrote still counts as the plugin's own). The same rule holds for `EventSheets.compile()`, the export pass and the MCP compile tool.
 - **Renaming a file keeps your work.** Rename, move or delete a sheet's file in Godot's FileSystem dock and the open tab follows it with its unsaved edits, its compiled script goes with it, a sheet deleted behind unsaved edits keeps them (a copy goes into the backups), and what the editor remembered about it follows too: folds, locks, the look you chose, the sheets it includes. Your own scripts are never rewritten; the editor tells you how many still name the old path.
 - **Safer rewrites.** Replace in Project lists what it will change, leaves your own scripts alone by default and can be put back whole; Sheet > Tidy This Script shows every line before it writes an older script the way the editor writes it today.
 - **Two new examples** (rebind the controls, save options and a quick save), a Juice Player that plays over a 3D view, and a bug form, a documentation form and a Report an Issue link that fill in your plugin and Godot versions for you.
