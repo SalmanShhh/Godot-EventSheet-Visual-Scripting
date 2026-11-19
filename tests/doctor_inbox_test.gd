@@ -28,6 +28,7 @@ static func run() -> bool:
 	ok = _test_what_makes_a_finding_the_same_finding() and ok
 	ok = _test_the_sections() and ok
 	ok = _test_the_summary_line() and ok
+	ok = _test_the_search_rule() and ok
 	ok = _test_the_reading_position() and ok
 	return ok
 
@@ -110,10 +111,10 @@ static func _test_the_summary_line() -> bool:
 		EventSheetDoctorInbox.triage(_findings(), PackedStringArray()))
 	var ok: bool = _check("a page with something new says how much",
 		EventSheetDoctorInbox.summary_line(EventSheetDoctorInbox.triage(_findings(), PackedStringArray())),
-		"Project Doctor: 2 error(s), 2 warning(s), 1 note(s). 5 new since you last looked.")
+		"Project Doctor: 2 errors, 2 warnings, 1 note. 5 new since you last looked.")
 	ok = _check("a page a reader has already read says only what it holds",
 		EventSheetDoctorInbox.summary_line(EventSheetDoctorInbox.triage(_findings(), seen)),
-		"Project Doctor: 2 error(s), 2 warning(s), 1 note(s).") and ok
+		"Project Doctor: 2 errors, 2 warnings, 1 note.") and ok
 	return ok
 
 
@@ -170,3 +171,18 @@ static func _check(label: String, actual: Variant, expected: Variant) -> bool:
 	print("  expected: ", expected)
 	print("  actual:   ", actual)
 	return false
+
+
+static func _test_the_search_rule() -> bool:
+	var words: PackedStringArray = EventSheetDoctorInbox.filter_words("  Reading   LINE ")
+	var ok: bool = _check("typed words are lower-cased and split on spaces", words, PackedStringArray(["reading", "line"]))
+	ok = _check("no words shows everything", EventSheetDoctorInbox.shown_by(PackedStringArray(), "a", "b", "c"), true) and ok
+	ok = _check("every word must be found, in any order and any case",
+		EventSheetDoctorInbox.shown_by(words, "Reading line", "enemy.gd", "line 4: var hp"), true) and ok
+	ok = _check("a word that is nowhere hides the row",
+		EventSheetDoctorInbox.shown_by(PackedStringArray(["reading", "zebra"]), "Reading line", "enemy.gd", "line 4"), false) and ok
+	ok = _check("section, where and wording are each searched",
+		[EventSheetDoctorInbox.shown_by(PackedStringArray(["enemy"]), "Files", "enemy.gd", "x"),
+		EventSheetDoctorInbox.shown_by(PackedStringArray(["files"]), "Files", "enemy.gd", "x"),
+		EventSheetDoctorInbox.shown_by(PackedStringArray(["hello"]), "Files", "enemy.gd", "Hello there")], [true, true, true]) and ok
+	return ok

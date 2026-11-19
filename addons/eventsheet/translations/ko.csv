@@ -11279,6 +11279,29 @@ The test run ended before it wrote a report. Run the tests from a terminal to se
 Ctrl+Z takes it out again.,Ctrl+Z로 다시 뺄 수 있습니다.
 %d found so far,지금까지 %d개 발견
 the last checks,마지막 검사
+Search the findings,결과 검색
+"Writes down what is on this page, so the next audit marks only what appeared after it. It means the whole page, not only what the search shows.",이 페이지의 내용을 기록해 두어 다음 검사에서는 새로 생긴 것만 표시합니다. 검색 결과만이 아니라 페이지 전체가 대상입니다.
+Showing %d of %d.,%d / %d개 표시 중.
+Project Doctor: %s.,프로젝트 닥터: %s.
+"Interop: scripts in this project: %d, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.",Interop: 이 프로젝트에는 살펴볼 스크립트가 %d개 있지만 측정하려고 열 수 있는 것이 없었습니다. 플러그인을 설치해도 바뀌는 것은 없습니다. 스크립트는 시트로 열기 전까지는 코드입니다.
+"Interop: scripts in this project: %d, measured: %d. Of what they hold, %d%% shows as rows. Installing the plugin changed nothing - a script is code until you open it as a sheet. The score gates nothing; it is there to watch the seam move.","Interop: 이 프로젝트의 스크립트: %d개, 측정됨: %d개. 내용 중 %d%%가 행으로 표시됩니다. 플러그인을 설치해도 바뀌는 것은 없습니다. 스크립트는 시트로 열기 전까지는 코드입니다. 이 점수는 아무것도 막지 않으며 경계가 움직이는 것을 보기 위한 것입니다."
+"%s: %d%% of its lines are drawn in the sheet. Of its functions, %d open as rows of words and %d stay as code blocks.",%s: 줄의 %d%%가 시트에 그려집니다. 함수 중 %d개는 말로 된 행으로 열리고 %d개는 코드 블록으로 남습니다.
+"Read %d of the %d scripts, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.",스크립트 %d / %d개를 경로 순서대로 읽었습니다. 아래 목록은 이 프로젝트의 일부이며 전체가 아닙니다. 항상 같은 스크립트를 읽습니다.
+"%d%% of what was read shows as rows, and every line of it has a name on it. Nothing here stays as code.",읽은 내용의 %d%%가 행으로 표시되며 모든 줄에 이름이 있습니다. 코드로 남는 것은 없습니다.
+%d%% of what was read shows as rows.,읽은 내용의 %d%%가 행으로 표시됩니다.
+"More kinds of line repeat here: %d more, over %d lines in all. The list names the commonest and counts the rest.","이 밖에도 반복되는 줄 종류가 있습니다: %d개 종류, 모두 %d줄. 목록에는 가장 흔한 것을 적고 나머지는 개수만 셉니다."
+"1 line shows as code instead of as a row, for example: %s",1줄이 행이 아니라 코드로 표시됩니다. 예: %s
+"%d lines show as code instead of as rows, all of one kind, for example: %s",%d줄이 행이 아니라 코드로 표시됩니다. 모두 같은 종류입니다. 예: %s
+"1 line stays as code, because no word of the vocabulary claims it yet.",1줄은 아직 어휘의 어떤 말도 맡지 않아서 코드로 남습니다.
+"%d lines stay as code, because no word of the vocabulary claims them yet.",%d줄은 아직 어휘의 어떤 말도 맡지 않아서 코드로 남습니다.
+... and 1 more line like it.,... 비슷한 줄이 1줄 더 있습니다.
+... and %d more lines like it.,... 비슷한 줄이 %d줄 더 있습니다.
+"1 line is of a kind nothing else here repeats. It is counted, not listed: a line said once is meant to stay code.",1줄은 여기서 다른 곳에 반복되지 않는 종류입니다. 나열하지 않고 개수만 셉니다. 한 번만 나오는 줄은 코드로 남기려는 것입니다.
+"%d lines are of kinds nothing else here repeats. They are counted, not listed: a line said once is meant to stay code.",%d줄은 여기서 다른 곳에 반복되지 않는 종류입니다. 나열하지 않고 개수만 셉니다. 한 번만 나오는 줄은 코드로 남기려는 것입니다.
+"1 line inside those runs holds no statement - a note, or the inside of a text block.",그 묶음 안의 1줄에는 실행문이 없습니다. 메모이거나 텍스트 블록의 내용입니다.
+"%d lines inside those runs hold no statement - a note, or the inside of a text block.",그 묶음 안의 %d줄에는 실행문이 없습니다. 메모이거나 텍스트 블록의 내용입니다.
+1 other script calls something it declares.,다른 스크립트 1개가 이 스크립트가 선언한 것을 호출합니다.
+%d other scripts call something it declares.,다른 스크립트 %d개가 이 스크립트가 선언한 것을 호출합니다.
 Your first event,첫 번째 이벤트
 Open your own script as a sheet,내 스크립트를 시트로 열기
 Add a behavior to an object,오브젝트에 비헤이비어 추가하기

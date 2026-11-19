@@ -150,7 +150,7 @@ static func _page_from(sorted: PackedStringArray, read: int, read_lines: int, to
 		CHECK_ID, "head"))
 	if read < sorted.size():
 		findings.append(_note("", EventSheetL10n.translate(
-			"Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.") % [
+			"Read %d of the %d scripts, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.") % [
 			read, sorted.size()], CHECK_ID, "capped"))
 	findings.append_array(_shape_lines(census))
 	findings.append_array(_tail_lines(census))
@@ -165,10 +165,10 @@ static func _head_line(read_lines: int, total_lines: int, stays_code: int) -> St
 		percent = int(floor(100.0 * float(read_lines) / float(total_lines)))
 	if stays_code <= 0:
 		return EventSheetL10n.translate(
-			"%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.") % percent
-	return EventSheetL10n.translate(
-		"%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.") % [
-		percent, stays_code]
+			"%d%% of what was read shows as rows, and every line of it has a name on it. Nothing here stays as code.") % percent
+	return EventSheetL10n.translate("%d%% of what was read shows as rows.") % percent + " " + EventSheetL10n.counted(
+		"1 line stays as code, because no word of the vocabulary claims it yet.",
+		"%d lines stay as code, because no word of the vocabulary claims them yet.", stays_code)
 
 
 ## One finding per named shape, each followed by a few of its own lines as doors. A door carries the
@@ -185,22 +185,26 @@ static func _shape_lines(census: Dictionary) -> Array[Dictionary]:
 		var held: Array = entry.get("lines", []) as Array
 		if index >= SHAPES_LISTED:
 			findings.append(_note("", EventSheetL10n.translate(
-				"%d more shape(s) are said more than once here, over %d line(s). The ledger names the commonest and counts the rest.") % [
+				"More kinds of line repeat here: %d more, over %d lines in all. The list names the commonest and counts the rest.") % [
 				shapes.size() - SHAPES_LISTED, all_lines - listed_lines], CHECK_TAIL, "more-shapes"))
 			break
 		listed_lines += held.size()
 		var first: Dictionary = held[0] as Dictionary
-		findings.append(_note(str(first.get("path", "")), EventSheetL10n.translate(
-			"%d line(s) are the same shape: %s") % [held.size(), str(entry.get("shape", ""))],
-			CHECK_SHAPE, str(entry.get("shape", ""))))
+		var example: String = str(first.get("text", "")).strip_edges()
+		var shape_words: String
+		if held.size() == 1:
+			shape_words = EventSheetL10n.translate("1 line shows as code instead of as a row, for example: %s") % example
+		else:
+			shape_words = EventSheetL10n.translate("%d lines show as code instead of as rows, all of one kind, for example: %s") % [held.size(), example]
+		findings.append(_note(str(first.get("path", "")), shape_words, CHECK_SHAPE, str(entry.get("shape", ""))))
 		for line_index: int in range(mini(LINES_PER_SHAPE, held.size())):
 			var line: Dictionary = held[line_index] as Dictionary
 			findings.append(_note(str(line.get("path", "")), EventSheetL10n.translate("line %d: %s") % [
 				int(line.get("number", 0)), str(line.get("text", "")).strip_edges()],
 				CHECK_LINE, "%s:%d" % [str(line.get("path", "")), int(line.get("number", 0))]))
 		if held.size() > LINES_PER_SHAPE:
-			findings.append(_note(str(first.get("path", "")), EventSheetL10n.translate(
-				"... and %d more line(s) of the same shape.") % (held.size() - LINES_PER_SHAPE),
+			findings.append(_note(str(first.get("path", "")), EventSheetL10n.counted(
+				"... and 1 more line like it.", "... and %d more lines like it.", held.size() - LINES_PER_SHAPE),
 				CHECK_LINE, "%s+" % str(entry.get("shape", ""))))
 	return findings
 
@@ -211,13 +215,15 @@ static func _tail_lines(census: Dictionary) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
 	var one_offs: int = (census.get("one_offs", []) as Array).size()
 	if one_offs > 0:
-		findings.append(_note("", EventSheetL10n.translate(
-			"%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.") % one_offs,
+		findings.append(_note("", EventSheetL10n.counted(
+			"1 line is of a kind nothing else here repeats. It is counted, not listed: a line said once is meant to stay code.",
+			"%d lines are of kinds nothing else here repeats. They are counted, not listed: a line said once is meant to stay code.", one_offs),
 			CHECK_TAIL, "one-offs"))
 	var notes: int = int(census.get("notes", 0))
 	if notes > 0:
-		findings.append(_note("", EventSheetL10n.translate(
-			"%d line(s) inside those runs hold no statement to shape - a note, or the inside of a text block.") % notes,
+		findings.append(_note("", EventSheetL10n.counted(
+			"1 line inside those runs holds no statement - a note, or the inside of a text block.",
+			"%d lines inside those runs hold no statement - a note, or the inside of a text block.", notes),
 			CHECK_TAIL, "notes"))
 	return findings
 

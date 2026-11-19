@@ -11279,6 +11279,29 @@ The test run ended before it wrote a report. Run the tests from a terminal to se
 Ctrl+Z takes it out again.,Ctrl+Z снова уберёт это.
 %d found so far,найдено: %d
 the last checks,последние проверки
+Search the findings,Поиск по результатам
+"Writes down what is on this page, so the next audit marks only what appeared after it. It means the whole page, not only what the search shows.","Запоминает, что есть на этой странице, чтобы следующая проверка отмечала только новое. Имеется в виду вся страница, а не только то, что показывает поиск."
+Showing %d of %d.,Показано %d из %d.
+Project Doctor: %s.,Доктор проекта: %s.
+"Interop: scripts in this project: %d, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.","Interop: в проекте %d скриптов для просмотра, и ни один не удалось открыть для измерения. Установка плагина ничего не изменила - скрипт остаётся кодом, пока вы не откроете его как лист."
+"Interop: scripts in this project: %d, measured: %d. Of what they hold, %d%% shows as rows. Installing the plugin changed nothing - a script is code until you open it as a sheet. The score gates nothing; it is there to watch the seam move.","Interop: скриптов в проекте: %d, измерено: %d. Из их содержимого %d%% показано строками. Установка плагина ничего не изменила - скрипт остаётся кодом, пока вы не откроете его как лист. Оценка ничего не блокирует; она нужна, чтобы видеть, как смещается граница."
+"%s: %d%% of its lines are drawn in the sheet. Of its functions, %d open as rows of words and %d stay as code blocks.","%s: %d%% строк нарисовано в листе. Из функций %d открываются строками из слов, а %d остаются блоками кода."
+"Read %d of the %d scripts, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.","Прочитано %d из %d скриптов в порядке путей. Список ниже - выборка из этого проекта, а не весь проект: каждый раз читаются одни и те же скрипты."
+"%d%% of what was read shows as rows, and every line of it has a name on it. Nothing here stays as code.","%d%% прочитанного показано строками, и у каждой строки есть имя. Кодом здесь ничего не остаётся."
+%d%% of what was read shows as rows.,%d%% прочитанного показано строками.
+"More kinds of line repeat here: %d more, over %d lines in all. The list names the commonest and counts the rest.","Здесь повторяются и другие виды строк: ещё %d, всего %d строк. В списке названы самые частые, остальные только подсчитаны."
+"1 line shows as code instead of as a row, for example: %s","1 строка показана кодом, а не строкой, например: %s"
+"%d lines show as code instead of as rows, all of one kind, for example: %s","%d строк показаны кодом, а не строками, все одного вида, например: %s"
+"1 line stays as code, because no word of the vocabulary claims it yet.","1 строка остаётся кодом, потому что ни одно слово словаря пока её не берёт."
+"%d lines stay as code, because no word of the vocabulary claims them yet.","%d строк остаются кодом, потому что ни одно слово словаря пока их не берёт."
+... and 1 more line like it.,... и ещё 1 такая же строка.
+... and %d more lines like it.,... и ещё %d таких же строк.
+"1 line is of a kind nothing else here repeats. It is counted, not listed: a line said once is meant to stay code.","1 строка такого вида, что больше нигде здесь не повторяется. Она подсчитана, но не перечислена: строка, сказанная один раз, должна остаться кодом."
+"%d lines are of kinds nothing else here repeats. They are counted, not listed: a line said once is meant to stay code.","%d строк такого вида, что больше нигде здесь не повторяются. Они подсчитаны, но не перечислены: строка, сказанная один раз, должна остаться кодом."
+"1 line inside those runs holds no statement - a note, or the inside of a text block.",1 строка внутри этих серий не содержит инструкции - заметка или содержимое текстового блока.
+"%d lines inside those runs hold no statement - a note, or the inside of a text block.",%d строк внутри этих серий не содержат инструкций - заметки или содержимое текстовых блоков.
+1 other script calls something it declares.,"1 другой скрипт вызывает то, что он объявляет."
+%d other scripts call something it declares.,"%d других скриптов вызывают то, что он объявляет."
 Your first event,Ваше первое событие
 Open your own script as a sheet,Откройте свой скрипт как лист
 Add a behavior to an object,Добавьте поведение объекту

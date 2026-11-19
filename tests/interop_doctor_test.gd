@@ -53,7 +53,7 @@ static func run() -> bool:
 		str(findings[0].get("message", "")).contains("changed nothing") if not findings.is_empty() else false,
 		true) and ok
 	ok = _check("and counts the marked file out of the candidates",
-		str(findings[0].get("message", "")).contains("2 script(s)") if not findings.is_empty() else false,
+		str(findings[0].get("message", "")).contains("scripts in this project: 2") if not findings.is_empty() else false,
 		true) and ok
 	ok = _check("every line is advisory - the score gates nothing",
 		_severities(findings), PackedStringArray(["info"])) and ok
@@ -74,7 +74,7 @@ static func run() -> bool:
 		PackedStringArray(["res://tests/fixtures/interop_corpus/not_a_file.gd"]))
 	ok = _check("nothing measured says so instead of claiming a full score",
 		str(unmeasurable[0].get("message", "")) if not unmeasurable.is_empty() else "",
-		"Interop: 1 script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.") and ok
+		"Interop: scripts in this project: 1, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.") and ok
 
 	# The section asks the project index how many other files call each function, which starts the
 	# project-wide scan and leaves three caches warm. Continuous integration runs the whole suite

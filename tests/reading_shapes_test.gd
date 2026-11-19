@@ -258,9 +258,9 @@ static func _test_the_doctor_page() -> bool:
 	ok = _check("every line of the page is a note", severities.keys(), ["info"]) and ok
 	ok = _check("the head says the drawing number and the naming number apart",
 		str(findings[0].get("message", "")),
-		"100% of what was read draws as rows - that is the drawing question. The naming question is below it: 4 line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.") and ok
+		"100% of what was read shows as rows. 4 lines stay as code, because no word of the vocabulary claims them yet.") and ok
 	ok = _check("the shape is named with its count", str(findings[1].get("message", "")),
-		"3 line(s) are the same shape: name.chain().tween_callback(name)") and ok
+		"3 lines show as code instead of as rows, all of one kind, for example: pop.chain().tween_callback(queue_free)") and ok
 	ok = _check("a door opens the file the line is in", str(findings[3].get("path", "")),
 		staged_a) and ok
 	ok = _check("the door quotes the line the way the file spells it",
@@ -275,7 +275,7 @@ static func _test_the_doctor_page() -> bool:
 		checks) and ok
 	ok = _check("the tail counts the one-off rather than listing it",
 		str(findings[5].get("message", "")),
-		"1 line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.") and ok
+		"1 line is of a kind nothing else here repeats. It is counted, not listed: a line said once is meant to stay code.") and ok
 	return ok
 
 
@@ -338,7 +338,7 @@ static func _test_the_capped_walk() -> bool:
 		if str(finding.get("subject", "")) == "capped":
 			capped = str(finding.get("message", ""))
 	var ok: bool = _check("the capped walk says what it read, in path order", capped,
-		"Read the first 12 script(s) of 13, in path order. The ledger below is a sample of this"\
+		"Read 12 of the 13 scripts, in path order. The ledger below is a sample of this"\
 		+ " project, not the whole of it - the same scripts are read every time.")
 	# The claim inside that sentence, made good: a second run reads the same twelve and says the same
 	# thing, which is why it must not promise the rest.

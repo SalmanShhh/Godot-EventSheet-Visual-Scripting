@@ -132,6 +132,34 @@ static func label_for(check_id: String) -> String:
 	return EventSheetL10n.translate(words.substr(0, 1).to_upper() + words.substr(1))
 
 
+## The words a search box holds, lower-cased, split on spaces: a finding is shown when its text holds every one.
+static func filter_words(typed: String) -> PackedStringArray:
+	var words: PackedStringArray = PackedStringArray()
+	for word: String in typed.to_lower().split(" ", false):
+		words.append(word)
+	return words
+
+
+## Whether a finding is shown by the words typed: its section, where and wording, in the language shown, together hold
+## every word, in any order and any case. No words shows everything.
+static func shown_by(words: PackedStringArray, section: String, where: String, message: String) -> bool:
+	return shown_in(words, haystack_of(section, where, message))
+
+
+## The one lower-cased string a finding's row is searched in, made once when the row is made so a keystroke does not
+## make it again for every row.
+static func haystack_of(section: String, where: String, message: String) -> String:
+	return ("%s %s %s" % [section, where, message]).to_lower()
+
+
+## Whether a haystack holds every word.
+static func shown_in(words: PackedStringArray, haystack: String) -> bool:
+	for word: String in words:
+		if not haystack.contains(word):
+			return false
+	return true
+
+
 ## The one line the status bar gets: what was found, and how much of it is new.
 static func summary_line(triaged: Array[Dictionary]) -> String:
 	var counts: Dictionary = {"error": 0, "warning": 0, "info": 0}
@@ -141,8 +169,11 @@ static func summary_line(triaged: Array[Dictionary]) -> String:
 		counts[severity] = int(counts.get(severity, 0)) + 1
 		if bool(finding.get("is_new", false)):
 			new_count += 1
-	var line: String = EventSheetL10n.translate("Project Doctor: %d error(s), %d warning(s), %d note(s).") % [
-		int(counts["error"]), int(counts["warning"]), int(counts["info"])]
+	var parts: PackedStringArray = PackedStringArray([
+		EventSheetL10n.counted("1 error", "%d errors", int(counts["error"])),
+		EventSheetL10n.counted("1 warning", "%d warnings", int(counts["warning"])),
+		EventSheetL10n.counted("1 note", "%d notes", int(counts["info"]))])
+	var line: String = EventSheetL10n.translate("Project Doctor: %s.") % ", ".join(parts)
 	if new_count > 0:
 		line += " " + EventSheetL10n.translate("%d new since you last looked.") % new_count
 	return line

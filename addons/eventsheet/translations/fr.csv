@@ -11279,6 +11279,29 @@ The test run ended before it wrote a report. Run the tests from a terminal to se
 Ctrl+Z takes it out again.,Ctrl+Z le retire à nouveau.
 %d found so far,%d trouvés jusqu'ici
 the last checks,les dernières vérifications
+Search the findings,Rechercher dans les constats
+"Writes down what is on this page, so the next audit marks only what appeared after it. It means the whole page, not only what the search shows.","Note ce qui figure sur cette page, pour que la prochaine vérification ne marque que le nouveau. Cela vaut pour toute la page, pas seulement pour ce que montre la recherche."
+Showing %d of %d.,%d affichés sur %d.
+Project Doctor: %s.,Docteur du projet : %s.
+"Interop: scripts in this project: %d, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.","Interop : ce projet a %d scripts à examiner, et aucun n'a pu être ouvert pour être mesuré. Installer le plugin n'a rien changé - un script reste du code tant que vous ne l'ouvrez pas comme feuille."
+"Interop: scripts in this project: %d, measured: %d. Of what they hold, %d%% shows as rows. Installing the plugin changed nothing - a script is code until you open it as a sheet. The score gates nothing; it is there to watch the seam move.","Interop : scripts dans ce projet : %d, mesurés : %d. De leur contenu, %d%% apparaît sous forme de lignes. Installer le plugin n'a rien changé - un script reste du code tant que vous ne l'ouvrez pas comme feuille. Le score ne bloque rien ; il sert à voir bouger la couture."
+"%s: %d%% of its lines are drawn in the sheet. Of its functions, %d open as rows of words and %d stay as code blocks.","%s : %d%% de ses lignes sont dessinées dans la feuille. Parmi ses fonctions, %d s'ouvrent en lignes de mots et %d restent des blocs de code."
+"Read %d of the %d scripts, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.","%d scripts lus sur %d, par ordre de chemin. La liste ci-dessous est un échantillon de ce projet, pas son ensemble - ce sont toujours les mêmes scripts qui sont lus."
+"%d%% of what was read shows as rows, and every line of it has a name on it. Nothing here stays as code.","%d%% de ce qui a été lu apparaît en lignes, et chaque ligne porte un nom. Rien ici ne reste du code."
+%d%% of what was read shows as rows.,%d%% de ce qui a été lu apparaît en lignes.
+"More kinds of line repeat here: %d more, over %d lines in all. The list names the commonest and counts the rest.","D'autres sortes de lignes se répètent ici : %d de plus, sur %d lignes au total. La liste nomme les plus courantes et compte le reste."
+"1 line shows as code instead of as a row, for example: %s","1 ligne apparaît comme du code et non comme une ligne, par exemple : %s"
+"%d lines show as code instead of as rows, all of one kind, for example: %s","%d lignes apparaissent comme du code et non comme des lignes, toutes du même genre, par exemple : %s"
+"1 line stays as code, because no word of the vocabulary claims it yet.","1 ligne reste du code, car aucun mot du vocabulaire ne la revendique encore."
+"%d lines stay as code, because no word of the vocabulary claims them yet.","%d lignes restent du code, car aucun mot du vocabulaire ne les revendique encore."
+... and 1 more line like it.,... et 1 ligne de plus du même genre.
+... and %d more lines like it.,... et %d lignes de plus du même genre.
+"1 line is of a kind nothing else here repeats. It is counted, not listed: a line said once is meant to stay code.","1 ligne est d'un genre que rien d'autre ici ne répète. Elle est comptée, pas listée : une ligne dite une seule fois est faite pour rester du code."
+"%d lines are of kinds nothing else here repeats. They are counted, not listed: a line said once is meant to stay code.","%d lignes sont de genres que rien d'autre ici ne répète. Elles sont comptées, pas listées : une ligne dite une seule fois est faite pour rester du code."
+"1 line inside those runs holds no statement - a note, or the inside of a text block.","1 ligne de ces séries ne contient aucune instruction - une note, ou l'intérieur d'un bloc de texte."
+"%d lines inside those runs hold no statement - a note, or the inside of a text block.","%d lignes de ces séries ne contiennent aucune instruction - des notes, ou l'intérieur d'un bloc de texte."
+1 other script calls something it declares.,1 autre script appelle quelque chose qu'il déclare.
+%d other scripts call something it declares.,%d autres scripts appellent quelque chose qu'il déclare.
 Your first event,Votre premier événement
 Open your own script as a sheet,Ouvrir votre propre script comme une feuille
 Add a behavior to an object,Ajouter un comportement à un objet

@@ -11279,6 +11279,29 @@ The test run ended before it wrote a report. Run the tests from a terminal to se
 Ctrl+Z takes it out again.,Ctrl+Z でもう一度取り除けます。
 %d found so far,ここまでに%d件
 the last checks,最後のチェック
+Search the findings,結果を検索
+"Writes down what is on this page, so the next audit marks only what appeared after it. It means the whole page, not only what the search shows.",このページの内容を記録し、次回の確認では新しい項目だけに印を付けます。検索で表示されている分だけでなく、ページ全体が対象です。
+Showing %d of %d.,%d / %d 件を表示中。
+Project Doctor: %s.,プロジェクトドクター: %s。
+"Interop: scripts in this project: %d, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.",Interop: このプロジェクトには確認対象のスクリプトが %d 個ありますが、計測のために開けたものはありません。プラグインを入れても何も変わりません。スクリプトはシートとして開くまではコードです。
+"Interop: scripts in this project: %d, measured: %d. Of what they hold, %d%% shows as rows. Installing the plugin changed nothing - a script is code until you open it as a sheet. The score gates nothing; it is there to watch the seam move.",Interop: このプロジェクトのスクリプト: %d 個、計測済み: %d 個。内容のうち %d%% が行として表示されます。プラグインを入れても何も変わりません。スクリプトはシートとして開くまではコードです。この数値は何も止めません。境目が動くのを見るためのものです。
+"%s: %d%% of its lines are drawn in the sheet. Of its functions, %d open as rows of words and %d stay as code blocks.",%s: 行の %d%% がシートに描かれます。関数のうち %d 個は言葉の行として開き、%d 個はコードブロックのままです。
+"Read %d of the %d scripts, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.",%d / %d 個のスクリプトを、パス順に読みました。下の一覧はこのプロジェクトの一部であり全体ではありません。毎回同じスクリプトを読みます。
+"%d%% of what was read shows as rows, and every line of it has a name on it. Nothing here stays as code.",読み取った内容の %d%% が行として表示され、すべての行に名前が付いています。コードのまま残るものはありません。
+%d%% of what was read shows as rows.,読み取った内容の %d%% が行として表示されます。
+"More kinds of line repeat here: %d more, over %d lines in all. The list names the commonest and counts the rest.",ほかにも繰り返される種類の行があります: %d 種類、合計 %d 行。一覧には最も多いものを挙げ、残りは数だけ示します。
+"1 line shows as code instead of as a row, for example: %s",1 行が行ではなくコードとして表示されます。例: %s
+"%d lines show as code instead of as rows, all of one kind, for example: %s",%d 行が行ではなくコードとして表示されます。すべて同じ種類です。例: %s
+"1 line stays as code, because no word of the vocabulary claims it yet.",1 行はコードのままです。語彙のどの言葉もまだこれを扱っていないためです。
+"%d lines stay as code, because no word of the vocabulary claims them yet.",%d 行はコードのままです。語彙のどの言葉もまだこれらを扱っていないためです。
+... and 1 more line like it.,... ほかに同じような行が 1 行あります。
+... and %d more lines like it.,... ほかに同じような行が %d 行あります。
+"1 line is of a kind nothing else here repeats. It is counted, not listed: a line said once is meant to stay code.",1 行は、ここで他に繰り返されない種類です。一覧にはせず数だけ数えます。1 回しか出てこない行はコードのままにしておくものです。
+"%d lines are of kinds nothing else here repeats. They are counted, not listed: a line said once is meant to stay code.",%d 行は、ここで他に繰り返されない種類です。一覧にはせず数だけ数えます。1 回しか出てこない行はコードのままにしておくものです。
+"1 line inside those runs holds no statement - a note, or the inside of a text block.",それらの並びの中の 1 行には処理がありません。メモか、テキストブロックの中身です。
+"%d lines inside those runs hold no statement - a note, or the inside of a text block.",それらの並びの中の %d 行には処理がありません。メモか、テキストブロックの中身です。
+1 other script calls something it declares.,ほかの 1 つのスクリプトが、これが宣言したものを呼んでいます。
+%d other scripts call something it declares.,ほかの %d 個のスクリプトが、これが宣言したものを呼んでいます。
 Your first event,最初のイベント
 Open your own script as a sheet,自分のスクリプトをシートとして開く
 Add a behavior to an object,オブジェクトにビヘイビアを追加する

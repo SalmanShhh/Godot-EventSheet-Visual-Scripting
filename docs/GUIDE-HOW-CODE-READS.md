@@ -118,7 +118,12 @@ same file see the same rows.
 is a ledger: what the lines nothing claims actually look like, so that deciding where the next
 curated table would pay is a matter of reading rather than of guessing.
 
-![The Project Doctor's Reading section as rows of Section, Where and Finding: a head line reading 100% of what was read draws as rows with the naming question below it, a Reading shape line saying four lines are the same shape name.chain().tween_callback(name), three Reading line doors naming coin.gd, crate.gd and door.gd with the statement each holds, one saying how many more lines of that shape there are, and a Reading tail counting the shapes nothing else repeats](images/doctor-reading-page.png)
+![The Project Doctor's Check the project window with its search box above the list and the Reading section as rows of Section, Where and Finding: a head line saying 100% of what was read shows as rows and 6 lines stay as code, a Reading shape line saying 4 lines show as code instead of as rows with pop.chain().tween_callback(queue_free) as the example, three Reading line findings naming coin.gd, crate.gd and door.gd with the statement each holds, one saying 1 more line like it, and a Reading tail counting the 2 lines of a kind nothing else repeats](images/doctor-reading-page.png)
+
+Opening a Reading line finding opens its script as a sheet with the row that holds that line selected.
+The window's search box (Ctrl+F) narrows the ledger, or any other page of findings, to the findings
+whose section, file or wording hold the words you type; Escape empties the box, and closes the window
+once it is already empty.
 
 **Two numbers, said apart on purpose.** The head number is the project's reads-as percentage: the
 *drawing* question, how much of a file the canvas shows as rows rather than as a wall of code. On

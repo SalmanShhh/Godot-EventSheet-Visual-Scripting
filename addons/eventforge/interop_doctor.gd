@@ -138,9 +138,9 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 	# A percentage over nothing is not 0 and it is certainly not 100: it is a number nobody took. A
 	# project whose candidates all failed to open says so, rather than claiming a full score for a
 	# measurement that never happened.
-	var summary: String = EventSheetL10n.translate("Interop: %d script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.") % candidates.size() \
+	var summary: String = EventSheetL10n.translate("Interop: scripts in this project: %d, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.") % candidates.size() \
 		if measured.is_empty() \
-		else EventSheetL10n.translate("Interop: %d script(s) of this project, %d measured, and %d%% of what they hold reads as rows. Installing the plugin changed nothing - a script is code until you open it as a sheet. The score gates nothing; it is there to watch the seam move.") % [
+		else EventSheetL10n.translate("Interop: scripts in this project: %d, measured: %d. Of what they hold, %d%% shows as rows. Installing the plugin changed nothing - a script is code until you open it as a sheet. The score gates nothing; it is there to watch the seam move.") % [
 			candidates.size(), measured.size(), _average_reads_as(measured)]
 	findings.append(_finding("info", CHECK_ID, measured[0].get("path", "") if not measured.is_empty() else "",
 		summary, ""))
@@ -181,9 +181,9 @@ static func report_in_turns(scripts: PackedStringArray) -> Array[Dictionary]:
 	# A percentage over nothing is not 0 and it is certainly not 100: it is a number nobody took. A
 	# project whose candidates all failed to open says so, rather than claiming a full score for a
 	# measurement that never happened.
-	var summary: String = EventSheetL10n.translate("Interop: %d script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.") % candidates.size() \
+	var summary: String = EventSheetL10n.translate("Interop: scripts in this project: %d, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.") % candidates.size() \
 		if measured.is_empty() \
-		else EventSheetL10n.translate("Interop: %d script(s) of this project, %d measured, and %d%% of what they hold reads as rows. Installing the plugin changed nothing - a script is code until you open it as a sheet. The score gates nothing; it is there to watch the seam move.") % [
+		else EventSheetL10n.translate("Interop: scripts in this project: %d, measured: %d. Of what they hold, %d%% shows as rows. Installing the plugin changed nothing - a script is code until you open it as a sheet. The score gates nothing; it is there to watch the seam move.") % [
 			candidates.size(), measured.size(), _average_reads_as(measured)]
 	findings.append(_finding("info", CHECK_ID, measured[0].get("path", "") if not measured.is_empty() else "",
 		summary, ""))
@@ -203,11 +203,11 @@ static func report_in_turns(scripts: PackedStringArray) -> Array[Dictionary]:
 ## One measured script in a sentence: the share that reads as rows, what that is made of, and what a
 ## rename of it would have to check.
 static func _script_line(entry: Dictionary) -> String:
-	var line: String = EventSheetL10n.translate("%s reads as rows: %d%% - %d function(s) opened, %d still code.") % [
+	var line: String = EventSheetL10n.translate("%s: %d%% of its lines are drawn in the sheet. Of its functions, %d open as rows of words and %d stay as code blocks.") % [
 		str(entry["path"]).get_file(), int(entry["reads_as"]), int(entry["lifted"]), int(entry["verbatim"])]
 	var callers: int = int(entry["callers"])
 	if callers > 0:
-		line += " " + EventSheetL10n.translate("%d other script(s) call something it declares.") % callers
+		line += " " + EventSheetL10n.counted("1 other script calls something it declares.", "%d other scripts call something it declares.", callers)
 	return line
 
 

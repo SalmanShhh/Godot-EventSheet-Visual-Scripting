@@ -40,8 +40,8 @@ static func run() -> bool:
 	var counted: Array = []
 	var expected: Array = []
 	for section: Array in [
-			["Interop", EventSheetInteropDoctor, "Interop: (\\d+) script", unmarked],
-			["the reading ledger", EventSheetReadingDoctor, "Read the first \\d+ script\\(s\\) of (\\d+)", own.size()],
+			["Interop", EventSheetInteropDoctor, "Interop: scripts in this project: (\\d+)", unmarked],
+			["the reading ledger", EventSheetReadingDoctor, "Read \\d+ of the (\\d+) scripts", own.size()],
 			["Effects", EventSheetEffectsDoctor, "", 0],
 			["Migration", EventSheetMigrationDoctor, "is a sample: \\d+ of (\\d+) script", own.size()]]:
 		var findings: Array[Dictionary] = []
@@ -98,7 +98,7 @@ static func _the_readers_own_folder_under_the_packs_is_theirs() -> bool:
 	# empty corpus, so its having a page is the count.
 	var counted: Array = []
 	for section: Array in [
-			["Interop", EventSheetInteropDoctor, "Interop: (\\d+) script"],
+			["Interop", EventSheetInteropDoctor, "Interop: scripts in this project: (\\d+)"],
 			["the reading ledger", EventSheetReadingDoctor, ""],
 			["Migration", EventSheetMigrationDoctor, "Migration: (\\d+) sheet\\(s\\) read"]]:
 		var findings: Array[Dictionary] = []
