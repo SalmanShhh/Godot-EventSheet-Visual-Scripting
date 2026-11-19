@@ -201,7 +201,7 @@ static func prepare_readings(paths: PackedStringArray) -> void:
 static func reading_of(source: String, script_path: String) -> Dictionary:
 	if _reading_cache.has(script_path):
 		return _reading_cache[script_path] as Dictionary
-	return EventSheetLiftReading.read(source, script_path)
+	return load("res://addons/eventsheet/editor/interaction/lift_reading.gd").read(source, script_path)
 
 
 ## `work` run on a worker thread while the editor keeps drawing, for a stretch of the audit that is nothing but
@@ -334,14 +334,15 @@ static func _has_banner(script_path: String) -> bool:
 static func _build_scene_index() -> void:
 	if _frame_source == null:
 		return
-	if EventSheetSceneConnections._scenes_by_script_built:
+	var scene_connections: GDScript = load("res://addons/eventforge/importer/scene_connections.gd")
+	if scene_connections._scenes_by_script_built:
 		return
 	# The pass over every scene touches nothing but what it returns, so it runs on a worker thread.
-	var paths: PackedStringArray = EventSheetSceneConnections.scene_paths()
-	var index: Dictionary = await in_background(func() -> Dictionary: return EventSheetSceneConnections.index_scenes(paths))
+	var paths: PackedStringArray = scene_connections.scene_paths()
+	var index: Dictionary = await in_background(func() -> Dictionary: return scene_connections.index_scenes(paths))
 	# Marked built only once the whole index is in: a half-filled one would answer "no scene uses this".
-	EventSheetSceneConnections._scenes_by_script = index
-	EventSheetSceneConnections._scenes_by_script_built = true
+	scene_connections._scenes_by_script = index
+	scene_connections._scenes_by_script_built = true
 
 
 ## Builds the project share index (what holds what, and who calls what) a slice at a time, for a section that
@@ -350,8 +351,9 @@ static func _build_scene_index() -> void:
 static func build_share_index_in_turns() -> void:
 	if _frame_source == null:
 		return
-	EventSheetProjectShareIndex.request(false)
-	while not EventSheetProjectShareIndex.advance(4):
+	var share_index: GDScript = load("res://addons/eventforge/importer/project_share_index.gd")
+	share_index.request(false)
+	while not share_index.advance(4):
 		await breathe()
 		if _cancel_check.is_valid() and bool(_cancel_check.call()):
 			return
@@ -410,7 +412,7 @@ static func _release_listing() -> void:
 		_run_in_progress = false
 		clear_project_scripts(true)
 		ProjectFiles.clear()
-		EventSheetSceneConnections.clear_cache()
+		load("res://addons/eventforge/importer/scene_connections.gd").clear_cache()
 	EventSheetProjectFind.release_held_sheets()
 	_primed = {}
 	_reading_cache.clear()
