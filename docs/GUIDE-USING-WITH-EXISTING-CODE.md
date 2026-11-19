@@ -656,7 +656,7 @@ That is the order this section is in.
   badged, still one undo funnel). Simple Mode keeps it on **sentence**.
 
 - **Variable rows are rows of their own kind, in the order you wrote them.** A flat lilac wash and a
-  2px rule down the left edge say "this is a declaration" before a word is read; the order is the
+  hairline down the left edge say "this is a declaration" before a word is read; the order is the
   file's, not the alphabet's. Drag one past another and the drop writes the new order; **Sort A-Z**
   on the row's menu writes alphabetical when you ask for it. Variables never fold as a block - the
   only fold in the list is a folder you made yourself, an **Inspector group**, which draws as a slim
@@ -972,7 +972,7 @@ pivot turns.
 
   ![An `_unhandled_input` read as one trigger event per branch: Mouse - On mouse moved with Mouse - mouse is captured under it, and Keyboard - On Escape pressed](images/opened-pack-input-triggers.png)
 
-  ![A script the engine refuses to compile, opened as a sheet: the head bar and two events wear a red margin mark, the status bar counts the problem, and the rest still reads normally](images/opened-script-structure5.png)
+  ![A script the engine refuses to compile, opened as a sheet: the head bar and two events are washed red and their numbers in the margin turn red, the status bar counts the problem, and the rest still reads normally](images/opened-script-structure5.png)
 - **A trigger-shaped poll at the top of a tick handler IS the trigger.** This is how a beginner
   writes input in Godot: `if Input.is_action_just_pressed("jump"):` inside `_process`. In an event
   sheet the same thing is a top-level trigger, so the row reads `⌨  Keyboard ▸ On "jump" pressed`

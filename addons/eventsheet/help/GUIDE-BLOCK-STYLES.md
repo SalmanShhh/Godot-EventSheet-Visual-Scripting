@@ -177,9 +177,9 @@ it always did - which is what the echo at the right edge of the row is showing.
 A **region** is a `#region` / `#endregion` fence pair, and it reads as what it is in the script
 editor - a fold mark. The opening fence wears a dashed `#` badge, its name in bold, its description
 muted beside it, and the line the file really has echoed at the right edge (`#region Movement`).
-Everything it holds sits under a **dashed** 2px rule down the left edge in the region's own colour -
-the same stroke as its badge, and the dashed twin of a group's solid bracket - and no row is pushed
-sideways for it. The closing fence is a slim tick whose only text is `#endregion`. Folded, the head
+Everything it holds sits beside a **dashed** hairline down the left edge in the theme's neutral guide
+colour - the same stroke as its badge, and the dashed twin of a group's solid bracket - and no row is
+pushed sideways for it. The closing fence is a slim tick whose only text is `#endregion`. Folded, the head
 says how much it holds and the echo shows both fences at once: `#region Movement … #endregion`.
 
 A region holds no local variables and has no on/off switch: it is two plain lines of a file, not a
@@ -193,8 +193,9 @@ followed by its switch. `◍` means active on start and `◌` means off; a ring 
 the group can also be switched while the game runs, which is what `Set group active` needs to reach
 it. One click on either mark throws it.
 
-Everything the group holds sits under a 2px **bracket** down the left edge of the body, in the
-group's own colour, running from the head's bottom to its last row's bottom. Nested groups inset one
+Everything the group holds sits beside a **bracket** down the left edge of the body, a hairline in the
+theme's neutral guide colour whatever colour the group's own head wears, running from the head's
+bottom to its last row's bottom. Nested groups inset one
 step each, and no row is ever pushed sideways to make room for a bracket. A group that is switched
 off fades its whole body: it and its rows compile out entirely.
 

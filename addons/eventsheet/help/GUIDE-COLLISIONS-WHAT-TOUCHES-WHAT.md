@@ -315,7 +315,7 @@ project does not name (renamed away, renumbered, or never named) is a note, and 
 say nothing at all in a project that names no layers - numbers are a perfectly good way to work, and
 the note exists only because the project already speaks in names and one row cannot.
 
-**None of this renders in the sheet.** A row a finding is about wears a quiet amber stripe and
+**None of this renders in the sheet.** A row a finding is about wears a quiet amber tint and
 nothing else: no note row, no icon, no inline sentence, and nothing at all on a sheet with nothing
 wrong. The words and the doors live in the two places a reader goes on purpose - the Doctor's triage
 inbox, and the help strip under the row once the row is selected.

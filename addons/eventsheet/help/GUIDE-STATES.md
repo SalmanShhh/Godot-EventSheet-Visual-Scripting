@@ -340,8 +340,8 @@ game's viewport and no window in front of it:
   `3.2 of 6` right after the cell. That left-hand number is not a second clock kept by the editor: it
   is the very quantity the row compares, so the progress and the row cannot disagree. A wait written
   as an expression shows no progress rather than one the editor invented.
-- **The event that just fired is lit.** With **Event Trace** armed, a firing event wears a stripe down
-  its left edge and a faint wash, pulsing: a one-shot reads as a flash that fades over about a second
+- **The event that just fired is lit.** With **Event Trace** armed, a firing event is washed in the
+  run's cyan and its number in the margin turns the same cyan, pulsing: a one-shot reads as a flash that fades over about a second
   while a sustained fire holds near full. With **Reduced Motion** on it appears and disappears without
   animating.
 

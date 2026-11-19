@@ -86,7 +86,7 @@ Current additions on top of the model below:
   `ace_action_accent_color` / `ace_action_badge_background_color`, and the same pair for
   `ace_condition_*` and `ace_expression_*`. The accent is the one with reach - it drives that role's
   badge text and the name's tint, so changing it re-skins the whole role.
-  `verb_row_tint_strength` (0.0 - 0.4) additionally washes the WHOLE row - plus a left accent bar and
+  `verb_row_tint_strength` (0.0 - 0.4) additionally washes the WHOLE row - and
   the description caption's band - in the role's colour. It ships at **0.0**: a published function is an
   ordinary event row, and tinting every one of them turned a pack into a wall of coloured blocks.
   Raise it if you want the kinds colour-coded, higher on a pale sheet where a faint tint disappears. `verb_chip_background_color` and
@@ -101,7 +101,7 @@ Current additions on top of the model below:
 Until recently a theme stopped at the row shells and the chips in them. Everything the
 "an opened script reads like an event sheet" work added - the chips on a head bar, the
 coverage chip, the badge that says how often an event runs, the Script block and ⚠ code
-badges, the Inspector mark on a variable (drawn as the picture of its look, in the row's own ink), the guide lines, the stripe down a broken row,
+badges, the Inspector mark on a variable (drawn as the picture of its look, in the row's own ink), the guide lines, the wash and number of a broken row,
 the bubble that refuses a drop, the Object bar, the status strip, the Manual's pages - was
 painted from fixed constants. A pale preset kept the plugin's own dark marks on white
 paper, and the Theme Editor could not show them at all.
@@ -116,10 +116,10 @@ sections:
   the setup and Script block and ⚠ code badges, the "or" divider between OR'd conditions,
   the ⟳ / ⌨ / ▶ badges that say
   how often an event runs, the three text tones, the tints on text and true/false values,
-  the error and live-fire stripes, the disabled scrim, the breakpoint dot, the bookmark
+  the error and live-fire washes, the disabled scrim, the breakpoint dot, the bookmark
   pennant, the event-number margin's rail, the indent stops and the tree connector, the drop
-  line and the refusal bubble, the swatch outline, the text-selection band, the flat wash and
-  left rule every variable row wears (`variable_row_wash_color`, `variable_row_rule_color`, and
+  line and the refusal bubble, the swatch outline, the text-selection band, the flat wash
+  every variable row wears and its scope word (`variable_row_wash_color`, `variable_row_rule_color`, and
   `variable_row_wash_end_color` for a theme that wants the wash to fade across the row - equal to
   the wash means flat, which is what every bundled preset ships), and how strongly a hovered
   variable lights up its other uses.

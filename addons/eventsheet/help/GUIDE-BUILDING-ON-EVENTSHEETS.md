@@ -140,7 +140,7 @@ var probe := EventSheetPopupUI.probe_help_dialog(my_dialog_body)
 assert(probe["strips"] == 1 and probe["unwired"].is_empty() and probe["follows_focus"])
 ```
 
-`show_note(heading, body, tone := TONE_NORMAL, fixes := [])` is the shape to call: it sets the heading, the paragraph, the tone (`TONE_NORMAL` / `TONE_WARNING` / `TONE_ERROR`, which recolour the rule down the left edge) and the one-click fixes together, so a red rule from the last field can never stand over this field's description. The strip's current `tone` is readable, so a test pins the state without sampling a colour.
+`show_note(heading, body, tone := TONE_NORMAL, fixes := [])` is the shape to call: it sets the heading, the paragraph, the tone (`TONE_NORMAL` / `TONE_WARNING` / `TONE_ERROR`, which recolour the heading) and the one-click fixes together, so a red heading from the last field can never stand over this field's description. The strip's current `tone` is readable, so a test pins the state without sampling a colour.
 
 ### Completion
 
@@ -409,7 +409,7 @@ The calls below sit beside the ones above. Each is a plain static on `EventSheet
 | Rows | `build_condition_action_row(condition_text, action_lines, indent := 0, source := null)` - the primitive for mapping any construct onto the event model | `EventRowData` | yes |
 | Rows | `add_field_cell(row, label, text, metadata := {})` - a named slot as a condition-style cell (label leads it, text says what it holds); a published function's parameters use this exact call | `EventRowData` | yes |
 | Rows | `build_caption_row(text, indent := 0, row_uid := "", accent := Color(0,0,0,0))` - a wrapping line of prose welded above the row it describes | `EventRowData` | yes |
-| Rows | `mark_language_block(row)` - marks a row as GDScript structure (accent stripe + wash) | `EventRowData` | no |
+| Rows | `mark_language_block(row)` - marks a row as GDScript structure (a quiet accent wash) | `EventRowData` | no |
 | Rows | `collection_decl(variable_name, entries, dictionary := true)` - a structured multi-line collection declaration (`var waves := { ... }`), the row an opened `.gd`'s canonical literal lifts into. `entries` is `[key, value]` pairs for a dictionary (keys carry their own quotes) or plain values for an array. Append it to an `EventRow`'s actions, or to `sheet.events` for a file-scope table; entries stay individually editable rows. Returns `null` when the name is not an identifier or an entry is refused | `CollectionDeclRow` | no |
 | Codegen | `new_sheet(config: Dictionary = {})` | `EventSheetResource` | no |
 | Codegen | `compile(sheet: EventSheetResource, output_path := "")` - compiles AND WRITES the script: to `output_path`, else to the sheet's own file after the Save's backup, else (a sheet with no file) nowhere, with a warning in the result; a script that is not this sheet's own is never written over, and `"success"` is `false` with one sentence in `"errors"` | `Dictionary` | no |

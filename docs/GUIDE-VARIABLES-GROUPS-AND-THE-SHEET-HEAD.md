@@ -75,7 +75,7 @@ Two things a reader coming from the older look should know:
 - **`name : Type = value` is gone from the canvas.** That spelling survives where it belongs - on
   the name's hover, and in the code panel under the rows.
 
-A flat lilac wash and a 2px rule down the left edge mark every variable row, so a declaration is
+A flat lilac wash and a hairline down the left edge mark every variable row, so a declaration is
 recognisable before a word of it is read. Three theme colours dress it (`variable_row_wash_color`,
 `variable_row_rule_color`, and `variable_row_wash_end_color` for a theme that wants the wash to fade
 across the row - every bundled preset ships it equal to the wash, which is what keeps them flat).
@@ -709,7 +709,7 @@ A group is a folder you drew around rows. It is one row on the sheet, the same r
 A folded head keeps the description and adds what is inside it, including the objects the group
 touches - which is the sentence you need to decide whether to open it.
 
-**The body wears a bracket, and the rows do not move.** A 2px rule in the group's own colour runs
+**The body wears a bracket, and the rows do not move.** A hairline in the theme's neutral guide colour runs
 down the LEFT EDGE of the body, from the head's bottom to its last row's bottom. Nested groups inset
 one step each, so where a group ends is visible without counting indents, and nothing is pushed
 sideways to make room for it. The rule ends in a slim tick turning right, so the body has a bottom
@@ -738,7 +738,7 @@ The group's menu:
 | Open / Close Section | fold this one |
 | Open All / Close All Sections | `Ctrl+Shift+G` |
 | Add Local Variable… | `V` with the head selected does the same |
-| Group Color… | paints the bracket, the badge and the head's left rule |
+| Group Color… | paints the badge and the head's tint (the bracket stays neutral) |
 | Turn Into Region | with the reason in the item itself when it cannot |
 | Ungroup - Keep The Rows | drops the folder, keeps everything in it |
 
@@ -793,7 +793,7 @@ rather than borrowing the group bar.
 | Row | What it shows |
 |---|---|
 | opening fence | a **dashed** `#` badge, the name in bold, the description muted beside it, and the real line echoed at the right edge: `#region Movement` |
-| the body | a **dashed** 2px rule down the left edge in the region's own colour - the dashed twin of a group's solid bracket. No row is pushed sideways |
+| the body | a **dashed** hairline down the left edge in the theme's neutral guide colour - the dashed twin of a group's solid bracket. No row is pushed sideways |
 | closing fence | a slim tick whose only text is `#endregion`. The old "end region" prose is gone |
 | folded opener | how much it holds, and both fences at once: `#region Movement … #endregion` |
 

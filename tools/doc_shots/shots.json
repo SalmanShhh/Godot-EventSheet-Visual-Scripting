@@ -387,7 +387,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "c4a1cd0dd54f2fd35ae3f2fbfc99a9f2ca7284682ba501d2442d8fe8e84a7693"
+				"png": "7ee23a47989528c0c53cef8ec04b395a46dfda4a34c4aa303d325dbf0c1b9184"
 			},
 			"name": "editor-tool-dock-panel-skeleton",
 			"steps": [
@@ -591,7 +591,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "d17b19a856753edd3d9636886f8b7645e461cfeb025805a20b4fa8af53f7ff58",
+				"png": "e08cbd2338b6d220554be5c391fa52e6b61c4201c8a122e08aa62c770142e728",
 				"reading": "a9f663b2e53d348709769b3193b5be6040430698fae0076c5da27b1ef579c187"
 			},
 			"layout": "vertical",
@@ -650,7 +650,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "afadf151f89dd6d147a05e5b19b9e1daa5094e99d15b81fa6c7237cc2106111f",
+				"png": "b10d7b702e32fa02642dda497ba54a74ac4c192920b61700bed6fd106f5a69b9",
 				"reading": "8aad9630a665a6034e96d3efebe853a3fb7242d19a48a571a55ec67cd2f7ff45"
 			},
 			"name": "opened-pack-head-open",
@@ -855,7 +855,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "06f34c8ca6f87324196ec2c2dc866e1109ccf7777f9e2e49fb2bdbe9df6a5bc1",
+				"png": "d7b8a20bf1c6e0a62bf3e65573f7dfffb9cea744a62cfa6d168a22aba319db34",
 				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "opened-script-event-numbers",
@@ -867,7 +867,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "8d2092fa8da95cc7f69537c84d3d863ccb3e75a70d813fd43d9a6ed475c27ee6",
+				"png": "02e5c8d9d2cdb688f42835df9b426091ad46c72f022f3c2c3b5cfb849cc22f46",
 				"reading": "3eba6442f06b36d457225be70c1c876befc9bedd157d4132b0dd8fe95159b965"
 			},
 			"layout": "vertical",
@@ -1038,7 +1038,7 @@
 				"files": "f3a57bc0485015d61b6188d3742cce889ff29bcb2ae602dd12115becaa48aa61",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "6ef3fa1727035da999f2bcf9e39a15b10ff4d715452e13c3243cad910e0ad7da",
+				"png": "5784ac3c93a788e79b5b3d1a7a68328cac0a458b1c9b575ce17f4e685d9fe243",
 				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "add-cascade-keys",
@@ -1066,7 +1066,7 @@
 				"files": "f3a57bc0485015d61b6188d3742cce889ff29bcb2ae602dd12115becaa48aa61",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "4ae760bebf6dcc0acb6fe68d2752d9e94ae28d54b154d204e06d2128e2cdfb7f",
+				"png": "d652e4a63f99fef8f9dcf0c37cea9166b8aa3e832420395e51348232371d2d76",
 				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "view-sheet-theme-menu",
@@ -1093,7 +1093,7 @@
 				"files": "f3a57bc0485015d61b6188d3742cce889ff29bcb2ae602dd12115becaa48aa61",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "da2aa242c126951395a1dabf2422b2c3fc47d055fe365afbd29108561661571b",
+				"png": "e4d32d87b68835724d16a384bf2becaca3d8c286fd26da3c7756032e058907d0",
 				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "look-sheet-1-menu",
@@ -1135,7 +1135,7 @@
 				"files": "f3a57bc0485015d61b6188d3742cce889ff29bcb2ae602dd12115becaa48aa61",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "2d84c38624e4399c7494d713a057d5380319301e7991c07819ad45fc1cbbc789",
+				"png": "ef065311f8e93dbaf4ecb5dd367ff24dade80384714476eda01b79d3af4856b2",
 				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "resting-toolbar-note",
@@ -1164,7 +1164,7 @@
 				"files": "f3a57bc0485015d61b6188d3742cce889ff29bcb2ae602dd12115becaa48aa61",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "363ffb2ffb0cebf3a1259ce2353fcf072a7814a4e5d49f3157e54d571a73f78a",
+				"png": "74f18ffc7e1719d9544325024a00e32f01e0aed75e4fe7e7112658c3c39c382c",
 				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "play-button-dropdown",
@@ -1312,7 +1312,7 @@
 				"files": "f3a57bc0485015d61b6188d3742cce889ff29bcb2ae602dd12115becaa48aa61",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "ef6a1df56f74d2599868c75e2ac0dacbe836a1d794cc08d7ec30d6d0a7f4e6aa",
+				"png": "513e9c42ef1a8357595409dd76bd16c7e5825a7965b14365ae28f2b1f8c73bb0",
 				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "refactor-row-menu",
@@ -1930,7 +1930,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "c88f07402f066dcaf954509baff32ed3fdc9cb18f63cbe5789aacece3abc8434",
+				"png": "2115bc46d01a99e5eff543e1a1a018af87bb27fda44241388760f29dcae4b6bb",
 				"reading": "60b210c4bca67e4232644cd80539c5580f4d04b8d7579fa91dc7ecdb37f545d0"
 			},
 			"name": "collisions-head-band",
@@ -2055,7 +2055,7 @@
 				"files": "a0db9606e4d651c19f79e73c3bd5cd663cd9d2d6be4c5d38d92e597efad5de6f",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "890d3863c2444a7f976370e6a11d427a59a57fc408180e376225e984f3089a7d"
+				"png": "2d63f962377a15ae252688629a962ed08aa4612931886011f2b317a249212b8d"
 			},
 			"layout": "vertical",
 			"name": "opened-script-structure5",
@@ -2400,7 +2400,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "5b613148ed6bcd84cc1ca07bad046f91885107c7c8d98ae488c14b9dacf39a5a",
+				"png": "a799c5b7f3171ac96df5747f00845361df96a7fac9c7760ba8deb5d727f95475",
 				"reading": "0966e2700c10f5beaf7f4748a7fd07fb74ae48f46f6a24434a2315ec34b88a3f"
 			},
 			"name": "reading-match-patterns-and-notes",
@@ -2535,7 +2535,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "8a36abfd15784b3ee6e2a477b384a3c6c61f6a0ab26c9359c36a69d7e785ca3c",
+				"png": "03c3e6588665f1903208dfb33e8a66a691991fca6275392ccad4309343f8a58f",
 				"reading": "a3e7261272a9f2684324b541168860a790550d70e17535284b4fc7e76833437e"
 			},
 			"name": "reading-vectors-patterns-notes",
@@ -2951,7 +2951,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "655953caf61a6702c907d2f5478dd869d251986f711e2d4c40146cd006df7297",
+				"png": "d388f9d3a40ce456d5cc61ee0a51fc7f7df4a89df6f0f628e0b317bb6eaf6f97",
 				"reading": "450b370391d03471c98eabb0aa74a41504fb8a011f518c60b4983f3f02aab3c5"
 			},
 			"name": "block-views-real-file",
@@ -2967,7 +2967,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "e4c9bdeb763815054ba2518bc7a464c6939069d5571974374c4acc6a30732d98",
+				"png": "ffe4fd694b74f00aaa743da3e7fb59655204c7584e7c132015348644404c35d7",
 				"reading": "e7d0981c0ae09f9eb4960a037bbe31b6a78cc8a5a7e988fd75823702f16033fc"
 			},
 			"name": "code-patterns-lifted-machine",
@@ -2999,7 +2999,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "52b2003254c66af795ca9926d74481535a1ad7eb2048fa334808eef028cd3f49",
+				"png": "a373df72a5f54e52c8b600ff98f9d288fd0ddae77d4a70ea24e77fb0854e5828",
 				"reading": "e7d0981c0ae09f9eb4960a037bbe31b6a78cc8a5a7e988fd75823702f16033fc"
 			},
 			"name": "code-patterns-state-machine",
@@ -3031,7 +3031,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "da3dcbb9a77b612aae6f814a1f7844bb4001ba4b4bd1201a198d294073b9bfc9",
+				"png": "d6ffeb321338aa0bea2dffb4f36779ae5f6a61ae07ad629b66761242437ae258",
 				"reading": "2cce7fdfda66c927c4f888a6de4394469ad1dc548a4d33f0e9e4d0aa8dded319"
 			},
 			"name": "custom-blocks",
@@ -3063,7 +3063,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "9a9f2c16f39f45ade29da9809317de7555570b4858efb6a1d1f993a01bce75de",
+				"png": "432cdd4113d3e1a055f5303db716120c9164de9145f96a8d79a680764897f0f8",
 				"reading": "450b370391d03471c98eabb0aa74a41504fb8a011f518c60b4983f3f02aab3c5"
 			},
 			"name": "decl-top-canvas",
@@ -3151,7 +3151,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "b50858588eea3ea4eb91e4e5cc64fd9e2a39c1a038a65c4481e358d880b94bb5",
+				"png": "1bf76ff30909de347f4804fd343739c2df2c3c2e22977b174a32a0119ee18b6b",
 				"reading": "47d41ecaf266e855a20a6b9d0cbe71a076c9a52a38fc497f98c51432cc3c0bf9"
 			},
 			"name": "files-band",
@@ -3191,7 +3191,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "6129d07406f848e37aaf8ad761bd11c1863eca9ecbd13c19a83ff41e0b927882",
+				"png": "5b69fa42402e92c9b48b935306019a2696ff4954c3391d5a319f940bfdfd8eab",
 				"reading": "a79e57e88abf6eb803d1fc2c4a590c0ee2c5c4c85e01f5cf4633259e082adc76"
 			},
 			"name": "files-runs-reopened",
@@ -3231,7 +3231,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "0766b97480a3a40c175d1f22b4587303c90ceeae4516d66605b7297f1abb353c",
+				"png": "ad8583e26985efe3209bdad7dabf96cdbd31374f41a0c415874b664444d488d0",
 				"reading": "dbfb3e40fa6fb6bbebef928f8819cf172927fe4918fac76c3116ab4be7e56e5b"
 			},
 			"name": "folder-watcher",
@@ -3312,7 +3312,7 @@
 				"files": "976b4038bbe412eab96cbd41ca950cc7584a74f399343c2cc8263879a55131d2",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "bf66491b66367acc3ebe376dc955f6b8aa65a33b1f1af1c28fd34b96fb699ee9"
+				"png": "a30e762579d7b2928dd425789821a8d176a7c14403493a921cc9deee0989feab"
 			},
 			"name": "migration-amber-row",
 			"steps": [
@@ -3443,7 +3443,7 @@
 				"files": "0841d1cc278be80c6bd00d4cc9f77c33854d09dfdea45499d971346b6bd50eba",
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "f47a8f8bd3a42521c0c993dfe0585ad8ab5e2a4d71ea565c6da1d4a2d84d26e3"
+				"png": "2490b4e931383b87701869ff8585c98874c37cd47361214989ab2d8127892ce5"
 			},
 			"layout": "vertical",
 			"name": "successor-row-strip",
@@ -3646,7 +3646,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "0e99a802c7b3371844313f486a387382935950f6e13518f048963b86bd9543dd",
+				"png": "b373efc7ff641acd1a14308acdbb1365d135f7f829856fb8657c75886ad7b972",
 				"reading": "aa3ee2d0b8091ba295304e7dbda7b0a032ac9388280dad6777c167bb1741ab9e"
 			},
 			"name": "prelude-blocks-closed",
@@ -3735,7 +3735,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "931b61c75ee7d2d8ad6d8a3cb8606a4a3f4e1c4c2f6cfc9ce160458dc01ef5ab",
+				"png": "e9da120bc91cea59b5bef03fb054341ea87869dbb0984559862590927855c846",
 				"reading": "fd5b2d1ed93ed52532ce69fba10da8a1beaa8dc3b15d13c1dd1a15dcae0f1065"
 			},
 			"name": "scenes-spawn-3d",
@@ -3798,7 +3798,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "c3114183ce487fd5ec12369e67c0def47fd8fe5404e8f83a0f73240f211e8085",
+				"png": "2097a4af6e3076d0696f0593d7079d86b3a9de9956d369fecfcc9232bc35e375",
 				"reading": "8e01227f92ead55a54e014589a58c50f79b2302230db31cd5cf063f41159860a"
 			},
 			"name": "theme-dracula",
@@ -3862,7 +3862,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "8a400e41889e5277981551946c61c2d4eea2b37610d35930e2ab133b2571cc33",
+				"png": "b5ef5c6b6313f2c06db2a19afcdc2762f04648783f3fe17d1797df074a2a00b0",
 				"reading": "2b72a96cf5bd784291f255543bc4e96ba27bc1c8ccdd0a821b2d0a5bcf09d170"
 			},
 			"name": "variable-sentence-head",
@@ -4063,7 +4063,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "3e7933f498b85b43e4aca6af3f963834676c63b15bf82dfa16293b01335c0c59",
+				"png": "efab5f3779be292b7067e772ee5d35e7bfcc73906d9c9cd9ccc76f65a66e438d",
 				"reading": "b8c7a08291786f00436011015e67a7b623f93966018e6ce95281fb301bf3798c"
 			},
 			"name": "minimap-column",
@@ -4429,7 +4429,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "56afaecee13040b10199e60f722e06bc4ffafa4b2c7df1276910f47857d1ebd1",
+				"png": "75eecacbd8e52526533ff168e288070efe1e518a710e7c5d7f9fc20793aaf8b1",
 				"reading": "e7d0981c0ae09f9eb4960a037bbe31b6a78cc8a5a7e988fd75823702f16033fc"
 			},
 			"height": 330.0,
@@ -4659,7 +4659,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "35b9e53a06b87a304b7dbf975c18d333cf4fa2077c7e9b8c0801050c434cc60d",
+				"png": "a4593b1637266c385223ab0aea4db0074123d2e2c34c9ef57059c2c27b9c0f20",
 				"reading": "a3e7261272a9f2684324b541168860a790550d70e17535284b4fc7e76833437e"
 			},
 			"name": "data-class-add-field",
@@ -4890,7 +4890,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "b536eda826ee5710d1ff7ceb745a4dbeb20a17db9fbe0e9a2ddf94113c7060d8",
+				"png": "e8491f6ef1692df4544cd5ed4f6de2b800ee2f8ce5e01dc79491c6bd8eb494ce",
 				"reading": "b3fccdc6f8ea1134bb6f0330fa41211eece8ac74fd0d86497711c48c4d1e08fe"
 			},
 			"height": 640.0,
@@ -5322,7 +5322,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "b3637874f5bbe0e4c0e118c5228be3e5d1303fac402d7587c9e182425d03e9ee",
+				"png": "85b35d6c52cef2e1e016527857368bbeb5c2c7b32fbeb5d5b57155f68f5a32c3",
 				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "theme-editor-new-groups",
@@ -5354,7 +5354,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "86fcc47f136b3557b95c26068a491bb70abcfc65da00cc47fff3cbed1a40ec10",
+				"png": "92f7b0bd6f67c039d85e7c3467cc2b9cc7bb696e6be66b2d1de538d0057bb80a",
 				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"name": "theme-editor-token-rows",
@@ -5630,7 +5630,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "f03c3629697688a4e3839728e80e4d3bcf38ad2958c3a564f4c72c9d985e9226",
+				"png": "8654c784223aa3a7f03a1b0e6a84e805c3cb50c38b2ef59e034f221f30791e55",
 				"reading": "616137b10b58089571ea1de4a59437b76ef9babd0e72d39d66e59102ff183d4b"
 			},
 			"height": 220.0,
@@ -5659,7 +5659,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "14c66d96e81e3a93b1d562d454a749bb4763b3e055574c2724218c0c953ea901",
+				"png": "0522dffe92dadb1f4a80e92a241cbce427effd1f41d8a919cb0a49aa003667e2",
 				"reading": "5bb1392d5385a73e0af3a5f8dd8cad8ba96e7f4ae02e742c0dc7d9f771933aec"
 			},
 			"keep_mouse": true,
@@ -5756,7 +5756,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "7ea64ea38b12d859e86c3d56b17e2e7b87b89e30379f4c150a87193cfc28b7b8",
+				"png": "76cd22c324840e8140b6af80ab4e08af4d78cefb2f18f565d5709a93ff68905b",
 				"reading": "95c7d437be993a31da5cf14ca840bf684047a881933eb078d4bc6cfed9363592"
 			},
 			"name": "second-view-rows",
@@ -5974,7 +5974,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "3c96e09d6ce2feaf9cd4b3dc035dc0a0865c9769272dbe0f18439d70be0f70ee",
+				"png": "bdaf2a448ce3f0e36b526124993cf93765aaaad453ef31eb7df187c6e2f53134",
 				"reading": "4dc76ed3b2b5ecfeced28e3e6fbf559801a9b8b1a3e268016607c1a16247cce4"
 			},
 			"name": "inspector-designer",
@@ -7365,7 +7365,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "d136c8ae51c74876546285ed5caac936854f50e9419e2670f9546e089e0830de"
+				"png": "a672593e5bbab694baa23ec9c20ed04695213acbbaa37eafc3b49617c7010ebd"
 			},
 			"name": "live-pulse",
 			"steps": [
@@ -8340,7 +8340,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "0c3376b5decc71469c0a6fd13bb8f1a888dceebf384ed1dce04a4e17b75139ee"
+				"png": "7e61dc353814ab8b0625fe232d308b72e457294d9723503c73834f801ce7df4a"
 			},
 			"name": "merge-guards",
 			"steps": [
@@ -9364,7 +9364,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "c74d0353eddf40297c4f3e72c00365ee2911563e67687f3d90c2a240b6c89184",
+				"png": "af0600ba86f294d92108100bb405093482e0eefa2edf49f75a5981cba88a7c2a",
 				"reading": "c90f50e77eef6390b67b905dc3230efe6c5a6ddc731411325ecf965447f89c09"
 			},
 			"layout": "vertical",
@@ -9658,7 +9658,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "ae74c586128b9238ef73abff864cfbe9d1261b505a61a902861da960c95af986",
+				"png": "5f05cc3aa958b65ba85aff16cf6653728d57b067dc21f25cbbf753ca32be8c52",
 				"reading": "8e01227f92ead55a54e014589a58c50f79b2302230db31cd5cf063f41159860a"
 			},
 			"name": "theming-lead-light",
@@ -10072,7 +10072,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "aa118b16e70671861f6e1af4c6f14f1bc6e49cb9077e6245f774d6985c0e52c4",
+				"png": "a4d8bb8a1e1a6c9bdff2c21d753bd430ba1846f8035f5d7a6f82a3aaebd03a0e",
 				"reading": "2b72a96cf5bd784291f255543bc4e96ba27bc1c8ccdd0a821b2d0a5bcf09d170"
 			},
 			"keep_mouse": true,
@@ -10120,7 +10120,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "6591910573b28ed8b1b3762c14641e15c18fb7ca8f464334c75f0cdca074622f",
+				"png": "ce13c9f9d98dd4957f8b96e94697af0a143f233d5586268a149ae48689e4de6b",
 				"reading": "74f6dad820a724084cb560f4448ad62cfa9fbcd5f09f6e06a241114a4727f16f"
 			},
 			"name": "rename-outside-row",
@@ -10168,7 +10168,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "c5d50be79ef7b6f61546861333afae0670f13a38c2c2e454c7b5d6cc921056b7",
-				"png": "736ee2747dec92626b17500da6dc747cb25135f4f212567046f7e09ee1fa96a8",
+				"png": "50a29b9958cde8202a4217c7847f5f04d244cfcdf523717f480a2b9011c04b4d",
 				"reading": "56f82a0981e846ab31ec7582c89c493393317d42be95269dbc0d74741001563c"
 			},
 			"name": "interop-convert-menu",
