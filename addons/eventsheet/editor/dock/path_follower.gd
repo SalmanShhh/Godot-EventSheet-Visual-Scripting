@@ -405,11 +405,34 @@ func _start_read() -> void:
 		moves.append(entry["move"])
 		skip.append_array(entry["open"] as PackedStringArray)
 	var references: GDScript = load("res://addons/eventsheet/editor/dock/path_references.gd")
+	moves = chained(moves)
 	_read_running = true
-	_finish_read(references, references.begin_scan(moves, skip), batch)
+	_finish_read(references, references.begin_scan(moves, skip), batch, moves)
 
 
-func _finish_read(references: GDScript, job: Object, batch: Array) -> void:
+## The moves of one batch with each one's destination followed through the moves after it, so a file moved
+## from A to B and then from B to C is carried to C by the sheets that named A (the files are read once, after
+## both moves, and a sheet respelled to B would be left naming a path that is no longer there). The move out of
+## B stays in the list for the sheets that named B. Moves that do not meet are returned as they were.
+static func chained(moves: Array) -> Array:
+	var followed: Array = []
+	for at: int in range(moves.size()):
+		var move: Dictionary = (moves[at] as Dictionary).duplicate()
+		for later: int in range(at + 1, moves.size()):
+			var next: Dictionary = moves[later]
+			var destination: String = str(move["new"])
+			# A folder the later move carries away is that folder itself, which `mapped` leaves alone (it maps
+			# what lies under a folder), so the destination that IS the folder is named here.
+			if bool(next["folder"]) and destination.simplify_path() == str(next["old"]).simplify_path():
+				destination = str(next["new"])
+			else:
+				destination = mapped(destination, str(next["old"]), str(next["new"]), bool(next["folder"]))
+			move["new"] = destination
+		followed.append(move)
+	return followed
+
+
+func _finish_read(references: GDScript, job: Object, batch: Array, moves: Array) -> void:
 	while is_instance_valid(_dock) and _dock.is_inside_tree() and not job.is_done():
 		await _dock.get_tree().process_frame
 	var results: Array = job.finish()
@@ -419,7 +442,7 @@ func _finish_read(references: GDScript, job: Object, batch: Array) -> void:
 	var followed_sheets: int = 0
 	var script_paths: Dictionary = {}
 	for index: int in range(batch.size()):
-		var move: Dictionary = batch[index]["move"]
+		var move: Dictionary = moves[index]
 		followed_sheets += int(batch[index]["followed"])
 		var sheets: Array = results[index]["sheets"]
 		# A sheet opened while the files were being read holds the old spelling in memory: it follows in

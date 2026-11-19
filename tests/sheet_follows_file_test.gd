@@ -54,6 +54,7 @@ static func _all() -> bool:
 	passed = _a_followed_tab_is_named_by_the_rule_a_fresh_one_is() and passed
 	passed = _what_the_plugin_wrote_down_follows_the_file() and passed
 	passed = _a_batch_of_moves_reads_the_project_once_and_answers_each_alone() and passed
+	passed = _a_file_moved_twice_in_one_batch_is_followed_to_its_last_place() and passed
 	return passed
 
 
@@ -643,3 +644,35 @@ static func _a_batch_of_moves_reads_the_project_once_and_answers_each_alone() ->
 		["no needles share nothing", refs.needles_in_common(PackedStringArray()), ""],
 	])
 	return passed
+
+
+## A file moved from A to B and then from B to C in the same moment: the project is read once, after both
+## moves, so a sheet naming A has to be carried to C, not left naming B (a path nothing is at any more).
+static func _a_file_moved_twice_in_one_batch_is_followed_to_its_last_place() -> bool:
+	var refs: GDScript = load("res://addons/eventsheet/editor/dock/path_references.gd")
+	var root: String = SUPPORT.own_folder("follow_chain")
+	var sheet_head: String = "[gd_resource type=\"Resource\" script_class=\"EventSheetResource\" format=3]\n\n[resource]\n"
+	var names_a: String = _write(root + "/names_a.tres", sheet_head + "includes = Array[String]([\"res://lib/a.tres\"])\n")
+	var names_b: String = _write(root + "/names_b.tres", sheet_head + "includes = Array[String]([\"res://lib/b.tres\"])\n")
+	var moves: Array = [
+		{"old": "res://lib/a.tres", "new": "res://lib/b.tres", "folder": false},
+		{"old": "res://lib/b.tres", "new": "res://lib/c.tres", "folder": false},
+	]
+	var carried: Array = FOLLOWER.chained(moves)
+	var found: Array = refs.begin_scan(carried, PackedStringArray(), root).finish()
+	for at: int in range(carried.size()):
+		refs.write_sheets(found[at]["sheets"], str(carried[at]["old"]), str(carried[at]["new"]), bool(carried[at]["folder"]))
+	var folder_chain: Array = FOLLOWER.chained([
+		{"old": "res://a", "new": "res://b", "folder": true},
+		{"old": "res://b", "new": "res://c", "folder": true},
+		{"old": "res://c/x.gd", "new": "res://c/y.gd", "folder": false},
+	])
+	return SUPPORT.pins(TEST_NAME, [
+		["the first move is carried to the last place the file went", [carried[0]["old"], carried[0]["new"]], ["res://lib/a.tres", "res://lib/c.tres"]],
+		["the second move stays for the sheets that named the middle", [carried[1]["old"], carried[1]["new"]], ["res://lib/b.tres", "res://lib/c.tres"]],
+		["moves that never meet are left as they were", FOLLOWER.chained([moves[0], {"old": "res://x.gd", "new": "res://y.gd", "folder": false}])[0]["new"], "res://lib/b.tres"],
+		["the moves passed in are not changed", moves[0]["new"], "res://lib/b.tres"],
+		["a sheet that named the first path names the last", FileAccess.get_file_as_string(names_a), sheet_head + "includes = Array[String]([\"res://lib/c.tres\"])\n"],
+		["a sheet that named the middle path names the last", FileAccess.get_file_as_string(names_b), sheet_head + "includes = Array[String]([\"res://lib/c.tres\"])\n"],
+		["a folder moved twice and a file in it renamed lands every move on its last place", [folder_chain[0]["new"], folder_chain[1]["new"], folder_chain[2]["new"]], ["res://c", "res://c", "res://c/y.gd"]],
+	])

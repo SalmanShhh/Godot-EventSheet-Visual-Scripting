@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: sheets that named a file moved twice in one moment follow it to its last place
+
+When two files in the FileSystem dock were moved one after the other in the same moment - a file renamed from A to B and then from B to C - the project is read once afterwards, and a sheet file that named A was respelled to B, a path nothing is at any more. The first move now carries on to where the file ended up, so such a sheet names C; sheets that named B follow too.
+
 ### Faster: renaming or moving a sheet no longer holds the editor while the project is read
 
 When a sheet or script is renamed or moved in the FileSystem dock, the plugin looks through the project's scripts and sheet files for ones that name the old path. That read ran on the editor's main thread: about a third of a second in a project of 2,000 files and about 1.7 seconds in one of 10,000, with the editor frozen meanwhile, and a selection of 50 files moved at once read the whole project 50 times (17 seconds at 2,000 files). The read now runs on the engine's worker threads, once for every move reported in the same moment, and the sentence that says how many sheets followed and how many of your scripts still name the old path arrives on the status line when it ends. The files found and respelled, and the count in the sentence, are the same as before.
