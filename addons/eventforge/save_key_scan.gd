@@ -174,7 +174,19 @@ static func _sorted_keys(keys: Dictionary) -> PackedStringArray:
 static var _regex_cache: Dictionary = {}
 
 
+## Made by the Project Doctor for as long as a sliced audit has worker threads that ask for a regex, and `null`
+## otherwise (a command-line run makes none). A compiled regex is only read once made, so what the lock protects is
+## the table: two threads asking for a new pattern at once would each write into it.
+static var lock: Mutex = null
+
+
 static func _cached_regex(pattern: String) -> RegEx:
-	if not _regex_cache.has(pattern):
-		_regex_cache[pattern] = RegEx.create_from_string(pattern)
-	return _regex_cache[pattern]
+	if lock != null:
+		lock.lock()
+	var held: RegEx = _regex_cache.get(pattern, null) as RegEx
+	if held == null:
+		held = RegEx.create_from_string(pattern)
+		_regex_cache[pattern] = held
+	if lock != null:
+		lock.unlock()
+	return held

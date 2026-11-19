@@ -272,6 +272,12 @@ func _run_project_doctor() -> void:
 		func(partial: Dictionary) -> void: _show_progress(partial))
 	_running = false
 	_set_running(false)
+	if bool(report.get("interrupted", false)):
+		# A whole audit was asked for from outside while this one was under way (the MCP tool, a test): it took the
+		# shared state over and this one was abandoned, so the window asks again rather than show half a page.
+		if not _cancel_requested and _doctor_window != null and _doctor_window.visible:
+			_run_project_doctor()
+		return
 	if report.is_empty():
 		# Stopped: what had come in stays on the page, and the summary says it is not the whole.
 		_summary_label.text = EventSheetL10n.translate("Stopped - %d finding(s) so far; run it again for the whole project.") % (session["findings"] as Array).size()

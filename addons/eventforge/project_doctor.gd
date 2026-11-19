@@ -39,6 +39,11 @@ static var _listed_by_extension: Dictionary = {}
 
 ## path -> that file's text, for the length of one audit - see `source_of`.
 static var _source_cache: Dictionary = {}
+## Held for as long as a sliced audit is running (made when it starts, let go of when it ends): the texts are read by
+## worker threads while the main thread may be filling the table, and a table two threads touch at once is corrupted.
+## `null` in a command-line run or a test, which have no workers, so they pay for no lock. A worker only reads the
+## table; the main thread is the one that adds to it.
+static var _cache_lock: Mutex = null
 
 ## And the same sharing one step further along: a script already opened as a SHEET. Twelve sections
 ## of this report need the rows rather than the text, and most of them look at the same scripts, so
@@ -50,6 +55,14 @@ static var _sheet_cache: Dictionary = {}
 ## tested) may be handed a fixture that was just rewritten under it, and a read held from before the
 ## write would answer with the file that is no longer there.
 static var _run_in_progress: bool = false
+
+const _WARM_SCRIPTS: PackedStringArray = [
+	"res://addons/eventforge/importer/scene_connections.gd",
+	"res://addons/eventforge/importer/scene_replication.gd",
+	"res://addons/eventsheet/editor/interaction/mistake_findings.gd",
+	"res://addons/eventsheet/editor/interaction/classic_findings.gd",
+	"res://addons/eventsheet/editor/interaction/collision_findings.gd",
+]
 
 ## How long a sliced audit works before it gives the editor a frame, and where it is in that slice.
 const SLICE_USEC: int = 8000
@@ -318,13 +331,14 @@ static func _preload_texts() -> void:
 	var texts: Dictionary = await load(BACKGROUND_PATH).read_texts(wanted, _frame_source, _cancel_check)
 	_last_mark_usec = Time.get_ticks_usec()
 	for path: Variant in texts:
-		_source_cache[str(path)] = texts[path]
+		_cache_put(str(path), texts[path])
 
 
 ## Whether a script starts with the compiler's banner. A text already held answers "no" for certain; a "yes" is
 ## confirmed on the file's own first bytes, as it always was, so a file with a byte-order mark answers as before.
 static func _has_banner(script_path: String) -> bool:
-	if _source_cache.has(script_path) and not str(_source_cache[script_path]).begins_with(KnownSheets.SHEET_BANNER):
+	var held: Variant = _cache_get(script_path)
+	if held != null and not str(held).begins_with(KnownSheets.SHEET_BANNER):
 		return false
 	return KnownSheets.has_banner(script_path)
 
@@ -404,6 +418,51 @@ static func drop_primed_listing() -> void:
 
 
 ## Lets go of what an audit held for its own length.
+## What an audit held that is being let go of a few at a time, as {"held": the table, "keys": its keys, "at": next}.
+## Letting go of the sheets of ten thousand scripts at once is a stretch of the main thread of its own, so in the editor
+## each table is emptied a few milliseconds a frame (see `_drain_released`); everywhere else it is cleared at once.
+static var _dying: Array = []
+static var _draining: bool = false
+## The tree whose frames the drain waits on: the one the latest sliced audit ran on, null for a plain run.
+static var _release_tree: SceneTree = null
+
+
+static func _let_go(held: Dictionary) -> void:
+	if held.is_empty():
+		return
+	if _release_tree == null:
+		held.clear()
+		return
+	var moved: Dictionary = held.duplicate()
+	held.clear()
+	_dying.append({"held": moved, "keys": moved.keys(), "at": 0})
+
+
+## Empties what `_let_go` was handed, a few milliseconds of work and then a frame, until nothing is left. A coroutine
+## nobody waits on: it runs on the frames of the tree and ends when the last table is empty.
+static func _drain_released() -> void:
+	if _draining or _release_tree == null:
+		return
+	_draining = true
+	var tree: SceneTree = _release_tree
+	while not _dying.is_empty():
+		var entry: Dictionary = _dying[0]
+		var held: Dictionary = entry["held"]
+		var keys: Array = entry["keys"]
+		var at: int = int(entry["at"])
+		var started: int = Time.get_ticks_usec()
+		while at < keys.size() and Time.get_ticks_usec() - started < 4000:
+			held.erase(keys[at])
+			at += 1
+		entry["at"] = at
+		if at >= keys.size():
+			_dying.pop_front()
+		await tree.process_frame
+	_draining = false
+	# Nothing is being let go of now, so a plain run after this clears at once, as it always did.
+	_release_tree = null
+
+
 static func _release_listing() -> void:
 	ProjectFiles.hold(null)
 	# The editor's filesystem hook fired during the audit and was ignored: what it would have dropped is dropped now.
@@ -415,19 +474,56 @@ static func _release_listing() -> void:
 		load("res://addons/eventforge/importer/scene_connections.gd").clear_cache()
 	EventSheetProjectFind.release_held_sheets()
 	_primed = {}
-	_reading_cache.clear()
-	_resource_sheets.clear()
-	_fresh_sheets.clear()
+	_let_go(_reading_cache)
+	_let_go(_resource_sheets)
+	_let_go(_fresh_sheets)
 	_gate_memo.clear()
 
 
 ## Full audit over every sheet in the project. Returns
 ## {findings: Array[Dictionary{severity, check, path, message}], errors, warnings, infos}.
 static func run(options: Dictionary = {}) -> Dictionary:
+	# A sliced audit may be under way (the window's), and everything an audit holds is shared: this run would
+	# begin by clearing what that one has read and end by clearing it again, and every check that yields would
+	# hand back at its first wait with its work half done. So the audit under way is abandoned - its workers are
+	# stopped and joined, it is told it was interrupted, and it winds down at its next look without doing more -
+	# and this run is the whole audit it has always been. The window's audit then starts again (see `run_sliced`).
+	var under_way: bool = _frame_source != null
+	var held_source: SceneTree = _frame_source
+	var held_cancel: Callable = _cancel_check
+	var held_release_tree: SceneTree = _release_tree
+	_release_tree = null
+	if under_way:
+		_interrupts += 1
+		stop_workers()
+		_frame_source = null
+		_cancel_check = Callable()
 	var session: Dictionary = begin(options)
 	while step(session):
 		pass
-	return finish(session)
+	var report: Dictionary = finish(session)
+	_release_tree = held_release_tree
+	if under_way:
+		_frame_source = held_source
+		_cancel_check = held_cancel
+	return report
+
+
+## How many times a synchronous `run()` has taken over from a sliced audit under way, and which sliced audit is the
+## latest to have started: the first is how an abandoned audit knows it was, the second keeps it from resetting
+## what a newer one now holds.
+static var _interrupts: int = 0
+static var _sliced_token: int = 0
+
+
+## Stops and joins every worker thread the Doctor has running: for the editor quitting (a thread still running when
+## the process ends is a crash on some platforms) and for a synchronous audit taking over from the window's. Called
+## on the main thread; each worker leaves at its next file or the end of the piece it is in. Loads nothing that has
+## not been loaded already.
+static func stop_workers() -> void:
+	for path: String in [BACKGROUND_PATH, SHEET_PREFETCH_PATH]:
+		if ResourceLoader.has_cached(path):
+			(load(path) as GDScript).call("stop_all")
 
 
 ## The same audit in pieces, for a caller that must not hold the editor still: `begin()` opens it,
@@ -749,18 +845,26 @@ static func step(session: Dictionary) -> bool:
 ## report, or an empty Dictionary when it was cancelled. A check yields in the middle of its own loop
 ## through `breathe`, so a section that walks every script of a big project does not hold a frame.
 static func run_sliced(session: Dictionary, tree: SceneTree, cancelled: Callable, on_progress: Callable) -> Dictionary:
+	_sliced_token += 1
+	var token: int = _sliced_token
+	var interrupts: int = _interrupts
+	_release_tree = tree
+	# The scripts the long checks reach for first are compiled on the engine's own loader threads while the window is
+	# still saying it is getting ready, instead of in the frame the first check that names them is in.
+	for warm_path: String in _WARM_SCRIPTS:
+		ResourceLoader.load_threaded_request(warm_path)
 	_frame_source = tree
-	_cancel_check = cancelled
+	# The one "stop now" question every wait inside a check asks: the caller's, or that a synchronous audit took over.
+	_cancel_check = func() -> bool:
+		return _interrupts != interrupts or (cancelled.is_valid() and bool(cancelled.call()))
 	_spent_slice = true
+	_share_locks(true)
 	var steps: Array = session["steps"]
 	while int(session["index"]) < steps.size():
+		if _interrupts != interrupts:
+			return _wound_down(token, true)
 		if cancelled.is_valid() and bool(cancelled.call()):
-			_frame_source = null
-			_cancel_check = Callable()
-			_run_in_progress = false
-			_audited_sheets = {}
-			_release_listing()
-			return {}
+			return _wound_down(token, false)
 		var entry: Array = steps[int(session["index"])]
 		session["current"] = str(entry[0])
 		current_step = str(entry[0])
@@ -769,6 +873,8 @@ static func run_sliced(session: Dictionary, tree: SceneTree, cancelled: Callable
 		await (entry[1] as Callable).call()
 		if trace_slow and _last_mark_usec > 0 and Time.get_ticks_usec() - _last_mark_usec > 50000:
 			slow_segments.append({"step": current_step, "ms": (Time.get_ticks_usec() - _last_mark_usec) / 1000.0, "where": "end of step"})
+		if _interrupts != interrupts:
+			return _wound_down(token, true)
 		var timings: Dictionary = session["timings"]
 		timings[entry[0]] = int(timings.get(entry[0], 0)) + Time.get_ticks_usec() - started
 		session["index"] = int(session["index"]) + 1
@@ -780,7 +886,29 @@ static func run_sliced(session: Dictionary, tree: SceneTree, cancelled: Callable
 	_frame_source = null
 	_cancel_check = Callable()
 	current_step = ""
-	return finish(session)
+	_share_locks(false)
+	var report: Dictionary = finish(session)
+	_drain_released()
+	return report
+
+
+## What a sliced audit that is stopping leaves behind, and what it answers: nothing, or `{"interrupted": true}` when a
+## synchronous audit took over and the caller should ask again. A newer sliced audit's state is not this one's to reset.
+static func _wound_down(token: int, interrupted: bool) -> Dictionary:
+	if token == _sliced_token:
+		_frame_source = null
+		_cancel_check = Callable()
+		current_step = ""
+		_share_locks(false)
+		if not interrupted:
+			_run_in_progress = false
+			_audited_sheets = {}
+			_release_listing()
+			_cache_clear()
+			_let_go(_sheet_cache)
+			_let_go(_margin_cache)
+			_drain_released()
+	return {"interrupted": true} if interrupted else {}
 
 
 ## Called inside a long loop of a check: `await EventSheetProjectDoctor.breathe()`. Outside a sliced
@@ -896,9 +1024,9 @@ static func finish(session: Dictionary) -> Dictionary:
 	last_timings = (session["timings"] as Dictionary).duplicate()
 	var importer_calls: int = EventSheetGDScriptImporter.external_imports - importer_calls_before
 	_audited_sheets = {}
-	_source_cache.clear()
-	_sheet_cache.clear()
-	_margin_cache.clear()
+	_cache_clear()
+	_let_go(_sheet_cache)
+	_let_go(_margin_cache)
 	var counts: Dictionary = {"error": 0, "warning": 0, "info": 0}
 	for finding: Dictionary in findings:
 		var severity: String = str(finding.get("severity"))
@@ -3734,7 +3862,7 @@ static func clear_project_scripts(force: bool = false) -> void:
 	_project_scripts_walked = false
 	_listed_by_extension.clear()
 	ProjectFiles.clear()
-	_source_cache.clear()
+	_cache_clear()
 	_sheet_cache.clear()
 	_resource_sheets.clear()
 	_margin_cache.clear()
@@ -3759,11 +3887,13 @@ static func clear_project_scripts(force: bool = false) -> void:
 ## there. The corpus every check walks is res:// throughout, so nothing the sharing is for is left
 ## out of it.
 static func source_of(path: String) -> String:
-	if _source_cache.has(path):
-		return _source_cache[path]
+	var held: Variant = _cache_get(path)
+	if held != null:
+		return held
 	var text: String = FileAccess.get_file_as_string(path)
-	if _run_in_progress and path.begins_with("res://"):
-		_source_cache[path] = text
+	# A worker thread only reads the table: the text it had to read for itself is handed back and not kept.
+	if _run_in_progress and path.begins_with("res://") and OS.get_thread_caller_id() == OS.get_main_thread_id():
+		_cache_put(path, text)
 	return text
 
 
@@ -3893,6 +4023,38 @@ static func declared_skipped_folders() -> PackedStringArray:
 	for entry: Variant in declared:
 		var folder: String = str(entry).strip_edges().trim_prefix("res://").trim_suffix("/")
 		if folder.is_empty() or folders.has(folder):
+## The held text of one path, or null.
+static func _cache_get(path: String) -> Variant:
+	if _cache_lock != null:
+		_cache_lock.lock()
+	var held: Variant = _source_cache.get(path, null)
+	if _cache_lock != null:
+		_cache_lock.unlock()
+	return held
+
+
+static func _cache_clear() -> void:
+	if _cache_lock != null:
+		_cache_lock.lock()
+	_source_cache.clear()
+	if _cache_lock != null:
+		_cache_lock.unlock()
+
+
+static func _cache_put(path: String, text: String) -> void:
+	if _cache_lock != null:
+		_cache_lock.lock()
+	_source_cache[path] = text
+	if _cache_lock != null:
+		_cache_lock.unlock()
+
+
+## Makes the locks a sliced audit's worker threads share, and lets them go again when it is over. Main thread only.
+static func _share_locks(on: bool) -> void:
+	_cache_lock = Mutex.new() if on else null
+	SAVE_KEY_SCAN.lock = _cache_lock
+
+
 			continue
 		folders.append(folder)
 	return folders

@@ -23,6 +23,10 @@ const SHEET_NO: int = 0
 ## A header that cannot say (a resource with a script of some other class): the main thread loads it.
 const SHEET_UNSURE: int = -1
 
+## The jobs with a worker still running, so whoever must end the audit now (the editor quitting, a synchronous
+## audit asked for while the window's is under way) can stop and join every one of them: `stop_all`.
+static var _live: Array = []
+
 var _threads: Array[Thread] = []
 var _stop: bool = false
 var _listing: Array = []
@@ -66,6 +70,7 @@ static func run_work(work: Callable, tree: SceneTree) -> Variant:
 	if thread.start(job._do_work.bind(work), Thread.PRIORITY_LOW) != OK:
 		return work.call()
 	job._threads.append(thread)
+	_live.append(job)
 	while job.is_running():
 		await tree.process_frame
 	job._join()
@@ -81,6 +86,7 @@ func start_listing() -> bool:
 	if thread.start(_list, Thread.PRIORITY_LOW) != OK:
 		return false
 	_threads.append(thread)
+	_live.append(self)
 	return true
 
 
@@ -99,6 +105,8 @@ func start_reading(paths: PackedStringArray) -> bool:
 			_slices.erase(held)
 			continue
 		_threads.append(thread)
+	if not _threads.is_empty():
+		_live.append(self)
 	return not _threads.is_empty()
 
 
@@ -136,6 +144,17 @@ func _join() -> void:
 	for thread: Thread in _threads:
 		thread.wait_to_finish()
 	_threads.clear()
+	_live.erase(self)
+
+
+## Stops every worker of every job and waits for each to finish: a listing or a read leaves at its next file, and
+## a piece of work handed in finishes the piece it is in (a slice of about sixty milliseconds). Called on the main
+## thread, by whoever must have no worker left running - the editor quitting, or a synchronous audit that is about
+## to use the state the workers read. A job joined here answers what it had, and its waiting coroutine finds it done.
+static func stop_all() -> void:
+	for job: Variant in _live.duplicate():
+		(job as RefCounted).call("stop")
+		(job as RefCounted).call("_join")
 
 
 func _list() -> void:

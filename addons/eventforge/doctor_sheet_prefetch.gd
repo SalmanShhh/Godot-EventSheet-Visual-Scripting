@@ -18,6 +18,9 @@ extends RefCounted
 
 const OPEN_JOB_PATH: String = "res://addons/eventforge/importer/open_job.gd"
 
+## The job whose worker is running, so `stop_all` can end it: there is one at a time.
+static var _running_job: RefCounted = null
+
 var _thread: Thread = null
 var _paths: PackedStringArray = PackedStringArray()
 ## path -> sheet, written only by the worker and read only after it has stopped.
@@ -105,7 +108,9 @@ func begin(paths: PackedStringArray, open_job_class: GDScript, mode: String = "s
 	if _thread.start(_run, Thread.PRIORITY_LOW) != OK:
 		_thread = null
 		return false
-	open_job_class.preempt_background = preempt
+	open_job_class.preempt_background = ask_to_stop
+	open_job_class.background_running = is_running
+	_running_job = self
 	return true
 
 
@@ -145,15 +150,32 @@ func request_stop() -> void:
 	EventSheetACELifter.cancel_requested = true
 
 
-## The reader is opening a sheet: stop and join now, so the lifter is free for that open.
+## The reader is opening a sheet: asks the worker to stop at the next function of the lift in hand and goes on, without
+## waiting. The reader's open begins its own worker once this one has left (see `EventSheetOpenJob.start`), so the click
+## that opens a sheet is not held for as long as a very large function takes to finish.
+func ask_to_stop() -> void:
+	if _thread != null and not _joined:
+		request_stop()
+
+
+## Stops the worker and joins it now, for whoever must have it gone before going on.
 func preempt() -> void:
 	if _thread == null or _joined:
 		return
 	request_stop()
 	_thread.wait_to_finish()
 	_joined = true
+	if _running_job == self:
+		_running_job = null
 	EventSheetACELifter.cancel_requested = false
 	EventSheetACELifter.progress_phase = ""
+
+
+## Stops the running worker, if there is one, and waits for it: for whoever must have no worker left (the editor
+## quitting, a synchronous audit about to use what the worker reads). Its waiting coroutine finds it joined.
+static func stop_all() -> void:
+	if _running_job != null:
+		_running_job.call("preempt")
 
 
 ## Joins the worker and answers {"sheets": {path: sheet}, "done": how many paths were finished}.
@@ -162,8 +184,11 @@ func finish(open_job_class: GDScript) -> Dictionary:
 		_thread.wait_to_finish()
 		_joined = true
 	_thread = null
-	if open_job_class.preempt_background == preempt:
+	if _running_job == self:
+		_running_job = null
+	if open_job_class.preempt_background == ask_to_stop:
 		open_job_class.preempt_background = Callable()
+		open_job_class.background_running = Callable()
 	EventSheetACELifter.cancel_requested = false
 	EventSheetACELifter.progress_phase = ""
 	return {"sheets": _sheets, "done": _done}

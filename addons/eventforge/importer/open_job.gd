@@ -30,7 +30,13 @@ const LIFT_CACHE_PATH: String = "res://addons/eventforge/importer/lift_cache.gd"
 
 ## Set while the Project Doctor is opening scripts on a worker of its own: called by `start()` so the
 ## reader's open takes the lifter first (the Doctor's worker stops and carries on once this one is done).
+## It only ASKS that worker to stop; it never waits for it.
 static var preempt_background: Callable = Callable()
+## The question that goes with it: is the Doctor's worker still running. The reader's own worker is started
+## once the answer is no, and the open call returns at once - waiting for the Doctor's worker to leave the
+## function it is in was as long as that function took, on a very large script most of a second, in the click that
+## opened a sheet.
+static var background_running: Callable = Callable()
 ## The job most recently started, to answer `lifting_now`.
 static var _latest: WeakRef = null
 
@@ -41,6 +47,8 @@ var _sheet: EventSheetResource = null
 var _started_msec: int = 0
 var _finished_msec: int = 0
 var _canceled: bool = false
+## True from `start()` until the Doctor's worker has stopped and this job's own worker has begun.
+var _deferred: bool = false
 
 
 ## Builds every lazily-initialised static the import path reads, on the calling (main) thread.
@@ -62,12 +70,15 @@ static func warm_registries() -> void:
 ## Whether a job of this kind has its worker running right now: what anything else that wants the lifter waits on.
 static func lifting_now() -> bool:
 	var job: Object = _latest.get_ref() if _latest != null else null
-	return job != null and (job as EventSheetOpenJob)._thread != null and (job as EventSheetOpenJob)._thread.is_alive()
+	if job == null:
+		return false
+	var open_job: EventSheetOpenJob = job as EventSheetOpenJob
+	return open_job._deferred or (open_job._thread != null and open_job._thread.is_alive())
 
 
 ## Starts the import. Returns false when the file is missing or a job is already running.
 func start(path: String) -> bool:
-	if _thread != null:
+	if _thread != null or _deferred:
 		return false
 	if not FileAccess.file_exists(path):
 		return false
@@ -79,11 +90,24 @@ func start(path: String) -> bool:
 	_finished_msec = 0
 	var source: String = FileAccess.get_file_as_string(path)
 	_source_lines = source.split("\n").size()
+	_latest = weakref(self)
+	_started_msec = Time.get_ticks_msec()
+	if background_running.is_valid() and bool(background_running.call()):
+		# The Doctor's worker is in the middle of a function; this job's worker begins when it has left (`is_done`).
+		_deferred = true
+		EventSheetACELifter.progress_phase = "reading"
+		return true
+	return _begin_worker()
+
+
+## Starts the worker thread. False never: with no thread to be had the open is made here, synchronously.
+func _begin_worker() -> bool:
+	_deferred = false
 	warm_registries()
 	EventSheetACELifter.reset_progress()
 	EventSheetACELifter.progress_phase = "reading"
-	_latest = weakref(self)
-	_started_msec = Time.get_ticks_msec()
+	if _canceled:
+		EventSheetACELifter.cancel_requested = true
 	_thread = Thread.new()
 	if _thread.start(_run) != OK:
 		# No thread available (a platform without threading): fall back to the synchronous open so
@@ -130,6 +154,10 @@ func _run() -> void:
 ## Whether the worker has stopped. False while it runs; true once there is a result to collect
 ## (including the no-thread fallback, which finished inside start()).
 func is_done() -> bool:
+	if _deferred:
+		if background_running.is_valid() and bool(background_running.call()):
+			return false
+		_begin_worker()
 	if _thread == null:
 		return _finished_msec > 0
 	return _thread.is_started() and not _thread.is_alive()
@@ -149,6 +177,7 @@ func was_canceled() -> bool:
 ## Joins the worker and returns the imported sheet (null when the file could not be read). Must be
 ## called once is_done(); calling it earlier blocks until the worker stops.
 func finish() -> EventSheetResource:
+	_deferred = false
 	if _thread != null:
 		_thread.wait_to_finish()
 		_thread = null
