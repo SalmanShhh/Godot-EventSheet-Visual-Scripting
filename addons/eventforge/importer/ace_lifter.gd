@@ -114,6 +114,9 @@ const RUN_FAMILIES: Array[GDScript] = [
 	# a sprite, a collision shape or a timer made and added, a branch packed into a variable. Asked
 	# after the spawn runs, whose statements open on an `instantiate()` these never contain.
 	preload("res://addons/eventforge/importer/building_run_lift.gd"),
+	# The graph a Show In Monitors row adds to the debugger panel (guard, add, clean-up) and the
+	# guarded removal of one. Asked last: both open on an `if` over Performance and nothing else.
+	preload("res://addons/eventforge/importer/monitor_lift.gd"),
 ]
 
 ## The spawn runs again, named on its own because the file is told which dimension it is reading
