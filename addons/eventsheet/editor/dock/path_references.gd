@@ -158,8 +158,8 @@ static func needles_in_common(needles: PackedStringArray) -> String:
 	return prefix
 
 
-## A scan of the project's files that runs off the main thread. The listing and the reading both happen in
-## the worker: one task lists the folders, then a group task spreads the reading over every worker thread.
+## A scan of the project's files that runs off the main thread: one task lists the folders, then a group
+## task spreads the reading over every worker thread.
 class ScanJob extends RefCounted:
 	var moves: Array = []
 	var needles: PackedStringArray = PackedStringArray()
@@ -168,6 +168,8 @@ class ScanJob extends RefCounted:
 	## This script itself, which an inner class reaches its static helpers through.
 	var refs: GDScript = null
 	var task_id: int = -1
+	## The reading's group task: -1 before it starts, -2 when there was nothing to read.
+	var group_id: int = -1
 	var files: PackedStringArray = PackedStringArray()
 	## The longest start every needle shares ("" when they share none).
 	var common: String = ""
@@ -197,9 +199,6 @@ class ScanJob extends RefCounted:
 						files.append(full_path)
 				entry = directory.get_next()
 		slots.resize(files.size())
-		if files.is_empty():
-			return
-		WorkerThreadPool.wait_for_group_task_completion(WorkerThreadPool.add_group_task(_read_one, files.size(), -1, false, "event sheet path scan files"))
 
 
 	func _read_one(index: int) -> void:
@@ -232,15 +231,42 @@ class ScanJob extends RefCounted:
 		return "script" if CLAIM.source_of(full_path).is_empty() else ""
 
 
+	## Moves the scan along without blocking and says whether it has ended. The listing is one task; once it
+	## is complete the reading is started as a group task from here (a task that waited on a group of its own
+	## could take the last free worker thread and never be answered).
 	func is_done() -> bool:
-		return _finished or WorkerThreadPool.is_task_completed(task_id)
+		if _finished:
+			return true
+		if group_id < 0:
+			if not WorkerThreadPool.is_task_completed(task_id):
+				return false
+			_start_reading()
+		if group_id >= 0 and not WorkerThreadPool.is_group_task_completed(group_id):
+			return false
+		_end()
+		return true
+
+
+	func _start_reading() -> void:
+		WorkerThreadPool.wait_for_task_completion(task_id)
+		if files.is_empty():
+			group_id = -2
+		else:
+			group_id = WorkerThreadPool.add_group_task(_read_one, files.size(), -1, false, "event sheet path scan files")
+
+
+	func _end() -> void:
+		if group_id >= 0:
+			WorkerThreadPool.wait_for_group_task_completion(group_id)
+		_finished = true
 
 
 	## Waits for the worker when it is not done yet, then answers one {"sheets", "scripts"} per move.
 	func finish() -> Array:
 		if not _finished:
-			WorkerThreadPool.wait_for_task_completion(task_id)
-			_finished = true
+			if group_id < 0:
+				_start_reading()
+			_end()
 		var out: Array = []
 		for _move: Dictionary in moves:
 			out.append({"sheets": [], "scripts": []})
