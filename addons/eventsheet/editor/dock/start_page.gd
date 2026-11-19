@@ -468,7 +468,16 @@ func _build() -> void:
 	_columns_row = HBoxContainer.new()
 	_columns_row.add_theme_constant_override("separation", int(EventSheetPalette.scaled_f(12.0)))
 	_columns_row.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	outer.add_child(_columns_row)
+	_columns_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# The columns scroll inside the window when it is too short for them (a language whose words wrap to more
+	# lines asks for more height than the window's smallest size): the strip and the Open and Close buttons under
+	# them stay in view and in reach, instead of being pushed past the window's bottom edge.
+	var columns_scroll: ScrollContainer = ScrollContainer.new()
+	columns_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	columns_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	columns_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	columns_scroll.add_child(_columns_row)
+	outer.add_child(columns_scroll)
 	_strip = EventSheetPopupUI.help_strip("", "", "", "", EventSheetPalette.scaled_f(640.0))
 	_opens_value = _strip.add_line(EventSheetL10n.translate("OPENS"))
 	outer.add_child(_strip)

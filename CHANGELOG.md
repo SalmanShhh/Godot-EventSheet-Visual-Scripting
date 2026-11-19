@@ -15,6 +15,10 @@ A scene saved by the editor names each script it uses with a uid before the path
 ### Fixed: sheets that named a file moved twice in one moment follow it to its last place
 
 When two files in the FileSystem dock were moved one after the other in the same moment - a file renamed from A to B and then from B to C - the project is read once afterwards, and a sheet file that named A was respelled to B, a path nothing is at any more. The first move now carries on to where the file ended up, so such a sheet names C; sheets that named B follow too.
+### Fixed: the Start window's Open and Close buttons stay in reach at its smallest size
+
+Made as small as it goes (760 by 420, or 1140 by 630 on a 150 percent display), the Start window in Spanish, French or Russian asked its columns for more height than the window has, so the "this entry" strip, the Show-this-page box and the Close and Open buttons were pushed past the bottom edge, out of reach of the mouse and the keyboard. The columns now scroll inside the window, so the strip and the buttons are always in view. Checked in the real editor, dark and light, in English and the eight shipped translations, at 760 by 420, 900 by 520, 1000 by 560 and the default size, and on a 1366 by 768 screen at 150 percent.
+
 ### Fixed: Add > Include sheet is one undo step
 
 Including a shared sheet in the open script rewrote the script's file and reloaded it, so nothing went on the undo history: Ctrl+Z did not take the include out and instead undid whatever you had done before it. The include is now one step like any other edit. Ctrl+Z writes the file back exactly as it was and Ctrl+Shift+Z writes the include again, the sheet is saved after each so neither leaves it unsaved, and the Include line at the head and the rows that call the shared sheet are drawn again from the file as it then reads. (The Includes window's add, remove and reorder, and Extract to Include, were already one step each.) An Include line is also no longer left stale when an include is written and taken out within the same second.
