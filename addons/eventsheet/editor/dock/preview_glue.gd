@@ -54,7 +54,6 @@ var _lift_report_tree: Tree = null
 ## a mode - there is no button that opens it, and it must never look like one that merely has not been
 ## pressed. It is the only thing the banner is ever shown for.
 const CONFLICT_BANNER_BACKGROUND := Color(0.36, 0.18, 0.14)
-const CONFLICT_BANNER_BORDER := Color(0.92, 0.48, 0.34)
 
 ## The blocked state's one button, kept by name because the refresh below shows and hides the
 ## banner's buttons by their role rather than by their position in the row.
@@ -69,8 +68,6 @@ func build_preview_banner() -> PanelContainer:
 	panel.visible = false
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = CONFLICT_BANNER_BACKGROUND
-	style.border_color = CONFLICT_BANNER_BORDER
-	style.set_border_width(SIDE_LEFT, 4)
 	style.set_content_margin_all(6.0)
 	panel.add_theme_stylebox_override("panel", style)
 	var row: HBoxContainer = HBoxContainer.new()
@@ -117,7 +114,7 @@ func _refresh_preview_banner() -> void:
 ## unlock button is not hidden as a courtesy - it is hidden because there is no unlock. The only
 ## button left is the reading of what is in the way.
 func _paint_blocked_banner() -> void:
-	_paint_banner_ground(CONFLICT_BANNER_BACKGROUND, CONFLICT_BANNER_BORDER)
+	_paint_banner_ground(CONFLICT_BANNER_BACKGROUND)
 	for button: Node in _dock._preview_banner.find_children("", "Button", true, false):
 		(button as Button).visible = button == _conflict_button
 	# The blocked sentence WRAPS rather than trailing off in an ellipsis. A preview banner may be
@@ -140,13 +137,12 @@ func _paint_blocked_banner() -> void:
 
 
 ## Repaints the banner's ground. One place, so the two states cannot drift into looking alike.
-func _paint_banner_ground(background: Color, border: Color) -> void:
+func _paint_banner_ground(background: Color) -> void:
 	var style: StyleBox = _dock._preview_banner.get_theme_stylebox("panel")
 	var flat: StyleBoxFlat = style as StyleBoxFlat
 	if flat == null:
 		return
 	flat.bg_color = background
-	flat.border_color = border
 
 
 ## "Show the conflicts": the two sides of each region, side by side, read-only until a person picks.

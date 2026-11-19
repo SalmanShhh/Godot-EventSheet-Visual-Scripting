@@ -277,8 +277,7 @@ func _option_row(option: Dictionary) -> Control:
 	row.tooltip_text = str(option.get("tip"))
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = Color(EventSheetPopupUI.accent_color(), 0.16) if option_id == _chosen else Color(0.0, 0.0, 0.0, 0.0)
-	style.border_color = EventSheetPopupUI.accent_color() if option_id == _chosen else Color(0.0, 0.0, 0.0, 0.0)
-	style.border_width_left = EventSheetPalette.scaled(3)
+	style.border_color = Color(0.0, 0.0, 0.0, 0.0)
 	style.border_width_bottom = 1
 	style.content_margin_left = EventSheetPalette.scaled_f(8.0)
 	style.content_margin_right = EventSheetPalette.scaled_f(8.0)
