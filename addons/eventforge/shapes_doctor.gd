@@ -58,7 +58,7 @@ static func ensure_registered() -> void:
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(scripts_scrolling_dashes()))
+	findings.append_array(report(await scripts_scrolling_dashes_in_turns()))
 
 
 ## Every script of the project that marches a shape's dashes, in path order. The substring sweep is
@@ -69,6 +69,22 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 static func scripts_scrolling_dashes() -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	for script_path: String in EventSheetProjectDoctor._project_scripts():
+		if _is_shipped(script_path):
+			continue
+		var source: String = EventSheetProjectDoctor.source_of(script_path)
+		if not source.contains(SCROLL_CALL):
+			continue
+		if scrolled_targets(source).is_empty():
+			continue
+		found.append(script_path)
+	return found
+
+
+## `scripts_scrolling_dashes`, a script at a time with a frame between turns: the same answer.
+static func scripts_scrolling_dashes_in_turns() -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for script_path: String in EventSheetProjectDoctor._project_scripts():
+		await EventSheetProjectDoctor.breathe()
 		if _is_shipped(script_path):
 			continue
 		var source: String = EventSheetProjectDoctor.source_of(script_path)

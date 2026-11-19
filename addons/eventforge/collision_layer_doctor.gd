@@ -57,7 +57,7 @@ static func ensure_registered() -> void:
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	findings.append_array(report(ReadingDoors.doctor()._project_scripts()))
+	findings.append_array(await report_in_turns(ReadingDoors.doctor()._project_scripts()))
 
 
 ## The whole section as findings. Pure over its corpus, so a test can hand it a list of scripts and
@@ -72,11 +72,35 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 	return findings
 
 
+## `report`, a script at a time with a frame between turns: the same answer.
+static func report_in_turns(scripts: PackedStringArray) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	var ordered: PackedStringArray = await ranked_in_turns(scripts)
+	for script_path: String in ordered:
+		await ReadingDoors.doctor().breathe()
+		findings.append_array(script_findings(script_path,
+			ReadingDoors.doctor().source_of(script_path)))
+	return findings
+
+
 ## The scripts worth reading, sorted. The plugin's own are left out, and so is every script that
 ## never names a collision layer at all.
 static func ranked(scripts: PackedStringArray) -> PackedStringArray:
 	var ordered: PackedStringArray = PackedStringArray()
 	for script_path: String in scripts:
+		if _is_shipped(script_path):
+			continue
+		if says_enough(ReadingDoors.doctor().source_of(script_path)):
+			ordered.append(script_path)
+	ordered.sort()
+	return ordered
+
+
+## `ranked`, a script at a time with a frame between turns: the same answer.
+static func ranked_in_turns(scripts: PackedStringArray) -> PackedStringArray:
+	var ordered: PackedStringArray = PackedStringArray()
+	for script_path: String in scripts:
+		await ReadingDoors.doctor().breathe()
 		if _is_shipped(script_path):
 			continue
 		if says_enough(ReadingDoors.doctor().source_of(script_path)):

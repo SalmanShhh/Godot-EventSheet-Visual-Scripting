@@ -615,8 +615,8 @@ static func begin(options: Dictionary = {}) -> Dictionary:
 	# Which scene runs which script, built a scene at a time: a good many sections ask it and the first to would build
 	# it in one go.
 	steps.append(["scene_index", func() -> void: await _build_scene_index()])
-	steps.append(["generated_outputs", func() -> void: check_generated_outputs(context["sheet_paths"], findings)])
-	steps.append(["debug_residue", func() -> void: check_debug_residue(context["sheet_paths"], findings)])
+	steps.append(["generated_outputs", func() -> void: await check_generated_outputs_in_turns(context["sheet_paths"], findings)])
+	steps.append(["debug_residue", func() -> void: await check_debug_residue_in_turns(context["sheet_paths"], findings)])
 	steps.append(["autoload_registration", func() -> void: check_autoload_registration(context["sheet_paths"], findings)])
 	steps.append(["scene_attachment", func() -> void: await check_scene_attachment(context["sheet_paths"], findings)])
 	steps.append(["unused_variables", func() -> void: check_unused_variables(context["sheet_paths"], findings)])
@@ -633,20 +633,20 @@ static func begin(options: Dictionary = {}) -> Dictionary:
 	steps.append(["shadowed_variables", func() -> void: check_shadowed_variables(context["sheet_paths"], findings)])
 	steps.append(["variable_notes", func() -> void: check_variable_notes(context["sheet_paths"], findings)])
 	steps.append(["region_fences", func() -> void: check_region_fences(context["sheet_paths"], findings)])
-	steps.append(["untranslated_project", func() -> void: check_untranslated_project(context["sheet_paths"], findings)])
+	steps.append(["untranslated_project", func() -> void: await check_untranslated_project_in_turns(context["sheet_paths"], findings)])
 	steps.append(["unmarked_player_text", func() -> void: check_unmarked_player_text(context["sheet_paths"], findings)])
 	steps.append(["stale_translated_labels", func() -> void: check_stale_translated_labels(context["sheet_paths"], findings)])
 	# Required fields read every sheet in BOTH formats: a `.gd` sheet is its own output and is the
 	# default format, so the `.tres`-only list above would skip most real projects.
 	steps.append(["required_fields", func() -> void: await check_required_fields(EventSheetTemplates.non_template_sheets(EventSheetProjectFind.list_all_project_sheets()), findings)])
 	steps.append(["missing_save_support", func() -> void: check_missing_save_support(context["sheet_paths"], findings)])
-	steps.append(["save_key_symmetry", func() -> void: check_save_key_symmetry(context["sheet_paths"], findings)])
+	steps.append(["save_key_symmetry", func() -> void: await check_save_key_symmetry_in_turns(context["sheet_paths"], findings)])
 	steps.append(["editor_tool_undo", func() -> void: check_editor_tool_undo(context["sheet_paths"], findings)])
 	steps.append(["sheet_edit_funnel", func() -> void: check_sheet_edit_funnel(findings)])
 	steps.append(["editor_tool_safety", func() -> void: check_editor_tool_safety(context["sheet_paths"], findings)])
-	steps.append(["background_thread_safety", func() -> void: check_background_thread_safety(context["sheet_paths"], findings)])
-	steps.append(["unknown_input_actions", func() -> void: check_unknown_input_actions(context["sheet_paths"], findings)])
-	steps.append(["unsaved_rebindings", func() -> void: check_unsaved_rebindings(context["sheet_paths"], findings)])
+	steps.append(["background_thread_safety", func() -> void: await check_background_thread_safety_in_turns(context["sheet_paths"], findings)])
+	steps.append(["unknown_input_actions", func() -> void: await check_unknown_input_actions_in_turns(findings)])
+	steps.append(["unsaved_rebindings", func() -> void: await check_unsaved_rebindings_in_turns(context["sheet_paths"], findings)])
 	steps.append(["settings_global", func() -> void: check_settings_global(context["sheet_paths"], findings)])
 	steps.append(["caption_less_sounds", func() -> void: check_caption_less_sounds(context["sheet_paths"], findings)])
 	steps.append(["orphaned_provider_calls", func() -> void: check_orphaned_provider_calls(context["sheet_paths"], findings)])
@@ -668,9 +668,9 @@ static func begin(options: Dictionary = {}) -> Dictionary:
 	steps.append(["old_disabled_packs_setting", func() -> void: check_old_disabled_packs_setting(findings)])
 	steps.append(["threaded_shader_import", func() -> void: check_threaded_shader_import(findings)])
 	steps.append(["family_group_agreement", func() -> void: await check_family_group_agreement(findings)])
-	steps.append(["imported_rows", func() -> void: check_imported_rows(context["sheet_paths"], findings)])
+	steps.append(["imported_rows", func() -> void: await check_imported_rows_in_turns(context["sheet_paths"], findings)])
 	steps.append(["task_notes", func() -> void: await check_task_notes(findings)])
-	steps.append(["menu_ids", func() -> void: check_menu_ids(findings)])
+	steps.append(["menu_ids", func() -> void: await check_menu_ids_in_turns(findings)])
 	steps.append(["game_modes", func() -> void: await check_game_modes(findings)])
 	steps.append(["object_states", func() -> void: await check_object_states(findings)])
 	steps.append(["animation_method_tracks", func() -> void: await in_background(func() -> void: check_animation_method_tracks(findings))])
@@ -1061,24 +1061,35 @@ static func output_path_for(sheet_path: String) -> String:
 ## byte-identity contract pack goldens pin, generalized to every sheet in the project.
 static func check_generated_outputs(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
-		if _is_script(sheet_path):
-			continue  # A script is its own output: nothing for it to be stale against.
-		var sheet: EventSheetResource = sheet_at(sheet_path)
-		if sheet == null:
-			continue
-		var output_path: String = output_path_for(sheet_path)
-		if not FileAccess.file_exists(output_path):
-			_add(findings, "warning", "stale-output", sheet_path,
-				"No generated script yet - saving the sheet in the editor writes %s (compile-on-save)." % output_path.get_file())
-			continue
-		var result: Dictionary = EventSheetCompiler.echo(sheet)
-		if not bool(result.get("success", false)):
-			_add(findings, "error", "compile", sheet_path,
-				"Sheet no longer compiles: %s" % str(result.get("errors")))
-			continue
-		if str(result.get("output", "")) != source_of(output_path):
-			_add(findings, "error", "stale-output", sheet_path,
-				"%s is stale - re-save the sheet (or re-run the pack builder) to refresh it." % output_path.get_file())
+		_check_generated_outputs_one(sheet_path, findings)
+
+
+## `check_generated_outputs`, a file at a time with a frame between turns: the same findings, for an audit that must not hold the editor while thousands of files are read.
+static func check_generated_outputs_in_turns(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		await breathe()
+		_check_generated_outputs_one(sheet_path, findings)
+
+
+static func _check_generated_outputs_one(sheet_path: String, findings: Array[Dictionary]) -> void:
+	if _is_script(sheet_path):
+		return  # A script is its own output: nothing for it to be stale against.
+	var sheet: EventSheetResource = sheet_at(sheet_path)
+	if sheet == null:
+		return
+	var output_path: String = output_path_for(sheet_path)
+	if not FileAccess.file_exists(output_path):
+		_add(findings, "warning", "stale-output", sheet_path,
+			"No generated script yet - saving the sheet in the editor writes %s (compile-on-save)." % output_path.get_file())
+		return
+	var result: Dictionary = EventSheetCompiler.echo(sheet)
+	if not bool(result.get("success", false)):
+		_add(findings, "error", "compile", sheet_path,
+			"Sheet no longer compiles: %s" % str(result.get("errors")))
+		return
+	if str(result.get("output", "")) != source_of(output_path):
+		_add(findings, "error", "stale-output", sheet_path,
+			"%s is stale - re-save the sheet (or re-run the pack builder) to refresh it." % output_path.get_file())
 
 
 ## Debug residue: a sheet saved with a debug-emit toggle ON compiles debug instrumentation INTO its
@@ -1091,28 +1102,39 @@ static func check_generated_outputs(sheet_paths: PackedStringArray, findings: Ar
 ## but the documented CI recipe can escalate it for release branches.
 static func check_debug_residue(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
-		if _is_script(sheet_path):
-			# A script keeps no switches, only the lines the switches wrote.
-			var written: PackedStringArray = GdSheets.residue_in_source(source_of(sheet_path))
-			if not written.is_empty():
-				_add(findings, "warning", "debug-residue", sheet_path,
-					"Debug instrumentation (%s) is in this script - remove those lines before shipping." % ", ".join(written))
-			continue
-		var sheet: EventSheetResource = sheet_at(sheet_path)
-		if sheet == null:
-			continue
-		var flags: PackedStringArray = PackedStringArray()
-		if sheet.emit_breakpoints:
-			flags.append("breakpoints")
-		if sheet.emit_live_values:
-			flags.append("live-values telemetry")
-		if sheet.emit_event_trace:
-			flags.append("event trace")
-		if sheet.emit_input_recording:
-			flags.append("replay recording")
-		if not flags.is_empty():
+		_check_debug_residue_one(sheet_path, findings)
+
+
+## `check_debug_residue`, a file at a time with a frame between turns: the same findings, for an audit that must not hold the editor while thousands of files are read.
+static func check_debug_residue_in_turns(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		await breathe()
+		_check_debug_residue_one(sheet_path, findings)
+
+
+static func _check_debug_residue_one(sheet_path: String, findings: Array[Dictionary]) -> void:
+	if _is_script(sheet_path):
+		# A script keeps no switches, only the lines the switches wrote.
+		var written: PackedStringArray = GdSheets.residue_in_source(source_of(sheet_path))
+		if not written.is_empty():
 			_add(findings, "warning", "debug-residue", sheet_path,
-				"Debug instrumentation (%s) is compiled into the committed script - turn it off (Debug menu) and re-save before shipping." % ", ".join(flags))
+				"Debug instrumentation (%s) is in this script - remove those lines before shipping." % ", ".join(written))
+		return
+	var sheet: EventSheetResource = sheet_at(sheet_path)
+	if sheet == null:
+		return
+	var flags: PackedStringArray = PackedStringArray()
+	if sheet.emit_breakpoints:
+		flags.append("breakpoints")
+	if sheet.emit_live_values:
+		flags.append("live-values telemetry")
+	if sheet.emit_event_trace:
+		flags.append("event trace")
+	if sheet.emit_input_recording:
+		flags.append("replay recording")
+	if not flags.is_empty():
+		_add(findings, "warning", "debug-residue", sheet_path,
+			"Debug instrumentation (%s) is compiled into the committed script - turn it off (Debug menu) and re-save before shipping." % ", ".join(flags))
 
 
 ## Clears every debug-emit toggle on a sheet - the data half of the Doctor panel's "strip + resave" fix
@@ -1350,6 +1372,27 @@ static func check_save_key_symmetry(_sheet_paths: PackedStringArray, findings: A
 	var usage_by_path: Dictionary = {}
 	var shared_by_path: Dictionary = {}
 	for script_path: String in _project_scripts():
+		var source: String = source_of(script_path)
+		if source.is_empty():
+			continue
+		var shared: PackedStringArray = shared_section_keys(source)
+		if not shared.is_empty():
+			shared_by_path[script_path] = shared
+		var usage: Dictionary = save_key_usage(source)
+		if (usage["saved"] as PackedStringArray).is_empty() and (usage["loaded"] as PackedStringArray).is_empty() \
+				and (usage["remembered"] as PackedStringArray).is_empty():
+			continue
+		usage_by_path[script_path] = usage
+	findings.append_array(save_key_findings(usage_by_path))
+	findings.append_array(shared_section_findings(shared_by_path))
+
+
+## `check_save_key_symmetry`, a script at a time with a frame between turns: the same findings.
+static func check_save_key_symmetry_in_turns(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	var usage_by_path: Dictionary = {}
+	var shared_by_path: Dictionary = {}
+	for script_path: String in _project_scripts():
+		await breathe()
 		var source: String = source_of(script_path)
 		if source.is_empty():
 			continue
@@ -1645,15 +1688,26 @@ const _SCENE_TOUCHES: PackedStringArray = [
 ## find, says nothing at all, because a warning that fires on shapes it cannot see would be noise.
 static func check_background_thread_safety(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for sheet_path: String in sheet_paths:
-		var output_path: String = output_path_for(sheet_path)
-		if not FileAccess.file_exists(output_path):
-			continue  # the stale-output check owns the "not compiled yet" case
-		var output: String = source_of(output_path)
-		for function_name: String in _backgrounded_function_names(output):
-			if not _function_body_touches_tree(output, function_name):
-				continue
-			_add(findings, "warning", "background-thread-touches-tree", sheet_path,
-				"%s runs in the background, and its rows reach the scene tree. Nodes are not thread-safe: a crash from this happens one run in twenty rather than every time. Work out the answer in the background and let the main thread do the node steps - a signal fired when the work is done is the usual shape." % function_name)
+		_check_background_thread_safety_one(sheet_path, findings)
+
+
+## `check_background_thread_safety`, a file at a time with a frame between turns: the same findings, for an audit that must not hold the editor while thousands of files are read.
+static func check_background_thread_safety_in_turns(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for sheet_path: String in sheet_paths:
+		await breathe()
+		_check_background_thread_safety_one(sheet_path, findings)
+
+
+static func _check_background_thread_safety_one(sheet_path: String, findings: Array[Dictionary]) -> void:
+	var output_path: String = output_path_for(sheet_path)
+	if not FileAccess.file_exists(output_path):
+		return  # the stale-output check owns the "not compiled yet" case
+	var output: String = source_of(output_path)
+	for function_name: String in _backgrounded_function_names(output):
+		if not _function_body_touches_tree(output, function_name):
+			continue
+		_add(findings, "warning", "background-thread-touches-tree", sheet_path,
+			"%s runs in the background, and its rows reach the scene tree. Nodes are not thread-safe: a crash from this happens one run in twenty rather than every time. Work out the answer in the background and let the main thread do the node steps - a signal fired when the work is done is the usual shape." % function_name)
 
 
 ## Every function name this file hands to a thread, from the `f.bind(...)` and bare-name
@@ -2509,6 +2563,22 @@ static func check_untranslated_project(sheet_paths: PackedStringArray, findings:
 			return
 
 
+## `check_untranslated_project`, a sheet at a time with a frame between turns: the same findings.
+static func check_untranslated_project_in_turns(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	if not (ProjectSettings.get_setting("internationalization/locale/translations", PackedStringArray()) as PackedStringArray).is_empty():
+		return
+	for sheet_path: String in sheet_paths:
+		await breathe()
+		var output_path: String = output_path_for(sheet_path)
+		if not FileAccess.file_exists(output_path):
+			continue
+		var output_text: String = source_of(output_path)
+		if output_text.contains("tr(\"") or output_text.contains("tr_n(\"") or output_text.contains("TranslationServer.set_locale"):
+			_add(findings, "info", "l10n", sheet_path,
+				"This sheet translates text (tr / Set Language) but the project has no translations registered - generate a POT (Project Settings > Localization > POT Generation, add the compiled .gd), translate it, and add the catalog under Localization > Translations.")
+			return
+
+
 ## THE LOCALISATION GATE the two checks below share, and the reason they can never argue with the
 ## check above. check_untranslated_project fires only while the project has NO catalog registered
 ## ("you translate but nothing is installed"); these two fire only once one IS registered ("you have
@@ -2995,18 +3065,29 @@ static func _function_list(names: PackedStringArray) -> String:
 ## Info tier: an imported project is a work in progress, not a broken one.
 static func check_imported_rows(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for script_path: String in _project_scripts():
-		var source: String = source_of(script_path)
-		if not source.contains(EventSheetForeignImporter.TALLY_PREFIX):
-			continue
-		var pending: int = 0
-		for line: String in source.split("
+		_check_imported_rows_one(script_path, findings)
+
+
+## `check_imported_rows`, a file at a time with a frame between turns: the same findings, for an audit that must not hold the editor while thousands of files are read.
+static func check_imported_rows_in_turns(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for script_path: String in _project_scripts():
+		await breathe()
+		_check_imported_rows_one(script_path, findings)
+
+
+static func _check_imported_rows_one(script_path: String, findings: Array[Dictionary]) -> void:
+	var source: String = source_of(script_path)
+	if not source.contains(EventSheetForeignImporter.TALLY_PREFIX):
+		return
+	var pending: int = 0
+	for line: String in source.split("
 "):
-			if line.begins_with(EventSheetForeignImporter.TALLY_PREFIX):
-				pending += 1
-		_add(findings, "info", "imported-row", script_path,
-			"%s from an imported event sheet still switched off, with the original words beside %s. Each one needs the row that says the same thing here, or the shipped behaviour the note names. Delete the note once the row is back." % [
-				("%d rows" % pending) if pending > 1 else "1 row",
-				"them" if pending > 1 else "it"])
+		if line.begins_with(EventSheetForeignImporter.TALLY_PREFIX):
+			pending += 1
+	_add(findings, "info", "imported-row", script_path,
+		"%s from an imported event sheet still switched off, with the original words beside %s. Each one needs the row that says the same thing here, or the shipped behaviour the note names. Delete the note once the row is back." % [
+			("%d rows" % pending) if pending > 1 else "1 row",
+			"them" if pending > 1 else "it"])
 
 
 static func check_vocabulary_doc(findings: Array[Dictionary]) -> void:
@@ -3111,11 +3192,25 @@ static func check_unknown_input_actions(_sheet_paths: PackedStringArray, finding
 	_report_unknown_input_actions(_missing_actions_among(_list_files_with_extension("gd")), findings)
 
 
-## The same check in the editor: the scripts' text is read for control names on a worker thread, a batch at a time,
-## and the findings (which open a sheet for the few that earn one) are made here.
+## The same check in the editor, a script at a time with a frame between turns. The question is asked on the main
+## thread (the Input Map is the engine's, not a worker's to read), and the scripts that earned a finding are opened as
+## sheets on the lift worker before the findings are made, which open a sheet for each.
 static func check_unknown_input_actions_in_turns(findings: Array[Dictionary]) -> void:
-	var missing_by_script: Array = await in_batches(_list_files_with_extension("gd"), _missing_actions_among)
-	_report_unknown_input_actions(missing_by_script, findings)
+	var missing_by_script: Array = []
+	for script_path: String in _list_files_with_extension("gd"):
+		await breathe()
+		missing_by_script.append_array(_missing_actions_among(PackedStringArray([script_path])))
+	var earned: PackedStringArray = PackedStringArray()
+	for entry: Variant in missing_by_script:
+		earned.append(str((entry as Array)[0]))
+	await prepare_sheets(earned)
+	for entry: Variant in missing_by_script:
+		await breathe()
+		var script_path: String = str((entry as Array)[0])
+		var missing: PackedStringArray = (entry as Array)[1]
+		_add(findings, "warning", "unknown-input-action", script_path, _unknown_input_message(missing))
+		findings[findings.size() - 1]["subject"] = missing[0]
+		await _address_missing_control_in_turns(script_path, missing, findings[findings.size() - 1])
 
 
 ## The scripts among `paths` that name a control the Input Map does not have, as [[path, the names], ...]. Plain
@@ -3146,13 +3241,16 @@ static func _report_unknown_input_actions(missing_by_script: Array, findings: Ar
 	for entry: Variant in missing_by_script:
 		var script_path: String = str((entry as Array)[0])
 		var missing: PackedStringArray = (entry as Array)[1]
-		_add(findings, "warning", "unknown-input-action", script_path,
-			"This script names %d control(s) the Input Map does not have (%s) - the key will never fire and nothing will say so. Add it in Project ▸ Input Map, or fix the spelling." % [
-				missing.size(), ", ".join(missing)])
+		_add(findings, "warning", "unknown-input-action", script_path, _unknown_input_message(missing))
 		# The control's own name, so the quick fix on the row can add it without reading the
 		# message back out of English.
 		findings[findings.size() - 1]["subject"] = missing[0]
 		_address_missing_control(script_path, missing, findings[findings.size() - 1])
+
+
+static func _unknown_input_message(missing: PackedStringArray) -> String:
+	return "This script names %d control(s) the Input Map does not have (%s) - the key will never fire and nothing will say so. Add it in Project ▸ Input Map, or fix the spelling." % [
+		missing.size(), ", ".join(missing)]
 
 
 ## Gives a missing-control finding the row that names the control: its margin number, the near name the map
@@ -3163,7 +3261,24 @@ static func _address_missing_control(script_path: String, missing: PackedStringA
 	if sheet == null:
 		return
 	var numbers: Dictionary = margin_numbers_of(sheet)
-	for row_finding: Dictionary in load("res://addons/eventsheet/editor/interaction/mistake_findings.gd").findings(sheet, script_path):
+	_apply_missing_address(finding, missing, numbers,
+		load("res://addons/eventsheet/editor/interaction/mistake_findings.gd").findings(sheet, script_path))
+
+
+## `_address_missing_control`, the sheet judged a stage at a time with a frame between, for a sheet large enough that
+## judging it whole is more than a frame: the same address, made in turns.
+static func _address_missing_control_in_turns(script_path: String, missing: PackedStringArray, finding: Dictionary) -> void:
+	var sheet: EventSheetResource = sheet_of(script_path)
+	if sheet == null:
+		return
+	var row_findings: Array[Dictionary] = await load("res://addons/eventsheet/editor/interaction/mistake_findings.gd").findings_in_turns(
+		sheet, script_path, breathe)
+	await breathe()
+	_apply_missing_address(finding, missing, margin_numbers_of(sheet), row_findings)
+
+
+static func _apply_missing_address(finding: Dictionary, missing: PackedStringArray, numbers: Dictionary, row_findings: Array) -> void:
+	for row_finding: Dictionary in row_findings:
 		if str(row_finding.get("kind", "")) != "input-action-not-in-map" or not missing.has(str(row_finding.get("subject", ""))):
 			continue
 		var event_row: Object = row_finding.get("event") as Object
@@ -3183,16 +3298,27 @@ static func _address_missing_control(script_path: String, missing: PackedStringA
 ## rebind screen forgets.
 static func check_unsaved_rebindings(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	for script_path: String in _list_files_with_extension("gd"):
-		var source: String = source_of(script_path)
-		if not (source.contains("InputMap.action_add_event") or source.contains("InputMap.action_erase_events")):
-			continue
-		# Anything that persists them counts: the sheet's own Save bindings, a ConfigFile, a save
-		# file, or the project's settings written back.
-		if source.contains("ConfigFile") or source.contains("save_settings") \
-				or source.contains("ProjectSettings.save") or source.contains("store_var"):
-			continue
-		_add(findings, "info", "unsaved-rebindings", script_path,
-			"This script changes control bindings at runtime but never saves them - every remap is lost when the game closes. Add Save bindings after the rebind and Load bindings on start-up.")
+		_check_unsaved_rebindings_one(script_path, findings)
+
+
+## `check_unsaved_rebindings`, a file at a time with a frame between turns: the same findings, for an audit that must not hold the editor while thousands of files are read.
+static func check_unsaved_rebindings_in_turns(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
+	for script_path: String in _list_files_with_extension("gd"):
+		await breathe()
+		_check_unsaved_rebindings_one(script_path, findings)
+
+
+static func _check_unsaved_rebindings_one(script_path: String, findings: Array[Dictionary]) -> void:
+	var source: String = source_of(script_path)
+	if not (source.contains("InputMap.action_add_event") or source.contains("InputMap.action_erase_events")):
+		return
+	# Anything that persists them counts: the sheet's own Save bindings, a ConfigFile, a save
+	# file, or the project's settings written back.
+	if source.contains("ConfigFile") or source.contains("save_settings") \
+			or source.contains("ProjectSettings.save") or source.contains("store_var"):
+		return
+	_add(findings, "info", "unsaved-rebindings", script_path,
+		"This script changes control bindings at runtime but never saves them - every remap is lost when the game closes. Add Save bindings after the rebind and Load bindings on start-up.")
 
 
 
@@ -3897,6 +4023,38 @@ static func source_of(path: String) -> String:
 	return text
 
 
+## The held text of one path, or null.
+static func _cache_get(path: String) -> Variant:
+	if _cache_lock != null:
+		_cache_lock.lock()
+	var held: Variant = _source_cache.get(path, null)
+	if _cache_lock != null:
+		_cache_lock.unlock()
+	return held
+
+
+static func _cache_clear() -> void:
+	if _cache_lock != null:
+		_cache_lock.lock()
+	_source_cache.clear()
+	if _cache_lock != null:
+		_cache_lock.unlock()
+
+
+static func _cache_put(path: String, text: String) -> void:
+	if _cache_lock != null:
+		_cache_lock.lock()
+	_source_cache[path] = text
+	if _cache_lock != null:
+		_cache_lock.unlock()
+
+
+## Makes the locks a sliced audit's worker threads share, and lets them go again when it is over. Main thread only.
+static func _share_locks(on: bool) -> void:
+	_cache_lock = Mutex.new() if on else null
+	SAVE_KEY_SCAN.lock = _cache_lock
+
+
 ## One script opened as a sheet, imported once per audit and handed to every section that asks.
 ##
 ## Twelve sections need the ROWS rather than the text, and most of them are asking about the same
@@ -4023,38 +4181,6 @@ static func declared_skipped_folders() -> PackedStringArray:
 	for entry: Variant in declared:
 		var folder: String = str(entry).strip_edges().trim_prefix("res://").trim_suffix("/")
 		if folder.is_empty() or folders.has(folder):
-## The held text of one path, or null.
-static func _cache_get(path: String) -> Variant:
-	if _cache_lock != null:
-		_cache_lock.lock()
-	var held: Variant = _source_cache.get(path, null)
-	if _cache_lock != null:
-		_cache_lock.unlock()
-	return held
-
-
-static func _cache_clear() -> void:
-	if _cache_lock != null:
-		_cache_lock.lock()
-	_source_cache.clear()
-	if _cache_lock != null:
-		_cache_lock.unlock()
-
-
-static func _cache_put(path: String, text: String) -> void:
-	if _cache_lock != null:
-		_cache_lock.lock()
-	_source_cache[path] = text
-	if _cache_lock != null:
-		_cache_lock.unlock()
-
-
-## Makes the locks a sliced audit's worker threads share, and lets them go again when it is over. Main thread only.
-static func _share_locks(on: bool) -> void:
-	_cache_lock = Mutex.new() if on else null
-	SAVE_KEY_SCAN.lock = _cache_lock
-
-
 			continue
 		folders.append(folder)
 	return folders
@@ -4610,12 +4736,23 @@ static func _node_name_of(text: String) -> String:
 ## gate, and a note about somebody else's shipped addon is not the reader's to act on.
 static func check_menu_ids(findings: Array[Dictionary]) -> void:
 	for script_path: String in _project_scripts():
-		var source: String = source_of(script_path)
-		if not source.contains("add_item("):
-			continue
-		for note: Dictionary in menu_id_notes(source.split("\n")):
-			_add(findings, "info", str(note.get("check", "")), script_path, str(note.get("message", "")))
-			(findings[findings.size() - 1] as Dictionary)["subject"] = str(note.get("subject", ""))
+		_check_menu_ids_one(script_path, findings)
+
+
+## `check_menu_ids`, a file at a time with a frame between turns: the same findings, for an audit that must not hold the editor while thousands of files are read.
+static func check_menu_ids_in_turns(findings: Array[Dictionary]) -> void:
+	for script_path: String in _project_scripts():
+		await breathe()
+		_check_menu_ids_one(script_path, findings)
+
+
+static func _check_menu_ids_one(script_path: String, findings: Array[Dictionary]) -> void:
+	var source: String = source_of(script_path)
+	if not source.contains("add_item("):
+		return
+	for note: Dictionary in menu_id_notes(source.split("\n")):
+		_add(findings, "info", str(note.get("check", "")), script_path, str(note.get("message", "")))
+		(findings[findings.size() - 1] as Dictionary)["subject"] = str(note.get("subject", ""))
 
 
 ## The two things that go wrong with a game's modes: one nothing can get out of, and one nothing
@@ -4865,49 +5002,84 @@ static func _is_plain_name(text: String) -> bool:
 
 
 static func check_hierarchy_footguns(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	var looked: int = 0
+	# The plain text readings of every script (a loop that moves its children, a reparent in _ready, a parent freed) are
+	# text in and lists out, so in the editor they run on a worker thread, a batch at a time. The pin notes ask the
+	# shape reader, which the canvas on the main thread is using at the same time, so those are asked here, a script a
+	# turn; the findings are made here too, in the order the scripts come.
+	var read: Dictionary = {}
+	for entry: Variant in await in_batches(_project_scripts(), _hierarchy_among):
+		read[str((entry as Array)[0])] = (entry as Array)[1]
 	for script_path: String in _project_scripts():
-		looked += 1
-		await breathe_every(looked)
+		await breathe()
 		var source: String = source_of(script_path)
 		if source.is_empty():
 			continue
-		for loop_variable: String in reparenting_children_loops(source):
-			_add(findings, "info", "reparent-while-iterating", script_path,
-				"This walk over a node's children moves %s while it is walking them. Godot's child list is live, so every child after the moved one shifts down and the loop skips it - half the children quietly never get their turn. Walk a copy instead (add .duplicate() to the children), or use the sheet's For Each Child row, which always takes the snapshot for you."
-					% loop_variable)
-			(findings[findings.size() - 1] as Dictionary)["subject"] = loop_variable
-		for call_text: String in self_reparent_in_ready(source):
-			_add(findings, "info", "reparent-in-ready", script_path,
-				"\"%s\" moves this object to a new parent while the old parent is still adding its children, and Godot refuses that outright. Do it after the tree has settled instead."
-					% call_text)
-			(findings[findings.size() - 1] as Dictionary)["subject"] = call_text
-		for held: String in freed_parent_references(source):
-			_add(findings, "info", "freed-parent-reference", script_path,
-				"%s keeps hold of an object whose parent this file frees. A child is destroyed with its parent, so %s is left pointing at nothing and the next line that uses it crashes. Ask whether it is still there before touching it."
-					% [held, held])
-			(findings[findings.size() - 1] as Dictionary)["subject"] = held
-		# The two ways the pin words and the child words get crossed. Notes, never warnings:
-		# both mechanisms are honest and both files run - they just do a thing the author did not
-		# mean, and there is nowhere else a person would be told.
-		# One grammar walk for both notes: each of them would otherwise ask for the same answer.
+		var scan: Dictionary = read.get(script_path, {"loops": PackedStringArray(), "readies": PackedStringArray(),
+			"freed": PackedStringArray()}) as Dictionary
+		scan["double"] = PackedStringArray()
+		scan["freed_pins"] = PackedStringArray()
+		scan["no_pins"] = true
+		# A file that pins nothing has neither pin note to give, and both readers answer nothing for it. Asking them
+		# anyway was not free: each takes the pins it was HANDED only when that list is non-empty, and reads the file
+		# again from the beginning when it is - so every one of the thousand files with no pin in it paid for the pin
+		# grammar three times over.
 		var pins: PackedStringArray = pinned_anchors(source)
-		# A file that pins nothing has neither note to give, and both readers below answer nothing
-		# for it. Asking them anyway was not free: each takes the pins it was HANDED only when that
-		# list is non-empty, and reads the file again from the beginning when it is - so every
-		# one of the thousand files with no pin in it paid for the pin grammar three times over.
-		if pins.is_empty():
+		if not pins.is_empty():
+			scan["no_pins"] = false
+			scan["double"] = double_follow_anchors(source, pins)
+			scan["freed_pins"] = freed_pin_anchors(source, pins)
+		_hierarchy_findings_of(script_path, scan, findings)
+
+
+## What the plain text hierarchy notes find in each of `paths`, as [[path, {loops, readies, freed}], ...] for the scripts
+## that have anything to say. Text in and lists out, so a worker thread may ask it.
+static func _hierarchy_among(paths: PackedStringArray) -> Array:
+	var found: Array = []
+	for script_path: String in paths:
+		var source: String = source_of(script_path)
+		if source.is_empty():
 			continue
-		for anchor: String in double_follow_anchors(source, pins):
-			_add(findings, "info", "double-follow", script_path,
-				"This object is BOTH a child of %s and pinned to it. Being a child already carries it, so the pin writes its place a second time from the same source and the two fight every frame - the classic \"it drifts twice as fast\" bug. Keep one: Unpin, or take it out of %s and let the pin do the carrying."
-					% [anchor, anchor])
-			(findings[findings.size() - 1] as Dictionary)["subject"] = anchor
-		for anchor: String in freed_pin_anchors(source, pins):
-			_add(findings, "info", "pin-to-freed-object", script_path,
-				"This object is pinned to %s and this file frees %s without ever unpinning. The pin keeps reading a place off a node that is gone, and the first frame after the free is a \"previously freed instance\" crash. Unpin before the free, or ask whether %s is still there."
-					% [anchor, anchor, anchor])
-			(findings[findings.size() - 1] as Dictionary)["subject"] = anchor
+		var scan: Dictionary = {"loops": reparenting_children_loops(source), "readies": self_reparent_in_ready(source),
+			"freed": freed_parent_references(source)}
+		if (scan["loops"] as PackedStringArray).is_empty() and (scan["readies"] as PackedStringArray).is_empty() \
+				and (scan["freed"] as PackedStringArray).is_empty():
+			continue
+		found.append([script_path, scan])
+	return found
+
+
+static func _hierarchy_findings_of(script_path: String, scan: Dictionary, findings: Array[Dictionary]) -> void:
+	for loop_variable: String in scan["loops"]:
+		_add(findings, "info", "reparent-while-iterating", script_path,
+			"This walk over a node's children moves %s while it is walking them. Godot's child list is live, so every child after the moved one shifts down and the loop skips it - half the children quietly never get their turn. Walk a copy instead (add .duplicate() to the children), or use the sheet's For Each Child row, which always takes the snapshot for you."
+				% loop_variable)
+		(findings[findings.size() - 1] as Dictionary)["subject"] = loop_variable
+	for call_text: String in scan["readies"]:
+		_add(findings, "info", "reparent-in-ready", script_path,
+			"\"%s\" moves this object to a new parent while the old parent is still adding its children, and Godot refuses that outright. Do it after the tree has settled instead."
+				% call_text)
+		(findings[findings.size() - 1] as Dictionary)["subject"] = call_text
+	for held: String in scan["freed"]:
+		_add(findings, "info", "freed-parent-reference", script_path,
+			"%s keeps hold of an object whose parent this file frees. A child is destroyed with its parent, so %s is left pointing at nothing and the next line that uses it crashes. Ask whether it is still there before touching it."
+				% [held, held])
+		(findings[findings.size() - 1] as Dictionary)["subject"] = held
+	# The two ways the pin words and the child words get crossed. Notes, never warnings:
+	# both mechanisms are honest and both files run - they just do a thing the author did not
+	# mean, and there is nowhere else a person would be told.
+	# One grammar walk for both notes: each of them would otherwise ask for the same answer.
+	if bool(scan["no_pins"]):
+		return
+	for anchor: String in scan["double"]:
+		_add(findings, "info", "double-follow", script_path,
+			"This object is BOTH a child of %s and pinned to it. Being a child already carries it, so the pin writes its place a second time from the same source and the two fight every frame - the classic \"it drifts twice as fast\" bug. Keep one: Unpin, or take it out of %s and let the pin do the carrying."
+				% [anchor, anchor])
+		(findings[findings.size() - 1] as Dictionary)["subject"] = anchor
+	for anchor: String in scan["freed_pins"]:
+		_add(findings, "info", "pin-to-freed-object", script_path,
+			"This object is pinned to %s and this file frees %s without ever unpinning. The pin keeps reading a place off a node that is gone, and the first frame after the free is a \"previously freed instance\" crash. Unpin before the free, or ask whether %s is still there."
+				% [anchor, anchor, anchor])
+		(findings[findings.size() - 1] as Dictionary)["subject"] = anchor
 
 
 # ── what mirroring has to drag along ─────────────────────────────────────────────

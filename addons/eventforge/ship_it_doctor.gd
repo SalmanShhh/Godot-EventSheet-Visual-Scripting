@@ -103,9 +103,7 @@ static func ensure_registered() -> void:
 ## res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	var sources: Dictionary = await project_sources_sliced()
-	for piece: Callable in report_pieces(sources):
-		await EventSheetProjectDoctor.breathe()
-		findings.append_array(piece.call())
+	findings.append_array(await report_in_turns(sources))
 
 
 ## The whole section over one corpus of {script path: source text}. Pure, so a test hands it three
@@ -114,6 +112,15 @@ static func report(sources: Dictionary) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for piece: Callable in report_pieces(sources):
 		out.append_array(piece.call())
+	return out
+
+
+## `report`, a script at a time with a frame between turns: the same findings in the same order.
+static func report_in_turns(sources: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for piece: Callable in report_pieces_in_turns(sources):
+		await EventSheetProjectDoctor.breathe()
+		out.append_array(await piece.call())
 	return out
 
 
@@ -136,6 +143,27 @@ static func report_pieces(sources: Dictionary) -> Array[Callable]:
 		func() -> Array[Dictionary]: return sky_backdrop_findings(sources, flat_backdrop_scripts(sources)),
 		func() -> Array[Dictionary]: return loading_screen_findings(sources, plainly_opened_scene_sizes(sources)),
 		func() -> Array[Dictionary]: return haptics_findings(sources),
+	]
+
+
+## The pieces of the section as `report_pieces` gives them, each one a turn at a time: a Callable to await.
+static func report_pieces_in_turns(sources: Dictionary) -> Array[Callable]:
+	return [
+		func() -> Array[Dictionary]: return export_preset_findings(_read_text(EXPORT_PRESETS_PATH)),
+		func() -> Array[Dictionary]: return identity_findings(
+			str(ProjectSettings.get_setting(NAME_SETTING, "")),
+			str(ProjectSettings.get_setting(ICON_SETTING, ""))),
+		func() -> Array[Dictionary]: return await debug_row_findings_in_turns(sources),
+		func() -> Array[Dictionary]: return translation_findings(await used_translation_keys_in_turns(sources), catalog_keys()),
+		func() -> Array[Dictionary]: return frame_budget_findings(await measured_costs_in_turns(sources)),
+		func() -> Array[Dictionary]: return what_gets_saved_findings(await save_usage_in_turns(sources)),
+		func() -> Array[Dictionary]: return await pixel_scale_findings_in_turns(sources),
+		func() -> Array[Dictionary]: return await renderer_findings_in_turns(sources, str(ProjectSettings.get_setting(
+			EventForgeEnvironmentWords.RENDERING_METHOD_SETTING,
+			EventForgeEnvironmentWords.FORWARD_PLUS))),
+		func() -> Array[Dictionary]: return await sky_backdrop_findings_in_turns(sources, await flat_backdrop_scripts_in_turns(sources)),
+		func() -> Array[Dictionary]: return await loading_screen_findings_in_turns(sources, await plainly_opened_scene_sizes_in_turns(sources)),
+		func() -> Array[Dictionary]: return await haptics_findings_in_turns(sources),
 	]
 
 
@@ -205,6 +233,34 @@ static func debug_row_findings(sources: Dictionary) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
 	var plain_scripts: PackedStringArray = PackedStringArray()
 	for script_path: String in _sorted_keys(sources):
+		var text: String = str(sources[script_path])
+		var lines: PackedStringArray = unguarded_console_lines(text)
+		if lines.is_empty():
+			continue
+		# A hand-written script is code, and the advice below is about a row (Log, Debug Builds Only), so
+		# it is not told once per file: the plain scripts that print are counted in one line at the end.
+		if not text.begins_with(SHEET_BANNER) and not EventSheetProjectDoctor.is_audited_sheet(script_path):
+			plain_scripts.append(script_path)
+			continue
+		var first: String = lines[0]
+		var message: String = EventSheetL10n.translate("%s writes to the console where an exported release build still runs it - first: %s.") % [script_path.get_file(), first]
+		if lines.size() > 1:
+			message += " " + EventSheetL10n.translate("%d more like it in this file.") % (lines.size() - 1)
+		message += " " + EventSheetL10n.translate("Log (Debug Builds Only) compiles the line out of a release game.")
+		findings.append(_finding("warning", CHECK_DEBUG_ROWS, script_path, message, first))
+	if not plain_scripts.is_empty():
+		findings.append(_finding("info", CHECK_DEBUG_ROWS, plain_scripts[0],
+			EventSheetL10n.translate("%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.") % [
+				plain_scripts.size(), plain_scripts[0].get_file()], ""))
+	return findings
+
+
+## `debug_row_findings`, a script at a time with a frame between turns: the same answer.
+static func debug_row_findings_in_turns(sources: Dictionary) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	var plain_scripts: PackedStringArray = PackedStringArray()
+	for script_path: String in _sorted_keys(sources):
+		await EventSheetProjectDoctor.breathe()
 		var text: String = str(sources[script_path])
 		var lines: PackedStringArray = unguarded_console_lines(text)
 		if lines.is_empty():
@@ -349,6 +405,20 @@ static func used_translation_keys(sources: Dictionary) -> PackedStringArray:
 	return out
 
 
+## `used_translation_keys`, a script at a time with a frame between turns: the same answer.
+static func used_translation_keys_in_turns(sources: Dictionary) -> PackedStringArray:
+	var keys: Dictionary = {}
+	for script_path: String in _sorted_keys(sources):
+		await EventSheetProjectDoctor.breathe()
+		for key: String in translation_keys_in(str(sources[script_path])):
+			keys[key] = true
+	var out: PackedStringArray = PackedStringArray()
+	for key: Variant in keys.keys():
+		out.append(str(key))
+	out.sort()
+	return out
+
+
 ## The literal keys one source hands to tr(). Only literals: a key built at run time is not something
 ## a catalog can be checked against, and reporting it would be a guess.
 static func translation_keys_in(source: String) -> PackedStringArray:
@@ -481,6 +551,25 @@ static func measured_costs(sources: Dictionary) -> Array[Dictionary]:
 	return costs
 
 
+## `measured_costs`, a script at a time with a frame between turns: the same answer.
+static func measured_costs_in_turns(sources: Dictionary) -> Array[Dictionary]:
+	if not EventSheetRunProfile.has_numbers():
+		return []
+	var costs: Array[Dictionary] = []
+	for script_path: String in _sorted_keys(sources):
+		await EventSheetProjectDoctor.breathe()
+		var text: String = str(sources[script_path])
+		for uid: String in _fired_uids_in(text):
+			var ms: float = EventSheetRunProfile.ms_for(uid)
+			if ms < 0.0:
+				continue
+			costs.append({
+				"path": script_path, "ms": ms,
+				"per_frame": EventSheetRunProfile.fires_per_frame(uid),
+			})
+	return costs
+
+
 ## The row ids a traced script reports as it runs. They are in the file because a traced build writes
 ## them there, which is the only reason a cost can be told which script it belongs to at all.
 static func _fired_uids_in(source: String) -> PackedStringArray:
@@ -542,6 +631,17 @@ static func save_usage(sources: Dictionary) -> Dictionary:
 	return usage
 
 
+## `save_usage`, a script at a time with a frame between turns: the same answer.
+static func save_usage_in_turns(sources: Dictionary) -> Dictionary:
+	var usage: Dictionary = {}
+	for script_path: String in _sorted_keys(sources):
+		await EventSheetProjectDoctor.breathe()
+		var keys: PackedStringArray = EventSheetProjectDoctor.save_key_usage(str(sources[script_path])).get("saved", PackedStringArray())
+		if not keys.is_empty():
+			usage[script_path] = keys
+	return usage
+
+
 ## The page: one note stating what a slot of this game holds. A note rather than a warning, because
 ## nothing here is wrong - it is the answer to "does my save keep the coins", which is otherwise
 ## answered by reading emitted code.
@@ -578,6 +678,23 @@ const PIXEL_SIZE_LINE := "content_scale_factor = "
 static func pixel_scale_findings(sources: Dictionary) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
 	for script_path: String in _sorted_keys(sources):
+		var text: String = str(sources[script_path])
+		if not text.contains(SHARP_PIXELS_LINE):
+			continue
+		var fraction: String = fractional_pixel_size(text)
+		if fraction.is_empty():
+			continue
+		findings.append(_finding("info", CHECK_PIXEL_SCALE, script_path,
+			EventSheetL10n.translate("%s keeps pixels sharp and then asks for a pixel size of %s. Whole pixels only means the window rounds that down, so the size a player gets is not the one the row asks for - use a whole number, or let the fraction through.") % [
+				script_path.get_file(), fraction], fraction))
+	return findings
+
+
+## `pixel_scale_findings`, a script at a time with a frame between turns: the same answer.
+static func pixel_scale_findings_in_turns(sources: Dictionary) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	for script_path: String in _sorted_keys(sources):
+		await EventSheetProjectDoctor.breathe()
 		var text: String = str(sources[script_path])
 		if not text.contains(SHARP_PIXELS_LINE):
 			continue
@@ -634,6 +751,23 @@ static func renderer_findings(sources: Dictionary, rendering_method: String) -> 
 	if renderer.is_empty():
 		return findings
 	for script_path: String in _sorted_keys(sources):
+		var asked: String = forward_plus_asked_for(str(sources[script_path]))
+		if asked.is_empty():
+			continue
+		findings.append(_finding("info", CHECK_RENDERER, script_path,
+			EventSheetL10n.translate("%s asks for %s, which only the Forward+ renderer draws - this row does nothing on %s. Either build for Forward+, or drop the row.") % [
+				script_path.get_file(), asked, renderer], asked))
+	return findings
+
+
+## `renderer_findings`, a script at a time with a frame between turns: the same answer.
+static func renderer_findings_in_turns(sources: Dictionary, rendering_method: String) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	var renderer: String = str(RENDERER_WORDS.get(rendering_method.strip_edges(), ""))
+	if renderer.is_empty():
+		return findings
+	for script_path: String in _sorted_keys(sources):
+		await EventSheetProjectDoctor.breathe()
 		var asked: String = forward_plus_asked_for(str(sources[script_path]))
 		if asked.is_empty():
 			continue
@@ -714,6 +848,23 @@ static func sky_backdrop_findings(sources: Dictionary,
 	return findings
 
 
+## `sky_backdrop_findings`, a script at a time with a frame between turns: the same answer.
+static func sky_backdrop_findings_in_turns(sources: Dictionary,
+		flat_backdrops: PackedStringArray) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	for script_path: String in _sorted_keys(sources):
+		await EventSheetProjectDoctor.breathe()
+		var text: String = str(sources[script_path])
+		if text.contains(SKY_BACKDROP_LINE) or not _writes_a_sky_word(text):
+			continue
+		if not flat_backdrops.has(script_path):
+			continue
+		findings.append(_finding("info", CHECK_SKY_BACKDROP, script_path,
+			EventSheetL10n.translate("%s sets the sky's colours, and nothing in it makes the sky the backdrop - the rows do nothing while the world is drawing a flat colour. Use Procedural Sky, or set the backdrop to sky.") % script_path.get_file(),
+			script_path.get_file()))
+	return findings
+
+
 ## The scripts whose attached scene was read and found to be drawing a flat colour rather than a sky.
 ## THREE THINGS HAVE TO BE TRUE before a script is named, and every one of them is something a reader
 ## can go and look at: the script runs exactly one scene (a behaviour worn by five levels has no
@@ -724,6 +875,28 @@ static func sky_backdrop_findings(sources: Dictionary,
 static func flat_backdrop_scripts(sources: Dictionary) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	for script_path: String in _sorted_keys(sources):
+		if not _writes_a_sky_word(str(sources[script_path])):
+			continue
+		if EventSheetSceneLightingFacts.attached_scene(script_path).is_empty():
+			continue
+		var holders: Array[Dictionary] = EventSheetSceneLights.nodes_of_class(script_path,
+			EventSheetSceneLightingFacts.ENVIRONMENT_CLASS)
+		if holders.is_empty():
+			continue
+		var drawn: bool = false
+		for holder: Dictionary in holders:
+			if _draws_a_sky(holder):
+				drawn = true
+		if not drawn:
+			found.append(script_path)
+	return found
+
+
+## `flat_backdrop_scripts`, a script at a time with a frame between turns: the same answer.
+static func flat_backdrop_scripts_in_turns(sources: Dictionary) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for script_path: String in _sorted_keys(sources):
+		await EventSheetProjectDoctor.breathe()
 		if not _writes_a_sky_word(str(sources[script_path])):
 			continue
 		if EventSheetSceneLightingFacts.attached_scene(script_path).is_empty():
@@ -796,6 +969,22 @@ static func loading_screen_findings(sources: Dictionary, scene_bytes: Dictionary
 	return findings
 
 
+## `loading_screen_findings`, a script at a time with a frame between turns: the same answer.
+static func loading_screen_findings_in_turns(sources: Dictionary, scene_bytes: Dictionary) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	for script_path: String in _sorted_keys(sources):
+		await EventSheetProjectDoctor.breathe()
+		for scene_path: String in plainly_opened_scenes(str(sources[script_path])):
+			var size: int = int(scene_bytes.get(scene_path, 0))
+			if size < BIG_SCENE_BYTES:
+				continue
+			findings.append(_finding("info", CHECK_LOADING_SCREEN, script_path,
+				EventSheetL10n.translate("%s opens %s with a plain scene change, and that scene is %s on disk - big enough that the last frame of the old one sits there while it loads. Go To Scene With Loading shows a loading screen of your own while it comes off the disk, with a shortest time so it cannot flash past.") % [
+					script_path.get_file(), scene_path.get_file(), _megabytes(size)],
+				scene_path))
+	return findings
+
+
 ## Every scene a source opens with a plain swap, in the order it opens them, each named once. Only a
 ## literal path counts: a swap through a variable is a scene this cannot size, and a guess about one
 ## is worse than saying nothing.
@@ -821,6 +1010,17 @@ static func plainly_opened_scenes(source: String) -> PackedStringArray:
 static func plainly_opened_scene_sizes(sources: Dictionary) -> Dictionary:
 	var sizes: Dictionary = {}
 	for script_path: String in _sorted_keys(sources):
+		for scene_path: String in plainly_opened_scenes(str(sources[script_path])):
+			if not sizes.has(scene_path):
+				sizes[scene_path] = _bytes_of(scene_path)
+	return sizes
+
+
+## `plainly_opened_scene_sizes`, a script at a time with a frame between turns: the same answer.
+static func plainly_opened_scene_sizes_in_turns(sources: Dictionary) -> Dictionary:
+	var sizes: Dictionary = {}
+	for script_path: String in _sorted_keys(sources):
+		await EventSheetProjectDoctor.breathe()
 		for scene_path: String in plainly_opened_scenes(str(sources[script_path])):
 			if not sizes.has(scene_path):
 				sizes[scene_path] = _bytes_of(scene_path)
@@ -884,6 +1084,18 @@ const HAPTIC_SPELLING := "EventForgeHaptics."
 ## sound and picture) rather than a fix.
 static func haptics_findings(sources: Dictionary) -> Array[Dictionary]:
 	for script_path: String in _sorted_keys(sources):
+		if not str(sources[script_path]).contains(HAPTIC_SPELLING):
+			continue
+		return [_finding("info", CHECK_HAPTICS, script_path,
+			EventSheetL10n.translate("This project plays haptics (first in %s). They are felt on a pad and on a phone, and are silent on the web and on a desktop with no pad - quietly, with no warning per row. Carry the same beat in sound or picture too, and let the options screen turn the rumble down: Set Haptic Strength is the one dial every haptic row reads.") % script_path.get_file(),
+			HAPTIC_SPELLING)]
+	return []
+
+
+## `haptics_findings`, a script at a time with a frame between turns: the same answer.
+static func haptics_findings_in_turns(sources: Dictionary) -> Array[Dictionary]:
+	for script_path: String in _sorted_keys(sources):
+		await EventSheetProjectDoctor.breathe()
 		if not str(sources[script_path]).contains(HAPTIC_SPELLING):
 			continue
 		return [_finding("info", CHECK_HAPTICS, script_path,

@@ -83,8 +83,10 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 	# The sheets the report is about to open are opened here, one turn each, so the editor draws between
 	# them; the report then finds each one already held for the audit.
 	var scripts: PackedStringArray = EventSheetProjectDoctor._project_scripts()
-	await EventSheetProjectDoctor.prepare_sheets(ranked(scripts).slice(0, MEASURED_LIMIT))
-	findings.append_array(await report_in_turns(scripts))
+	# Ranked once, in turns, and the ranking handed on: it reads every script of the project.
+	var ordered: PackedStringArray = await ranked_in_turns(scripts)
+	await EventSheetProjectDoctor.prepare_sheets(ordered.slice(0, MEASURED_LIMIT))
+	findings.append_array(await report_in_turns(scripts, ordered))
 
 
 ## The whole section as findings, the summary first (only when something was found: a project with
@@ -121,12 +123,13 @@ static func _with_summary(findings: Array[Dictionary], worst_path: String, measu
 
 ## `report`, a sheet at a time with a frame between: the same answer, so the editor draws while a project's sheets
 ## are read and their margin numbers are built (each of those is a whole canvas).
-static func report_in_turns(scripts: PackedStringArray) -> Array[Dictionary]:
+static func report_in_turns(scripts: PackedStringArray, ranked_paths: Variant = null) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
 	var troubled: int = 0
 	var measured: int = 0
 	var worst_path: String = ""
-	for script_path: String in ranked(scripts):
+	var ordered: PackedStringArray = ranked_paths as PackedStringArray if ranked_paths != null else ranked(scripts)
+	for script_path: String in ordered:
 		if measured >= MEASURED_LIMIT:
 			break
 		measured += 1
@@ -134,7 +137,7 @@ static func report_in_turns(scripts: PackedStringArray) -> Array[Dictionary]:
 		var sheet: EventSheetResource = EventSheetProjectDoctor.sheet_of(script_path)
 		if sheet == null:
 			continue
-		var mine: Array[Dictionary] = EventSheetMistakeFindings.findings(sheet, script_path)
+		var mine: Array[Dictionary] = await EventSheetMistakeFindings.findings_in_turns(sheet, script_path, EventSheetProjectDoctor.breathe)
 		# The margin numbers build a whole canvas, so they are a turn of their own - and only for a sheet
 		# with a finding that names an event.
 		var named: bool = names_an_event(mine)
@@ -205,6 +208,19 @@ static func doors_of(finding: Dictionary) -> Array:
 static func ranked(scripts: PackedStringArray) -> PackedStringArray:
 	var scored: Array[Dictionary] = []
 	for script_path: String in scripts:
+		if _is_shipped(script_path):
+			continue
+		var weight: int = evidence(EventSheetProjectDoctor.source_of(script_path), script_path)
+		if weight > 0:
+			scored.append({"path": script_path, "weight": weight})
+	return _ordered_paths(scored, "weight", false)
+
+
+## `ranked`, a script at a time with a frame between turns: the same list, for a project of thousands of scripts.
+static func ranked_in_turns(scripts: PackedStringArray) -> PackedStringArray:
+	var scored: Array[Dictionary] = []
+	for script_path: String in scripts:
+		await EventSheetProjectDoctor.breathe()
 		if _is_shipped(script_path):
 			continue
 		var weight: int = evidence(EventSheetProjectDoctor.source_of(script_path), script_path)

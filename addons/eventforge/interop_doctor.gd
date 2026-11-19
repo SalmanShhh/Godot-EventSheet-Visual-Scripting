@@ -63,7 +63,7 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 		if not _marked_in(text):
 			sized.append({"path": script_path, "size": text.length()})
 	await ReadingDoors.doctor().prepare_sheets(_ordered_paths(sized, "size", true).slice(0, MEASURED_LIMIT))
-	findings.append_array(report(scripts))
+	findings.append_array(await report_in_turns(scripts))
 
 
 ## Whether this file carries the mark that keeps it code. Read off the file, so it is the same answer
@@ -157,6 +157,49 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 	return findings
 
 
+## `report`, a script at a time with a frame between turns: the same report.
+static func report_in_turns(scripts: PackedStringArray) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	if scripts.is_empty():
+		return findings
+	# ONE read per script answers both questions - is it marked, and how big is it - because this runs
+	# over every script the project owns and reading each of them twice is the whole cost of the
+	# section. The lifts below are bounded; this walk is not, so it has to be the cheap half.
+	var kept_as_code: PackedStringArray = PackedStringArray()
+	var sized: Array[Dictionary] = []
+	for script_path: String in scripts:
+		await ReadingDoors.doctor().breathe()
+		var text: String = ReadingDoors.doctor().source_of(script_path)
+		if _marked_in(text):
+			kept_as_code.append(script_path)
+			continue
+		sized.append({"path": script_path, "size": text.length()})
+	var measured: Array[Dictionary] = await _measure_in_turns(_ordered_paths(sized, "size", true))
+	var candidates: PackedStringArray = PackedStringArray()
+	for entry: Dictionary in sized:
+		candidates.append(str(entry["path"]))
+	# A percentage over nothing is not 0 and it is certainly not 100: it is a number nobody took. A
+	# project whose candidates all failed to open says so, rather than claiming a full score for a
+	# measurement that never happened.
+	var summary: String = EventSheetL10n.translate("Interop: %d script(s) of this project, and none of them could be opened to measure. Installing the plugin changed nothing - a script is code until you open it as a sheet.") % candidates.size() \
+		if measured.is_empty() \
+		else EventSheetL10n.translate("Interop: %d script(s) of this project, %d measured, and %d%% of what they hold reads as rows. Installing the plugin changed nothing - a script is code until you open it as a sheet. The score gates nothing; it is there to watch the seam move.") % [
+			candidates.size(), measured.size(), _average_reads_as(measured)]
+	findings.append(_finding("info", CHECK_ID, measured[0].get("path", "") if not measured.is_empty() else "",
+		summary, ""))
+	for entry: Dictionary in measured:
+		findings.append(_finding("info", CHECK_SCRIPT, str(entry["path"]), _script_line(entry), ""))
+		var adoptable: PackedStringArray = entry["adoptable"]
+		if not adoptable.is_empty():
+			findings.append(_finding("info", CHECK_ADOPT, str(entry["path"]),
+				EventSheetL10n.translate("%s could hand %s to a shipped behaviour - open it and the row says what would change before anything does.") % [
+					str(entry["path"]).get_file(), ", ".join(adoptable)], ""))
+	for script_path: String in kept_as_code:
+		findings.append(_finding("info", CHECK_STAYS_CODE, script_path,
+			EventSheetL10n.translate("%s is marked to stay code: never offered anything, never counted, opened read-only.") % script_path.get_file(), ""))
+	return findings
+
+
 ## One measured script in a sentence: the share that reads as rows, what that is made of, and what a
 ## rename of it would have to check.
 static func _script_line(entry: Dictionary) -> String:
@@ -177,6 +220,27 @@ static func _measure(ordered: PackedStringArray) -> Array[Dictionary]:
 		if measured.size() >= MEASURED_LIMIT or Time.get_ticks_msec() > deadline:
 			break
 		var entry: Dictionary = adoption(script_path)
+		if not entry.is_empty():
+			measured.append(entry)
+	measured.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:
+		if int(left["reads_as"]) == int(right["reads_as"]):
+			return str(left["path"]) < str(right["path"])
+		return int(left["reads_as"]) > int(right["reads_as"]))
+	return measured
+
+
+## `_measure`, a script at a time with a frame between turns.
+static func _measure_in_turns(ordered: PackedStringArray) -> Array[Dictionary]:
+	var measured: Array[Dictionary] = []
+	# The budget is for the time spent measuring, not the frames given away between scripts.
+	var spent: int = 0
+	for script_path: String in ordered:
+		if measured.size() >= MEASURED_LIMIT or spent > MEASURE_BUDGET_MSEC:
+			break
+		await ReadingDoors.doctor().breathe()
+		var started: int = Time.get_ticks_msec()
+		var entry: Dictionary = adoption(script_path)
+		spent += Time.get_ticks_msec() - started
 		if not entry.is_empty():
 			measured.append(entry)
 	measured.sort_custom(func(left: Dictionary, right: Dictionary) -> bool:

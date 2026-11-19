@@ -183,32 +183,72 @@ static func _in_group_scan_scope(path: String) -> bool:
 ## finding, because without a scene there is no evidence.
 static func findings(sheet: EventSheetResource, script_path: String = "") -> Array[Dictionary]:
 	var found: Array[Dictionary] = []
+	for stage: Callable in _stages(sheet, script_path, found):
+		stage.call()
+	return found
+
+
+## `findings`, a stage at a time with `between` (a Callable that answers something to await, or null) called after each:
+## the same findings in the same order, for an audit that must give the editor a frame between the stages of one very
+## large sheet. The caller supplies `between` so this file names nothing of the audit that awaits it.
+static func findings_in_turns(sheet: EventSheetResource, script_path: String, between: Callable) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
 	if sheet == null:
 		return found
+	var own_path: String = _own_path_of(sheet, script_path)
+	var walk: Dictionary = await _read_in_turns(sheet, between)
+	await between.call()
+	var remembered: PackedStringArray = remembered_for(own_path)
+	await between.call()
+	var scene: Dictionary = scene_facts(own_path)
+	await between.call()
+	var stages: Array[Callable] = _stages_for(sheet, own_path, walk, found, remembered, scene)
+	await between.call()
+	for stage: Callable in stages:
+		stage.call()
+		await between.call()
+	return found
+
+
+## The stages a sheet is judged in, each a Callable that appends to `found` - the one list `findings` and
+## `findings_in_turns` both run, so the two cannot differ.
+static func _stages(sheet: EventSheetResource, script_path: String, found: Array[Dictionary]) -> Array[Callable]:
+	if sheet == null:
+		return [] as Array[Callable]
+	return _stages_for(sheet, _own_path_of(sheet, script_path), _read(sheet), found)
+
+
+static func _own_path_of(sheet: EventSheetResource, script_path: String) -> String:
 	var own_path: String = script_path.strip_edges()
 	if own_path.is_empty():
 		own_path = sheet.external_source_path
-	var walk: Dictionary = _read(sheet)
+	return own_path
+
+
+## The stages for a sheet already read (`walk` is what `_read` makes of it).
+static func _stages_for(sheet: EventSheetResource, own_path: String, walk: Dictionary, found: Array[Dictionary],
+		held_memory: Variant = null, held_scene: Variant = null) -> Array[Callable]:
+	var stages: Array[Callable] = []
 	var rows: Array[Dictionary] = walk["rows"]
 	# An event with no rows yet still has a trigger: a handler's own parameters can be wrong before its first action.
 	if rows.is_empty() and (walk["variable_rows"] as Array).is_empty() and (walk["events"] as Array).is_empty():
-		return found
-	var remembered: PackedStringArray = remembered_for(own_path)
-	var scene: Dictionary = scene_facts(own_path)
-	_wrong_node_types(rows, scene, walk, found)
-	_missing_paths(rows, walk["variable_rows"], found)
-	_empty_groups(rows, sheet, own_path, remembered, found)
-	_missing_actions(rows, walk, found, sheet)
-	_missing_nodes(rows, scene, remembered, found)
-	_signal_counts(sheet, walk, rows, found)
-	_endless_whiles(rows, walk, found)
-	_hidden_locals(walk, found)
-	_zero_divisions(rows, walk, found)
-	_wrong_kinds(sheet, rows, scene, walk, found)
-	found.append_array(EventSheetListFindings.findings(sheet, rows))
+		return stages
+	var remembered: PackedStringArray = held_memory as PackedStringArray if held_memory != null else remembered_for(own_path)
+	var scene: Dictionary = held_scene as Dictionary if held_scene != null else scene_facts(own_path)
+	stages.append(func() -> void: _wrong_node_types(rows, scene, walk, found))
+	stages.append(func() -> void: _missing_paths(rows, walk["variable_rows"], found))
+	stages.append(func() -> void: _empty_groups(rows, sheet, own_path, remembered, found))
+	stages.append(func() -> void: _missing_actions(rows, walk, found, sheet))
+	stages.append(func() -> void: _missing_nodes(rows, scene, remembered, found))
+	stages.append(func() -> void: _signal_counts(sheet, walk, rows, found))
+	stages.append(func() -> void: _endless_whiles(rows, walk, found))
+	stages.append(func() -> void: _hidden_locals(walk, found))
+	stages.append(func() -> void: _zero_divisions(rows, walk, found))
+	stages.append(func() -> void: _wrong_kinds(sheet, rows, scene, walk, found))
+	stages.append(func() -> void: found.append_array(EventSheetListFindings.findings(sheet, rows)))
 	# Loaded by path: the first open of the editor does not compile what only a judged sheet needs.
-	found.append_array(load("res://addons/eventsheet/editor/interaction/classic_findings.gd").findings(rows, walk, scene, own_path))
-	return found
+	stages.append(func() -> void: found.append_array(load("res://addons/eventsheet/editor/interaction/classic_findings.gd").findings(rows, walk, scene, own_path)))
+	return stages
 
 
 ## The words after a save: how many rows cannot run or do not do what they say, and the first. ""
@@ -292,6 +332,46 @@ static func _read(sheet: EventSheetResource) -> Dictionary:
 				names.append(declared.id.strip_edges())
 		_walk_rows(event_function.events if not event_function.events.is_empty() else event_function.rows,
 			event_function.function_name, names, walk)
+	var pieces: PackedStringArray = PackedStringArray()
+	for context: Dictionary in walk["rows"]:
+		pieces.append(str(context.get("line", "")))
+	walk["text"] = "\n".join(pieces)
+	_collect_connections(walk)
+	return walk
+
+
+## `_read`, a few rows at a time with a frame between turns: the same walk.
+static func _read_in_turns(sheet: EventSheetResource, between: Callable) -> Dictionary:
+	var walk: Dictionary = {
+		"rows": [] as Array[Dictionary], "variable_rows": [], "sheet_variables": {}, "signals": {},
+		"functions": {}, "connected": {}, "events": [] as Array[Dictionary], "text": "",
+		"verbatim": [], "behavior": sheet.behavior_mode, "host_class": sheet.host_class, "sheet": sheet,
+	}
+	_collect_declarations(sheet.events, walk)
+	for name_key: Variant in sheet.variables.keys():
+		if not (walk["sheet_variables"] as Dictionary).has(str(name_key)):
+			(walk["sheet_variables"] as Dictionary)[str(name_key)] = ""
+	for entry: Variant in sheet.functions:
+		var event_function: EventFunction = entry as EventFunction
+		if event_function != null:
+			(walk["functions"] as Dictionary)[event_function.function_name.strip_edges()] = event_function
+	# The top-level rows are walked a few at a time: each is walked on its own, whatever stands beside it.
+	var top_level: Array = sheet.events
+	for start: int in range(0, top_level.size(), 8):
+		_walk_rows(top_level.slice(start, start + 8), "", PackedStringArray(), walk)
+		await between.call()
+	for entry: Variant in sheet.functions:
+		var event_function: EventFunction = entry as EventFunction
+		if event_function == null:
+			continue
+		var names: PackedStringArray = PackedStringArray()
+		for parameter: Variant in event_function.params:
+			var declared: ACEParam = parameter as ACEParam
+			if declared != null and not declared.id.strip_edges().is_empty():
+				names.append(declared.id.strip_edges())
+		_walk_rows(event_function.events if not event_function.events.is_empty() else event_function.rows,
+			event_function.function_name, names, walk)
+		await between.call()
 	var pieces: PackedStringArray = PackedStringArray()
 	for context: Dictionary in walk["rows"]:
 		pieces.append(str(context.get("line", "")))

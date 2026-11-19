@@ -84,8 +84,9 @@ static func ensure_registered() -> void:
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
 	var scripts: PackedStringArray = EventSheetProjectDoctor._project_scripts()
 	# The scripts the report opens as sheets are opened first, on a worker, so the editor keeps drawing.
-	await EventSheetProjectDoctor.prepare_sheets(ranked(scripts).slice(0, MEASURED_LIMIT))
-	findings.append_array(report(scripts))
+	var ordered: PackedStringArray = await ranked_in_turns(scripts)
+	await EventSheetProjectDoctor.prepare_sheets(ordered.slice(0, MEASURED_LIMIT))
+	findings.append_array(await report_in_turns(ordered))
 
 
 ## The whole section as findings, the summary first: how many scripts wait on a touch, how many were
@@ -95,12 +96,10 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 static func report(scripts: PackedStringArray,
 		scenes: PackedStringArray = PackedStringArray()) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
-	var waiting: int = 0
 	var troubled: int = 0
 	var measured: int = 0
 	var worst_path: String = ""
 	var ordered: PackedStringArray = ranked(scripts)
-	waiting = ordered.size()
 	for script_path: String in ordered:
 		if measured >= MEASURED_LIMIT:
 			break
@@ -112,6 +111,36 @@ static func report(scripts: PackedStringArray,
 			worst_path = script_path
 		troubled += 1
 		findings.append_array(found)
+	return _with_summary(findings, ordered, worst_path, measured, troubled)
+
+
+## `report` over scripts already ranked, a sheet at a time with a frame between turns: the same report.
+static func report_in_turns(ordered: PackedStringArray,
+		scenes: PackedStringArray = PackedStringArray()) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	var troubled: int = 0
+	var measured: int = 0
+	var worst_path: String = ""
+	for script_path: String in ordered:
+		if measured >= MEASURED_LIMIT:
+			break
+		measured += 1
+		await EventSheetProjectDoctor.breathe()
+		var found: Array[Dictionary] = sheet_findings(script_path, scenes)
+		if found.is_empty():
+			continue
+		if troubled == 0:
+			worst_path = script_path
+		troubled += 1
+		findings.append_array(found)
+	return _with_summary(findings, ordered, worst_path, measured, troubled)
+
+
+## The summary line in front of what was found: how many scripts wait on a touch, how many were read, how many have
+## a trigger that cannot fire. Nothing at all when no script waits on a touch.
+static func _with_summary(findings: Array[Dictionary], ordered: PackedStringArray, worst_path: String,
+		measured: int, troubled: int) -> Array[Dictionary]:
+	var waiting: int = ordered.size()
 	if waiting <= 0:
 		return findings
 	# A healthy project has no worst file, and the summary still has to point somewhere: an empty path
@@ -148,6 +177,23 @@ static func sheet_findings(script_path: String,
 static func ranked(scripts: PackedStringArray) -> PackedStringArray:
 	var ordered: PackedStringArray = PackedStringArray()
 	for script_path: String in scripts:
+		if _is_shipped(script_path):
+			continue
+		if not says_enough(EventSheetProjectDoctor.source_of(script_path)):
+			continue
+		if EventSheetSceneCollisionFacts.for_script(script_path).is_empty() \
+				and not _says_any(EventSheetProjectDoctor.source_of(script_path), TARGET_WORDS):
+			continue
+		ordered.append(script_path)
+	ordered.sort()
+	return ordered
+
+
+## `ranked`, a script at a time with a frame between turns: the same list, for a project of thousands of scripts.
+static func ranked_in_turns(scripts: PackedStringArray) -> PackedStringArray:
+	var ordered: PackedStringArray = PackedStringArray()
+	for script_path: String in scripts:
+		await EventSheetProjectDoctor.breathe()
 		if _is_shipped(script_path):
 			continue
 		if not says_enough(EventSheetProjectDoctor.source_of(script_path)):

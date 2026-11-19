@@ -201,8 +201,14 @@ static func list_project_sheets() -> PackedStringArray:
 ## a real project. Listing a script costs a directory walk; nothing here loads or imports one.
 static func list_all_project_sheets() -> PackedStringArray:
 	var sheet_paths: PackedStringArray = list_project_sheets()
+	# A set, not a search of the list for each script: ten thousand scripts against a thousand sheets was thirteen
+	# million comparisons, a stretch of the main thread of its own.
+	var seen: Dictionary = {}
+	for sheet_path: String in sheet_paths:
+		seen[sheet_path] = true
 	for script_path: String in EventSheetFindReferences.project_scripts():
-		if not sheet_paths.has(script_path):
+		if not seen.has(script_path):
+			seen[script_path] = true
 			sheet_paths.append(script_path)
 	sheet_paths.sort()
 	return sheet_paths

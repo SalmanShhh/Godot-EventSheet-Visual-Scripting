@@ -55,7 +55,7 @@ static func check(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -
 	# Opened as sheets first, on a worker, so the editor keeps drawing while the report reads them.
 	await EventSheetProjectDoctor.prepare_resource_sheets(read, true)
 	await EventSheetProjectDoctor.prepare_sheets(read)
-	findings.append_array(report(read))
+	findings.append_array(await report_in_turns(read))
 
 
 ## What one run reads: the stored sheets it was handed, plus every file this session watched a save
@@ -94,10 +94,37 @@ static func report(paths: PackedStringArray) -> Array[Dictionary]:
 		if not mine.is_empty():
 			affected += 1
 		findings.append_array(sheet_findings(path, mine))
-	findings.insert(0, _finding("info", CHECK_ID, "",
-		"Renames: %d sheet(s) read, and %d of them hold a row pointing at a name that went out of its file." % [
-			measured, affected], ""))
+	findings.insert(0, _summary(measured, affected))
 	return findings
+
+
+## `report`, a sheet at a time with a frame between turns: the same report, for an audit that must not hold the editor
+## while a thousand sheets are judged.
+static func report_in_turns(paths: PackedStringArray) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	var read: PackedStringArray = paths.duplicate()
+	read.sort()
+	var measured: int = 0
+	var affected: int = 0
+	for path: String in read:
+		await EventSheetProjectDoctor.breathe()
+		var sheet: EventSheetResource = _opened(path)
+		if sheet == null:
+			continue
+		measured += 1
+		var mine: Array[Dictionary] = EventSheetRenameFindings.findings(sheet, path,
+			EventSheetRenameEvidence.witness_for(path, _scene_of(path)))
+		if not mine.is_empty():
+			affected += 1
+		findings.append_array(sheet_findings(path, mine))
+	findings.insert(0, _summary(measured, affected))
+	return findings
+
+
+static func _summary(measured: int, affected: int) -> Dictionary:
+	return _finding("info", CHECK_ID, "",
+		"Renames: %d sheet(s) read, and %d of them hold a row pointing at a name that went out of its file." % [
+			measured, affected], "")
 
 
 ## What one opened sheet contributes to the section. Pure over the findings a sheet earned, so the

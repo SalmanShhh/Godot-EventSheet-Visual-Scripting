@@ -276,7 +276,7 @@ static func _run_end_to_end() -> bool:
 	var all_passed: bool = true
 
 	var doctor_source: String = FileAccess.get_file_as_string("res://addons/eventforge/project_doctor.gd")
-	all_passed = _check("the check runs in the Doctor's audit", doctor_source.contains("check_save_key_symmetry(context[\"sheet_paths\"], findings)"), true) and all_passed
+	all_passed = _check("the check runs in the Doctor's audit", doctor_source.contains("check_save_key_symmetry_in_turns(context[\"sheet_paths\"], findings)"), true) and all_passed
 
 	# The real scan over the real project: a check that fires on the repo that ships it is noise.
 	var findings: Array[Dictionary] = []

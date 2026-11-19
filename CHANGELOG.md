@@ -12,6 +12,10 @@ The Learn column of the Start window listed the tutorials in English in a transl
 
 The picture check had warned for weeks that the default look moved for 292 pictures. The look moved when the bundled Manual colours were left to follow the editor (they are no longer written into the default look), which changes no pixel: ten pictures spread across the guides were retaken in the real editor and five of them were byte for byte the same. The five that differed did so for other reasons (a longer Manual contents list, a row that now wraps, a name shown on a row): `around-objects-rows`, `opened-script-3d-words`, `picker-recipes`, `layout-on-top-pause-pair` and `row-doors` are retaken, and the check's recorded look is the current one, so the warning stops.
 
+### Faster: the Check the project window stays responsive on a project of ten thousand scripts
+
+The long single stretches of main-thread work the audit still had are now taken a script at a time with a frame between: the Mistake checks (one very large sheet is judged a stage at a time), Ship it, Save keys, Renames, Unknown input actions, Collisions, Interop, Collision layers, Shapes, Tool edits, the unsaved rebindings, menu ids, imported rows, generated outputs, debug residue and untranslated project checks. The findings, their order and the counts are the same.
+
 ### Fixed: a whole audit asked for while the Check the project window is checking no longer breaks both
 
 Everything an audit holds is shared, so a whole audit run from elsewhere (the MCP tool, a test) while the window's was under way began by clearing what the window's had read and made the window's own steps hand back half done: the caller got its answer, and the window ended with a page of one finding and frames of up to fifteen seconds. The audit under way is now stopped and its workers joined first, the whole audit runs, and the window's starts again by itself, so both give the complete page.

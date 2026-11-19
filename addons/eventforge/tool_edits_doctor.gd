@@ -41,7 +41,7 @@ static func ensure_registered() -> void:
 ## The section itself, with the contract every registered check has: append findings, never write
 ## inside res://.
 static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) -> void:
-	var scripts: PackedStringArray = scene_editing_tools()
+	var scripts: PackedStringArray = await scene_editing_tools_in_turns()
 	# Opened as sheets first, on a worker, so the editor keeps drawing while the report reads them.
 	await EventSheetProjectDoctor.prepare_sheets(scripts)
 	findings.append_array(report(scripts))
@@ -56,6 +56,18 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 static func scene_editing_tools() -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
 	for script_path: String in EventSheetProjectDoctor._project_scripts():
+		var source: String = EventSheetProjectDoctor.source_of(script_path)
+		if source.contains("@tool") and (EventForgeUndoableEdits.touches_open_scene(source)
+				or source.contains(EventSheetRebuildFindings.BUILT_MARK)):
+			found.append(script_path)
+	return found
+
+
+## `scene_editing_tools`, a script at a time with a frame between turns: the same answer.
+static func scene_editing_tools_in_turns() -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	for script_path: String in EventSheetProjectDoctor._project_scripts():
+		await EventSheetProjectDoctor.breathe()
 		var source: String = EventSheetProjectDoctor.source_of(script_path)
 		if source.contains("@tool") and (EventForgeUndoableEdits.touches_open_scene(source)
 				or source.contains(EventSheetRebuildFindings.BUILT_MARK)):
