@@ -250,7 +250,7 @@ static func debug_row_findings(sources: Dictionary) -> Array[Dictionary]:
 		findings.append(_finding("warning", CHECK_DEBUG_ROWS, script_path, message, first))
 	if not plain_scripts.is_empty():
 		findings.append(_finding("info", CHECK_DEBUG_ROWS, plain_scripts[0],
-			EventSheetL10n.translate("%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.") % [
+			EventSheetL10n.translate("Plain scripts that write to the console where an exported release build still runs it: %d, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.") % [
 				plain_scripts.size(), plain_scripts[0].get_file()], ""))
 	return findings
 
@@ -279,7 +279,7 @@ static func debug_row_findings_in_turns(sources: Dictionary) -> Array[Dictionary
 		findings.append(_finding("warning", CHECK_DEBUG_ROWS, script_path, message, first))
 	if not plain_scripts.is_empty():
 		findings.append(_finding("info", CHECK_DEBUG_ROWS, plain_scripts[0],
-			EventSheetL10n.translate("%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.") % [
+			EventSheetL10n.translate("Plain scripts that write to the console where an exported release build still runs it: %d, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.") % [
 				plain_scripts.size(), plain_scripts[0].get_file()], ""))
 	return findings
 
@@ -477,8 +477,8 @@ static func translation_findings(used: PackedStringArray, catalogs: Dictionary) 
 		if missing.is_empty():
 			continue
 		findings.append(_finding("warning", CHECK_TRANSLATION, path,
-			EventSheetL10n.translate("%s is missing %d key(s) the game asks for, so a player reading it sees the raw key: %s.") % [
-				path.get_file(), missing.size(), _named_then_counted(missing)], path))
+			EventSheetL10n.translate("%s is missing keys the game asks for, so a player reading it sees the raw key: %s.") % [
+				path.get_file(), _named_then_counted(missing)], path))
 	return findings
 
 
@@ -673,7 +673,7 @@ static func what_gets_saved_findings(usage: Dictionary) -> Array[Dictionary]:
 				keys.append(key)
 	keys.sort()
 	return [_finding("info", CHECK_WHAT_GETS_SAVED, _sorted_keys(usage)[0],
-		EventSheetL10n.translate("A save slot of this game holds %d value(s), written from %d script(s): %s. Anything not on this list is back to its starting value when a slot is loaded.") % [
+		EventSheetL10n.translate("A save slot of this game: values held: %d; scripts that write them: %d. They are: %s. Anything not on this list is back to its starting value when a slot is loaded.") % [
 			keys.size(), usage.size(), _named_then_counted(keys)], "")]
 
 

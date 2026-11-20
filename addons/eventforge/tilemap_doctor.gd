@@ -105,7 +105,7 @@ static func report(sources: Array[Dictionary], known_keys: PackedStringArray,
 		unknown += mine.size()
 		findings.append_array(mine)
 	findings.insert(0, _finding("info", CHECK_ID, str(sources[0].get("path", "")),
-		"Tilemap: %d sheet(s) ask a level questions, and %d row(s) name something the project's tilesets do not declare." % [
+		"Tilemap: sheets that ask a level questions: %d; rows that name something the project's tilesets do not declare: %d." % [
 			sources.size(), unknown], ""))
 	return findings
 

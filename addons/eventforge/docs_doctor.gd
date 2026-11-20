@@ -161,9 +161,9 @@ static func _summary(reports: Array[Dictionary], read: int, total: int) -> Dicti
 		counts["unwritten"] = int(counts["unwritten"]) + (page.get("unwritten", PackedStringArray()) as PackedStringArray).size()
 	if read == 0:
 		return _finding("info", CHECK_ID, "", EventSheetL10n.translate("Docs: guides are checked in the editor, where the vocabulary is already loaded. Outside it the help bundle build prints the same report."), "summary")
-	var message: String = EventSheetL10n.translate("Docs: %d of %d guide(s) read, %d out of step.") % [
+	var message: String = EventSheetL10n.translate("Docs: guides read: %d of %d; guides out of step: %d.") % [
 		read, total, reports.size()]
-	message += " " + EventSheetL10n.translate("%d verb(s) undocumented, %d name(s) no verb answers to, %d description(s) that say nothing, %d verb(s) the changelog never mentions.") % [
+	message += " " + EventSheetL10n.translate("Verbs undocumented: %d; names no verb answers to: %d; descriptions that say nothing: %d; verbs the changelog never mentions: %d.") % [
 		int(counts["missing"]), int(counts["extra"]), int(counts["thin"]), int(counts["unwritten"])]
 	if reports.size() > GUIDES_LISTED_LIMIT:
 		message += " " + EventSheetL10n.translate("The %d worst are listed below.") % GUIDES_LISTED_LIMIT

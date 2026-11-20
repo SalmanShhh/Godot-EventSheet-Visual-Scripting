@@ -312,7 +312,7 @@ static func _test_the_doctor_section() -> bool:
 	ok = _check("the section leads with its summary",
 		str(report[0].get("check", "")), EventSheetMultiplayerDoctor.CHECK_ID) and ok
 	ok = _check("the summary counts the scripts that touch the network",
-		str(report[0].get("message", "")).contains("1 script(s) touch the network"), true) and ok
+		str(report[0].get("message", "")).contains("scripts that touch the network: 1."), true) and ok
 	ok = _check("a corpus with nothing networked in it reports nothing at all",
 		EventSheetMultiplayerDoctor.report(PackedStringArray()).size(), 0) and ok
 	# A script block the sheet could not claim is what the Adopt offer is made over.
@@ -332,7 +332,7 @@ multiplayer.multiplayer_peer = peer"
 		_checks(reading), PackedStringArray([EventSheetMultiplayerDoctor.CHECK_READING])) and ok
 	ok = _check("the line says how much read and names the first that did not",
 		str(reading[0].get("message", "")),
-		"lobby.gd reads 0% of its networking as rows - 1 line(s) stay code. First: multiplayer.multiplayer_peer = peer") and ok
+		"lobby.gd reads 0% of its networking as rows - lines that stay code: 1. First: multiplayer.multiplayer_peer = peer") and ok
 	# The offer on that line is the row's own Adopt, named where the reader can reach it.
 	ok = _check("a reading line offers Adopt", EventSheetQuickFixes.fixes_for(
 		{"check": EventSheetMultiplayerDoctor.CHECK_READING}).size(), 1) and ok

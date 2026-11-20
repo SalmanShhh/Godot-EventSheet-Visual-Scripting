@@ -108,7 +108,7 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 			unread_scripts += 1
 		findings.append_array(script_findings(script_path, sheet))
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
-		"Multiplayer: %d script(s) touch the network, and %d%% of what they say about it reads as rows (%d of %d line(s)). %d have lines the sheet can only show as code." % [
+		"Multiplayer: scripts that touch the network: %d. Of what they say about it, %d%% reads as rows (lines: %d of %d). Scripts with lines the sheet can only show as code: %d." % [
 			measured, _percent(read, total), read, total, unread_scripts], ""))
 	return findings
 
@@ -121,7 +121,7 @@ static func script_findings(script_path: String, sheet: EventSheetResource) -> A
 	var unread: PackedStringArray = unread_lines(sheet)
 	if not unread.is_empty():
 		findings.append(_finding("info", CHECK_READING, script_path,
-			"%s reads %d%% of its networking as rows - %d line(s) stay code. First: %s" % [
+			"%s reads %d%% of its networking as rows - lines that stay code: %d. First: %s" % [
 				script_path.get_file(),
 				int(EventSheetReadingCoverage.networking(sheet).get("percent", 0)),
 				unread.size(), unread[0]],

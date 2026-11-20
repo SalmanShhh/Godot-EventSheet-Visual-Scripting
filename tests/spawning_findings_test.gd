@@ -652,7 +652,7 @@ static func _test_the_doctor_files_a_real_finding() -> bool:
 	# a clean bill of health - and it points at the first script worth opening.
 	passed = _check("the summary says what was found, what was read and what is wrong",
 		str(filed[0].get("message", "")),
-		"Spawning: 1 script(s) that add or destroy nodes, 1 read, 1 with something that will go wrong at run time.") and passed
+		"Spawning: scripts that add or destroy nodes: 1; scripts read: 1; scripts with something that will go wrong at run time: 1.") and passed
 	passed = _check("the summary is an info line under the section's own id",
 		"%s/%s" % [str(filed[0].get("severity", "")), str(filed[0].get("check", ""))],
 		"info/%s" % EventSheetSpawningDoctor.CHECK_ID) and passed

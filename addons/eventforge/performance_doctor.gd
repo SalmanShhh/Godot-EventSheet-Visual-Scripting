@@ -201,7 +201,7 @@ static func report_in_turns(scripts: PackedStringArray, ordered_paths: Variant =
 ## The summary line in front of what was found.
 static func _with_summary(findings: Array[Dictionary], script_count: int, worst_path: String, measured: int, safe_fixes: int) -> Array[Dictionary]:
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
-		"Performance: %d of %d script(s) that work every frame were read, and %d of them earn a finding. %d of those fixes are safe to apply together." % [
+		"Performance: scripts that work every frame, read: %d of %d; scripts that earn a finding: %d. Fixes that are safe to apply together: %d." % [
 			measured, script_count, _scripts_with_findings(findings), safe_fixes], ""))
 	return findings
 

@@ -102,11 +102,18 @@ static func findings(sheet: EventSheetResource) -> Array[Dictionary]:
 ## on record - so a second finding about the same save never hides the first.
 static func tail_for(path: String) -> String:
 	var count: int = warnings_at(path).size()
-	return "" if count == 0 else " - " + EventSheetL10n.translate("%d compiler warning(s) - the first: %s") % [count, str(warnings_at(path)[0])]
+	return "" if count == 0 else " - " + _count_phrase(count, str(warnings_at(path)[0]))
 
 
 ## The words after a save: how many warnings, and the first. "" when there were none.
 static func summary(warnings: Array) -> String:
 	if warnings.is_empty():
 		return ""
-	return EventSheetL10n.translate("%d compiler warning(s) - the first: %s") % [warnings.size(), str(warnings[0])]
+	return _count_phrase(warnings.size(), str(warnings[0]))
+
+
+## "1 compiler warning - the first: ..." or "3 compiler warnings - the first: ...", each form its own row in every language.
+static func _count_phrase(count: int, first: String) -> String:
+	if count == 1:
+		return EventSheetL10n.translate("1 compiler warning - the first: %s") % first
+	return EventSheetL10n.translate("%d compiler warnings - the first: %s") % [count, first]

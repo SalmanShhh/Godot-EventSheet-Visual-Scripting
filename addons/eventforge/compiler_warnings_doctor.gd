@@ -48,7 +48,7 @@ static func report(paths: PackedStringArray) -> Array[Dictionary]:
 			findings.append(_finding("warning", CHECK_ID, path, "%s %s" % [path.get_file(), str(warning)], ""))
 	if total > 0:
 		findings.insert(0, _finding("info", CHECK_ID, first_path,
-			"Compiler: %d warning(s) from the last save of %d sheet(s)." % [total, _count_files(findings)], ""))
+			"Compiler: warnings from the last save: %d; sheets they came from: %d." % [total, _count_files(findings)], ""))
 	return findings
 
 

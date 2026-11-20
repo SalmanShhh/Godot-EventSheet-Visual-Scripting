@@ -263,7 +263,7 @@ static func _test_the_report() -> bool:
 		"effects", "effects-screen-effect-idle", "effects-shared-material", "effects-shared-material",
 		"effects-unknown-dial", "effects-undeclared-global"])) and ok
 	ok = _check("and the summary counts the scenes", str(report[0]["message"]),
-		"Effects: 3 scene(s) wearing a material, 1 with something that will not show at run time.") and ok
+		"Effects: scenes wearing a material: 3; scenes with something that will not show at run time: 1.") and ok
 	return _check("a project with no effects in it reports nothing at all",
 		EventSheetEffectsDoctor.report(PackedStringArray(), PackedStringArray()).size(), 0) and ok
 

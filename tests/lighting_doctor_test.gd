@@ -219,7 +219,7 @@ static func _test_the_section() -> bool:
 		PackedStringArray([CRYPT_SCENE, VAULT_SCENE, CAVE_SCENE]), PackedStringArray([CRYPT]))
 	ok = _check("it leads with a summary counting the lit scenes and the troubled ones",
 		str(report[0].get("message", "")),
-		"Lighting: 3 lit scene(s), 2 with something that will not show at run time.") and ok
+		"Lighting: lit scenes: 3; scenes with something that will not show at run time: 2.") and ok
 	ok = _check("and every finding is filed under the check its kind maps to", _checks(report),
 		PackedStringArray([EventSheetLightingDoctor.CHECK_ID, EventSheetLightingDoctor.CHECK_TEXTURE,
 			EventSheetLightingDoctor.CHECK_OCCLUDER, EventSheetLightingDoctor.CHECK_DARKNESS,

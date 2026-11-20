@@ -795,6 +795,6 @@ static func findings(sheet: EventSheetResource) -> Array[Dictionary]:
 	if unfilled > 0:
 		found.append({
 			"kind": KIND_STATE_ROW_UNFILLED, "severity": "warning", "subject": ENUM_NAME,
-			"message": EventSheetL10n.translate("%d row(s) here name no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point each one at one of this object's states.") % unfilled,
+			"message": EventSheetL10n.translate("1 row here names no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point it at one of this object's states.") if unfilled == 1 else EventSheetL10n.translate("%d rows here name no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point each one at one of this object's states.") % unfilled,
 		})
 	return found

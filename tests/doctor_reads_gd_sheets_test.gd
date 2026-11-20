@@ -161,7 +161,7 @@ extends Node
 	rows.append(["a project with no .gd sheets and no plain scripts gets no note", GdSheets.coverage_finding(3, 0).is_empty(), true])
 	var plain_note: Dictionary = GdSheets.coverage_finding(1, 2, 640)
 	rows.append(["plain scripts are counted in the one note, not reported one by one",
-		str(plain_note.get("message", "")).contains("The other 640 .gd file(s) are plain scripts"), true])
+		str(plain_note.get("message", "")).contains("Other .gd files, which are plain scripts: 640"), true])
 	rows.append(["a project of only plain scripts still gets that note", GdSheets.coverage_finding(0, 0, 4).is_empty(), false])
 
 	# The residue reader on its own.

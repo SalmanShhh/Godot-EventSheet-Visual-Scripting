@@ -43,7 +43,7 @@ static func run() -> bool:
 			["Interop", EventSheetInteropDoctor, "Interop: scripts in this project: (\\d+)", unmarked],
 			["the reading ledger", EventSheetReadingDoctor, "Read \\d+ of the (\\d+) scripts", own.size()],
 			["Effects", EventSheetEffectsDoctor, "", 0],
-			["Migration", EventSheetMigrationDoctor, "is a sample: \\d+ of (\\d+) script", own.size()]]:
+			["Migration", EventSheetMigrationDoctor, "is a sample - scripts read: \\d+ of (\\d+)", own.size()]]:
 		var findings: Array[Dictionary] = []
 		(section[1] as Object).call("check", PackedStringArray(), findings)
 		var named: Array = []
@@ -100,7 +100,7 @@ static func _the_readers_own_folder_under_the_packs_is_theirs() -> bool:
 	for section: Array in [
 			["Interop", EventSheetInteropDoctor, "Interop: scripts in this project: (\\d+)"],
 			["the reading ledger", EventSheetReadingDoctor, ""],
-			["Migration", EventSheetMigrationDoctor, "Migration: (\\d+) sheet\\(s\\) read"]]:
+			["Migration", EventSheetMigrationDoctor, "Migration: sheets read: (\\d+);"]]:
 		var findings: Array[Dictionary] = []
 		(section[1] as Object).call("check", PackedStringArray(), findings)
 		var total: int = -1 if not str(section[2]).is_empty() else mini(findings.size(), 1)

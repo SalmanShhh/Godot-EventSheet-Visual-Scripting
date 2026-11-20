@@ -149,7 +149,7 @@ static func _with_summary(findings: Array[Dictionary], ordered: PackedStringArra
 	if worst_path.is_empty():
 		worst_path = ordered[0]
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
-		EventSheetL10n.translate("Collisions: %d script(s) waiting on a touch, %d read, %d whose trigger cannot fire as the scene stands.") % [
+		EventSheetL10n.translate("Collisions: scripts waiting on a touch: %d; scripts read: %d; scripts whose trigger cannot fire as the scene stands: %d.") % [
 			waiting, measured, troubled], ""))
 	return findings
 

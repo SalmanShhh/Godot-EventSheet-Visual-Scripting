@@ -453,7 +453,7 @@ static func _run_doctor() -> bool:
 	rows.append(["the section reports its summary and both notes", findings.size(), 3])
 	rows.append(["the summary counts what it found",
 		str(findings[0].get("message", "")),
-		"Animation: 1 script(s) drive a blend tree, 1 state(s) no tree declares, 1 blend position(s) written as a vector into a one-dimensional space."])
+		"Animation: scripts that drive a blend tree: 1; states no tree declares: 1; blend positions written as a vector into a one-dimensional space: 1."])
 	rows.append(["a state nobody declared is filed as itself",
 		str(findings[1].get("check", "")), "animation-unknown-state"])
 	rows.append(["and says which state, with the one it was nearly",
@@ -477,7 +477,7 @@ static func _run_doctor() -> bool:
 		[{"path": "res://player.gd", "source": clean, "trees": trees}])
 	rows.append(["a sheet that says it right says nothing back", quiet.size(), 1])
 	rows.append(["and its summary counts no trouble", str(quiet[0].get("message", "")),
-		"Animation: 1 script(s) drive a blend tree, 0 state(s) no tree declares, 0 blend position(s) written as a vector into a one-dimensional space."])
+		"Animation: scripts that drive a blend tree: 1; states no tree declares: 0; blend positions written as a vector into a one-dimensional space: 0."])
 	# The two readers behind the notes, on their own: what the sweep sees in a line.
 	rows.append(["the sweep reads the state out of a travel",
 		Array(EventSheetAnimationDoctor.states_travelled_to(source)), ["&\"Swng\""]])

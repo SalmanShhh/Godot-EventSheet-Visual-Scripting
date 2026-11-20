@@ -76,7 +76,7 @@ static func _test_a_console_line_a_player_would_see() -> bool:
 		"res://game/a.gd": source, "res://game/b.gd": source, "res://game/c.gd": source,
 	})
 	ok = _check("plain scripts that print are one note, not one warning each", _messages(plain),
-		PackedStringArray(["3 plain script(s) write to the console where an exported release build still runs it, the first being a.gd. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet."])) and ok
+		PackedStringArray(["Plain scripts that write to the console where an exported release build still runs it: 3, the first being a.gd. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet."])) and ok
 	ok = _check("and that note is an info, not a warning", str(plain[0].get("severity", "")), "info") and ok
 	ok = _check("a file whose logging is all guarded is not accused",
 		EventSheetShipItDoctor.debug_row_findings({
@@ -120,7 +120,7 @@ static func _test_a_language_that_is_short() -> bool:
 	var used: PackedStringArray = EventSheetShipItDoctor.used_translation_keys(sources)
 	var found: Array[Dictionary] = EventSheetShipItDoctor.translation_findings(used, catalogs)
 	ok = _check("only the short catalog is reported, and it says which keys", _messages(found),
-		PackedStringArray(["fr.po is missing 2 key(s) the game asks for, so a player reading it sees the raw key: HUD_LIVES, MENU_PLAY."])) and ok
+		PackedStringArray(["fr.po is missing keys the game asks for, so a player reading it sees the raw key: HUD_LIVES, MENU_PLAY."])) and ok
 	ok = _check("a project with no catalogs at all is not accused of a short one",
 		EventSheetShipItDoctor.translation_findings(used, {}).size(), 0) and ok
 	ok = _check("the missing keys come back as a translation CSV, ready to fill",
@@ -161,13 +161,13 @@ static func _test_what_gets_saved() -> bool:
 		"res://game/hud.gd": PackedStringArray(["level", "best_time"]),
 	})
 	ok = _check("the page lists what a slot holds and where it is written from", _messages(found),
-		PackedStringArray(["A save slot of this game holds 3 value(s), written from 2 script(s): best_time, coins, level. Anything not on this list is back to its starting value when a slot is loaded."])) and ok
+		PackedStringArray(["A save slot of this game: values held: 3; scripts that write them: 2. They are: best_time, coins, level. Anything not on this list is back to its starting value when a slot is loaded."])) and ok
 	ok = _check("it is a note, never a warning", _severities(found), PackedStringArray(["info"])) and ok
 	var many: Array[Dictionary] = EventSheetShipItDoctor.what_gets_saved_findings({
 		"res://game/save.gd": PackedStringArray(["a", "b", "c", "d", "e"]),
 	})
 	ok = _check("and a long list names three and counts the rest", _messages(many),
-		PackedStringArray(["A save slot of this game holds 5 value(s), written from 1 script(s): a, b, c and 2 more. Anything not on this list is back to its starting value when a slot is loaded."])) and ok
+		PackedStringArray(["A save slot of this game: values held: 5; scripts that write them: 1. They are: a, b, c and 2 more. Anything not on this list is back to its starting value when a slot is loaded."])) and ok
 	return ok
 
 
@@ -225,7 +225,7 @@ static func _test_the_chip_the_reader_presses() -> bool:
 		{"check": "ship-debug-rows", "path": "res://noisy.gd"}, {"dock": dock})
 	ok = _check("pressing it on the sheet in front of you swaps the row and shows the line",
 		here, {"ok": true,
-			"message": "1 row(s) guarded. print(\"hit\") → if OS.is_debug_build(): print(\"hit\") - one Ctrl+Z takes it back."}) and ok
+			"message": "Rows guarded: 1. print(\"hit\") → if OS.is_debug_build(): print(\"hit\") - one Ctrl+Z takes it back."}) and ok
 	ok = _check("the row really is the debug-builds-only verb now",
 		str((dock._current_sheet.events[0] as EventRow).actions[0].get("ace_id")),
 		EventSheetShipItDoctor.DEBUG_LOG_ACE) and ok

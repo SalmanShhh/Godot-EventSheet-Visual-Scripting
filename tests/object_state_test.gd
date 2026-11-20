@@ -367,7 +367,7 @@ static func _run_findings() -> bool:
 		EventSheetStateFacts.unfilled_rows(unfilled), 2) and all_passed
 	all_passed = _check("and said as the one state mistake that does not compile",
 		_message_for(EventSheetStateFacts.findings(unfilled), EventSheetStateFacts.ENUM_NAME),
-		"2 row(s) here name no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point each one at one of this object's states.") and all_passed
+		"2 rows here name no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point each one at one of this object's states.") and all_passed
 	all_passed = _check("a sheet whose rows all name a state says nothing about it",
 		EventSheetStateFacts.unfilled_rows(sheet), 0) and all_passed
 	return all_passed

@@ -145,7 +145,7 @@ static func report(scenes: PackedStringArray, scripts: PackedStringArray) -> Arr
 	for script_path: String in sheets:
 		findings.append_array(sheet_findings(script_path))
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
-		EventSheetL10n.translate("Effects: %d scene(s) wearing a material, %d with something that will not show at run time.") % [
+		EventSheetL10n.translate("Effects: scenes wearing a material: %d; scenes with something that will not show at run time: %d.") % [
 			scenes.size(), troubled], ""))
 	return findings
 

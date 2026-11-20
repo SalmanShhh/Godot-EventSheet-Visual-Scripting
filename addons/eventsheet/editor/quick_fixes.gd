@@ -508,7 +508,7 @@ static func _guard_debug_rows(sheet_path: String, dock: Variant) -> Dictionary:
 			return guarded[0] > 0))
 	if not applied:
 		return {"ok": false, "message": "No plain Log rows in %s - the console line is written by hand, so guard it where it is typed." % sheet_path.get_file()}
-	return {"ok": true, "message": "%d row(s) guarded. %s - one Ctrl+Z takes it back."
+	return {"ok": true, "message": "Rows guarded: %d. %s - one Ctrl+Z takes it back."
 		% [guarded[0], guard_receipt_line(receipt)]}
 
 
@@ -576,7 +576,7 @@ static func _rewrite_paths(fix_id: String, sheet_path: String, dock: Variant) ->
 			return rewritten[0] > 0))
 	if not applied:
 		return {"ok": false, "message": nothing}
-	return {"ok": true, "message": "%d value(s) changed. %s - one Ctrl+Z takes it back."
+	return {"ok": true, "message": "Values changed: %d. %s - one Ctrl+Z takes it back."
 		% [rewritten[0], guard_receipt_line(receipt)]}
 
 
@@ -676,7 +676,7 @@ static func _extract_to_variable(literal: String, sheet_path: String, dock: Vari
 	if not applied:
 		return {"ok": false, "message": "Could not extract %s - is \"%s\" already a variable?"
 			% [literal, variable_name]}
-	return {"ok": true, "message": "%s is now \"%s\" in %d place(s) - rename it from its row."
+	return {"ok": true, "message": "%s is now \"%s\" (places changed: %d) - rename it from its row."
 		% [literal, variable_name, moved[0]]}
 
 

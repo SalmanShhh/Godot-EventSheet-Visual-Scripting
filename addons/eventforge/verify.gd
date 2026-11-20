@@ -487,7 +487,7 @@ static func _migration_rows(requested: PackedStringArray, paths: PackedStringArr
 	var corpus_paths: PackedStringArray = EventSheetMigrationDoctor.corpus(sheets, scripts,
 		read_every_script)
 	return {"rows": EventSheetMigrationDoctor.rows(corpus_paths), "files": corpus_paths.size(),
-		"note": EventSheetMigrationDoctor.sample_note(sheets, scripts, true) if read_every_script else ""}
+		"note": EventSheetMigrationDoctor.sample_note(sheets, scripts, true, true) if read_every_script else ""}
 
 
 ## A prefix is written the way the path is, so `tests/fixtures/` and `res://tests/fixtures/` are the

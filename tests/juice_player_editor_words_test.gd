@@ -42,7 +42,7 @@ static func run() -> bool:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SHEET_PATH))
 	return label_pins() and SUPPORT.pins(TEST_NAME, [
 		["the Doctor's summary", str(report[0].get("message", "")) if not report.is_empty() else "<no summary>",
-			"Juice Players: 1 sheet(s) play a beat through a Juice Player, and 0 row(s) name a juice card no player in their scene has."],
+			"Juice Players: sheets that play a beat through a Juice Player: 1; rows that name a juice card no player in their scene has: 0."],
 	]) and ok
 
 

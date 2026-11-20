@@ -340,7 +340,7 @@ static func _test_the_corpus_is_reported_honestly() -> bool:
 		many.append("res://script_%02d.gd" % index)
 	ok = _check("and names both numbers when it sampled",
 		EventSheetMigrationDoctor.sample_note(PackedStringArray(["res://a.tres"]), many),
-		" The .gd half is a sample: %d of %d script(s) were read." % [
+		" The .gd half is a sample - scripts read: %d of %d." % [
 			EventSheetMigrationDoctor.SCRIPTS_SAMPLED, many.size()]) and ok
 	return ok
 
@@ -354,7 +354,7 @@ static func _test_the_corpus_is_reported_honestly() -> bool:
 ## findings is a mode nobody can trust the verdict of.
 static func _test_the_whole_read_names_itself() -> bool:
 	var whole: String = EventSheetMigrationDoctor.sample_note(PackedStringArray(["res://a.tres"]),
-		PackedStringArray(["res://one.gd", "res://two.gd"]), true)
+		PackedStringArray(["res://one.gd", "res://two.gd"]), true, true)
 	var ok: bool = _check("the section says it read the half whole, with nothing to confess",
 		whole, " The .gd half was read whole: 2 script(s).")
 	ok = _check("and the verdict ends with that sentence", EventSheetVerify.verdict(

@@ -328,7 +328,7 @@ static func _header_arguments(header: String, arity: int) -> Dictionary:
 			names.append(argument)
 	if names.size() != arity:
 		return {"ok": false, "names": names,
-			"why": "it takes %d argument(s) where Godot passes %d" % [names.size(), arity]}
+			"why": "its argument count is %d where Godot passes %d" % [names.size(), arity]}
 	return {"ok": true, "names": names, "why": ""}
 
 

@@ -468,8 +468,8 @@ static func _test_the_project_report() -> bool:
 	}) and ok
 	ok = _check("the Doctor's per-sheet lines say the same numbers",
 		_messages(EventSheetMigrationDoctor.sheet_lines(listed)), PackedStringArray([
-			"%s - 1 row(s) migrate cleanly, 1 ask you." % FIXTURE_ONE.get_file(),
-			"%s - 1 row(s) migrate cleanly, 0 ask you." % FIXTURE_TWO.get_file(),
+			"%s - rows that migrate cleanly: 1; rows that ask you: 1." % FIXTURE_ONE.get_file(),
+			"%s - rows that migrate cleanly: 1; rows that ask you: 0." % FIXTURE_TWO.get_file(),
 		])) and ok
 	# Deterministic: the same corpus asked twice answers the same, with nothing remembered between.
 	ok = _check("and asking twice answers the same",

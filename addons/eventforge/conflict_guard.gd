@@ -141,10 +141,10 @@ static func save_refusal(file_name: String) -> String:
 	return EventSheetL10n.translate("%s still has merge conflict markers in it - saving would write the sheet's reading of them back over the file. Resolve the merge first.") % file_name
 
 
-## What the Doctor says about such a file. The audit reads whole projects, so it leads with the count
-## rather than with the lines: the reader is scanning a list, not looking at the file.
+## What the Doctor says about such a file. The audit reads whole projects, so it leads with the file and says where
+## the markers are in a few words: the reader is scanning a list, not looking at the file.
 static func doctor_message(file_name: String, numbers: PackedInt32Array) -> String:
 	if numbers.is_empty():
 		return ""
-	return EventSheetL10n.translate("%s still holds %d merge conflict marker line(s) (%s). It will not parse, and it opens read-only until the merge is finished.") % [
-		file_name, numbers.size(), lines_phrase(numbers)]
+	return EventSheetL10n.translate("%s still holds merge conflict markers, on %s. It will not parse, and it opens read-only until the merge is finished.") % [
+		file_name, lines_phrase(numbers)]

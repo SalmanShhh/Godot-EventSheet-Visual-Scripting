@@ -96,7 +96,7 @@ static func _pin_the_section() -> bool:
 		["the section is registered through the public seam, exactly once", registered, 1],
 		["it leads with a summary counting the sheets and the troubled ones",
 			str(report[0].get("message", "")) if not report.is_empty() else "",
-			"Shapes: 2 sheet(s) march a shape's dashes, 1 of them on a shape whose dashes are off."],
+			"Shapes: sheets that march a shape's dashes: 2; of those, sheets with a shape whose dashes are off: 1."],
 		["the summary is a note and the finding under it is a warning", _severities(report), "info,warning"],
 		["and every line is filed under the check its kind is", _checks(report),
 			"shapes,shapes-scroll-without-dashes"],

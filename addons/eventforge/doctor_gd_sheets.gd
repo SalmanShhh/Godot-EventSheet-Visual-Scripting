@@ -95,10 +95,10 @@ static func coverage_finding(tres_count: int, script_count: int, plain_count: in
 	var parts: PackedStringArray = PackedStringArray()
 	for entry: Dictionary in NOT_APPLIED:
 		parts.append("%s (%s)" % [str(entry["name"]), str(entry["why"])])
-	var message: String = "The sheet checks read %d .gd sheet(s) and %d .tres sheet(s). These checks do not apply to a .gd sheet: %s." % [
+	var message: String = "Sheets the sheet checks read: %d .gd, %d .tres. These checks do not apply to a .gd sheet: %s." % [
 		script_count, tres_count, "; ".join(parts)]
 	if plain_count > 0:
-		message += " The other %d .gd file(s) are plain scripts: only the checks that make sense for any script read them, and they are not reported on one by one." % plain_count
+		message += " Other .gd files, which are plain scripts: %d. Only the checks that make sense for any script read them, and they are not reported on one by one." % plain_count
 	var note: Dictionary = {"severity": "info", "check": "sheet-coverage", "path": "", "message": message, "event": 0}
 	if plain_count > 0:
 		# The editor's door reads this: how many scripts it would check as sheets.

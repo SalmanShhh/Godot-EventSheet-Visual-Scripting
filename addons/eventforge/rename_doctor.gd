@@ -123,7 +123,7 @@ static func report_in_turns(paths: PackedStringArray) -> Array[Dictionary]:
 
 static func _summary(measured: int, affected: int) -> Dictionary:
 	return _finding("info", CHECK_ID, "",
-		"Renames: %d sheet(s) read, and %d of them hold a row pointing at a name that went out of its file." % [
+		"Renames: sheets read: %d; sheets that hold a row pointing at a name that went out of its file: %d." % [
 			measured, affected], "")
 
 

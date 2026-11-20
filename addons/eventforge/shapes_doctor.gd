@@ -116,7 +116,7 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 		troubled += 1
 		findings.append_array(mine)
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
-		EventSheetL10n.translate("Shapes: %d sheet(s) march a shape's dashes, %d of them on a shape whose dashes are off.") % [
+		EventSheetL10n.translate("Shapes: sheets that march a shape's dashes: %d; of those, sheets with a shape whose dashes are off: %d.") % [
 			scripts.size(), troubled], ""))
 	return findings
 

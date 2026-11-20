@@ -4540,7 +4540,6 @@ tinted,色合い
 "%s writes the world's environment, and %s has no WorldEnvironment node - the row does nothing when the game runs. Add one to the scene.",%s はワールドの環境に書き込みますが、%s には WorldEnvironment ノードがありません - ゲーム実行時にこの行は何もしません。シーンに追加してください。
 "%s writes %s, which %s also uses - the change follows the player into those scenes. Give this scene its own copy first.",%s は %s に書き込みますが、そのファイルは %s も使っています - 変更はプレイヤーと一緒にそれらのシーンへついていきます。まずこのシーン専用のコピーを持たせてください。
 Make the environment this scene's own,環境をこのシーン専用にする
-"Lighting: %d lit scene(s), %d with something that will not show at run time.",ライティング: 照明のあるシーン %d 件、うち %d 件に実行時には見えないものがあります。
 This sheet already takes its own copy.,このシートはすでに自分のコピーを取っています。
 This scene has its own environment now - the change stops here.,このシーンは自分の環境を持つようになりました - 変更はここで止まります。
 Send Message To Everyone,全員にメッセージを送る
@@ -4850,7 +4849,6 @@ This node has its own material now - the dials stop here.,このノードは自�
 "%s wears no material in the scene, so setting %s on it reaches through nothing - every effect row aimed at it does nothing. Give it a ShaderMaterial in the Inspector.",%s はシーンでマテリアルを持っていないため、%s を設定しても何にも届きません - このノードを狙うエフェクト行はすべて何もしません。インスペクターで ShaderMaterial を与えてください。
 "%s is worn by %s as well, and a material is one object - every dial this row turns turns for them too. Give this node its own copy first.",%s は %s も身につけており、マテリアルは 1 つのオブジェクトです - この行が回すダイヤルは、それらでも回ります。まずこのノードに自分のコピーを与えてください。
 "Project Settings > Shader Globals declares no %s, so every shader reading it sees zero however often this row runs. Declare it there.",プロジェクト設定 > Shader Globals に %s は宣言されていないため、この行が何度実行されても、それを読むシェーダーはすべてゼロを見ます。そこで宣言してください。
-"Effects: %d scene(s) wearing a material, %d with something that will not show at run time.",エフェクト: マテリアルを持つシーン %d 件、そのうち実行時に表示されないものが %d 件。
 kept inside this scene - nothing else wears it,このシーンの中に保持 - ほかに着ているものはありません
 its own copy at runtime,実行時に自分のコピー
 counting…,集計中…
@@ -5035,7 +5033,6 @@ Tip: that run stuttered - Tools > Row Timings shows which rows the frames went t
 "%s %s has no description, and its rows do not compose one - this is a line only you can write.",%s %s には説明がなく、その行からは下書きも作れません。この一行はあなたにしか書けません。
 "%s %s has no description. Draft from its own rows: ""%s""","%s %s には説明がありません。自身の行からの下書き: ""%s"""
 "%s still says ""%s"", but its rows no longer mention any of that. Fresh draft: ""%s""","%s はまだ ""%s"" と述べていますが、その行はもうそのどれにも触れていません。新しい下書き: ""%s"""
-Descriptions: %d sheet(s) read of %d. Open the rest and the page will have them too.,説明: %d / %d シートを読みました。残りを開けば、このページにも入ります。
 Errors,エラー
 Warnings,警告
 %d new since you last looked.,前回見てから %d 件が新しく増えました。
@@ -5045,9 +5042,7 @@ Warnings,警告
 "The icon is still the engine's own, so the taskbar shows Godot's logo rather than the game's. Project Settings > Application > Config > Icon.",アイコンがまだエンジンのものなので、タスクバーにはゲームではなく Godot のロゴが出ます。プロジェクト設定 > アプリケーション > 構成 > アイコン。
 %s writes to the console where an exported release build still runs it - first: %s.,%s は、エクスポートしたリリースビルドでも実行される場所でコンソールに書き出しています - 最初: %s。
 Log (Debug Builds Only) compiles the line out of a release game.,ログ (デバッグビルドのみ) を使うと、その行はリリース版から取り除かれます。
-"%s is missing %d key(s) the game asks for, so a player reading it sees the raw key: %s.",%s にはゲームが求めるキーが %d 件不足しているため、プレイヤーには生のキーが見えます: %s。
 %s costs %.2f ms of a frame in the last measured run - %d%% of the %.1f ms a 60 fps frame has.,%s は最後に計測した実行で 1 フレームあたり %.2f ms かかっています - 1 フレームの %d%% です (60 fps の 1 フレームは %.1f ms)。
-"A save slot of this game holds %d value(s), written from %d script(s): %s. Anything not on this list is back to its starting value when a slot is loaded.",このゲームのセーブスロットには %d 個の値が入り、%d 個のスクリプトから書き込まれます: %s。この一覧にないものは、スロットを読み込むと初期値に戻ります。
 %s and %d more,%s ほか %d 件
 Go To Mode,モードへ移行
 Moves the whole game into another mode and says so. Groups that run in a mode start and stop running by themselves; On entering and On leaving rows do the work of the moment itself.,ゲーム全体を別のモードへ移し、それを通知します。あるモードで動作するグループは自動的に開始・停止し、入るとき・出るときの行がその瞬間の処理を担当します。
@@ -5245,10 +5240,8 @@ Opens the page your rows point at.,あなたの行が指し示すページを開
 %d name(s) no verb answers to,対応する動詞がない名前 %d 件
 %d verb(s) the changelog never mentions,変更履歴が一度も触れていない動詞 %d 件
 %d verb(s) the guide does not list,ガイドに載っていない動詞 %d 件
-"%d verb(s) undocumented, %d name(s) no verb answers to, %d description(s) that say nothing, %d verb(s) the changelog never mentions.",未記載の動詞 %d 件、対応する動詞がない名前 %d 件、内容のない説明 %d 件、変更履歴が一度も触れていない動詞 %d 件。
 %s publishes %s and the guide never names it. A reader who searched the guide concluded it does not exist.,%s は %s を公開していますが、ガイドはそれに触れていません。ガイドを検索した読者は存在しないと判断します。
 "%s shipped, but nothing in the changelog ever mentions %s. Write the line while you still remember what changed.",%s は出荷済みですが、変更履歴に %s の記載がありません。何が変わったか覚えているうちに書いてください。
-"Docs: %d of %d guide(s) read, %d out of step.",ドキュメント: %d / %d 件のガイドを確認、%d 件がずれています。
 "Docs: guides are checked in the editor, where the vocabulary is already loaded. Outside it the help bundle build prints the same report.",ドキュメント: ガイドは語彙が読み込まれているエディタ内で確認されます。エディタ外ではヘルプバンドルのビルドが同じ報告を出力します。
 Draft: %s.,下書き: %s。
 Takes %s.,引数: %s。
@@ -5361,7 +5354,6 @@ Guard it,確認を入れる
 "This spawns the scene it is already running in, every time a copy is created, with nothing in the way. Each copy makes another one.",これは自分がすでに動いているシーンを、コピーが作られるたびに、何の条件もなく生成します。コピーがまたコピーを作ります。
 "%s is destroyed earlier in this event, and this row books a wait against it. Move the destroy below this row, or destroy it after a delay instead.",%s はこのイベントの上の行で破棄されており、この行はそれに対して待ちを予約しています。破棄する行をこの行の下へ移すか、遅らせて破棄してください。
 Move the destroy last,破棄する行を最後へ
-"Spawning: %d script(s) that add or destroy nodes, %d read, %d with something that will go wrong at run time.","生成: ノードを追加または破棄するスクリプト %d 件、うち %d 件を読み、%d 件に実行時に破綻するものがあります。"
 This row is already added on the next idle moment.,この行はすでに次のアイドル時に追加されます。
 Guard %s,%s に確認を入れる
 This event already asks whether %s is still here.,このイベントはすでに、%s がまだ存在するかを確かめています。
@@ -5409,7 +5401,6 @@ Name physics layer,物理レイヤーに名前を付ける
 "%s is one-way and turned over, so bodies fall through it from above and are stopped from below. The rows here are waiting for the landing it blocks.","%s は片側のみで、上下逆に回転しています。そのため物体は上からすり抜け、下から止められます。ここの行は、それが妨げている着地を待っています。"
 "%s watches %s, and everything in this project that can collide sits on %s - so nothing can reach this trigger. This reads every layer in use, because the trigger names no group.","%s は %s を見張っていますが、このプロジェクトで衝突しうるものはすべて %s にあります。したがって、このトリガーには何も届きません。トリガーがグループを指定していないため、使用中のすべてのレイヤーを読み取っています。"
 "%s watches %s, and the members of ""%s"" sit on %s - so this trigger never fires.","%s は %s を見張っていますが、""%s"" のメンバーは %s にいます。したがって、このトリガーは決して発火しません。"
-"Collisions: %d script(s) waiting on a touch, %d read, %d whose trigger cannot fire as the scene stands.","衝突: 接触を待っているスクリプト %d 件、読み取り %d 件、現在のシーンではトリガーが発火できないもの %d 件。"
 "Godot has collision layers 1 to 32.","Godot の衝突レイヤーは 1 から 32 までです。"
 "Open %s to change what it collides with.","何と衝突するかを変えるには %s を開いてください。"
 "Show me in the scene","シーンで表示"
@@ -5686,7 +5677,6 @@ open the player's data folder {path},プレイヤーのデータフォルダー 
 and %d more watched folder(s),さらに %d 個の監視フォルダー
 "%s is declared and no row can reach it: nothing goes to it, and the object does not start in it.",%s は宣言されていますが、どの行からも到達できません。そこへ行くものがなく、オブジェクトもそこから始まりません。
 "A row names the state %s and this object does not declare it. Either add it to the states on the head, or point the row at one of this object's own.",ある行が状態 %s を指していますが、このオブジェクトはそれを宣言していません。見出しの状態に追加するか、行をこのオブジェクト自身の状態に向けてください。
-"%d row(s) here name no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point each one at one of this object's states.","ここにある %d 行が状態を何も指していません。空の状態セルは `state == State.` にコンパイルされ、これは GDScript ではありません。それぞれをこのオブジェクトの状態のどれかに向けてください。"
 Name at least one state.,状態を少なくとも 1 つ指定してください。
 Declare states,状態を宣言
 Declare states…,状態を宣言…
@@ -5931,7 +5921,6 @@ line %s%s,%s 行目%s
 lines %s and %s%s,%s および %s 行目%s
 "%s still has merge conflict markers on %s. It is not GDScript until they are gone, so it is open read-only here: nothing is lifted into rows, and Save is off. Finish the merge in the tool you started it in, then open it again.",%s には %s にまだマージ競合マーカーがあります。それが消えるまでは GDScript ではないため、ここでは読み取り専用で開いています。行への持ち上げは行われず、保存も無効です。マージを始めたツールで仕上げてから、もう一度開いてください。
 %s still has merge conflict markers in it - saving would write the sheet's reading of them back over the file. Resolve the merge first.,%s にはまだマージ競合マーカーがあります。保存すると、シートの読み取り結果をファイルに上書きしてしまいます。先にマージを解決してください。
-"%s still holds %d merge conflict marker line(s) (%s). It will not parse, and it opens read-only until the merge is finished.",%s にはまだマージ競合マーカーの行が %d 行あります（%s）。解析できず、マージが終わるまで読み取り専用で開きます。
 " The previous bytes of those %d file(s) are in the backup ring beside each of them, under %s.", それら %d 個のファイルの以前のバイトは、各ファイルの隣のバックアップリング（%s）にあります。
 " %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo.", このシートを取り込んでいる %d 枚のシートが書き換えられ、保存されます。ここでの Ctrl+Z では元に戻りません。
 "Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them",あわせて書き込み、保存されるもの - これらのシートはこのシートを取り込んでいるため、ここでの Ctrl+Z では戻りません
@@ -6936,8 +6925,6 @@ Resource files,リソースファイル
 "What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it. A file that IS there with the right extension but cannot be decoded answers with null and an engine message rather than with this, because the guard asks whether a file exists and not whether it is a track.",そのパスにファイルがないとき、または拡張子が三つのどれでもないときに式が読み取る値です。空のままにすると、まわりに何の守りも付けずにそのままファイルを読みます。ファイルがあって拡張子も合っているのにデコードできない場合は、これではなく null とエンジンのメッセージを返します。守りが尋ねているのはファイルがあるかどうかであって、それが曲かどうかではないからです。
 tile data,タイルデータ
 terrain set,地形セット
-"Streaming: %d chunk folder(s), %d with something to look at.",ストリーミング: チャンクフォルダー %d 個、うち %d 個に確認すべき点があります。
-%s holds %d chunk scenes with %d cell(s) missing from the middle of the grid: %s. A player who walks into one of those cells finds nothing there.,%s には %d 個のチャンクシーンがありますが、グリッドの途中で %d 個のセルが欠けています: %s。プレイヤーがそのセルに入っても、そこには何もありません。
 "%s is a chunk scene carrying a camera. A camera saved as the current one takes the view the moment its chunk streams in, and where nothing else is current the first chunk to arrive keeps it - keep the camera in the scene that owns the player.",%s はカメラを持つチャンクシーンです。カレントとして保存されたカメラは、そのチャンクが読み込まれた瞬間に視点を奪います。カレントのカメラが他にない場合は、最初に到着したチャンクのカメラが視点を持ち続けます - カメラはプレイヤーを持つシーンに置いてください。
 Put On Cooldown,クールダウンを設定
 "Starts (or restarts) a named cooldown. Ask it with Is Off Cooldown before the thing it guards, and the same name works from any event on this node. On game time the cooldown is held while the game is paused and runs slow while the game does, which is what a dash or a spell wants; pick realtime for a clock that must keep going through a pause menu. If the sheet declares a cooldown_ready(cooldown_name) signal, the On Cooldown Ready trigger fires the moment it finishes.",名前付きのクールダウンを開始（または再開始）します。守りたい処理の前に「クールダウン明け」で尋ねてください。同じ名前はこのノードのどのイベントからでも通じます。ゲーム時間ではポーズ中は止まり、スローモーション中はゆっくり進みます - ダッシュや魔法が求めるのはこちらです。ポーズメニューの向こうでも進み続ける時計にはリアルタイムを選んでください。シートが cooldown_ready(cooldown_name) シグナルを宣言していれば、終わった瞬間に「クールダウン明けのとき」トリガーが発火します。
@@ -7042,7 +7029,6 @@ no such state,そのような状態はありません
 This scene's animation tree has no state called %s. A misspelled state travels nowhere and reports nothing - pick the one you meant.,このシーンのアニメーションツリーには %s という状態がありません。綴りを誤った状態はどこにも遷移せず、何も報告しません。意図した状態を選んでください。
 %d-dimensional,%d 次元
 one amount,値ひとつ
-"Animation: %d script(s) drive a blend tree, %d state(s) no tree declares, %d blend position(s) written as a vector into a one-dimensional space.",アニメーション: %d 個のスクリプトがブレンドツリーを操作、%d 個の状態はどのツリーにも存在せず、%d 個のブレンド位置が1次元の空間にベクトルとして書き込まれています。
 "%s travels to ""%s"", which no animation tree in its scene declares. A misspelled state travels nowhere and is never reported by the game itself.","%s は ""%s"" へ遷移しますが、そのシーンのどのアニメーションツリーにもこの状態はありません。綴りを誤った状態はどこにも遷移せず、ゲーム自身は何も報告しません。"
 "Did you mean ""%s""?","もしかして ""%s"" ですか?"
 "%s writes a vector into ""%s"", which is a one-dimensional blend space. Only the first number is used - the rest of the direction is dropped without a word.","%s は ""%s"" にベクトルを書き込んでいますが、これは1次元のブレンド空間です。最初の数値だけが使われ、残りの向きは何も告げずに捨てられます。"
@@ -7107,7 +7093,6 @@ Levels,段
 "A named countdown as minutes and seconds, so 83 seconds left reads ""01:23"" - and with tenths under ten seconds, where ""00:09.4"" is the difference between a clock a player can feel running out and one that looks stopped. The text a clock label is set to, with no formatting on the row. A countdown longer than an hour keeps counting in minutes rather than rolling over.","名前付きカウントダウンを分と秒で返します。残り 83 秒なら ""01:23"" です。十秒を切ると十分の一秒まで表示し、""00:09.4"" は、時間が減っていくのが分かる時計と、止まって見える時計との違いです。時計ラベルにそのまま設定できる文字列で、行の中で書式を組む必要はありません。1 時間を超えるカウントダウンは繰り上がらず、分のまま数え続けます。"
 "%s deals damage of type ""%s"", which no DamageTypeSet in this project names. A misspelling resists nothing and is never reported by the game itself.","%s は ""%s"" 種別のダメージを与えますが、このプロジェクトのどの DamageTypeSet もその名前を持っていません。綴りの誤りは何にも耐性を持たず、ゲーム自身が知らせることもありません。"
 "%s guards against damage of type ""%s"", which nothing in this project deals. The guard will never be tested.","%s は ""%s"" 種別のダメージに備えていますが、このプロジェクトではその種別を与えるものがありません。その備えが試されることはありません。"
-"Damage: %d script(s) deal or guard against typed damage, %d type(s) no set names, %d guard(s) against a type nothing deals.",ダメージ: %d 個のスクリプトが種別つきのダメージを与えるか、それに備えています。%d 個の種別はどのセットにも書かれておらず、%d 個の備えは誰も与えない種別に向いています。
 Claim,所有者にする
 "Marks a node as belonging to somebody - the bullet you just fired, the trap you armed, the minion you summoned. Every ownership row in the project reads what this writes, so kill credit, assists and friendly fire all come from this one line. Claiming again simply replaces the owner.",ノードが誰かのものであることを記します - いま撃った弾、仕掛けた罠、呼び出した手下。プロジェクト内のすべての所有行がここに書かれたものを読むので、キルの手柄、アシスト、同士討ちの判定はすべてこの一行から生まれます。もう一度所有者にすると、所有者が置き換わるだけです。
 Ownership,所有
@@ -7164,7 +7149,6 @@ Save Moment As File…,モーメントをファイルとして保存…
 Delete Step,ステップを削除
 "A .gd file IS code, a .gdextension is a native library, and a .tres or a .res is a table that can name a script, so loading any of them runs its author's code with everything this game can reach: the player's files, their network, their machine. A .pck or a .zip is wider still: it MOUNTS its contents into res://, so it can replace the game's own files rather than only add to them.",".gd ファイルはそれ自体がコードで、.gdextension はネイティブライブラリ、.tres や .res はスクリプトを名指しできるテーブルです。どれを読み込んでも、その作者のコードがこのゲームの届く範囲すべて - プレイヤーのファイル、ネットワーク、マシン - を持って動きます。.pck や .zip はさらに広く、その中身を res:// 以下にマウントするので、ゲーム自身のファイルに付け足すだけでなく、置き換えることもできます。"
 (none),(なし)
-"Shapes: %d sheet(s) march a shape's dashes, %d of them on a shape whose dashes are off.","シェイプ: %d 枚のシートがシェイプの破線を流していますが、そのうち %d 枚は破線がオフのシェイプに対してです。"
 "%s marches the dashes on %s, and that shape has none to march: its Dashed box is off in %s, and no row here turns it on. Turn Dashed on in the Inspector, or put a Set Dashes row before the Scroll Dashes.","%s は %s の破線を流していますが、そのシェイプには流す破線がありません。%s では破線のチェックがオフで、このシート内のどの行もオンにしていません。インスペクターで破線をオンにするか、破線を流す行の前に破線を設定する行を置いてください。"
 """%s"" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling.","""%s"" は入力マップにありません - この操作は決して発火せず、何も告げません。プロジェクト ▸ 入力マップで追加するか、綴りを修正してください。"
 What this file is. ▸ opens the lines behind it.,このファイルが何か。▸ で背後の行を開きます。
@@ -9882,7 +9866,6 @@ Expressions are not being compile-checked: the sheet variable %s has the same na
 Expressions are not being compile-checked: this sheet's own code does not compile. Fix the sheet first to turn the check back on.,式のコンパイルチェックが行われていません。このシート自体のコードがコンパイルできません。先にシートを修正するとチェックが再開されます。
 compile check paused,コンパイルチェック停止中
 "Saved, but Godot cannot compile the script this sheet writes: %s (line %d of %s) - the row it came from is marked.",保存しましたが、このシートが書き出すスクリプトを Godot がコンパイルできません: %s（%d 行目、%s）- 原因の行に印を付けました。
-%d compiler warning(s) - the first: %s,コンパイラの警告 %d 件 - 最初の警告: %s
 Worked out while the game runs. Picking a colour replaces this expression with a constant.,ゲームの実行中に計算されます。色を選ぶと、この式は定数に置き換わります。
 "Worked out from constants: %s. Picking replaces the expression with Color(""#..."").","定数から計算: %s。選ぶと式が Color(""#..."") に置き換わります。"
 Written as %s.,%s として書き込まれます。
@@ -9933,7 +9916,6 @@ The row now acts on %s.,この行は %s に対して動作するようになり�
 "Noted: %s is made while the game runs, so this sheet will not be asked about it again.",メモしました: %s はゲームの実行中に作られるため、このシートでは今後これについて確認しません。
 Stop after %d rounds,%d 回で停止
 The loop now stops after %d rounds.,ループは %d 回で停止するようになりました。
-%d mistake(s) the game would only meet when it runs - the first: %s,ゲームが実行時にしか遭遇しないミスが %d 件 - 最初の1件: %s
 this node,このノード
 "This node is a %s, which has no ""%s"" - the row asks it for one. Godot refuses the script (a parse error: not found in base self), so it does not load. Put this row on a node that has it, or pick another action.","このノードは %s で、""%s"" を持っていません - 行はそれを求めています。Godot はスクリプトを拒否し(パースエラー: not found in base self)、読み込まれません。この行を持っているノードに置くか、別のアクションを選んでください。"
 "%s is a %s, which has no ""%s"" - the row asks it for one. Godot stops the function when the line runs (""Invalid call. Nonexistent function"" for a method, ""Invalid assignment of property"" for a property). Point it at a node that has it, or pick another action.","%s は %s で、""%s"" を持っていません - 行はそれを求めています。その行が実行されると Godot は関数を停止します(メソッドなら ""Invalid call. Nonexistent function""、プロパティなら ""Invalid assignment of property"")。持っているノードを指すか、別のアクションを選んでください。"
@@ -9960,7 +9942,6 @@ no values,値なし
 "%s divides a whole number by zero, so the game stops here with a ""Division by zero error"".","%s は整数をゼロで割るため、ゲームはここで ""Division by zero error"" を出して停止します。"
 the value,値
 "%s divides by zero. If %s holds a whole number the game stops here with a ""Division by zero error""; with a decimal the answer is inf.","%s はゼロで割っています。%s が整数を保持している場合、ゲームはここで ""Division by zero error"" を出して停止します。小数の場合、答えは inf です。"
-"Mistake checks: %d script(s) read, %d with a line that cannot run or does not do what it says.",ミスのチェック: スクリプトを %d 件読み込み、実行できない行や言っていることと違う動作をする行があるものは %d 件です。
 "The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld, which lands the copy where the At field says.",同じ生成ですが、今すぐではなく次のアイドル時に追加します。衝突やボディのハンドラー内で使ってください: そこで追加された 2D 物理ボディやエリアは、物理サーバーが処理中の間 Godot にエラーを出力させます(ノードは追加され、動作します)。この行は処理が終わるのを待つので何も出力されません。位置はコピーを追加する前に設定されるため、レベル内の位置ではなく親を基準にした位置になります。At フィールドの場所にコピーを置く SpawnNewCopyDeferredWorld を使ってください。
 "The same 3D spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld3D, which lands the copy where the At field says.",同じ 3D の生成ですが、今すぐではなく次のアイドル時に追加します。衝突やボディのハンドラー内で使ってください: そこで追加された 2D 物理ボディやエリアは、物理サーバーが処理中の間 Godot にエラーを出力させます(ノードは追加され、動作します)。この行は処理が終わるのを待つので何も出力されません。位置はコピーを追加する前に設定されるため、レベル内の位置ではなく親を基準にした位置になります。At フィールドの場所にコピーを置く SpawnNewCopyDeferredWorld3D を使ってください。
 When the copies join the tree. Pick the next idle moment inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works). Both answers put the copies in the same places - the shape is measured in the world either way.,コピーがツリーに入るタイミング。衝突やボディのハンドラー内では次のアイドル時を選んでください: そこで追加された 2D 物理ボディやエリアは、物理サーバーが処理中の間 Godot にエラーを出力させます(ノードは追加され、動作します)。どちらの答えでもコピーは同じ場所に置かれます - 形はどちらの場合もワールドで測られます。
@@ -11243,7 +11224,6 @@ The %s global now runs save_system.tscn; its settings change here and in its Ins
 Every sheet with no theme of its own now wears %s instead of %s. Edit > Undo in Godot puts %s back.,自分のテーマを持たないシートは、%s の代わりに %s を使うようになりました。Godot の 編集 > 元に戻す で %s に戻ります。
 Use %s for every sheet,%s をすべてのシートに使う
 Match the editor again,再びエディターに合わせる
-"%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.",%d 個の普通のスクリプトがコンソールに出力しており、書き出したリリース版でも実行されます（最初は %s）。一つずつは一覧しません。リリースを静かにしたいなら、その行を OS.is_debug_build() のテストで囲んでください。
 Getting ready...,準備中...
 about %d seconds,約%d秒
 about %d minutes,約%d分
@@ -11325,3 +11305,26 @@ Add a word to the vocabulary,語彙に単語を追加する
 "Every row in every sheet comes from a word the vocabulary knows. Adding one is not a special ceremony: the modules that hold them are sheets too, and a new word is a new Define row in one of them.",どのシートのどの行も、語彙が知っている単語から作られています。単語を足すのに特別な手順はありません。それらを収めたモジュールもシートで、新しい単語はその中の新しい「定義」行になります。
 Next ▶,次へ ▶
 Learning paths,学習パス
+Animation: scripts that drive a blend tree: %d; states no tree declares: %d; blend positions written as a vector into a one-dimensional space: %d.,アニメーション: ブレンドツリーを操作するスクリプト: %d 件、どのツリーにも存在しない状態: %d 件、1次元の空間にベクトルとして書き込まれたブレンド位置: %d 件。
+Collisions: scripts waiting on a touch: %d; scripts read: %d; scripts whose trigger cannot fire as the scene stands: %d.,衝突: 接触を待っているスクリプト: %d 件、読み取ったスクリプト: %d 件、現在のシーンではトリガーが発火できないスクリプト: %d 件。
+Damage: scripts that deal or guard against typed damage: %d; types no set names: %d; guards against a type nothing deals: %d.,ダメージ: 種別つきのダメージを与える、またはそれに備えるスクリプト: %d 件、どのセットにも書かれていない種別: %d 件、誰も与えない種別に向けた備え: %d 件。
+Docs: guides read: %d of %d; guides out of step: %d.,ドキュメント: 確認したガイド: %d / %d 件、ずれているガイド: %d 件。
+Verbs undocumented: %d; names no verb answers to: %d; descriptions that say nothing: %d; verbs the changelog never mentions: %d.,未記載の動詞: %d 件、対応する動詞がない名前: %d 件、内容のない説明: %d 件、変更履歴が一度も触れていない動詞: %d 件。
+Effects: scenes wearing a material: %d; scenes with something that will not show at run time: %d.,エフェクト: マテリアルを持つシーン: %d 件、実行時に表示されないものがあるシーン: %d 件。
+Lighting: lit scenes: %d; scenes with something that will not show at run time: %d.,ライティング: 照明のあるシーン: %d 件、実行時には見えないものがあるシーン: %d 件。
+"%s still holds merge conflict markers, on %s. It will not parse, and it opens read-only until the merge is finished.",%s にはまだマージ競合マーカーがあります（%s）。解析できず、マージが終わるまで読み取り専用で開きます。
+Mistake checks: scripts read: %d; scripts with a line that cannot run or does not do what it says: %d.,ミスのチェック: 読み込んだスクリプト: %d 件、実行できない行や言っていることと違う動作をする行があるスクリプト: %d 件。
+Descriptions: sheets read: %d of %d. Open the rest and the page will have them too.,説明: 読み込んだシート: %d / %d 枚。残りを開けば、このページにも入ります。
+"Shapes: sheets that march a shape's dashes: %d; of those, sheets with a shape whose dashes are off: %d.",シェイプ: シェイプの破線を流しているシート: %d 枚、そのうち破線がオフのシェイプがあるシート: %d 枚。
+"Plain scripts that write to the console where an exported release build still runs it: %d, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.",コンソールに出力しており、書き出したリリース版でも実行される普通のスクリプト: %d 件（最初は %s）。一つずつは一覧しません。リリースを静かにしたいなら、その行を OS.is_debug_build() のテストで囲んでください。
+"%s is missing keys the game asks for, so a player reading it sees the raw key: %s.",%s にはゲームが求めるキーが不足しているため、プレイヤーには生のキーが見えます: %s。
+A save slot of this game: values held: %d; scripts that write them: %d. They are: %s. Anything not on this list is back to its starting value when a slot is loaded.,このゲームのセーブスロット: 入っている値: %d 個、書き込むスクリプト: %d 個。内容は次のとおりです: %s。この一覧にないものは、スロットを読み込むと初期値に戻ります。
+Spawning: scripts that add or destroy nodes: %d; scripts read: %d; scripts with something that will go wrong at run time: %d.,生成: ノードを追加または破棄するスクリプト: %d 件、読んだスクリプト: %d 件、実行時に破綻するものがあるスクリプト: %d 件。
+Streaming: chunk folders: %d; folders with something to look at: %d.,ストリーミング: チャンクフォルダー: %d 個、確認すべき点があるフォルダー: %d 個。
+%s holds %d chunk scenes. Cells missing from the middle of the grid: %d - %s. A player who walks into one of those cells finds nothing there.,%s には %d 個のチャンクシーンがあります。グリッドの途中で欠けているセル: %d 個 - %s。プレイヤーがそのセルに入っても、そこには何もありません。
+1 compiler warning - the first: %s,コンパイラの警告 1 件 - 最初の警告: %s
+%d compiler warnings - the first: %s,コンパイラの警告 %d 件 - 最初の警告: %s
+1 mistake the game would only meet when it runs - the first: %s,ゲームが実行時にしか遭遇しないミスが 1 件 - 最初の1件: %s
+%d mistakes the game would only meet when it runs - the first: %s,ゲームが実行時にしか遭遇しないミスが %d 件 - 最初の1件: %s
+"1 row here names no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point it at one of this object's states.",ここにある 1 行が状態を何も指していません。空の状態セルは `state == State.` にコンパイルされ、これは GDScript ではありません。この行をこのオブジェクトの状態のどれかに向けてください。
+"%d rows here name no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point each one at one of this object's states.",ここにある %d 行が状態を何も指していません。空の状態セルは `state == State.` にコンパイルされ、これは GDScript ではありません。それぞれをこのオブジェクトの状態のどれかに向けてください。

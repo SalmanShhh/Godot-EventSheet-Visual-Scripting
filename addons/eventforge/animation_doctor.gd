@@ -121,7 +121,7 @@ static func report(sources: Array[Dictionary]) -> Array[Dictionary]:
 	if not first_trouble.is_empty():
 		first_path = first_trouble
 	findings.insert(0, _finding("info", CHECK_ID, first_path,
-		EventSheetL10n.translate("Animation: %d script(s) drive a blend tree, %d state(s) no tree declares, %d blend position(s) written as a vector into a one-dimensional space.") % [
+		EventSheetL10n.translate("Animation: scripts that drive a blend tree: %d; states no tree declares: %d; blend positions written as a vector into a one-dimensional space: %d.") % [
 			driving, unknown, flattened], ""))
 	return findings
 

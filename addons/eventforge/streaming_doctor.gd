@@ -101,7 +101,7 @@ static func report(folders: Dictionary, texts: Dictionary) -> Array[Dictionary]:
 		troubled += 1
 		findings.append_array(found)
 	findings.insert(0, _finding("info", CHECK_ID, worst_folder,
-		EventSheetL10n.translate("Streaming: %d chunk folder(s), %d with something to look at.") % [
+		EventSheetL10n.translate("Streaming: chunk folders: %d; folders with something to look at: %d.") % [
 			names.size(), troubled], ""))
 	return findings
 
@@ -119,7 +119,7 @@ static func folder_findings(folder: String, entry: Dictionary, texts: Dictionary
 	if EventForgeChunkFolderFacts.gap_is_worth_reporting(cells.size(), holes):
 		var missing: Array[Vector3i] = EventForgeChunkFolderFacts.missing_cells(cells)
 		findings.append(_finding("warning", CHECK_GAP, folder,
-			EventSheetL10n.translate("%s holds %d chunk scenes with %d cell(s) missing from the middle of the grid: %s. A player who walks into one of those cells finds nothing there.") % [
+			EventSheetL10n.translate("%s holds %d chunk scenes. Cells missing from the middle of the grid: %d - %s. A player who walks into one of those cells finds nothing there.") % [
 				folder, cells.size(), missing.size(),
 				EventForgeChunkFolderFacts.cells_as_words(missing, flat, NAMED_GAPS)],
 			EventForgeChunkFolderFacts.file_name_of(str(entry["prefix"]), missing[0], flat)))

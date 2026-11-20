@@ -134,6 +134,6 @@ static func report(sources: Array[Dictionary], declared: PackedStringArray,
 				EventSheetL10n.translate("%s guards against damage of type \"%s\", which nothing in this project deals. The guard will never be tested.") % [
 					path.get_file(), kind], kind))
 	findings.insert(0, _finding("info", CHECK_ID, first_path,
-		EventSheetL10n.translate("Damage: %d script(s) deal or guard against typed damage, %d type(s) no set names, %d guard(s) against a type nothing deals.") % [
+		EventSheetL10n.translate("Damage: scripts that deal or guard against typed damage: %d; types no set names: %d; guards against a type nothing deals: %d.") % [
 			speaking, undeclared, unguarded], ""))
 	return findings

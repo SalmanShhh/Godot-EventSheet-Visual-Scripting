@@ -82,7 +82,7 @@ static func _warnings_are_recorded_and_found() -> bool:
 		["it is the quiet amber kind", str(at_event[0].get("severity", "")), "warning"] if not at_event.is_empty() else ["it is a finding", false, true],
 		["its words are the compiler's", str(at_event[0].get("message", "")).contains("could not be resolved"), true] if not at_event.is_empty() else ["has words", false, true],
 		["no door is offered", str(at_event[0].get("fix", "x")), ""] if not at_event.is_empty() else ["no door", false, true],
-		["the status line says how many and the first", summary.begins_with("1 compiler warning(s)"), true],
+		["the status line says how many and the first", summary.begins_with("1 compiler warning -"), true],
 	])
 	# A fixed sheet stops being reported.
 	var clean: Dictionary = {"warnings": [], "warning_rows": []}

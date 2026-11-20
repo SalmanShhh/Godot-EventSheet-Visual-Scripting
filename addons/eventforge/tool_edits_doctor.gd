@@ -104,7 +104,7 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 			findings.append(_finding("warning", CHECK_REBUILD, script_path,
 				str(rebuild.get("message", "")), str(rebuild.get("subject", ""))))
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
-		"Tool edits: %d tool sheet(s) change the scene the editor has open, and %d of them do it as steps the editor can take back." % [
+		"Tool edits: tool sheets that change the scene the editor has open: %d; of those, sheets that do it as steps the editor can take back: %d." % [
 			measured, undoable_tools], ""))
 	return findings
 

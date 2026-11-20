@@ -4540,7 +4540,6 @@ tinted,色调
 "%s writes the world's environment, and %s has no WorldEnvironment node - the row does nothing when the game runs. Add one to the scene.",%s 会写入世界的环境，而 %s 里没有 WorldEnvironment 节点 - 游戏运行时这一行什么也不会做。给场景加一个。
 "%s writes %s, which %s also uses - the change follows the player into those scenes. Give this scene its own copy first.",%s 会写入 %s，而 %s 也在用同一个文件 - 这个改动会跟着玩家进入那些场景。先让这个场景拥有自己的副本。
 Make the environment this scene's own,让环境成为这个场景自己的
-"Lighting: %d lit scene(s), %d with something that will not show at run time.",光照：%d 个有光照的场景，其中 %d 个含有运行时看不到的东西。
 This sheet already takes its own copy.,这张事件表已经取了自己的副本。
 This scene has its own environment now - the change stops here.,这个场景现在有了自己的环境 - 改动到此为止。
 Send Message To Everyone,向所有人发送消息
@@ -4850,7 +4849,6 @@ This node has its own material now - the dials stop here.,这个节点现在有�
 "%s wears no material in the scene, so setting %s on it reaches through nothing - every effect row aimed at it does nothing. Give it a ShaderMaterial in the Inspector.",%s 在场景里没有材质，所以设置 %s 什么也碰不到 - 每一条指向它的效果行都不起作用。在检查器里给它一个 ShaderMaterial。
 "%s is worn by %s as well, and a material is one object - every dial this row turns turns for them too. Give this node its own copy first.",%s 也被 %s 使用，而材质是同一个对象 - 这一行拧动的每个旋钮，也会为它们拧动。请先让这个节点拥有自己的副本。
 "Project Settings > Shader Globals declares no %s, so every shader reading it sees zero however often this row runs. Declare it there.",项目设置 > Shader Globals 中没有声明 %s，所以无论这一行运行多少次，读取它的每个着色器看到的都是零。请在那里声明它。
-"Effects: %d scene(s) wearing a material, %d with something that will not show at run time.",效果：%d 个场景带有材质，其中 %d 个含有运行时不会显示的东西。
 kept inside this scene - nothing else wears it,保存在这个场景里 - 没有别的节点使用它
 its own copy at runtime,运行时使用自己的副本
 counting…,统计中…
@@ -5035,7 +5033,6 @@ Tip: that run stuttered - Tools > Row Timings shows which rows the frames went t
 "%s %s has no description, and its rows do not compose one - this is a line only you can write.",%s %s 没有说明，它的行也拼不出一句 - 这一行只有你能写。
 "%s %s has no description. Draft from its own rows: ""%s""","%s %s 没有说明。根据它自己的行草拟：""%s"""
 "%s still says ""%s"", but its rows no longer mention any of that. Fresh draft: ""%s""","%s 仍然写着 ""%s""，但它的行已经不再提到其中任何一项。新的草稿：""%s"""
-Descriptions: %d sheet(s) read of %d. Open the rest and the page will have them too.,说明：已读取 %d / %d 个表。打开其余的，这一页也会有它们。
 Errors,错误
 Warnings,警告
 %d new since you last looked.,自上次查看以来新增 %d 条。
@@ -5045,9 +5042,7 @@ Warnings,警告
 "The icon is still the engine's own, so the taskbar shows Godot's logo rather than the game's. Project Settings > Application > Config > Icon.",图标仍是引擎自带的，所以任务栏显示的是 Godot 的标志而不是游戏的。项目设置 > 应用 > 配置 > 图标。
 %s writes to the console where an exported release build still runs it - first: %s.,%s 在导出的发行版构建仍会执行的位置写入控制台 - 第一处：%s。
 Log (Debug Builds Only) compiles the line out of a release game.,日志（仅调试构建）会把这一行从发行版游戏中去掉。
-"%s is missing %d key(s) the game asks for, so a player reading it sees the raw key: %s.",%s 缺少游戏请求的 %d 个键，玩家会看到原始键：%s。
 %s costs %.2f ms of a frame in the last measured run - %d%% of the %.1f ms a 60 fps frame has.,%s 在上次测量的运行中每帧耗费 %.2f 毫秒 - 占一帧的 %d%%（60 fps 下一帧为 %.1f 毫秒）。
-"A save slot of this game holds %d value(s), written from %d script(s): %s. Anything not on this list is back to its starting value when a slot is loaded.",这个游戏的一个存档槽保存 %d 个值，由 %d 个脚本写入：%s。不在此列表中的内容在加载存档槽时会回到初始值。
 %s and %d more,%s 等另外 %d 个
 Go To Mode,切换到模式
 Moves the whole game into another mode and says so. Groups that run in a mode start and stop running by themselves; On entering and On leaving rows do the work of the moment itself.,将整个游戏切换到另一个模式并发出通知。在某个模式中运行的分组会自行启动和停止；进入时与离开时的行负责该瞬间的工作。
@@ -5245,10 +5240,8 @@ Opens the page your rows point at.,打开你的行所指向的那一页。
 %d name(s) no verb answers to,%d 个没有动词对应的名称
 %d verb(s) the changelog never mentions,%d 个更新日志从未提到的动词
 %d verb(s) the guide does not list,%d 个指南没有列出的动词
-"%d verb(s) undocumented, %d name(s) no verb answers to, %d description(s) that say nothing, %d verb(s) the changelog never mentions.",%d 个未记录的动词、%d 个没有动词对应的名称、%d 条什么都没说的描述、%d 个更新日志从未提到的动词。
 %s publishes %s and the guide never names it. A reader who searched the guide concluded it does not exist.,%s 提供了 %s，而指南从未提及。在指南里搜索过的人会以为它不存在。
 "%s shipped, but nothing in the changelog ever mentions %s. Write the line while you still remember what changed.",%s 已发布，但更新日志从未提到 %s。趁还记得改了什么，把这一行写下来。
-"Docs: %d of %d guide(s) read, %d out of step.",文档：已读 %d/%d 篇指南，%d 篇已脱节。
 "Docs: guides are checked in the editor, where the vocabulary is already loaded. Outside it the help bundle build prints the same report.",文档：指南在编辑器内检查，那里已经加载了词汇表。在编辑器之外，帮助包构建会打印同样的报告。
 Draft: %s.,草稿：%s。
 Takes %s.,接受 %s。
@@ -5361,7 +5354,6 @@ Guard it,加上判断
 "This spawns the scene it is already running in, every time a copy is created, with nothing in the way. Each copy makes another one.",这会在每次创建副本时、且没有任何条件阻挡地生成它自己所在的那个场景。每个副本又会再生成一个。
 "%s is destroyed earlier in this event, and this row books a wait against it. Move the destroy below this row, or destroy it after a delay instead.",%s 在本事件更靠上的地方被销毁，而这一行又为它预约了一段等待。请把销毁移到这一行下面，或者改为延迟销毁。
 Move the destroy last,把销毁移到最后
-"Spawning: %d script(s) that add or destroy nodes, %d read, %d with something that will go wrong at run time.","生成：有 %d 个脚本会添加或销毁节点，已读取 %d 个，其中 %d 个存在运行时会出错的地方。"
 This row is already added on the next idle moment.,这一行已经是在下一个空闲时刻添加的。
 Guard %s,为 %s 加上判断
 This event already asks whether %s is still here.,这个事件已经在问 %s 是否还在了。
@@ -5409,7 +5401,6 @@ Name physics layer,命名物理层
 "%s is one-way and turned over, so bodies fall through it from above and are stopped from below. The rows here are waiting for the landing it blocks.","%s 是单向的且被翻转过来，因此物体会从上方穿过、从下方被挡住。这里的行正在等待它挡住的那次落地。"
 "%s watches %s, and everything in this project that can collide sits on %s - so nothing can reach this trigger. This reads every layer in use, because the trigger names no group.","%s 监视 %s，而本项目中所有能发生碰撞的东西都位于 %s - 因此没有任何东西能触及这个触发器。由于触发器未指定分组，这里读取的是所有在用的层。"
 "%s watches %s, and the members of ""%s"" sit on %s - so this trigger never fires.","%s 监视 %s，而 ""%s"" 的成员位于 %s - 因此这个触发器永远不会触发。"
-"Collisions: %d script(s) waiting on a touch, %d read, %d whose trigger cannot fire as the scene stands.","碰撞：%d 个脚本在等待接触，已读取 %d 个，其中 %d 个的触发器在当前场景下无法触发。"
 "Godot has collision layers 1 to 32.","Godot 的碰撞层为 1 到 32。"
 "Open %s to change what it collides with.","打开 %s 以更改它与什么发生碰撞。"
 "Show me in the scene","在场景中显示"
@@ -5686,7 +5677,6 @@ open the player's data folder {path},打开玩家的数据文件夹 {path}
 and %d more watched folder(s),还有 %d 个受监视的文件夹
 "%s is declared and no row can reach it: nothing goes to it, and the object does not start in it.",%s 已声明，但没有任何行能到达它：没有任何行前往它，对象也不从它开始。
 "A row names the state %s and this object does not declare it. Either add it to the states on the head, or point the row at one of this object's own.",有一行指向状态 %s，而这个对象并未声明它。请把它加入表头的状态列表，或让该行指向这个对象自己的状态。
-"%d row(s) here name no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point each one at one of this object's states.","这里有 %d 行没有指明任何状态。空的状态格会编译成 `state == State.`，那不是 GDScript，请把每一行指向这个对象的某个状态。"
 Name at least one state.,请至少指定一个状态。
 Declare states,声明状态
 Declare states…,声明状态…
@@ -5931,7 +5921,6 @@ line %s%s,第 %s 行%s
 lines %s and %s%s,第 %s 和 %s 行%s
 "%s still has merge conflict markers on %s. It is not GDScript until they are gone, so it is open read-only here: nothing is lifted into rows, and Save is off. Finish the merge in the tool you started it in, then open it again.",%s 在%s仍有合并冲突标记。在它们消失之前这不是 GDScript，因此这里以只读方式打开：不会提升为行，保存也已关闭。请在你开始合并的工具中完成合并，然后重新打开。
 %s still has merge conflict markers in it - saving would write the sheet's reading of them back over the file. Resolve the merge first.,%s 中仍有合并冲突标记 - 保存会把本表对它们的读法覆盖到文件上。请先解决合并。
-"%s still holds %d merge conflict marker line(s) (%s). It will not parse, and it opens read-only until the merge is finished.",%s 仍有 %d 行合并冲突标记（%s）。它无法解析，在合并完成前将以只读方式打开。
 " The previous bytes of those %d file(s) are in the backup ring beside each of them, under %s.", 那 %d 个文件的旧字节保存在各自旁边的备份环中，位于 %s。
 " %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo.", 有 %d 张包含本表的表会被重写并保存，此处的 Ctrl+Z 不会撤销它们。
 "Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them",同样会被写入并保存 - 这些表包含本表，因此此处的 Ctrl+Z 不会撤销它们
@@ -6936,8 +6925,6 @@ Resource files,资源文件
 "What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it. A file that IS there with the right extension but cannot be decoded answers with null and an engine message rather than with this, because the guard asks whether a file exists and not whether it is a track.",该路径上没有文件、或者它的扩展名不属于这三种时，这个表达式读到的值。留空则直接读取文件，外面不加任何守卫。文件确实在那里、扩展名也对却解不开时，回答的是 null 和一条引擎消息而不是这个值，因为守卫问的是文件在不在，而不是它是不是一段音轨。
 tile data,瓦片数据
 terrain set,地形集
-"Streaming: %d chunk folder(s), %d with something to look at.",流式加载：%d 个区块文件夹，其中 %d 个有需要查看的问题。
-%s holds %d chunk scenes with %d cell(s) missing from the middle of the grid: %s. A player who walks into one of those cells finds nothing there.,%s 中有 %d 个区块场景，但网格中间缺少 %d 个格子：%s。玩家走进这些格子时，那里什么都没有。
 "%s is a chunk scene carrying a camera. A camera saved as the current one takes the view the moment its chunk streams in, and where nothing else is current the first chunk to arrive keeps it - keep the camera in the scene that owns the player.",%s 是一个带有摄像机的区块场景。被保存为当前摄像机的那一台，会在它的区块流入的那一刻夺走视角；而在没有当前摄像机时，视角归最先到达的区块所有 - 请把摄像机放在拥有玩家的那个场景里。
 Put On Cooldown,设为冷却
 "Starts (or restarts) a named cooldown. Ask it with Is Off Cooldown before the thing it guards, and the same name works from any event on this node. On game time the cooldown is held while the game is paused and runs slow while the game does, which is what a dash or a spell wants; pick realtime for a clock that must keep going through a pause menu. If the sheet declares a cooldown_ready(cooldown_name) signal, the On Cooldown Ready trigger fires the moment it finishes.",开始（或重新开始）一个具名冷却。在它守护的动作之前用「冷却已结束」来询问，同一个名字在该节点的任何事件里都通用。使用游戏时间时，游戏暂停冷却也随之停住，游戏变慢它也变慢 - 冲刺或法术要的正是这一种；若时钟必须穿过暂停菜单继续走，就选实时。若事件表声明了 cooldown_ready(cooldown_name) 信号，冷却就绪时触发器会在它结束的那一刻触发。
@@ -7042,7 +7029,6 @@ no such state,没有这个状态
 This scene's animation tree has no state called %s. A misspelled state travels nowhere and reports nothing - pick the one you meant.,此场景的动画树中没有名为 %s 的状态。拼错的状态哪里也去不了，也不会报告任何信息 - 请选择你想要的那个。
 %d-dimensional,%d 维
 one amount,单个数值
-"Animation: %d script(s) drive a blend tree, %d state(s) no tree declares, %d blend position(s) written as a vector into a one-dimensional space.",动画：%d 个脚本驱动混合树，%d 个状态没有任何树声明，%d 个混合位置以向量写入一维空间。
 "%s travels to ""%s"", which no animation tree in its scene declares. A misspelled state travels nowhere and is never reported by the game itself.","%s 前往 ""%s""，但其场景中没有任何动画树声明该状态。拼错的状态哪里也去不了，游戏本身也不会报告。"
 "Did you mean ""%s""?","你是指 ""%s"" 吗？"
 "%s writes a vector into ""%s"", which is a one-dimensional blend space. Only the first number is used - the rest of the direction is dropped without a word.","%s 向 ""%s"" 写入了向量，而它是一维混合空间。只有第一个数字会被使用，方向的其余部分会被悄悄丢弃。"
@@ -7107,7 +7093,6 @@ Levels,层级
 "A named countdown as minutes and seconds, so 83 seconds left reads ""01:23"" - and with tenths under ten seconds, where ""00:09.4"" is the difference between a clock a player can feel running out and one that looks stopped. The text a clock label is set to, with no formatting on the row. A countdown longer than an hour keeps counting in minutes rather than rolling over.","把具名倒计时写成分和秒，于是剩 83 秒读作 ""01:23""；不足十秒时会显示到十分之一秒，""00:09.4"" 就是一只能让人感到时间在流走的钟，和一只看起来停住的钟之间的差别。这就是时钟标签要设置的文本，行内不必做任何格式化。超过一小时的倒计时会继续按分钟计，而不是回卷。"
 "%s deals damage of type ""%s"", which no DamageTypeSet in this project names. A misspelling resists nothing and is never reported by the game itself.","%s 造成 ""%s"" 类型的伤害，但本项目中没有任何 DamageTypeSet 写下这个名字。拼错的名字什么也抵抗不了，游戏本身也永远不会报告它。"
 "%s guards against damage of type ""%s"", which nothing in this project deals. The guard will never be tested.","%s 防备 ""%s"" 类型的伤害，但本项目里没有任何东西造成这种伤害。这道防备永远不会被检验。"
-"Damage: %d script(s) deal or guard against typed damage, %d type(s) no set names, %d guard(s) against a type nothing deals.",伤害：%d 个脚本造成或防备带类型的伤害，%d 个类型没有任何集合写下，%d 处防备针对无人造成的类型。
 Claim,认领
 "Marks a node as belonging to somebody - the bullet you just fired, the trap you armed, the minion you summoned. Every ownership row in the project reads what this writes, so kill credit, assists and friendly fire all come from this one line. Claiming again simply replaces the owner.",把一个节点标记为属于某人 - 你刚发射的子弹、你刚布下的陷阱、你刚召唤的随从。项目里每一条归属行读的都是这里写下的东西，所以击杀归属、助攻和友军伤害判定全都出自这一行。再认领一次只是替换掉所有者。
 Ownership,归属
@@ -7164,7 +7149,6 @@ Save Moment As File…,将时刻保存为文件…
 Delete Step,删除步骤
 "A .gd file IS code, a .gdextension is a native library, and a .tres or a .res is a table that can name a script, so loading any of them runs its author's code with everything this game can reach: the player's files, their network, their machine. A .pck or a .zip is wider still: it MOUNTS its contents into res://, so it can replace the game's own files rather than only add to them.",".gd 文件本身就是代码，.gdextension 是原生库，.tres 或 .res 是可以指名一份脚本的表，因此加载其中任何一个，都会让它作者的代码带着这个游戏能触及的一切运行：玩家的文件、他们的网络、他们的机器。.pck 或 .zip 走得更远：它会把自己的内容挂载到 res:// 下，因此不只是往游戏里添文件，还能替换掉游戏自己的文件。"
 (none),(无)
-"Shapes: %d sheet(s) march a shape's dashes, %d of them on a shape whose dashes are off.","形状：%d 个表让形状的虚线流动，其中 %d 个所在的形状虚线是关闭的。"
 "%s marches the dashes on %s, and that shape has none to march: its Dashed box is off in %s, and no row here turns it on. Turn Dashed on in the Inspector, or put a Set Dashes row before the Scroll Dashes.","%s 让 %s 的虚线流动，但那个形状没有可流动的虚线：它在 %s 中的虚线开关是关闭的，而这个表里没有任何一行把它打开。请在检查器中打开虚线，或在流动虚线一行之前放一行设置虚线。"
 """%s"" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling.","""%s"" 不在输入映射中 - 该控制永远不会触发，也没有任何提示。请在项目 ▸ 输入映射中添加它，或修正拼写。"
 What this file is. ▸ opens the lines behind it.,这个文件是什么。▸ 展开它背后的行。
@@ -9882,7 +9866,6 @@ Expressions are not being compile-checked: the sheet variable %s has the same na
 Expressions are not being compile-checked: this sheet's own code does not compile. Fix the sheet first to turn the check back on.,表达式未进行编译检查：此工作表自身的代码无法编译。请先修复工作表以恢复检查。
 compile check paused,编译检查已暂停
 "Saved, but Godot cannot compile the script this sheet writes: %s (line %d of %s) - the row it came from is marked.",已保存，但 Godot 无法编译此工作表生成的脚本：%s（第 %d 行，%s）- 已标记对应的行。
-%d compiler warning(s) - the first: %s,%d 条编译器警告 - 第一条：%s
 Worked out while the game runs. Picking a colour replaces this expression with a constant.,在游戏运行时才会计算。选择颜色会把这个表达式替换为常量。
 "Worked out from constants: %s. Picking replaces the expression with Color(""#..."").","由常量算出: %s。选择后会把表达式替换为 Color(""#..."")。"
 Written as %s.,将写为 %s。
@@ -9933,7 +9916,6 @@ The row now acts on %s.,该行现在作用于 %s。
 "Noted: %s is made while the game runs, so this sheet will not be asked about it again.","已记录:%s 是在游戏运行时创建的,因此这个事件表不会再询问它。"
 Stop after %d rounds,%d 轮后停止
 The loop now stops after %d rounds.,循环现在会在 %d 轮后停止。
-%d mistake(s) the game would only meet when it runs - the first: %s,"有 %d 处错误,游戏只有在运行时才会遇到 - 第一处:%s"
 this node,此节点
 "This node is a %s, which has no ""%s"" - the row asks it for one. Godot refuses the script (a parse error: not found in base self), so it does not load. Put this row on a node that has it, or pick another action.","此节点是 %s,没有 ""%s"" - 该行却向它索取。Godot 会拒绝该脚本(解析错误:not found in base self),因此它不会加载。请把这一行放到拥有它的节点上,或选择其他动作。"
 "%s is a %s, which has no ""%s"" - the row asks it for one. Godot stops the function when the line runs (""Invalid call. Nonexistent function"" for a method, ""Invalid assignment of property"" for a property). Point it at a node that has it, or pick another action.","%s 是 %s,没有 ""%s"" - 该行却向它索取。该行运行时 Godot 会中止函数(方法为 ""Invalid call. Nonexistent function"",属性为 ""Invalid assignment of property"")。请指向拥有它的节点,或选择其他动作。"
@@ -9960,7 +9942,6 @@ no values,没有值
 "%s divides a whole number by zero, so the game stops here with a ""Division by zero error"".","%s 对一个整数除以零,因此游戏会在这里以 ""Division by zero error"" 中止。"
 the value,该值
 "%s divides by zero. If %s holds a whole number the game stops here with a ""Division by zero error""; with a decimal the answer is inf.","%s 除以零。如果 %s 保存的是整数,游戏会在这里以 ""Division by zero error"" 中止;如果是小数,结果为 inf。"
-"Mistake checks: %d script(s) read, %d with a line that cannot run or does not do what it says.","错误检查:已读取 %d 个脚本,其中 %d 个含有无法运行或与其所述不符的行。"
 "The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld, which lands the copy where the At field says.","同样的生成,但在下一个空闲时刻添加,而不是立即添加。请在碰撞或物体处理器中使用它:在那里添加 2D 物理物体或区域,会让 Godot 在物理服务器繁忙时打印错误(节点仍会被添加并正常工作),而这一行会等它结束,因此不会打印任何内容。位置在添加副本之前设置,所以它是相对于父节点的位置,而不是关卡中的位置;请使用 SpawnNewCopyDeferredWorld,它会把副本放在 At 字段所指的位置。"
 "The same 3D spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld3D, which lands the copy where the At field says.","同样的 3D 生成,但在下一个空闲时刻添加,而不是立即添加。请在碰撞或物体处理器中使用它:在那里添加 2D 物理物体或区域,会让 Godot 在物理服务器繁忙时打印错误(节点仍会被添加并正常工作),而这一行会等它结束,因此不会打印任何内容。位置在添加副本之前设置,所以它是相对于父节点的位置,而不是关卡中的位置;请使用 SpawnNewCopyDeferredWorld3D,它会把副本放在 At 字段所指的位置。"
 When the copies join the tree. Pick the next idle moment inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works). Both answers put the copies in the same places - the shape is measured in the world either way.,"副本何时加入场景树。在碰撞或物体处理器中请选择下一个空闲时刻:在那里添加 2D 物理物体或区域,会让 Godot 在物理服务器繁忙时打印错误(节点仍会被添加并正常工作)。两种选择会把副本放在相同的位置 - 形状在两种情况下都是在世界中测量的。"
@@ -11243,7 +11224,6 @@ The %s global now runs save_system.tscn; its settings change here and in its Ins
 Every sheet with no theme of its own now wears %s instead of %s. Edit > Undo in Godot puts %s back.,所有没有自己主题的表现在使用 %s，而不是 %s。Godot 的 编辑 > 撤销 可以恢复 %s。
 Use %s for every sheet,将 %s 用于所有表
 Match the editor again,再次跟随编辑器
-"%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.",%d 个普通脚本在导出的发布版中仍会向控制台输出，第一个是 %s。它们不会逐个列出：如果发布版应保持安静，请把这些行包在 OS.is_debug_build() 判断里。
 Getting ready...,正在准备...
 about %d seconds,约 %d 秒
 about %d minutes,约 %d 分钟
@@ -11325,3 +11305,26 @@ Add a word to the vocabulary,向词汇表添加一个词
 "Every row in every sheet comes from a word the vocabulary knows. Adding one is not a special ceremony: the modules that hold them are sheets too, and a new word is a new Define row in one of them.",每个事件表里的每一行，都来自词汇表里已有的一个词。添加新词没有什么特别的仪式：存放这些词的模块本身也是事件表，新词就是其中一个模块里新增的一行“定义”。
 Next ▶,下一步 ▶
 Learning paths,学习路径
+Animation: scripts that drive a blend tree: %d; states no tree declares: %d; blend positions written as a vector into a one-dimensional space: %d.,动画：驱动混合树的脚本：%d 个；没有任何树声明的状态：%d 个；以向量写入一维空间的混合位置：%d 个。
+Collisions: scripts waiting on a touch: %d; scripts read: %d; scripts whose trigger cannot fire as the scene stands: %d.,碰撞：等待接触的脚本：%d 个；已读取的脚本：%d 个；触发器在当前场景下无法触发的脚本：%d 个。
+Damage: scripts that deal or guard against typed damage: %d; types no set names: %d; guards against a type nothing deals: %d.,伤害：造成或防备带类型伤害的脚本：%d 个；没有任何集合写下的类型：%d 个；针对无人造成的类型的防备：%d 处。
+Docs: guides read: %d of %d; guides out of step: %d.,文档：已读指南：%d/%d 篇；已脱节的指南：%d 篇。
+Verbs undocumented: %d; names no verb answers to: %d; descriptions that say nothing: %d; verbs the changelog never mentions: %d.,未记录的动词：%d 个；没有动词对应的名称：%d 个；什么都没说的描述：%d 条；更新日志从未提到的动词：%d 个。
+Effects: scenes wearing a material: %d; scenes with something that will not show at run time: %d.,效果：带有材质的场景：%d 个；含有运行时不会显示的东西的场景：%d 个。
+Lighting: lit scenes: %d; scenes with something that will not show at run time: %d.,光照：有光照的场景：%d 个；含有运行时看不到的东西的场景：%d 个。
+"%s still holds merge conflict markers, on %s. It will not parse, and it opens read-only until the merge is finished.",%s 仍有合并冲突标记（%s）。它无法解析，在合并完成前将以只读方式打开。
+Mistake checks: scripts read: %d; scripts with a line that cannot run or does not do what it says: %d.,错误检查：已读取的脚本：%d 个；含有无法运行或与其所述不符的行的脚本：%d 个。
+Descriptions: sheets read: %d of %d. Open the rest and the page will have them too.,说明：已读取的表：%d / %d 个。打开其余的，这一页也会有它们。
+"Shapes: sheets that march a shape's dashes: %d; of those, sheets with a shape whose dashes are off: %d.",形状：让形状虚线流动的表：%d 个；其中形状虚线是关闭的表：%d 个。
+"Plain scripts that write to the console where an exported release build still runs it: %d, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.",在导出的发布版中仍会向控制台输出的普通脚本：%d 个，第一个是 %s。它们不会逐个列出：如果发布版应保持安静，请把这些行包在 OS.is_debug_build() 判断里。
+"%s is missing keys the game asks for, so a player reading it sees the raw key: %s.",%s 缺少游戏请求的键，玩家会看到原始键：%s。
+A save slot of this game: values held: %d; scripts that write them: %d. They are: %s. Anything not on this list is back to its starting value when a slot is loaded.,这个游戏的一个存档槽：保存的值：%d 个；写入它们的脚本：%d 个。它们是：%s。不在此列表中的内容在加载存档槽时会回到初始值。
+Spawning: scripts that add or destroy nodes: %d; scripts read: %d; scripts with something that will go wrong at run time: %d.,生成：会添加或销毁节点的脚本：%d 个；已读取的脚本：%d 个；存在运行时会出错的地方的脚本：%d 个。
+Streaming: chunk folders: %d; folders with something to look at: %d.,流式加载：区块文件夹：%d 个；有需要查看的问题的文件夹：%d 个。
+%s holds %d chunk scenes. Cells missing from the middle of the grid: %d - %s. A player who walks into one of those cells finds nothing there.,%s 中有 %d 个区块场景。网格中间缺少的格子：%d 个 - %s。玩家走进这些格子时，那里什么都没有。
+1 compiler warning - the first: %s,1 条编译器警告 - 第一条：%s
+%d compiler warnings - the first: %s,%d 条编译器警告 - 第一条：%s
+1 mistake the game would only meet when it runs - the first: %s,"有 1 处错误,游戏只有在运行时才会遇到 - 第一处:%s"
+%d mistakes the game would only meet when it runs - the first: %s,"有 %d 处错误,游戏只有在运行时才会遇到 - 第一处:%s"
+"1 row here names no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point it at one of this object's states.",这里有 1 行没有指明任何状态。空的状态格会编译成 `state == State.`，那不是 GDScript，请把这一行指向这个对象的某个状态。
+"%d rows here name no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point each one at one of this object's states.",这里有 %d 行没有指明任何状态。空的状态格会编译成 `state == State.`，那不是 GDScript，请把每一行指向这个对象的某个状态。

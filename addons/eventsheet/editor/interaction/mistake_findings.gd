@@ -264,7 +264,9 @@ static func summary(found: Array[Dictionary]) -> String:
 			first = str(finding.get("message", ""))
 	if counted == 0:
 		return ""
-	return EventSheetL10n.translate("%d mistake(s) the game would only meet when it runs - the first: %s") % [counted, first]
+	if counted == 1:
+		return EventSheetL10n.translate("1 mistake the game would only meet when it runs - the first: %s") % first
+	return EventSheetL10n.translate("%d mistakes the game would only meet when it runs - the first: %s") % [counted, first]
 
 
 # -- What is remembered ---------------------------------------------------------------------------

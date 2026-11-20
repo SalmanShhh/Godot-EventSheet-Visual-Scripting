@@ -516,7 +516,7 @@ static func _test_the_report() -> bool:
 			EventSheetCollisionsDoctor.CHECK_ONE_WAY])) and ok
 	ok = _check("the summary counts what it read",
 		str(filed[0].get("message", "")),
-		"Collisions: 6 script(s) waiting on a touch, 6 read, 4 whose trigger cannot fire as the scene stands.") and ok
+		"Collisions: scripts waiting on a touch: 6; scripts read: 6; scripts whose trigger cannot fire as the scene stands: 4.") and ok
 	# A healthy project has no worst file, and the summary still has to point somewhere: filed against
 	# an empty path it renders as a line with a gap where the file should be.
 	var healthy: Array[Dictionary] = EventSheetCollisionsDoctor.report(

@@ -545,16 +545,16 @@ static func _test_the_two_corpus_modes() -> bool:
 		EventSheetMigrationDoctor.corpus(stored, scripts, true), whole) and ok
 	ok = _check("the summary line names both numbers when it sampled",
 		EventSheetMigrationDoctor.sample_note(stored, scripts),
-		" The .gd half is a sample: %d of %d script(s) were read." % [
+		" The .gd half is a sample - scripts read: %d of %d." % [
 			EventSheetMigrationDoctor.SCRIPTS_SAMPLED, scripts.size()]) and ok
 	ok = _check("and says so when it read the whole half",
 		EventSheetMigrationDoctor.sample_note(stored, scripts, true),
-		" The .gd half was read whole: %d script(s)." % scripts.size()) and ok
+		" The .gd half was read whole - scripts: %d." % scripts.size()) and ok
 	# A whole read over a project small enough that the sample already covered it says so anyway -
 	# the line is about which mode ran, not about whether it happened to matter.
 	ok = _check("a whole read over a small project still names itself",
 		EventSheetMigrationDoctor.sample_note(stored, PackedStringArray(["res://one.gd"]), true),
-		" The .gd half was read whole: 1 script(s).") and ok
+		" The .gd half was read whole - scripts: 1.") and ok
 
 	# The second half: a real folder, read both ways.
 	var folder: String = SUPPORT.own_path("eventforge_corpus_fixture")

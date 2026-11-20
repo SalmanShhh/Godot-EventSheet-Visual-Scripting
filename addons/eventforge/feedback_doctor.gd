@@ -123,7 +123,7 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 			worst_path = script_path
 		findings.append_array(script_findings(script_path, mine))
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
-		"Juice Players: %d sheet(s) play a beat through a Juice Player, and %d row(s) name a juice card no player in their scene has." % [
+		"Juice Players: sheets that play a beat through a Juice Player: %d; rows that name a juice card no player in their scene has: %d." % [
 			measured, unknown], ""))
 	return findings
 

@@ -116,7 +116,7 @@ static func _with_summary(findings: Array[Dictionary], worst_path: String, measu
 	if findings.is_empty():
 		return findings
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
-		EventSheetL10n.translate("Mistake checks: %d script(s) read, %d with a line that cannot run or does not do what it says.") % [
+		EventSheetL10n.translate("Mistake checks: scripts read: %d; scripts with a line that cannot run or does not do what it says: %d.") % [
 			measured, troubled], ""))
 	return findings
 

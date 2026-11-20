@@ -124,7 +124,7 @@ static func report(scenes: PackedStringArray, scripts: PackedStringArray) -> Arr
 	for script_path: String in EventSheetProjectDoctor.gate("lighting-environment", scripts, Callable(EventSheetLightingDoctor, "reaches_the_environment")):
 		findings.append_array(sheet_findings(script_path))
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
-		EventSheetL10n.translate("Lighting: %d lit scene(s), %d with something that will not show at run time.") % [
+		EventSheetL10n.translate("Lighting: lit scenes: %d; scenes with something that will not show at run time: %d.") % [
 			scenes.size(), troubled], ""))
 	return findings
 

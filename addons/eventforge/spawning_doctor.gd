@@ -148,7 +148,7 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 	if spawning <= 0:
 		return findings
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
-		EventSheetL10n.translate("Spawning: %d script(s) that add or destroy nodes, %d read, %d with something that will go wrong at run time.") % [
+		EventSheetL10n.translate("Spawning: scripts that add or destroy nodes: %d; scripts read: %d; scripts with something that will go wrong at run time: %d.") % [
 			spawning, measured, troubled], ""))
 	return findings
 

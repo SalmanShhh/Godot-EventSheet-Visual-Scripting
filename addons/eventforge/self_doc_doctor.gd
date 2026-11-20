@@ -59,7 +59,7 @@ static func check(sheet_paths: PackedStringArray, findings: Array[Dictionary]) -
 		await EventSheetProjectDoctor.breathe_every(turn)
 		if read >= SHEETS_READ_LIMIT:
 			findings.append(_finding("info", CHECK_ID, "",
-				EventSheetL10n.translate("Descriptions: %d sheet(s) read of %d. Open the rest and the page will have them too.") % [
+				EventSheetL10n.translate("Descriptions: sheets read: %d of %d. Open the rest and the page will have them too.") % [
 					read, sorted.size()], ""))
 			return
 		var sheet: Resource = ResourceLoader.load(sheet_path)

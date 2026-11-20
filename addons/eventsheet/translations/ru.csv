@@ -4540,7 +4540,6 @@ tinted,оттенок
 "%s writes the world's environment, and %s has no WorldEnvironment node - the row does nothing when the game runs. Add one to the scene.","%s записывает окружение мира, а в %s нет узла WorldEnvironment - во время игры эта строка ничего не делает. Добавьте его в сцену."
 "%s writes %s, which %s also uses - the change follows the player into those scenes. Give this scene its own copy first.","%s записывает %s, и этот же файл использует %s - изменение последует за игроком в те сцены. Сначала дайте этой сцене собственную копию."
 Make the environment this scene's own,Сделать окружение собственным для этой сцены
-"Lighting: %d lit scene(s), %d with something that will not show at run time.","Освещение: освещённых сцен - %d, из них %d с тем, что не будет видно во время игры."
 This sheet already takes its own copy.,Этот лист уже берёт собственную копию.
 This scene has its own environment now - the change stops here.,Теперь у этой сцены собственное окружение - изменение дальше не уйдёт.
 Send Message To Everyone,Отправить сообщение всем
@@ -4850,7 +4849,6 @@ This node has its own material now - the dials stop here.,Теперь у это
 "%s wears no material in the scene, so setting %s on it reaches through nothing - every effect row aimed at it does nothing. Give it a ShaderMaterial in the Inspector.","%s не носит материала в сцене, поэтому установка %s ни во что не попадает - каждая строка эффекта, нацеленная на него, ничего не делает. Дайте ему ShaderMaterial в инспекторе."
 "%s is worn by %s as well, and a material is one object - every dial this row turns turns for them too. Give this node its own copy first.","%s носят также %s, а материал - это один объект: каждый регулятор, который крутит эта строка, крутится и у них. Сначала дайте этому узлу собственную копию."
 "Project Settings > Shader Globals declares no %s, so every shader reading it sees zero however often this row runs. Declare it there.","В «Параметры проекта > Shader Globals» не объявлено %s, поэтому каждый шейдер, который его читает, видит ноль, сколько бы раз ни выполнялась эта строка. Объявите его там."
-"Effects: %d scene(s) wearing a material, %d with something that will not show at run time.","Эффекты: сцен с материалом - %d, из них с тем, что не покажется во время выполнения - %d."
 kept inside this scene - nothing else wears it,хранится внутри этой сцены - больше его никто не носит
 its own copy at runtime,собственная копия во время выполнения
 counting…,подсчёт…
@@ -5035,7 +5033,6 @@ Tip: that run stuttered - Tools > Row Timings shows which rows the frames went t
 "%s %s has no description, and its rows do not compose one - this is a line only you can write.","%s %s без описания, и его строки не складываются в одно - эту строку можете написать только вы."
 "%s %s has no description. Draft from its own rows: ""%s""","%s %s без описания. Черновик из его собственных строк: ""%s"""
 "%s still says ""%s"", but its rows no longer mention any of that. Fresh draft: ""%s""","%s всё ещё говорит ""%s"", но его строки больше ни о чём из этого не упоминают. Свежий черновик: ""%s"""
-Descriptions: %d sheet(s) read of %d. Open the rest and the page will have them too.,"Описания: прочитано %d лист(ов) из %d. Откройте остальные, и страница получит их тоже."
 Errors,Ошибки
 Warnings,Предупреждения
 %d new since you last looked.,%d новых с прошлого просмотра.
@@ -5045,9 +5042,7 @@ Warnings,Предупреждения
 "The icon is still the engine's own, so the taskbar shows Godot's logo rather than the game's. Project Settings > Application > Config > Icon.","Значок всё ещё движковый, поэтому на панели задач виден логотип Godot, а не игры. Настройки проекта > Приложение > Конфигурация > Значок."
 %s writes to the console where an exported release build still runs it - first: %s.,"%s пишет в консоль там, где экспортированная релизная сборка всё ещё это выполняет - первое: %s."
 Log (Debug Builds Only) compiles the line out of a release game.,Лог (только в отладочных сборках) убирает строку из релизной игры.
-"%s is missing %d key(s) the game asks for, so a player reading it sees the raw key: %s.","В %s не хватает %d ключ(ей), которые запрашивает игра, поэтому игрок видит сырой ключ: %s."
 %s costs %.2f ms of a frame in the last measured run - %d%% of the %.1f ms a 60 fps frame has.,"%s стоит %.2f мс кадра в последнем измеренном запуске - %d%% от %.1f мс, которые есть у кадра при 60 fps."
-"A save slot of this game holds %d value(s), written from %d script(s): %s. Anything not on this list is back to its starting value when a slot is loaded.","Слот сохранения этой игры хранит %d значени(й), записанных из %d скрипт(ов): %s. Всё, чего нет в этом списке, вернётся к начальному значению при загрузке слота."
 %s and %d more,%s и ещё %d
 Go To Mode,Перейти в режим
 Moves the whole game into another mode and says so. Groups that run in a mode start and stop running by themselves; On entering and On leaving rows do the work of the moment itself.,"Переводит всю игру в другой режим и сообщает об этом. Группы, работающие в режиме, сами запускаются и останавливаются; строки При входе и При выходе делают работу самого момента."
@@ -5245,10 +5240,8 @@ Opens the page your rows point at.,"Открывает страницу, на к
 %d name(s) no verb answers to,"%d имён, которым не отвечает ни один глагол"
 %d verb(s) the changelog never mentions,"%d глаголов, ни разу не упомянутых в журнале изменений"
 %d verb(s) the guide does not list,"%d глаголов, которых нет в руководстве"
-"%d verb(s) undocumented, %d name(s) no verb answers to, %d description(s) that say nothing, %d verb(s) the changelog never mentions.","%d глаголов без документации, %d имён, которым не отвечает ни один глагол, %d пустых описаний, %d глаголов, ни разу не упомянутых в журнале изменений."
 %s publishes %s and the guide never names it. A reader who searched the guide concluded it does not exist.,"%s публикует %s, а руководство его не называет. Тот, кто искал в руководстве, решил, что этого нет."
 "%s shipped, but nothing in the changelog ever mentions %s. Write the line while you still remember what changed.","%s вышел, но журнал изменений ни разу не упоминает %s. Напишите строку, пока помните, что изменилось."
-"Docs: %d of %d guide(s) read, %d out of step.","Документация: прочитано руководств %d из %d, расходятся %d."
 "Docs: guides are checked in the editor, where the vocabulary is already loaded. Outside it the help bundle build prints the same report.","Документация: руководства проверяются в редакторе, где словарь уже загружен. За его пределами тот же отчёт печатает сборка пакета справки."
 Draft: %s.,Черновик: %s.
 Takes %s.,Принимает %s.
@@ -5361,7 +5354,6 @@ Guard it,Защитить
 "This spawns the scene it is already running in, every time a copy is created, with nothing in the way. Each copy makes another one.","Здесь порождается та же сцена, в которой это уже работает - при каждом создании копии и без единого условия. Каждая копия делает следующую."
 "%s is destroyed earlier in this event, and this row books a wait against it. Move the destroy below this row, or destroy it after a delay instead.","%s уничтожается выше в этом событии, а эта строка бронирует ожидание для него. Перенесите уничтожение ниже этой строки или уничтожайте с задержкой."
 Move the destroy last,Переместить уничтожение в конец
-"Spawning: %d script(s) that add or destroy nodes, %d read, %d with something that will go wrong at run time.","Порождение: %d скрипт(ов), добавляющих или уничтожающих узлы, %d прочитано, %d из них с тем, что сломается во время выполнения."
 This row is already added on the next idle moment.,Эта строка уже добавляется в ближайший свободный момент.
 Guard %s,Защитить %s
 This event already asks whether %s is still here.,"Это событие уже спрашивает, здесь ли ещё %s."
@@ -5409,7 +5401,6 @@ Name physics layer,Назвать слой физики
 "%s is one-way and turned over, so bodies fall through it from above and are stopped from below. The rows here are waiting for the landing it blocks.","%s односторонний и перевёрнут, поэтому тела проваливаются сквозь него сверху и останавливаются снизу. Строки здесь ждут приземления, которое он не пропускает."
 "%s watches %s, and everything in this project that can collide sits on %s - so nothing can reach this trigger. This reads every layer in use, because the trigger names no group.","%s следит за %s, а всё, что может сталкиваться в этом проекте, находится на %s - значит, до этого триггера ничто не дотянется. Здесь читаются все используемые слои, потому что триггер не называет группу."
 "%s watches %s, and the members of ""%s"" sit on %s - so this trigger never fires.","%s следит за %s, а участники ""%s"" находятся на %s - значит, этот триггер никогда не срабатывает."
-"Collisions: %d script(s) waiting on a touch, %d read, %d whose trigger cannot fire as the scene stands.","Столкновения: скриптов, ждущих касания - %d, прочитано - %d, с триггером, который при нынешней сцене не сработает - %d."
 "Godot has collision layers 1 to 32.","В Godot слои столкновений с 1 по 32."
 "Open %s to change what it collides with.","Откройте %s, чтобы изменить, с чем оно сталкивается."
 "Show me in the scene","Показать в сцене"
@@ -5686,7 +5677,6 @@ open the player's data folder {path},открыть папку данных иг
 and %d more watched folder(s),и ещё %d наблюдаемых папок
 "%s is declared and no row can reach it: nothing goes to it, and the object does not start in it.","%s объявлено, и ни одна строка не может его достичь: туда ничто не переходит, и объект не начинает в нём."
 "A row names the state %s and this object does not declare it. Either add it to the states on the head, or point the row at one of this object's own.","Строка называет состояние %s, а этот объект его не объявляет. Добавьте его в состояния в заголовке или укажите строке одно из собственных состояний объекта."
-"%d row(s) here name no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point each one at one of this object's states.","%d строк(и) здесь не называют ни одного состояния. Пустая ячейка состояния компилируется в `state == State.`, а это не GDScript, так что укажите в каждой одно из состояний этого объекта."
 Name at least one state.,Назовите хотя бы одно состояние.
 Declare states,Объявить состояния
 Declare states…,Объявить состояния…
@@ -5931,7 +5921,6 @@ line %s%s,строка %s%s
 lines %s and %s%s,строки %s и %s%s
 "%s still has merge conflict markers on %s. It is not GDScript until they are gone, so it is open read-only here: nothing is lifted into rows, and Save is off. Finish the merge in the tool you started it in, then open it again.","В %s всё ещё есть маркеры конфликта слияния в %s. Пока они есть, это не GDScript, поэтому файл открыт только для чтения: ничего не поднимается в строки, а сохранение отключено. Завершите слияние в том инструменте, где начали, и откройте файл снова."
 %s still has merge conflict markers in it - saving would write the sheet's reading of them back over the file. Resolve the merge first.,В %s всё ещё есть маркеры конфликта слияния - сохранение запишет прочтение листа поверх файла. Сначала разрешите слияние.
-"%s still holds %d merge conflict marker line(s) (%s). It will not parse, and it opens read-only until the merge is finished.","В %s всё ещё %d строк(и) с маркерами конфликта слияния (%s). Файл не разберётся и открывается только для чтения, пока слияние не завершено."
 " The previous bytes of those %d file(s) are in the backup ring beside each of them, under %s."," Прежние байты этих %d файл(ов) лежат в кольце резервных копий рядом с каждым из них, в %s."
 " %d sheet(s) that include this one are rewritten and SAVED, which one Ctrl+Z here does not undo."," %d лист(ов), включающих этот, будут переписаны и СОХРАНЕНЫ, чего Ctrl+Z здесь не отменит."
 "Also written, and saved - these sheets include this one, so Ctrl+Z here does not undo them","Также записаны и сохранены - эти листы включают этот, поэтому Ctrl+Z здесь их не отменит"
@@ -6936,8 +6925,6 @@ Resource files,Файлы ресурсов
 "What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it. A file that IS there with the right extension but cannot be decoded answers with null and an engine message rather than with this, because the guard asks whether a file exists and not whether it is a track.","Что выражение читает, когда по этому пути файла нет или его расширение не одно из трёх. Оставьте пустым, чтобы прочитать файл прямо, без всякой защиты вокруг. Файл, который ЕСТЬ и носит нужное расширение, но не декодируется, отвечает null и сообщением движка, а не этим, потому что защита спрашивает, существует ли файл, а не является ли он звуковой дорожкой."
 tile data,данные тайла
 terrain set,набор ландшафта
-"Streaming: %d chunk folder(s), %d with something to look at.","Стриминг: папок с чанками - %d, из них %d с тем, на что стоит взглянуть."
-%s holds %d chunk scenes with %d cell(s) missing from the middle of the grid: %s. A player who walks into one of those cells finds nothing there.,"%s содержит %d сцен чанков, при этом в середине сетки не хватает %d ячейки(ек): %s. Игрок, который зайдёт в такую ячейку, ничего там не найдёт."
 "%s is a chunk scene carrying a camera. A camera saved as the current one takes the view the moment its chunk streams in, and where nothing else is current the first chunk to arrive keeps it - keep the camera in the scene that owns the player.","%s - это сцена чанка с камерой. Камера, сохранённая как текущая, забирает вид в тот момент, когда её чанк подгружается, а если текущей камеры нет вовсе, вид остаётся за тем чанком, который пришёл первым - держите камеру в сцене, которой принадлежит игрок."
 Put On Cooldown,Поставить на перезарядку
 "Starts (or restarts) a named cooldown. Ask it with Is Off Cooldown before the thing it guards, and the same name works from any event on this node. On game time the cooldown is held while the game is paused and runs slow while the game does, which is what a dash or a spell wants; pick realtime for a clock that must keep going through a pause menu. If the sheet declares a cooldown_ready(cooldown_name) signal, the On Cooldown Ready trigger fires the moment it finishes.","Запускает (или перезапускает) именованную перезарядку. Спрашивайте о ней условием Перезарядка прошла перед тем, что она защищает; то же имя работает из любого события на этом узле. На игровом времени перезарядка стоит, пока игра на паузе, и идёт медленнее вместе с замедлением игры - именно это нужно рывку или заклинанию; выберите реальное время для часов, которые должны идти и при открытом меню паузы. Если лист объявляет сигнал cooldown_ready(cooldown_name), триггер Когда перезарядка готова срабатывает в тот момент, когда она заканчивается."
@@ -7042,7 +7029,6 @@ no such state,нет такого состояния
 This scene's animation tree has no state called %s. A misspelled state travels nowhere and reports nothing - pick the one you meant.,"В дереве анимации этой сцены нет состояния с именем %s. Состояние с опечаткой никуда не переходит и ни о чём не сообщает - выберите то, которое имелось в виду."
 %d-dimensional,%d-мерное
 one amount,одно значение
-"Animation: %d script(s) drive a blend tree, %d state(s) no tree declares, %d blend position(s) written as a vector into a one-dimensional space.","Анимация: %d скрипт(ов) управляют деревом смешивания, %d состояние(й) не объявлено ни одним деревом, %d позиция(й) смешивания записаны вектором в одномерное пространство."
 "%s travels to ""%s"", which no animation tree in its scene declares. A misspelled state travels nowhere and is never reported by the game itself.","%s переходит к ""%s"", которого не объявляет ни одно дерево анимации в его сцене. Состояние с опечаткой никуда не переходит, и сама игра об этом никогда не сообщит."
 "Did you mean ""%s""?","Возможно, вы имели в виду ""%s""?"
 "%s writes a vector into ""%s"", which is a one-dimensional blend space. Only the first number is used - the rest of the direction is dropped without a word.","%s записывает вектор в ""%s"" - это одномерное пространство смешивания. Используется только первое число, остальная часть направления отбрасывается молча."
@@ -7107,7 +7093,6 @@ Levels,Уровни
 "A named countdown as minutes and seconds, so 83 seconds left reads ""01:23"" - and with tenths under ten seconds, where ""00:09.4"" is the difference between a clock a player can feel running out and one that looks stopped. The text a clock label is set to, with no formatting on the row. A countdown longer than an hour keeps counting in minutes rather than rolling over.","Именованный отсчёт как минуты и секунды: 83 оставшиеся секунды читаются как ""01:23"" - и с десятыми долями под десятью секундами, где ""00:09.4"" - это разница между часами, у которых чувствуется утекающее время, и часами, которые кажутся остановившимися. Текст, в который ставят надпись часов, без всякого форматирования в строке. Отсчёт длиннее часа продолжает считать в минутах, а не обнуляется."
 "%s deals damage of type ""%s"", which no DamageTypeSet in this project names. A misspelling resists nothing and is never reported by the game itself.","%s наносит урон типа ""%s"", который не назван ни одним DamageTypeSet в этом проекте. Опечатка ничему не сопротивляется, и сама игра об этом никогда не сообщит."
 "%s guards against damage of type ""%s"", which nothing in this project deals. The guard will never be tested.","%s защищается от урона типа ""%s"", который в этом проекте никто не наносит. Эта защита никогда не будет проверена."
-"Damage: %d script(s) deal or guard against typed damage, %d type(s) no set names, %d guard(s) against a type nothing deals.","Урон: %d скрипт(ов) наносят типизированный урон или защищаются от него, %d тип(ов) не назван ни одним набором, %d защит(ы) от типа, который никто не наносит."
 Claim,Присвоить
 "Marks a node as belonging to somebody - the bullet you just fired, the trap you armed, the minion you summoned. Every ownership row in the project reads what this writes, so kill credit, assists and friendly fire all come from this one line. Claiming again simply replaces the owner.","Помечает узел как принадлежащий кому-то - пулю, которую вы только что выпустили, ловушку, которую вы взвели, прислужника, которого вы призвали. Каждая строка владения в проекте читает то, что пишет эта, поэтому засчитанное убийство, помощь и дружественный огонь берутся из одной этой строки. Повторное присвоение просто заменяет владельца."
 Ownership,Владение
@@ -7164,7 +7149,6 @@ Save Moment As File…,Сохранить момент как файл…
 Delete Step,Удалить шаг
 "A .gd file IS code, a .gdextension is a native library, and a .tres or a .res is a table that can name a script, so loading any of them runs its author's code with everything this game can reach: the player's files, their network, their machine. A .pck or a .zip is wider still: it MOUNTS its contents into res://, so it can replace the game's own files rather than only add to them.","Файл .gd - это и есть код, .gdextension - нативная библиотека, а .tres или .res - таблица, которая может назвать скрипт, так что загрузка любого из них выполняет код его автора со всем, до чего дотягивается эта игра: файлы игрока, его сеть, его машина. Файл .pck или .zip идёт ещё дальше: он МОНТИРУЕТ своё содержимое в res://, так что может не просто добавить файлы, а заменить собственные файлы игры."
 (none),(нет)
-"Shapes: %d sheet(s) march a shape's dashes, %d of them on a shape whose dashes are off.","Фигуры: %d лист(ов) прокручивают штрихи фигуры, из них %d на фигуре, у которой штрихи выключены."
 "%s marches the dashes on %s, and that shape has none to march: its Dashed box is off in %s, and no row here turns it on. Turn Dashed on in the Inspector, or put a Set Dashes row before the Scroll Dashes.","%s прокручивает штрихи на %s, а у этой фигуры нечего прокручивать: флажок Штрихи выключен в %s, и ни одна строка здесь его не включает. Включите Штрихи в инспекторе или поставьте строку Задать штрихи перед строкой Прокручивать штрихи."
 """%s"" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling.","""%s"" нет в карте ввода - это управление никогда не сработает, и ничто об этом не скажет. Добавьте его в Проект ▸ Карта ввода или исправьте написание."
 What this file is. ▸ opens the lines behind it.,Что это за файл. ▸ открывает строки за ним.
@@ -9882,7 +9866,6 @@ Expressions are not being compile-checked: the sheet variable %s has the same na
 Expressions are not being compile-checked: this sheet's own code does not compile. Fix the sheet first to turn the check back on.,"Выражения не проверяются на компилируемость: собственный код этого листа не компилируется. Сначала исправьте лист, чтобы вернуть проверку."
 compile check paused,проверка приостановлена
 "Saved, but Godot cannot compile the script this sheet writes: %s (line %d of %s) - the row it came from is marked.","Сохранено, но Godot не может скомпилировать скрипт, который пишет этот лист: %s (строка %d файла %s) - строка-источник помечена."
-%d compiler warning(s) - the first: %s,Предупреждений компилятора: %d - первое: %s
 Worked out while the game runs. Picking a colour replaces this expression with a constant.,Вычисляется во время работы игры. Выбор цвета заменит это выражение константой.
 "Worked out from constants: %s. Picking replaces the expression with Color(""#..."").","Вычислено из констант: %s. Выбор заменит выражение на Color(""#..."")."
 Written as %s.,Записывается как %s.
@@ -9933,7 +9916,6 @@ The row now acts on %s.,Теперь строка действует на %s.
 "Noted: %s is made while the game runs, so this sheet will not be asked about it again.","Принято: %s создаётся во время работы игры, поэтому этот лист больше не будет о нём спрашивать."
 Stop after %d rounds,Остановиться после %d кругов
 The loop now stops after %d rounds.,Теперь цикл останавливается после %d кругов.
-%d mistake(s) the game would only meet when it runs - the first: %s,"Ошибок, с которыми игра столкнулась бы только при запуске: %d - первая: %s"
 this node,этот узел
 "This node is a %s, which has no ""%s"" - the row asks it for one. Godot refuses the script (a parse error: not found in base self), so it does not load. Put this row on a node that has it, or pick another action.","Этот узел - %s, у которого нет ""%s"" - строка запрашивает его. Godot отвергает скрипт (ошибка разбора: not found in base self), поэтому он не загружается. Поместите эту строку на узел, у которого он есть, или выберите другое действие."
 "%s is a %s, which has no ""%s"" - the row asks it for one. Godot stops the function when the line runs (""Invalid call. Nonexistent function"" for a method, ""Invalid assignment of property"" for a property). Point it at a node that has it, or pick another action.","%s - это %s, у которого нет ""%s"" - строка запрашивает его. Godot останавливает функцию, когда строка выполняется (""Invalid call. Nonexistent function"" для метода, ""Invalid assignment of property"" для свойства). Укажите узел, у которого он есть, или выберите другое действие."
@@ -9960,7 +9942,6 @@ no values,нет значений
 "%s divides a whole number by zero, so the game stops here with a ""Division by zero error"".","%s делит целое число на ноль, поэтому игра останавливается здесь с ""Division by zero error""."
 the value,значение
 "%s divides by zero. If %s holds a whole number the game stops here with a ""Division by zero error""; with a decimal the answer is inf.","%s делит на ноль. Если %s содержит целое число, игра останавливается здесь с ""Division by zero error""; с десятичным числом ответ - inf."
-"Mistake checks: %d script(s) read, %d with a line that cannot run or does not do what it says.","Проверки на ошибки: прочитано скриптов - %d, из них со строкой, которая не может выполниться или делает не то, что говорит - %d."
 "The same spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld, which lands the copy where the At field says.","То же создание, но добавляется в следующий момент простоя, а не сразу. Используйте его внутри обработчика столкновения или тела: добавленные там 2D-физическое тело или область заставляют Godot выводить ошибку, пока физический сервер занят (узел всё равно добавляется и работает), а эта строка ждёт его завершения, чтобы ничего не выводилось. Место задаётся до добавления копии, поэтому это место относительно родителя, а не место в уровне; используйте SpawnNewCopyDeferredWorld, который помещает копию туда, куда указывает поле At."
 "The same 3D spawn, added on the next idle moment instead of right now. Use it inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works), and this row waits for it to finish so nothing is printed. The place is set before the copy is added, so it is a place relative to the parent rather than a place in the level; use SpawnNewCopyDeferredWorld3D, which lands the copy where the At field says.","То же 3D-создание, но добавляется в следующий момент простоя, а не сразу. Используйте его внутри обработчика столкновения или тела: добавленные там 2D-физическое тело или область заставляют Godot выводить ошибку, пока физический сервер занят (узел всё равно добавляется и работает), а эта строка ждёт его завершения, чтобы ничего не выводилось. Место задаётся до добавления копии, поэтому это место относительно родителя, а не место в уровне; используйте SpawnNewCopyDeferredWorld3D, который помещает копию туда, куда указывает поле At."
 When the copies join the tree. Pick the next idle moment inside a collision or body handler: a 2D physics body or area added there makes Godot print an error while the physics server is busy (the node is still added and works). Both answers put the copies in the same places - the shape is measured in the world either way.,"Когда копии попадают в дерево. Выберите следующий момент простоя внутри обработчика столкновения или тела: добавленные там 2D-физическое тело или область заставляют Godot выводить ошибку, пока физический сервер занят (узел всё равно добавляется и работает). Оба ответа помещают копии в одни и те же места - форма в любом случае измеряется в мире."
@@ -11243,7 +11224,6 @@ The %s global now runs save_system.tscn; its settings change here and in its Ins
 Every sheet with no theme of its own now wears %s instead of %s. Edit > Undo in Godot puts %s back.,Каждый лист без своей темы теперь носит %s вместо %s. Правка > Отменить в Godot возвращает %s.
 Use %s for every sheet,Использовать %s для каждого листа
 Match the editor again,Снова следовать редактору
-"%d plain script(s) write to the console where an exported release build still runs it, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.","Обычных скриптов, пишущих в консоль там, где выпускная сборка всё ещё их выполняет: %d, первый - %s. Они не перечислены по одному: оберните строки в проверку OS.is_debug_build(), если выпуск должен молчать."
 Getting ready...,Подготовка...
 about %d seconds,около %d секунд
 about %d minutes,около %d минут
@@ -11325,3 +11305,26 @@ Add a word to the vocabulary,Добавьте слово в словарь
 "Every row in every sheet comes from a word the vocabulary knows. Adding one is not a special ceremony: the modules that hold them are sheets too, and a new word is a new Define row in one of them.","Каждая строка в каждом листе происходит от слова, которое знает словарь. Добавить слово - не особый ритуал: модули, где они хранятся, тоже листы, а новое слово - это новая строка «Определить» в одном из них."
 Next ▶,Далее ▶
 Learning paths,Пути обучения
+Animation: scripts that drive a blend tree: %d; states no tree declares: %d; blend positions written as a vector into a one-dimensional space: %d.,"Анимация: скриптов, управляющих деревом смешивания: %d; состояний, не объявленных ни одним деревом: %d; позиций смешивания, записанных вектором в одномерное пространство: %d."
+Collisions: scripts waiting on a touch: %d; scripts read: %d; scripts whose trigger cannot fire as the scene stands: %d.,"Столкновения: скриптов, ждущих касания: %d; прочитано скриптов: %d; скриптов с триггером, который при нынешней сцене не сработает: %d."
+Damage: scripts that deal or guard against typed damage: %d; types no set names: %d; guards against a type nothing deals: %d.,"Урон: скриптов, наносящих типизированный урон или защищающихся от него: %d; типов, не названных ни одним набором: %d; защит от типа, который никто не наносит: %d."
+Docs: guides read: %d of %d; guides out of step: %d.,Документация: прочитано руководств: %d из %d; расходятся руководств: %d.
+Verbs undocumented: %d; names no verb answers to: %d; descriptions that say nothing: %d; verbs the changelog never mentions: %d.,"Глаголов без документации: %d; имён, которым не отвечает ни один глагол: %d; пустых описаний: %d; глаголов, ни разу не упомянутых в журнале изменений: %d."
+Effects: scenes wearing a material: %d; scenes with something that will not show at run time: %d.,"Эффекты: сцен с материалом: %d; сцен с тем, что не покажется во время выполнения: %d."
+Lighting: lit scenes: %d; scenes with something that will not show at run time: %d.,"Освещение: освещённых сцен: %d; сцен с тем, что не будет видно во время игры: %d."
+"%s still holds merge conflict markers, on %s. It will not parse, and it opens read-only until the merge is finished.","В %s всё ещё есть маркеры конфликта слияния (%s). Файл не разберётся и открывается только для чтения, пока слияние не завершено."
+Mistake checks: scripts read: %d; scripts with a line that cannot run or does not do what it says: %d.,"Проверки на ошибки: прочитано скриптов: %d; скриптов со строкой, которая не может выполниться или делает не то, что говорит: %d."
+Descriptions: sheets read: %d of %d. Open the rest and the page will have them too.,"Описания: прочитано листов: %d из %d. Откройте остальные, и страница получит их тоже."
+"Shapes: sheets that march a shape's dashes: %d; of those, sheets with a shape whose dashes are off: %d.","Фигуры: листов, прокручивающих штрихи фигуры: %d; из них листов с фигурой, у которой штрихи выключены: %d."
+"Plain scripts that write to the console where an exported release build still runs it: %d, the first being %s. They are not listed one by one: wrap the lines in an OS.is_debug_build() test if a release should be quiet.","Обычных скриптов, пишущих в консоль там, где выпускная сборка всё ещё их выполняет: %d, первый - %s. Они не перечислены по одному: оберните строки в проверку OS.is_debug_build(), если выпуск должен молчать."
+"%s is missing keys the game asks for, so a player reading it sees the raw key: %s.","В %s не хватает ключей, которые запрашивает игра, поэтому игрок видит сырой ключ: %s."
+A save slot of this game: values held: %d; scripts that write them: %d. They are: %s. Anything not on this list is back to its starting value when a slot is loaded.,"Слот сохранения этой игры: хранимых значений: %d; скриптов, которые их записывают: %d. Вот они: %s. Всё, чего нет в этом списке, вернётся к начальному значению при загрузке слота."
+Spawning: scripts that add or destroy nodes: %d; scripts read: %d; scripts with something that will go wrong at run time: %d.,"Порождение: скриптов, добавляющих или уничтожающих узлы: %d; прочитано скриптов: %d; скриптов с тем, что сломается во время выполнения: %d."
+Streaming: chunk folders: %d; folders with something to look at: %d.,"Стриминг: папок с чанками: %d; папок с тем, на что стоит взглянуть: %d."
+%s holds %d chunk scenes. Cells missing from the middle of the grid: %d - %s. A player who walks into one of those cells finds nothing there.,"%s содержит %d сцен чанков. Не хватает ячеек в середине сетки: %d - %s. Игрок, который зайдёт в такую ячейку, ничего там не найдёт."
+1 compiler warning - the first: %s,1 предупреждение компилятора - первое: %s
+%d compiler warnings - the first: %s,Предупреждений компилятора: %d - первое: %s
+1 mistake the game would only meet when it runs - the first: %s,"1 ошибка, с которой игра столкнулась бы только при запуске - первая: %s"
+%d mistakes the game would only meet when it runs - the first: %s,"Ошибок, с которыми игра столкнулась бы только при запуске: %d - первая: %s"
+"1 row here names no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point it at one of this object's states.","1 строка здесь не называет ни одного состояния. Пустая ячейка состояния компилируется в `state == State.`, а это не GDScript, так что укажите в ней одно из состояний этого объекта."
+"%d rows here name no state at all. An empty state cell compiles to `state == State.`, which is not GDScript, so point each one at one of this object's states.","Строк здесь, не называющих ни одного состояния: %d. Пустая ячейка состояния компилируется в `state == State.`, а это не GDScript, так что укажите в каждой одно из состояний этого объекта."

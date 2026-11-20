@@ -135,7 +135,7 @@ static func sheet_lines(report_rows: Array[Dictionary]) -> Array[Dictionary]:
 	var lines: Array[Dictionary] = []
 	for path: String in order:
 		lines.append(_finding("info", CHECK_SHEET, path,
-			"%s - %d row(s) migrate cleanly, %d ask you." % [path.get_file(), int(clean[path]),
+			"%s - rows that migrate cleanly: %d; rows that ask you: %d." % [path.get_file(), int(clean[path]),
 				int(asks[path])], path))
 	return lines
 
@@ -148,7 +148,7 @@ static func sheet_lines(report_rows: Array[Dictionary]) -> Array[Dictionary]:
 ## person reading the section, and the one thing that must never happen is their reading a count of
 ## sheets that is not the count of sheets that were opened.
 static func sample_note(sheet_paths: PackedStringArray, scripts: PackedStringArray,
-		read_every_script: bool = false) -> String:
+		read_every_script: bool = false, for_command_line: bool = false) -> String:
 	var read: PackedStringArray = corpus(sheet_paths, scripts, read_every_script)
 	var sampled: int = 0
 	for path: String in scripts:
@@ -158,11 +158,16 @@ static func sample_note(sheet_paths: PackedStringArray, scripts: PackedStringArr
 	# corpora and print the same shape of verdict, so a reader who asked for the whole thing and got
 	# the sample by accident - a flag dropped on the way through a build script - would have no way
 	# to tell from the line in front of them.
+	# The command line's verdict line keeps its wording: it is a line other tools read.
 	if read_every_script:
-		return " The .gd half was read whole: %d script(s)." % scripts.size()
+		if for_command_line:
+			return " The .gd half was read whole: %d script(s)." % scripts.size()  # the verify line, which other tools read
+		return " The .gd half was read whole - scripts: %d." % scripts.size()
 	if sampled >= scripts.size():
 		return ""
-	return " The .gd half is a sample: %d of %d script(s) were read." % [sampled, scripts.size()]
+	if for_command_line:
+		return " The .gd half is a sample: %d of %d script(s) were read." % [sampled, scripts.size()]  # the verify line, which other tools read
+	return " The .gd half is a sample - scripts read: %d of %d." % [sampled, scripts.size()]
 
 
 ## What one audit reads: every stored sheet, then the first few scripts in path order - or every one
@@ -249,7 +254,7 @@ static func _audit(paths: PackedStringArray, vocabulary: Dictionary,
 				"asks": bool(entry.get("asks", true)),
 			})
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
-		"Migration: %d sheet(s) read, and %d of them hold a verb the installed vocabulary no longer has.%s" % [
+		"Migration: sheets read: %d; sheets that hold a verb the installed vocabulary no longer has: %d.%s" % [
 			measured, affected, note], ""))
 	return {"findings": findings, "rows": listed}
 

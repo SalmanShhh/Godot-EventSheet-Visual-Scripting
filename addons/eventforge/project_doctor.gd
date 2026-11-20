@@ -1372,7 +1372,7 @@ static func check_missing_save_support(sheet_paths: PackedStringArray, findings:
 			continue
 		var kind: String = "autoload" if sheet.autoload_mode else "behavior"
 		_add(findings, "info", "save-support", sheet_path,
-			"This %s holds %d State variable(s) but has no save_state/load_state seam, so its runtime state won't survive Save Game - give those variables a Save choice in Tools > Save Studio > What gets saved and the pair is written for you (ignore if the state is transient)." % [kind, state_vars])
+			"This %s holds State variables (%d) but has no save_state/load_state seam, so its runtime state won't survive Save Game - give those variables a Save choice in Tools > Save Studio > What gets saved and the pair is written for you (ignore if the state is transient)." % [kind, state_vars])
 
 
 ## Save-key symmetry: the commonest save bug is not a crash, it is a SILENCE. A sheet loads
@@ -2205,7 +2205,7 @@ static func check_fragile_node_paths(sheet_paths: PackedStringArray, findings: A
 			var paths: Array = fragile.keys()
 			paths.sort()
 			_add(findings, "info", "fragile-node-path", sheet_path,
-				"This sheet reaches across the tree with %d fragile node path(s) (%s) - an absolute or multi-level parent path breaks silently when a node moves or is renamed. Prefer a group (get_first_node_in_group), a scene-unique node, or Connect Group Signal to react without depending on where a node lives." % [fragile.size(), ", ".join(PackedStringArray(paths))])
+				"This sheet reaches across the tree by node paths that break easily: %s - an absolute or multi-level parent path breaks silently when a node moves or is renamed. Prefer a group (get_first_node_in_group), a scene-unique node, or Connect Group Signal to react without depending on where a node lives." % ", ".join(PackedStringArray(paths)))
 
 
 ## Same walk as _collect_external_targets, collecting only the FRAGILE references (absolute / deep parent).
@@ -3300,8 +3300,7 @@ static func _report_unknown_input_actions(missing_by_script: Array, findings: Ar
 
 
 static func _unknown_input_message(missing: PackedStringArray) -> String:
-	return "This script names %d control(s) the Input Map does not have (%s) - the key will never fire and nothing will say so. Add it in Project ▸ Input Map, or fix the spelling." % [
-		missing.size(), ", ".join(missing)]
+	return "This script names controls the Input Map does not have: %s - the key will never fire and nothing will say so. Add it in Project ▸ Input Map, or fix the spelling." % ", ".join(missing)
 
 
 ## Gives a missing-control finding the row that names the control: its margin number, the near name the map
@@ -3465,7 +3464,7 @@ static func check_caption_less_sounds(_sheet_paths: PackedStringArray, findings:
 		if captioned >= played:
 			continue
 		_add(findings, "info", "caption-less-sound", script_path,
-			"This script plays %d sound(s) with no caption - a player who cannot hear them is told nothing. Use Play Sound With Caption for the ones that carry information (a door, a reload, a warning), and leave the rest blank on purpose." % [played - captioned])
+			"This script plays sounds with no caption (%d of them) - a player who cannot hear them is told nothing. Use Play Sound With Caption for the ones that carry information (a door, a reload, a warning), and leave the rest blank on purpose." % [played - captioned])
 
 
 ## The reading check, as a Doctor check on this project's own packs. Same rule as the Publish
@@ -3484,7 +3483,7 @@ static func check_pack_reading(findings: Array[Dictionary]) -> void:
 		var failures: Array = result.get("failures", [])
 		var first: String = "" if failures.is_empty() else EventSheetPackReadingCheck.failure_line(failures[0])
 		_add(findings, "info", "pack-reading", script_path,
-			"%s reads %d%% - %d thing(s) do not read as sentences. First: %s" % [
+			"%s reads %d%% - things that do not read as sentences: %d. First: %s" % [
 				str(pack.get("name", "")), int(result.get("percent", 0)), failures.size(), first])
 		findings[findings.size() - 1]["subject"] = str(pack.get("dir", ""))
 
