@@ -14886,12 +14886,13 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 	elif input_reading.is_empty() and event_row.else_mode == EventRow.ElseMode.NONE \
 			and not _blank_tick_reading(event_row).is_empty():
 		# ────────────────────────────────────────────────────────────────────────────────────────
-		# A blank event at the top of a sheet runs every tick - that is what blank MEANS here, so an
-		# every-frame handler with no condition of its own says nothing in the condition lane and the
-		# empty lane is the reading (the hover and Explain say it in words). The physics tick keeps
-		# one muted note, because blank alone cannot say WHICH tick. Display only: the row still
-		# carries its trigger id and still compiles to exactly the handler it came from.
-		var blank_note: String = str(_blank_tick_reading(event_row).get("note", ""))
+		# A tick handler with no condition of its own still SAYS when it runs: the cell reads "System |
+		# On process" (or the physics tick), the same words the row reads with a condition beside it,
+		# so a reader never meets a blank condition lane and has to know what blank means. It wears no
+		# trigger arrow, on purpose: the arrow marks what fires once, and a per-frame event is not a
+		# trigger (NativeRowMarks.kind_mark_for). Display only: the row still carries its trigger id
+		# and still compiles to exactly the handler it came from. A blank event (no trigger id) runs every
+		# frame too, so it reads as the every-frame tick.
 		# Every line has an object column and leads with its object's icon, so the physics note reads
 		# as the trigger cell its neighbours wear - "System | Every physics tick" - in every look,
 		# never as a bare lowercase note with no object.
@@ -14899,20 +14900,19 @@ func _build_event_spans(event_row: EventRow, in_verb_body: bool = false, slice_f
 		# Every tick, match state" - so the match head beside it has a trigger to finish. The cell
 		# sizes to its words, which puts the head straight after them instead of across the lane.
 		var match_beside: bool = _match_head_beside_tick(event_row)
-		if not blank_note.is_empty() or match_beside:
-			var tick_words: String = EventSheetViewportReadingRows.tick_trigger_words(event_row.trigger_id, _trigger_sentence(event_row), _familiar_words_enabled())
-			spans.append(_make_span(
-				"%s," % tick_words if match_beside else tick_words,
-				EventSheetSemanticSpan.SpanType.CONDITION, {
-					"lane": "condition",
-					"kind": "trigger",
-					"ace_index": 0,
-					"chip": true,
-					"natural_width": match_beside,
-					"line_index": condition_line_index,
-					"object_label": _handler_object_label(event_row),
-					"object_icon": _object_icon_for(event_row.trigger_provider_id, event_row.trigger_id)
-				}.merged(condition_style_meta, true)))
+		var tick_words: String = EventSheetViewportReadingRows.tick_trigger_words(EventSheetTriggerResolver.effective_trigger_id(event_row), _trigger_sentence(event_row), _familiar_words_enabled())
+		spans.append(_make_span(
+			"%s," % tick_words if match_beside else tick_words,
+			EventSheetSemanticSpan.SpanType.CONDITION, {
+				"lane": "condition",
+				"kind": "trigger",
+				"ace_index": 0,
+				"chip": true,
+				"natural_width": match_beside,
+				"line_index": condition_line_index,
+				"object_label": _handler_object_label(event_row),
+				"object_icon": _object_icon_for(event_row.trigger_provider_id, event_row.trigger_id)
+			}.merged(condition_style_meta, true)))
 		# Blank hides the tick words, never a fact a reader has to know: a per-frame event on a
 		# tool sheet ALSO runs while the scene is being edited, so that chip survives the blank
 		# reading and keeps its place on the line.

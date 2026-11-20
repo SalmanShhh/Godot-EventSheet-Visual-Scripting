@@ -221,7 +221,7 @@ static func _test_geometry() -> bool:
 	var native_style: EventSheetEventStyle = (load(NATIVE_THEME) as EventSheetEditorStyle).get_event_style()
 	return SUPPORT.pins(TEST_NAME, [
 		["a trigger's arrow stands at the lane's padding (8 px into the block)", arrows, [8.0]],
-		["the arrow's line starts its object 17 px on", triggers, [25.0]],
+		["the arrow's line starts its object 17 px on, and an every-frame line (no arrow) starts at the padding", triggers, [25.0, 8.0]],
 		["a line with no mark starts at the padding, a mark-less event's door included", doors[0], 8.0],
 		["no mark slot is reserved on the look's own tokens",
 			[native_style.condition_badge_column_width, (load(NATIVE_THEME) as EventSheetEditorStyle).get_condition_style().horizontal_padding], [0, 0]],

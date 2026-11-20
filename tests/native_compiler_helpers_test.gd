@@ -214,6 +214,7 @@ static func _test_loop_names() -> bool:
 		"⟳ | [System] On physics process | [shots/targets] For each shots/targets",
 		"[System] shots/targets.global_position.x < -60 | [System] shots/targets.global_position.x > 1300"
 			+ " || [shots/targets] Queue free",
+		"[System] On process",
 	]
 	var starter: EventSheetViewport = _viewport_for(_shooter(), NATIVE_THEME)
 	var native_loops: Array = _loop_lines(starter)
@@ -262,6 +263,7 @@ static func _test_loop_names() -> bool:
 			"⟳ | [System] On physics process | [System] For each __node in get_tree().get_nodes_in_group(\"shots\")"
 				+ " + get_tree().get_nodes_in_group(\"targets\")",
 			"[System] __node.global_position.x < -60 | [System] __node.global_position.x > 1300 || [__node] Queue free",
+			"[System] On process",
 		]],
 		["a loop name the author wrote reads exactly as written", authored_loops, [
 			"⟳ | [System] On physics process | [System] For each shot in get_tree().get_nodes_in_group(\"shots\")",

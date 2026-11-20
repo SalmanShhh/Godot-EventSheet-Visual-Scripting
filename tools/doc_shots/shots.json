@@ -310,8 +310,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "b13328b2a076b1b6d983d631af6262d65d2fe304415399b47e5f627046bf3f90",
-				"reading": "66933d191d9275895f5253ff987e85cd7c2084df430807ef5383d625fe2f2fcd"
+				"png": "63068de30d2d7999aa8268b34f9e8543857de901261889b3c03932001dcc5511",
+				"reading": "2e0686d1f57c6cd53cf25c9b4307816f3afba71aeef7639e0c8f186185b4e336"
 			},
 			"name": "define-rows",
 			"rows": [
@@ -941,8 +941,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "02e5c8d9d2cdb688f42835df9b426091ad46c72f022f3c2c3b5cfb849cc22f46",
-				"reading": "3eba6442f06b36d457225be70c1c876befc9bedd157d4132b0dd8fe95159b965"
+				"png": "236ebc9e5c6581675424068375dfe85536939f0ac8674f47a78f0a09a5390261",
+				"reading": "ae2ff548bec148bb8b99a1f75ab54f2201174b4c157beb7c191de9010d54258d"
 			},
 			"layout": "vertical",
 			"name": "opened-script-head5",
@@ -2310,8 +2310,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "129bc3082d71dac4683c11ec6aca4d53b81c246536e682343cc0f8941db661e2",
-				"reading": "15253f2370cf7b8adb7cbcddfd7ac569e4ee02e17101f9d8f068ec2640c7a247"
+				"png": "ebb28ca601b0fcc485846a77588cf6e4ca043f597c571b755b54e83e152abb21",
+				"reading": "7ea127de5b99f6f099ad52d27bb2687e609cbb0281f024a55352329ed91c7817"
 			},
 			"layout": "vertical",
 			"name": "pattern-chip",
@@ -2490,8 +2490,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "ae825163e93ef33911b94051131bce67ab42af866c4fc929ec37740cd4b8d537",
-				"reading": "e17adc3b6e2e0627f0663154a13f2bdce48d842275b1aaecf28bc62a7a4f831c"
+				"png": "e59fe22e1a263a2b247950c8c48a555325bc09dd6dd647503dd6c8725150a7f2",
+				"reading": "67b5ac6b2852bc7bcf539630d1143084634d1df10390c282b3369c5c05f120f2"
 			},
 			"name": "reading-mission-timer",
 			"rows": [
@@ -2589,8 +2589,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "fb767f6bcf1e045ce049c792a1f26918fd1d757d17096a32ec00032f0aeea6c7",
-				"reading": "16b6fd4f36ed3f990489573916342fa5d080f3e4f12084dd61ad900a6997f78d"
+				"png": "b1c0b464cff6fb4334eed71c1acdb0be7d4b50c4526c3b1a430b40afb5565dab",
+				"reading": "94399a9217a2c87309cbb9326ae4b4d92ae0043ae7bbd00680abae31e6673df8"
 			},
 			"name": "reading-sprite-sound-juice",
 			"rows": [
@@ -2609,8 +2609,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "03c3e6588665f1903208dfb33e8a66a691991fca6275392ccad4309343f8a58f",
-				"reading": "a3e7261272a9f2684324b541168860a790550d70e17535284b4fc7e76833437e"
+				"png": "fe9a8b3fdcdcdad2433120b07692038abf8af40e6a88dc99d4618b627cc43ac2",
+				"reading": "134cf755df9a4a9984b48509234737657e7a60ebb59a3b3d1b0180da9ea94259"
 			},
 			"name": "reading-vectors-patterns-notes",
 			"rows": [
@@ -2993,8 +2993,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "29438019124d7971529fa96db6f1e4ec9549d5cc03e1126469d52d945252b131",
-				"reading": "a1d53dbd84387fe1f01ff8244837a25263d52a2f49fdbaff12b24d34ab26c4d2"
+				"png": "600e9153d5c0e7b40b7ff6ce1bdcc6125bcd5ce47148a823d0a86ae89248bdc9",
+				"reading": "1f32a49ee7e1fbcd80ba28075d7805f8450595961611c51775989f4324c4dd68"
 			},
 			"name": "blank-events",
 			"rows": [
@@ -3058,7 +3058,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
 				"png": "d9ca1afb332bdede04f5e407b9bee68d0db3ba3974914072aab9aef82a417c48",
-				"reading": "ae64fdb7ef6838eee5047473316c48e7734c2ca2872bb2fecc716f9e676825b4"
+				"reading": "b5c19bd31cc6a16905a93f61618b85b12de4a7f61bd11d937203a363b2210d5b"
 			},
 			"name": "code-patterns-rows",
 			"rows": [
@@ -3624,8 +3624,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "fb63869b6e12e15295151ce3ce13a7574dfabf5a8c8320ce0e646966c0acc9ee",
-				"reading": "8de5cf384cbb0772c5c54707ff693cfbb7e42a52f46f80c26f441df60eb2c650"
+				"png": "12c50e996b9458c076ad938f10fa7992ad74d727bc811ac62d59ebb707c171ee",
+				"reading": "b68ed347b574fc877eee8aa0524a7b4d378a698bf58656a9e891a4b26a9fcec3"
 			},
 			"name": "pattern-effects-tilemap-camera",
 			"rows": [
@@ -3656,8 +3656,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "60872678f125b6939f72f2b9d02c7b48b9ec08cc3bc5c7e7d6117c927924e049",
-				"reading": "8a0a6e03ac20455f105dd2c61eb3752952b857c941741e36f176ccdb76b26deb"
+				"png": "5345acef09c02c0bf7b0f4e459e8ba7d20101f54dd4d5c0553ff9bb976aa9255",
+				"reading": "cbc61d6e6d8634e36746f141dfdc380f9c74d9eb38be474b80f602432d23ec24"
 			},
 			"name": "pattern-verbs",
 			"rows": [
@@ -3672,8 +3672,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "44a23690f31c10984fe360c2281d2750ce8cb051d03be31347370db52affa1d0",
-				"reading": "dc2640985b76ea14b2a726a47212e6b3eeb4f4f979072d701ae714d6f4ab78de"
+				"png": "b4406c0a6612e83f62eb17e45c86881d37ab62f6676bb6971256912c98b9c2d2",
+				"reading": "c00f8d85b6b1b6985bb8293aaa8f8d2eba314b99ad9f3b68e0bd32937a5da397"
 			},
 			"name": "pattern-wave3",
 			"rows": [
@@ -3936,8 +3936,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "b5ef5c6b6313f2c06db2a19afcdc2762f04648783f3fe17d1797df074a2a00b0",
-				"reading": "2b72a96cf5bd784291f255543bc4e96ba27bc1c8ccdd0a821b2d0a5bcf09d170"
+				"png": "b0a7df8d2ae4cfd8f50894612da6b04a92b4cb0f59001ece8195dc65e84b374d",
+				"reading": "8bc1bfc427137d11dbd551c674b83edd6b896907cf288d39ff5a8b970e20c391"
 			},
 			"name": "variable-sentence-head",
 			"rows": [
@@ -3976,8 +3976,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "d1dd01660f912c1ab749ceb876d1eed004a66a011acae7382f458b21757817e3",
-				"reading": "adbb4bdeca6d7cfabb093369164711bafcfa7859e59c32d18cb893219092e557"
+				"png": "225af6541c58f0d11f1f361aa25248fa8afed322b1f8325e87b8324275fbf3ed",
+				"reading": "1b6043f65c551a0da79b3da3013dcce93842a51fc6fa9428a75c7be6ccc7a9ef"
 			},
 			"name": "themed-gutter",
 			"rows": [
@@ -4007,8 +4007,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "7f3486aa0a480e3667238de3f48f41456118f52433be6a08cde0b74ee81aff76",
-				"reading": "ac0bf5dc8e2b68a6ca8a4aecda83f115d15c331b954ac11283c7f58f8ec98f3c"
+				"png": "bfb0953a4a0ad67ab9d52ed11be6014e91eb04b39ebecdc20e4ce44181af409a",
+				"reading": "49ac015f14148d883a45452c2eab71d8490afe90bf2e1bff980509c5f15afed7"
 			},
 			"name": "select-all-matching",
 			"rows": [
@@ -4097,8 +4097,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "58d6fc69a8be378bb3cc17d6fa4dfbdbedadd50427730db7f2bcb2fc2db9d7d2",
-				"reading": "8406ad14db64f7a30da090368740a8f37ba0f797c3fa902e012fb040d82edb90"
+				"png": "640cc09a17f8b9a21df805fb7cd6ae4d47e74340119cbf28fe03844998461d11",
+				"reading": "fb6bb023a2425412b5a78e32557c116fbb5205fb48de308e34139d60584d3d95"
 			},
 			"name": "filter-lens",
 			"rect": [
@@ -4137,8 +4137,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "efab5f3779be292b7067e772ee5d35e7bfcc73906d9c9cd9ccc76f65a66e438d",
-				"reading": "b8c7a08291786f00436011015e67a7b623f93966018e6ce95281fb301bf3798c"
+				"png": "7d77fa264cec8b5731407bc70b8c9e5a7314cc9155f1f2cbaa7a90982cbcbd3e",
+				"reading": "2dce41c5c93c702d3b5b8b79f4b08164737be87eea7d91e8769ad6bcaf4aebcc"
 			},
 			"name": "minimap-column",
 			"rect": [
@@ -4186,7 +4186,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
 				"png": "ac72e558437a2a070d35246e574dfbe6ce9df91c30b72201f12c793a8187cdc4",
-				"reading": "24ff38dfa98643b22fa4df0d860f0c4f6400f478903f7be81f394bebe754d513"
+				"reading": "1bea6e3144bc852efc9ef829c4a8becdf59e4222155740431b22a80125cab985"
 			},
 			"name": "objects-rail",
 			"rect": [
@@ -4231,7 +4231,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
 				"png": "54f24c7444695a349f809063548bf7109bc2112bcceb9831c8c3cf46405198c7",
-				"reading": "66933d191d9275895f5253ff987e85cd7c2084df430807ef5383d625fe2f2fcd"
+				"reading": "2e0686d1f57c6cd53cf25c9b4307816f3afba71aeef7639e0c8f186185b4e336"
 			},
 			"name": "anatomy-panel",
 			"rect": [
@@ -4285,8 +4285,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "79e6529e8f6a563da66919a1368ead9be315469aac10c62a7fdaf639d355c1aa",
-				"reading": "a1d53dbd84387fe1f01ff8244837a25263d52a2f49fdbaff12b24d34ab26c4d2"
+				"png": "5967cf6dd1d7ed23b7ff42dd35653bf0a4e9a5a5738d044a2a8e25ab35176f74",
+				"reading": "1f32a49ee7e1fbcd80ba28075d7805f8450595961611c51775989f4324c4dd68"
 			},
 			"height": 330.0,
 			"keep_mouse": true,
@@ -4538,8 +4538,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "ab897d4be6ee9998e6d996cbd4b61c787e0d502921c1f9e2d5b9fd9324b952c0",
-				"reading": "ac0bf5dc8e2b68a6ca8a4aecda83f115d15c331b954ac11283c7f58f8ec98f3c"
+				"png": "78ac08e4cff87bda71eb1689e3059a96c77deefaab54fa63991152c192f3e027",
+				"reading": "49ac015f14148d883a45452c2eab71d8490afe90bf2e1bff980509c5f15afed7"
 			},
 			"name": "batch-param-edit",
 			"source": "res://tools/doc_shots/fixtures/status_reporter.gd",
@@ -4617,7 +4617,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
 				"png": "c73fdd316a09e038486bdff0a3e946b38574f78a5476b23b5efa2ad9a8b7f8f0",
-				"reading": "adbb4bdeca6d7cfabb093369164711bafcfa7859e59c32d18cb893219092e557"
+				"reading": "1b6043f65c551a0da79b3da3013dcce93842a51fc6fa9428a75c7be6ccc7a9ef"
 			},
 			"name": "bookmarks-panel",
 			"source": "res://tools/doc_shots/fixtures/tick_logger.gd",
@@ -4733,8 +4733,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "a4593b1637266c385223ab0aea4db0074123d2e2c34c9ef57059c2c27b9c0f20",
-				"reading": "a3e7261272a9f2684324b541168860a790550d70e17535284b4fc7e76833437e"
+				"png": "6c7915d5f2aba8ede1765eefd03ee8ce77103222b7ccd489839d1e3780185ec5",
+				"reading": "134cf755df9a4a9984b48509234737657e7a60ebb59a3b3d1b0180da9ea94259"
 			},
 			"name": "data-class-add-field",
 			"source": "res://tools/doc_shots/fixtures/chaser.gd",
@@ -4989,7 +4989,7 @@
 				{
 					"do": "right_click_row",
 					"text": "subtract delta",
-					"x": 300.0
+					"x": 40.0
 				},
 				{
 					"activate": true,
@@ -5009,7 +5009,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
 				"png": "ad89944a22d30d02992c81ceeaae87610541b40ac086eb8af48442e80af8997f",
-				"reading": "15253f2370cf7b8adb7cbcddfd7ac569e4ee02e17101f9d8f068ec2640c7a247"
+				"reading": "7ea127de5b99f6f099ad52d27bb2687e609cbb0281f024a55352329ed91c7817"
 			},
 			"name": "pattern-adopt-dialog",
 			"source": "res://tools/doc_shots/fixtures/turret_cooldown.gd",
@@ -5041,7 +5041,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
 				"png": "774a0f109449fb9bc70c0bd505c8924f993147128bff6ab06c034970a4c04e75",
-				"reading": "66933d191d9275895f5253ff987e85cd7c2084df430807ef5383d625fe2f2fcd"
+				"reading": "2e0686d1f57c6cd53cf25c9b4307816f3afba71aeef7639e0c8f186185b4e336"
 			},
 			"name": "publish-version-dialog",
 			"source": "res://eventsheet_addons/health/health_behavior.gd",
@@ -5061,8 +5061,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "77eb89d26bc3f25d85ff3600409a4506d169a64fc4070745e6c4bc52e326953e",
-				"reading": "a9773091a066c4133f47544988ea43a1f104229d6e676e7d93c11fb025c5622d"
+				"png": "e5181d5950c5374bee389141cb883b1dd2ac0d71f4da13a56e8b756949492e8c",
+				"reading": "e8a398102137c136779d74450cdd695590eef43cd27076f8267a9adb0f274c1d"
 			},
 			"name": "published-verb-rows",
 			"source": "res://eventsheet_addons/abilities/abilities_behavior.gd",
@@ -5276,7 +5276,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
 				"png": "ca16e12c74ffae118cc5b4636a12d52863bf8f73d27fce3a04e2a8fb06cd5ad5",
-				"reading": "5712e3edbdb95c3afb839bdf1f970287122923abf3ccbc0c9e4fc8f8b8712f9b"
+				"reading": "054a0057c1c76a628fa7dfbb9317c521ebc945b09451523293919262c44ca0c9"
 			},
 			"name": "secret-object-drop-offer",
 			"prelude": [
@@ -5782,7 +5782,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
 				"png": "1e734aebe6c593806d19d92322e792a1c182da0fb53caca70fd4a6e9876a71b0",
-				"reading": "3db7e3280a62f952dfba1133f8fc75dfc882cd0aef5c2ef47d07e4061605ec9a"
+				"reading": "6de7a7012c74b6d8c791b4c79e4131d5325ecd8bcc2a1073546854d42326ccd5"
 			},
 			"name": "look-sheet-8-doors",
 			"source": "res://demo/showcase/inspector_playground/inspector_playground.gd",
@@ -7563,7 +7563,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
 				"png": "4ac42e1a13b82856a38b53220b384860bd6f0c8c85e97de1cae1e25d0e061efd",
-				"reading": "15253f2370cf7b8adb7cbcddfd7ac569e4ee02e17101f9d8f068ec2640c7a247"
+				"reading": "7ea127de5b99f6f099ad52d27bb2687e609cbb0281f024a55352329ed91c7817"
 			},
 			"name": "friendly-runtime-error",
 			"source": "res://tools/doc_shots/fixtures/turret_cooldown.gd",
@@ -7619,7 +7619,7 @@
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
 				"png": "fdaa6aa83a5fe5e7ab9deb0b51f4be21378916e6a187987269e9f4290d38043e",
-				"reading": "15253f2370cf7b8adb7cbcddfd7ac569e4ee02e17101f9d8f068ec2640c7a247"
+				"reading": "7ea127de5b99f6f099ad52d27bb2687e609cbb0281f024a55352329ed91c7817"
 			},
 			"name": "why-didnt-fire",
 			"source": "res://tools/doc_shots/fixtures/turret_cooldown.gd",
@@ -9803,8 +9803,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "e7d8d1258a6b9450dd0b270a82ac637bd1ea10ac421e54cf72d8db5433f47178",
-				"reading": "5712e3edbdb95c3afb839bdf1f970287122923abf3ccbc0c9e4fc8f8b8712f9b"
+				"png": "b7948643f59d7b7ff1aa8b0b266f2438879f4079452eddcf8e1b29fed75554e8",
+				"reading": "054a0057c1c76a628fa7dfbb9317c521ebc945b09451523293919262c44ca0c9"
 			},
 			"height": 520.0,
 			"name": "editor-event-sheet",
@@ -9945,8 +9945,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "decd6fa21d398585348ed5b409e5615d80592454a308a23c349f691a32a08938",
-				"reading": "66933d191d9275895f5253ff987e85cd7c2084df430807ef5383d625fe2f2fcd"
+				"png": "e639ab085d51707b6cb6c555f466c55c70130eb1542af78c4636d563fc94c34e",
+				"reading": "2e0686d1f57c6cd53cf25c9b4307816f3afba71aeef7639e0c8f186185b4e336"
 			},
 			"name": "picker-preview-panel",
 			"source": "res://eventsheet_addons/health/health_behavior.gd",
@@ -10079,7 +10079,7 @@
 				{
 					"do": "right_click_row",
 					"text": "process",
-					"x": 300.0
+					"x": 40.0
 				},
 				{
 					"activate": true,
@@ -10104,8 +10104,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "683915cf835942ad4dfbaee88f681f1c4c3ca57a36244ad8fc36b7433401d098",
-				"reading": "a1d53dbd84387fe1f01ff8244837a25263d52a2f49fdbaff12b24d34ab26c4d2"
+				"png": "281b9264640fe75107034081c802ddf95d32e92f432882457f746e17863b8ef1",
+				"reading": "1f32a49ee7e1fbcd80ba28075d7805f8450595961611c51775989f4324c4dd68"
 			},
 			"name": "duplicate-as-variant",
 			"source": "res://tools/doc_shots/fixtures/hurt_flash.gd",
@@ -10146,8 +10146,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "a4d8bb8a1e1a6c9bdff2c21d753bd430ba1846f8035f5d7a6f82a3aaebd03a0e",
-				"reading": "2b72a96cf5bd784291f255543bc4e96ba27bc1c8ccdd0a821b2d0a5bcf09d170"
+				"png": "f244158112f49e1f1aa7261ea65a373885f6c7e4567eb5eba809c4e627b73d69",
+				"reading": "8bc1bfc427137d11dbd551c674b83edd6b896907cf288d39ff5a8b970e20c391"
 			},
 			"keep_mouse": true,
 			"name": "local-variable-uses-highlight",
@@ -10254,8 +10254,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "de4a680f64f339d1c11a4e1bd3048fce252a21709b41a05b17e7b4f8018cece3",
-				"reading": "4a0e646a466ccc86ef8c3e1a6951875d9a28572236ebff240d8d10527f544640"
+				"png": "e98bbfb359d620815c7fa0b8f51e4d88555a2085ee288df94eeb9c0bcbd2e552",
+				"reading": "ec75b9afc1059d60beff005f775489bb9e926725b7439bb5562abaf8f6795185"
 			},
 			"name": "object-pooling-sheet",
 			"rows": [
@@ -10270,8 +10270,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "ae64ebf6aa730c65f508a29f1f3728b2c1ba19f50b60fe44e8e55775215a6a74",
-				"reading": "fc7674acfa861c91886ff7ff664340fa3962efb9843eb4f35689c543e2227c9c"
+				"png": "7325e086a55ca7fd701648782c28275600fee375268d11271e26ff17c52c3872",
+				"reading": "7190774b998649f5987a0dd3635e87d374ede2a8e69e9a1564447e7b83048253"
 			},
 			"name": "object-pooling-spark",
 			"rows": [

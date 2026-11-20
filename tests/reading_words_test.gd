@@ -295,10 +295,10 @@ static func _opened_file_reads() -> bool:
 	var readings: PackedStringArray = _render(_import())
 	for expected: String in EXPECTED_READINGS:
 		ok = _check("opened row reads \"%s\"" % expected, readings.has(expected), true) and ok
-	# And the conditionless `_process` handler says nothing at all, because a blank event
-	# already means every tick.
-	ok = _check("a conditionless _process reads blank, not \"On process\"",
-		readings.has("System ▸ On process"), false) and ok
+	# And the conditionless `_process` handler still says when it runs: a blank event means every
+	# tick, but a reader should not have to know that.
+	ok = _check("a conditionless _process says \"On process\"",
+		readings.has("System ▸ On process"), true) and ok
 	return ok
 
 

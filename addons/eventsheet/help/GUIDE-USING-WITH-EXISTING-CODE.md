@@ -909,16 +909,16 @@ pivot turns.
 
 #### Events - the shapes the file is made of
 
-- **A blank event runs every tick, and that is why the lane is empty.** A `_process` body that carries
-  no condition of its own reads as a BLANK top-level event: nothing at all in the condition lane,
-  because in an event sheet a blank event already means "every tick". Hover the row and it says
-  `Runs every tick`; the Explain panel says the same. `_physics_process` keeps one muted
-  `every physics tick` note, because blank alone cannot say WHICH tick. The moment such an event
-  grows a condition it goes back to saying **On process** in full, so the reading never hides a fact
-  that matters. Nothing is written to the file for any of this: a blank event compiles into
+- **A blank event runs every tick, and the row says so.** A `_process` body that carries no condition
+  of its own is a BLANK top-level event: in an event sheet a blank event means "every tick". The
+  condition lane does not leave you to know that: it reads **System  On process** (or **On physics
+  process** for `_physics_process`), the same words the row reads when it also carries a condition.
+  The trigger arrow is kept for what fires once (On ready, a key press, a signal), so an every-frame
+  row has the words and no arrow. Hover the row and it says `Runs every tick`; the Explain panel says
+  the same. Nothing is written to the file for any of this: a blank event compiles into
   `_process(delta)` and re-reads as a blank event, byte for byte.
 
-  ![Three events: a blank one whose condition lane holds only + Add condition and whose action sets a label every tick, an every-tick event carrying a condition that keeps its full On process words, and a physics one](images/blank-events.png)
+  ![Three events: a blank one whose condition lane reads System On process above the + Add condition link and whose action sets a label every tick, an every-tick event carrying a condition that also reads On process, and a physics one that reads On physics process](images/blank-events.png)
 
   You can author one too. Press **E** and the Add event dialog's first entry is already selected -
   **(none - runs every tick)** - so Enter makes the blank event and **A** fills its actions. Under a
