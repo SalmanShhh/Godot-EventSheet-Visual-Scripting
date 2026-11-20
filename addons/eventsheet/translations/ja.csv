@@ -11379,7 +11379,7 @@ Put an action inside it: select the function's row and press A. Everything under
 "Save. The plugin reloads, and a word that does not parse does not take the editor with it.",保存します。プラグインが再読み込みされ、構文解析できない言葉があっても、エディタごと巻き込まれることはありません。
 "Open the picker and type the name you gave it. Your word is in the list beside the ones that shipped, and a row made from it compiles to the line you wrote.",ピッカーを開き、つけた名前を入力します。あなたの言葉は、出荷されているものと並んでリストに表示され、それから作った行は、あなたが書いた行にコンパイルされます。
 "These are done, not read. Each step names a control this editor really has, highlights it until you use it, and completes when the sheet contains what the step asked for. They run in the sheet you have open, and every step is one ordinary undo.",これらは読むものではなく、やるものです。各ステップは、このエディタに実際にあるコントロールを示し、使うまで強調表示し、ステップが求めた内容がシートに入った時点で完了します。開いているシートの中で進み、どのステップも通常の元に戻す 1 回分です。
-%s stays highlighted in the toolbar until you use it.,%s は、使うまでツールバーで強調表示されたままです。
+%s stays highlighted in the toolbar until you use it.,%sは、使うまでツールバーで強調表示されたままです。
 This step completes on its own the moment the sheet contains it.,このステップは、シートにそれが入った瞬間に自動で完了します。
 "Walks this tutorial step by step, in the sheet you have open.",開いているシートの中で、このチュートリアルを 1 ステップずつ進めます。
 The step before this one.,このステップの 1 つ前のステップです。

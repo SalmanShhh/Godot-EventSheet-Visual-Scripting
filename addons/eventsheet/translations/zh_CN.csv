@@ -11379,7 +11379,7 @@ Put an action inside it: select the function's row and press A. Everything under
 "Save. The plugin reloads, and a word that does not parse does not take the editor with it.",保存。插件会重新加载，一个无法解析的词不会把编辑器一起拖垮。
 "Open the picker and type the name you gave it. Your word is in the list beside the ones that shipped, and a row made from it compiles to the line you wrote.",打开选择器，输入你起的名字。你的词和随插件发布的那些并列在列表里，用它做出的行会编译成你写的那一行代码。
 "These are done, not read. Each step names a control this editor really has, highlights it until you use it, and completes when the sheet contains what the step asked for. They run in the sheet you have open, and every step is one ordinary undo.",这些教程是用来动手做的，不是用来读的。每一步都会指出这个编辑器里真实存在的一个控件，在你用到它之前一直高亮，并在事件表里出现该步骤要求的内容时自动完成。它们在你已打开的事件表里进行，每一步都只是一次普通的撤销。
-%s stays highlighted in the toolbar until you use it.,%s 会一直在工具栏中高亮，直到你用到它。
+%s stays highlighted in the toolbar until you use it.,%s会一直在工具栏中高亮，直到你用到它。
 This step completes on its own the moment the sheet contains it.,一旦事件表里出现了它，这一步就会自动完成。
 "Walks this tutorial step by step, in the sheet you have open.",在你已打开的事件表里，一步一步带你完成这个教程。
 The step before this one.,这一步之前的那一步。

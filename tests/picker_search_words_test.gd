@@ -27,6 +27,7 @@ static func run() -> bool:
 	ok = _ranking_rule() and ok
 	ok = _words_are_data_beside_the_row() and ok
 	ok = _words_search_the_same_in_another_language() and ok
+	ok = _enter_adds_the_top_row() and ok
 	return ok
 
 
@@ -159,3 +160,37 @@ static func _words_search_the_same_in_another_language() -> bool:
 		["the same rows answer under Spanish", spanish, english],
 		["and they are the measuring rows", english.slice(0, 2), PackedStringArray(["Core::GetPerfMonitor", "Core::GetStaticMemory"])],
 	])
+
+
+## The row Enter would add (the one pre-selected while a word is typed) is the first row of the list as
+## drawn, and the list is scrolled to its top: for the measuring words, and for a word that is a row's
+## exact name.
+static func _enter_adds_the_top_row() -> bool:
+	var registry: EventSheetACERegistry = _registry()
+	var parent: Node = Node.new()
+	var picker: ACEPickerDialog = ACEPickerDialog.new()
+	picker.init_dialog(parent, registry)
+	var rows: Array = []
+	var expected: Dictionary = {
+		"profiler": "DebugOverlayAddon::method:watch_value", "fps": "Core::SetMaxFps", "slow": "TimeSlicerBehavior::method:enqueue_items",
+		"lag": "TimeSlicerBehavior::method:enqueue_items", "hide": "Core::HideNode", "wait": "Core::Wait",
+	}
+	for word: Variant in expected:
+		picker._context = {"mode": "append_action", "signals_only": false, "selected_resource": null}
+		picker._search.text = str(word)
+		picker._refresh_tree()
+		picker._select_first_match()
+		var top: ACEDefinition = picker._first_definition_item(picker._tree.get_root()).get_metadata(0) as ACEDefinition
+		var chosen: ACEDefinition = picker._selected_definition
+		rows.append(["%s: Enter's row is the first row drawn" % word,
+			"%s::%s" % [chosen.provider_id, chosen.id] if chosen != null else "none",
+			"%s::%s" % [top.provider_id, top.id]])
+		rows.append(["%s: and it is the row the ranking puts first" % word,
+			"%s::%s" % [top.provider_id, top.id], str(expected[word])])
+		rows.append(["%s: the list shows from its top" % word, picker._tree.get_scroll().y, 0.0])
+	picker._search.text = ""
+	picker._refresh_tree()
+	picker._select_first_match()
+	rows.append(["nothing typed leaves the list with no row selected", picker._tree.get_selected() == null, true])
+	parent.free()
+	return SUPPORT.pins("picker_search_words_test", rows)

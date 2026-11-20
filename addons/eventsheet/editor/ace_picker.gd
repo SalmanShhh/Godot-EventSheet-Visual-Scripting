@@ -1517,6 +1517,23 @@ static func phrase_first_keys(query: String) -> Array[String]:
 	return found
 
 
+## `definitions` with the rows the other editor's name for the typed phrase moved to the front (the
+## rest keep their order), so the row Enter adds for "WaitForSeconds" is the first one drawn.
+func _foreign_named_first(definitions: Array[ACEDefinition], query: String) -> Array[ACEDefinition]:
+	if _foreign_phrase_by_id.is_empty():
+		return definitions
+	var typed: String = query.to_lower()
+	var named: Array[ACEDefinition] = []
+	var rest: Array[ACEDefinition] = []
+	for definition: ACEDefinition in definitions:
+		if str(_foreign_phrase_by_id.get(str(definition.id), "")).to_lower() == typed:
+			named.append(definition)
+		else:
+			rest.append(definition)
+	named.append_array(rest)
+	return named
+
+
 ## `definitions` with the rows a whole typed phrase names moved to the front, in that order. The
 ## rest keep their order.
 static func with_phrase_hits_first(definitions: Array[ACEDefinition], query: String) -> Array[ACEDefinition]:
@@ -2622,6 +2639,8 @@ func _refresh_tree() -> void:
 	definitions = ordered_variable_verbs(definitions)
 	if filtering:
 		definitions = EventSheetACERegistry.rank_for_query(definitions, query)
+	if filtering:
+		definitions = _foreign_named_first(definitions, query)
 	definitions = with_phrase_hits_first(definitions, query)
 	for definition: ACEDefinition in definitions:
 		if not _is_allowed_for_mode(definition, mode, signals_only):
@@ -3558,7 +3577,12 @@ func _select_first_match() -> void:
 	var best: TreeItem = _best_match_item()
 	if best != null:
 		best.select(0)
-		_tree.scroll_to_item(best)
+		# The best row is the first one drawn, so show the list from its very top (the heading
+		# and anything above the row stay in view); a row steered elsewhere is scrolled to.
+		if best == _first_definition_item(_tree.get_root()) and _tree.get_root().get_first_child() != null:
+			_tree.scroll_to_item(_tree.get_root().get_first_child())
+		else:
+			_tree.scroll_to_item(best)
 
 
 func _activate_first_match() -> void:
@@ -3584,58 +3608,29 @@ func _first_definition_item(item: TreeItem) -> TreeItem:
 	return null
 
 
-## The type-and-Enter target: the highest RELEVANCE-scored row for the current query, not merely the
-## first row in tree order (which, under category grouping, can bury the obvious match - typing "hide"
-## should pre-select Hide). Falls back to the first definition row when the query is empty or nothing
-## scores textually (a pure synonym/fuzzy hit), so behaviour is unchanged for empty/loose queries.
+## The type-and-Enter target. While a search is typed it is the first row of the list as drawn, so
+## Enter adds the row at the top the reader is looking at (the list is already ranked: the whole
+## phrase and the other editor's name first, then a row named by the word, then its search words).
+## Nothing is pre-selected with an empty query: the sections are collapsed on first open, and a row
+## INSIDE a collapsed section is invisible and would arm Enter/Add on something the user never saw.
+## The one steering kept: a polling condition's reactive twin is pre-selected in its place (unless
+## the exact name was typed), which ties the Enter-target to the Godot idiom (overlap -> On Body
+## Entered).
 func _best_match_item() -> TreeItem:
 	if _tree == null:
 		return null
-	var first: TreeItem = _first_definition_item(_tree.get_root())
 	var query: String = _search.text.strip_edges() if _search != null else ""
 	if query.is_empty():
-		# No query means the sections are collapsed (first-open state): auto-selecting a row
-		# INSIDE a collapsed section is invisible and would arm Enter/Add on something the user
-		# never saw. Let the first pick be deliberate.
 		return null
-	var best: TreeItem = null
-	var best_score: int = 0
-	var stack: Array = [_tree.get_root()]
-	while not stack.is_empty():
-		var node: TreeItem = stack.pop_back()
-		var child: TreeItem = node.get_first_child()
-		while child != null:
-			# Guard before casting: section headers carry a Dictionary marker, and casting a
-			# non-Object to a typed object variable is a runtime error, not a null.
-			var child_meta: Variant = child.get_metadata(0)
-			if child_meta is ACEDefinition:
-				var score: int = _score_match(query, child_meta as ACEDefinition)
-				# The other editor's whole phrase names exactly one verb in the importer's table, so
-				# "create object" pre-selects the verb that table writes rather than whichever row
-				# happens to hold the word "object" in its name.
-				if str(_foreign_phrase_by_id.get(str((child_meta as ACEDefinition).id), "")).to_lower() == query.to_lower():
-					score = maxi(score, FOREIGN_PHRASE_SCORE)
-				if phrase_first_keys(query).has("%s::%s" % [(child_meta as ACEDefinition).provider_id, (child_meta as ACEDefinition).id]):
-					# One point above the importer's own phrase table, so the row this editor names for
-					# the phrase wins a tie with a row the importer maps the same phrase to.
-					score = maxi(score, FOREIGN_PHRASE_SCORE + 1)
-				if score > best_score:
-					best_score = score
-					best = child
-			stack.push_back(child)
-			child = child.get_next()
-	# Reactivity steering: pre-select a polling condition's reactive twin (when it was surfaced in the
-	# list) instead of the poll - unless the user typed the condition's exact name. Ties the Enter-target
-	# to the Godot idiom (overlap -> On Body Entered) without touching the visible list order.
-	if best != null:
-		var best_meta: Variant = best.get_metadata(0)
-		var best_definition: ACEDefinition = best_meta if best_meta is ACEDefinition else null
-		if _prefer_reactive_twin(query, best_definition):
-			var twin_item: TreeItem = _find_definition_item(best_definition.provider_id, _reactive_twin_id(best_definition))
+	var first: TreeItem = _first_definition_item(_tree.get_root())
+	if first != null:
+		var first_meta: Variant = first.get_metadata(0)
+		var first_definition: ACEDefinition = first_meta if first_meta is ACEDefinition else null
+		if _prefer_reactive_twin(query, first_definition):
+			var twin_item: TreeItem = _find_definition_item(first_definition.provider_id, _reactive_twin_id(first_definition))
 			if twin_item != null:
 				return twin_item
-	return best if best != null else first
-
+	return first
 
 ## The reactive trigger id that replaces a polling condition (from the shared ACEDescriptor.REACTS_TO
 ## map), or "" if the condition has no clean signal twin.
