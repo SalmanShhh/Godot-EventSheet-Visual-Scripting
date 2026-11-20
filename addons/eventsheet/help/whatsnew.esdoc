@@ -14,6 +14,10 @@ About forty-five sentences in the Check the project window still ended a count w
 
 The pattern chip's plate and word (`pattern_chip_background_color`, `pattern_chip_foreground_color`) and the Inspector note's panel and words (`drawer_info_background_color`, `drawer_info_border_color`, `drawer_info_text_color`) had lost their last drawer: the chip was taken out of sheet rows, and an `@inspector_info` note became one quiet line in the editor's own colour under its field. The Theme Editor no longer offered them, but the theme builders still wrote them and the contrast check still measured them, so a bundled theme carried colours that did nothing. The builders no longer write them, the check no longer measures them, and the six bundled demo themes lose those lines. They stay as stored values on the theme resources: a theme file that still names them loads, keeps them and saves them again, and the public names are unchanged. A new test fails when any colour the Theme Editor offers has no reader, so a swatch that does nothing cannot come back. Nothing on screen changes.
 
+### Faster: opening a sheet no longer waits for the project's scenes to be read, and a changed scene file no longer makes the next question walk the project
+
+The first sheet of a session used to stop and wait for the scene read when it was still going (or do the whole read itself when it had not begun). Now the rows are built at once without what only the scenes can answer, the read runs on its own thread, and the rows are built again when it lands - nothing the scenes did not say is ever shown, and a finding that needs them is simply left out until then. After a change to the project's files the list of scenes keeps answering from what it held while the new one is read, instead of walking every folder on the main thread.
+
 ### Fixed: the Monitors rows read as sentences
 
 Show In Monitors and Remove From Monitors now begin their sentence with a capital, like every other action (\"Show enemies_alive in Monitors as ...\"). Only the words on the row changed; their ids and the code they write are the same.
