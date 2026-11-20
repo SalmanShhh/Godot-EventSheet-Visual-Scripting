@@ -52,6 +52,10 @@ prewarm; and the custom way, Create Empty Pool then Add To Pool your own nodes. 
 Register **ObjectPool** as an autoload (Project Settings, Autoload). Then create a pool once and spawn from
 it.
 
+The pool can instead be added to a scene as a child node (so the rows read `$ObjectPool.spawn(...)`). A node
+records which pool handed it out, so **Retire** sends it back to that pool wherever the pool sits, and a
+scene with several pools gets each node back to its own.
+
 A pooled bullet:
 
 ```
@@ -290,6 +294,7 @@ line.
   values.
 - **Prewarm to the size of your worst burst** so the first heavy moment is already smooth.
 - **Spawn returns the node** - capture it into a variable to position and configure it.
+- **Retire works with any pool.** Retire returns a node to the pool that made it, whether that pool is the autoload or a child node, and frees a node no pool made.
 - **Only Despawn nodes that came from a pool** - Despawn ignores anything the pool did not hand out.
 - **Create the pool once** (on ready or at load), not every frame.
 - **Clear Pool actually frees** its nodes; use it only when the pool is truly finished, not between

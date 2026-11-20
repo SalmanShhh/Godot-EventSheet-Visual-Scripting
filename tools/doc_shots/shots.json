@@ -10253,9 +10253,9 @@
 			"batch": "pooling",
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
-				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "e98bbfb359d620815c7fa0b8f51e4d88555a2085ee288df94eeb9c0bcbd2e552",
-				"reading": "ec75b9afc1059d60beff005f775489bb9e926725b7439bb5562abaf8f6795185"
+				"look": "e3fea062c6aa47b06e5d4f750669ab105a31e6666445f6528a5421fa5494b6c8",
+				"png": "65f830d9ff20460eaddb99c2e80431b414e75b26e138c635ebc67b0770d6c9bf",
+				"reading": "7fe3f194411e8ea6d1c0a08e41fe62dff8249c4876bffcf0089258ce9cee30bf"
 			},
 			"name": "object-pooling-sheet",
 			"rows": [
@@ -10269,8 +10269,8 @@
 			"batch": "pooling",
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
-				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "7325e086a55ca7fd701648782c28275600fee375268d11271e26ff17c52c3872",
+				"look": "e3fea062c6aa47b06e5d4f750669ab105a31e6666445f6528a5421fa5494b6c8",
+				"png": "83d9215dafe8625a659523a7b808a85970d02947e6400861ee34363f78ff6151",
 				"reading": "7190774b998649f5987a0dd3635e87d374ede2a8e69e9a1564447e7b83048253"
 			},
 			"name": "object-pooling-spark",

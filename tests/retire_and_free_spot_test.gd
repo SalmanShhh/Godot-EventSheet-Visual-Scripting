@@ -53,6 +53,7 @@ static func run() -> bool:
 	passed = _test_retiring_into_a_pool_waits_for_the_frame() and passed
 	passed = _test_an_unpooled_node_is_destroyed() and passed
 	passed = _test_what_counts_as_pooled() and passed
+	passed = _test_a_node_knows_which_pool_made_it() and passed
 	passed = _test_on_retired_is_one_connection() and passed
 	passed = _test_on_retired_is_only_a_retirement() and passed
 	passed = _test_a_copy_of_myself_is_the_safe_spawn() and passed
@@ -153,6 +154,55 @@ static func _test_what_counts_as_pooled() -> bool:
 	passed = SUPPORT.check(TEST_NAME, "and the mark it reads is the one the pool leaves",
 		str(EventForgePooledNodes.POOL_META), "__pool__") and passed
 	bare.free()
+	return passed
+
+
+## A pool is not always the autoload: it can be a child node of a scene, and a scene can hold several.
+## So the pool writes WHICH pool it is on every node it holds or hands out, and Retire reads that
+## before it looks anywhere else.
+static func _test_a_node_knows_which_pool_made_it() -> bool:
+	var passed: bool = true
+	var first: Node = _real_pool()
+	var second: Node = Node.new()
+	second.set_script(load(POOL_SCRIPT_PATH))
+	second.call("create_empty_pool", "sparks")
+	var kept: Node2D = Node2D.new()
+	var other: Node2D = Node2D.new()
+	first.call("add_to_pool", POOL_NAME, kept)
+	second.call("add_to_pool", "sparks", other)
+	passed = SUPPORT.check(TEST_NAME, "a node parked in a pool names that pool",
+		EventForgePooledNodes.stamped_pool(kept) == first, true) and passed
+	passed = SUPPORT.check(TEST_NAME, "and with two pools in one scene each node names its own",
+		EventForgePooledNodes.stamped_pool(other) == second, true) and passed
+	passed = SUPPORT.check(TEST_NAME, "the mark is the pool's instance id",
+		str(EventForgePooledNodes.POOL_NODE_META), "__pool_node__") and passed
+	var made: Node = first.call("create_pool", "fresh", "res://demo/showcase/object_pooling/spark.tscn", 0)
+	var copy: Node = first.call("_take_from_pool", "fresh")
+	passed = SUPPORT.check(TEST_NAME, "a copy the pool makes new is marked the same way",
+		EventForgePooledNodes.stamped_pool(copy) == first, true) and passed
+	passed = SUPPORT.check(TEST_NAME, "a node no pool made names no pool",
+		EventForgePooledNodes.stamped_pool(Node2D.new()), null) and passed
+	passed = SUPPORT.check(TEST_NAME, "and asking about nothing names none",
+		EventForgePooledNodes.stamped_pool(null), null) and passed
+	# A node handed back goes to the pool it names, so the other pool's list stays as it was.
+	EventForgePooledNodes.hand_back(other, EventForgePooledNodes.stamped_pool(other))
+	passed = SUPPORT.check(TEST_NAME, "a node retired into its own pool leaves the other pool alone",
+		int(first.call("free_count", POOL_NAME)), 1) and passed
+	var gone: Node = Node.new()
+	gone.set_script(load(POOL_SCRIPT_PATH))
+	gone.call("create_empty_pool", "temp")
+	var orphan: Node2D = Node2D.new()
+	gone.call("add_to_pool", "temp", orphan)
+	gone.remove_child(orphan)
+	gone.free()
+	passed = SUPPORT.check(TEST_NAME, "a node whose pool has been freed names no pool",
+		EventForgePooledNodes.stamped_pool(orphan), null) and passed
+	if copy != null:
+		copy.free()
+	for node: Node in [kept, other, orphan]:
+		node.free()
+	first.free()
+	second.free()
 	return passed
 
 

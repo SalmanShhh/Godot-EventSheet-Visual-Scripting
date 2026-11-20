@@ -356,7 +356,7 @@ static func run() -> bool:
 		"class_name ObjectPoolingDemo",
 		"$ObjectPool.create_pool(\"sparks\", \"res://demo/showcase/object_pooling/spark.tscn\", 0)",
 		"$ObjectPool.spawn(\"sparks\")",
-		"$ObjectPool.despawn(spark)",
+		"EventForgePooledNodes.retire(spark)",
 		"spark.expired.is_connected(retire_spark)",
 	]) and passed
 	passed = _check_sheet("object_pooling spark", "res://demo/showcase/object_pooling/spark.gd", [

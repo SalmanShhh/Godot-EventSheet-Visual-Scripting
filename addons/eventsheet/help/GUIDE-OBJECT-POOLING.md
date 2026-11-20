@@ -67,8 +67,9 @@ already have: an **Instantiate** row that makes a copy of a scene, and a **Destr
 4. **Place it after.** Rows after the spawn set its position and velocity. A pooled copy is reset first
    (section 5) and your rows run after, so they win.
 5. **Put it away instead of freeing it.** Replace **Destroy** with **Retire**. Retire asks the node where
-   it came from: a copy the pool handed out goes back to the pool, anything else is freed. If you
-   call the pool directly, the verb is **Despawn**. Both wait for the end of the frame, so they are safe
+   it came from: a copy the pool handed out goes back to the pool that made it, anything else is freed.
+   That holds whether the pool is the autoload or a child node of your scene, and a scene with several
+   pools gets each node back to its own. If you call the pool directly, the verb is **Despawn**. Both wait for the end of the frame, so they are safe
    inside a collision handler.
 6. **Reset what a second life must not inherit.** Write a `reset` function on the pooled scene's script.
    The pool calls it on every spawn.
@@ -95,7 +96,7 @@ func spawn_spark() -> void:
 ```
 
 (The showcase writes `$ObjectPool` instead of `ObjectPool`, because it carries the pack as a child node
-rather than asking you to change Project Settings.) The pack itself is a plain script, `object_pool_addon.gd`,
+rather than asking you to change Project Settings.) It ends a spark's life with Retire, which works the same either way. The pack itself is a plain script, `object_pool_addon.gd`,
 and it keeps one dictionary: pool name to `{scene, free, active}`.
 
 If you wrote a pool by hand, it would be this, and the pack does the same plus the bookkeeping:

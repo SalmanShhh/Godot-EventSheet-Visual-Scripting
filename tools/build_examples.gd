@@ -7196,7 +7196,7 @@ func _build_object_pooling() -> bool:
 			"description": "Seconds the fountain has been sweeping, which is where along the floor it stands."}
 	}
 	# What the showcase is, as the class description: Godot shows it on the class and the script doc.
-	sheet.class_description = "[b]Object Pooling[/b] - a fountain throws about a hundred and twenty sparks a second, and each spark lives a little over a second. Press Space to switch pooling on and off and watch the strip at the foot of the screen: with pooling on, the first second makes about a hundred and fifty sparks and every spark after that is one that expired a moment ago, so nodes made stops climbing; with pooling off, every spark is a new node that is freed when it expires, so nodes made climbs for as long as you watch. A reused spark is put back to a fresh one by its own reset function, which the pool calls on every spawn. In your own project the Object Pool pack is the ObjectPool autoload, so the rows read ObjectPool.spawn(); here it sits as a child node of the same name, so they read $ObjectPool.spawn(), and a spark is handed back with Despawn because the Retire rows look for the autoload."
+	sheet.class_description = "[b]Object Pooling[/b] - a fountain throws about a hundred and twenty sparks a second, and each spark lives a little over a second. Press Space to switch pooling on and off and watch the strip at the foot of the screen: with pooling on, the first second makes about a hundred and fifty sparks and every spark after that is one that expired a moment ago, so nodes made stops climbing; with pooling off, every spark is a new node that is freed when it expires, so nodes made climbs for as long as you watch. A reused spark is put back to a fresh one by its own reset function, which the pool calls on every spawn. In your own project the Object Pool pack is the ObjectPool autoload, so the rows read ObjectPool.spawn(); here it sits as a child node of the same name, so they read $ObjectPool.spawn(), and an expired spark is handed back with Retire, which returns it to the pool that made it wherever that pool sits and frees a spark that was built new."
 
 	var scene_member: RawCodeRow = RawCodeRow.new()
 	scene_member.code = "## The spark scene, used to build a new spark when pooling is off.\nconst SPARK_SCENE: PackedScene = preload(\"%s/spark.tscn\")" % POOLING_DIR
@@ -7222,10 +7222,7 @@ func _build_object_pooling() -> bool:
 	])
 	_helper(sheet, "retire_spark", "Puts an expired spark away: back to the pool if the pool gave it out, freed if it was built new.",
 		[["spark", "PoolSpark"]], [
-		"if spark.has_meta(&\"__pool__\"):",
-		"\t$ObjectPool.despawn(spark)",
-		"else:",
-		"\tspark.queue_free()",
+		"EventForgePooledNodes.retire(spark)",
 	])
 
 	var ready_row: EventRow = EventRow.new()

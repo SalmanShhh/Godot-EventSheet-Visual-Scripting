@@ -69,6 +69,7 @@ func _take_from_pool(pool_name: String) -> Node:
 		return null
 	var node: Node = (_pools[pool_name].scene as PackedScene).instantiate()
 	node.set_meta(&"__pool__", pool_name)
+	node.set_meta(&"__pool_node__", get_instance_id())
 	return node
 # The retire runtime if the project has it, found once and remembered - null when it does not, in
 # which case this pool hands nodes back on its own and marks nothing.
@@ -258,6 +259,7 @@ func _stow(pool_name: String, node: Node) -> void:
 	if node == null or not _pools.has(pool_name):
 		return
 	node.set_meta(&"__pool__", pool_name)
+	node.set_meta(&"__pool_node__", get_instance_id())
 	if node.get_parent() != null:
 		node.get_parent().remove_child(node)
 	add_child(node)

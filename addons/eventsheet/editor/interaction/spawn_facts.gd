@@ -46,8 +46,22 @@ const CAP_PARAM := "cap"
 ##
 ## The declaring call comes first because it is the one that names the SCENE as well as the pool;
 ## a handing-out call names only the pool, which is all the band needs to say the copies are pooled.
-const POOL_CREATE_CALL := "ObjectPool.create_pool("
-const POOL_SPAWN_CALL := "ObjectPool.spawn("
+##
+## Written without their receiver, because the pool is not always the autoload: a pool added to a scene
+## as a child node is reached as `$ObjectPool.spawn(`, `%ObjectPool.spawn(` or through a variable typed
+## as the pool. The receiver is read separately and judged by `_is_pool_receiver`.
+const POOL_CREATE_CALL := ".create_pool("
+const POOL_SPAWN_CALL := ".spawn("
+
+## The class a pool is declared as, which is what makes a variable of that type a pool receiver.
+const POOL_CLASS := "ObjectPoolAddon"
+
+## The word a node's name carries when it is a pool: `$ObjectPool`, `%BulletPool`, `$World/ObjectPool`.
+const POOL_NAME_WORD := "pool"
+
+## Where the names of the variables typed as the pool are kept for the length of one read, in the
+## seen-map every collecting function already carries.
+const POOL_RECEIVERS_KEY := "receivers:"
 
 ## How a pool's own name is remembered in the seen-map, kept apart from the scene keys beside it: a
 ## pool called "bullets" and a scene called "bullets" are two different facts, and one band each.
@@ -102,6 +116,7 @@ static func spawned_scenes(sheet: EventSheetResource) -> Array[Dictionary]:
 	var seen: Dictionary = {}
 	if sheet == null:
 		return found
+	seen[POOL_RECEIVERS_KEY] = _typed_pool_names(sheet)
 	_walk(sheet.events, found, seen)
 	for entry: Variant in sheet.functions:
 		var event_function: EventFunction = entry as EventFunction
@@ -249,6 +264,9 @@ static func _collect_pool(text: String, found: Array[Dictionary], seen: Dictiona
 	for call_name: String in [POOL_CREATE_CALL, POOL_SPAWN_CALL]:
 		var at: int = text.find(call_name)
 		while at >= 0:
+			if not _is_pool_receiver(_receiver_before(text, at), seen):
+				at = text.find(call_name, at + 1)
+				continue
 			var arguments: PackedStringArray = _quoted_arguments(text.substr(at + call_name.length()))
 			var pool: String = arguments[0] if arguments.size() > 0 else ""
 			var scene: String = arguments[1] if call_name == POOL_CREATE_CALL \
@@ -277,6 +295,75 @@ static func _collect_pool(text: String, found: Array[Dictionary], seen: Dictiona
 				found.append({"scene": key, "path": scene, "crowd": "", "cap": "",
 					"pool": pool, "echo": echo})
 			at = text.find(call_name, at + 1)
+
+
+## The expression a call is made on: the characters before the `.` at `dot`, back to the first one that
+## cannot be part of a node path or a name (`$World/ObjectPool`, `%Bullets`, `pool`, `ObjectPool`).
+static func _receiver_before(text: String, dot: int) -> String:
+	var start: int = dot
+	while start > 0:
+		var letter: String = text[start - 1]
+		var part_of_path: bool = letter == "_" or letter == "/" or letter == "$" or letter == "%" \
+			or letter == "\"" or (letter >= "0" and letter <= "9") \
+			or (letter >= "a" and letter <= "z") or (letter >= "A" and letter <= "Z")
+		if not part_of_path:
+			break
+		start -= 1
+	return text.substr(start, dot - start)
+
+
+## Whether a receiver is an Object Pool node. Three things say so and nothing else does: it is the
+## autoload's own name, it is a node path whose last name says it is a pool, or it is a variable the
+## sheet declares as the pool's class. A plain variable of no type is NOT guessed at - no band is
+## better than a wrong one.
+static func _is_pool_receiver(receiver: String, seen: Dictionary) -> bool:
+	if receiver.is_empty():
+		return false
+	var is_path: bool = receiver.begins_with("$") or receiver.begins_with("%")
+	var name_part: String = receiver.trim_prefix("$").trim_prefix("%").replace("\"", "")
+	name_part = name_part.get_slice("/", name_part.get_slice_count("/") - 1)
+	if name_part == "ObjectPool":
+		return true
+	if is_path:
+		return name_part.to_lower().contains(POOL_NAME_WORD)
+	return (seen.get(POOL_RECEIVERS_KEY, PackedStringArray()) as PackedStringArray).has(receiver)
+
+
+## The names the sheet declares as the pool's class: its typed variables, the member and local
+## variable rows that name the class as their type, and the ones a verbatim block declares in its own
+## words.
+static func _typed_pool_names(sheet: EventSheetResource) -> PackedStringArray:
+	var names: PackedStringArray = PackedStringArray()
+	for variable_name: Variant in sheet.variables.keys():
+		var declared: Variant = sheet.variables[variable_name]
+		if declared is Dictionary and str((declared as Dictionary).get("type", "")) == POOL_CLASS:
+			names.append(str(variable_name))
+	var typed: RegEx = RegEx.new()
+	typed.compile("var[ \\t]+([A-Za-z_][A-Za-z0-9_]*)[ \\t]*:[ \\t]*%s\\b" % POOL_CLASS)
+	_typed_names_in(sheet.events, typed, names)
+	for entry: Variant in sheet.functions:
+		var event_function: EventFunction = entry as EventFunction
+		if event_function != null:
+			_typed_names_in(event_function.events, typed, names)
+	return names
+
+
+## One row list's declarations of the pool class, groups and sub-events walked into.
+static func _typed_names_in(items: Array, typed: RegEx, names: PackedStringArray) -> void:
+	for item: Variant in items:
+		if item is RawCodeRow:
+			for hit: RegExMatch in typed.search_all((item as RawCodeRow).code):
+				names.append(hit.get_string(1))
+		elif item is EventGroup:
+			_typed_names_in(EventSheetGroupFacts.children(item as EventGroup), typed, names)
+		elif item is EventRow:
+			_typed_names_in((item as EventRow).local_variables, typed, names)
+			_typed_names_in((item as EventRow).sub_events, typed, names)
+		elif item is Resource:
+			# A member or local variable row: its type is the class name it was declared with.
+			var declared_type: Variant = (item as Resource).get("type_name")
+			if declared_type != null and str(declared_type) == POOL_CLASS:
+				names.append(str((item as Resource).get("name")))
 
 
 ## The quoted arguments at the head of a call, in order - `"bullets", "res://bullet.tscn", 8` reads

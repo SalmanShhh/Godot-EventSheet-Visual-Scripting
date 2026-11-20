@@ -44,6 +44,9 @@ const POOL_AUTOLOAD_PATH: String = "/root/ObjectPool"
 ## The meta mark a pool leaves on every copy it hands out.
 const POOL_META: StringName = &"__pool__"
 
+## The meta mark that names WHICH pool handed the node out: the pool's instance id.
+const POOL_NODE_META: StringName = &"__pool_node__"
+
 ## The method a pool takes a node back through.
 const POOL_METHOD: StringName = &"despawn"
 
@@ -58,14 +61,30 @@ static var _booked: Dictionary = {}
 # down here for the length of the handing over, and `is_retiring` below is what a sheet asks.
 ## Nodes being handed back to their pool right now, by instance id; emptied when the call returns.
 static var _retiring: Dictionary = {}
-## The pool a node came out of, or null when it came from anywhere else. Null covers all four ways
-## the answer can be no: the node is not in a tree, it carries no pool mark, nothing is registered at
-## the autoload path, and whatever is registered there cannot take a node back.
+## The pool the node's own mark names, or null when it carries none, that pool no longer exists, or it
+## cannot take a node back. Needs no tree, so it is the half a test can ask on its own.
+static func stamped_pool(node: Node) -> Node:
+	if node == null or not is_instance_valid(node) or not node.has_meta(POOL_NODE_META):
+		return null
+	var pool_id: int = int(node.get_meta(POOL_NODE_META))
+	if not is_instance_id_valid(pool_id):
+		return null
+	var stamped: Node = instance_from_id(pool_id) as Node
+	if stamped == null or not stamped.has_method(POOL_METHOD):
+		return null
+	return stamped
+## The pool a node came out of, or null when it came from anywhere else. The pool that handed the node
+## out is written on it, so a pool that is a child node of a scene works as well as the autoload, and
+## several pools each get their own nodes back; a node with no such mark falls back to the autoload.
+## Null covers every way the answer can be no: the node is not in a tree, it carries no pool mark, the
+## pool that made it is gone, and whatever answers cannot take a node back.
 static func pool_of(node: Node) -> Node:
 	if node == null or not is_instance_valid(node) or not node.is_inside_tree():
 		return null
 	if not node.has_meta(POOL_META):
 		return null
+	if node.has_meta(POOL_NODE_META):
+		return stamped_pool(node)
 	var pool: Node = node.get_node_or_null(POOL_AUTOLOAD_PATH)
 	if pool == null or not pool.has_method(POOL_METHOD):
 		return null

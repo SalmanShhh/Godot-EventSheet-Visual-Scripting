@@ -28,6 +28,7 @@ const ENEMY: String = "load(\"res://enemy.tscn\")"
 static func run() -> bool:
 	var passed: bool = true
 	passed = _test_the_band_says_what_the_sheet_spawns() and passed
+	passed = _test_a_pool_that_is_a_child_node_still_gets_its_chip() and passed
 	passed = _test_the_band_counts_what_it_did_not_name() and passed
 	passed = _test_added_during_physics() and passed
 	passed = _test_a_maybe_freed_reference() and passed
@@ -111,6 +112,62 @@ static func _test_the_band_says_what_the_sheet_spawns() -> bool:
 	passed = _check("a pool only drawn from says the pool and nothing it was not told",
 		str(EventSheetSpawnFacts.bands(borrowed)[0].get("value", "")),
 		"bullets - pooled as bullets") and passed
+	return passed
+
+
+## The pool is the autoload in a project that installed it, and a child node of a scene in a project
+## that added it there; the chip is for both, and for a variable typed as the pool, and for nothing
+## whose receiver cannot be known to be a pool.
+static func _test_a_pool_that_is_a_child_node_still_gets_its_chip() -> bool:
+	var passed: bool = true
+	var receivers: Array[String] = ["$ObjectPool", "%ObjectPool", "$World/ObjectPool", "$\"World/BulletPool\"",
+		"ObjectPool"]
+	for receiver: String in receivers:
+		var sheet: EventSheetResource = _sheet()
+		sheet.events.append(_event("OnReady", [_raw("%s.create_pool(\"bullets\", \"res://bullet.tscn\", 8)" % receiver)]))
+		var bands: Array[Dictionary] = EventSheetSpawnFacts.bands(sheet)
+		passed = _check("the chip is read for the receiver %s" % receiver, bands.size(), 1) and passed
+		if bands.size() == 1:
+			passed = _check("and it says the scene and the pool for %s" % receiver,
+				str(bands[0].get("value", "")), "bullet.tscn - pooled as bullets") and passed
+	var drawn: EventSheetResource = _sheet()
+	drawn.events.append(_event("OnProcess", [_raw("var shot = $ObjectPool.spawn(\"bullets\")")]))
+	passed = _check("a handing-out call on a child pool says the pool",
+		str(EventSheetSpawnFacts.bands(drawn)[0].get("value", "")), "bullets - pooled as bullets") and passed
+	var typed: EventSheetResource = _sheet()
+	typed.variables["pool"] = {"type": "ObjectPoolAddon", "default": null}
+	typed.events.append(_event("OnProcess", [_raw("var shot = pool.spawn(\"bullets\")")]))
+	passed = _check("a variable typed as the pool is a pool",
+		EventSheetSpawnFacts.bands(typed).size(), 1) and passed
+	var written: EventSheetResource = _sheet()
+	written.events.append(_raw("@onready var shelf: ObjectPoolAddon = $Shelf"))
+	written.events.append(_event("OnProcess", [_raw("var shot = shelf.spawn(\"bullets\")")]))
+	passed = _check("and so is one a verbatim block declares as the pool",
+		EventSheetSpawnFacts.bands(written).size(), 1) and passed
+	# The same, as a script opened from disk: its member variable becomes a row, and the pool's type is on it.
+	var opened: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(
+		"extends Node2D
+
+@onready var shelf: ObjectPoolAddon = $Shelf
+
+
+func _ready() -> void:
+"
+		+ "	shelf.create_pool(\"bullets\", \"res://bullet.tscn\", 4)
+", true, "")
+	var opened_bands: Array[Dictionary] = EventSheetSpawnFacts.bands(opened)
+	passed = _check("a typed member variable of an opened script is a pool", opened_bands.size(), 1) and passed
+	if opened_bands.size() == 1:
+		passed = _check("and its chip says the scene and the pool",
+			str(opened_bands[0].get("value", "")), "bullet.tscn - pooled as bullets") and passed
+	var unknown: EventSheetResource = _sheet()
+	unknown.events.append(_event("OnProcess", [_raw("var shot = shelf.spawn(\"bullets\")")]))
+	passed = _check("a variable of no type is never guessed to be a pool",
+		EventSheetSpawnFacts.bands(unknown).size(), 0) and passed
+	var spawner: EventSheetResource = _sheet()
+	spawner.events.append(_event("OnProcess", [_raw("$Spawner.spawn(\"bullets\")")]))
+	passed = _check("and a node that is not named as a pool gets no chip",
+		EventSheetSpawnFacts.bands(spawner).size(), 0) and passed
 	return passed
 
 
