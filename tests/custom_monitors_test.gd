@@ -33,9 +33,9 @@ static func run() -> bool:
 static func _the_rows() -> bool:
 	return SUPPORT.pins(P, [
 		["Show In Monitors", _row_text("ShowInMonitors"),
-			"action|Show In Monitors|Debug|name,value|if Performance.has_custom_monitor({name}):\n\tPerformance.remove_custom_monitor({name})\nPerformance.add_custom_monitor({name}, func(): return {value})\ntree_exiting.connect(func(): if Performance.has_custom_monitor({name}): Performance.remove_custom_monitor({name}))|show [b]{value}[/b] in Monitors as [b]{name}[/b]"],
+			"action|Show In Monitors|Debug|name,value|if Performance.has_custom_monitor({name}):\n\tPerformance.remove_custom_monitor({name})\nPerformance.add_custom_monitor({name}, func(): return {value})\ntree_exiting.connect(func(): if Performance.has_custom_monitor({name}): Performance.remove_custom_monitor({name}))|Show [b]{value}[/b] in Monitors as [b]{name}[/b]"],
 		["Remove From Monitors", _row_text("RemoveFromMonitors"),
-			"action|Remove From Monitors|Debug|name|if Performance.has_custom_monitor({name}):\n\tPerformance.remove_custom_monitor({name})|remove [b]{name}[/b] from Monitors"],
+			"action|Remove From Monitors|Debug|name|if Performance.has_custom_monitor({name}):\n\tPerformance.remove_custom_monitor({name})|Remove [b]{name}[/b] from Monitors"],
 		["Is In Monitors", _row_text("IsInMonitors"),
 			"condition|Is In Monitors|Debug|name|Performance.has_custom_monitor({name})|[b]{name}[/b] is in Monitors"],
 		["Custom Monitor Value", _row_text("CustomMonitorValue"),

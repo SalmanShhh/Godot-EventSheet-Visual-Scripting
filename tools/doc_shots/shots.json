@@ -215,7 +215,7 @@
 				"icons": "2a692aad0cb78faee74046eb6398759e0195e4c565565427081022180ef7034a",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
 				"png": "bc5e00a7c1388da5dcc66cf84a12057f13721dd562051a827a81a18ec6b459f5",
-				"reading": "4ba8e28fd204bbbdc87742606816e02b5cde11b145ac425e73bd55a94c39d9f2"
+				"reading": "6986bc2cce7d4b6561e3bf911c77ccf6333d2c2c0d6e76fb8ecc42f57febbb22"
 			},
 			"icons": [
 				"sections"
@@ -262,8 +262,8 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "7e9b2448e90495fe84fa0912f90cc6092bd8b950699791a188a0adc043d7a25c",
-				"reading": "4ba8e28fd204bbbdc87742606816e02b5cde11b145ac425e73bd55a94c39d9f2"
+				"png": "9a26600ca431929a9e2f6bba7b5ab38fe19f73efacda5595ee02666ea0ae39ae",
+				"reading": "6986bc2cce7d4b6561e3bf911c77ccf6333d2c2c0d6e76fb8ecc42f57febbb22"
 			},
 			"name": "custom-monitors-sheet",
 			"rows": [

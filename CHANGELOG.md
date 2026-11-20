@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the Monitors rows read as sentences
+
+Show In Monitors and Remove From Monitors now begin their sentence with a capital, like every other action ("Show enemies_alive in Monitors as ..."). Only the words on the row changed; their ids and the code they write are the same.
+
 ### Faster: the first sheet opened in a session no longer reads every scene in the project inside its own frames
 
 On a project of 10,000 files the first sheet opened in a session built two project-wide scene indexes on the main thread (which scenes load a script, 560 ms, and which script each scene's root carries, 570 ms), and three frames of 220 to 500 ms followed the open. The plugin now reads both once on a thread of its own a couple of seconds after the editor's first scan, and the first reader that asks takes the answer, or waits for the read in progress instead of making it twice. Any file change drops what it holds, and the readers then build as they always did. Measured over three runs at 10,000 files with the sheet's lift cache cleared, the worst frame of the first open went from 397 to 499 ms to 210 to 300 ms and the three late frames over 100 ms are gone; the answers are identical to the synchronous build over repeated runs, including when a scene is added and another edited while the read is under way. At 200 files the read takes about 220 ms on its thread and 0.1 ms on the main thread. The sweep of scene heads moved out of the row builder into its own small file, so the editor's first open compiles slightly fewer lines.
