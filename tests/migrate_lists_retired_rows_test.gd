@@ -32,6 +32,23 @@ static func run() -> bool:
 			ok = SUPPORT.check(P, "its reason says to pick a replacement by hand",
 				EventSheetMigrateDialog.reason_text(asking[0]).contains("by hand"), true) and ok
 		ok = SUPPORT.check(P, "the sheet still compiles to the same bytes after the question", SUPPORT.compile_output(sheet), before) and ok
+	ok = _window_shows_only_what_it_holds() and ok
+	return ok
+
+
+## Nothing here can be rewritten, so the empty "What will be rewritten" box is gone and the rows left
+## as they are carry the room; the button that rewrites is switched off.
+static func _window_shows_only_what_it_holds() -> bool:
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	editor.setup(_sheet_with("IsOnScreen"))
+	editor.open_migrate_dialog()
+	var dialog: EventSheetMigrateDialog = editor._migrate_dialog as EventSheetMigrateDialog
+	var ok: bool = true
+	ok = SUPPORT.check(P, "the window with nothing to rewrite hides the empty rewrite box",
+		[dialog._rewrite_card.visible, dialog._left_alone_card.visible], [false, true]) and ok
+	ok = SUPPORT.check(P, "and its rewrite button is off",
+		dialog._dialog.get_ok_button().disabled, true) and ok
+	editor.free()
 	return ok
 
 

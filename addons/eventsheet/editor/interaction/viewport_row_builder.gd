@@ -858,15 +858,20 @@ func _build_head_band_row(sheet: EventSheetResource, band: Dictionary, head_fact
 	# The band's own words that ACT: the prompt a half-made sheet answers ("name it") and the control
 	# that opens the gesture ("change…"). Both are the band's action, so both read the same way.
 	# A quiet class head prints no control word: the band's own words carry its gesture instead.
+	# The migration line stays a door on a script that opened as a read-only preview: its window only
+	# reads, and its Apply unlocks the preview itself the way any first edit does. Without this the
+	# count says rows ask you and nothing answers a click until some unrelated edit unlocks the file.
+	var is_script_preview: bool = sheet.external_source_path.get_extension() == "gd" and not sheet.blocked_by_conflict()
+	var door_shut: bool = sheet.read_only and not (kind == EventSheetHeadBands.BAND_MIGRATION and is_script_preview)
 	var words: Array[String] = [str(band["prompt"])]
 	if not quiet_head:
 		words.append(str(band["control"]))
-	elif not str(band["control"]).is_empty() and not sheet.read_only:
+	elif not str(band["control"]).is_empty() and not door_shut:
 		for span: EventSheetSemanticSpan in spans:
 			if span.metadata is Dictionary and not (span.metadata as Dictionary).has("head_action"):
 				(span.metadata as Dictionary)["head_action"] = band_action
 	for word: String in words:
-		if word.is_empty() or sheet.read_only:
+		if word.is_empty() or door_shut:
 			continue
 		spans.append(_make_span(word, EventSheetSemanticSpan.SpanType.COMMENT, band_meta.merged({
 			"head_action": band_action,

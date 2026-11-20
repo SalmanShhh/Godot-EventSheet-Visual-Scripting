@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a script that opens with rows that ask you can open the Migrate window at once, and the window shows every row
+
+A script you open comes up as a read-only preview until your first edit. Its head said "2 rows ask you" and the line did nothing when clicked until some other edit had unlocked the file, so the way to see the rows was hidden behind an edit you had no reason to make. The line is now a door on the preview too: the window only reads, and its button still unlocks the file the way any first edit does. The window itself drew an empty "What will be rewritten" box above the rows it left alone and showed two of three rows with no scrollbar; when nothing can be rewritten the empty box is gone and the rows left as they are take the room. The sentence Save leaves on a preview no longer points at an "Edit Events" button that is not there: it says to make an edit to unlock it, or use Save As.
+
 ### Fixed: typing a search word into the picker pre-selects the top row, and the list shows from its top
 
 After typing a word such as "profiler" or "slow", the row Enter would add was the one with the shortest name among the rows that fit the word, and the list was scrolled down to it, so the best rows sat out of sight above it and Enter added a row the reader had not meant. Now, while a search is typed, the pre-selected row is the first row of the list as drawn and the list shows from its top. A row named by the typed phrase, or by the other editor's name for it, is drawn first, so "hide" and "WaitForSeconds" still land where they did. A polling condition still hands Enter to its reactive twin, as before. With nothing typed nothing is pre-selected, as before. The parameters window's Expressions panel already took its first row and is unchanged. The Japanese and Chinese hint "stays highlighted in the toolbar until you use it" no longer has a stray space between the control's name and the next word.

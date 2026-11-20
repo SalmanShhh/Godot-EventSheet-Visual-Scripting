@@ -29,7 +29,40 @@ static func run() -> bool:
 		_head_words(_tres_sheet([""], "StopAudio")).has("1 row has a newer spelling"), true) and ok
 	ok = SUPPORT.check(P, "a .tres sheet with only current verbs says nothing about migrating",
 		_migration_words(_tres_sheet([""], "Print")), PackedStringArray()) and ok
+	# A script that opened as a read-only preview keeps the migration line as a door: the count says
+	# rows ask you, so a click on it has to answer, and the window's Apply unlocks the preview itself.
+	var preview: EventSheetResource = _script_sheet(["IsOnScreen"], "Print")
+	preview.external_source_path = "res://head_migration_band_probe.gd"
+	preview.read_only = true
+	ok = SUPPORT.check(P, "a read-only script preview keeps the migration line clickable",
+		_migration_actions(preview).has("migration"), true) and ok
+	var locked_resource: EventSheetResource = _tres_sheet(["IsOnScreen"], "Print")
+	locked_resource.read_only = true
+	ok = SUPPORT.check(P, "a read-only sheet that is not a script preview stays without the door",
+		_migration_actions(locked_resource), PackedStringArray()) and ok
 	return ok
+
+
+## The head action each word of the migration line carries (empty when the line is not a door).
+static func _migration_actions(sheet: EventSheetResource) -> PackedStringArray:
+	var actions: PackedStringArray = PackedStringArray()
+	var editor: EventSheetEditor = EventSheetEditor.new()
+	editor.setup(sheet)
+	for entry: Dictionary in editor._viewport.get_flat_rows():
+		var row: EventRowData = entry.get("row")
+		if row == null or row.source_resource != null:
+			continue
+		var is_migration: bool = false
+		for span: EventSheetSemanticSpan in row.spans:
+			if span.metadata is Dictionary and str((span.metadata as Dictionary).get("head_band", "")) == "migration":
+				is_migration = true
+		if not is_migration:
+			continue
+		for span: EventSheetSemanticSpan in row.spans:
+			if span.metadata is Dictionary and not str((span.metadata as Dictionary).get("head_action", "")).is_empty():
+				actions.append(str((span.metadata as Dictionary).get("head_action", "")))
+	editor.free()
+	return actions
 
 
 static func _head_words(sheet: EventSheetResource) -> PackedStringArray:

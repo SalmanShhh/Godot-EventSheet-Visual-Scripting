@@ -536,7 +536,7 @@ func _on_save_requested(after_save_as: Callable = Callable()) -> void:
 		return
 	if _dock._current_sheet.read_only:
 		var source_name: String = _dock._current_sheet.external_source_path.get_file()
-		_dock._set_status("You're viewing %s - click \"Edit Events\" in the banner to edit and save it, or use Save As… to keep a separate copy." % source_name, true)
+		_dock._set_status("You're viewing %s - make an edit to unlock it for saving, or use Save As… to keep a separate copy." % source_name, true)
 		return
 	# The one file whose save has a consequence no other file's does: this one builds the editor
 	# you are looking at. Asked once, answerable with "always", and asked BEFORE the write rather than

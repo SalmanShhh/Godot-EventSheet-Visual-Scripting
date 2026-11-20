@@ -32,6 +32,7 @@ var _dialog: AcceptDialog = null
 var _summary_label: Label = null
 var _rewrite_list: Tree = null
 var _left_alone_card: Control = null
+var _rewrite_card: Control = null
 var _left_alone_list: Tree = null
 var _planned: Array[Dictionary] = []
 ## The vocabulary this receipt was drawn against, held so the button answers the same corpus the
@@ -186,7 +187,8 @@ func _build_dialog() -> void:
 	_summary_label = EventSheetPopupUI.hint_label("")
 	content.add_child(_summary_label)
 	_rewrite_list = _wrapping_list(180.0)
-	content.add_child(EventSheetPopupUI.titled_card(EventSheetL10n.translate("What will be rewritten"), _rewrite_list))
+	_rewrite_card = EventSheetPopupUI.titled_card(EventSheetL10n.translate("What will be rewritten"), _rewrite_list)
+	content.add_child(_rewrite_card)
 	_left_alone_list = _wrapping_list(90.0)
 	_left_alone_card = EventSheetPopupUI.titled_card(EventSheetL10n.translate("Left exactly as they are"), _left_alone_list)
 	content.add_child(_left_alone_card)
@@ -233,6 +235,10 @@ func _fill() -> void:
 	_clear_list(_left_alone_list)
 	for line: String in left_alone_lines(_planned):
 		_add_line(_left_alone_list, line)
-	# A card with nothing under it is a heading that says a sheet has a problem it does not have.
+	# A card with nothing under it is a heading that says a sheet has a problem it does not have. When
+	# nothing can be rewritten the empty box goes, and the rows left as they are take the room, so a
+	# sheet with three of them shows three and not two and a scrollbar.
+	_rewrite_card.visible = _list_size(_rewrite_list) > 0
 	_left_alone_card.visible = _list_size(_left_alone_list) > 0
+	_left_alone_list.custom_minimum_size.y = EventSheetPalette.scaled_f(90.0 if _rewrite_card.visible else 260.0)
 	_dialog.get_ok_button().disabled = _list_size(_rewrite_list) == 0

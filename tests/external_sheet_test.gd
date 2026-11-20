@@ -120,6 +120,10 @@ static func run() -> bool:
 	editor._sheet_io._on_save_requested()
 	all_passed = _check("preview save does not overwrite the source file",
 		FileAccess.get_file_as_string(sample_path) == SAMPLE_SOURCE, true) and all_passed
+	# The sentence a preview-save leaves names a way that exists: there is no banner button to press.
+	var preview_status: String = editor._status_label.text if editor._status_label != null else ""
+	all_passed = _check("the preview-save sentence does not point at a button that is gone",
+		[preview_status.contains("Edit Events"), preview_status.contains("make an edit")], [false, true]) and all_passed
 	# "Edit Events" unlocks editing; the two-way GDScript-backed save then writes the change.
 	editor._preview_glue._on_preview_edit_requested()
 	all_passed = _check("Edit Events unlocks editing", editor._current_sheet.read_only, false) and all_passed
