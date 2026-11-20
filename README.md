@@ -117,11 +117,8 @@ The latest tagged release is **`v0.20.0` - "Feel Native"** ([release notes](http
 - **Renaming a file keeps your work.** Rename, move or delete a sheet's file in Godot's FileSystem dock and the open tab follows it with its unsaved edits, its compiled script goes with it, a sheet deleted behind unsaved edits keeps them (a copy goes into the backups), and what the editor remembered about it follows too: folds, locks, the look you chose, the sheets it includes. Your own scripts are never rewritten; the editor tells you how many still name the old path.
 - **Safer rewrites.** Replace in Project lists what it will change, leaves your own scripts alone by default and can be put back whole; Sheet > Tidy This Script shows every line before it writes an older script the way the editor writes it today.
 - **Two new examples** (rebind the controls, save options and a quick save), a Juice Player that plays over a 3D view, and a bug form, a documentation form and a Report an Issue link that fill in your plugin and Godot versions for you.
-
-**Designed, next in line:**
-
-- **Building at run time** - spawn and keep hold of what you made, add nodes and behaviours, turn behaviours on and off, and build prefabs from parts.
-- **Custom inspectors made and improved as event sheets.**
+- **Building at run time with rows.** Add New Node and Add Behaviour put what you made under the running scene and keep its name for the rows after it, Remove Behaviour takes one away, Pause Node and Unpause Node switch a node or a behaviour off and on, and Keep As Prefab packs a branch of what you built into a prefab.
+- **Inspector looks made as event sheets.** Sheet > New inspector look writes a small working look and opens it as a sheet, so a look is made and improved with the same rows as anything else.
 
 **Measured** on our test machine: enabling the plugin takes **310 to 460 ms**; the first sheet tab of a session **17 to 25 s** (about 30 s at `v0.18.0`).
 
