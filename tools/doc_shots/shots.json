@@ -8125,7 +8125,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "35322c59577c9ee8961fc821d1a188787d1286331fe35b1f34b3f1f2e86da5bc"
+				"png": "728a660b280eed257e5f81f6cc464c37e180b59417dddc278d5f038bcca3b783"
 			},
 			"name": "collisions-doctor-report",
 			"steps": [
@@ -8247,7 +8247,7 @@
 			"fingerprint": {
 				"godot": "4.7-stable (official)",
 				"look": "5b533468b1308189b456021385d818ed5245c65e82e039ddba1a9f1cce6be1c1",
-				"png": "84b6a0006a8bb92c8e5bdf2355ee56b5c86032cd54e57b9bb22d781d895ce133"
+				"png": "7828a93ac3a2c9a3ba76ac393b2cfaa049930a58b16e02e4a4d7bbd683a91ce1"
 			},
 			"name": "migration-doctor-inbox",
 			"steps": [

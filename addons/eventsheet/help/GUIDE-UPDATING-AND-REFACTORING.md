@@ -292,11 +292,11 @@ all of them where they are.
 One sheet at a time is the safe shape, but "how much of this is there?" is a project question. It has
 two doors.
 
-**The Doctor's Migration section** carries one line per sheet - *torch_room.gd - 11 row(s) migrate
-cleanly, 1 ask you* - which double-clicks through to the sheet, plus one line per row whose verb the
+**The Doctor's Migration section** carries one line per sheet - *torch_room.gd - rows that migrate
+cleanly: 11; rows that ask you: 1* - which double-clicks through to the sheet, plus one line per row whose verb the
 vocabulary no longer has at all.
 
-![The Doctor's triage inbox showing a Migration verb gone warning naming options_screen.tres, three notes under it - two per-sheet lines reading options_screen.tres, 3 rows migrate cleanly, 1 ask you and title_screen.tres, 2 rows migrate cleanly, 0 ask you - and a summary line, with a Fix row reading Apply per sheet under the selected sheet line](images/migration-doctor-inbox.png)
+![The Doctor's triage inbox showing a Migration verb gone warning naming options_screen.tres, three notes under it - two per-sheet lines reading options_screen.tres - rows that migrate cleanly: 3; rows that ask you: 1 - and title_screen.tres - rows that migrate cleanly: 2; rows that ask you: 0 - and a summary line, with a Fix row reading Apply per sheet under the selected sheet line](images/migration-doctor-inbox.png)
 
 The one chip on a per-sheet line is **Apply per sheet…**, and it opens that sheet's own receipt.
 **Nothing applies from the report.** A report that rewrote files from a list nobody was looking at

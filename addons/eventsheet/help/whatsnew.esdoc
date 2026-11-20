@@ -6,6 +6,10 @@ What changed in the build you have installed (v0.20.0), in the words the release
 
 ## Unreleased
 
+### Changed: the other Doctor sentences with a count read as sentences too
+
+About forty-five sentences in the Check the project window still ended a count with \"(s)\" (\"2 script(s) read\", \"1 row(s) migrate cleanly\"). Each section's summary now says its numbers as a list a person would read (\"Mistake checks: scripts read: 12; scripts with a line that cannot run or does not do what it says: 3.\"), and the three findings that put a count in front of a noun (\"1 compiler warning\", \"3 compiler warnings\"; \"1 mistake\" and \"2 mistakes\"; \"1 row here names no state\" and \"2 rows here name no state\") take the one form and the many form as two rows of every translation file. A Russian count that needs a different ending for 2 to 4 than for 5 or more is worded the same list way, so it never has to agree with a number. A finding is remembered as read by its section, file and subject and not by its words, so nothing is marked new because it was reworded (a test audits, rewords and audits again). The command line's own lines (`doctor:`, `verify:`) are as they were. The two guide pictures that showed a reworded sentence are retaken. More than a hundred and fifty lines with the same ending sit outside the Doctor (the row readings under a sheet, the project view, the docs and find windows) and are left as they are.
+
 ### Fixed: the Monitors rows read as sentences
 
 Show In Monitors and Remove From Monitors now begin their sentence with a capital, like every other action (\"Show enemies_alive in Monitors as ...\"). Only the words on the row changed; their ids and the code they write are the same.
