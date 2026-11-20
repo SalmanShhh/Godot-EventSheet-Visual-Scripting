@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the Start page's header comment says where the page opens
+
+The comment at the top of the Start page said it opens by itself when nothing is open. It never did (a first run shows the Welcome window and the page is under Sheet > Start page), so the comment now says that, and that the "when nothing is open" checkbox at the page's foot stores a setting nothing reads yet.
+
 ### Fixed: a script that opens with rows that ask you can open the Migrate window at once, and the window shows every row
 
 A script you open comes up as a read-only preview until your first edit. Its head said "2 rows ask you" and the line did nothing when clicked until some other edit had unlocked the file, so the way to see the rows was hidden behind an edit you had no reason to make. The line is now a door on the preview too: the window only reads, and its button still unlocks the file the way any first edit does. The window itself drew an empty "What will be rewritten" box above the rows it left alone and showed two of three rows with no scrollbar; when nothing can be rewritten the empty box is gone and the rows left as they are take the room. The sentence Save leaves on a preview no longer points at an "Edit Events" button that is not there: it says to make an edit to unlock it, or use Save As.

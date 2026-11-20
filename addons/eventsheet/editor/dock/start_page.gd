@@ -13,8 +13,9 @@ extends RefCounted
 # Each row shows its kind beside its name. A click selects and the help strip at the foot says what
 # the row is and what opening it does; Open, Enter or a double-click opens it.
 #
-# It opens when the EventSheet tab is shown with no sheet open, and from Sheet ▸ Start page. A
-# checkbox turns the startup half off; the menu entry always works.
+# It opens from Sheet ▸ Start page, and only from there: it does not open by itself. A first run
+# shows the Welcome window instead, and a project with nothing open shows the empty tab. The
+# "when nothing is open" checkbox at its foot stores a setting that nothing reads yet.
 #
 # Nothing here is a new way to do anything: every row calls the starter builder, the open path, or
 # the Manual, all of which already exist.
