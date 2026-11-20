@@ -26,7 +26,7 @@ static func build() -> bool:
 	sheet.custom_class_name = "DebugOverlayAddon"
 	sheet.class_description = "An on-screen debug display driven from event rows, drawn over the running game and only in debug builds. Watch Value lists named values, Show Bar draws a labelled meter, Mark Point drops a fading cross in the world, Draw Ray shows a direction, Draw Rect outlines an area, Draw Ray (3D) shows a direction in a 3D world, and Label Above floats text over a node. Nothing exists until a row calls one of them, and the toggle key hides the whole thing while you play."
 	sheet.addon_category = "Debug Overlay"
-	sheet.addon_tags = PackedStringArray(["debug", "overlay", "hud", "profiling"])
+	sheet.addon_tags = PackedStringArray(["debug", "overlay", "hud", "profiling", "profiler", "fps", "framerate", "performance"])
 	sheet.variables = {
 		"toggle_key": {"type": "String", "default": "F3", "exported": true, "description": "Key that shows and hides the overlay while the game runs. Blank turns the key off.",
 			"attributes": {"tooltip": "Key that shows and hides the overlay while the game runs, by name (F3, F1, Tab, Escape). Leave blank for no key.", "group": "Debug Overlay"}},

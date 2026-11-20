@@ -15,10 +15,10 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	var descriptors: Array[ACEDescriptor] = []
 
 	# ── Event-sheet System coverage: time/engine, display, text expressions, comparisons ──
-	descriptors.append(F.act("SetTimeScale", "Set Time Scale", "Engine.time_scale = {scale}", "Time", "Set time scale to {scale}", "Speeds up or slows the whole game; use for slow-motion or pausing.").param("scale", "1.0", "Scale", "1 = normal, 0.5 = slow motion, 0 = paused physics/process.", "expression"))
-	descriptors.append(F.expr("GetTimeScale", "Time Scale", "Engine.time_scale", "Time", "time scale", "Gives the current game speed (1 = normal, below 1 = slow motion)."))
+	descriptors.append(F.act("SetTimeScale", "Set Time Scale", "Engine.time_scale = {scale}", "Time", "Set time scale to {scale}", "Speeds up or slows the whole game; use for slow-motion or pausing.").param("scale", "1.0", "Scale", "1 = normal, 0.5 = slow motion, 0 = paused physics/process.", "expression").tagged("slow motion slowmo"))
+	descriptors.append(F.expr("GetTimeScale", "Time Scale", "Engine.time_scale", "Time", "time scale", "Gives the current game speed (1 = normal, below 1 = slow motion).").tagged("slow motion slowmo"))
 	descriptors.append(F.expr("GetGameTime", "Game Time", "(Time.get_ticks_msec() / 1000.0)", "Time", "game time (seconds)", "Gives seconds elapsed since the game started, handy for timers."))
-	descriptors.append(F.expr("GetFps", "FPS", "Engine.get_frames_per_second()", "Time", "fps", "Gives the current frames per second, useful for performance checks."))
+	descriptors.append(F.expr("GetFps", "FPS", "Engine.get_frames_per_second()", "Time", "fps", "Gives the current frames per second, useful for performance checks.").tagged("framerate frame rate performance slow lag profiler"))
 	descriptors.append(F.expr("GetFrameCount", "Frame Count", "Engine.get_process_frames()", "Time", "frame count", "Gives how many frames have run since startup."))
 	descriptors.append(F.act("SetFullscreen", "Set Fullscreen Mode", "DisplayServer.window_set_mode({mode})", "Display", "Set window mode to {mode}", "Switches the game window between windowed, fullscreen and other display modes.").param_choice("mode", "DisplayServer.WINDOW_MODE_FULLSCREEN", "Mode", "Window mode.", ["DisplayServer.WINDOW_MODE_FULLSCREEN", "DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN", "DisplayServer.WINDOW_MODE_WINDOWED", "DisplayServer.WINDOW_MODE_MAXIMIZED"]))
 	descriptors.append(F.act("SetWindowSize", "Set Window Size", "DisplayServer.window_set_size({size})", "Display", "Set window size to {size}", "Resizes the game window to a chosen pixel width and height.").param("size", "Vector2i(1280, 720)", "Size", "Window size in pixels.", "expression"))
@@ -57,7 +57,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 
 	# System actions (engine/frame control + the screenshot verb)
 	descriptors.append(F.act("TakeScreenshot", "Take Screenshot", "get_viewport().get_texture().get_image().save_png({path})", "General Actions", "Take screenshot to {path}", "Saves what's on screen right now as a PNG file.").param("path", "\"user://screenshot.png\"", "Path", "Where to save the PNG (user:// is the writable folder).", "expression"))
-	descriptors.append(F.act("SetMaxFps", "Set Max FPS", "Engine.max_fps = int({fps})", "Time", "Set max fps to {fps}", "Caps how many frames per second the game renders - save battery or steady the pace.").param("fps", "60", "FPS", "Frame cap (0 = uncapped).", "expression"))
+	descriptors.append(F.act("SetMaxFps", "Set Max FPS", "Engine.max_fps = int({fps})", "Time", "Set max fps to {fps}", "Caps how many frames per second the game renders - save battery or steady the pace.").param("fps", "60", "FPS", "Frame cap (0 = uncapped).", "expression").tagged("framerate frame rate performance cap limit"))
 	descriptors.append(F.act("SetPhysicsRate", "Set Physics Rate", "Engine.physics_ticks_per_second = int({fps})", "Time", "Set physics rate to {fps}", "Changes how often physics steps per second (default 60).").param("fps", "60", "Ticks", "Physics updates per second.", "expression"))
 	descriptors.append(F.act("SetRandomSeed", "Set Random Seed", "seed(int({seed}))", "Math & Random", "Set random seed to {seed}", "Pins the global randomness so a run replays identically - daily challenges, replays, tests.").param("seed", "12345", "Seed", "Any integer - the same seed replays the same randomness.", "expression"))
 

@@ -54,6 +54,10 @@ static func from_eventforge_descriptor(descriptor: ACEDescriptor) -> ACEDefiniti
 		# A drain loop ("front" / "back") takes each item off the list as it uses it.
 		"looping_drain": descriptor.looping_drain
 	}
+	# The search words ride the same `tags` key a pack's provider tags do, set only when there are any
+	# so a row with none keeps exactly the metadata it always had.
+	if not descriptor.search_tags.is_empty():
+		definition.metadata["tags"] = Array(descriptor.search_tags)
 	return definition
 
 

@@ -1,4 +1,4 @@
-# @ace_tags(debug, overlay, hud, profiling)
+# @ace_tags(debug, overlay, hud, profiling, profiler, fps, framerate, performance)
 # @ace_category("Debug Overlay")
 # @ace_version(1.0.0)
 @icon("res://eventsheet_addons/debug_overlay/icon.svg")

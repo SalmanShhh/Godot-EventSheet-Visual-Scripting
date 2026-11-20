@@ -18,7 +18,7 @@ static func build() -> bool:
 	sheet.class_description = "A managed work queue that spreads heavy work across frames: enqueue items in one event and the slicer drains them a slice at a time, firing On Process Item for each until the per-frame budget runs out. Spawning 500 enemies or carving a dungeon no longer freezes the frame."
 	sheet.addon_category = "Time Slicer"
 	sheet.ace_expose_all_mode = "node"
-	sheet.addon_tags = PackedStringArray(["performance", "scheduling"])
+	sheet.addon_tags = PackedStringArray(["performance", "scheduling", "slow", "lag", "stutter", "hitch", "optimize", "optimise"])
 	sheet.variables = {
 		"frame_budget_ms": {"type": "float", "default": 4.0, "exported": true,
 			"attributes": {"tooltip": "Max milliseconds per frame spent draining the queue (used when Mode includes ms).", "range": {"min": "0.1", "max": "16", "step": "0.1"}}},

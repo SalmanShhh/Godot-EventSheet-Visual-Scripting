@@ -2620,6 +2620,8 @@ func _refresh_tree() -> void:
 		definitions = __featured
 		definitions.append_array(__rest)
 	definitions = ordered_variable_verbs(definitions)
+	if filtering:
+		definitions = EventSheetACERegistry.rank_for_query(definitions, query)
 	definitions = with_phrase_hits_first(definitions, query)
 	for definition: ACEDefinition in definitions:
 		if not _is_allowed_for_mode(definition, mode, signals_only):

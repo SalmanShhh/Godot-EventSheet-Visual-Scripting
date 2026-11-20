@@ -68,6 +68,10 @@ var looping_drain: String = ""
 ## Featured everyday verb: the picker renders it bold and floats it to the top of its
 ## category (the event-sheet "highlight"). Set inline via `.featured()`.
 @export var is_featured: bool = false
+## Words a reader types for this row that its name and help do not hold ("slow", "lag", "profiler").
+## They ride in the definition's `tags` metadata, the same place a pack's `@ace_tags` words go, so the
+## picker's search reads builtin and pack rows alike. Set inline via `.tagged("slow lag profiler")`.
+@export var search_tags: PackedStringArray = PackedStringArray()
 
 ## THE FORWARDING ADDRESS - where the newer spelling of this verb lives, and nothing else.
 ##
@@ -204,6 +208,16 @@ func param_built(parameter: ACEParam) -> ACEDescriptor:
 ## so behaviour packs are easy to author, integrate, and update without touching any central registry.
 func described(text: String) -> ACEDescriptor:
 	description = text
+	return self
+
+
+## Adds search words (space separated) a reader may type for this row and returns self, so it chains like
+## `.featured()`. They are data beside the row: never part of the id, the template, the sentence, the
+## category or the emitted code.
+func tagged(words: String) -> ACEDescriptor:
+	for word: String in words.split(" ", false):
+		if not search_tags.has(word):
+			search_tags.append(word)
 	return self
 
 

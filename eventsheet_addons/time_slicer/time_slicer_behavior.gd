@@ -1,4 +1,4 @@
-# @ace_tags(performance, scheduling)
+# @ace_tags(performance, scheduling, slow, lag, stutter, hitch, optimize, optimise)
 # @ace_category("Time Slicer")
 # @ace_expose_all(node)
 # @ace_version(1.0.0)

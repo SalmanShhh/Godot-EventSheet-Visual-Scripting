@@ -18,7 +18,7 @@ static func build() -> bool:
 	sheet.custom_class_name = "ObjectPoolAddon"
 	sheet.class_description = "The ObjectPool autoload singleton: reuses nodes instead of creating and freeing them, so spawn-heavy games stop hitching. Create Pool from a scene (with optional prewarm), Spawn hands out a ready-made node, and Despawn parks it hidden with processing off until the next Spawn."
 	sheet.addon_category = "Object Pool"
-	sheet.addon_tags = PackedStringArray(["performance", "spawning"])
+	sheet.addon_tags = PackedStringArray(["performance", "spawning", "slow", "lag", "stutter", "hitch", "optimize", "optimise"])
 	var about: CommentRow = CommentRow.new()
 	about.text = "ObjectPool: register as the ObjectPool autoload. Create Pool from a scene (or Create Empty Pool + Add To Pool your own nodes), then Spawn to get a ready node and Despawn to hand it back. Reusing nodes keeps heavy scenes smooth. This pack is an event sheet - extend it by editing it."
 	sheet.events.append(about)

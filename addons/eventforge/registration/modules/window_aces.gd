@@ -25,7 +25,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 	descriptors.append(F.act("WindowSetPosition", "Set Window Position", "get_window().position = Vector2i({x}, {y})", CAT, "Set position to {x}, {y}", "Moves the game window to a position on the screen.").param_typed("int", "x", "0", "X", "Left edge in screen pixels.", "expression").param_typed("int", "y", "0", "Y", "Top edge in screen pixels.", "expression"))
 	descriptors.append(F.act("WindowCenter", "Center Window", "get_window().move_to_center()", CAT, "Center on screen", "Centers the game window on the screen."))
 	descriptors.append(F.act("WindowSetVSync", "Set VSync Enabled", "DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if {enabled} else DisplayServer.VSYNC_DISABLED)", CAT, "Set vsync to {enabled}", "Turns vertical sync on or off - a common options-menu toggle.").param_typed("bool", "enabled", "true", "Enabled", "On removes screen tearing; off can raise the frame rate.", "expression"))
-	descriptors.append(F.act("WindowSetMaxFps", "Set Max FPS", "Engine.max_fps = {fps}", CAT, "Set max FPS to {fps}", "Caps the frame rate (0 means uncapped).").param_typed("int", "fps", "60", "Max FPS", "Frame-rate cap (0 = uncapped).", "expression"))
+	descriptors.append(F.act("WindowSetMaxFps", "Set Max FPS", "Engine.max_fps = {fps}", CAT, "Set max FPS to {fps}", "Caps the frame rate (0 means uncapped).").param_typed("int", "fps", "60", "Max FPS", "Frame-rate cap (0 = uncapped).", "expression").tagged("framerate frame rate performance cap limit"))
 	descriptors.append(F.act("WindowSetAlwaysOnTop", "Set Always On Top", "get_window().always_on_top = {enabled}", CAT, "Set always on top to {enabled}", "Keeps the game window above every other window.").param_typed("bool", "enabled", "true", "Enabled", "Keep the window above other windows.", "expression"))
 	descriptors.append(F.act("WindowMinimize", "Minimize Window", "get_window().mode = Window.MODE_MINIMIZED", CAT, "Minimize", "Minimizes the game window to the taskbar."))
 	descriptors.append(F.act("WindowMaximize", "Maximize Window", "get_window().mode = Window.MODE_MAXIMIZED", CAT, "Maximize", "Maximizes the game window."))
@@ -40,7 +40,7 @@ static func get_descriptors() -> Array[ACEDescriptor]:
 
 	descriptors.append(F.cond("WindowIsFullscreen", "Is Fullscreen", "(get_window().mode == Window.MODE_FULLSCREEN or get_window().mode == Window.MODE_EXCLUSIVE_FULLSCREEN)", CAT, "Is fullscreen", "True while the game is in either fullscreen mode."))
 
-	descriptors.append(F.expr("WindowMaxFps", "Max FPS", "Engine.max_fps", CAT, "max FPS", "The current frame-rate cap (0 means uncapped)."))
+	descriptors.append(F.expr("WindowMaxFps", "Max FPS", "Engine.max_fps", CAT, "max FPS", "The current frame-rate cap (0 means uncapped).").tagged("framerate frame rate performance cap limit"))
 
 	return descriptors
 

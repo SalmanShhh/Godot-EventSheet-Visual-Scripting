@@ -225,7 +225,7 @@ func _refresh_expression_tree() -> void:
 	if bool(self_query.get("self_scoped", false)):
 		return
 	var group_nodes: Dictionary = {}
-	for definition: ACEDefinition in _host._registry.search(query):
+	for definition: ACEDefinition in EventSheetACERegistry.rank_for_query(_host._registry.search(query), query):
 		if definition.ace_type != ACEDefinition.ACEType.EXPRESSION:
 			continue
 		var node_type: String = str(definition.metadata.get("node_type", "")).strip_edges()

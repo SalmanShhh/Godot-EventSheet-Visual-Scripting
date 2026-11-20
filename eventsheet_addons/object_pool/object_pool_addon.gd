@@ -1,4 +1,4 @@
-# @ace_tags(performance, spawning)
+# @ace_tags(performance, spawning, slow, lag, stutter, hitch, optimize, optimise)
 # @ace_category("Object Pool")
 # @ace_version(1.0.0)
 @icon("res://eventsheet_addons/object_pool/icon.svg")

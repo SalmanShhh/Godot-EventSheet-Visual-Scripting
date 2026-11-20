@@ -115,6 +115,63 @@ func search(query: String, category: String = "", ace_type: int = -1) -> Array[A
 	return output
 
 
+## `definitions` ordered by how squarely each answers a typed query, as a STABLE sort: within a rank the
+## order is exactly what it was. The ranks, best first: the row whose own name IS what was typed; a row
+## whose name starts a word with every typed word; a row whose name, search words (`tags`) or category
+## start a word with every typed word; and everything else (a word buried inside another, or one that
+## only the help text holds). That last rule is what keeps "lag" from putting every "flag" row ahead of
+## the rows a reader with a laggy game wants, and what keeps a search-word hit from standing above a
+## row that carries the typed word in its name.
+static func rank_for_query(definitions: Array[ACEDefinition], query: String) -> Array[ACEDefinition]:
+	var typed: String = query.to_lower().strip_edges()
+	var tokens: PackedStringArray = typed.split(" ", false)
+	if tokens.is_empty():
+		return definitions
+	var buckets: Array = [[], [], [], []]
+	for definition: ACEDefinition in definitions:
+		(buckets[_rank_of(definition, typed, tokens)] as Array).append(definition)
+	var ranked: Array[ACEDefinition] = []
+	for bucket: Array in buckets:
+		for definition: ACEDefinition in bucket:
+			ranked.append(definition)
+	return ranked
+
+
+static func _rank_of(definition: ACEDefinition, typed: String, tokens: PackedStringArray) -> int:
+	var named: String = definition.display_name.to_lower()
+	if named == typed:
+		return 0
+	if _starts_words(named, tokens):
+		return 1
+	var tag_text: String = ""
+	var tags: Variant = definition.metadata.get("tags", [])
+	if tags is Array:
+		tag_text = " ".join(PackedStringArray(tags as Array)).to_lower()
+	if _starts_words(named + " " + tag_text + " " + definition.category.to_lower(), tokens):
+		return 2
+	return 3
+
+
+## Whether every token begins a word somewhere in `text` (a word starts at the front or after anything
+## that is not a letter or a digit).
+static func _starts_words(text: String, tokens: PackedStringArray) -> bool:
+	for token: String in tokens:
+		var found: bool = false
+		var at: int = text.find(token)
+		while at >= 0:
+			if at == 0 or not _is_word_character(text.unicode_at(at - 1)):
+				found = true
+				break
+			at = text.find(token, at + 1)
+		if not found:
+			return false
+	return true
+
+
+static func _is_word_character(code: int) -> bool:
+	return (code >= 48 and code <= 57) or (code >= 97 and code <= 122) or code > 127
+
+
 func find_definition(provider_id: String, definition_id: String) -> ACEDefinition:
 	return _definitions_by_key.get(_make_key(provider_id, definition_id), null)
 
