@@ -744,12 +744,55 @@ static func _typed_nodes_in(code: String, masked: String, node_classes: Dictiona
 	return written + code.substr(cursor)
 
 
+## `lines` without the ones the untyped stand-in refuses, asked QUIETLY. A line the untyped stand-in
+## refuses can never be a finding (a finding is a line only the typed one refuses), but putting it to the
+## typed stand-in anyway made the engine print its parse error into Output - the Doctor's "Expected end of
+## file" - for a line this check was only going to throw away. The engine's printing is turned off around
+## the asking, the way the migration plan asks whether a rewrite parses, and the lines are halved until
+## each refused one stands alone, so one bad line never hides the rest.
+static func _lines_godot_can_parse(sheet: EventSheetResource, lines: Array[Dictionary]) -> Array[Dictionary]:
+	if lines.is_empty() or not _quietly_loads(sheet, []):
+		# Nothing to ask, or the stand-in itself does not load (then no line can be judged anyway).
+		return [] as Array[Dictionary] if not lines.is_empty() else lines
+	return _parseable_part(sheet, lines)
+
+
+static func _parseable_part(sheet: EventSheetResource, lines: Array[Dictionary]) -> Array[Dictionary]:
+	if _quietly_loads(sheet, lines):
+		return lines
+	if lines.size() == 1:
+		return [] as Array[Dictionary]
+	var middle: int = lines.size() / 2
+	var kept: Array[Dictionary] = _parseable_part(sheet, lines.slice(0, middle))
+	kept.append_array(_parseable_part(sheet, lines.slice(middle)))
+	return kept
+
+
+## Whether the untyped stand-in script holding these lines, one function each, loads. Says nothing into
+## Output either way, and puts the engine's printing back exactly as it found it.
+static func _quietly_loads(sheet: EventSheetResource, lines: Array[Dictionary]) -> bool:
+	var functions: PackedStringArray = PackedStringArray()
+	for index: int in range(lines.size()):
+		functions.append("func __row_%d():
+%s" % [index, str(lines[index]["untyped"])])
+	var probe: GDScript = GDScript.new()
+	probe.source_code = EventSheetGDScriptLint.build_probe_source("
+".join(functions), false, sheet, false)
+	var was_printing: bool = Engine.print_error_messages
+	Engine.print_error_messages = false
+	var error: Error = probe.reload(true)
+	Engine.print_error_messages = was_printing
+	return error == OK
+
+
 ## The lines one stand-in refuses in words the plain table knows, as {line key: the lead message}. A line
 ## Godot cannot parse stops the parser before anything else is judged, so it is taken out and the rest asked
 ## again, a few times at most: past that the rest are simply not judged, which can only say less.
 static func _refusals(sheet: EventSheetResource, lines: Array[Dictionary], typed: bool, declarations: PackedStringArray = PackedStringArray()) -> Dictionary:
 	var refused: Dictionary = {}
 	var rest: Array[Dictionary] = lines.duplicate()
+	if typed:
+		rest = _lines_godot_can_parse(sheet, rest)
 	var own_class: String = _stand_in_class(sheet)
 	for _round: int in range(SYNTAX_ROUNDS):
 		if rest.is_empty():

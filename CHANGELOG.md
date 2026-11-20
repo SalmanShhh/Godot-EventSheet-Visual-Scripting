@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the Doctor no longer prints a parse error into Output for a line it was only going to throw away
+
+While the Doctor checked a sheet's lines for type mistakes, a line Godot cannot parse was still handed to the engine's typed check, which printed a red "Parse Error: Expected end of file" into Output once per run. Such a line cannot be a finding, so it is now set aside first by a quiet check (the engine's printing is turned off around it, the way the Migrate window asks whether a rewrite parses), and the lines beside it are judged as before. A real type mistake is still printed by the engine as it is found; the Doctor's findings do not change.
+
 ### Fixed: the Start page's header comment says where the page opens
 
 The comment at the top of the Start page said it opens by itself when nothing is open. It never did (a first run shows the Welcome window and the page is under Sheet > Start page), so the comment now says that, and that the "when nothing is open" checkbox at the page's foot stores a setting nothing reads yet.

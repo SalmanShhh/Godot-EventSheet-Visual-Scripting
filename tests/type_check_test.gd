@@ -28,6 +28,7 @@ static func run() -> bool:
 	all_passed = _the_scene_that_judges_is_the_one_that_runs_the_sheet() and all_passed
 	all_passed = _a_clause_head_is_never_probed_as_a_statement() and all_passed
 	all_passed = _optional_commas_are_settled_before_a_field_is_judged() and all_passed
+	all_passed = _a_line_godot_cannot_parse_never_reaches_the_engine() and all_passed
 	return all_passed
 
 
@@ -499,6 +500,33 @@ static func _a_clause_head_is_never_probed_as_a_statement() -> bool:
 	rows.append(["the wrong kind after them is still refused", str(answers[clauses.size()]).is_empty(), false])
 	rows.append(["a lambda is still a statement", _statement_kinds(["score = 1", "var f = func(a): return a", "if score:", "x: int = 1"]), [false, false, false, true]])
 	return SUPPORT.pins(NAME + ": clause heads", rows)
+
+
+## A line the parser cannot read ("Expected end of file") says nothing about kinds, so it is thrown away
+## quietly before the typed stand-in is asked: the engine prints no parse error for it into Output (the
+## Doctor promises it prints nothing there), the lines judged beside it are still judged, and the wrong
+## kind among them is still refused.
+static func _a_line_godot_cannot_parse_never_reaches_the_engine() -> bool:
+	var sheet: EventSheetResource = _sheet()
+	var lines: Array[Dictionary] = []
+	for code: String in ["score = = 3", "score = 1 2", "speed = score score", "score = \"text\"", "speed = 1.5"]:
+		lines.append({"code": code, "condition": false})
+	var ear: EventSheetTypeCheck.Ear = EventSheetTypeCheck.Ear.new()
+	OS.add_logger(ear)
+	EventSheetTypeCheck.forget_lines()
+	var answers: Array = EventSheetTypeCheck.judge_lines(sheet, lines, {})
+	OS.remove_logger(ear)
+	var unread: int = 0
+	for message: Dictionary in ear.messages:
+		if EventSheetTypeWords.recognise(str(message["text"])).is_empty():
+			unread += 1
+	var rows: Array = [
+		["the engine heard nothing it could not read as a wrong kind", [unread, ear.messages.size()], [0, 2]],
+		["a line that does not parse says nothing", [answers[0], answers[1], answers[2]], ["", "", ""]],
+		["the wrong kind beside them is still refused", str(answers[3]).is_empty(), false],
+		["and a right one is not", answers[4], ""],
+	]
+	return SUPPORT.pins(NAME + ": unparseable lines", rows)
 
 
 static func _statement_kinds(codes: Array) -> Array:
