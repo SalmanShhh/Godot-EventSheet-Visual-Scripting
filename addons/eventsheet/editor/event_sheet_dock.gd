@@ -1895,7 +1895,10 @@ func _notification(what: int) -> void:
 		# GDScript-backed sheets: refocusing the editor is the moment external edits (the
 		# script editor, another tool, git) usually land - offer to reload from disk. This is also
 		# what carries "Open in Godot" edits back into a backed sheet (the .gd changed on disk).
-		_external_watcher.prompt_external_reload_if_changed()
+		# Deferred: the engine hands this notification down the tree with every parent blocked from
+		# taking children, so a question added to the editor from in here failed with "Parent node is
+		# busy setting up children" and the reload question was lost.
+		_external_watcher.prompt_external_reload_if_changed.call_deferred()
 	elif what == NOTIFICATION_THEME_CHANGED and is_inside_tree():
 		# The user switched their editor theme. The follow-up reads the whole sheet again (the rows
 		# are built from the style), which compiles stand-in scripts for the type check - and a script

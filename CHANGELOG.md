@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the question about a script that changed outside the editor is no longer lost when the editor regains focus
+
+After a game run, coming back to the editor could print "Parent node is busy setting up children, add_child() failed" and drop the reload question, because the question was added to the editor from inside the engine's own focus notification. It is now asked one step later, the way Godot code adds a child from a notification.
+
 ### Fixed: a script's head, the Migrate window and the Doctor count rows that ask you the same way
 
 The head of a script counted EVENTS holding a verb the vocabulary lost or retired ("2 rows ask you") while the Migrate window listed ROWS (3). Both now count rows, and so do the Doctor's per-sheet line (`rows that ask you`) and the `verify_sheets` `[migration-asks]` lines, which already named one row each. The head still counts only the two cheap sources (a verb the vocabulary no longer has, a verb it retired with nothing to replace it); the window may also list a row the file would refuse, which only the window's own check can know.
