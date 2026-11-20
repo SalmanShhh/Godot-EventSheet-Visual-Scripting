@@ -504,7 +504,7 @@ Node script extending `CharacterBody2D`.
 - **Resume The Clock** - Starts the clock again from where it was paused.
 
 ### DebugOverlayAddon (`res://eventsheet_addons/debug_overlay/debug_overlay_addon.gd`)
-@ace_tags(debug, overlay, hud, profiling) @ace_category("Debug Overlay") @ace_version(1.0.0)
+@ace_tags(debug, overlay, hud, profiling, profiler, fps, framerate, performance) @ace_category("Debug Overlay") @ace_version(1.0.0)
 
 #### Triggers
 - **On Overlay Toggled** (`shown: bool`)
@@ -1788,7 +1788,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Path Move Z**
 
 ### ObjectPoolAddon (`res://eventsheet_addons/object_pool/object_pool_addon.gd`)
-@ace_tags(performance, spawning) @ace_category("Object Pool") @ace_version(1.0.0)
+@ace_tags(performance, spawning, slow, lag, stutter, hitch, optimize, optimise) @ace_category("Object Pool") @ace_version(1.0.0)
 
 #### Triggers
 - **On Spawned**
@@ -3083,7 +3083,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Teleport To Tile** (`tile_x: float, tile_y: float`) - Snaps to a tile coordinate instantly.
 
 ### TimeSlicerBehavior (`res://eventsheet_addons/time_slicer/time_slicer_behavior.gd`)
-@ace_tags(performance, scheduling) @ace_category("Time Slicer") @ace_expose_all(node) @ace_version(1.0.0)
+@ace_tags(performance, scheduling, slow, lag, stutter, hitch, optimize, optimise) @ace_category("Time Slicer") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Process Item** (`item: Variant`)
