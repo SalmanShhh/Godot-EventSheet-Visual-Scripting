@@ -253,9 +253,17 @@ static func _audit(paths: PackedStringArray, vocabulary: Dictionary,
 				"after": str(entry.get("after", "")),
 				"asks": bool(entry.get("asks", true)),
 			})
+	# A sheet can have rows that ask you without holding a verb the vocabulary lacks (a verb that moved
+	# and whose rewrite nothing can prove), so the summary counts them as their own figure; the
+	# per-sheet lines below say how many rows. Otherwise the summary reads 0 over a sheet whose line
+	# says rows ask you.
+	var asking_sheets: Array[String] = []
+	for entry: Dictionary in listed:
+		if bool(entry.get("asks", true)) and not asking_sheets.has(str(entry["sheet"])):
+			asking_sheets.append(str(entry["sheet"]))
 	findings.insert(0, _finding("info", CHECK_ID, worst_path,
-		"Migration: sheets read: %d; sheets that hold a verb the installed vocabulary no longer has: %d.%s" % [
-			measured, affected, note], ""))
+		"Migration: sheets read: %d; sheets that hold a verb the installed vocabulary no longer has: %d; sheets with rows that ask you: %d.%s" % [
+			measured, affected, asking_sheets.size(), note], ""))
 	return {"findings": findings, "rows": listed}
 
 

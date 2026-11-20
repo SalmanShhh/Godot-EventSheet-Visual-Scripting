@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the Doctor's Migration summary no longer reads 0 over a sheet whose own line says rows ask you
+
+The summary counted only sheets holding a verb the vocabulary no longer has, while the per-sheet line counted every row that asks you (a verb that moved and whose rewrite cannot be proved is one too), so a sheet could sit under "...no longer has: 0" and say "rows that ask you: 3". The summary now also says "sheets with rows that ask you: N" as its own figure.
+
 ### Fixed: the Doctor no longer prints a parse error into Output for a line it was only going to throw away
 
 While the Doctor checked a sheet's lines for type mistakes, a line Godot cannot parse was still handed to the engine's typed check, which printed a red "Parse Error: Expected end of file" into Output once per run. Such a line cannot be a finding, so it is now set aside first by a quiet check (the engine's printing is turned off around it, the way the Migrate window asks whether a rewrite parses), and the lines beside it are judged as before. A real type mistake is still printed by the engine as it is found; the Doctor's findings do not change.
