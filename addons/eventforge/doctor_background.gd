@@ -39,6 +39,10 @@ var _work_usec: int = 0
 ## waited on them, {step id: [worked usec, waited usec, pieces]}.
 static var work_totals: Dictionary = {}
 
+## Set by `stop_all`: a piece of work handed to a worker that is made of many small pieces (see `EventSheetProjectDoctor.in_batches`)
+## looks at this between them and hands back what it has, so the editor quitting waits for a file and not for a batch.
+static var stopping: bool = false
+
 
 ## The project's folders and files, and which `.tres` files are event sheets, made on a worker.
 ## A coroutine (await it); answers {"listing": Array, "verdicts": {path: SHEET_*}} or {} when `cancelled`.
@@ -166,6 +170,7 @@ func _join() -> void:
 ## thread, by whoever must have no worker left running - the editor quitting, or a synchronous audit that is about
 ## to use the state the workers read. A job joined here answers what it had, and its waiting coroutine finds it done.
 static func stop_all() -> void:
+	stopping = true
 	for job: Variant in _live.duplicate():
 		(job as RefCounted).call("stop")
 		(job as RefCounted).call("_join")

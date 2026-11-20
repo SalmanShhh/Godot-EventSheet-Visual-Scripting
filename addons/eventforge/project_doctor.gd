@@ -309,7 +309,16 @@ static func in_batches(paths: PackedStringArray, work: Callable) -> Array:
 		var upto: int = mini(at + batch_files, paths.size())
 		var batch: PackedStringArray = paths.slice(at, upto)
 		var started: int = Time.get_ticks_usec()
-		joined.append_array(await in_background(func() -> Array: return work.call(batch)))
+		var background: GDScript = load(BACKGROUND_PATH)
+		# Asked of a few files at a time on the worker, with a look at the stop flag between: the same answer as asking it
+		# of the whole batch (that is the contract of `work`), and a quit waits for a few files rather than for a batch.
+		joined.append_array(await in_background(func() -> Array:
+			var out: Array = []
+			var from: int = 0
+			while from < batch.size() and not bool(background.get("stopping")):
+				out.append_array(work.call(batch.slice(from, from + 8)))
+				from += 8
+			return out))
 		var spent: int = maxi(Time.get_ticks_usec() - started, 1)
 		batch_files = clampi(int(float(upto - at) * 60000.0 / float(spent)), 8, 2000)
 		at = upto
@@ -355,6 +364,20 @@ static func _build_scene_index() -> void:
 	var scene_connections: GDScript = load("res://addons/eventforge/importer/scene_connections.gd")
 	if scene_connections._scenes_by_script_built:
 		return
+	# The editor reads this index on a thread of its own soon after its first scan: when that read is under way it is
+	# waited for a frame at a time, and when it is done its answer is taken, rather than every scene being read again.
+	if ResourceLoader.has_cached(scene_connections.PREP_PATH):
+		var prep: GDScript = load(scene_connections.PREP_PATH)
+		if prep.pending():
+			while prep.running():
+				await _frame_source.process_frame
+				_last_mark_usec = Time.get_ticks_usec()
+				if _cancel_check.is_valid() and bool(_cancel_check.call()):
+					return
+			var prepared: Variant = prep.take_connections()
+			if prepared is Dictionary:
+				scene_connections._adopt_prepared(prepared)
+				return
 	# The pass over every scene touches nothing but what it returns, so it runs on a worker thread.
 	var paths: PackedStringArray = scene_connections.scene_paths()
 	var index: Dictionary = await in_background(func() -> Dictionary: return scene_connections.index_scenes(paths))
@@ -863,6 +886,7 @@ static func run_sliced(session: Dictionary, tree: SceneTree, cancelled: Callable
 		return _interrupts != interrupts or (cancelled.is_valid() and bool(cancelled.call()))
 	_spent_slice = true
 	_share_locks(true)
+	load(BACKGROUND_PATH).set("stopping", false)
 	var steps: Array = session["steps"]
 	while int(session["index"]) < steps.size():
 		if _interrupts != interrupts:
@@ -963,10 +987,22 @@ static func sliced_findings(sources: Dictionary, finders: Array) -> Array[Dictio
 			slice[keys[index]] = sources[keys[index]]
 		var started: int = Time.get_ticks_usec()
 		if _frame_source != null:
+			var background: GDScript = load(BACKGROUND_PATH)
+			# A few files at a time with a look at the stop flag between, so a quit waits for a file and not for the slice:
+			# each finder judges each file on its own text, so the answers joined are the answers over the whole slice.
 			var worked: Array = await in_background(func() -> Array:
 				var parts: Array = []
 				for finder: Callable in finders:
-					parts.append(finder.call(slice))
+					parts.append([] as Array[Dictionary])
+				var slice_keys: Array = slice.keys()
+				var from: int = 0
+				while from < slice_keys.size() and not bool(background.get("stopping")):
+					var piece: Dictionary = {}
+					for key_index: int in range(from, mini(from + 4, slice_keys.size())):
+						piece[slice_keys[key_index]] = slice[slice_keys[key_index]]
+					for number: int in range(finders.size()):
+						(parts[number] as Array).append_array((finders[number] as Callable).call(piece))
+					from += 4
 				return parts)
 			for number: int in range(finders.size()):
 				(answers[number] as Array).append_array(worked[number])
