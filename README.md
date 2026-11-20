@@ -5,7 +5,7 @@
 The point is **speed-to-game**: whether you've never written code, want logic to pour out faster, or you're mid-jam - events get you from idea to *playing it* in minutes, and keep up when the project balloons to thousands of events.
 
 > [!NOTE]
-> **Early.** Every feature ships with tests (over 1,200 test files gated in CI, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
+> **Early.** Every feature ships with tests (over 1,300 test files gated in CI, byte-exact round-trip gates, performance-parity contracts), but the project hasn't yet earned real-world mileage and may see sweeping changes between releases. Pin a release tag and report what you hit - issues are read and acted on.
 
 Godot EventSheets (engine codename *EventForge*, the prefix on internal class names) brings the C3 event-sheet workflow into the Godot editor: a fast visual editor where events read like sentences, and a compiler that turns every sheet into **typed, idiomatic GDScript** - no runtime interpreter, no plugin dependency in your exported game, and **zero performance difference from hand-written code** (a tested contract).
 
@@ -46,7 +46,7 @@ func _on_hitbox_body_entered(body: Node2D) -> void:
 
 The hit is wired in the scene, not in code: `player.tscn` has an `Area2D` child named `Hitbox` whose `body_entered` signal is connected to `_on_hitbox_body_entered`, so the sheet reads it as a real *On collision with* trigger on the `Hitbox`. The example lives in `demo/readme_example/`.
 
-Delete the plugin and this script still runs. The reverse works too: **open *any* `.gd` as a sheet** - the round-trip is lossless and byte-identical, so you edit visually or in Godot's script editor with the two in sync. Measured with the project's own verify command over 1,647 of this repo's sheet and script files (the deliberately broken test fixtures left out), every one reopens and re-saves byte-for-byte with no answer owed; nearly every code line of the hand-written scripts opens as structure in the sheet's own words; anything the vocabulary cannot match stays an honest, editable row rather than being reformatted behind your back.
+Delete the plugin and this script still runs. The reverse works too: **open *any* `.gd` as a sheet** - the round-trip is lossless and byte-identical, so you edit visually or in Godot's script editor with the two in sync. Measured with the project's own verify command over 2,085 of this repo's sheet and script files (the deliberately broken test fixtures left out), every one reopens and re-saves byte-for-byte with no answer owed; nearly every code line of the hand-written scripts opens as structure in the sheet's own words; anything the vocabulary cannot match stays an honest, editable row rather than being reformatted behind your back.
 
 **View > Generated GDScript** puts the compiled output beside the sheet, refreshed live as you edit:
 
@@ -57,7 +57,7 @@ Delete the plugin and this script still runs. The reverse works too: **open *any
 
 ## Quick start
 
-1. Copy `addons/eventforge/`, `addons/eventsheet/` and `addons/eventsheet_library/` into your Godot **4.5+** project (tested through **4.7 stable**). The library holds the 140 behavior packs in a folder Godot never imports (it carries a `.gdignore`), so none of them reach the picker or your exported game until you add one: the Welcome asks what you are making and copies the packs you pick into `eventsheet_addons/`, and Godot's own **Create Node** window and the Behaviour library add more later. A few built-in rows (a free-spot spawn, a retire, a bus mix) call a small script of their own; the plugin carries those too and copies one into `eventsheet_addons/` the moment you apply a row that needs it. Removal is clean - see [uninstall](docs/GUIDE-UNINSTALL.md).
+1. Copy `addons/eventforge/`, `addons/eventsheet/` and `addons/eventsheet_library/` into your Godot **4.5+** project (tested through **4.7 stable**). The library holds the 140 behavior packs in a folder Godot never imports (it carries a `.gdignore`), so none of them reach the picker or your exported game until you add one: the Welcome asks what you are making and copies the packs you pick into `eventsheet_addons/`, and Godot's own **Create Node** window and the Behaviour library add more later. A few built-in rows (a free-spot spawn, a retire that works whether the Object Pool is an autoload or a child node of a scene, a bus mix) call a small script of their own; the plugin carries those too and copies one into `eventsheet_addons/` the moment you apply a row that needs it. Removal is clean - see [uninstall](docs/GUIDE-UNINSTALL.md).
 2. **Project Settings → Plugins** → enable **Godot EventSheets**.
 3. Open the **EventSheet** tab in the main editor strip (next to 2D/3D/Script).
 4. **New… → Platformer Starter**, add events (live search also understands other editors' words like *"every tick"*), and Run.
@@ -72,23 +72,24 @@ Everything else is in the **[documentation index](docs/README.md)** and inside t
 - **Your existing scripts open as sheets.** Any `.gd` opens as rows and saves back byte for byte, so you can adopt it one file at a time and leave at any time.
 - **It teaches Godot while you use it.** Every row shows the GDScript it writes, expressions are GDScript, and mistakes are explained on the row with a fix beside them.
 - **Familiar if you come from another event-sheet editor.** The grammar, the picker, behaviours as components and picking work the way you expect, on Godot's own nodes, signals and groups. The sheet speaks Godot's words by default; the other editors' words are one opt-in away.
-- **Debug it like any script.** Real breakpoints, paused-at-row, Live Values and an Event Trace.
-- **It stays fast.** A custom-drawn sheet keeps 10,000+ rows fluid.
+- **Debug it like any script.** Real breakpoints (F9 compiles to Godot's own `breakpoint`), paused-at-row, values shown beside the variable rows while the game runs, an Event Trace that lights the rows that fire, and Watch and Trail tabs beside Godot's own Debugger.
+- **It stays fast.** A custom-drawn sheet keeps 10,000+ rows fluid, and the Doctor, saving, renaming a file and opening the first sheet were reworked to stay quick on a project of thousands of files.
 
 **Cons**
 
 - **It is a bridge, not a wall.** Complex logic eventually pulls you toward GDScript, by design.
 - **2D-first.** The 3D vocabularies are real, but deeper 3D still reaches for expressions.
-- **The first sheet tab of a session is slow** on a large project (about 17 to 25 s on our test machine). After that, editing is smooth.
+- **The first sheet tab of a session is slow** on a large project (about 21 s on our test machine, in this repository's own project). After that, editing is smooth.
 - **Experimental.** A large CI suite stands in for mileage it has not earned yet.
 
 ## Feature tour
 
-- **The editor** - two-lane event rows, groups, regions, comments, drag and drop, full undo; Find and Replace, find all references, a Go to window (Ctrl+P) with every command on Godot's own Command Palette, themes that follow Godot's light and dark editor.
+- **The editor** - two-lane event rows, groups, regions, comments, drag and drop, full undo; Find and Replace, find all references, a Go to window (Ctrl+P) with every command on Godot's own Command Palette, themes that follow Godot's light and dark editor, a Theme Editor that saves your own theme with a dark and a light side, and a project-wide replace that lists every change first and can be put back whole.
 - **The language** - events, sub-events, Else, loops and picking, typed functions, enums, signals, `match`, `await`, and a Custom Block API for your own row kinds.
 - **Any script opens as a sheet** - handlers as triggers, input branches as events, signal wiring as triggers; every reading is gated by saving back the same bytes.
-- **2,332 native ACEs** (111 triggers) across scenes, spawning, tweens, audio, cameras, lights, shaders, collisions, raycasts, files, multiplayer, UI, particles, tilemaps and input.
+- **2,336 native ACEs** (111 triggers) across scenes, spawning, tweens, audio, cameras, lights, shaders, collisions, raycasts, files, multiplayer, UI, particles, tilemaps and input. The picker finds a row by what you would call it (typing `slow`, `lag`, `fps` or `profiler` finds the measuring rows) and pre-selects the best match, so a word and Enter adds it.
 - **140 behavior packs**, all authored as event sheets: movement, AI, combat, narrative, drawing, lighting, shaders. See [docs/Addons/](docs/Addons/README.md).
+- **Game feel and drawing** - a Juice Player holds a list of juice cards you can play, copy and reorder without running the game; a Drawing Prefab draws shapes from a list; eighteen behaviours have a Preview button; your own numbers can go in Godot's Monitors tab.
 - **Your own code is vocabulary** - the picker lists your classes and autoloads as actions, conditions and expressions with zero setup, and a call you wrote by hand (`$Enemy.take_damage(25.0)`) offers to become the matching row from the right-click menu.
 - **Mistakes caught as you type** - type checking with Godot's own analyzer, autocomplete that follows the code, and checks for the errors Godot only reports when the game runs.
 
@@ -97,7 +98,7 @@ Everything else is in the **[documentation index](docs/README.md)** and inside t
 	<img alt="The parameters window with a string typed where a number belongs: the exact span is underlined and a plain sentence plus Godot's own words explain why it would be refused." src="docs/previews/editor-type-check.png">
   </picture>
 
-- **Tooling** - Project Doctor (dock, CLI, CI), live debugging, Tools > Run Tests for your test sheets (they run in a second copy of Godot and report back in the same window), Save Studio, Translation Studio (nine editor languages), the Manual inside the editor, a public [`EventSheets` API](docs/GUIDE-BUILDING-ON-EVENTSHEETS.md) and an opt-in MCP server.
+- **Tooling** - Project Doctor (dock, CLI, CI; runs in the background on a large project, with a search box), live debugging, Tools > Run Tests for your test sheets (they run in a second copy of Godot and report back in the same window), Save Studio, Translation Studio (nine editor languages; the tutorials and the Doctor read in the editor's language too), the Manual inside the editor, a public [`EventSheets` API](docs/GUIDE-BUILDING-ON-EVENTSHEETS.md) and an opt-in MCP server.
 - **Updating never rewrites your sheets** - a superseded row keeps working forever and carries the address of its replacement. ([guide](docs/GUIDE-UPDATING-AND-REFACTORING.md))
 
 ## Current status
@@ -120,7 +121,7 @@ The latest tagged release is **`v0.20.0` - "Feel Native"** ([release notes](http
 - **Building at run time with rows.** Add New Node and Add Behaviour put what you made under the running scene and keep its name for the rows after it, Remove Behaviour takes one away, Pause Node and Unpause Node switch a node or a behaviour off and on, and Keep As Prefab packs a branch of what you built into a prefab.
 - **Inspector looks made as event sheets.** Sheet > New inspector look writes a small working look and opens it as a sheet, so a look is made and improved with the same rows as anything else.
 
-**Measured** on our test machine: enabling the plugin takes **310 to 460 ms**; the first sheet tab of a session **17 to 25 s** (about 30 s at `v0.18.0`).
+**Measured** on our test machine: enabling the plugin takes **440 to 450 ms**; the first sheet tab of a session **about 21 s** (20.7 to 20.8 s in three runs of `tools/measure_editor_boot.gd` inside a real editor; about 30 s at `v0.18.0`).
 
 **Quality** - the full test suite and CI run on every push; byte-exact round-trips guard your files; generated code never depends on the plugin. **Verified on Godot 4.7 stable.**
 
