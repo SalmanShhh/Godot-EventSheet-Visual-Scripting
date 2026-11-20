@@ -11385,3 +11385,33 @@ This step completes on its own the moment the sheet contains it.,이 단계는 �
 The step before this one.,이 단계의 이전 단계입니다.
 Leaves the tutorial and goes back to the list.,튜토리얼을 나가 목록으로 돌아갑니다.
 The next step. Never waits for the check - a step you have already done your own way is a step you can walk past.,다음 단계입니다. 확인을 기다리지 않습니다 - 이미 자기 방식으로 끝낸 단계는 그냥 지나쳐도 됩니다.
+Learn by doing,직접 해보며 배우기
+The Studios (in-editor authoring tools),스튜디오(편집기 안의 제작 도구)
+Extend the plugin,플러그인 확장하기
+Localization,현지화
+Working with your project,프로젝트 작업하기
+Reference,레퍼런스
+Built-in vocabulary,내장 어휘
+Addon packs,애드온 팩
+Pack guides,팩 가이드
+This project,이 프로젝트
+Documentation index,문서 색인
+Open online,온라인으로 열기
+Start here,여기서 시작
+Look something up,찾아보기
+Your first platformer,첫 번째 플랫폼 게임
+A top-down shooter,탑다운 슈터
+Every condition and action,모든 조건과 액션
+Every behaviour,모든 비헤이비어
+Glossary,용어집
+Moving from another event-sheet editor,다른 이벤트 시트 편집기에서 옮겨 오기
+"Opens the page you are reading in your browser, pinned to the version you installed.",지금 읽고 있는 페이지를 설치한 버전에 맞춰 브라우저에서 엽니다.
+Opens the project's source repository in your browser.,프로젝트의 소스 저장소를 브라우저에서 엽니다.
+"Everything the plugin can do, in the order you will need it. Start with a tutorial, or search above: every page, every condition and action, and every behaviour is in the search.","플러그인으로 할 수 있는 모든 것을 필요한 순서대로 담았습니다. 튜토리얼로 시작하거나 위에서 검색해 보세요. 모든 페이지, 모든 조건과 액션, 모든 비헤이비어가 검색에 포함됩니다."
+"Which words change, which stay, and how a family, a layout and a variable read here.","바뀌는 용어와 그대로인 용어, 그리고 패밀리, 레이아웃, 변수가 여기서 어떻게 읽히는지 설명합니다."
+This is the editor's own project - open its source as sheets,이것은 편집기 자체의 프로젝트입니다. 소스를 시트로 열어 보세요
+Vocabulary modules,어휘 모듈
+Copy to the clipboard,클립보드에 복사
+Copy these rows as shareable snippet text.,이 행들을 공유할 수 있는 스니펫 텍스트로 복사합니다.
+"Jump to ""%s"".","""%s""(으)로 이동합니다."
+Off means the Start page only opens from Sheet ▸ Start page.,끄면 시작 페이지는 시트 ▸ 시작 페이지에서만 열립니다.

@@ -11385,3 +11385,33 @@ This step completes on its own the moment the sheet contains it.,このステッ
 The step before this one.,このステップの 1 つ前のステップです。
 Leaves the tutorial and goes back to the list.,チュートリアルを抜けて、一覧に戻ります。
 The next step. Never waits for the check - a step you have already done your own way is a step you can walk past.,次のステップへ進みます。チェックを待つことはありません - 自分のやり方ですでにやり終えたステップは、そのまま通り過ぎられます。
+Learn by doing,やって覚える
+The Studios (in-editor authoring tools),スタジオ（エディタ内の制作ツール）
+Extend the plugin,プラグインを拡張する
+Localization,ローカライズ
+Working with your project,プロジェクトでの作業
+Reference,リファレンス
+Built-in vocabulary,組み込みの語彙
+Addon packs,アドオンパック
+Pack guides,パックのガイド
+This project,このプロジェクト
+Documentation index,ドキュメント索引
+Open online,オンラインで開く
+Start here,ここから始める
+Look something up,調べる
+Your first platformer,最初のプラットフォーマー
+A top-down shooter,見下ろし型シューティング
+Every condition and action,すべての条件とアクション
+Every behaviour,すべてのビヘイビア
+Glossary,用語集
+Moving from another event-sheet editor,他のイベントシートエディタからの移行
+"Opens the page you are reading in your browser, pinned to the version you installed.",今読んでいるページを、インストールしたバージョンに合わせてブラウザで開きます。
+Opens the project's source repository in your browser.,プロジェクトのソースリポジトリをブラウザで開きます。
+"Everything the plugin can do, in the order you will need it. Start with a tutorial, or search above: every page, every condition and action, and every behaviour is in the search.",プラグインでできることのすべてを、必要になる順に並べています。まずチュートリアルから始めるか、上の検索を使ってください。すべてのページ、すべての条件とアクション、すべてのビヘイビアが検索の対象です。
+"Which words change, which stay, and how a family, a layout and a variable read here.",変わる言葉と変わらない言葉、そしてファミリー、レイアウト、変数がここでどう読まれるかを説明します。
+This is the editor's own project - open its source as sheets,これはエディタ自身のプロジェクトです。ソースをシートとして開けます
+Vocabulary modules,語彙モジュール
+Copy to the clipboard,クリップボードにコピー
+Copy these rows as shareable snippet text.,これらの行を共有できるスニペットのテキストとしてコピーします。
+"Jump to ""%s"".",「%s」へ移動します。
+Off means the Start page only opens from Sheet ▸ Start page.,オフの場合、スタートページはシート ▸ スタートページからのみ開きます。

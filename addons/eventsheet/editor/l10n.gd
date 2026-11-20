@@ -71,7 +71,7 @@ static func rescan() -> void:
 	# (picker rows, tooltips, viewport sentences). Merged after the editor's own catalogs,
 	# so a pack can only ADD messages, never re-word the editor UI.
 	for pack_csv: String in _pack_translation_files():
-		load_translation_file(pack_csv)
+		load_translation_file(pack_csv, false)
 	_scan_stamp = scan_fingerprint()
 
 
@@ -131,19 +131,22 @@ static func reload_if_changed() -> bool:
 	return true
 
 
-## Loads one translation file into the catalogs (merging; later files win on key collisions).
+## Loads one translation file into the catalogs (merging; later files win on key collisions unless
+## `overwrite` is false, in which case a key the catalogs already hold keeps its words - the way a
+## pack's own file is read, so a pack can add messages and never re-word the editor's own: a skateboard
+## pack's "Manual" trick had been turning the Manual's title into a skate trick in six languages).
 ## Supports the drop-in CSV shape and ready-made Translation resources. Returns true when the
 ## file contributed at least one message - the API surfaces use this to confirm registration.
-static func load_translation_file(path: String) -> bool:
+static func load_translation_file(path: String, overwrite: bool = true) -> bool:
 	match path.get_extension().to_lower():
 		"csv":
-			return _load_csv(path)
+			return _load_csv(path, overwrite)
 		"translation", "tres":
 			return _load_translation_resource(path)
 	return false
 
 
-static func _load_csv(path: String) -> bool:
+static func _load_csv(path: String, overwrite: bool = true) -> bool:
 	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		return false
@@ -166,6 +169,8 @@ static func _load_csv(path: String) -> bool:
 				continue
 			if not _catalogs.has(locale):
 				_catalogs[locale] = {}
+			if not overwrite and (_catalogs[locale] as Dictionary).has(source):
+				continue
 			(_catalogs[locale] as Dictionary)[source] = row[column]
 			contributed = true
 	return contributed

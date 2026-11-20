@@ -18,7 +18,7 @@ static func run() -> bool:
 	ok = _check(ok, pack_files.has("res://eventsheet_addons/health/translations.csv"), "the health pack CSV is discovered")
 	var before_locale: String = EventSheetL10n.get_locale()
 	EventSheetL10n.set_locale("fr")
-	ok = _check(ok, EventSheetL10n.translate("Take Damage") == "Subir des Dégâts", "a pack display name translates (got %s)" % EventSheetL10n.translate("Take Damage"))
+	ok = _check(ok, EventSheetL10n.translate("Take Damage From") == "Subir des Dégâts De", "a pack display name translates (got %s)" % EventSheetL10n.translate("Take Damage From"))
 	ok = _check(ok, EventSheetL10n.translate("On Damaged") == "Sur Dégâts", "a pack trigger name translates")
 	# THE WHOLE TABLE, not the half of it that shipped first: the wound-chain rows are the pack's
 	# vocabulary too, and a table that stops before them leaves the picker half in English.
@@ -27,6 +27,10 @@ static func run() -> bool:
 
 	# ---- packs ADD, never re-word the editor: an editor key stays the editor's translation ----
 	ok = _check(ok, EventSheetL10n.translate("Save") == "Enregistrer", "editor strings keep the editor catalog (got %s)" % EventSheetL10n.translate("Save"))
+	# A word both catalogs hold: the editor's row wins, so a pack's "Manual" (a skateboard trick) can never
+	# turn the Manual's own title into a trick, and a pack's "Take Damage" does not re-word the editor's.
+	ok = _check(ok, EventSheetL10n.translate("Manual") == "Manuel", "a word a pack also translates keeps the editor's row (got %s)" % EventSheetL10n.translate("Manual"))
+	ok = _check(ok, EventSheetL10n.translate("Take Damage") == "Subir des dégâts", "and so does a row the editor has since added (got %s)" % EventSheetL10n.translate("Take Damage"))
 
 	# ---- translated templates: {slots} substitute AFTER translation ----
 	var probe_csv: String = "user://pack_l10n_probe.csv"

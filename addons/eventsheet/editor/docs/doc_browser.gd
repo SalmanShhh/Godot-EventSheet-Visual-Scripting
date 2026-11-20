@@ -311,7 +311,7 @@ func _build_chrome() -> HBoxContainer:
 	_breadcrumb.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_breadcrumb.add_theme_font_size_override("font_size", EventSheetPalette.scaled(11))
 	_breadcrumb.add_theme_color_override("font_color", EventSheetActiveTheme.manual().resolve_muted(EventSheetPalette.TEXT_MUTED))
-	_breadcrumb.text = EventSheetDocReference.MANUAL_TITLE
+	_breadcrumb.text = EventSheetL10n.translate(EventSheetDocReference.MANUAL_TITLE)
 	row.add_child(_breadcrumb)
 	_back_button = _icon_button(["Back", "ArrowLeft"], "◀", "Back (Alt+Left).", go_back_pressed)
 	row.add_child(_back_button)
@@ -521,7 +521,7 @@ func _refresh_chrome() -> void:
 	# call - the one that draws an empty trail - runs while there is no page to ask.
 	if _breadcrumb == null or _page == null:
 		return
-	_breadcrumb.text = " ▸ ".join(Array(EventSheetDocReference.breadcrumb(_current_id, current_title())))
+	_breadcrumb.text = breadcrumb_text(EventSheetDocReference.breadcrumb(_current_id, current_title()))
 	_breadcrumb.tooltip_text = _breadcrumb.text
 	_back_button.disabled = not EventSheetDocHistory.can_go_back()
 	_forward_button.disabled = not EventSheetDocHistory.can_go_forward()
@@ -1078,7 +1078,7 @@ func _build_mini_nav() -> void:
 		var button: Button = Button.new()
 		button.flat = true
 		button.text = str(entry.get("text", "")).to_upper()
-		button.tooltip_text = "Jump to \"%s\"." % str(entry.get("text", ""))
+		button.tooltip_text = EventSheetL10n.translate("Jump to \"%s\".") % str(entry.get("text", ""))
 		button.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 		button.pressed.connect(func() -> void:
 			_page.set_section_expanded(slug, true)
@@ -1444,9 +1444,20 @@ func _style_page_row(item: TreeItem, page_id: String) -> void:
 	item.set_icon_max_width(0, int(EventSheetPalette.scaled_f(14.0)))
 
 
+## The trail above the page in the reader's language: each crumb is looked up as it is (a crumb with
+## no row, such as a guide's own title, stays as written).
+static func breadcrumb_text(crumbs: PackedStringArray) -> String:
+	var said: PackedStringArray = PackedStringArray()
+	for crumb: String in crumbs:
+		said.append(EventSheetL10n.translate(crumb))
+	return " ▸ ".join(said)
+
+
 ## A group title as the sidebar draws it. Pure, so the suite pins the label rather than the pixels.
 static func group_label(title: String) -> String:
-	return title.strip_edges().to_upper()
+	# Translate the words first and change the case after: the catalog is keyed by the English words as
+	# written, so an upper-cased English divider never finds its row.
+	return EventSheetL10n.translate(title.strip_edges()).to_upper()
 
 
 ## The page on screen wears a filled accent pill, and the row that wore it last gives it back. The

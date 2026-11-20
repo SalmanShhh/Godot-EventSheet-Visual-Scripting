@@ -11385,3 +11385,33 @@ This step completes on its own the moment the sheet contains it.,一旦事件表
 The step before this one.,这一步之前的那一步。
 Leaves the tutorial and goes back to the list.,退出教程并回到列表。
 The next step. Never waits for the check - a step you have already done your own way is a step you can walk past.,下一步。从不等待检查 - 你已经用自己的方式完成的步骤，可以直接跳过。
+Learn by doing,边做边学
+The Studios (in-editor authoring tools),工作室（编辑器内的创作工具）
+Extend the plugin,扩展插件
+Localization,本地化
+Working with your project,处理你的项目
+Reference,参考
+Built-in vocabulary,内置词汇
+Addon packs,附加包
+Pack guides,附加包指南
+This project,此项目
+Documentation index,文档索引
+Open online,在线打开
+Start here,从这里开始
+Look something up,查找内容
+Your first platformer,你的第一个平台跳跃游戏
+A top-down shooter,俯视角射击游戏
+Every condition and action,所有条件和动作
+Every behaviour,所有行为
+Glossary,术语表
+Moving from another event-sheet editor,从其他事件表编辑器迁移
+"Opens the page you are reading in your browser, pinned to the version you installed.",在浏览器中打开你正在阅读的页面，并固定为你安装的版本。
+Opens the project's source repository in your browser.,在浏览器中打开项目的源代码仓库。
+"Everything the plugin can do, in the order you will need it. Start with a tutorial, or search above: every page, every condition and action, and every behaviour is in the search.",插件的全部功能，按你需要的顺序排列。先从教程开始，或使用上方的搜索：每个页面、每个条件和动作、每个行为都能搜到。
+"Which words change, which stay, and how a family, a layout and a variable read here.",哪些词会变，哪些不变，以及家族、布局和变量在这里如何表示。
+This is the editor's own project - open its source as sheets,这是编辑器自身的项目：把它的源代码当作事件表打开
+Vocabulary modules,词汇模块
+Copy to the clipboard,复制到剪贴板
+Copy these rows as shareable snippet text.,把这些行复制为可分享的代码片段文本。
+"Jump to ""%s"".",跳转到“%s”。
+Off means the Start page only opens from Sheet ▸ Start page.,关闭后，起始页只能从“事件表 ▸ 起始页”打开。

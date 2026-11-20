@@ -747,7 +747,7 @@ func _fill_list(list: Tree, entries: Array, shelf: String = "") -> void:
 		if row_shelf != heading:
 			heading = row_shelf
 			var head: TreeItem = list.create_item(root)
-			head.set_text(0, heading.to_upper())
+			head.set_text(0, shelf_heading(heading))
 			head.set_custom_color(0, EventSheetPopupUI.accent_color())
 			head.set_custom_font(0, EventSheetPopupUI.small_caps_font(list.get_theme_font("font")))
 			head.set_custom_font_size(0, EventSheetPalette.scaled(EventSheetPopupUI.SMALL_CAPS_FONT_SIZE))
@@ -778,6 +778,13 @@ func _fill_list(list: Tree, entries: Array, shelf: String = "") -> void:
 		empty.set_selectable(1, false)
 
 
+## A shelf's heading in the list: the words in the reader's language first, then the capitals. The
+## catalog is keyed by the English words as written, so upper-casing the English before the lookup
+## would never find a row.
+static func shelf_heading(shelf_name: String) -> String:
+	return EventSheetL10n.translate(shelf_name).to_upper()
+
+
 ## The chips over the template column: All, then one per shelf. A chip narrows the list to its shelf.
 func _shelf_chips(list: Tree, entries: Array) -> HFlowContainer:
 	var chips: HFlowContainer = HFlowContainer.new()
@@ -788,7 +795,7 @@ func _shelf_chips(list: Tree, entries: Array) -> HFlowContainer:
 	for shelf: String in shelf_names:
 		var chip: Button = Button.new()
 		# The chip is the heading's first words: "Project-wide", not "Project-wide (autoloads)".
-		chip.text = shelf.get_slice(" (", 0) if not shelf.is_empty() else EventSheetL10n.translate("All")
+		chip.text = EventSheetL10n.translate(shelf).get_slice(" (", 0) if not shelf.is_empty() else EventSheetL10n.translate("All")
 		chip.toggle_mode = true
 		chip.button_group = group
 		chip.flat = true

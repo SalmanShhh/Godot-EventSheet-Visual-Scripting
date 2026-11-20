@@ -11385,3 +11385,33 @@ This step completes on its own the moment the sheet contains it.,"Этот ша�
 The step before this one.,Шаг перед этим.
 Leaves the tutorial and goes back to the list.,Выходит из урока и возвращает к списку.
 The next step. Never waits for the check - a step you have already done your own way is a step you can walk past.,"Следующий шаг. Никогда не ждёт проверки - шаг, который вы уже выполнили по-своему, можно просто пропустить."
+Learn by doing,Учимся на практике
+The Studios (in-editor authoring tools),Студии (инструменты создания в редакторе)
+Extend the plugin,Расширение плагина
+Localization,Локализация
+Working with your project,Работа с вашим проектом
+Reference,Справочник
+Built-in vocabulary,Встроенный словарь
+Addon packs,Пакеты дополнений
+Pack guides,Руководства по пакетам
+This project,Этот проект
+Documentation index,Указатель документации
+Open online,Открыть онлайн
+Start here,Начните здесь
+Look something up,Найти что-нибудь
+Your first platformer,Ваш первый платформер
+A top-down shooter,Шутер с видом сверху
+Every condition and action,Все условия и действия
+Every behaviour,Все поведения
+Glossary,Глоссарий
+Moving from another event-sheet editor,Переход из другого редактора листов событий
+"Opens the page you are reading in your browser, pinned to the version you installed.",Открывает читаемую страницу в браузере для установленной у вас версии.
+Opens the project's source repository in your browser.,Открывает репозиторий с исходным кодом проекта в браузере.
+"Everything the plugin can do, in the order you will need it. Start with a tutorial, or search above: every page, every condition and action, and every behaviour is in the search.","Всё, что умеет плагин, в том порядке, в каком это вам понадобится. Начните с урока или воспользуйтесь поиском выше: в нём есть каждая страница, каждое условие и действие и каждое поведение."
+"Which words change, which stay, and how a family, a layout and a variable read here.","Какие слова меняются, какие остаются и как здесь читаются семейство, раскладка и переменная."
+This is the editor's own project - open its source as sheets,Проект самого плагина: откройте код как листы
+Vocabulary modules,Модули словаря
+Copy to the clipboard,Скопировать в буфер обмена
+Copy these rows as shareable snippet text.,"Копирует эти строки как текст фрагмента, которым можно поделиться."
+"Jump to ""%s"".",Перейти к «%s».
+Off means the Start page only opens from Sheet ▸ Start page.,"Если выключено, стартовая страница открывается только через Лист ▸ Стартовая страница."

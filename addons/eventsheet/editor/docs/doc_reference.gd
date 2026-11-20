@@ -149,24 +149,24 @@ const HOME_MOVING_ACROSS := "guide:GUIDE-MOVING-FROM-ANOTHER-EVENT-SHEET-EDITOR"
 ## rather than drawn dead.
 static func home_blocks() -> Array[Dictionary]:
 	var blocks: Array[Dictionary] = [
-		{"kind": "heading", "level": 1, "text": "Documentation index", "slug": "documentation-index"},
-		{"kind": "paragraph", "bbcode": "Everything the plugin can do, in the order you will need it. Start with a tutorial, or search above: every page, every condition and action, and every behaviour is in the search."},
+		{"kind": "heading", "level": 1, "text": EventSheetL10n.translate("Documentation index"), "slug": "documentation-index"},
+		{"kind": "paragraph", "bbcode": EventSheetL10n.translate("Everything the plugin can do, in the order you will need it. Start with a tutorial, or search above: every page, every condition and action, and every behaviour is in the search.")},
 	]
 	for row: Array in [["Start here", HOME_START_HERE], ["Look something up", HOME_LOOK_UP]]:
 		var items: Array = []
 		for door: Array in (row[1] as Array):
 			if EventSheetDocExplain.resolve(str(door[1])).get("valid", false):
-				items.append({"label": str(door[0]), "tooltip": "", "action": ACTION_HOME_OPEN,
+				items.append({"label": EventSheetL10n.translate(str(door[0])), "tooltip": "", "action": ACTION_HOME_OPEN,
 					"argument": "%s#%s" % [str(door[1]), str(door[2])]})
 		if items.is_empty():
 			continue
-		blocks.append({"kind": "heading", "level": 2, "text": str(row[0]), "slug": str(row[0]).to_lower().replace(" ", "-")})
+		blocks.append({"kind": "heading", "level": 2, "text": EventSheetL10n.translate(str(row[0])), "slug": str(row[0]).to_lower().replace(" ", "-")})
 		blocks.append({"kind": "buttons", "items": items})
 	if bool(EventSheetDocExplain.resolve(HOME_MOVING_ACROSS).get("valid", false)):
-		blocks.append({"kind": "heading", "level": 2, "text": "Coming from another event-sheet editor",
+		blocks.append({"kind": "heading", "level": 2, "text": EventSheetL10n.translate("Coming from another event-sheet editor"),
 			"slug": "coming-from-another-event-sheet-editor"})
-		blocks.append({"kind": "paragraph", "bbcode": "Which words change, which stay, and how a family, a layout and a variable read here."})
-		blocks.append({"kind": "buttons", "items": [{"label": "Moving from another event-sheet editor", "tooltip": "",
+		blocks.append({"kind": "paragraph", "bbcode": EventSheetL10n.translate("Which words change, which stay, and how a family, a layout and a variable read here.")})
+		blocks.append({"kind": "buttons", "items": [{"label": EventSheetL10n.translate("Moving from another event-sheet editor"), "tooltip": "",
 			"action": ACTION_HOME_OPEN, "argument": "%s#" % HOME_MOVING_ACROSS}]})
 	return blocks
 

@@ -11385,3 +11385,33 @@ This step completes on its own the moment the sheet contains it.,Este paso se co
 The step before this one.,El paso anterior a este.
 Leaves the tutorial and goes back to the list.,Sale del tutorial y vuelve a la lista.
 The next step. Never waits for the check - a step you have already done your own way is a step you can walk past.,El siguiente paso. Nunca espera a la comprobación - un paso que ya has hecho a tu manera es un paso que puedes dejar atrás.
+Learn by doing,Aprender haciendo
+The Studios (in-editor authoring tools),Los estudios (herramientas de creación en el editor)
+Extend the plugin,Ampliar el plugin
+Localization,Localización
+Working with your project,Trabajar con tu proyecto
+Reference,Referencia
+Built-in vocabulary,Vocabulario integrado
+Addon packs,Paquetes de addons
+Pack guides,Guías de los paquetes
+This project,Este proyecto
+Documentation index,Índice de la documentación
+Open online,Abrir en línea
+Start here,Empieza aquí
+Look something up,Buscar algo
+Your first platformer,Tu primer juego de plataformas
+A top-down shooter,Un juego de disparos cenital
+Every condition and action,Todas las condiciones y acciones
+Every behaviour,Todos los comportamientos
+Glossary,Glosario
+Moving from another event-sheet editor,Pasar desde otro editor de hojas de eventos
+"Opens the page you are reading in your browser, pinned to the version you installed.","Abre en tu navegador la página que estás leyendo, fijada a la versión que instalaste."
+Opens the project's source repository in your browser.,Abre en tu navegador el repositorio de código fuente del proyecto.
+"Everything the plugin can do, in the order you will need it. Start with a tutorial, or search above: every page, every condition and action, and every behaviour is in the search.","Todo lo que el plugin puede hacer, en el orden en que lo vas a necesitar. Empieza con un tutorial o busca arriba: cada página, cada condición y acción y cada comportamiento está en la búsqueda."
+"Which words change, which stay, and how a family, a layout and a variable read here.","Qué palabras cambian, cuáles se quedan y cómo se leen aquí una familia, un diseño y una variable."
+This is the editor's own project - open its source as sheets,Este es el propio proyecto del editor: abre su código como hojas
+Vocabulary modules,Módulos de vocabulario
+Copy to the clipboard,Copiar al portapapeles
+Copy these rows as shareable snippet text.,Copia estas filas como texto de fragmento que se puede compartir.
+"Jump to ""%s"".","Ir a ""%s""."
+Off means the Start page only opens from Sheet ▸ Start page.,Desactivado significa que la página de inicio solo se abre desde Hoja ▸ Página de inicio.
