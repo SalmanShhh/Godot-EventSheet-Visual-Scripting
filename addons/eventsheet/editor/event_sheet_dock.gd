@@ -1058,7 +1058,7 @@ func _ready() -> void:
 		# A rename, move or delete in the FileSystem dock reaches the known-sheets record first, and the
 		# record tells the open tabs; a change made outside Godot lands after the rescan, and an open tab
 		# whose file is gone is treated as deleted (a walk over the open tabs only).
-		load("res://addons/eventforge/known_sheets.gd").path_listener = follow_file_event
+		load("res://addons/eventforge/known_sheets.gd").set_path_listener(follow_file_event)
 		# The two scripts that follow a file are only loaded when the first file moves, which is a frame the
 		# user is waiting on; asking the engine for them now reads and compiles them on a worker thread, so
 		# that first move finds them ready.
@@ -1066,8 +1066,8 @@ func _ready() -> void:
 		ResourceLoader.load_threaded_request(PATH_REFERENCES_PATH)
 		# The scene index is read again off the main thread after a filesystem change; when what arrives
 		# answers differently, the names that were built from the one before it are built again.
-		EventSheetViewportRowBuilder.scene_index_changed = _on_scene_index_changed
-		EventSheetSceneConnections.index_changed = _on_scene_index_changed
+		EventSheetViewportRowBuilder.set_scene_index_changed(_on_scene_index_changed)
+		EventSheetSceneConnections.set_index_changed(_on_scene_index_changed)
 		if filesystem != null and filesystem.has_signal("filesystem_changed") \
 				and not filesystem.is_connected("filesystem_changed", follow_file_event.bind("missing")):
 			filesystem.connect("filesystem_changed", follow_file_event.bind("missing"))

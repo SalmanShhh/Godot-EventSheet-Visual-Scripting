@@ -95,7 +95,7 @@ func start(path: String) -> bool:
 	if background_running.is_valid() and bool(background_running.call()):
 		# The Doctor's worker is in the middle of a function; this job's worker begins when it has left (`is_done`).
 		_deferred = true
-		EventSheetACELifter.progress_phase = "reading"
+		EventSheetACELifter.set_progress_phase("reading")
 		return true
 	return _begin_worker()
 
@@ -105,9 +105,9 @@ func _begin_worker() -> bool:
 	_deferred = false
 	warm_registries()
 	EventSheetACELifter.reset_progress()
-	EventSheetACELifter.progress_phase = "reading"
+	EventSheetACELifter.set_progress_phase("reading")
 	if _canceled:
-		EventSheetACELifter.cancel_requested = true
+		EventSheetACELifter.set_cancel_requested(true)
 	_thread = Thread.new()
 	if _thread.start(_run) != OK:
 		# No thread available (a platform without threading): fall back to the synchronous open so
@@ -127,7 +127,7 @@ func _run() -> void:
 	# instead of being lifted again - after it re-emits the source byte for byte (see lift_cache.gd).
 	var remembered: EventSheetResource = load(LIFT_CACHE_PATH).fetch(_path, source) as EventSheetResource
 	if remembered != null:
-		EventSheetACELifter.progress_phase = "checking"
+		EventSheetACELifter.set_progress_phase("checking")
 		EventSheetParseErrors.store_on_sheet(remembered, EventSheetParseErrors.check_file(_path))
 		_sheet = remembered
 		return
@@ -137,7 +137,7 @@ func _run() -> void:
 		_sheet = null
 		return
 	if not EventSheetACELifter.cancel_requested:
-		EventSheetACELifter.progress_phase = "lifting"
+		EventSheetACELifter.set_progress_phase("lifting")
 		EventSheetACELifter.attempt_lift(raw_sheet, source)
 		# A lift that was cut short is the raw sheet and says nothing about the file: never remembered.
 		if not EventSheetACELifter.cancel_requested:
@@ -146,7 +146,7 @@ func _run() -> void:
 		# Whether the engine can actually parse this file, asked of the engine itself. It costs a few
 		# hundred milliseconds because it runs a second Godot, which is exactly why it belongs here on
 		# the worker rather than anywhere near the paint path - and why the answer is cached per file.
-		EventSheetACELifter.progress_phase = "checking"
+		EventSheetACELifter.set_progress_phase("checking")
 		EventSheetParseErrors.store_on_sheet(raw_sheet, EventSheetParseErrors.check_file(_path))
 	_sheet = raw_sheet
 
@@ -167,7 +167,7 @@ func is_done() -> bool:
 ## the RAW sheet, the same state a file that cannot lift at all ends in.
 func cancel() -> void:
 	_canceled = true
-	EventSheetACELifter.cancel_requested = true
+	EventSheetACELifter.set_cancel_requested(true)
 
 
 func was_canceled() -> bool:
@@ -182,8 +182,8 @@ func finish() -> EventSheetResource:
 		_thread.wait_to_finish()
 		_thread = null
 		_finished_msec = Time.get_ticks_msec()
-	EventSheetACELifter.progress_phase = ""
-	EventSheetACELifter.cancel_requested = false
+	EventSheetACELifter.set_progress_phase("")
+	EventSheetACELifter.set_cancel_requested(false)
 	return _sheet
 
 

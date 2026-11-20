@@ -431,9 +431,9 @@ func _import_canonical(source: String, lift: bool = true, script_path: String = 
 		# `external_source_path` early, because that field also switches the compiler onto its external
 		# emission path - and the lift runs several before/after compiles of its own that must keep
 		# comparing like with like. Cleared after, so an in-memory import never inherits a stale path.
-		EventSheetACELifter.scene_source_path = script_path
+		EventSheetACELifter.set_scene_source_path(script_path)
 		EventSheetACELifter.attempt_lift(sheet, source)
-		EventSheetACELifter.scene_source_path = ""
+		EventSheetACELifter.set_scene_source_path("")
 	return sheet
 
 
@@ -2084,3 +2084,9 @@ func _build_function(function_data: Dictionary) -> EventFunction:
 		raw_row.code = body
 		event_function.events.append(raw_row)
 	return event_function
+
+
+## Sets `external_imports` on behalf of another script. A static variable assigned from outside its own script marks that script as
+## edited, and Godot's scene save then rewrites every edited script (a reload each, seconds in all); a write made here does not.
+static func set_external_imports(value: int) -> void:
+	external_imports = value

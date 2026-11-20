@@ -22935,3 +22935,15 @@ func _cursor_ray_run_facts(actions: Array, first: int, last: int) -> Dictionary:
 		"aimed_at": EventSheetViewportReadingRows.cursor_aim_owner(str(origin.get("point", ""))),
 		"mask": mask
 	}
+
+
+## Sets `preview_param_door` on behalf of another script. A static variable assigned from outside its own script marks that script as
+## edited, and Godot's scene save then rewrites every edited script (a reload each, seconds in all); a write made here does not.
+static func set_preview_param_door(value: Callable) -> void:
+	preview_param_door = value
+
+
+## Sets `scene_index_changed` on behalf of another script. A static variable assigned from outside its own script marks that script as
+## edited, and Godot's scene save then rewrites every edited script (a reload each, seconds in all); a write made here does not.
+static func set_scene_index_changed(value: Callable) -> void:
+	scene_index_changed = value

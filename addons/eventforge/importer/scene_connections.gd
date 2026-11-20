@@ -684,3 +684,15 @@ static func _walk_scene_paths(directory_path: String, into: PackedStringArray) -
 			into.append(full_path)
 		entry = directory.get_next()
 	directory.list_dir_end()
+
+
+## Sets `index_changed` on behalf of another script. A static variable assigned from outside its own script marks that script as
+## edited, and Godot's scene save then rewrites every edited script (a reload each, seconds in all); a write made here does not.
+static func set_index_changed(value: Callable) -> void:
+	index_changed = value
+
+
+## Sets `scene_scope` on behalf of another script. A static variable assigned from outside its own script marks that script as
+## edited, and Godot's scene save then rewrites every edited script (a reload each, seconds in all); a write made here does not.
+static func set_scene_scope(value: String) -> void:
+	scene_scope = value

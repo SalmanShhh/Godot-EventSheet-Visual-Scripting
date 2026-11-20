@@ -98,7 +98,7 @@ func begin(paths: PackedStringArray, open_job_class: GDScript, mode: String = "s
 	_stop = false
 	_joined = false
 	if EventSheetACELifter.lift_lock == null:
-		EventSheetACELifter.lift_lock = Mutex.new()
+		EventSheetACELifter.set_lift_lock(Mutex.new())
 	# Built here on the main thread, so the worker only ever reads them.
 	var warmed: int = Time.get_ticks_usec()
 	open_job_class.warm_registries()
@@ -119,7 +119,7 @@ func _run() -> void:
 	# A stop asked of this worker is cleared here, as the worker ends, so no lift of the editor's own that starts in
 	# the gap before the main thread joins is cut short by it.
 	if _stop:
-		EventSheetACELifter.cancel_requested = false
+		EventSheetACELifter.set_cancel_requested(false)
 
 
 func _lift_all() -> void:
@@ -134,7 +134,7 @@ func _lift_all() -> void:
 		if _stop:
 			# A lift cut short is the raw sheet: not an answer, and not counted as a call that was.
 			if _mode != "reading":
-				EventSheetGDScriptImporter.external_imports -= 1
+				EventSheetGDScriptImporter.set_external_imports(EventSheetGDScriptImporter.external_imports - 1)
 			return
 		_sheets[_paths[index]] = answer
 		_done = index + 1
@@ -147,7 +147,7 @@ func is_running() -> bool:
 ## Asks the worker to stop at the next function of the lift in hand.
 func request_stop() -> void:
 	_stop = true
-	EventSheetACELifter.cancel_requested = true
+	EventSheetACELifter.set_cancel_requested(true)
 
 
 ## The reader is opening a sheet: asks the worker to stop at the next function of the lift in hand and goes on, without
@@ -167,8 +167,8 @@ func preempt() -> void:
 	_joined = true
 	if _running_job == self:
 		_running_job = null
-	EventSheetACELifter.cancel_requested = false
-	EventSheetACELifter.progress_phase = ""
+	EventSheetACELifter.set_cancel_requested(false)
+	EventSheetACELifter.set_progress_phase("")
 
 
 ## Stops the running worker, if there is one, and waits for it: for whoever must have no worker left (the editor
@@ -189,6 +189,6 @@ func finish(open_job_class: GDScript) -> Dictionary:
 	if open_job_class.preempt_background == ask_to_stop:
 		open_job_class.preempt_background = Callable()
 		open_job_class.background_running = Callable()
-	EventSheetACELifter.cancel_requested = false
-	EventSheetACELifter.progress_phase = ""
+	EventSheetACELifter.set_cancel_requested(false)
+	EventSheetACELifter.set_progress_phase("")
 	return {"sheets": _sheets, "done": _done}

@@ -190,3 +190,9 @@ static func _cached_regex(pattern: String) -> RegEx:
 	if lock != null:
 		lock.unlock()
 	return held
+
+
+## Sets `lock` on behalf of another script. A static variable assigned from outside its own script marks that script as
+## edited, and Godot's scene save then rewrites every edited script (a reload each, seconds in all); a write made here does not.
+static func set_lock(value: Mutex) -> void:
+	lock = value

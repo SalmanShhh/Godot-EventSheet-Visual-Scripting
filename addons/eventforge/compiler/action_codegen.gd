@@ -275,3 +275,15 @@ static func _get_params(action: ACEAction) -> Dictionary:
 	if not action.params.is_empty():
 		return action.params
 	return action.parameters
+
+
+## Sets `starting_values` on behalf of another script. A static variable assigned from outside its own script marks that script as
+## edited, and Godot's scene save then rewrites every edited script (a reload each, seconds in all); a write made here does not.
+static func set_starting_values(value: Dictionary) -> void:
+	starting_values = value
+
+
+## Sets `unresolved_starting_values` on behalf of another script. A static variable assigned from outside its own script marks that script as
+## edited, and Godot's scene save then rewrites every edited script (a reload each, seconds in all); a write made here does not.
+static func set_unresolved_starting_values(value: PackedStringArray) -> void:
+	unresolved_starting_values = value

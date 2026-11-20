@@ -266,3 +266,9 @@ static func door_text(plain_count: int) -> String:
 	else:
 		how_long = EventSheetL10n.translate("about %d minutes") % int(round(seconds / 60.0))
 	return "%s (%s)" % [EventSheetL10n.translate("Check these %d scripts as sheets too") % plain_count, how_long]
+
+
+## Sets `path_listener` on behalf of another script. A static variable assigned from outside its own script marks that script as
+## edited, and Godot's scene save then rewrites every edited script (a reload each, seconds in all); a write made here does not.
+static func set_path_listener(value: Callable) -> void:
+	path_listener = value

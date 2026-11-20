@@ -283,8 +283,8 @@ static func _reset_per_compile_state(sheet: EventSheetResource = null) -> void:
 	_removal_guard_facts = EventForgeRemovalGuard.facts(sheet)
 	# What each variable's declaration starts it on, for the Reset rows - read once here for the same
 	# reason: a walk of the whole sheet whose answer cannot change during a compile.
-	EventSheetActionCodegen.starting_values = declared_starting_values(sheet)
-	EventSheetActionCodegen.unresolved_starting_values = PackedStringArray()
+	EventSheetActionCodegen.set_starting_values(declared_starting_values(sheet))
+	EventSheetActionCodegen.set_unresolved_starting_values(PackedStringArray())
 
 
 ## Compiles an event sheet resource to a GDScript output file.
@@ -327,8 +327,8 @@ static func _compile_locked(sheet: EventSheetResource, output_path: String, omit
 	# A Reset row naming a variable this sheet does not declare wrote nothing, so it says why here.
 	for unresolved: String in EventSheetActionCodegen.unresolved_starting_values:
 		(locked_result["warnings"] as Array).append("Reset Variable: %s is not declared on this sheet, so there is no starting value to put back - the row writes nothing." % unresolved)
-	EventSheetActionCodegen.starting_values = {}
-	EventSheetActionCodegen.unresolved_starting_values = PackedStringArray()
+	EventSheetActionCodegen.set_starting_values({})
+	EventSheetActionCodegen.set_unresolved_starting_values(PackedStringArray())
 	_writes_output = true
 	_compile_mutex.unlock()
 	return locked_result

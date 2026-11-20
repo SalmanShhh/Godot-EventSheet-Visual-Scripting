@@ -161,9 +161,9 @@ static func _open_body(body_source: String) -> EventSheetResource:
 	var total: int = EventSheetACELifter.progress_functions_total
 	var done: int = EventSheetACELifter.progress_functions_done
 	var body_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external_source(body_source, true, "")
-	EventSheetACELifter.progress_phase = phase
-	EventSheetACELifter.progress_functions_total = total
-	EventSheetACELifter.progress_functions_done = done
+	EventSheetACELifter.set_progress_phase(phase)
+	EventSheetACELifter.set_progress_functions_total(total)
+	EventSheetACELifter.set_progress_functions_done(done)
 	return body_sheet
 
 

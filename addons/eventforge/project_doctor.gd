@@ -4052,7 +4052,7 @@ static func _cache_put(path: String, text: String) -> void:
 ## Makes the locks a sliced audit's worker threads share, and lets them go again when it is over. Main thread only.
 static func _share_locks(on: bool) -> void:
 	_cache_lock = Mutex.new() if on else null
-	SAVE_KEY_SCAN.lock = _cache_lock
+	SAVE_KEY_SCAN.set_lock(_cache_lock)
 
 
 ## One script opened as a sheet, imported once per audit and handed to every section that asks.

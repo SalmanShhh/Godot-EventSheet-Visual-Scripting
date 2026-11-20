@@ -6203,3 +6203,39 @@ static func _escape_regex(text: String) -> String:
 	for character in text:
 		escaped += ("\\" + character) if character in "\\^$.|?*+()[]{}" else character
 	return escaped
+
+
+## Sets `cancel_requested` on behalf of another script. A static variable assigned from outside its own script marks that script as
+## edited, and Godot's scene save then rewrites every edited script (a reload each, seconds in all); a write made here does not.
+static func set_cancel_requested(value: bool) -> void:
+	cancel_requested = value
+
+
+## Sets `lift_lock` on behalf of another script. A static variable assigned from outside its own script marks that script as
+## edited, and Godot's scene save then rewrites every edited script (a reload each, seconds in all); a write made here does not.
+static func set_lift_lock(value: Mutex) -> void:
+	lift_lock = value
+
+
+## Sets `progress_functions_done` on behalf of another script. A static variable assigned from outside its own script marks that script as
+## edited, and Godot's scene save then rewrites every edited script (a reload each, seconds in all); a write made here does not.
+static func set_progress_functions_done(value: int) -> void:
+	progress_functions_done = value
+
+
+## Sets `progress_functions_total` on behalf of another script. A static variable assigned from outside its own script marks that script as
+## edited, and Godot's scene save then rewrites every edited script (a reload each, seconds in all); a write made here does not.
+static func set_progress_functions_total(value: int) -> void:
+	progress_functions_total = value
+
+
+## Sets `progress_phase` on behalf of another script. A static variable assigned from outside its own script marks that script as
+## edited, and Godot's scene save then rewrites every edited script (a reload each, seconds in all); a write made here does not.
+static func set_progress_phase(value: String) -> void:
+	progress_phase = value
+
+
+## Sets `scene_source_path` on behalf of another script. A static variable assigned from outside its own script marks that script as
+## edited, and Godot's scene save then rewrites every edited script (a reload each, seconds in all); a write made here does not.
+static func set_scene_source_path(value: String) -> void:
+	scene_source_path = value
