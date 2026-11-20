@@ -340,18 +340,12 @@ static func _test_the_manual_page() -> bool:
 
 
 static func _test_the_theme_token_derives() -> bool:
-	var ok: bool = true
+	# The chip is retired: the two tokens are stored values a saved theme may still carry, and they round-trip.
 	var style := EventSheetReadingStyle.new()
-	# ALPHA 0 means DERIVE, not transparent: a preset saved before patterns existed must dress the
-	# chip in its own palette rather than take a hard-coded plate.
-	ok = _check("an undressed pattern chip takes the plain chip's plate",
-		style.resolved_pattern_chip_background(), style.plain_chip_background_color) and ok
-	ok = _check("and the muted text tone, which is what makes it read as a note",
-		style.resolved_pattern_chip_foreground(), style.muted_text_color) and ok
 	style.pattern_chip_background_color = Color(0.1, 0.2, 0.3, 1.0)
-	ok = _check("a theme that dresses it wins", style.resolved_pattern_chip_background(),
-		Color(0.1, 0.2, 0.3, 1.0)) and ok
-	return ok
+	var copy: EventSheetReadingStyle = style.duplicate() as EventSheetReadingStyle
+	return _check("a retired pattern chip token is still kept by a theme that names it",
+		copy.pattern_chip_background_color, Color(0.1, 0.2, 0.3, 1.0))
 
 
 # ── The covenant ──

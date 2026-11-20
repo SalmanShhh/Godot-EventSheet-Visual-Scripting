@@ -102,7 +102,9 @@ extends Resource
 ## The min-max range slider's two round handles, and the line around each.
 @export_storage var drawer_handle_color: Color = Color(0.86, 0.9, 0.97, 1.0)
 @export var drawer_handle_border_color: Color = Color(0.2, 0.28, 0.4, 1.0)
-## The quiet note panel an `@inspector_info` comment builds, and the words on it.
+## RETIRED. An `@inspector_info` note is one quiet line in the editor's own colour under its field (the
+## panel these coloured is gone), so nothing draws with these three. Stored values only: a theme file that
+## names them loads and saves without losing anything, and the Theme Editor does not offer them.
 @export_storage var drawer_info_background_color: Color = Color(0.25, 0.42, 0.6, 0.22)
 @export_storage var drawer_info_border_color: Color = Color(0.36, 0.66, 1.0, 0.5)
 @export_storage var drawer_info_text_color: Color = Color(0.86, 0.9, 0.96, 1.0)

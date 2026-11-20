@@ -17,7 +17,6 @@ extends SceneTree
 #   cool_text, warm_text, yellow_text   the ink of a condition / action sentence and of an object name (yellow_text) where the palette's own accent reads too faintly on
 #              its lane (a pale palette's accents are made for large marks, not for a line of words)
 ## What the word on a pattern chip must keep on the chip's plate (a little over the contrast test's own bar).
-const PATTERN_CHIP_BAR: float = 3.15
 
 const PALETTES: Dictionary = {
 	"dracula": {
@@ -479,17 +478,6 @@ func _build_style(palette: Dictionary, theme_name: String) -> EventSheetEditorSt
 	# rather than listed again per palette: one rule, so a new token reaches all six presets the day
 	# it ships instead of leaving them on EventForge's own dark marks.
 	EventSheetThemeDerivation.fill_derived_tokens(style)
-	# The word on a pattern chip is the reading's muted tone, a note beside the row; where that falls under the bar
-	# on the chip's plate (a pale palette, a cool grey), it is walked toward the primary text just far enough.
-	var chip_reading: EventSheetReadingStyle = style.get_reading_style()
-	var chip_plate: Color = event_style.row_background_color.lerp(Color(chip_reading.resolved_pattern_chip_background(), 1.0), chip_reading.resolved_pattern_chip_background().a)
-	var chip_word: Color = chip_reading.resolved_pattern_chip_foreground()
-	if EventSheetEditorThemeDeriver.contrast_ratio(chip_word, chip_plate) < PATTERN_CHIP_BAR:
-		for step: int in range(1, 101):
-			var walked: Color = Color(chip_word.lerp(chip_reading.primary_text_color, step * 0.01), 1.0)
-			if EventSheetEditorThemeDeriver.contrast_ratio(walked, chip_plate) >= PATTERN_CHIP_BAR:
-				chip_reading.pattern_chip_foreground_color = walked
-				break
 	if palette.has("variable"):
 		var variable_hue: Color = Color(str(palette["variable"]))
 		var reading: EventSheetReadingStyle = style.get_reading_style()

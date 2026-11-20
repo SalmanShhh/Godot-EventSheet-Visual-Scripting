@@ -138,20 +138,11 @@ static func _test_marks(name: String, style: EventSheetEditorStyle) -> bool:
 	var chrome: EventSheetChromeStyle = style.get_chrome_style()
 	var manual: EventSheetManualStyle = style.get_manual_style()
 	var ground: Color = _opaque(event_style, Color(event_style.row_background_color.r, event_style.row_background_color.g, event_style.row_background_color.b, 1.0))
-	var chip_plate: Color = _flatten(reading.resolved_pattern_chip_background(), ground)
-	var chip_ratio: float = EventSheetEditorThemeDeriver.contrast_ratio(reading.resolved_pattern_chip_foreground(), chip_plate)
-	ok = SUPPORT.pin_value(TEST_NAME, "%s: the word on a pattern chip reads on its plate (%.1f to 1; the bar is %.1f; set pattern_chip_foreground_color)" % [name, chip_ratio, MARK_BAR],
-		chip_ratio >= MARK_BAR, true) and ok
 	# The quiet amber state: the warning colour is the event's number in the margin and the help strip's mark.
 	var gutter: Color = _flatten(event_style.gutter_background_color, ground)
 	var amber_ratio: float = EventSheetEditorThemeDeriver.contrast_ratio(chrome.object_bar_warning_color, gutter)
 	ok = SUPPORT.pin_value(TEST_NAME, "%s: the amber of a quiet finding reads in the margin (%.1f to 1; the bar is %.1f; set object_bar_warning_color)" % [name, amber_ratio, MARK_BAR],
 		amber_ratio >= MARK_BAR, true) and ok
-	# The Inspector drawer's note: its words on its tinted plate.
-	var note_plate: Color = _flatten(chrome.drawer_info_background_color, ground)
-	var note_ratio: float = EventSheetEditorThemeDeriver.contrast_ratio(chrome.drawer_info_text_color, note_plate)
-	ok = SUPPORT.pin_value(TEST_NAME, "%s: the Inspector drawer's note reads on its plate (%.1f to 1; the bar is %.1f; set drawer_info_text_color)" % [name, note_ratio, WORDS_BAR],
-		note_ratio >= WORDS_BAR, true) and ok
 	var header_ratio: float = EventSheetEditorThemeDeriver.contrast_ratio(chrome.drawer_header_text_color, _flatten(chrome.drawer_well_color, ground))
 	ok = SUPPORT.pin_value(TEST_NAME, "%s: the Inspector drawer's heading reads on its well (%.1f to 1; the bar is %.1f; set drawer_header_text_color)" % [name, header_ratio, WORDS_BAR],
 		header_ratio >= WORDS_BAR, true) and ok

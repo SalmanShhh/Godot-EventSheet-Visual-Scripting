@@ -145,9 +145,6 @@ static func fill_derived_tokens(style: EventSheetEditorStyle) -> EventSheetEdito
 	chrome.drawer_well_color = Color(0.0, 0.0, 0.0, 0.28)
 	chrome.drawer_handle_color = background.lerp(ink, 0.95)
 	chrome.drawer_handle_border_color = background.lerp(ink, 0.35)
-	chrome.drawer_info_background_color = Color(cool.r, cool.g, cool.b, 0.22)
-	chrome.drawer_info_border_color = Color(cool.r, cool.g, cool.b, 0.5)
-	chrome.drawer_info_text_color = reading.primary_text_color
 	chrome.drawer_header_text_color = reading.primary_text_color
 	chrome.drawer_required_color = flag_red
 	chrome.drawer_validate_color = warm

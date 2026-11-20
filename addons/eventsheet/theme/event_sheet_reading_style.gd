@@ -26,13 +26,9 @@ extends Resource
 ## coverage chip, and every other plain chip in a reading row.
 @export var plain_chip_background_color: Color = EventSheetPalette.COLOR_CHIP_BG
 @export var plain_chip_foreground_color: Color = EventSheetPalette.COLOR_CHIP_FG
-## The ⟡ chip that names the PATTERN an event is - the Cooldown, the Object pool, the Wait sequence.
-## Muted by design: it says what the reader is looking at without competing with the row's own words.
-## ALPHA 0 (the default) means DERIVE, not "transparent": the chip then takes the plain chip's plate
-## and the muted text tone, so every preset ever saved - including the ones written before patterns
-## existed - dresses it in its own palette instead of inheriting a hard-coded dark plate onto pale
-## paper. Give the token a real colour to override that derivation.
-## Stored only, not shown in the Theme Editor: no row reads it, but a theme file that names it still loads and saves.
+## RETIRED. The pattern chip was taken out of sheet rows (the pattern is named on its event number's card),
+## so nothing draws with these two. They stay as stored values only: a theme file that names them loads
+## and saves without losing anything, and the Theme Editor does not offer them.
 @export_storage var pattern_chip_background_color: Color = Color(0, 0, 0, 0)
 @export_storage var pattern_chip_foreground_color: Color = Color(0, 0, 0, 0)
 ## The picker-category chip ("Group › Subgroup" on a variable row, a pack's category).
@@ -135,17 +131,3 @@ extends Resource
 ## How strongly every OTHER use of a hovered local variable lights up, inside that variable's own
 ## scope. The colour is the row hover fill; this is only how far it is pushed.
 @export_range(0.0, 1.0, 0.01) var name_highlight_strength: float = 0.34
-
-
-## The plate the ⟡ pattern chip sits on: the token when a theme set one, the plain chip's own plate
-## otherwise - so a pale preset gets a pale plate without ever having heard of patterns.
-func resolved_pattern_chip_background() -> Color:
-	return pattern_chip_background_color if pattern_chip_background_color.a > 0.0 \
-		else plain_chip_background_color
-
-
-## The word on the ⟡ pattern chip: the token when a theme set one, the reading's own muted tone
-## otherwise - which is what makes the chip read as a note about the row rather than part of it.
-func resolved_pattern_chip_foreground() -> Color:
-	return pattern_chip_foreground_color if pattern_chip_foreground_color.a > 0.0 \
-		else muted_text_color
