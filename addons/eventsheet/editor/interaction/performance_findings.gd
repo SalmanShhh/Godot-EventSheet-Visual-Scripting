@@ -113,6 +113,47 @@ static func tick_rows(sheet: EventSheetResource) -> Array[Dictionary]:
 	return rows
 
 
+## `findings`, a row at a time with `between` (a Callable that answers something to await, or null) called after each row
+## is read and after each rule: the same findings, for an audit that must give the editor a frame inside one very large
+## sheet - reading a row compiles it, which on a sheet of thousands of rows is most of a second. The caller supplies
+## `between` so this file names nothing of the audit that awaits it.
+static func findings_in_turns(sheet: EventSheetResource, between: Callable) -> Array[Dictionary]:
+	var found: Array[Dictionary] = []
+	if sheet == null:
+		return found
+	var rows: Array[Dictionary] = []
+	await _walk_in_turns(sheet.events, false, true, rows, between)
+	if rows.is_empty():
+		return found
+	for rule: Callable in [_looked_up_every_tick, _scans_every_tick, _distance_root, _heavy_loop, _made_and_freed, _text_rebuilt]:
+		rule.call(rows, found)
+		await between.call()
+	return found
+
+
+static func _walk_in_turns(items: Array, inside_tick: bool, top_level: bool, into: Array[Dictionary], between: Callable) -> void:
+	for item: Variant in items:
+		if item is EventGroup:
+			await _walk_in_turns(EventSheetGroupFacts.children(item as EventGroup), inside_tick, top_level, into, between)
+			continue
+		var event_row: EventRow = item as EventRow
+		if event_row == null:
+			continue
+		var ticks: bool = inside_tick or _is_tick_trigger(event_row.trigger_id, top_level)
+		if ticks:
+			for is_action: bool in [false, true]:
+				var lane: Array = event_row.actions if is_action else event_row.conditions
+				for index: int in range(lane.size()):
+					if lane[index] is Resource:
+						into.append({
+							"event": event_row, "ace": lane[index] as Resource,
+							"lane": "actions" if is_action else "conditions", "index": index,
+							"line": EventSheetLightingFindings.compiled_line(lane[index] as Resource),
+						})
+						await between.call()
+		await _walk_in_turns(event_row.sub_events, ticks, false, into, between)
+
+
 static func _walk(items: Array, inside_tick: bool, top_level: bool, into: Array[Dictionary]) -> void:
 	for item: Variant in items:
 		if item is EventGroup:

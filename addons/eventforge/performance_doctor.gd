@@ -70,9 +70,11 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 	var busy: PackedStringArray = PackedStringArray(swept.get("busy", PackedStringArray()))
 	# The scripts the report is about to open are opened here a turn at a time, so the editor draws
 	# between them; the report then finds each one held for the audit.
+	# Ordered once, on a worker thread (it asks the size of every script), and handed on.
+	var ordered: PackedStringArray = await EventSheetProjectDoctor.in_background(func() -> PackedStringArray: return _smallest_first(busy))
 	if not busy.is_empty():
-		await EventSheetProjectDoctor.prepare_sheets(_smallest_first(busy).slice(0, MEASURED_LIMIT))
-	findings.append_array(await report_in_turns(busy))
+		await EventSheetProjectDoctor.prepare_sheets(ordered.slice(0, MEASURED_LIMIT))
+	findings.append_array(await report_in_turns(busy, ordered))
 	if not bool(swept.get("handles_trouble", true)) and _still_asking():
 		findings.append(_finding("info", CHECK_NO_REPORT, "",
 			"Nothing in this game hears about its own errors. Add an On Something Went Wrong event to the Game sheet and a build can save the report, show the player something, or skip the broken thing and keep playing - the editor's error strip only helps while you are the one running it.", ""))
@@ -169,7 +171,7 @@ static func report(scripts: PackedStringArray) -> Array[Dictionary]:
 
 ## `report`, a script at a time with a frame between: the same answer, so the editor draws while the scripts
 ## that work every frame are read.
-static func report_in_turns(scripts: PackedStringArray) -> Array[Dictionary]:
+static func report_in_turns(scripts: PackedStringArray, ordered_paths: Variant = null) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
 	if scripts.is_empty():
 		return findings
@@ -178,7 +180,8 @@ static func report_in_turns(scripts: PackedStringArray) -> Array[Dictionary]:
 	var worst_path: String = scripts[0]
 	var worst_count: int = -1
 	var deadline: int = Time.get_ticks_msec() + MEASURE_BUDGET_MSEC
-	for script_path: String in _smallest_first(scripts):
+	var ordered: PackedStringArray = ordered_paths as PackedStringArray if ordered_paths != null else _smallest_first(scripts)
+	for script_path: String in ordered:
 		if measured >= MEASURED_LIMIT or Time.get_ticks_msec() > deadline:
 			break
 		await EventSheetProjectDoctor.breathe()
@@ -186,7 +189,7 @@ static func report_in_turns(scripts: PackedStringArray) -> Array[Dictionary]:
 		if sheet == null:
 			continue
 		measured += 1
-		var mine: Array[Dictionary] = EventSheetPerformanceFindings.findings(sheet)
+		var mine: Array[Dictionary] = await EventSheetPerformanceFindings.findings_in_turns(sheet, EventSheetProjectDoctor.breathe)
 		if mine.size() > worst_count:
 			worst_count = mine.size()
 			worst_path = script_path

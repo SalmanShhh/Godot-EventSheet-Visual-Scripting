@@ -40,6 +40,11 @@ static func run() -> bool:
 	rows.append(["a script with no loader call loads nothing from outside", EventForgeOutsidePaths.loading_outside_lines("extends Node\nvar path := \"user://mods/a.tscn\"\n"), PackedStringArray()])
 	var dropped: String = "extends Node\nfunc _ready() -> void:\n\tget_window().files_dropped.connect(_on_drop)\n\n\nfunc _on_drop(files: PackedStringArray) -> void:\n\tvar scene = load(files[0])\n"
 	rows.append(["a path from a drop handed to load is still found", EventForgeOutsidePaths.loading_outside_lines(dropped).size(), 1])
+	# A sheet's every-frame rows are read a turn at a time and judged by the same six rules, in the same order.
+	var tick_sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(CORPUS[0])
+	rows.append(["the performance findings of a sheet in turns are the same findings", await EventSheetPerformanceFindings.findings_in_turns(tick_sheet, EventSheetProjectDoctor.breathe), EventSheetPerformanceFindings.findings(tick_sheet)])
+	var tick_rows_whole: Array[Dictionary] = EventSheetPerformanceFindings.tick_rows(tick_sheet)
+	rows.append(["and there were every-frame rows to read", tick_rows_whole.size() > 0, true])
 	# The quote stripper.
 	rows.append(["a line with no quote is its own code", EventForgeMultiplayerLift.outside_strings("rpc(take, 1)"), "rpc(take, 1)"])
 	rows.append(["a quoted run is removed", EventForgeMultiplayerLift.outside_strings("rpc(\"take\", 1)"), "rpc(, 1)"])

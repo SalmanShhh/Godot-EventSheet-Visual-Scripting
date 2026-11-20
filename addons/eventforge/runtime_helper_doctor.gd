@@ -29,7 +29,8 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 	var scripts: PackedStringArray = EventSheetProjectDoctor._list_files_with_extension("gd")
 	scripts.sort()
 	# The library's class table is read once for the whole project, not once per script.
-	var index: Dictionary = HELPERS.class_files()
+	# Read on a worker thread: it lists a folder and reads every helper's text, and nothing else.
+	var index: Dictionary = await EventSheetProjectDoctor.in_background(func() -> Dictionary: return HELPERS.class_files())
 	var turn: int = 0
 	for script_path: String in scripts:
 		turn += 1

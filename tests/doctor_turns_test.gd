@@ -38,7 +38,8 @@ static func run() -> bool:
 	before = int(doctor.get("breathe_calls"))
 	var performance_turns: Array[Dictionary] = await EventSheetPerformanceDoctor.report_in_turns(CORPUS)
 	rows.append(["the performance report in turns answers the same", performance_turns, performance_whole])
-	rows.append(["and offers a frame for each script it opened", int(doctor.get("breathe_calls")) - before, mini(CORPUS.size(), EventSheetPerformanceDoctor.MEASURED_LIMIT)])
+	# A sheet's rows are read a turn at a time as well, so a frame is offered for each script and more besides.
+	rows.append(["and offers a frame for each script it opened", int(doctor.get("breathe_calls")) - before >= mini(CORPUS.size(), EventSheetPerformanceDoctor.MEASURED_LIMIT), true])
 
 	# The renames and collisions sections, and the Ship it page, in turns: the same report, a frame a script.
 	var renames_paths: PackedStringArray = PackedStringArray(CORPUS)

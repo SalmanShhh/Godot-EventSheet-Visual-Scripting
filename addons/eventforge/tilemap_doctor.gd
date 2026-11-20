@@ -71,7 +71,9 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 	# project and a full read of every text resource in it. Held for the length of this run, they
 	# are one walk and one read; let go of at the end, so the next run sees the project as it is.
 	EventForgeTileSetFacts.remember()
-	if not EventForgeTileSetFacts.has_any_tileset():
+	# The two questions that read every text resource of the project run on a worker thread: they touch files only.
+	var has_any: bool = await EventSheetProjectDoctor.in_background(func() -> bool: return EventForgeTileSetFacts.has_any_tileset())
+	if not has_any:
 		EventForgeTileSetFacts.forget()
 		return
 	var sources: Array[Dictionary] = []
@@ -82,8 +84,9 @@ static func check(_sheet_paths: PackedStringArray, findings: Array[Dictionary]) 
 		var source: String = EventSheetProjectDoctor.source_of(script_path)
 		if _says_any(source, SHEET_WORDS):
 			sources.append({"path": script_path, "source": source})
-	findings.append_array(report(sources, EventForgeTileSetFacts.project_data_keys(),
-		EventForgeTileSetFacts.project_terrain_set_count()))
+	var facts: Array = await EventSheetProjectDoctor.in_background(func() -> Array:
+		return [EventForgeTileSetFacts.project_data_keys(), EventForgeTileSetFacts.project_terrain_set_count()])
+	findings.append_array(report(sources, PackedStringArray(facts[0]), int(facts[1])))
 	EventForgeTileSetFacts.forget()
 
 
