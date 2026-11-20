@@ -578,6 +578,12 @@ static func lead_of(entry: Dictionary) -> String:
 	return EventSheetL10n.translate(str(entry.get("lead", "")))
 
 
+## One step's sentence in the editor's language. The English text is the key of a row in every translation
+## file; a step with no row reads in English, never as a key.
+static func step_text_of(current: Dictionary) -> String:
+	return EventSheetL10n.translate(str(current.get("text", "")))
+
+
 ## "5 min" in the reader's language.
 static func minutes_label(minutes: int) -> String:
 	return EventSheetL10n.translate("%d min") % minutes
@@ -605,7 +611,7 @@ static func list_blocks() -> Array[Dictionary]:
 		{"kind": "heading", "level": 1, "text": PAGE_TITLE, "bbcode": PAGE_TITLE,
 			"slug": EventSheetDocMarkdown.slug(PAGE_TITLE)},
 		{"kind": "paragraph", "bbcode":
-			"These are done, not read. Each step names a control this editor really has, highlights it until you use it, and completes when the sheet contains what the step asked for. They run in the sheet you have open, and every step is one ordinary undo."},
+			EventSheetL10n.translate("These are done, not read. Each step names a control this editor really has, highlights it until you use it, and completes when the sheet contains what the step asked for. They run in the sheet you have open, and every step is one ordinary undo.")},
 	]
 	for entry: Dictionary in TUTORIALS:
 		var id: String = str(entry.get("id", ""))
@@ -616,7 +622,7 @@ static func list_blocks() -> Array[Dictionary]:
 			progress_label(id, step_reached(id))]})
 		blocks.append({"kind": "button",
 			"label": "Start" if step_reached(id) <= 0 else "Carry on",
-			"tooltip": "Walks this tutorial step by step, in the sheet you have open.",
+			"tooltip": EventSheetL10n.translate("Walks this tutorial step by step, in the sheet you have open."),
 			"action": ACTION_START, "argument": id})
 	return blocks
 
@@ -636,23 +642,24 @@ static func step_blocks(tutorial_id: String, index: int = -1) -> Array[Dictionar
 		{"kind": "heading", "level": 1, "text": title, "bbcode": title,
 			"slug": EventSheetDocMarkdown.slug(title)},
 		{"kind": "paragraph", "bbcode": "[i]%s[/i]" % step_caption(tutorial_id, at)},
-		{"kind": "quote", "bbcode": EventSheetDocMarkdown.escape_brackets(str(current.get("text", "")))},
+		{"kind": "quote", "bbcode": EventSheetDocMarkdown.escape_brackets(step_text_of(current))},
 	]
 	var control: String = str(current.get("control", "")).strip_edges()
 	if not control.is_empty():
 		blocks.append({"kind": "paragraph", "bbcode":
-			"[i]%s stays highlighted in the toolbar until you use it.[/i]" % EventSheetDocMarkdown.escape_brackets(control)})
+			"[i]%s[/i]" % (EventSheetL10n.translate("%s stays highlighted in the toolbar until you use it.")
+				% EventSheetDocMarkdown.escape_brackets(EventSheetL10n.translate(control)))})
 	if not str(current.get("check", "")).strip_edges().is_empty():
 		blocks.append({"kind": "paragraph", "bbcode":
-			"[i]This step completes on its own the moment the sheet contains it.[/i]"})
+			"[i]%s[/i]" % EventSheetL10n.translate("This step completes on its own the moment the sheet contains it.")})
 	# One ROW of three, not three rows: a step card's three answers are one decision.
 	blocks.append({"kind": "buttons", "items": [
-		{"label": "◀ Back", "tooltip": "The step before this one.",
+		{"label": "◀ Back", "tooltip": EventSheetL10n.translate("The step before this one."),
 			"action": ACTION_BACK, "argument": tutorial_id},
-		{"label": "Skip", "tooltip": "Leaves the tutorial and goes back to the list.",
+		{"label": "Skip", "tooltip": EventSheetL10n.translate("Leaves the tutorial and goes back to the list."),
 			"action": ACTION_SKIP, "argument": tutorial_id},
 		{"label": "Finish" if is_last_step(tutorial_id, at) else "Next ▶",
-			"tooltip": "The next step. Never waits for the check - a step you have already done your own way is a step you can walk past.",
+			"tooltip": EventSheetL10n.translate("The next step. Never waits for the check - a step you have already done your own way is a step you can walk past."),
 			"action": ACTION_NEXT, "argument": tutorial_id},
 	]})
 	return blocks
