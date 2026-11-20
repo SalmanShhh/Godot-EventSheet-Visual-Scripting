@@ -52,7 +52,7 @@ const BehaviorPreviewEmit := preload("res://addons/eventforge/compiler/behavior_
 ## compiler may spell it again against the body it has now.
 const UNUSED_PARAMS_SPELLED_META: String = "__source_trigger_header_spelled"
 
-const VERSION: String = "0.20.0"
+const VERSION: String = "0.21.0"
 ## How many blank lines an opened file ended with under its last lifted function, as transient meta
 ## on the sheet. The lift writes it and the external path writes the lines back.
 const TRAILING_BLANKS_META: StringName = &"__source_trailing_blanks"

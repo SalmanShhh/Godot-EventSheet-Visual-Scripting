@@ -103,12 +103,13 @@ Everything else is in the **[documentation index](docs/README.md)** and inside t
 
 ## Current status
 
-The latest tagged release is **`v0.20.0` - "Feel Native"** ([release notes](https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/releases/tag/v0.20.0), [full notes](https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/blob/main/docs/changelog/v0.20.0.md)): the Editor Native look in Godot's light and dark themes, names you already know, type checking, autocomplete and mistake checks as you type.
+The latest tagged release is **`v0.21.0` - "Small to Large"** ([release notes](https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/releases/tag/v0.21.0), [full notes](https://github.com/SalmanShhh/Godot-EventSheet-Visual-Scripting/blob/main/docs/changelog/v0.21.0.md)): a plugin that holds up on a project of thousands of files, finishes the move to Godot's own words and tools, and never overwrites a script you wrote. The one before it was `v0.20.0` - "Feel Native".
 
-### In the works for the next release
+### New in v0.21.0
 
-**Already on `main`** (over 800 commits since the tag, CI green, each in the [CHANGELOG](CHANGELOG.md)):
+Each item is in the [CHANGELOG](docs/changelog/v0.21.0.md); the release notes list what you must know when you upgrade (nine renamed plugin classes, no plugin autoload, panels and windows removed because Godot has them, some older rows that now say "N rows ask you").
 
+- **Game feel and drawing.** A Juice Player holds a list of juice cards you can play, copy and reorder without running the game, a Drawing Prefab draws shapes from a list, your own numbers can go in Godot's Monitors tab, and a guide called "Is my game slow" walks from a doubt to the fix.
 - **Godot's words by default.** On ready, On process, scene, group, Queue free, Instantiate; the other editors' words are an opt-in Familiar preset and still work as search.
 - **Behaviours are added through Godot's own Create Node window** and a Behaviour library, and the ones you tune by eye have a Preview button that never changes your saved scene.
 - **The everyday object rows**, a correct on-screen check, and Godot groups in place of marks.
@@ -137,7 +138,7 @@ Every release has full notes under [docs/changelog](https://github.com/SalmanShh
 | `v0.17.0` | Adopt anything: real `.gd` files open as rows byte-exact, your classes as vocabulary |
 | `v0.18.0` | Refactor anything, render anything, feel everything |
 | `v0.20.0` | Feel native: the Editor Native look, type checking, autocomplete and mistake checks |
-| _Next_ | See "In the works" above |
+| `v0.21.0` | Small to large: the Doctor, saves, renames and the first open stay quick on thousands of files; the Juice Player and Drawing Prefab; saves never overwrite your scripts; the sheet reads in Godot's own words |
 
 ## Project layout
 
