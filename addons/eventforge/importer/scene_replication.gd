@@ -65,6 +65,7 @@ static func for_script(script_path: String) -> Dictionary:
 		return {"synced": [], "spawners": [], "synchronizers": [], "host": {}}
 	if _cache.has(path):
 		return _cache[path]
+	var withheld_before: int = EventSheetSceneConnections.withheld_count
 	var synced: Array = []
 	var spawners: Array = []
 	var synchronizers: Array = []
@@ -102,7 +103,10 @@ static func for_script(script_path: String) -> Dictionary:
 		"synchronizers": synchronizers,
 		"host": host_node(path),
 	}
-	_cache[path] = answer
+	# An answer worked out while the project's scenes were still being read says nothing about them: it is
+	# handed back for the rows being built and kept by nobody, so the next question works it out again.
+	if EventSheetSceneConnections.withheld_count == withheld_before:
+		_cache[path] = answer
 	return answer
 
 

@@ -1119,6 +1119,9 @@ func _on_scene_index_changed() -> void:
 	_on_translations_maybe_changed()
 	_refresh_tab_bar()
 	_refresh_title_strip()
+	# Rows built while the first read of the scenes was still going were built without its answer.
+	if _viewport != null:
+		_viewport.rebuild_after_scene_read()
 
 
 ## Editor filesystem ping: cheap fingerprint check inside; only a REAL translation-folder

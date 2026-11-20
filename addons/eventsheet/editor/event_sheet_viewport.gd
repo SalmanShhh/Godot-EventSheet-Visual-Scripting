@@ -911,6 +911,13 @@ func rebuild_rows() -> void:
 	queue_redraw()
 
 
+## The project's first read of its scenes landed after the rows were built without it: they are built again,
+## but only when something in them was actually built without an answer.
+func rebuild_after_scene_read() -> void:
+	if EventSheetSceneConnections.take_withheld():
+		rebuild_rows()
+
+
 ## The project index finished counting, so the answers the rows were built without have landed. A
 ## function head's card is written again in place; the rows are built again only when a band about a
 ## scene was laid out while that half was still counting.
@@ -3712,7 +3719,11 @@ func _refresh_rows() -> void:
 	# The same goes for the row builder's answers about the sheet (its variable names, its knobs):
 	# an edit changes the sheet in place, so they are read again for every sweep.
 	_row_builder.invalidate_lens_caches()
+	# Building rows never waits for the project's first read of its scenes: a band that needs it is built without
+	# its answer and the rows are built again when it lands (see `rebuild_after_scene_read`).
+	EventSheetSceneConnections.set_withhold_answers(true)
 	_root_rows = _build_rows_from_sheet(_sheet)
+	EventSheetSceneConnections.set_withhold_answers(false)
 	_update_layout_style_signature(_get_font_size())
 	_reflow_flat_rows()
 

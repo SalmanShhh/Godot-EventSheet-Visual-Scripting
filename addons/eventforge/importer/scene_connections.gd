@@ -107,12 +107,79 @@ static func scenes_using_script(script_path: String) -> PackedStringArray:
 ## this function may mark the index built, and it does so once it is - a half-filled index marked
 ## ready answers "no scene uses this" for every script the pass had not reached yet.
 static func _build_scene_script_index() -> void:
+	if _defer_to_idle_read():
+		return
 	var prepared: Variant = _take_prepared()
 	if prepared is Dictionary:
 		_adopt_prepared(prepared)
 		return
 	_scenes_by_script = index_scenes(scene_paths())
 	_scenes_by_script_built = true
+
+
+## Set around the one stretch of work (a sheet's rows being built) that would rather be told "not yet" than wait
+## for the project's first read. While it is set and the first read of the scenes is not here, a question about
+## the project's scenes is answered with nothing, the answer is not kept by anyone, and the dock is told
+## through `index_changed` when the read lands (see `take_withheld`). Set through `set_withhold_answers`.
+static var _withhold: bool = false
+## Whether an answer was withheld since the last `take_withheld`, and how many have been in all (a caller that
+## keeps what it worked out compares the count before and after, and keeps nothing when it moved).
+static var _withheld_pending: bool = false
+static var withheld_count: int = 0
+
+
+## Sets `_withhold` on behalf of another script. A static variable assigned from outside its own script marks that
+## script as edited, and Godot's scene save then rewrites every edited script; a write made here does not.
+static func set_withhold_answers(value: bool) -> void:
+	_withhold = value
+
+
+## Whether answers are being withheld right now (an inner stretch puts back what it found, not "off").
+static func is_withholding() -> bool:
+	return _withhold
+
+
+## Whether an answer was withheld since this was last asked, and forgets it.
+static func take_withheld() -> bool:
+	var pending: bool = _withheld_pending
+	_withheld_pending = false
+	return pending
+
+
+## Records that a question was answered with nothing because the read of the scenes is not here yet.
+static func note_withheld() -> void:
+	_withheld_pending = true
+	withheld_count += 1
+
+
+## Whether this question is to be answered with nothing for now, and the read of the project begun (or kept
+## going) on its own thread so the answer arrives. False when the question may wait, or the read is here.
+static func _defer_to_idle_read() -> bool:
+	if not _withhold or not (Engine.is_editor_hint() and Engine.get_main_loop() is SceneTree):
+		return false
+	var prep: GDScript = load(PREP_PATH)
+	if not prep.running():
+		if prep.pending():
+			return false
+		if not prep.start():
+			return false
+	note_withheld()
+	prep.tell_when_ready(_on_idle_read_ready)
+	return true
+
+
+## The idle read ended: its answer is taken, and the dock is told so the rows built without it are built again.
+static func _on_idle_read_ready() -> void:
+	var prep: GDScript = load(PREP_PATH)
+	var prepared: Variant = prep.take_connections(false)
+	if prepared is Dictionary:
+		_adopt_prepared(prepared)
+		_cache.clear()
+	elif prep.start():
+		prep.tell_when_ready(_on_idle_read_ready)
+		return
+	if index_changed.is_valid():
+		index_changed.call()
 
 
 ## Whether the index of which scenes load which script is held (built here, or taken from the idle read).
@@ -186,7 +253,13 @@ static func files_changed() -> void:
 	if not _scenes_by_script_built or not (Engine.is_editor_hint() and Engine.get_main_loop() is SceneTree):
 		clear_cache()
 		return
+	# The list of scenes keeps answering too, from what it held: a question that came while the re-read is on its
+	# thread would otherwise walk the whole project on the main thread to build the list the re-read is building.
+	var held_paths: PackedStringArray = _scene_paths
+	var held_scanned: bool = _scene_paths_scanned
 	_drop_derived()
+	_scene_paths = held_paths
+	_scene_paths_scanned = held_scanned
 	start_index_refresh()
 
 
@@ -243,9 +316,11 @@ static func _finish_index_refresh(adopt: bool) -> void:
 		changed = not _scenes_by_script_built or not load(FOLLOW_PATH).scenes_match(_scenes_by_script, arrived[1])
 		_scenes_by_script = arrived[1]
 		_scenes_by_script_built = true
-		if not _scene_paths_scanned:
-			_scene_paths = arrived[0]
-			_scene_paths_scanned = true
+		# The re-read's list is the list: the one kept while it ran may name a scene that has gone or miss a new one.
+		if _scene_paths != arrived[0] or not _scene_paths_scanned:
+			changed = true
+		_scene_paths = arrived[0]
+		_scene_paths_scanned = true
 	if changed:
 		# What was worked out from the list that was just replaced is worked out again.
 		_cache.clear()

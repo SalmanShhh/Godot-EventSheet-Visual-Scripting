@@ -39,6 +39,9 @@ static var _wants_connections: bool = true
 static var _wants_roots: bool = true
 ## How many reads were started, so a test can tell.
 static var reads_started: int = 0
+## Who is to be told when the read ends, and whether the frame poll that tells them is connected.
+static var _askers: Array[Callable] = []
+static var _polling: bool = false
 
 
 ## Starts the read on a worker thread, for the indexes nobody has asked for yet. A no-op
@@ -95,9 +98,12 @@ static func invalidate() -> void:
 
 ## The scenes-to-scripts half, {paths, index}, or null when there is none to give. Asking ends the need for a
 ## first read of it: the caller holds the index from here on, whatever this had to give. Waits for a read that
-## is under way (a second one would read every scene again for the same answer), and gives nothing for a read
-## a change has made stale.
-static func take_connections() -> Variant:
+## is under way (a second one would read every scene again for the same answer) unless `wait` is false, when it
+## gives nothing and the caller asks again through `tell_when_ready`. Gives nothing for a read a change has made
+## stale.
+static func take_connections(wait: bool = true) -> Variant:
+	if not wait and running():
+		return null
 	_wants_connections = false
 	if _job != null and _outdated:
 		return null
@@ -111,7 +117,9 @@ static func take_connections() -> Variant:
 
 
 ## The scene-roots half, {script path: [{scene_path, root_name}, ...]}, or null when there is none to give.
-static func take_roots() -> Variant:
+static func take_roots(wait: bool = true) -> Variant:
+	if not wait and running():
+		return null
 	_wants_roots = false
 	if _job != null and _outdated:
 		return null
@@ -119,6 +127,36 @@ static func take_roots() -> Variant:
 	var answer: Variant = _roots
 	_roots = null
 	return answer
+
+
+## Asks to be called once the read under way has ended (or at once, a frame later, when none is): the way a
+## question that may not wait is told its answer has arrived. A caller asked twice is called once.
+static func tell_when_ready(callback: Callable) -> void:
+	if not _askers.has(callback):
+		_askers.append(callback)
+	_poll_for_askers()
+
+
+static func _poll_for_askers() -> void:
+	if _polling or _askers.is_empty():
+		return
+	var loop: SceneTree = Engine.get_main_loop() as SceneTree
+	if loop == null:
+		return
+	_polling = true
+	loop.process_frame.connect(_on_frame_for_askers, CONNECT_ONE_SHOT)
+
+
+static func _on_frame_for_askers() -> void:
+	_polling = false
+	if running():
+		_poll_for_askers()
+		return
+	var askers: Array[Callable] = _askers.duplicate()
+	_askers.clear()
+	for asker: Callable in askers:
+		if asker.is_valid():
+			asker.call()
 
 
 ## Takes the read when it is done (or is waited for) and keeps it, unless something changed meanwhile.
@@ -148,3 +186,4 @@ static func stop() -> void:
 	_roots = null
 	_wants_connections = true
 	_wants_roots = true
+	_askers.clear()

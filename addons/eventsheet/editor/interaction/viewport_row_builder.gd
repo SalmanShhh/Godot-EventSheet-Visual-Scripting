@@ -8092,12 +8092,36 @@ static func note_path_moved(old_path: String, new_path: String, is_folder: bool)
 ## filesystem changes, when it is read again (`refresh_scene_script_index`).
 static func scene_using_script(script_path: String) -> Dictionary:
 	if not _script_scene_scanned:
-		# The idle read of the project, when it has finished (or is about to: it is waited for rather than
-		# done twice), is the answer; a project it has not read is read here, as it always was.
+		# Inside the editor this never waits and never reads the project on the main thread: the read is begun
+		# on a thread of its own (or is already going) and the answer is {} - the object named after its
+		# file, which is what a script no scene uses is named after anyway - until it lands, when the dock is
+		# told (`scene_index_changed`) and the names are built again.
+		if _can_sweep_in_background():
+			var idle: GDScript = load(SCENE_PREP_PATH)
+			if idle.running() or (not idle.pending() and idle.start()):
+				EventSheetSceneConnections.note_withheld()
+				idle.tell_when_ready(_on_idle_roots_ready)
+				return {}
+		# The idle read of the project, when it has finished, is the answer; a project it has not read (a run
+		# with no editor, or no read to be had) is read here, as it always was.
 		var prep: Variant = _prep()
 		var prepared: Variant = prep.take_roots() if prep != null else null
 		_install_scene_index(prepared if prepared is Dictionary else sweep_scenes_under("res://"))
 	return _script_scene_cache.get(script_path, {})
+
+
+## The idle read ended: the index of root objects is taken from it, and the dock hears that names built
+## without it are to be built again.
+static func _on_idle_roots_ready() -> void:
+	var idle: GDScript = load(SCENE_PREP_PATH)
+	var prepared: Variant = idle.take_roots(false)
+	if prepared is Dictionary:
+		_install_scene_index(prepared)
+	elif idle.start():
+		idle.tell_when_ready(_on_idle_roots_ready)
+		return
+	if scene_index_changed.is_valid():
+		scene_index_changed.call()
 
 
 ## Every scene under `directory_path` and the script its root carries, {script path: [{scene_path,
@@ -12516,6 +12540,11 @@ func _build_variable_note_row(event_uid: String, indent: int, message: String, f
 func _sheet_findings(family: String) -> Array[Dictionary]:
 	if not _sheet_findings_cache.has(family):
 		var sheet: EventSheetResource = _viewport._sheet if _viewport != null else null
+		# A finding that needs the project's scenes is never worth a wait: asked while their first read is going,
+		# it is answered without them and not kept, and asked again when the rows are built again after the read.
+		var withheld_before: int = EventSheetSceneConnections.withheld_count
+		var was_withholding: bool = EventSheetSceneConnections.is_withholding()
+		EventSheetSceneConnections.set_withhold_answers(true)
 		match family:
 			FINDINGS_PERFORMANCE:
 				_sheet_findings_cache[family] = EventSheetPerformanceFindings.findings(sheet)
@@ -12613,6 +12642,11 @@ func _sheet_findings(family: String) -> Array[Dictionary]:
 						scenes[0] if scenes.size() > 0 else ""))
 			_:
 				_sheet_findings_cache[family] = EventSheetMultiplayerFindings.findings(sheet)
+		EventSheetSceneConnections.set_withhold_answers(was_withholding)
+		if EventSheetSceneConnections.withheld_count != withheld_before:
+			var without_scenes: Array[Dictionary] = _sheet_findings_cache[family]
+			_sheet_findings_cache.erase(family)
+			return without_scenes
 	return _sheet_findings_cache[family]
 
 

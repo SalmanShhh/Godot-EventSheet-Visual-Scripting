@@ -59,7 +59,11 @@ from `tools/build_help_bundle.gd`).
   the ONE cached `.tscn` parse every scene-adjacent reader shares. The first read of its two project-wide
   indexes (scenes by script, and each scene's root script) is made on a worker thread soon after the
   editor's first scan (`importer/scene_index_prep.gd`) and handed to the first reader that asks; any file
-  change drops it and the reader builds as it always did. A BEHAVIOR PACK being read is a
+  change drops it and the reader builds as it always did. A row build never waits for it: while it is
+  running, a question the canvas asks (`scenes_using_script`, `scene_using_script`) is answered with
+  nothing, counted (`EventSheetSceneConnections.note_withheld`), kept by nobody, and the dock builds the
+  rows again when the read lands (`rebuild_after_scene_read`). Anything that caches an answer worked out
+  from the scenes must compare `withheld_count` before and after and keep nothing when it moved. A BEHAVIOR PACK being read is a
   reading of its own, gathered by `arrange_pack_reading` over the finished row list: Settings and
   Verbs open, How it works and Internal state folded, a published verb read as the verb the picker
   offers rather than as a trigger. The whole of it is keyed off ONE fact, the pack name the sheet's

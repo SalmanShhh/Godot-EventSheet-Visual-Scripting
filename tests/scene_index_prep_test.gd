@@ -8,6 +8,8 @@
 #      gets it; a second question finds nothing left to take and falls back to the ordinary build.
 #   3. A CHANGE DROPS IT. A file changed, moved or removed while it is held or being read means it is never
 #      handed over: the questions that follow read the project as it is.
+#   5. A QUESTION THAT MAY NOT WAIT IS NOT MADE TO. Asked without waiting, it gets nothing while the read is
+#      under way, and the read is not spent by having been asked: the answer is still whole afterwards.
 #   4. THE READERS TAKE IT. The scene reader and the row builder answer from it when it is there, and answer
 #      the same either way.
 @tool
@@ -26,6 +28,7 @@ static func run() -> bool:
 	ok = _taken_once() and ok
 	ok = _a_change_drops_it() and ok
 	ok = _the_readers_take_it() and ok
+	ok = _a_question_that_may_not_wait() and ok
 	_reset()
 	return ok
 
@@ -197,5 +200,51 @@ static func _the_readers_take_it() -> bool:
 	PREP.start()
 	EventSheetSceneConnections.files_changed()
 	rows.append(["after a change the scene reader still answers the synchronous index", EventSheetSceneConnections.scenes_using_script(script_path), expected_index.get(script_path, PackedStringArray())])
+	_reset()
+	return SUPPORT.pins(P, rows)
+
+
+static func _a_question_that_may_not_wait() -> bool:
+	_reset()
+	var rows: Array = []
+	var expected_paths: PackedStringArray = _sync_paths()
+	PREP.start()
+	var early_connections: Variant = PREP.take_connections(false)
+	var early_roots: Variant = PREP.take_roots(false)
+	# Whichever way the race went, it was either not here yet (nothing) or whole; never half of an answer.
+	rows.append(["asked at once without waiting, the connections are nothing or whole",
+		early_connections == null or (early_connections as Dictionary)["paths"] == expected_paths, true])
+	rows.append(["asked at once without waiting, the roots are nothing or whole",
+		early_roots == null or early_roots is Dictionary, true])
+	# A read that was not ready when asked for is still there for a caller that waits.
+	_reset()
+	PREP.start()
+	var not_yet: Variant = PREP.take_connections(false)
+	var later: Variant = PREP.take_connections()
+	rows.append(["a no-wait ask that found the read running left it to take",
+		not_yet != null or (later != null and (later as Dictionary)["paths"] == expected_paths), true])
+	_wait()
+	rows.append(["a finished read is given to a no-wait ask", PREP.take_roots(false) != null or not_yet != null, true])
+	# Nothing withheld, nothing counted, until a question is answered with nothing.
+	var count: int = EventSheetSceneConnections.withheld_count
+	rows.append(["no answer has been withheld yet", EventSheetSceneConnections.take_withheld(), false])
+	EventSheetSceneConnections.note_withheld()
+	rows.append(["a withheld answer is remembered once", [EventSheetSceneConnections.take_withheld(), EventSheetSceneConnections.take_withheld()], [true, false]])
+	rows.append(["and counted", EventSheetSceneConnections.withheld_count, count + 1])
+	rows.append(["withholding is off unless a build asked for it", EventSheetSceneConnections.is_withholding(), false])
+	EventSheetSceneConnections.set_withhold_answers(true)
+	var withholding: bool = EventSheetSceneConnections.is_withholding()
+	EventSheetSceneConnections.set_withhold_answers(false)
+	rows.append(["withholding can be set and put back", [withholding, EventSheetSceneConnections.is_withholding()], [true, false]])
+	# Outside the editor there is no frame loop to be told in, so a withholding build still answers in full.
+	EventSheetSceneConnections.set_withhold_answers(true)
+	var scripts: Dictionary = EventSheetSceneConnections.index_scenes(expected_paths)
+	var probe: String = ""
+	for candidate: Variant in scripts:
+		probe = str(candidate)
+		break
+	rows.append(["without an editor a withholding build is answered whole",
+		EventSheetSceneConnections.scenes_using_script(probe), scripts.get(probe, PackedStringArray())])
+	EventSheetSceneConnections.set_withhold_answers(false)
 	_reset()
 	return SUPPORT.pins(P, rows)
