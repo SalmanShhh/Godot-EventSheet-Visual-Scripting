@@ -216,16 +216,29 @@ static func ranked(scripts: PackedStringArray) -> PackedStringArray:
 	return _ordered_paths(scored, "weight", false)
 
 
-## `ranked`, a script at a time with a frame between turns: the same list, for a project of thousands of scripts.
+## `ranked`, a few scripts at a time with a frame between turns: the same list, for a project of thousands of scripts.
+## What a script's text says is judged on a worker thread; the one rule that asks which scene holds the script is asked
+## here on the main thread, of the scripts whose text mentions a node, a turn each.
 static func ranked_in_turns(scripts: PackedStringArray) -> PackedStringArray:
+	var judged: Array = await EventSheetProjectDoctor.in_batches(scripts, func(batch: PackedStringArray) -> Array:
+		var out: Array = []
+		for script_path: String in batch:
+			if _is_shipped(script_path):
+				continue
+			var source: String = EventSheetProjectDoctor.source_of(script_path)
+			out.append([script_path, evidence_of_text(source), _says_any(source, SCENE_WORDS)])
+		return out)
 	var scored: Array[Dictionary] = []
-	for script_path: String in scripts:
-		await EventSheetProjectDoctor.breathe()
-		if _is_shipped(script_path):
-			continue
-		var weight: int = evidence(EventSheetProjectDoctor.source_of(script_path), script_path)
+	for entry: Variant in judged:
+		var row: Array = entry
+		var weight: int = int(row[1])
+		if bool(row[2]):
+			await EventSheetProjectDoctor.breathe()
+			var script_path: String = str(row[0])
+			if script_path.is_empty() or not EventSheetSceneReplication.scenes_using(script_path).is_empty():
+				weight += 1
 		if weight > 0:
-			scored.append({"path": script_path, "weight": weight})
+			scored.append({"path": str(row[0]), "weight": weight})
 	return _ordered_paths(scored, "weight", false)
 
 
@@ -233,6 +246,16 @@ static func ranked_in_turns(scripts: PackedStringArray) -> PackedStringArray:
 ## script that holds none. A script on a scene earns the node rules; a script with the same name
 ## declared at both levels earns the shadow rule.
 static func evidence(source: String, script_path: String = "") -> int:
+	var weight: int = evidence_of_text(source)
+	if _says_any(source, SCENE_WORDS) and (script_path.is_empty()
+			or not EventSheetSceneReplication.scenes_using(script_path).is_empty()):
+		weight += 1
+	return weight
+
+
+## `evidence` without the rule that asks which scene holds the script: what the text alone says, touching nothing but the
+## text, so it can be asked on a worker thread.
+static func evidence_of_text(source: String) -> int:
 	var weight: int = 0
 	if _says_any(source, SIGNAL_WORDS):
 		weight += 1
@@ -250,9 +273,6 @@ static func evidence(source: String, script_path: String = "") -> int:
 		weight += 1
 	# A typed variable is what a wrong kind of value is judged against: the weakest evidence, since most scripts have one.
 	if source.contains("\nvar ") and source.contains(": "):
-		weight += 1
-	if _says_any(source, SCENE_WORDS) and (script_path.is_empty()
-			or not EventSheetSceneReplication.scenes_using(script_path).is_empty()):
 		weight += 1
 	return weight
 

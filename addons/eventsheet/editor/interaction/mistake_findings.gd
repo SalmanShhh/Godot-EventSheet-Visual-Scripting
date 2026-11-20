@@ -1044,10 +1044,18 @@ static func project_groups_in_turns() -> Dictionary:
 		_note_scene_groups(groups, scene_path)
 		looked += 1
 		await load("res://addons/eventforge/project_doctor.gd").breathe_every(looked)
-	for script_path: String in preload("res://addons/eventforge/project_files.gd").all_scripts():
-		_note_script_groups(groups, script_path)
-		looked += 1
-		await load("res://addons/eventforge/project_doctor.gd").breathe_every(looked)
+	# The scripts are read on a worker thread, a batch at a time: each answer is only the group names one script adds, in
+	# the order the scripts come, so folding them in here gives the table the walk above would have made.
+	var scripts: PackedStringArray = preload("res://addons/eventforge/project_files.gd").all_scripts()
+	var added: Array = await load("res://addons/eventforge/project_doctor.gd").in_batches(scripts, func(batch: PackedStringArray) -> Array:
+		var out: Array = []
+		for script_path: String in batch:
+			out.append(_script_group_names(script_path))
+		return out)
+	for names: Variant in added:
+		for group_name: String in (names as PackedStringArray):
+			if not groups.has(group_name):
+				groups[group_name] = "script"
 	_note_declared_groups(groups)
 	_project_groups = groups
 	_project_groups_built = true
@@ -1063,14 +1071,19 @@ static func _note_scene_groups(groups: Dictionary, scene_path: String) -> void:
 
 
 static func _note_script_groups(groups: Dictionary, script_path: String) -> void:
-	if not _in_group_scan_scope(script_path):
-		return
-	var source: String = FileAccess.get_file_as_string(script_path)
-	if not source.contains("add_to_group"):
-		return
-	for group_name: String in groups_added_in(source):
+	for group_name: String in _script_group_names(script_path):
 		if not groups.has(group_name):
 			groups[group_name] = "script"
+
+
+## The group names one script puts nodes in, touching nothing but the file, so it can be asked on a worker thread.
+static func _script_group_names(script_path: String) -> PackedStringArray:
+	if not _in_group_scan_scope(script_path):
+		return PackedStringArray()
+	var source: String = FileAccess.get_file_as_string(script_path)
+	if not source.contains("add_to_group"):
+		return PackedStringArray()
+	return groups_added_in(source)
 
 
 static func _note_declared_groups(groups: Dictionary) -> void:

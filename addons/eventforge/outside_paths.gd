@@ -114,6 +114,14 @@ const TRACE_ROUNDS: int = 8
 ## Every statement of this source that hands an outside path to a loader, trimmed, in the order they
 ## appear. The whole reading, and the only function the Doctor needs.
 static func loading_outside_lines(source: String) -> PackedStringArray:
+	# A line is only reported for a loader call it holds, so a script that names none is not read statement by statement.
+	var names_a_loader: bool = false
+	for call_text: String in LOADER_CALLS:
+		if source.contains(call_text):
+			names_a_loader = true
+			break
+	if not names_a_loader:
+		return PackedStringArray()
 	var statements: PackedStringArray = statements_of(source)
 	var tainted: Dictionary = _outside_names(statements)
 	var folders: PackedStringArray = outside_folders(statements)

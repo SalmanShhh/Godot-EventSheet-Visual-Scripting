@@ -64,8 +64,10 @@ const _WARM_SCRIPTS: PackedStringArray = [
 	"res://addons/eventsheet/editor/interaction/collision_findings.gd",
 ]
 
-## How long a sliced audit works before it gives the editor a frame, and where it is in that slice.
-const SLICE_USEC: int = 8000
+## How long a sliced audit works before it gives the editor a frame, and where it is in that slice. About three quarters
+## of a frame at sixty to the second: the rest is the editor's own drawing, and a slice shorter than that left the frame
+## idle behind it (an audit of ten thousand scripts spent about a fifth of its time in frames that did nothing).
+const SLICE_USEC: int = 12000
 static var _frame_source: SceneTree = null
 static var _slice_end_usec: int = 0
 static var _spent_slice: bool = true
@@ -93,6 +95,8 @@ static var last_timings: Dictionary = {}
 ## frame (or a step's start and end) that took over 50 ms is listed with the step it was in and where it ended.
 static var trace_slow: bool = false
 static var slow_segments: Array[Dictionary] = []
+## With `trace_slow` on: the main-thread microseconds of each stretch, summed by the step and the place it ended at.
+static var trace_sites: Dictionary = {}
 static var _last_mark_usec: int = 0
 ## How many times a section offered the editor a frame, for a test that pins that a section gives one per script it reads.
 static var breathe_calls: int = 0
@@ -986,12 +990,23 @@ static func note_main_work(what: String, usec: int) -> void:
 
 
 static func _note_segment(now: int) -> void:
-	if _last_mark_usec > 0 and now - _last_mark_usec > 50000:
+	if _last_mark_usec > 0:
 		var stack: Array = get_stack()
 		var where: String = ""
-		for depth: int in range(1, mini(4, stack.size())):
-			where += "%s:%d " % [str((stack[depth] as Dictionary).get("source", "")).get_file(), int((stack[depth] as Dictionary).get("line", 0))]
-		slow_segments.append({"step": current_step, "ms": (now - _last_mark_usec) / 1000.0, "where": where})
+		var site: String = ""
+		for depth: int in range(1, mini(5, stack.size())):
+			var frame: Dictionary = stack[depth]
+			var at: String = "%s:%d" % [str(frame.get("source", "")).get_file(), int(frame.get("line", 0))]
+			if depth < 4:
+				where += at + " "
+			# The place a stretch ended at is the first caller that is not the offer of a frame itself.
+			if site.is_empty() and not ["breathe", "breathe_every", "_note_segment"].has(str(frame.get("function", ""))):
+				site = at
+		# Every stretch is added to the place it ended at, so a measurer can see where an audit's main-thread time sat.
+		var key: String = "%s %s" % [current_step, site]
+		trace_sites[key] = int(trace_sites.get(key, 0)) + now - _last_mark_usec
+		if now - _last_mark_usec > 50000:
+			slow_segments.append({"step": current_step, "ms": (now - _last_mark_usec) / 1000.0, "where": where})
 	_last_mark_usec = now
 
 

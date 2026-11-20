@@ -259,10 +259,11 @@ static func debug_row_findings(sources: Dictionary) -> Array[Dictionary]:
 static func debug_row_findings_in_turns(sources: Dictionary) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
 	var plain_scripts: PackedStringArray = PackedStringArray()
+	var console_lines: Dictionary = await _map_texts(sources, unguarded_console_lines)
 	for script_path: String in _sorted_keys(sources):
 		await EventSheetProjectDoctor.breathe()
 		var text: String = str(sources[script_path])
-		var lines: PackedStringArray = unguarded_console_lines(text)
+		var lines: PackedStringArray = console_lines.get(script_path, PackedStringArray())
 		if lines.is_empty():
 			continue
 		# A hand-written script is code, and the advice below is about a row (Log, Debug Builds Only), so
@@ -634,12 +635,29 @@ static func save_usage(sources: Dictionary) -> Dictionary:
 ## `save_usage`, a script at a time with a frame between turns: the same answer.
 static func save_usage_in_turns(sources: Dictionary) -> Dictionary:
 	var usage: Dictionary = {}
+	var saved: Dictionary = await _map_texts(sources, func(text: String) -> PackedStringArray:
+		return EventSheetProjectDoctor.save_key_usage(text).get("saved", PackedStringArray()))
 	for script_path: String in _sorted_keys(sources):
-		await EventSheetProjectDoctor.breathe()
-		var keys: PackedStringArray = EventSheetProjectDoctor.save_key_usage(str(sources[script_path])).get("saved", PackedStringArray())
+		var keys: PackedStringArray = saved.get(script_path, PackedStringArray())
 		if not keys.is_empty():
 			usage[script_path] = keys
 	return usage
+
+
+## `work` asked of the text of every script of `sources`, on a worker thread a batch at a time, answered as
+## {script path: what work said}: the same answers a loop over the sorted paths would make, for a question about a
+## script's text that touches nothing but that text.
+static func _map_texts(sources: Dictionary, work: Callable) -> Dictionary:
+	var paths: PackedStringArray = _sorted_keys(sources)
+	var answers: Array = await EventSheetProjectDoctor.in_batches(paths, func(batch: PackedStringArray) -> Array:
+		var out: Array = []
+		for script_path: String in batch:
+			out.append(work.call(str(sources[script_path])))
+		return out)
+	var mapped: Dictionary = {}
+	for index: int in range(mini(paths.size(), answers.size())):
+		mapped[paths[index]] = answers[index]
+	return mapped
 
 
 ## The page: one note stating what a slot of this game holds. A note rather than a warning, because
@@ -852,10 +870,11 @@ static func sky_backdrop_findings(sources: Dictionary,
 static func sky_backdrop_findings_in_turns(sources: Dictionary,
 		flat_backdrops: PackedStringArray) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
+	var says_sky: Dictionary = await _map_texts(sources, _writes_a_sky_word)
 	for script_path: String in _sorted_keys(sources):
 		await EventSheetProjectDoctor.breathe()
 		var text: String = str(sources[script_path])
-		if text.contains(SKY_BACKDROP_LINE) or not _writes_a_sky_word(text):
+		if text.contains(SKY_BACKDROP_LINE) or not bool(says_sky.get(script_path, false)):
 			continue
 		if not flat_backdrops.has(script_path):
 			continue
@@ -895,9 +914,10 @@ static func flat_backdrop_scripts(sources: Dictionary) -> PackedStringArray:
 ## `flat_backdrop_scripts`, a script at a time with a frame between turns: the same answer.
 static func flat_backdrop_scripts_in_turns(sources: Dictionary) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
+	var says_sky: Dictionary = await _map_texts(sources, _writes_a_sky_word)
 	for script_path: String in _sorted_keys(sources):
 		await EventSheetProjectDoctor.breathe()
-		if not _writes_a_sky_word(str(sources[script_path])):
+		if not bool(says_sky.get(script_path, false)):
 			continue
 		if EventSheetSceneLightingFacts.attached_scene(script_path).is_empty():
 			continue
@@ -972,9 +992,10 @@ static func loading_screen_findings(sources: Dictionary, scene_bytes: Dictionary
 ## `loading_screen_findings`, a script at a time with a frame between turns: the same answer.
 static func loading_screen_findings_in_turns(sources: Dictionary, scene_bytes: Dictionary) -> Array[Dictionary]:
 	var findings: Array[Dictionary] = []
+	var opened: Dictionary = await _map_texts(sources, plainly_opened_scenes)
 	for script_path: String in _sorted_keys(sources):
 		await EventSheetProjectDoctor.breathe()
-		for scene_path: String in plainly_opened_scenes(str(sources[script_path])):
+		for scene_path: String in (opened.get(script_path, PackedStringArray()) as PackedStringArray):
 			var size: int = int(scene_bytes.get(scene_path, 0))
 			if size < BIG_SCENE_BYTES:
 				continue
@@ -1019,9 +1040,10 @@ static func plainly_opened_scene_sizes(sources: Dictionary) -> Dictionary:
 ## `plainly_opened_scene_sizes`, a script at a time with a frame between turns: the same answer.
 static func plainly_opened_scene_sizes_in_turns(sources: Dictionary) -> Dictionary:
 	var sizes: Dictionary = {}
+	var opened: Dictionary = await _map_texts(sources, plainly_opened_scenes)
 	for script_path: String in _sorted_keys(sources):
 		await EventSheetProjectDoctor.breathe()
-		for scene_path: String in plainly_opened_scenes(str(sources[script_path])):
+		for scene_path: String in (opened.get(script_path, PackedStringArray()) as PackedStringArray):
 			if not sizes.has(scene_path):
 				sizes[scene_path] = _bytes_of(scene_path)
 	return sizes

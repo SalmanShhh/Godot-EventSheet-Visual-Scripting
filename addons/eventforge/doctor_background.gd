@@ -33,6 +33,11 @@ var _listing: Array = []
 var _verdicts: Dictionary = {}
 var _slices: Array = []
 var _work_result: Variant = null
+var _work_usec: int = 0
+
+## For whoever measures an audit: how long the workers handed a piece of work spent working, and how long the audit
+## waited on them, {step id: [worked usec, waited usec, pieces]}.
+static var work_totals: Dictionary = {}
 
 
 ## The project's folders and files, and which `.tres` files are event sheets, made on a worker.
@@ -71,14 +76,23 @@ static func run_work(work: Callable, tree: SceneTree) -> Variant:
 		return work.call()
 	job._threads.append(thread)
 	_live.append(job)
+	var waited_from: int = Time.get_ticks_usec()
 	while job.is_running():
 		await tree.process_frame
 	job._join()
+	if EventSheetProjectDoctor.trace_slow:
+		var held: Array = work_totals.get(EventSheetProjectDoctor.current_step, [0, 0, 0])
+		held[0] += job._work_usec
+		held[1] += Time.get_ticks_usec() - waited_from
+		held[2] += 1
+		work_totals[EventSheetProjectDoctor.current_step] = held
 	return job._work_result
 
 
 func _do_work(work: Callable) -> void:
+	var started: int = Time.get_ticks_usec()
 	_work_result = work.call()
+	_work_usec = Time.get_ticks_usec() - started
 
 
 func start_listing() -> bool:

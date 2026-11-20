@@ -193,6 +193,10 @@ static func res_write_findings(sources: Dictionary) -> Array[Dictionary]:
 ## A READ of res:// is never here: reading the game's own files is what res:// is for.
 static func res_write_lines(source: String) -> PackedStringArray:
 	var found: PackedStringArray = PackedStringArray()
+	# A line is only reported for a literal that begins with res://, and a literal is text of the source: a script that
+	# never says it has nothing to find, and is not read statement by statement to learn so.
+	if not source.contains(EventForgeFilePlaces.RES_SCHEME):
+		return found
 	var statements: PackedStringArray = EventForgeOutsidePaths.statements_of(source)
 	var packers: PackedStringArray = _names_bound_to(statements,
 		EventForgeFilePlaces.PACKER_CLASS)

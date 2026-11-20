@@ -381,6 +381,9 @@ static func is_networking_line(text: String) -> bool:
 ## One line with every quoted run removed, so what is left is only the code. Kept simple on purpose:
 ## it answers "is this word part of the code or part of a string", which needs no parser.
 static func outside_strings(text: String) -> String:
+	# A line with no quote mark has no quoted run to remove: it is its own answer, and most lines are.
+	if not text.contains("\"") and not text.contains("'"):
+		return text
 	var code: String = ""
 	var quote: String = ""
 	var index: int = 0
