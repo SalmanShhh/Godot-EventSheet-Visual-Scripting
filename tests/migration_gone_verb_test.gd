@@ -55,7 +55,7 @@ static func _test_the_sheet_is_never_written_to() -> bool:
 	var _reading: String = EventSheetMigrationFindings.reading_text(GONE_READING,
 		{"light": "$Lamp", "amount": "0.4"})
 	var _band: String = EventForgeVocabularyRecord.band_reading(
-		EventForgeVocabularyRecord.band_facts(0, EventSheetMigrationFindings.events_asking(found)))
+		EventForgeVocabularyRecord.band_facts(0, EventSheetMigrationFindings.rows_asking(found)))
 	ok = _check("and asking every question about it changes nothing at all",
 		_compiled(sheet), before) and ok
 	var action: Resource = (sheet.events[0] as EventRow).actions[0] as Resource
@@ -185,8 +185,8 @@ static func _test_the_head_band_counts_both_halves() -> bool:
 		"") and ok
 	# The count the band's first half is built from, over the rows themselves.
 	var sheet: EventSheetResource = _sheet_with_a_gone_verb()
-	ok = _check("the asking count is over EVENTS, so a row is counted where a reader would look",
-		EventSheetMigrationFindings.events_asking(EventSheetMigrationFindings.findings(
+	ok = _check("the asking count is over ROWS, the unit the Migrate window lists",
+		EventSheetMigrationFindings.rows_asking(EventSheetMigrationFindings.findings(
 			sheet, "res://probe.gd", _known_vocabulary())), 1) and ok
 	return ok
 

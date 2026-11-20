@@ -79,16 +79,15 @@ static func findings(sheet: EventSheetResource, script_path: String = "",
 	return found
 
 
-## How many EVENTS of this sheet hold a verb the vocabulary no longer has - the "ask you" half of the
-## head band's counting line. Counted per event rather than per row, because the band counts rows a
-## reader would go and look at.
-static func events_asking(found: Array[Dictionary]) -> int:
-	var seen: Array = []
+## How many ROWS of this sheet hold a verb the vocabulary no longer has - the "ask you" half of the
+## head band's counting line. Counted per row, the unit the Migrate window lists and the Doctor's
+## per-sheet line counts, so the three say the same number: a finding is one row.
+static func rows_asking(found: Array[Dictionary]) -> int:
+	var rows: int = 0
 	for entry: Dictionary in found:
-		var event_row: Variant = entry.get("event")
-		if event_row != null and not seen.has(event_row):
-			seen.append(event_row)
-	return seen.size()
+		if entry.get("event") != null:
+			rows += 1
+	return rows
 
 
 ## A resolver over a fixed set of "<provider>::<ace_id>" keys - what a test hands in, and the shape

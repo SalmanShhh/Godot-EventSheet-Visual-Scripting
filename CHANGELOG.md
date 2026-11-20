@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: a script's head, the Migrate window and the Doctor count rows that ask you the same way
+
+The head of a script counted EVENTS holding a verb the vocabulary lost or retired ("2 rows ask you") while the Migrate window listed ROWS (3). Both now count rows, and so do the Doctor's per-sheet line (`rows that ask you`) and the `verify_sheets` `[migration-asks]` lines, which already named one row each. The head still counts only the two cheap sources (a verb the vocabulary no longer has, a verb it retired with nothing to replace it); the window may also list a row the file would refuse, which only the window's own check can know.
+
 ### Fixed: the Doctor's Migration summary no longer reads 0 over a sheet whose own line says rows ask you
 
 The summary counted only sheets holding a verb the vocabulary no longer has, while the per-sheet line counted every row that asks you (a verb that moved and whose rewrite cannot be proved is one too), so a sheet could sit under "...no longer has: 0" and say "rows that ask you: 3". The summary now also says "sheets with rows that ask you: N" as its own figure.

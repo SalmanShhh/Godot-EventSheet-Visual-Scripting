@@ -9,39 +9,38 @@ extends RefCounted
 # is on the boot path.
 
 
-## The band's facts for one sheet: `builder` is the row builder that is walking it.
+## The band's facts for one sheet: `builder` is the row builder that is walking it. Both counts are
+## ROWS (a condition, an action or a trigger), the unit the Migrate window lists and the Doctor's
+## per-sheet line counts, so the head, the window and the Doctor say the same number.
 static func facts(builder: RefCounted, sheet: EventSheetResource, gone_findings: Array[Dictionary]) -> Dictionary:
-	var asking_events: Array = []
-	for entry: Dictionary in gone_findings:
-		var event_row: Variant = entry.get("event")
-		if event_row != null and not asking_events.has(event_row):
-			asking_events.append(event_row)
-	var retired: int = _count_retired(builder, sheet.events, asking_events)
+	var retired: int = _count_retired(builder, sheet.events)
 	for function: Variant in sheet.functions:
 		if function != null and function.get("events") is Array:
-			retired += _count_retired(builder, function.get("events") as Array, asking_events)
-	return EventForgeVocabularyRecord.band_facts(builder._rows_with_a_newer_spelling(sheet), asking_events.size() + retired)
+			retired += _count_retired(builder, function.get("events") as Array)
+	return EventForgeVocabularyRecord.band_facts(builder._rows_with_a_newer_spelling(sheet),
+		EventSheetMigrationFindings.rows_asking(gone_findings) + retired)
 
 
-## Events holding a retired verb, following groups and sub-events down. An event already counted as
-## asking (it holds a verb that is gone) is not counted twice.
-static func _count_retired(builder: RefCounted, rows: Array, already_asking: Array) -> int:
+## Rows holding a retired verb, following groups and sub-events down. A row whose verb is gone from
+## the vocabulary has no definition to be retired in, so it is never counted here as well.
+static func _count_retired(builder: RefCounted, rows: Array) -> int:
 	var counted: int = 0
 	for row: Variant in rows:
 		if row is EventRow:
 			var event_row: EventRow = row
-			if not already_asking.has(event_row) and _holds_retired_verb(builder, event_row):
-				counted += 1
-			counted += _count_retired(builder, event_row.sub_events, already_asking)
+			counted += _retired_rows_in(builder, event_row)
+			counted += _count_retired(builder, event_row.sub_events)
 		elif row != null and row.get("events") is Array:
-			counted += _count_retired(builder, row.get("events") as Array, already_asking)
+			counted += _count_retired(builder, row.get("events") as Array)
 	return counted
 
 
-## A retired verb is one the vocabulary flags as deprecated and gives no forwarding address.
-static func _holds_retired_verb(builder: RefCounted, event_row: EventRow) -> bool:
+## How many of one event's own rows hold a retired verb. A retired verb is one the vocabulary flags as
+## deprecated and gives no forwarding address.
+static func _retired_rows_in(builder: RefCounted, event_row: EventRow) -> int:
+	var counted: int = 0
 	for candidate: Array in builder._successor_candidates(event_row):
 		var here: ACEDefinition = builder._viewport._find_definition(str(candidate[0]), str(candidate[1]))
 		if here != null and bool(here.metadata.get("deprecated", false)) and EventForgeSuccessors.map_of(here).is_empty():
-			return true
-	return false
+			counted += 1
+	return counted
