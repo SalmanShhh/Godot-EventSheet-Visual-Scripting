@@ -37,6 +37,10 @@ const Repro := preload("res://tests/repro_bundle.gd")
 ## of multi-line GDScript fixtures whose interiors are, correctly, code.
 const GATE_ROOTS: PackedStringArray = ["res://addons/", "res://tools/"]
 
+## Sample user scripts opened for documentation pictures. They are written to read like a game's code,
+## so they are left out of the corpus rather than held to the editor's own ceilings.
+const FIXTURE_SCRIPTS: String = "res://tools/doc_shots/fixtures/"
+
 ## How many files one run measures. Forty is about four seconds, which is what a per-commit gate can
 ## afford; the release ritual runs the whole set by raising this past the corpus size.
 const SAMPLE_SIZE: int = 40
@@ -370,7 +374,10 @@ static func corpus() -> PackedStringArray:
 	for path: String in EventSheetThisEditor.source_files():
 		for root: String in GATE_ROOTS:
 			if path.begins_with(root):
-				found.append(path)
+				# The sample scripts the documentation pictures open are a user's game code, not the
+				# editor's own source, so they are no part of what this gate measures.
+				if not path.begins_with(FIXTURE_SCRIPTS):
+					found.append(path)
 				break
 	found.sort()
 	return found
