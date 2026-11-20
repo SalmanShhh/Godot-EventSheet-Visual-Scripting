@@ -56,8 +56,19 @@ func open(vocabulary: Dictionary = {}) -> void:
 		return
 	_build_dialog()
 	_fill()
-	if _dock.is_inside_tree():
-		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(760, 520))
+	_show()
+
+
+## Puts the window up. With nothing to rewrite the blue button is greyed, so the window is only as tall as
+## the rows it lists (the empty room under them said nothing) and the keyboard starts on Cancel, which is
+## the one button that does anything.
+func _show() -> void:
+	if not _dock.is_inside_tree():
+		return
+	var rewrites: bool = _rewrite_card.visible
+	EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(760, 520) if rewrites else Vector2i(760, 1))
+	if not rewrites:
+		_dialog.get_cancel_button().grab_focus()
 
 
 ## The rewrite list, exactly as the dialog draws it: two lines per row, the sentence then the code.
@@ -158,8 +169,7 @@ func confirm() -> void:
 func _redraw_on_what_the_sheet_says_now() -> void:
 	_planned = EventSheetMigrationPlan.plan(_dock._current_sheet, _vocabulary)
 	_fill()
-	if _dock.is_inside_tree():
-		EventSheetWindowPlacement.popup_centered(_dialog, Vector2i(760, 520))
+	_show()
 	_dock._set_status(EventSheetL10n.translate("This sheet changed while the receipt was open, so nothing was rewritten - here is what it says now."), true)
 
 
@@ -240,5 +250,5 @@ func _fill() -> void:
 	# sheet with three of them shows three and not two and a scrollbar.
 	_rewrite_card.visible = _list_size(_rewrite_list) > 0
 	_left_alone_card.visible = _list_size(_left_alone_list) > 0
-	_left_alone_list.custom_minimum_size.y = EventSheetPalette.scaled_f(90.0 if _rewrite_card.visible else 260.0)
+	_left_alone_list.custom_minimum_size.y = EventSheetPalette.scaled_f(90.0 if _rewrite_card.visible else 150.0)
 	_dialog.get_ok_button().disabled = _list_size(_rewrite_list) == 0

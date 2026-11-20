@@ -4,6 +4,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Fixed: the Migrate window with nothing to rewrite fits its rows and starts on Cancel
+
+When no row could be rewritten the greyed Migrate button still carried the keyboard focus and half the window was empty. The window now takes only the height of the rows it lists and the focus starts on Cancel.
+
 ### Fixed: the question about a script that changed outside the editor is no longer lost when the editor regains focus
 
 After a game run, coming back to the editor could print "Parent node is busy setting up children, add_child() failed" and drop the reload question, because the question was added to the editor from inside the engine's own focus notification. It is now asked one step later, the way Godot code adds a child from a notification.
