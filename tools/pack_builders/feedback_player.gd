@@ -61,7 +61,7 @@ static func build() -> bool:
 		"cooldown": {"type": "float", "default": 0.0, "exported": true,
 			"attributes": {"tooltip": "Seconds that must pass between plays; sooner requests are refused."}},
 		"moment_file": {"type": "Resource", "default": null, "exported": true,
-			"attributes": {"tooltip": "Optional: a Juice list file (or an old moment file) to play INSTEAD of the list. Drop one here to share it between objects: edit the file once and every player using it changes. To give this one object its own tweaks, use Make Unique in this slot's menu. Save As File writes this list out as a Juice list file."}}
+			"attributes": {"tooltip": "A Juice list file (or an old moment file) played INSTEAD of the list. Edit it once and every player using it changes. Make Unique gives one object its own."}}
 	}
 
 	var about: CommentRow = CommentRow.new()
@@ -3100,8 +3100,9 @@ func vibrate(weak: float = 0.5, strong: float = 0.5, seconds: float = 0.2) -> vo
 
 ## The controller number that means every connected controller and a phone.
 const EVERY_CONTROLLER: int = -1
-## The words a Vibrate card's controller choice holds besides a number.
+## The word a Vibrate card's controller choice holds for every controller.
 const CONTROLLER_ALL: String = "all"
+## The word a Vibrate card's controller choice holds for the controller used last.
 const CONTROLLER_LAST: String = "last"
 
 ## Rumbles one controller by its number (0 is the first), or every controller and a phone when the number is

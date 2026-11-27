@@ -74,7 +74,7 @@ signal on_loop(loops_left: int)
 @export_range(0, 10, 0.01, "or_greater", "suffix:s") var loop_wait: float = 0.0
 ## Seconds that must pass between plays; sooner requests are refused.
 @export var cooldown: float = 0.0
-## Optional: a Juice list file (or an old moment file) to play INSTEAD of the list. Drop one here to share it between objects: edit the file once and every player using it changes. To give this one object its own tweaks, use Make Unique in this slot's menu. Save As File writes this list out as a Juice list file.
+## A Juice list file (or an old moment file) played INSTEAD of the list. Edit it once and every player using it changes. Make Unique gives one object its own.
 @export var moment_file: Resource = null
 
 # --- Choices (the words the choice parameters take; saved scenes keep them) ---
@@ -854,8 +854,9 @@ func play_sound(stream: AudioStream, volume_db: float = 0.0, pitch: float = 1.0,
 	_sounding[label] = voice
 ## The controller number that means every connected controller and a phone.
 const EVERY_CONTROLLER: int = -1
-## The words a Vibrate card's controller choice holds besides a number.
+## The word a Vibrate card's controller choice holds for every controller.
 const CONTROLLER_ALL: String = "all"
+## The word a Vibrate card's controller choice holds for the controller used last.
 const CONTROLLER_LAST: String = "last"
 ## The controller heard last, kept for the whole game by the one listener below.
 static var _last_pad: int = -1

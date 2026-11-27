@@ -11451,10 +11451,10 @@ Jumps,Sprünge
 "A phone has one motor, so it buzzes at the stronger of the two strengths, and an iPhone may ignore the strength. An Android game needs the Vibrate permission ticked in its export preset; the Project Doctor checks it. One chosen controller leaves the phone quiet.",Ein Handy hat nur einen Motor und summt deshalb mit der stärkeren der beiden Stärken; ein iPhone ignoriert die Stärke womöglich. Ein Android-Spiel braucht die Berechtigung Vibrieren im Export-Preset; der Projekt-Doktor prüft das. Ein gewählter Controller lässt das Handy ruhig.
 "This game vibrates (first in %s), but the Android export preset ""%s"" does not have the Vibrate permission ticked, so a phone will not buzz. Open Project > Export, pick that preset and tick Vibrate under Permissions.","Dieses Spiel vibriert (zuerst in %s), aber das Android-Export-Preset ""%s"" hat die Berechtigung Vibrieren nicht angehakt, daher summt ein Handy nicht. Öffne Projekt > Exportieren, wähle dieses Preset und hake unter Berechtigungen Vibrieren an."
 "Rumbles a controller, the weak motor and the strong one, and buzzes a phone, for a time. Does nothing on the web. Scaled by the strength of the play. For a pulse pattern, put the card between Loop Start and Loop Back with a Pause.","Lässt einen Controller mit dem schwachen und dem starken Motor vibrieren und ein Handy summen, für eine Zeit. Im Web ohne Wirkung. Skaliert mit der Stärke des Abspielens. Für ein Pulsmuster setze die Karte mit einer Pause zwischen Loop Start und Loop Back."
-Controller,Controller
+Controller,Gamepad
 Every controller,Jeder Controller
 The one used last,Der zuletzt benutzte
-Controller 1,Controller 1
-Controller 2,Controller 2
-Controller 3,Controller 3
-Controller 4,Controller 4
+Controller 1,Gamepad 1
+Controller 2,Gamepad 2
+Controller 3,Gamepad 3
+Controller 4,Gamepad 4
