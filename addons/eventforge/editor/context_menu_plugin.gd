@@ -17,6 +17,7 @@ const SHIPPED_SCRIPTS_PATH: String = "res://addons/eventsheet/ace/shipped_script
 const L10N_PATH: String = "res://addons/eventsheet/editor/l10n.gd"
 const THEME_FILES_PATH: String = "res://addons/eventsheet/theme/theme_files.gd"
 const PREVIEW_BEHAVIOURS_PATH: String = "res://addons/eventforge/editor/preview_behaviours.gd"
+const MOMENT_CONVERSION_PATH: String = "res://addons/eventforge/moment_conversion.gd"
 
 var slot: int = -1
 var open_sheet: Callable = Callable()    # Callable(path: String)
@@ -65,6 +66,10 @@ func _popup_menu(paths: PackedStringArray) -> void:
 			# Inspector keeps editing it and a theme shown there never pulls the workspace forward.
 			if should_offer_edit_theme(slot, paths):
 				add_context_menu_item(load(L10N_PATH).translate("Edit in Theme Editor"), _on_edit_theme_requested, _open_as_sheet_icon())
+			# An old moment file becomes a Juice list from here, in place, as one undo step.
+			var old_moments: PackedStringArray = old_moment_files(slot, paths)
+			if not old_moments.is_empty():
+				add_context_menu_item(load(L10N_PATH).translate("Make a Juice list"), _on_make_juice_list_requested, _open_as_sheet_icon())
 			# A script that names a class can be made a kind of: the new sheet extends it.
 			var kind_parent: String = class_declared_in(paths)
 			if not kind_parent.is_empty():
@@ -102,6 +107,27 @@ static func should_offer_edit_theme(menu_slot: int, paths: PackedStringArray) ->
 	if menu_slot != EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM or paths.size() != 1:
 		return false
 	return load(THEME_FILES_PATH).is_theme_file(paths[0])
+
+
+## The selected files that are old moment files, or none: only .tres files are looked at (their first line), and
+## never a folder, because a right-click must not walk a large project. The Doctor does the whole project.
+static func old_moment_files(menu_slot: int, paths: PackedStringArray) -> PackedStringArray:
+	var found: PackedStringArray = PackedStringArray()
+	if menu_slot != EditorContextMenuPlugin.CONTEXT_SLOT_FILESYSTEM or paths.size() > 50:
+		return found
+	var conversion: GDScript = load(MOMENT_CONVERSION_PATH)
+	if not conversion.can_convert():
+		return found
+	for path: String in paths:
+		if path.get_extension().to_lower() == "tres" and conversion.is_old_moment_file(path):
+			found.append(path)
+	return found
+
+
+func _on_make_juice_list_requested(targets: Variant) -> void:
+	if targets is PackedStringArray:
+		var conversion: GDScript = load(MOMENT_CONVERSION_PATH)
+		conversion.convert_files(conversion.old_files_among(targets as PackedStringArray), load(L10N_PATH).translate("Turn old moment files into Juice lists"))
 
 
 func _on_edit_theme_requested(targets: Variant) -> void:

@@ -52,6 +52,11 @@ const PREVIEW_PANEL_PATH: String = "res://addons/eventsheet/editor/inspector/pre
 ## The card-list drawer and its schema side, loaded BY PATH for the same reason: a property that
 ## never asks for cards must not pay for them at every editor start.
 const CARD_LIST_DRAWER_PATH: String = "res://addons/eventsheet/editor/inspector/card_list_drawer.gd"
+## What turns an old moment file into a Juice list, by path for the same reason. Asked only of a property called
+## `steps` on a resource, so every other object an Inspector shows never loads it.
+const MOMENT_CONVERSION_PATH: String = "res://addons/eventforge/moment_conversion.gd"
+## The marker a Juice list's own steps carry, which an old moment file's steps are drawn with until the first edit.
+const JUICE_LIST_MARKER: String = "eventsheet:cards:kind=verb,schema=feedback_steps,stripes=category"
 const CARD_SCHEMAS_PATH: String = "res://addons/eventsheet/editor/inspector/card_schemas.gd"
 ## The catalogue of looks that are files (the progress bar, and any look the project adds), loaded BY
 ## PATH for the same reason: it is read the first time a marker names a look it does not know by heart.
@@ -129,10 +134,21 @@ func _parse_property(_object: Object, type: Variant.Type, name: String, _hint_ty
 	# is read and added after whatever draws the field itself - Godot's plain one or one of ours.
 	var under_field: Array[Control] = []
 	var handled: bool = _parse_field(_object, type, name, hint_string, under_field, _hint_type)
-	var spans: bool = notes_span_row(hint_string)
+	var spans: bool = notes_span_row(hint_string) or not old_moment_marker(_object, type, name).is_empty()
 	for note: Control in under_field:
 		add_property_editor(name, widgets().NoteRow.new(note, "", spans or bool(note.get_meta("spans_row", false))), true)
 	return handled
+
+
+## The card marker for the steps of an old moment file, or "" for anything else. Needs the Juice list's script in the
+## project, because the first edit turns the file into one.
+static func old_moment_marker(object: Object, type: int, name: String) -> String:
+	if name != "steps" or type != TYPE_ARRAY or not (object is Resource) or object.get_script() == null:
+		return ""
+	var conversion: GDScript = load(MOMENT_CONVERSION_PATH)
+	if conversion.is_old_moment(object) and conversion.can_convert():
+		return JUICE_LIST_MARKER
+	return ""
 
 
 ## Whether the notes under a property take the whole row rather than the value column. A card list
@@ -198,6 +214,10 @@ func _parse_field(_object: Object, type: Variant.Type, name: String, hint_string
 			if str((entry as Dictionary).get("kind", "")) == "look":
 				marker_hint = str(load(LOOK_LINES_PATH).marker_for(str((entry as Dictionary).get("body", "")), hint_type, hint_string))
 				break
+	# An old moment file's steps are drawn as juice cards, so nobody meets a raw dictionary.
+	var moment_marker: String = old_moment_marker(_object, type, name)
+	if not moment_marker.is_empty():
+		marker_hint = moment_marker
 	var drawer: Dictionary = parse_drawer_hint(marker_hint)
 	var kind: String = str(drawer.get("drawer", ""))
 	match kind:
@@ -607,6 +627,12 @@ class CardListProperty:
 		_list.call("set_edited_object", _acting_object())
 
 	func _on_changed(cards: Array) -> void:
+		# The first edit of an old moment file turns it into a Juice list, edit and conversion one undo step.
+		var edited_file: Object = get_edited_object()
+		if edited_file is Resource and get_edited_property() == &"steps":
+			var conversion: GDScript = load(EventSheetAttributeDrawers.MOMENT_CONVERSION_PATH)
+			if conversion.edit_step(edited_file as Resource, cards, load("res://addons/eventsheet/editor/l10n.gd").translate("Turn this moment file into a Juice list")):
+				return
 		# A script that runs for real in the editor keeps its list in a typed array, which refuses a plain one: hand it its own type.
 		emit_changed(get_edited_property(), _list.call("typed_like", get_edited_object().get(get_edited_property()), cards))
 		# A property write does not fire a resource's `changed` signal, so live previews (a prefab's

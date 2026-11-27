@@ -814,6 +814,9 @@ static func begin(options: Dictionary = {}) -> Dictionary:
 	# the shape of mistake that never surfaces on its own. Quiet on a sheet no scene runs and on a
 	# scene with no player in it - without a list to hold the row up against there is no evidence.
 	steps.append(["EventSheetFeedbackDoctor", func() -> void: EventSheetFeedbackDoctor.ensure_registered()])
+	# The Moment files section: old moment files that can become Juice lists, with the fix that does them all
+	# at once as one undo step. A note, never a warning - an old file plays as it always did.
+	steps.append(["EventSheetMomentFilesDoctor", func() -> void: EventSheetMomentFilesDoctor.ensure_registered()])
 	# The Behaviour hosts section: a behaviour sitting under a node of the wrong type, read from the
 	# scene files as text. The behaviour only logs one line at run time and does nothing, so the
 	# report says it before the game runs. Same seam, same reason.

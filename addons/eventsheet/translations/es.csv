@@ -11458,3 +11458,10 @@ Controller 1,Mando 1
 Controller 2,Mando 2
 Controller 3,Mando 3
 Controller 4,Mando 4
+Turn this moment file into a Juice list,
+"1 old moment file can become a Juice list. It plays the same either way and keeps its path, so scenes and scripts pointing at it keep working; only a script that loads it and casts it to the old class gets nothing back.",
+"%d old moment files can become Juice lists. They play the same either way and keep their paths, so scenes and scripts pointing at them keep working; only a script that loads one and casts it to the old class gets nothing back.",
+Make it a Juice list,
+Make all %d Juice lists,
+Turn old moment files into Juice lists,
+Make a Juice list,

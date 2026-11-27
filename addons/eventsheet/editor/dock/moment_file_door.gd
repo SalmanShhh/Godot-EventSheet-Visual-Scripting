@@ -232,7 +232,8 @@ static func open_run(path: String) -> Dictionary:
 	var steps: Variant = file.get("steps")
 	if not (steps is Array):
 		return {"ok": false, "said": "%s holds no steps, so it is not a moment." % target.get_file(), "block": null}
-	var word: String = str(file.get("moment_name")).strip_edges()
+	# A file that became a Juice list keeps the name it had on the file itself, out of sight of its steps.
+	var word: String = str(load("res://addons/eventforge/moment_conversion.gd").name_of(file)).strip_edges()
 	if word.is_empty():
 		word = target.get_file().get_basename()
 	var block: MomentBlockRow = EventSheetMomentFile.block_of(word, steps as Array)
