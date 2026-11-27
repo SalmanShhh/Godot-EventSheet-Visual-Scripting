@@ -2116,7 +2116,7 @@ not in %s,absent de %s
 %d triggers,%d déclencheurs
 %d used,%d utilisés
 %d more,%d de plus
-%s - starts in %s,%s - commence dans %s
+"%s - starts in %s","%s - commence dans %s"
 "Sort by reading order, by count or by name.","Trier par ordre de lecture, par nombre ou par nom."
 Nothing in this sheet names an object yet.,Rien dans cette feuille ne nomme encore d'objet.
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,Ce script n'est encore sur aucune scène - déposez-le sur un nœud dans le dock Scène et ses objets apparaîtront ici.
@@ -5346,7 +5346,7 @@ pooled as %s,mutualisé sous %s
 browse the scene,afficher la scène
 "This one is named by an expression the sheet works out as it runs, so there is no file to show.","Celle-ci est nommée par une expression que la feuille évalue à l'exécution, il n'y a donc aucun fichier à afficher."
 %s - shown in the FileSystem dock.,%s - affiché dans le dock Système de fichiers.
-This adds a node to the tree inside a collision callback. A 2D physics body or area added there makes Godot print errors while the physics server is busy. Add it on the next idle moment instead.,Ceci ajoute un nœud à l'arbre dans un rappel de collision. Un corps ou une zone de physique 2D ajouté là fait afficher des erreurs à Godot pendant que le serveur physique travaille. Ajoute-le au prochain moment libre.
+"This adds a node to the tree inside a collision callback. A 2D physics body or area added there makes Godot print errors while the physics server is busy. Add it on the next idle moment instead.",Ceci ajoute un nœud à l'arbre dans un rappel de collision. Un corps ou une zone de physique 2D ajouté là fait afficher des erreurs à Godot pendant que le serveur physique travaille. Ajoute-le au prochain moment libre.
 Add it on the next idle moment,L'ajouter au prochain moment libre
 Use the safe spawn row,Utiliser la ligne d'apparition sûre
 "%s is kept between frames, and anything could have destroyed it by now. Ask whether it is still here before reaching into it.","%s est conservé d'une image à l'autre, et n'importe quoi a pu le détruire entre-temps. Demande s'il est encore là avant d'y toucher."
@@ -5388,7 +5388,7 @@ Layer Names,Noms des calques
 "Type the layer's name first, then Name it…","Saisissez d'abord le nom du calque, puis Le nommer…"
 """%s"" is already layer %d.","""%s"" est déjà le calque %d."
 Layer %d could not be named.,Le calque %d n'a pas pu être nommé.
-%s. Undo puts the number back.,%s. Annuler rétablit le numéro.
+"%s. Undo puts the number back.","%s. Annuler rétablit le numéro."
 Name physics layer,Nommer le calque physique
 "%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.","%s s'adresse au calque de collision %d, or Godot possède les calques 1 à 32 - cet appel ne fait rien."
 "%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.","%s concerne le calque de collision %d, que ce projet ne nomme pas - la ligne se lit comme le numéro alors que toutes les autres se lisent comme un mot. Nommez-le dans Paramètres du projet ▸ Noms des calques, ou pointez la ligne vers le calque renommé."
@@ -5401,68 +5401,68 @@ Name physics layer,Nommer le calque physique
 "%s is one-way and turned over, so bodies fall through it from above and are stopped from below. The rows here are waiting for the landing it blocks.","%s est à sens unique et retourné, donc les corps le traversent par le haut et sont arrêtés par le bas. Les lignes ici attendent l'atterrissage qu'il bloque."
 "%s watches %s, and everything in this project that can collide sits on %s - so nothing can reach this trigger. This reads every layer in use, because the trigger names no group.","%s surveille %s, et tout ce qui peut entrer en collision dans ce projet se trouve sur %s - donc rien ne peut atteindre ce déclencheur. Ceci lit toutes les couches utilisées, car le déclencheur ne nomme aucun groupe."
 "%s watches %s, and the members of ""%s"" sit on %s - so this trigger never fires.","%s surveille %s, et les membres de ""%s"" se trouvent sur %s - donc ce déclencheur ne se déclenche jamais."
-Godot has collision layers 1 to 32.,Godot a les couches de collision 1 à 32.
-Open %s to change what it collides with.,Ouvre %s pour changer ce avec quoi il entre en collision.
-Show me in the scene,Montrer dans la scène
-Switch monitoring on,Activer la surveillance
-Watch collision layer %d,Surveiller la couche de collision %d
-monitoring off,surveillance désactivée
-monitoring on,surveillance activée
-seen by %s,vu par %s
-sees %s,voit %s
-%s is selected in %s.,%s est sélectionné dans %s.
-%s is not in the project any more.,%s n'est plus dans le projet.
-On Collision With Group,À la collision avec un groupe
+"Godot has collision layers 1 to 32.","Godot a les couches de collision 1 à 32."
+"Open %s to change what it collides with.","Ouvre %s pour changer ce avec quoi il entre en collision."
+"Show me in the scene","Montrer dans la scène"
+"Switch monitoring on","Activer la surveillance"
+"Watch collision layer %d","Surveiller la couche de collision %d"
+"monitoring off","surveillance désactivée"
+"monitoring on","surveillance activée"
+"seen by %s","vu par %s"
+"sees %s","voit %s"
+"%s is selected in %s.","%s est sélectionné dans %s."
+"%s is not in the project any more.","%s n'est plus dans le projet."
+"On Collision With Group","À la collision avec un groupe"
 "Runs when something from one group hits this body. The group is the filter: the handler's first line leaves at once for anything else, and what did hit rides into the rows underneath. This body BLOCKS what it hits - it needs Contact Monitor switched on and its Max Contacts Reported above zero before Godot will report the hit at all.","S'exécute quand quelque chose d'un groupe heurte ce corps. Le groupe est le filtre : la première ligne du gestionnaire ressort aussitôt pour tout le reste, et ce qui a heurté passe dans les lignes en dessous. Ce corps BLOQUE ce qu'il heurte - il faut activer Contact Monitor et mettre Max Contacts Reported au-dessus de zéro pour que Godot signale le choc."
-On collision with {group},À la collision avec {group}
+"On collision with {group}","À la collision avec {group}"
 "Only react when the thing that arrived is in this group. Any node joins a group from the Node dock, and the emitted handler leaves immediately when it is not in it.","Ne réagir que si ce qui est arrivé fait partie de ce groupe. N'importe quel nœud rejoint un groupe depuis le panneau Nœud, et le gestionnaire généré ressort aussitôt sinon."
-body,corps
+"body","corps"
 "The body that arrived, already known to be in the group. Filled in for you when the trigger fires - use it in the rows underneath.","Le corps arrivé, dont on sait déjà qu'il est dans le groupe. Rempli pour vous au déclenchement - utilisez-le dans les lignes en dessous."
-On Stopped Colliding With Group,À la fin de la collision avec un groupe
+"On Stopped Colliding With Group","À la fin de la collision avec un groupe"
 "Runs when something from one group stops touching this body - the other half of the collision, for ending a push, a grind or a stand-on. Needs the same Contact Monitor setting the starting half does.","S'exécute quand quelque chose d'un groupe cesse de toucher ce corps - l'autre moitié de la collision, pour terminer une poussée, un glissement ou un appui. Demande le même réglage Contact Monitor que la première moitié."
-On stopped colliding with {group},À la fin de la collision avec {group}
+"On stopped colliding with {group}","À la fin de la collision avec {group}"
 "The body that left, already known to be in the group. Filled in for you when the trigger fires - use it in the rows underneath.","Le corps parti, dont on sait déjà qu'il est dans le groupe. Rempli pour vous au déclenchement - utilisez-le dans les lignes en dessous."
-On Collision With Group (3D),À la collision avec un groupe (3D)
-On Stopped Colliding With Group (3D),À la fin de la collision avec un groupe (3D)
-On Overlap With Group,Au chevauchement avec un groupe
+"On Collision With Group (3D)","À la collision avec un groupe (3D)"
+"On Stopped Colliding With Group (3D)","À la fin de la collision avec un groupe (3D)"
+"On Overlap With Group","Au chevauchement avec un groupe"
 "Runs when something from one group moves into this area. An area DETECTS and does not block, so the thing keeps going - this is the trigger a checkpoint, a pickup zone or a damage field is written from. What arrived rides into the rows underneath.","S'exécute quand quelque chose d'un groupe entre dans cette zone. Une zone DÉTECTE et ne bloque pas, la chose continue donc son chemin - c'est le déclencheur d'un point de contrôle, d'une zone de ramassage ou d'un champ de dégâts. Ce qui est arrivé passe dans les lignes en dessous."
-On overlap with {group},Au chevauchement avec {group}
-On Overlap Ended With Group,À la fin du chevauchement avec un groupe
+"On overlap with {group}","Au chevauchement avec {group}"
+"On Overlap Ended With Group","À la fin du chevauchement avec un groupe"
 "Runs when something from one group leaves this area - the moment a player walks out of a safe zone, or the last enemy clears a trap.","S'exécute quand quelque chose d'un groupe quitte cette zone - le moment où le joueur sort d'une zone sûre, ou où le dernier ennemi dégage un piège."
-On overlap ended with {group},À la fin du chevauchement avec {group}
-On Overlap With Group (3D),Au chevauchement avec un groupe (3D)
-On Overlap Ended With Group (3D),À la fin du chevauchement avec un groupe (3D)
-Is Touching Group,Touche un groupe
+"On overlap ended with {group}","À la fin du chevauchement avec {group}"
+"On Overlap With Group (3D)","Au chevauchement avec un groupe (3D)"
+"On Overlap Ended With Group (3D)","À la fin du chevauchement avec un groupe (3D)"
+"Is Touching Group","Touche un groupe"
 "True while at least one body from this group is inside this area. The standing question beside the two arrival triggers - ask it when what matters is the state now, not the moment it changed.","Vrai tant qu'au moins un corps de ce groupe se trouve dans cette zone. La question permanente à côté des deux déclencheurs d'arrivée - posez-la quand c'est l'état actuel qui compte, pas l'instant du changement."
-is touching {group},touche {group}
-The group to look for among the bodies inside this area right now.,Le groupe à chercher parmi les corps qui se trouvent actuellement dans cette zone.
-Is Touching Group (3D),Touche un groupe (3D)
+"is touching {group}","touche {group}"
+"The group to look for among the bodies inside this area right now.","Le groupe à chercher parmi les corps qui se trouvent actuellement dans cette zone."
+"Is Touching Group (3D)","Touche un groupe (3D)"
 "This node is an area: it notices what arrives and lets it through. Blocking is a body's job, so pair this with a body if the thing should also be stopped.","Ce nœud est une zone : il remarque ce qui arrive et le laisse passer. Bloquer est le travail d'un corps, associez-en un si la chose doit aussi être arrêtée."
 "This node is a body: what it hits stops, and the hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero. An area would notice the same arrival without stopping anything.","Ce nœud est un corps : ce qu'il heurte s'arrête, et le choc n'est signalé que si Contact Monitor est activé et Max Contacts Reported supérieur à zéro. Une zone remarquerait la même arrivée sans rien arrêter."
-On Landed,À l'atterrissage
-On Landed (3D),À l'atterrissage (3D)
-On Left The Ground,En quittant le sol
-On Left The Ground (3D),En quittant le sol (3D)
-Just Landed,Vient d'atterrir
-Just Landed (3D),Vient d'atterrir (3D)
-Just Left The Ground,Vient de quitter le sol
-Just Left The Ground (3D),Vient de quitter le sol (3D)
-On First Overlap,À la première superposition
-On First Overlap (3D),À la première superposition (3D)
-On Last Overlap Ended,À la fin de la dernière superposition
-On Last Overlap Ended (3D),À la fin de la dernière superposition (3D)
-Is The First One In,Est le premier entré
-Is The First One In (3D),Est le premier entré (3D)
-Was The Last One Out,Était le dernier sorti
-Was The Last One Out (3D),Était le dernier sorti (3D)
-On landed,À l'atterrissage
-On left the ground,En quittant le sol
-just landed,vient d'atterrir
-just left the ground,vient de quitter le sol
-On first overlap,À la première superposition
-On last overlap ended,À la fin de la dernière superposition
-is the first one in,est le premier entré
-was the last one out,était le dernier sorti
+"On Landed","À l'atterrissage"
+"On Landed (3D)","À l'atterrissage (3D)"
+"On Left The Ground","En quittant le sol"
+"On Left The Ground (3D)","En quittant le sol (3D)"
+"Just Landed","Vient d'atterrir"
+"Just Landed (3D)","Vient d'atterrir (3D)"
+"Just Left The Ground","Vient de quitter le sol"
+"Just Left The Ground (3D)","Vient de quitter le sol (3D)"
+"On First Overlap","À la première superposition"
+"On First Overlap (3D)","À la première superposition (3D)"
+"On Last Overlap Ended","À la fin de la dernière superposition"
+"On Last Overlap Ended (3D)","À la fin de la dernière superposition (3D)"
+"Is The First One In","Est le premier entré"
+"Is The First One In (3D)","Est le premier entré (3D)"
+"Was The Last One Out","Était le dernier sorti"
+"Was The Last One Out (3D)","Était le dernier sorti (3D)"
+"On landed","À l'atterrissage"
+"On left the ground","En quittant le sol"
+"just landed","vient d'atterrir"
+"just left the ground","vient de quitter le sol"
+"On first overlap","À la première superposition"
+"On last overlap ended","À la fin de la dernière superposition"
+"is the first one in","est le premier entré"
+"was the last one out","était le dernier sorti"
 "Runs on the step this character's feet arrive on the floor - the landing itself, not the standing that follows it. Landing is where the dust, the thud and the squash go. It is a moment of the physics step rather than a signal, so the question underneath says which step.","S'exécute au pas où les pieds de ce personnage arrivent au sol - l'atterrissage lui-même, pas la station debout qui suit. C'est là que vont la poussiere, le bruit sourd et l'écrasement. C'est un moment du pas physique et non un signal, donc la question en dessous dit de quel pas il s'agit."
 "Runs on the step this character's feet leave the floor, whichever way they left it: a jump and a walked-off ledge are the same moment to this row. The half that starts coyote time, and the half a fall animation begins on.","S'exécute au pas où les pieds de ce personnage quittent le sol, peu importe comment : un saut et un rebord franchi sont le même moment pour cette ligne. La moitié qui lance le temps de coyote, et celle ou demarre une animation de chute."
 "True on the one step the feet arrive on the floor: on the floor now, and not on it last step. It keeps last step's footing in a variable of its own and updates it AFTER asking - a memory updated before the question is asked would always agree with the present, and the row could never be true.","Vrai au seul pas ou les pieds arrivent au sol : au sol maintenant, et pas au pas précédent. L'appui du pas précédent est gardé dans une variable à elle, mise à jour APRÈS la question - une mémoire mise à jour avant serait toujours d'accord avec le présent et la ligne ne pourrait jamais être vraie."
@@ -5471,47 +5471,47 @@ was the last one out,était le dernier sorti
 "Runs when something leaves this area and nothing is left inside - the plate coming back up, the room going quiet. The other half of the first arrival, and the pair a door or a lift is written from.","S'exécute quand quelque chose quitte cette zone et qu'il n'y reste rien - la plaque qui remonte, la salle qui se tait. L'autre moitié de la première arrivée, et la paire à partir de laquelle s'écrit une porte ou un ascenseur."
 "True when exactly one body is inside this area. Asked in an arrival, that is the arrival which filled an empty area: what just came in is already listed by then, so a list of one held nothing a moment ago.","Vrai quand exactement un corps se trouve dans cette zone. Posée dans une arrivée, c'est l'arrivée qui a rempli une zone vide : ce qui vient d'entrer y figure déjà, donc une liste d'un seul élément était vide l'instant d'avant."
 "True when nothing is inside this area. Asked in a departure, that is the departure which emptied it: what just left is already off the list by then, so an empty list means it was the last one.","Vrai quand rien ne se trouve dans cette zone. Posée dans un départ, c'est le départ qui l'a vidée : ce qui vient de partir n'y figure déjà plus, donc une liste vide signifie que c'était le dernier."
-The body that arrived. Filled in for you when the trigger fires - use it in the rows underneath.,Le corps qui est arrive. Rempli pour vous au déclenchement - utilisez-le dans les lignes en dessous.
-The body that left. Filled in for you when the trigger fires - use it in the rows underneath.,Le corps qui est parti. Rempli pour vous au déclenchement - utilisez-le dans les lignes en dessous.
+"The body that arrived. Filled in for you when the trigger fires - use it in the rows underneath.","Le corps qui est arrive. Rempli pour vous au déclenchement - utilisez-le dans les lignes en dessous."
+"The body that left. Filled in for you when the trigger fires - use it in the rows underneath.","Le corps qui est parti. Rempli pour vous au déclenchement - utilisez-le dans les lignes en dessous."
 "This node is a character body: your own rows drive it, one move at a time, and it stops when it runs into something. What it hit comes back from its own move rather than from a signal.","Ce nœud est un corps de personnage : vos propres lignes le déplacent, un mouvement à la fois, et il s'arrête quand il heurte quelque chose. Ce qu'il a touché revient de son propre deplacement, pas d'un signal."
-This node is a rigid body: physics throws it around and it stops what it hits. The hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero.,Ce nœud est un corps rigide : la physique le projette et il arrête ce qu'il heurte. Le contact n'est signalé que si Contact Monitor est activé et Max Contacts Reported supérieur à zéro.
+"This node is a rigid body: physics throws it around and it stops what it hits. The hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero.","Ce nœud est un corps rigide : la physique le projette et il arrête ce qu'il heurte. Le contact n'est signalé que si Contact Monitor est activé et Max Contacts Reported supérieur à zéro."
 "This node is a static body: it stands still and things stop against it. It never moves itself, so the news of a touch usually belongs on whatever ran into it.","Ce nœud est un corps statique : il reste immobile et les choses s'arrêtent contre lui. Il ne bouge jamais de lui-même, donc la nouvelle d'un contact revient plutôt à ce qui l'a percuté."
-Nothing in this scene can touch anything yet - this row needs one: %s.,Rien dans cette scène ne peut encore toucher quoi que ce soit - cette ligne en a besoin d'un : %s.
-%d claimed by an entry · %d nothing claims · %d%% renders as rows rather than blocks,%d revendiquées par une entrée · %d que rien ne revendique · %d%% se dessine en lignes plutôt qu'en blocs
-Saves back byte-identical.,Se réenregistre à l'octet près.
-Line %d comes back different.,La ligne %d revient différente.
-buffer,tampon
-saved,enregistré
+"Nothing in this scene can touch anything yet - this row needs one: %s.","Rien dans cette scène ne peut encore toucher quoi que ce soit - cette ligne en a besoin d'un : %s."
+"%d claimed by an entry · %d nothing claims · %d%% renders as rows rather than blocks","%d revendiquées par une entrée · %d que rien ne revendique · %d%% se dessine en lignes plutôt qu'en blocs"
+"Saves back byte-identical.","Se réenregistre à l'octet près."
+"Line %d comes back different.","La ligne %d revient différente."
+"buffer","tampon"
+"saved","enregistré"
 "Mark each value span as [[name: text]], then check it.","Marquez chaque plage de valeur avec [[name: text]], puis vérifiez."
-Refused: %s,Refusé : %s
-This example derives an entry.,Cet exemple produit une entrée.
-Lift Workbench - what claims each line,Établi de lecture - ce qui revendique chaque ligne
-Paste code here,Collez du code ici
-Claimed by,Revendiquée par
-What claims each line,Ce qui revendique chaque ligne
-What it saves back as,Ce qui sera réenregistré
-The rows it opens as,Les lignes qu'il ouvre
-Draft an example…,Rédiger un exemple…
-Take the selected unclaimed line to the by-example form and derive an entry from it.,Emmener la ligne non revendiquée sélectionnée dans le formulaire par l'exemple et en dériver une entrée.
-Draft an example,Rédiger un exemple
+"Refused: %s","Refusé : %s"
+"This example derives an entry.","Cet exemple produit une entrée."
+"Lift Workbench - what claims each line","Établi de lecture - ce qui revendique chaque ligne"
+"Paste code here","Collez du code ici"
+"Claimed by","Revendiquée par"
+"What claims each line","Ce qui revendique chaque ligne"
+"What it saves back as","Ce qui sera réenregistré"
+"The rows it opens as","Les lignes qu'il ouvre"
+"Draft an example…","Rédiger un exemple…"
+"Take the selected unclaimed line to the by-example form and derive an entry from it.","Emmener la ligne non revendiquée sélectionnée dans le formulaire par l'exemple et en dériver une entrée."
+"Draft an example","Rédiger un exemple"
 "The line, with its value spans marked","La ligne, avec ses plages de valeur marquées"
 "A value span is [[name: text]], or [[name|fragment: text]] to say which fragment it is. Everything outside a span is matched literally.","Une plage de valeur s'écrit [[name: text]], ou [[name|fragment: text]] pour préciser le fragment. Tout ce qui est hors d'une plage est comparé littéralement."
-Entry id,Identifiant d'entrée
-Row it means,Ligne qu'elle signifie
-The entry this derives,L'entrée ainsi dérivée
+"Entry id","Identifiant d'entrée"
+"Row it means","Ligne qu'elle signifie"
+"The entry this derives","L'entrée ainsi dérivée"
 Nothing drafted yet.,Rien de brouillonné pour l'instant.
 "These are asked before every shipped spelling, in this window only. They are gone when it closes, and nothing on disk is written.","Elles sont consultées avant toute graphie livrée, dans cette fenêtre uniquement. Elles disparaissent à sa fermeture et rien n'est écrit sur le disque."
 Clear drafts,Effacer les brouillons
 "Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.","Vide les brouillons que cette fenêtre conserve, si bien que chaque ligne qu'ils revendiquaient redevient ce qu'elle était."
-Check,Vérifier
-Add draft,Ajouter le brouillon
+"Check","Vérifier"
+"Add draft","Ajouter le brouillon"
 "Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.","Les %d premiers script(s) sur %d ont été lus, dans l’ordre des chemins. Le registre ci-dessous est un échantillon de ce projet, pas son ensemble - ce sont les mêmes scripts qui sont lus à chaque fois."
 "%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.","%d%% de ce qui a été lu se dessine en lignes, et chacune porte un nom. Rien ne reste du code ici."
 "%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.","%d%% de ce qui a été lu se dessine en lignes - c'est la question du dessin. La question des mots est en dessous : %d ligne(s) restent du code honnête, parce qu'aucun vocabulaire ne les revendique encore. Les deux sont vraies, et ce n'est pas le même nombre."
 "%d more shape(s) are said more than once here, over %d line(s). The ledger names the commonest and counts the rest.","%d autre(s) forme(s) sont dites plus d'une fois ici, sur %d ligne(s). Le registre nomme les plus courantes et compte le reste."
-%d line(s) are the same shape: %s,%d ligne(s) ont la même forme : %s
-line %d: %s,ligne %d : %s
-... and %d more line(s) of the same shape.,... et %d ligne(s) de plus de la même forme.
+"%d line(s) are the same shape: %s","%d ligne(s) ont la même forme : %s"
+"line %d: %s","ligne %d : %s"
+"... and %d more line(s) of the same shape.","... et %d ligne(s) de plus de la même forme."
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d ligne(s) ont des formes que rien d'autre ici ne répète. Comptées plutôt que listées : une ligne dite une seule fois n'est la table de personne, et elle a vocation à rester du code."
 "%d line(s) inside those runs hold no statement to shape - a note, or the inside of a text block.","%d ligne(s) dans ces passages ne contiennent aucune instruction à mettre en forme - une note, ou l’intérieur d’un bloc de texte."
 On object freed,À la libération de l'objet
@@ -5539,68 +5539,68 @@ Notifications,Notifications
 "Runs as the very last thing that happens to this object, just before its memory goes. Different from On destroyed, which is the node leaving the tree and can happen more than once - this happens exactly once and nothing follows it, so it is where a handle held somewhere else gets given back.","S'exécute en tout dernier pour cet objet, juste avant que sa mémoire ne parte. Différent de À la destruction, qui est le nœud quittant l'arbre et peut arriver plusieurs fois - ceci arrive exactement une fois et rien ne suit, c'est donc là qu'une référence détenue ailleurs est rendue."
 "Runs when the player closes the window - the X, or the system asking the game to quit. The game does NOT quit by itself when this arrives if the project is set to handle it, which is what makes room for a ""save first?"" prompt.","S'exécute quand la joueuse ou le joueur ferme la fenêtre - la croix, ou le système qui demande au jeu de quitter. Le jeu ne quitte PAS de lui-même à l'arrivée de cet événement si le projet est réglé pour le gérer, et c'est ce qui laisse la place à une question ""sauvegarder d'abord ?""."
 "user:// - the player's folder: writable, one per player, survives updates.","user:// - le dossier du joueur : accessible en écriture, un par joueur, survit aux mises à jour."
-res:// - the game's own files: READ-ONLY once exported.,res:// - les fichiers propres du jeu : EN LECTURE SEULE une fois exporté.
-an absolute path: this folder exists on one computer and nowhere else.,un chemin absolu : ce dossier existe sur un seul ordinateur et nulle part ailleurs.
+"res:// - the game's own files: READ-ONLY once exported.","res:// - les fichiers propres du jeu : EN LECTURE SEULE une fois exporté."
+"an absolute path: this folder exists on one computer and nowhere else.","un chemin absolu : ce dossier existe sur un seul ordinateur et nulle part ailleurs."
 "user:// is a real folder on the player's machine: %APPDATA%\Godot\app_userdata\<project> on Windows, ~/Library/Application Support/Godot/app_userdata/<project> on macOS, ~/.local/share/godot/app_userdata/<project> on Linux. Open the player's data folder opens it while the game runs.","user:// est un vrai dossier sur la machine du joueur : %APPDATA%\Godot\app_userdata\<project> sous Windows, ~/Library/Application Support/Godot/app_userdata/<project> sous macOS, ~/.local/share/godot/app_userdata/<project> sous Linux. Ouvrir le dossier de données du joueur l'ouvre pendant que le jeu tourne."
 "%s writes to a res:// path, which works here and fails in every exported build - res:// is a packed archive once the game is built, not a folder. First: %s.","%s écrit sur un chemin res://, ce qui marche ici et échoue dans chaque build exporté - res:// est une archive compactée une fois le jeu construit, pas un dossier. D'abord : %s."
 "A game writes to user:// - the player's folder, which is writable, one per player, and survives the game being updated.","Un jeu écrit dans user:// - le dossier du joueur, accessible en écriture, un par joueur, et qui survit à une mise à jour du jeu."
 "%s reaches a file by an absolute path, which names a folder on one computer and on no other. First: %s.","%s atteint un fichier par un chemin absolu, qui nomme un dossier sur un seul ordinateur et sur aucun autre. D'abord : %s."
-A file the game WRITES belongs under user://; a file it SHIPS WITH belongs under res:// and inside the project.,Un fichier que le jeu ÉCRIT va sous user:// ; un fichier qu'il LIVRE va sous res:// et dans le projet.
+"A file the game WRITES belongs under user://; a file it SHIPS WITH belongs under res:// and inside the project.","Un fichier que le jeu ÉCRIT va sous user:// ; un fichier qu'il LIVRE va sous res:// et dans le projet."
 "%s reads a user:// file without saying what to use when it is not there, and the first run of a game has no save, no settings and no log. Godot answers with empty text rather than an error, so the game reads nothing as data. First: %s.","%s lit un fichier user:// sans dire quoi utiliser quand il n'est pas là, et le premier lancement d'un jeu n'a ni sauvegarde, ni réglages, ni journal. Godot répond par du texte vide plutôt que par une erreur, donc le jeu lit du rien comme des données. D'abord : %s."
 "Read Text File (or a fallback) says the answer out loud, and the guard is written into the line.","Lire un fichier texte (ou une valeur de repli) dit la réponse à voix haute, et la protection est écrite dans la ligne."
-%d more like it in this file.,%d autres du même genre dans ce fichier.
-the player's folder,le dossier du joueur
+"%d more like it in this file.","%d autres du même genre dans ce fichier."
+"the player's folder","le dossier du joueur"
 "the game's own files, read-only once exported","les fichiers propres du jeu, en lecture seule une fois exporté"
-Table Of File,Tableau du fichier
+"Table Of File","Tableau du fichier"
 "Reads a .csv with Godot's own CSV reader, one line at a time, and gives you the rows. Quoting is exactly the engine's: a cell in ""double quotes"" may hold the separator, and a doubled """" inside one is a single quote character. Store it with a Set action - the read is several lines long, so it belongs in an action rather than squeezed into a condition.","Lit un .csv avec le lecteur CSV de Godot lui-même, une ligne à la fois, et vous donne les lignes. Les guillemets suivent exactement la règle du moteur : une cellule entre ""guillemets doubles"" peut contenir le séparateur, et un """" doublé à l'intérieur vaut un seul guillemet. Rangez le résultat avec une action Définir - la lecture fait plusieurs lignes, elle a donc sa place dans une action plutôt que serrée dans une condition."
-table of [b]{path}[/b] - {headers},tableau de [b]{path}[/b] - {headers}
-The .csv to read. Prefer res:// for data that ships with the game; user:// for a file the game itself wrote.,Le .csv à lire. Préférez res:// pour des données livrées avec le jeu ; user:// pour un fichier que le jeu a écrit lui-même.
-First line,Première ligne
+"table of [b]{path}[/b] - {headers}","tableau de [b]{path}[/b] - {headers}"
+"The .csv to read. Prefer res:// for data that ships with the game; user:// for a file the game itself wrote.","Le .csv à lire. Préférez res:// pour des données livrées avec le jeu ; user:// pour un fichier que le jeu a écrit lui-même."
+"First line","Première ligne"
 "How the file's first line is read. Naming the columns gives one record per row, so a field is reachable as row[""price""]; otherwise every line is a plain list of cells.","Comment la première ligne du fichier est lue. Si elle nomme les colonnes, vous obtenez un enregistrement par ligne, chaque champ étant accessible par row[""price""] ; sinon chaque ligne est une simple liste de cellules."
-The first line names the columns,La première ligne nomme les colonnes
-Every line is a row,Chaque ligne est une ligne de données
-Write Table To File,Écrire le tableau dans un fichier
-"Writes rows back out as a .csv with Godot's own CSV writer, so a cell holding the separator or a quote is quoted the way the engine quotes it - and a file written here reads back through Table Of File unchanged.",Réécrit les lignes en .csv avec l'écrivain CSV de Godot lui-même : une cellule contenant le séparateur ou un guillemet est mise entre guillemets comme le moteur le fait - et un fichier écrit ici se relit sans changement avec Tableau du fichier.
-write table [b]{table}[/b] to [b]{path}[/b] - {headers},écrire le tableau [b]{table}[/b] dans [b]{path}[/b] - {headers}
-File to write. OVERWRITES any existing file. Use user:// - res:// is read-only once the game is exported.,Fichier à écrire. ÉCRASE tout fichier existant. Utilisez user:// - res:// est en lecture seule une fois le jeu exporté.
+"The first line names the columns","La première ligne nomme les colonnes"
+"Every line is a row","Chaque ligne est une ligne de données"
+"Write Table To File","Écrire le tableau dans un fichier"
+"Writes rows back out as a .csv with Godot's own CSV writer, so a cell holding the separator or a quote is quoted the way the engine quotes it - and a file written here reads back through Table Of File unchanged.","Réécrit les lignes en .csv avec l'écrivain CSV de Godot lui-même : une cellule contenant le séparateur ou un guillemet est mise entre guillemets comme le moteur le fait - et un fichier écrit ici se relit sans changement avec Tableau du fichier."
+"write table [b]{table}[/b] to [b]{path}[/b] - {headers}","écrire le tableau [b]{table}[/b] dans [b]{path}[/b] - {headers}"
+"File to write. OVERWRITES any existing file. Use user:// - res:// is read-only once the game is exported.","Fichier à écrire. ÉCRASE tout fichier existant. Utilisez user:// - res:// est en lecture seule une fois le jeu exporté."
 "The rows to write - the Array variable a table expression filled, or one the sheet built itself.","Les lignes à écrire - la variable Array remplie par une expression de tableau, ou une que la feuille a construite elle-même."
 "Whether to write a first line naming the columns. Naming them writes one line per record, in the order the first record's fields are in; otherwise every entry is written as a plain list of cells.","Faut-il écrire une première ligne nommant les colonnes. Si oui, une ligne est écrite par enregistrement, dans l'ordre des champs du premier ; sinon chaque entrée est écrite comme une simple liste de cellules."
-For Each Line In File,Pour chaque ligne d'un fichier
+"For Each Line In File","Pour chaque ligne d'un fichier"
 "Runs this event's actions once per LINE of a text file, skipping blank ones. The file is read once and the loop then walks text already in memory, so nothing stays open behind the loop. Windows (CRLF) and old-Mac (CR) endings are handled, and a file that is not there walks nothing. Read the current one as `line`.","Exécute les actions de cet événement une fois par LIGNE d'un fichier texte, en sautant les lignes vides. Le fichier est lu une fois, puis la boucle parcourt du texte déjà en mémoire : rien ne reste ouvert derrière elle. Les fins de ligne Windows (CRLF) et ancien Mac (CR) sont gérées, et un fichier absent ne parcourt rien. Lisez la ligne courante avec `line`."
-for each line of [b]{path}[/b],pour chaque ligne de [b]{path}[/b]
+"for each line of [b]{path}[/b]","pour chaque ligne de [b]{path}[/b]"
 "The text file to walk line by line - a log you wrote earlier, a list of level names, a leaderboard body.","Le fichier texte à parcourir ligne par ligne - un journal écrit plus tôt, une liste de noms de niveaux, le corps d'un classement."
-written,écrit
-read,lu
-read and written,lu et écrit
-asks the player to pick a file,demande au joueur de choisir un fichier
-and %d more path(s),et %d chemin(s) de plus
-On Files Dropped,Quand des fichiers sont déposés
+"written","écrit"
+"read","lu"
+"read and written","lu et écrit"
+"asks the player to pick a file","demande au joueur de choisir un fichier"
+"and %d more path(s)","et %d chemin(s) de plus"
+"On Files Dropped","Quand des fichiers sont déposés"
 "Runs when the player drags files from their desktop onto the game window and lets go. DESKTOP ONLY: Windows, macOS and Linux raise it, and a web or mobile build never does, so keep another way in beside it.","S'exécute quand la personne qui joue fait glisser des fichiers du bureau vers la fenêtre du jeu et les relâche. BUREAU UNIQUEMENT : Windows, macOS et Linux l'émettent, jamais une version web ou mobile - gardez donc une autre entrée à côté."
-On files dropped {files},Quand des fichiers sont déposés {files}
+"On files dropped {files}","Quand des fichiers sont déposés {files}"
 "Every path the player let go of, in one list - a drop can carry more than one file. They are real paths on that machine, not res:// or user:// ones.","Tous les chemins que la personne a relâchés, en une liste - un dépôt peut porter plusieurs fichiers. Ce sont de vrais chemins sur cette machine, pas des chemins res:// ou user://."
-Ask For A File To Open,Demander un fichier à ouvrir
+"Ask For A File To Open","Demander un fichier à ouvrir"
 "Opens the player's own file chooser so they can pick a file to read. The answer arrives as On a file chosen, or as On the ask cancelled - both of which the sheet needs an event for, because the emitted line calls them by name.","Ouvre le sélecteur de fichiers de la personne qui joue pour qu'elle choisisse un fichier à lire. La réponse arrive comme Quand un fichier est choisi ou Quand la demande est annulée - la feuille a besoin d'un événement pour chacune, car la ligne générée les appelle par leur nom."
-Ask for a file to open ({filters}),Demander un fichier à ouvrir ({filters})
-Filters,Filtres
+"Ask for a file to open ({filters})","Demander un fichier à ouvrir ({filters})"
+"Filters","Filtres"
 "Which files the player may pick. One entry per line of the list, spelled the way Godot spells a filter: the patterns, a semicolon, then the words the chooser shows - ""*.png,*.jpg;Images"".","Quels fichiers la personne peut choisir. Une entrée par ligne de la liste, écrite comme Godot écrit un filtre : les motifs, un point-virgule, puis les mots affichés par le sélecteur - ""*.png,*.jpg;Images""."
-Ask Where To Save,Demander où enregistrer
+"Ask Where To Save","Demander où enregistrer"
 "Opens the player's own save chooser so they can name a file and a folder to write into. Nothing is written by this row: the path arrives as On a file chosen, and a write row does the writing.","Ouvre le sélecteur d'enregistrement de la personne qui joue pour qu'elle nomme un fichier et un dossier. Cette ligne n'écrit rien : le chemin arrive comme Quand un fichier est choisi, et une ligne d'écriture écrit."
-Ask where to save ({filters}),Demander où enregistrer ({filters})
+"Ask where to save ({filters})","Demander où enregistrer ({filters})"
 "Which kind of file is being written. One entry per line of the list, spelled the way Godot spells a filter: the patterns, a semicolon, then the words the chooser shows - ""*.png;PNG image"".","Quel genre de fichier est écrit. Une entrée par ligne de la liste, écrite comme Godot écrit un filtre : les motifs, un point-virgule, puis les mots affichés par le sélecteur - ""*.png;PNG image""."
-On A File Chosen,Quand un fichier est choisi
-"Runs when the player answered an Ask row by picking a file. Both Ask rows end here, so a sheet that asks two different questions remembers which one it asked.",S'exécute quand la personne a répondu à une ligne de demande en choisissant un fichier. Les deux lignes de demande finissent ici : une feuille qui pose deux questions différentes retient laquelle elle a posée.
-On a file chosen {path},Quand un fichier est choisi {path}
+"On A File Chosen","Quand un fichier est choisi"
+"Runs when the player answered an Ask row by picking a file. Both Ask rows end here, so a sheet that asks two different questions remembers which one it asked.","S'exécute quand la personne a répondu à une ligne de demande en choisissant un fichier. Les deux lignes de demande finissent ici : une feuille qui pose deux questions différentes retient laquelle elle a posée."
+"On a file chosen {path}","Quand un fichier est choisi {path}"
 "The file the player picked, as a real path on their machine. It is a path and nothing more - reading it is a separate row.","Le fichier choisi par la personne, sous forme de chemin réel sur sa machine. Ce n'est qu'un chemin - le lire est une autre ligne."
-On The Ask Cancelled,Quand la demande est annulée
-Runs when the player closed an Ask row's chooser without picking anything. Put whatever was waiting on the answer back the way it was here.,S'exécute quand la personne a fermé le sélecteur d'une ligne de demande sans rien choisir. Remettez ici en état ce qui attendait la réponse.
-On the ask cancelled,Quand la demande est annulée
-Image From File,Image depuis un fichier
+"On The Ask Cancelled","Quand la demande est annulée"
+"Runs when the player closed an Ask row's chooser without picking anything. Put whatever was waiting on the answer back the way it was here.","S'exécute quand la personne a fermé le sélecteur d'une ligne de demande sans rien choisir. Remettez ici en état ce qui attendait la réponse."
+"On the ask cancelled","Quand la demande est annulée"
+"Image From File","Image depuis un fichier"
 "Reads a picture from outside the project and answers with a texture, ready to hand to a Sprite or a TextureRect. No import step is involved: what you get back is a texture in a variable, and it lives only as long as something holds it.","Lit une image hors du projet et répond par une texture, prête pour un Sprite ou un TextureRect. Aucune étape d'import : ce qui revient est une texture dans une variable, et elle ne vit que tant que quelque chose la retient."
 "image of file {path}, or {fallback}","image du fichier {path}, sinon {fallback}"
 "The picture to read, in any format Godot decodes at runtime: .png, .jpg / .jpeg, .webp, .bmp, .tga, .svg, .ktx, .dds and .hdr.","L'image à lire, dans n'importe quel format que Godot décode à l'exécution : .png, .jpg / .jpeg, .webp, .bmp, .tga, .svg, .ktx, .dds et .hdr."
-If missing,S'il manque
+"If missing","S'il manque"
 "What the expression reads as when there is no file at that path. Leave it blank to read the file plainly, with no guard around it.","Ce que vaut l'expression quand aucun fichier n'est à ce chemin. Laissez vide pour lire le fichier simplement, sans garde autour."
-Sound From File,Son depuis un fichier
+"Sound From File","Son depuis un fichier"
 "Reads a sound from outside the project and answers with an audio stream, ready to hand to a player node. The line names one reader per format the engine decodes at runtime, so a file it cannot decode reads as the fallback rather than as silence nobody explained.","Lit un son hors du projet et répond par un flux audio, prêt pour un nœud de lecture. La ligne nomme un lecteur par format que le moteur décode à l'exécution : un fichier qu'il ne sait pas décoder vaut donc le repli plutôt qu'un silence inexpliqué."
 "sound of file {path}, or {fallback}","son du fichier {path}, sinon {fallback}"
 "The sound to read. EXACTLY THREE formats decode at runtime and the line checks for those three by extension: .mp3, .ogg (Ogg Vorbis) and .wav. Prefer a variable here - the path is read once per format the line checks.","Le son à lire. EXACTEMENT TROIS formats se décodent à l'exécution, et la ligne vérifie ces trois-là par l'extension : .mp3, .ogg (Ogg Vorbis) et .wav. Préférez une variable ici - le chemin est lu une fois par format vérifié."
@@ -5704,10 +5704,10 @@ re-entered %s,est revenu dans %s
 This happened %d times in this run.,Cela s'est produit %d fois pendant cette exécution.
 Row,Ligne
 States,États
-OK,OK
-Patrol · Chase · Stagger,Patrouille · Poursuite · Chancelle
+"OK","OK"
+"Patrol · Chase · Stagger","Patrouille · Poursuite · Chancelle"
 "The states this one object can be in, separated by anything you like. They become an enum, and every row that names a state is offered this list as it types - so a state is picked rather than remembered, and a row naming one that is not here is what the Doctor calls out.","Les états dans lesquels cet objet peut se trouver, séparés comme vous voulez. Ils deviennent une énumération, et chaque ligne qui nomme un état se voit proposer cette liste pendant la frappe - un état se choisit donc au lieu de se retenir, et une ligne qui en nomme un absent d'ici, c'est ce que signale le Doctor."
-The state the object opens in - the value the state variable is declared with. It is also the one state that needs no row going to it.,L'état dans lequel l'objet démarre - la valeur avec laquelle la variable d'état est déclarée. C'est aussi le seul état qui n'a besoin d'aucune ligne pour y aller.
+"The state the object opens in - the value the state variable is declared with. It is also the one state that needs no row going to it.","L'état dans lequel l'objet démarre - la valeur avec laquelle la variable d'état est déclarée. C'est aussi le seul état qui n'a besoin d'aucune ligne pour y aller."
 Error,Erreur
 Warning,Avertissement
 this sheet,cette feuille
@@ -7247,7 +7247,7 @@ What this file is: a script.,Ce qu'est ce fichier : un script.
 Add to Class Head…,Ajouter à l'en-tête de classe…
 Click to change what kind of script it is.,Cliquez pour changer le type de script.
 Event %d selected,Événement %d sélectionné
-Comment - drag the grip to move it into an event's actions or between events.,Commentaire - faites glisser la poignée pour le déplacer dans les actions d'un événement ou entre des événements.
+Comment - drag the grip to move it into an event's actions or between events.,"Commentaire - faites glisser la poignée pour le déplacer dans les actions d'un événement ou entre des événements."
 Side Rail,Barre latérale
 "The panels beside the sheet - Open Sheets, Objects, Functions. Unticked, the rail is tucked away and the sheet takes the width.","Les panneaux à côté de la feuille - Feuilles ouvertes, Objets, Fonctions. Décochée, la barre est repliée et la feuille prend toute la largeur."
 Move every child of %s to %s,Déplacer chaque enfant de %s vers %s
@@ -9726,7 +9726,7 @@ Fold or unfold what this kind inherits.,Replie ou déplie ce dont cette sorte h�
 "read here, changed on %s's sheet","lu ici, modifié sur la feuille de %s"
 Double-click to start it at another value.,Double-cliquez pour le démarrer à une autre valeur.
 Right-click to replace it in %s.,Clic droit pour la remplacer dans %s.
-"%s changed since this step, so no file was written and the sheet is not saved.",%s a changé depuis cette étape : aucun fichier n'a été écrit et la feuille n'est pas enregistrée.
+"%s changed since this step, so no file was written and the sheet is not saved.","%s a changé depuis cette étape : aucun fichier n'a été écrit et la feuille n'est pas enregistrée."
 "In %s, 1 test of %s will test %s instead.","Dans %s, 1 test de %s testera %s à la place."
 "In %s, %d tests of %s will test %s instead.","Dans %s, %d tests de %s testeront %s à la place."
 "%s saves %s as a number: after the removal, a saved number can name a different state.","%s enregistre %s sous forme de nombre : après la suppression, un nombre enregistré peut désigner un autre état."
@@ -10028,31 +10028,31 @@ Every physics tick,Chaque tick de physique
 every physics tick,chaque tick de physique
 no starting value,aucune valeur de départ
 "%s is Array[%s] and %s is Array[%s], and a typed array only holds its own type.","%s est Array[%s] et %s est Array[%s], et un tableau typé ne contient que son propre type."
-different types,types différents
-the two types differ,les deux types diffèrent
-For each popped from the front of %s as %s,Pour chaque élément retiré du début de %s comme %s
-For each popped from the back of %s as %s,Pour chaque élément retiré de la fin de %s comme %s
+different types,"types différents"
+the two types differ,"les deux types diffèrent"
+For each popped from the front of %s as %s,"Pour chaque élément retiré du début de %s comme %s"
+For each popped from the back of %s as %s,"Pour chaque élément retiré de la fin de %s comme %s"
 Edit it anyway,Modifier quand même
 %s is now editable.,%s est maintenant modifiable.
 %s is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.,%s est un comportement fourni : ajouter une version plus récente du pack remplace ce fichier et vos modifications.
 This function is locked - right-click it and choose Unlock this function,Cette fonction est verrouillée - clic droit puis choisissez Déverrouiller cette fonction
-group %s,groupe %s
-list %s,liste %s
-Choose a group or list,Choisir un groupe ou une liste
-Use a group instead of %s,Utiliser un groupe à la place de %s
+group %s,"groupe %s"
+list %s,"liste %s"
+Choose a group or list,"Choisir un groupe ou une liste"
+Use a group instead of %s,"Utiliser un groupe à la place de %s"
 "%s is now the group ""%s"": add_to_group, remove_from_group, is_in_group and For each in group.","%s est maintenant le groupe ""%s"" : add_to_group, remove_from_group, is_in_group et For each in group."
-Pick the %s,Choisir %s
-This event now picks %s.,Cet événement choisit maintenant %s.
-Drop freed instances first,Retirer d'abord les instances libérées
-Added a row above the loop that drops freed instances from %s.,Une ligne a été ajoutée au-dessus de la boucle pour retirer les instances libérées de %s.
-Use a group instead,Utiliser un groupe à la place
+Pick the %s,"Choisir %s"
+This event now picks %s.,"Cet événement choisit maintenant %s."
+Drop freed instances first,"Retirer d'abord les instances libérées"
+Added a row above the loop that drops freed instances from %s.,"Une ligne a été ajoutée au-dessus de la boucle pour retirer les instances libérées de %s."
+Use a group instead,"Utiliser un groupe à la place"
 "%s holds nodes but is never read by position or order. A group is Godot's way to keep an unordered set of nodes, and it drops a destroyed instance by itself.","%s contient des nodes mais n'est jamais lue par position ou par ordre. Un groupe est la manière de Godot de garder un ensemble non ordonné de nodes, et il retire de lui-même une instance détruite."
 "%s is read in a loop but nothing on this sheet ever takes a destroyed instance out of it, and the next use of a freed one is an error (a group needs no such clean-up).","%s est lue dans une boucle mais rien dans cette feuille n'en retire jamais une instance détruite, et le prochain usage d'une instance libérée est une erreur (un groupe n'a pas besoin de ce nettoyage)."
-Pick the %s from a group,Choisir %s depuis un groupe
-Pick the %s from %s,Choisir %s depuis %s
+Pick the %s from a group,"Choisir %s depuis un groupe"
+Pick the %s from %s,"Choisir %s depuis %s"
 "This row reaches into %s, a list that belongs to another object. It works, but the object that owns a list should be asked for it through a function or a signal instead.","Cette ligne va chercher %s, une liste qui appartient à un autre objet. Cela fonctionne, mais l'objet propriétaire d'une liste devrait plutôt être interrogé par une fonction ou un signal."
 "No %s is picked here. A pick lasts for its own event and the sub-events under it, so this row has nothing to act on.","Aucun %s n'est choisi ici. Un choix dure pour son propre événement et les sous-événements dessous, donc cette ligne n'a rien sur quoi agir."
-Picked here,Choisis ici
+Picked here,"Choisis ici"
 "The instances this event picked or was handed, by the names the code uses.","Les instances que cet événement a choisies ou reçues, sous les noms que le code utilise."
 "The %s this event picked, written as %s. Rows you add here act on it.","Le %s que cet événement a choisi, écrit %s. Les lignes ajoutées ici agissent sur lui."
 %s - variables,%s - variables
@@ -10530,8 +10530,8 @@ Couldn't save %s: %s.,Impossible d'enregistrer %s : %s.
 Text that mentions the name - left as it is,Texte qui mentionne le nom - laissé tel quel
 " %d file(s) of the behaviours that ship with this plugin also say that name, and nothing in them refers to this script, so they are not listed."," %d fichier(s) des comportements livrés avec ce plugin disent aussi ce nom, et rien dedans ne renvoie à ce script, donc ils ne sont pas listés."
 "%s sits inside a %s, and a Container places its children itself: the next time it arranges them it moves this Control back, so this row seems to do nothing. To place it yourself, put the Control under a plain Control node instead; to change where it ends up inside the Container, change the Container's own settings or this Control's size flags and custom minimum size.","%s se trouve dans un %s, et un Container place lui-même ses enfants : à sa prochaine mise en page il remet ce Control en place, donc cette ligne semble ne rien faire. Pour le placer vous-même, mettez le Control sous un nœud Control simple ; pour changer où il se retrouve dans le Container, changez les réglages du Container lui-même ou les size flags et la taille minimale personnalisée de ce Control."
-Apply Central Impulse (3D),Appliquer une impulsion centrale (3D)
-Apply Central Impulse,Appliquer une impulsion centrale
+"Apply Central Impulse (3D)","Appliquer une impulsion centrale (3D)"
+"Apply Central Impulse","Appliquer une impulsion centrale"
 "%s is a %s, which the physics engine moves every physics frame, so a Tween on its %s fights the engine: the body jitters, snaps back or is pushed through walls. Tween a child node instead (a Sprite2D, say), move the body with %s, or turn on Freeze on the body first so code may move it.","%s est un %s, que le moteur de physique déplace à chaque image de physique, donc un Tween sur son %s lutte contre le moteur : le corps tremble, revient en arrière ou traverse les murs. Faites plutôt le Tween sur un nœud enfant (un Sprite2D, par exemple), déplacez le corps avec %s, ou activez d'abord Freeze sur le corps pour que le code puisse le déplacer."
 "This behaviour sits under %s, a %s, and it writes its parent's %s every frame while the physics engine moves that body too, so the two fight: the body jitters, snaps back or is pushed through walls. Put the behaviour on a node that is not a physics body (the Sprite2D inside it, or a plain Node2D), or move the body with %s instead.","Ce comportement est sous %s, un %s, et il écrit à chaque image le %s de son parent alors que le moteur de physique déplace aussi ce corps, donc les deux se battent : le corps tremble, revient en arrière ou traverse les murs. Mettez le comportement sur un nœud qui n'est pas un corps physique (le Sprite2D à l'intérieur, ou un Node2D simple), ou déplacez le corps avec %s."
 "An edit was started inside another edit, which cannot be undone as two steps, so it was not applied. Make both changes in the outer edit.","Une modification a été lancée à l'intérieur d'une autre modification, ce qui ne peut pas être annulé en deux étapes, donc elle n'a pas été appliquée. Fais les deux changements dans la modification extérieure."
@@ -10682,36 +10682,36 @@ Nothing here can be rewritten on its own - %d rows are listed below with the rea
 %d rows are left exactly as they are.,%d lignes restent exactement comme elles sont.
 After the hold,Après le Hold
 Start together,Démarrent ensemble
-Apply keeps a saved theme for this script in this project. Nothing is written into the script.,Appliquer garde un thème enregistré pour ce script dans ce projet. Rien n'est écrit dans le script.
-Revert,Rétablir
-Match Editor,Éditeur de match
-Untitled theme,Thème sans titre
-Theme Editor - %s,Éditeur de thème - %s
-%s (changed),%s (modifié)
-Save a Copy…,Enregistrer une copie…
-Theme saved: %s,Thème enregistré : %s
-Theme could not be saved: %s (%s),Impossible d'enregistrer le thème : %s (%s)
-Save a Copy,Enregistrer une copie
-Save Theme As,Enregistrer le thème sous
-Save changes to %s?,Enregistrer les modifications de %s ?
-The swatches you changed are not in the file yet.,Les couleurs que vous avez changées ne sont pas encore dans le fichier.
-Discard throws the changes away. Cancel keeps the window as it is.,Abandonner jette les modifications. Annuler laisse la fenêtre telle quelle.
-Your themes,Vos thèmes
-Starters,Modèles
-Open now,Ouvert maintenant
-Theme,Thème
-Open / Close %s,Ouvrir / fermer %s
-Open All / Close All %s,Tout ouvrir / fermer : %s
-Put Selection into New %s,Mettre la sélection dans un nouveau bloc (%s)
-Close %s,Fermer %s
-Use For Every Sheet,Utiliser pour toutes les feuilles
-Makes this theme the one every sheet wears unless it chose its own. Kept in Project Settings.,Fait de ce thème celui de chaque feuille qui n'en a pas choisi un. Conservé dans les Paramètres du projet.
-That file is not an event sheet theme.,Ce fichier n'est pas un thème de feuille d'événements.
-This sheet's look has no theme file. Save it from the Theme Editor first.,L'apparence de cette feuille n'a pas de fichier de thème. Enregistrez-la d'abord depuis l'éditeur de thème.
-Sheets with no theme of their own match the editor again.,Les feuilles sans thème propre suivent de nouveau l'éditeur.
-Every sheet with no theme of its own now wears %s.,Chaque feuille sans thème propre porte maintenant %s.
-Project theme: %s,Thème du projet : %s
-Edit in Theme Editor,Modifier dans l'éditeur de thème
+Apply keeps a saved theme for this script in this project. Nothing is written into the script.,"Appliquer garde un thème enregistré pour ce script dans ce projet. Rien n'est écrit dans le script."
+Revert,"Rétablir"
+Match Editor,"Éditeur de match"
+Untitled theme,"Thème sans titre"
+Theme Editor - %s,"Éditeur de thème - %s"
+%s (changed),"%s (modifié)"
+Save a Copy…,"Enregistrer une copie…"
+Theme saved: %s,"Thème enregistré : %s"
+Theme could not be saved: %s (%s),"Impossible d'enregistrer le thème : %s (%s)"
+Save a Copy,"Enregistrer une copie"
+Save Theme As,"Enregistrer le thème sous"
+Save changes to %s?,"Enregistrer les modifications de %s ?"
+The swatches you changed are not in the file yet.,"Les couleurs que vous avez changées ne sont pas encore dans le fichier."
+Discard throws the changes away. Cancel keeps the window as it is.,"Abandonner jette les modifications. Annuler laisse la fenêtre telle quelle."
+Your themes,"Vos thèmes"
+Starters,"Modèles"
+Open now,"Ouvert maintenant"
+Theme,"Thème"
+Open / Close %s,"Ouvrir / fermer %s"
+Open All / Close All %s,"Tout ouvrir / fermer : %s"
+Put Selection into New %s,"Mettre la sélection dans un nouveau bloc (%s)"
+Close %s,"Fermer %s"
+Use For Every Sheet,"Utiliser pour toutes les feuilles"
+Makes this theme the one every sheet wears unless it chose its own. Kept in Project Settings.,"Fait de ce thème celui de chaque feuille qui n'en a pas choisi un. Conservé dans les Paramètres du projet."
+That file is not an event sheet theme.,"Ce fichier n'est pas un thème de feuille d'événements."
+This sheet's look has no theme file. Save it from the Theme Editor first.,"L'apparence de cette feuille n'a pas de fichier de thème. Enregistrez-la d'abord depuis l'éditeur de thème."
+Sheets with no theme of their own match the editor again.,"Les feuilles sans thème propre suivent de nouveau l'éditeur."
+Every sheet with no theme of its own now wears %s.,"Chaque feuille sans thème propre porte maintenant %s."
+Project theme: %s,"Thème du projet : %s"
+Edit in Theme Editor,"Modifier dans l'éditeur de thème"
 A fixed direction,Une direction fixe
 "A label counts from the number it shows to a number. The number is a plain number or a name from your game, such as GameState.score.","Une étiquette compte du nombre affiché jusqu'à un nombre. Le nombre est un nombre simple ou un nom de votre jeu, comme GameState.score."
 A node,Un nœud
@@ -10868,28 +10868,28 @@ Label node,Nœud d'étiquette
 Pick a property first,Choisissez d'abord une propriété
 "A base for dark and a base for light, one accent, a text colour for each. Generate fills both columns at once; anything you then change by hand stays yours.","Une base pour le sombre et une pour le clair, un accent, une couleur de texte pour chacun. Générer remplit les deux colonnes d'un coup ; ce que vous changez ensuite à la main reste à vous."
 "Rebuild every colour token, dark and light, from the colours above.","Reconstruit chaque couleur, sombre et clair, à partir des couleurs ci-dessus."
-The open sheet keeps its own copy of a theme; pick the theme again to update it.,La feuille ouverte garde sa propre copie d'un thème ; choisissez à nouveau le thème pour la mettre à jour.
-Preview as,Aperçu en
-Dark,Sombre
-Only the sample sheet changes. Your sheet wears the side that matches Godot's editor theme.,Seule la feuille d'exemple change. Votre feuille porte le côté qui correspond au thème de l'éditeur de Godot.
-Contrast %s : 1 on %s (%s); %s : 1 reads comfortably.,Contraste %s : 1 sur %s (%s) ; %s : 1 se lit confortablement.
-(no light line: one colour for both),(pas de ligne claire : une couleur pour les deux)
-(no light line: worked out from the editor),(pas de ligne claire : calculée depuis l'éditeur)
-Same colour in dark and light: click to give light its own,Même couleur en sombre et en clair : cliquez pour donner sa propre couleur au clair
-Separate colours: click to use the dark colour in both,Couleurs séparées : cliquez pour utiliser la couleur sombre dans les deux
-Worked out from the editor. Pick a colour to give light its own.,Calculée depuis l'éditeur. Choisissez une couleur pour donner sa propre couleur au clair.
-auto,automatique
-Follow the editor in light,Suivre l'éditeur en clair
-Follows the editor,Suit l'éditeur
-Starters (copy to edit),Modèles (copier pour modifier)
-worked out from the editor,calculé à partir de l'éditeur
-same colour in both,même couleur des deux côtés
-hard to read on its row,difficile à lire sur sa ligne
+The open sheet keeps its own copy of a theme; pick the theme again to update it.,"La feuille ouverte garde sa propre copie d'un thème ; choisissez à nouveau le thème pour la mettre à jour."
+Preview as,"Aperçu en"
+Dark,"Sombre"
+Only the sample sheet changes. Your sheet wears the side that matches Godot's editor theme.,"Seule la feuille d'exemple change. Votre feuille porte le côté qui correspond au thème de l'éditeur de Godot."
+Contrast %s : 1 on %s (%s); %s : 1 reads comfortably.,"Contraste %s : 1 sur %s (%s) ; %s : 1 se lit confortablement."
+(no light line: one colour for both),"(pas de ligne claire : une couleur pour les deux)"
+(no light line: worked out from the editor),"(pas de ligne claire : calculée depuis l'éditeur)"
+Same colour in dark and light: click to give light its own,"Même couleur en sombre et en clair : cliquez pour donner sa propre couleur au clair"
+Separate colours: click to use the dark colour in both,"Couleurs séparées : cliquez pour utiliser la couleur sombre dans les deux"
+Worked out from the editor. Pick a colour to give light its own.,"Calculée depuis l'éditeur. Choisissez une couleur pour donner sa propre couleur au clair."
+auto,"automatique"
+Follow the editor in light,"Suivre l'éditeur en clair"
+Follows the editor,"Suit l'éditeur"
+Starters (copy to edit),"Modèles (copier pour modifier)"
+worked out from the editor,"calculé à partir de l'éditeur"
+same colour in both,"même couleur des deux côtés"
+hard to read on its row,"difficile à lire sur sa ligne"
 "Worked out from Godot's editor, dark or light. Change anything and it becomes a theme of your own: Save As asks where to keep it.","Calculé à partir de l'éditeur Godot, sombre ou clair. Changez quelque chose et il devient un thème à vous : Enregistrer sous demande où le ranger."
-"A starter that comes with the plugin, so a plugin update would replace it. Save a Copy makes your own in eventsheet_themes/ and leaves the starter as shipped.",Un modèle livré avec le plugin : une mise à jour du plugin le remplacerait. Enregistrer une copie crée le vôtre dans eventsheet_themes/ et laisse le modèle tel que livré.
-A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,Un thème livré avec les démos. Enregistrer une copie crée le vôtre dans eventsheet_themes/ et laisse celui-ci tel que livré.
-A file in your project. Save writes it in place (Ctrl+S) and every open sheet wearing it repaints.,Un fichier de votre projet. Enregistrer l'écrit sur place (Ctrl+S) et chaque feuille ouverte qui le porte est redessinée.
-not a file: the colours come from Godot's editor theme,pas un fichier : les couleurs viennent du thème de l'éditeur Godot
+"A starter that comes with the plugin, so a plugin update would replace it. Save a Copy makes your own in eventsheet_themes/ and leaves the starter as shipped.","Un modèle livré avec le plugin : une mise à jour du plugin le remplacerait. Enregistrer une copie crée le vôtre dans eventsheet_themes/ et laisse le modèle tel que livré."
+A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,"Un thème livré avec les démos. Enregistrer une copie crée le vôtre dans eventsheet_themes/ et laisse celui-ci tel que livré."
+A file in your project. Save writes it in place (Ctrl+S) and every open sheet wearing it repaints.,"Un fichier de votre projet. Enregistrer l'écrit sur place (Ctrl+S) et chaque feuille ouverte qui le porte est redessinée."
+not a file: the colours come from Godot's editor theme,"pas un fichier : les couleurs viennent du thème de l'éditeur Godot"
 a card of yours plays here only when its script is marked @tool,une carte à vous ne joue ici que si son script est marqué @tool
 Edit this value in the card's script.,Modifiez cette valeur dans le script de la carte.
 Yours,À vous
@@ -10970,7 +10970,7 @@ Shows this list as cards again.,Affiche de nouveau cette liste en cartes.
 Move to bottom,Déplacer tout en bas
 Shapes (%d),Formes (%d)
 Dash offset,Décalage du tiret
-Line %d: rename %s to %s. Nothing else changed.,Ligne %d : renomme %s en %s. Rien d'autre n'a changé.
+"Line %d: rename %s to %s. Nothing else changed.","Ligne %d : renomme %s en %s. Rien d'autre n'a changé."
 Fade in,Fondu en entrée
 Custom curve,Courbe personnalisée
 rises from nothing,monte depuis zéro
@@ -10982,13 +10982,13 @@ Starts at nothing and reaches %s at %s s.,Part de zéro et atteint %s à %s s.
 Starts at %s and is gone at %s s.,Part de %s et disparaît à %s s.
 "Holds %s for %s s, then stops.","Garde %s pendant %s s, puis s'arrête."
 Save the new file where the card can find it,Enregistrez le nouveau fichier là où la carte peut le trouver
-Preview its behaviours,Prévisualiser ses comportements
-Stop previews,Arrêter les prévisualisations
+Preview its behaviours,"Prévisualiser ses comportements"
+Stop previews,"Arrêter les prévisualisations"
 "Loop is on and nothing in this list takes time, so the player plays it again every frame. Add a Pause or a card with a length.","Loop est activé et rien dans cette liste ne prend de temps, donc le lecteur la rejoue à chaque image. Ajoutez une Pause ou une carte qui a une durée."
 "Nothing in this loop takes time, so the play gives up after %d steps. Give a card in it a length, or the Loop Back a Pause.","Rien dans cette boucle ne prend de temps, donc la lecture abandonne après %d étapes. Donnez une durée à une carte de la boucle, ou une Pause au Loop Back."
 1 card,1 carte
 %d cards,%d cartes
-This curve has changes that are not saved to its file yet. The game plays the saved file.,Cette courbe a des modifications qui ne sont pas encore enregistrées dans son fichier. Le jeu utilise le fichier enregistré.
+This curve has changes that are not saved to its file yet. The game plays the saved file.,"Cette courbe a des modifications qui ne sont pas encore enregistrées dans son fichier. Le jeu utilise le fichier enregistré."
 Flip,Basculer
 Pause Or Resume A Juice Player,Mettre en pause ou reprendre un Juice Player
 "Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on until it is resumed.","Met en pause, reprend ou bascule un autre Juice Player, ou celui-ci : une alarme en boucle qui s'arrête tant qu'une porte est ouverte. Une liste en pause reste sur la carte en cours jusqu'à la reprise."
@@ -11141,21 +11141,21 @@ A scene this sheet holds.,Une scène que cette feuille garde.
 A scene,Une scène
 "A scene file kept in a slot, to make copies of: a bullet, an enemy, a pickup. The Inspector shows a slot you drop a .tscn file into, and a spawn row copies it with its own instantiate().","Un fichier de scène gardé dans un emplacement, dont on fait des copies : une balle, un ennemi, un objet à ramasser. L'Inspecteur montre un emplacement où l'on dépose un fichier .tscn, et une ligne d'apparition le copie avec son propre instantiate()."
 "Comes back to rest without swinging past it, in about %s s.","Revient au repos sans le dépasser, en %s s environ."
-Swings past rest once and settles in about %s s.,Dépasse le repos une fois et se stabilise en %s s environ.
-Swings past rest %d times and settles in about %s s.,Dépasse le repos %d fois et se stabilise en %s s environ.
+Swings past rest once and settles in about %s s.,"Dépasse le repos une fois et se stabilise en %s s environ."
+Swings past rest %d times and settles in about %s s.,"Dépasse le repos %d fois et se stabilise en %s s environ."
 "Amount is 0, so the colours are never split.","La quantité est 0, donc les couleurs ne sont jamais séparées."
 "The colours stay %s px apart along %s degrees, then snap together after %s s.","Les couleurs restent écartées de %s px, le long de %s degrés, puis se rejoignent d'un coup après %s s."
-The colours part by up to %s px along %s degrees and are back together after %s s.,Les couleurs s'écartent de %s px au plus le long de %s degrés et se rejoignent après %s s.
+"The colours part by up to %s px along %s degrees and are back together after %s s.","Les couleurs s'écartent de %s px au plus le long de %s degrés et se rejoignent après %s s."
 "The colours stay %s px apart, turning as they go, then snap together after %s s.","Les couleurs restent écartées de %s px en tournant, puis se rejoignent d'un coup après %s s."
-"The colours part by up to %s px, turning as they go, and are back together after %s s.",Les couleurs s'écartent de %s px au plus en tournant et se rejoignent après %s s.
+"The colours part by up to %s px, turning as they go, and are back together after %s s.","Les couleurs s'écartent de %s px au plus en tournant et se rejoignent après %s s."
 "There is no Juice node beside this player, so this card does nothing. Add a Juice node under the same object.","Il n'y a pas de nœud Juice à côté de ce lecteur, donc cette carte ne fait rien. Ajoutez un nœud Juice sous le même objet."
-Chromatic Shake,Tremblement chromatique
+"Chromatic Shake","Tremblement chromatique"
 "Splits the red, green and blue of the screen apart along a direction for a moment, then lets them close again: the colour fringe of a hit, a dash or a landing. It plays through the Juice node beside the player, with the same no-flashing and reduced-effects choices as its Chromatic Shake row.","Sépare le rouge, le vert et le bleu de l'écran le long d'une direction un instant, puis les laisse se rejoindre : la frange de couleur d'un coup, d'une ruée ou d'un atterrissage. Il se joue par le nœud Juice à côté du lecteur, avec les mêmes choix sans clignotement et effets réduits que sa ligne Chromatic Shake."
-Ends,Fin
-Closes steadily,Se referme progressivement
-Holds then snaps shut,"Tient, puis se referme d'un coup"
-Wanders,Dérive
-Along an angle,Le long d'un angle
+"Ends","Fin"
+"Closes steadily","Se referme progressivement"
+"Holds then snaps shut","Tient, puis se referme d'un coup"
+"Wanders","Dérive"
+"Along an angle","Le long d'un angle"
 Replace scenes?,Remplacer les scènes ?
 "This writes over %d scene(s), starting with %s, and Ctrl+Z cannot take it back.","Cela écrase %d scène(s), à commencer par %s, et Ctrl+Z ne peut pas l'annuler."
 Each is kept in Sheet Backups first.,Chacune est d'abord conservée dans les sauvegardes de feuilles.
@@ -11248,12 +11248,12 @@ the Load bindings row of the same pair,la ligne Charger les touches de la même 
 "The slot card, which the Save System keeps for the load menu:","La carte de l'emplacement, que le Save System garde pour le menu de chargement :"
 "Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.","Clavier ▸ Enregistrer les touches écrit %s ; Settings ▸ Save Bindings les garde dans %s sous [%s], à côté des options."
 "Keyboard ▸ Save bindings, or Settings ▸ Save Bindings","Clavier ▸ Enregistrer les touches, ou Settings ▸ Save Bindings"
-Saved %s. %s,%s enregistré. %s
+"Saved %s. %s","%s enregistré. %s"
 "%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.","%s n'a pas été écrit : c'est un script à vous, pas un script créé par cette feuille, et l'écrire remplacerait votre code. Renommez la feuille ou ce script pour que les deux noms diffèrent, puis réessayez."
 "%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.","%s n'a pas été écrit : il appartient à la feuille %s. Renommez l'une des deux feuilles pour que les noms diffèrent, puis réessayez."
-"Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.",Rien dans cette feuille n'est encore publié dans le sélecteur. Cochez « Les autres feuilles peuvent l'utiliser » sur une fonction et elle sera listée ici telle que le sélecteur la montrera.
-%d sheet(s) that name it follow it too.,%d feuille(s) qui le nomment le suivent aussi.
-Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.,Vos scripts qui nomment encore l'ancien chemin : %d. Outils > Rechercher dans le projet les liste.
+"Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.","Rien dans cette feuille n'est encore publié dans le sélecteur. Cochez « Les autres feuilles peuvent l'utiliser » sur une fonction et elle sera listée ici telle que le sélecteur la montrera."
+"%d sheet(s) that name it follow it too.","%d feuille(s) qui le nomment le suivent aussi."
+"Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.","Vos scripts qui nomment encore l'ancien chemin : %d. Outils > Rechercher dans le projet les liste."
 The tests could not be started in a second copy of Godot.,Les tests n'ont pas pu être lancés dans une seconde copie de Godot.
 The test run ended before it wrote a report. Run the tests from a terminal to see why.,L'exécution des tests s'est arrêtée avant d'écrire un rapport. Lancez les tests depuis un terminal pour voir pourquoi.
 Ctrl+Z takes it out again.,Ctrl+Z le retire à nouveau.

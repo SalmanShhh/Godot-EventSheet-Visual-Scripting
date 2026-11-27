@@ -169,8 +169,7 @@ func _shader_for(effect: String) -> Shader:
 		push_warning("Screen FX has no shader file for the \"%s\" effect at %s." % [effect, path])
 	_shaders[effect] = found
 	return found
-## The entry the Grayscale rows wear: the shipped Desaturate effect under its own name, so a project's own Desaturate
-## entry is left alone and Clear Grayscale takes away only what Grayscale made.
+## The stack entry the Grayscale rows wear: Desaturate under its own name, so your own Desaturate entry is left alone.
 const GRAYSCALE_ENTRY: String = "grayscale"
 
 func _ready() -> void:

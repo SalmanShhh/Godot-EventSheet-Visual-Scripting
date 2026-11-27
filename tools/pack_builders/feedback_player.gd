@@ -2901,13 +2901,21 @@ const TYPED_CARD_CODE: String = r"""# --- Typed functions: the work of every car
 # a Tween handle would be null whenever a target is missing, and awaiting a null is a crash, not a warning.
 
 ## The four ways bus_effect_for changes an audio bus.
-enum BusWay { MUFFLE, DIVE, WASH, SWITCH }
+enum BusWay {
+	## Cuts the high end of the bus, as a wall or a closed door would.
+	MUFFLE,
+	## Brings the level of the bus down.
+	DIVE,
+	## Adds reverb to the bus.
+	WASH,
+	## Switches on an effect the bus already has.
+	SWITCH
+}
 
 ## The word a card keeps for each BusWay, in the enum's order.
 const BUS_WAY_WORDS: PackedStringArray = ["muffle", "dive", "wash", "switch"]
 
-## The card being played this instant, so a typed function that cannot do its work says so in that card's words.
-## Empty when the function was called from code.
+## The card being played this instant, so a typed function says what is wrong in its words; empty when code called it.
 var _card_in_play: Dictionary = {}
 
 ## Says once that a typed function could not do its work: in the card's name when a card asked, in this player's name when code did.

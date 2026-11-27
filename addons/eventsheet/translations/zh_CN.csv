@@ -2116,7 +2116,7 @@ not in %s,不在 %s 中
 %d triggers,%d 个触发器
 %d used,已用 %d 个
 %d more,另有 %d 个
-%s - starts in %s,%s - 起始为 %s
+"%s - starts in %s","%s - 起始为 %s"
 "Sort by reading order, by count or by name.",按阅读顺序、数量或名称排序。
 Nothing in this sheet names an object yet.,这张事件表还没有提到任何对象。
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,该脚本还没有放到任何场景上 - 在场景面板中把它拖到某个节点上，它的对象就会出现在这里。
@@ -5346,7 +5346,7 @@ pooled as %s,以 %s 池化
 browse the scene,查看场景
 "This one is named by an expression the sheet works out as it runs, so there is no file to show.",这一项由表在运行时算出的表达式指定，因此没有文件可以显示。
 %s - shown in the FileSystem dock.,%s - 已在文件系统面板中显示。
-This adds a node to the tree inside a collision callback. A 2D physics body or area added there makes Godot print errors while the physics server is busy. Add it on the next idle moment instead.,这会在碰撞回调中把节点加入场景树。在那里添加的 2D 物理体或区域会让 Godot 在物理服务器忙碌时输出错误。请改在下一个空闲时刻添加。
+"This adds a node to the tree inside a collision callback. A 2D physics body or area added there makes Godot print errors while the physics server is busy. Add it on the next idle moment instead.",这会在碰撞回调中把节点加入场景树。在那里添加的 2D 物理体或区域会让 Godot 在物理服务器忙碌时输出错误。请改在下一个空闲时刻添加。
 Add it on the next idle moment,在下一个空闲时刻添加
 Use the safe spawn row,使用安全的生成行
 "%s is kept between frames, and anything could have destroyed it by now. Ask whether it is still here before reaching into it.",%s 会跨帧保留，此刻可能已被别处销毁。使用它之前先问一句它是否还在。
@@ -5388,7 +5388,7 @@ Layer Names,层名称
 "Type the layer's name first, then Name it…",请先输入层的名称，再点「命名…」。
 """%s"" is already layer %d.","""%s"" 已经是层 %d。"
 Layer %d could not be named.,无法为层 %d 命名。
-%s. Undo puts the number back.,%s。撤销会把数字放回去。
+"%s. Undo puts the number back.","%s。撤销会把数字放回去。"
 Name physics layer,命名物理层
 "%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.",%s 指向碰撞层 %d，而 Godot 只有 1 到 32 层 - 这次调用什么也不做。
 "%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.",%s 说的是碰撞层 %d，而本项目没有给它命名 - 于是这一行读作数字，而其他每一行都读作一个词。请在项目设置 ▸ 层名称中给它命名，或把这一行指向那个被改名的层。
@@ -5396,123 +5396,123 @@ Name physics layer,命名物理层
 "The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.",要关注的层，用本项目在项目设置 ▸ 层名称 ▸ 3D 物理中给它起的名字。项目没有命名的层显示为它的编号，并可以在这里命名。
 "The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 2D Physics. A layer the project never named shows as its number, and can be named from here.",要位于的层，用本项目在项目设置 ▸ 层名称 ▸ 2D 物理中给它起的名字。项目没有命名的层显示为它的编号，并可以在这里命名。
 "The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.",要位于的层，用本项目在项目设置 ▸ 层名称 ▸ 3D 物理中给它起的名字。项目没有命名的层显示为它的编号，并可以在这里命名。
-"%s has monitoring switched off in the scene, so it reports no touches at all - every row waiting on one here is unreachable.",%s 在场景中关闭了监测，因此完全不会报告任何接触 - 这里等待接触的每一行都无法到达。
-"%s has no shape, so it cannot collide or interact with anything. Add a CollisionShape or a CollisionPolygon under it in the scene.",%s 没有形状，因此无法与任何东西碰撞或交互。请在场景中于其下方添加 CollisionShape 或 CollisionPolygon。
-"%s is one-way and turned over, so bodies fall through it from above and are stopped from below. The rows here are waiting for the landing it blocks.",%s 是单向的且被翻转过来，因此物体会从上方穿过、从下方被挡住。这里的行正在等待它挡住的那次落地。
-"%s watches %s, and everything in this project that can collide sits on %s - so nothing can reach this trigger. This reads every layer in use, because the trigger names no group.",%s 监视 %s，而本项目中所有能发生碰撞的东西都位于 %s - 因此没有任何东西能触及这个触发器。由于触发器未指定分组，这里读取的是所有在用的层。
+"%s has monitoring switched off in the scene, so it reports no touches at all - every row waiting on one here is unreachable.","%s 在场景中关闭了监测，因此完全不会报告任何接触 - 这里等待接触的每一行都无法到达。"
+"%s has no shape, so it cannot collide or interact with anything. Add a CollisionShape or a CollisionPolygon under it in the scene.","%s 没有形状，因此无法与任何东西碰撞或交互。请在场景中于其下方添加 CollisionShape 或 CollisionPolygon。"
+"%s is one-way and turned over, so bodies fall through it from above and are stopped from below. The rows here are waiting for the landing it blocks.","%s 是单向的且被翻转过来，因此物体会从上方穿过、从下方被挡住。这里的行正在等待它挡住的那次落地。"
+"%s watches %s, and everything in this project that can collide sits on %s - so nothing can reach this trigger. This reads every layer in use, because the trigger names no group.","%s 监视 %s，而本项目中所有能发生碰撞的东西都位于 %s - 因此没有任何东西能触及这个触发器。由于触发器未指定分组，这里读取的是所有在用的层。"
 "%s watches %s, and the members of ""%s"" sit on %s - so this trigger never fires.","%s 监视 %s，而 ""%s"" 的成员位于 %s - 因此这个触发器永远不会触发。"
-Godot has collision layers 1 to 32.,Godot 的碰撞层为 1 到 32。
-Open %s to change what it collides with.,打开 %s 以更改它与什么发生碰撞。
-Show me in the scene,在场景中显示
-Switch monitoring on,开启监测
-Watch collision layer %d,监视碰撞层 %d
-monitoring off,监测关闭
-monitoring on,监测开启
-seen by %s,被 %s 看到
-sees %s,看到 %s
-%s is selected in %s.,%s 已在 %s 中选中。
-%s is not in the project any more.,%s 已不在项目中。
-On Collision With Group,当与分组碰撞时
-"Runs when something from one group hits this body. The group is the filter: the handler's first line leaves at once for anything else, and what did hit rides into the rows underneath. This body BLOCKS what it hits - it needs Contact Monitor switched on and its Max Contacts Reported above zero before Godot will report the hit at all.",当某个分组中的东西撞到这个物体时运行。分组就是过滤器：处理函数的第一行会让其他一切立刻返回，撞上来的那个会传给下面的行。这个物体会挡住撞上来的东西 - 需要打开 Contact Monitor 并把 Max Contacts Reported 设为大于零，Godot 才会报告这次碰撞。
-On collision with {group},当与 {group} 碰撞时
-"Only react when the thing that arrived is in this group. Any node joins a group from the Node dock, and the emitted handler leaves immediately when it is not in it.",只在到来的东西属于这个分组时才响应。任何节点都可以在 Node 面板里加入分组，不属于时生成的处理函数会立刻返回。
-body,物体
-"The body that arrived, already known to be in the group. Filled in for you when the trigger fires - use it in the rows underneath.",到来的物体，已经确认属于该分组。触发时会自动填好 - 在下面的行里使用它。
-On Stopped Colliding With Group,当与分组的碰撞结束时
-"Runs when something from one group stops touching this body - the other half of the collision, for ending a push, a grind or a stand-on. Needs the same Contact Monitor setting the starting half does.",当某个分组中的东西不再接触这个物体时运行 - 碰撞的另一半，用来结束推挤、摩擦或站立其上。需要和开始那一半相同的 Contact Monitor 设置。
-On stopped colliding with {group},当与 {group} 的碰撞结束时
-"The body that left, already known to be in the group. Filled in for you when the trigger fires - use it in the rows underneath.",离开的物体，已经确认属于该分组。触发时会自动填好 - 在下面的行里使用它。
-On Collision With Group (3D),当与分组碰撞时 (3D)
-On Stopped Colliding With Group (3D),当与分组的碰撞结束时 (3D)
-On Overlap With Group,当与分组重叠时
-"Runs when something from one group moves into this area. An area DETECTS and does not block, so the thing keeps going - this is the trigger a checkpoint, a pickup zone or a damage field is written from. What arrived rides into the rows underneath.",当某个分组中的东西进入这个区域时运行。区域只负责发现，不会挡住，所以东西会继续前进 - 存档点、拾取区、伤害区都从这个触发器写起。进来的那个会传给下面的行。
-On overlap with {group},当与 {group} 重叠时
-On Overlap Ended With Group,当与分组的重叠结束时
-"Runs when something from one group leaves this area - the moment a player walks out of a safe zone, or the last enemy clears a trap.",当某个分组中的东西离开这个区域时运行 - 玩家走出安全区，或最后一个敌人离开陷阱的那一刻。
-On overlap ended with {group},当与 {group} 的重叠结束时
-On Overlap With Group (3D),当与分组重叠时 (3D)
-On Overlap Ended With Group (3D),当与分组的重叠结束时 (3D)
-Is Touching Group,正在接触分组
-"True while at least one body from this group is inside this area. The standing question beside the two arrival triggers - ask it when what matters is the state now, not the moment it changed.",只要该分组中至少有一个物体在这个区域内就为真。它是两个到达触发器旁边的常驻问题 - 当你关心的是此刻的状态而不是改变的瞬间时用它。
-is touching {group},正在接触 {group}
-The group to look for among the bodies inside this area right now.,要在此刻位于该区域内的物体中查找的分组。
-Is Touching Group (3D),正在接触分组 (3D)
-"This node is an area: it notices what arrives and lets it through. Blocking is a body's job, so pair this with a body if the thing should also be stopped.",这个节点是区域：它只发现到来的东西，并让它通过。挡住是物体的工作，如果还要把它停下来，就再配一个物体。
-"This node is a body: what it hits stops, and the hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero. An area would notice the same arrival without stopping anything.",这个节点是物体：撞上它的东西会停下，而且只有在 Contact Monitor 打开且 Max Contacts Reported 大于零时才会报告这次碰撞。区域会发现同样的到来，但不会挡住任何东西。
-On Landed,落地时
-On Landed (3D),落地时 (3D)
-On Left The Ground,离地时
-On Left The Ground (3D),离地时 (3D)
-Just Landed,刚刚落地
-Just Landed (3D),刚刚落地 (3D)
-Just Left The Ground,刚刚离地
-Just Left The Ground (3D),刚刚离地 (3D)
-On First Overlap,首次重叠时
-On First Overlap (3D),首次重叠时 (3D)
-On Last Overlap Ended,最后一个重叠结束时
-On Last Overlap Ended (3D),最后一个重叠结束时 (3D)
-Is The First One In,是第一个进来的
-Is The First One In (3D),是第一个进来的 (3D)
-Was The Last One Out,是最后一个出去的
-Was The Last One Out (3D),是最后一个出去的 (3D)
-On landed,落地时
-On left the ground,离地时
-just landed,刚刚落地
-just left the ground,刚刚离地
-On first overlap,首次重叠时
-On last overlap ended,最后一个重叠结束时
-is the first one in,是第一个进来的
-was the last one out,是最后一个出去的
-"Runs on the step this character's feet arrive on the floor - the landing itself, not the standing that follows it. Landing is where the dust, the thud and the squash go. It is a moment of the physics step rather than a signal, so the question underneath says which step.",在这个角色的双脚落到地面的那一步运行 - 落地本身，而不是随后的站立。灰尘、闷响和挤压都放在这里。它是物理步的一个瞬间而不是信号，所以下面的条件说明是哪一步。
-"Runs on the step this character's feet leave the floor, whichever way they left it: a jump and a walked-off ledge are the same moment to this row. The half that starts coyote time, and the half a fall animation begins on.",在这个角色的双脚离开地面的那一步运行，无论是怎么离开的：跳起和走出平台边缘对这一行来说是同一个瞬间。土狼时间从这里开始，下落动画也从这里开始。
-"True on the one step the feet arrive on the floor: on the floor now, and not on it last step. It keeps last step's footing in a variable of its own and updates it AFTER asking - a memory updated before the question is asked would always agree with the present, and the row could never be true.",只在双脚落到地面的那一步为真：现在在地面上，上一步不在。它把上一步的着地状态记在自己的变量里，并在提问之后才更新 - 若先更新，记忆就永远与当下一致，这一行也就永远不会为真。
-"True on the one step the feet leave the floor: not on it now, and on it last step. The same memory the landing question keeps, read the other way round.",只在双脚离开地面的那一步为真：现在不在地面上，上一步在。与落地问题所保存的是同一份记忆，只是反过来读。
-"Runs when something moves into this area and the area was empty until then - the pressure plate going down, the room waking up. Later arrivals do not run it again; the question underneath is what says so, and it is an ordinary condition you can read and edit.",当有东西进入这个区域、而在此之前区域是空的时运行 - 压力板落下、房间苏醒。之后再进来的不会再次触发；说明这一点的是下面那个条件，它是一个可以读也可以改的普通条件。
-"Runs when something leaves this area and nothing is left inside - the plate coming back up, the room going quiet. The other half of the first arrival, and the pair a door or a lift is written from.",当有东西离开这个区域、并且里面什么都不剩时运行 - 压力板弹回、房间安静下来。它是首次进入的另一半，门或升降台就是用这一对写出来的。
-"True when exactly one body is inside this area. Asked in an arrival, that is the arrival which filled an empty area: what just came in is already listed by then, so a list of one held nothing a moment ago.",当这个区域内恰好有一个物体时为真。在进入事件中问，它就是填满空区域的那次进入：刚进来的东西此时已经在名单上，所以只有一个的名单在片刻前是空的。
-"True when nothing is inside this area. Asked in a departure, that is the departure which emptied it: what just left is already off the list by then, so an empty list means it was the last one.",当这个区域内什么都没有时为真。在离开事件中问，它就是把区域清空的那次离开：刚离开的东西此时已经不在名单上，所以空名单意味着它就是最后一个。
-The body that arrived. Filled in for you when the trigger fires - use it in the rows underneath.,到达的物体。触发器触发时会自动填入 - 在下面的行里使用它。
-The body that left. Filled in for you when the trigger fires - use it in the rows underneath.,离开的物体。触发器触发时会自动填入 - 在下面的行里使用它。
-"This node is a character body: your own rows drive it, one move at a time, and it stops when it runs into something. What it hit comes back from its own move rather than from a signal.",这个节点是角色体：由你自己的行来驱动，一次移动一步，撞到东西就停下。撞到了什么是从这次移动本身返回的，而不是通过信号。
-This node is a rigid body: physics throws it around and it stops what it hits. The hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero.,这个节点是刚体：物理把它抛来抛去，它会挡住撞上的东西。只有在 Contact Monitor 打开且 Max Contacts Reported 大于零时，碰撞才会被报告。
-"This node is a static body: it stands still and things stop against it. It never moves itself, so the news of a touch usually belongs on whatever ran into it.",这个节点是静态体：它站着不动，东西撞上就停下。它自己从不移动，所以接触的消息通常属于撞上来的那一方。
-Nothing in this scene can touch anything yet - this row needs one: %s.,这个场景里还没有任何东西能碰到别的东西 - 这一行需要一个 %s。
-%d claimed by an entry · %d nothing claims · %d%% renders as rows rather than blocks,%d 行由条目认领 · %d 行无人认领 · %d%% 画作行而非代码块
-Saves back byte-identical.,保存回去逐字节相同。
-Line %d comes back different.,第 %d 行回来时不一样。
-buffer,缓冲区
-saved,已保存
-"Mark each value span as [[name: text]], then check it.",把每个值的跨度标为 [[name: text]]，然后检查。
-Refused: %s,已拒绝：%s
-This example derives an entry.,这个示例可以推导出一条条目。
-Lift Workbench - what claims each line,提升工作台 - 每行由什么认领
-Paste code here,把代码粘到这里
-Claimed by,认领者
-What claims each line,每行由什么认领
-What it saves back as,保存回去的样子
-The rows it opens as,它打开后的行
-Draft an example…,起草一个示例…
-Take the selected unclaimed line to the by-example form and derive an entry from it.,把选中的无人认领行带进“举例”表单，由它推导出一条条目。
-Draft an example,起草一个示例
-"The line, with its value spans marked",标出了值跨度的那一行
-"A value span is [[name: text]], or [[name|fragment: text]] to say which fragment it is. Everything outside a span is matched literally.",值跨度写作 [[name: text]]，或用 [[name|fragment: text]] 说明它是哪种片段。跨度以外的部分按字面匹配。
-Entry id,条目 ID
-Row it means,它代表的行
-The entry this derives,由此推导出的条目
+"Godot has collision layers 1 to 32.","Godot 的碰撞层为 1 到 32。"
+"Open %s to change what it collides with.","打开 %s 以更改它与什么发生碰撞。"
+"Show me in the scene","在场景中显示"
+"Switch monitoring on","开启监测"
+"Watch collision layer %d","监视碰撞层 %d"
+"monitoring off","监测关闭"
+"monitoring on","监测开启"
+"seen by %s","被 %s 看到"
+"sees %s","看到 %s"
+"%s is selected in %s.","%s 已在 %s 中选中。"
+"%s is not in the project any more.","%s 已不在项目中。"
+"On Collision With Group","当与分组碰撞时"
+"Runs when something from one group hits this body. The group is the filter: the handler's first line leaves at once for anything else, and what did hit rides into the rows underneath. This body BLOCKS what it hits - it needs Contact Monitor switched on and its Max Contacts Reported above zero before Godot will report the hit at all.","当某个分组中的东西撞到这个物体时运行。分组就是过滤器：处理函数的第一行会让其他一切立刻返回，撞上来的那个会传给下面的行。这个物体会挡住撞上来的东西 - 需要打开 Contact Monitor 并把 Max Contacts Reported 设为大于零，Godot 才会报告这次碰撞。"
+"On collision with {group}","当与 {group} 碰撞时"
+"Only react when the thing that arrived is in this group. Any node joins a group from the Node dock, and the emitted handler leaves immediately when it is not in it.","只在到来的东西属于这个分组时才响应。任何节点都可以在 Node 面板里加入分组，不属于时生成的处理函数会立刻返回。"
+"body","物体"
+"The body that arrived, already known to be in the group. Filled in for you when the trigger fires - use it in the rows underneath.","到来的物体，已经确认属于该分组。触发时会自动填好 - 在下面的行里使用它。"
+"On Stopped Colliding With Group","当与分组的碰撞结束时"
+"Runs when something from one group stops touching this body - the other half of the collision, for ending a push, a grind or a stand-on. Needs the same Contact Monitor setting the starting half does.","当某个分组中的东西不再接触这个物体时运行 - 碰撞的另一半，用来结束推挤、摩擦或站立其上。需要和开始那一半相同的 Contact Monitor 设置。"
+"On stopped colliding with {group}","当与 {group} 的碰撞结束时"
+"The body that left, already known to be in the group. Filled in for you when the trigger fires - use it in the rows underneath.","离开的物体，已经确认属于该分组。触发时会自动填好 - 在下面的行里使用它。"
+"On Collision With Group (3D)","当与分组碰撞时 (3D)"
+"On Stopped Colliding With Group (3D)","当与分组的碰撞结束时 (3D)"
+"On Overlap With Group","当与分组重叠时"
+"Runs when something from one group moves into this area. An area DETECTS and does not block, so the thing keeps going - this is the trigger a checkpoint, a pickup zone or a damage field is written from. What arrived rides into the rows underneath.","当某个分组中的东西进入这个区域时运行。区域只负责发现，不会挡住，所以东西会继续前进 - 存档点、拾取区、伤害区都从这个触发器写起。进来的那个会传给下面的行。"
+"On overlap with {group}","当与 {group} 重叠时"
+"On Overlap Ended With Group","当与分组的重叠结束时"
+"Runs when something from one group leaves this area - the moment a player walks out of a safe zone, or the last enemy clears a trap.","当某个分组中的东西离开这个区域时运行 - 玩家走出安全区，或最后一个敌人离开陷阱的那一刻。"
+"On overlap ended with {group}","当与 {group} 的重叠结束时"
+"On Overlap With Group (3D)","当与分组重叠时 (3D)"
+"On Overlap Ended With Group (3D)","当与分组的重叠结束时 (3D)"
+"Is Touching Group","正在接触分组"
+"True while at least one body from this group is inside this area. The standing question beside the two arrival triggers - ask it when what matters is the state now, not the moment it changed.","只要该分组中至少有一个物体在这个区域内就为真。它是两个到达触发器旁边的常驻问题 - 当你关心的是此刻的状态而不是改变的瞬间时用它。"
+"is touching {group}","正在接触 {group}"
+"The group to look for among the bodies inside this area right now.","要在此刻位于该区域内的物体中查找的分组。"
+"Is Touching Group (3D)","正在接触分组 (3D)"
+"This node is an area: it notices what arrives and lets it through. Blocking is a body's job, so pair this with a body if the thing should also be stopped.","这个节点是区域：它只发现到来的东西，并让它通过。挡住是物体的工作，如果还要把它停下来，就再配一个物体。"
+"This node is a body: what it hits stops, and the hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero. An area would notice the same arrival without stopping anything.","这个节点是物体：撞上它的东西会停下，而且只有在 Contact Monitor 打开且 Max Contacts Reported 大于零时才会报告这次碰撞。区域会发现同样的到来，但不会挡住任何东西。"
+"On Landed","落地时"
+"On Landed (3D)","落地时 (3D)"
+"On Left The Ground","离地时"
+"On Left The Ground (3D)","离地时 (3D)"
+"Just Landed","刚刚落地"
+"Just Landed (3D)","刚刚落地 (3D)"
+"Just Left The Ground","刚刚离地"
+"Just Left The Ground (3D)","刚刚离地 (3D)"
+"On First Overlap","首次重叠时"
+"On First Overlap (3D)","首次重叠时 (3D)"
+"On Last Overlap Ended","最后一个重叠结束时"
+"On Last Overlap Ended (3D)","最后一个重叠结束时 (3D)"
+"Is The First One In","是第一个进来的"
+"Is The First One In (3D)","是第一个进来的 (3D)"
+"Was The Last One Out","是最后一个出去的"
+"Was The Last One Out (3D)","是最后一个出去的 (3D)"
+"On landed","落地时"
+"On left the ground","离地时"
+"just landed","刚刚落地"
+"just left the ground","刚刚离地"
+"On first overlap","首次重叠时"
+"On last overlap ended","最后一个重叠结束时"
+"is the first one in","是第一个进来的"
+"was the last one out","是最后一个出去的"
+"Runs on the step this character's feet arrive on the floor - the landing itself, not the standing that follows it. Landing is where the dust, the thud and the squash go. It is a moment of the physics step rather than a signal, so the question underneath says which step.","在这个角色的双脚落到地面的那一步运行 - 落地本身，而不是随后的站立。灰尘、闷响和挤压都放在这里。它是物理步的一个瞬间而不是信号，所以下面的条件说明是哪一步。"
+"Runs on the step this character's feet leave the floor, whichever way they left it: a jump and a walked-off ledge are the same moment to this row. The half that starts coyote time, and the half a fall animation begins on.","在这个角色的双脚离开地面的那一步运行，无论是怎么离开的：跳起和走出平台边缘对这一行来说是同一个瞬间。土狼时间从这里开始，下落动画也从这里开始。"
+"True on the one step the feet arrive on the floor: on the floor now, and not on it last step. It keeps last step's footing in a variable of its own and updates it AFTER asking - a memory updated before the question is asked would always agree with the present, and the row could never be true.","只在双脚落到地面的那一步为真：现在在地面上，上一步不在。它把上一步的着地状态记在自己的变量里，并在提问之后才更新 - 若先更新，记忆就永远与当下一致，这一行也就永远不会为真。"
+"True on the one step the feet leave the floor: not on it now, and on it last step. The same memory the landing question keeps, read the other way round.","只在双脚离开地面的那一步为真：现在不在地面上，上一步在。与落地问题所保存的是同一份记忆，只是反过来读。"
+"Runs when something moves into this area and the area was empty until then - the pressure plate going down, the room waking up. Later arrivals do not run it again; the question underneath is what says so, and it is an ordinary condition you can read and edit.","当有东西进入这个区域、而在此之前区域是空的时运行 - 压力板落下、房间苏醒。之后再进来的不会再次触发；说明这一点的是下面那个条件，它是一个可以读也可以改的普通条件。"
+"Runs when something leaves this area and nothing is left inside - the plate coming back up, the room going quiet. The other half of the first arrival, and the pair a door or a lift is written from.","当有东西离开这个区域、并且里面什么都不剩时运行 - 压力板弹回、房间安静下来。它是首次进入的另一半，门或升降台就是用这一对写出来的。"
+"True when exactly one body is inside this area. Asked in an arrival, that is the arrival which filled an empty area: what just came in is already listed by then, so a list of one held nothing a moment ago.","当这个区域内恰好有一个物体时为真。在进入事件中问，它就是填满空区域的那次进入：刚进来的东西此时已经在名单上，所以只有一个的名单在片刻前是空的。"
+"True when nothing is inside this area. Asked in a departure, that is the departure which emptied it: what just left is already off the list by then, so an empty list means it was the last one.","当这个区域内什么都没有时为真。在离开事件中问，它就是把区域清空的那次离开：刚离开的东西此时已经不在名单上，所以空名单意味着它就是最后一个。"
+"The body that arrived. Filled in for you when the trigger fires - use it in the rows underneath.","到达的物体。触发器触发时会自动填入 - 在下面的行里使用它。"
+"The body that left. Filled in for you when the trigger fires - use it in the rows underneath.","离开的物体。触发器触发时会自动填入 - 在下面的行里使用它。"
+"This node is a character body: your own rows drive it, one move at a time, and it stops when it runs into something. What it hit comes back from its own move rather than from a signal.","这个节点是角色体：由你自己的行来驱动，一次移动一步，撞到东西就停下。撞到了什么是从这次移动本身返回的，而不是通过信号。"
+"This node is a rigid body: physics throws it around and it stops what it hits. The hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero.","这个节点是刚体：物理把它抛来抛去，它会挡住撞上的东西。只有在 Contact Monitor 打开且 Max Contacts Reported 大于零时，碰撞才会被报告。"
+"This node is a static body: it stands still and things stop against it. It never moves itself, so the news of a touch usually belongs on whatever ran into it.","这个节点是静态体：它站着不动，东西撞上就停下。它自己从不移动，所以接触的消息通常属于撞上来的那一方。"
+"Nothing in this scene can touch anything yet - this row needs one: %s.","这个场景里还没有任何东西能碰到别的东西 - 这一行需要一个 %s。"
+"%d claimed by an entry · %d nothing claims · %d%% renders as rows rather than blocks","%d 行由条目认领 · %d 行无人认领 · %d%% 画作行而非代码块"
+"Saves back byte-identical.","保存回去逐字节相同。"
+"Line %d comes back different.","第 %d 行回来时不一样。"
+"buffer","缓冲区"
+"saved","已保存"
+"Mark each value span as [[name: text]], then check it.","把每个值的跨度标为 [[name: text]]，然后检查。"
+"Refused: %s","已拒绝：%s"
+"This example derives an entry.","这个示例可以推导出一条条目。"
+"Lift Workbench - what claims each line","提升工作台 - 每行由什么认领"
+"Paste code here","把代码粘到这里"
+"Claimed by","认领者"
+"What claims each line","每行由什么认领"
+"What it saves back as","保存回去的样子"
+"The rows it opens as","它打开后的行"
+"Draft an example…","起草一个示例…"
+"Take the selected unclaimed line to the by-example form and derive an entry from it.","把选中的无人认领行带进“举例”表单，由它推导出一条条目。"
+"Draft an example","起草一个示例"
+"The line, with its value spans marked","标出了值跨度的那一行"
+"A value span is [[name: text]], or [[name|fragment: text]] to say which fragment it is. Everything outside a span is matched literally.","值跨度写作 [[name: text]]，或用 [[name|fragment: text]] 说明它是哪种片段。跨度以外的部分按字面匹配。"
+"Entry id","条目 ID"
+"Row it means","它代表的行"
+"The entry this derives","由此推导出的条目"
 Nothing drafted yet.,尚无草稿。
 "These are asked before every shipped spelling, in this window only. They are gone when it closes, and nothing on disk is written.",仅在此窗口中，先于任何随附的写法被询问。关闭窗口后即消失，不会向磁盘写入任何内容。
 Clear drafts,清除草稿
 "Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.",清空此窗口保存的草稿，使它们所认领的每一行回到此前的读法。
-Check,检查
-Add draft,添加草稿
+"Check","检查"
+"Add draft","添加草稿"
 "Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.",已按路径顺序读取前 %d 个脚本（共 %d 个）。下面的清单只是本项目的一个样本，并非全部 - 每次读取的都是同样的脚本。
-"%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.",读取内容的 %d%% 绘制为行，且每一行都有名字。这里没有任何内容仍是代码。
-"%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.",读取内容的 %d%% 绘制为行 - 这是绘制的问题。命名的问题在下面：%d 行仍是诚实的代码，因为还没有词汇认领它们。两者都为真，且不是同一个数字。
-"%d more shape(s) are said more than once here, over %d line(s). The ledger names the commonest and counts the rest.",这里还有 %d 种形状出现不止一次，共 %d 行。清单列出最常见的，其余只作计数。
-%d line(s) are the same shape: %s,%d 行是同一种形状：%s
-line %d: %s,第 %d 行：%s
-... and %d more line(s) of the same shape.,... 还有 %d 行是同一种形状。
-"%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.",%d 行的形状在这里没有别的内容重复。只作计数而不逐条列出：只说过一次的行不属于任何表格，它本就该留作代码。
+"%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.","读取内容的 %d%% 绘制为行，且每一行都有名字。这里没有任何内容仍是代码。"
+"%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.","读取内容的 %d%% 绘制为行 - 这是绘制的问题。命名的问题在下面：%d 行仍是诚实的代码，因为还没有词汇认领它们。两者都为真，且不是同一个数字。"
+"%d more shape(s) are said more than once here, over %d line(s). The ledger names the commonest and counts the rest.","这里还有 %d 种形状出现不止一次，共 %d 行。清单列出最常见的，其余只作计数。"
+"%d line(s) are the same shape: %s","%d 行是同一种形状：%s"
+"line %d: %s","第 %d 行：%s"
+"... and %d more line(s) of the same shape.","... 还有 %d 行是同一种形状。"
+"%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d 行的形状在这里没有别的内容重复。只作计数而不逐条列出：只说过一次的行不属于任何表格，它本就该留作代码。"
 "%d line(s) inside those runs hold no statement to shape - a note, or the inside of a text block.",这些片段中有 %d 行不含可归纳形态的语句 - 是注释，或是文本块的内部。
 On object freed,对象释放时
 Event Is Action Pressed,事件是动作按下
@@ -5538,73 +5538,73 @@ Notifications,通知
 "Runs when the game comes back off pause, on the same nodes. The other half of On paused, and where the music and the menu go back the way they were.",当游戏从暂停恢复时，在同样的节点上运行。它是暂停事件的另一半，也是音乐和菜单恢复原状的地方。
 "Runs as the very last thing that happens to this object, just before its memory goes. Different from On destroyed, which is the node leaving the tree and can happen more than once - this happens exactly once and nothing follows it, so it is where a handle held somewhere else gets given back.",作为这个对象身上发生的最后一件事运行，就在它的内存消失之前。它不同于被销毁时 - 那是节点离开场景树，可能发生多次 - 这件事恰好发生一次，之后什么也不会有，所以这里正是把别处持有的句柄交还回去的地方。
 "Runs when the player closes the window - the X, or the system asking the game to quit. The game does NOT quit by itself when this arrives if the project is set to handle it, which is what makes room for a ""save first?"" prompt.",当玩家关闭窗口时运行 - 点击关闭按钮，或系统要求游戏退出。如果项目设置为自行处理，收到这条通知时游戏不会自己退出，这正是为「要先保存吗？」这样的询问留下的余地。
-"user:// - the player's folder: writable, one per player, survives updates.",user:// - 玩家的文件夹：可写入，每位玩家各一份，更新后依然保留。
-res:// - the game's own files: READ-ONLY once exported.,res:// - 游戏自身的文件：导出后为只读。
-an absolute path: this folder exists on one computer and nowhere else.,绝对路径：这个文件夹只存在于一台电脑上，别处没有。
-"user:// is a real folder on the player's machine: %APPDATA%\Godot\app_userdata\<project> on Windows, ~/Library/Application Support/Godot/app_userdata/<project> on macOS, ~/.local/share/godot/app_userdata/<project> on Linux. Open the player's data folder opens it while the game runs.",user:// 是玩家机器上真实存在的文件夹：Windows 上是 %APPDATA%\Godot\app_userdata\<project>，macOS 上是 ~/Library/Application Support/Godot/app_userdata/<project>，Linux 上是 ~/.local/share/godot/app_userdata/<project>。“打开玩家的数据文件夹”会在游戏运行时打开它。
-"%s writes to a res:// path, which works here and fails in every exported build - res:// is a packed archive once the game is built, not a folder. First: %s.",%s 向 res:// 路径写入，这在这里可行，但在每个导出的版本中都会失败 - 游戏构建之后 res:// 是打包的归档，而不是文件夹。首先：%s。
-"A game writes to user:// - the player's folder, which is writable, one per player, and survives the game being updated.",游戏应写入 user:// - 玩家的文件夹，可写入、每位玩家各一份，并且在游戏更新后依然保留。
-"%s reaches a file by an absolute path, which names a folder on one computer and on no other. First: %s.",%s 通过绝对路径访问文件，而该路径指向的文件夹只存在于一台电脑上。首先：%s。
-A file the game WRITES belongs under user://; a file it SHIPS WITH belongs under res:// and inside the project.,游戏写入的文件应放在 user:// 下；随游戏一起发布的文件应放在 res:// 下、项目之内。
-"%s reads a user:// file without saying what to use when it is not there, and the first run of a game has no save, no settings and no log. Godot answers with empty text rather than an error, so the game reads nothing as data. First: %s.",%s 读取 user:// 文件，却没有说明文件不存在时该用什么，而游戏的首次运行没有存档、没有设置、也没有日志。Godot 返回的是空文本而不是错误，于是游戏把“什么都没有”当成数据来读。首先：%s。
-"Read Text File (or a fallback) says the answer out loud, and the guard is written into the line.",“读取文本文件（或一个后备值）”把答案说了出来，而这道保护就写在这一行里。
-%d more like it in this file.,此文件中还有 %d 处相同的情况。
-the player's folder,玩家的文件夹
-"the game's own files, read-only once exported",游戏自身的文件，导出后只读
-Table Of File,文件的表格
+"user:// - the player's folder: writable, one per player, survives updates.","user:// - 玩家的文件夹：可写入，每位玩家各一份，更新后依然保留。"
+"res:// - the game's own files: READ-ONLY once exported.","res:// - 游戏自身的文件：导出后为只读。"
+"an absolute path: this folder exists on one computer and nowhere else.","绝对路径：这个文件夹只存在于一台电脑上，别处没有。"
+"user:// is a real folder on the player's machine: %APPDATA%\Godot\app_userdata\<project> on Windows, ~/Library/Application Support/Godot/app_userdata/<project> on macOS, ~/.local/share/godot/app_userdata/<project> on Linux. Open the player's data folder opens it while the game runs.","user:// 是玩家机器上真实存在的文件夹：Windows 上是 %APPDATA%\Godot\app_userdata\<project>，macOS 上是 ~/Library/Application Support/Godot/app_userdata/<project>，Linux 上是 ~/.local/share/godot/app_userdata/<project>。“打开玩家的数据文件夹”会在游戏运行时打开它。"
+"%s writes to a res:// path, which works here and fails in every exported build - res:// is a packed archive once the game is built, not a folder. First: %s.","%s 向 res:// 路径写入，这在这里可行，但在每个导出的版本中都会失败 - 游戏构建之后 res:// 是打包的归档，而不是文件夹。首先：%s。"
+"A game writes to user:// - the player's folder, which is writable, one per player, and survives the game being updated.","游戏应写入 user:// - 玩家的文件夹，可写入、每位玩家各一份，并且在游戏更新后依然保留。"
+"%s reaches a file by an absolute path, which names a folder on one computer and on no other. First: %s.","%s 通过绝对路径访问文件，而该路径指向的文件夹只存在于一台电脑上。首先：%s。"
+"A file the game WRITES belongs under user://; a file it SHIPS WITH belongs under res:// and inside the project.","游戏写入的文件应放在 user:// 下；随游戏一起发布的文件应放在 res:// 下、项目之内。"
+"%s reads a user:// file without saying what to use when it is not there, and the first run of a game has no save, no settings and no log. Godot answers with empty text rather than an error, so the game reads nothing as data. First: %s.","%s 读取 user:// 文件，却没有说明文件不存在时该用什么，而游戏的首次运行没有存档、没有设置、也没有日志。Godot 返回的是空文本而不是错误，于是游戏把“什么都没有”当成数据来读。首先：%s。"
+"Read Text File (or a fallback) says the answer out loud, and the guard is written into the line.","“读取文本文件（或一个后备值）”把答案说了出来，而这道保护就写在这一行里。"
+"%d more like it in this file.","此文件中还有 %d 处相同的情况。"
+"the player's folder","玩家的文件夹"
+"the game's own files, read-only once exported","游戏自身的文件，导出后只读"
+"Table Of File","文件的表格"
 "Reads a .csv with Godot's own CSV reader, one line at a time, and gives you the rows. Quoting is exactly the engine's: a cell in ""double quotes"" may hold the separator, and a doubled """" inside one is a single quote character. Store it with a Set action - the read is several lines long, so it belongs in an action rather than squeezed into a condition.","用 Godot 自己的 CSV 读取器逐行读取 .csv，并交回这些行。引号规则完全是引擎的规则：用""双引号""包住的单元格里可以带分隔符，其中成对的 """" 表示一个引号字符。请用「设置」动作把结果存起来 - 读取有好几行，所以它属于动作，而不该硬塞进条件里。"
-table of [b]{path}[/b] - {headers},[b]{path}[/b] 的表格 - {headers}
-The .csv to read. Prefer res:// for data that ships with the game; user:// for a file the game itself wrote.,要读取的 .csv。随游戏一起发布的数据用 res://，游戏自己写出的文件用 user://。
-First line,第一行
+"table of [b]{path}[/b] - {headers}","[b]{path}[/b] 的表格 - {headers}"
+"The .csv to read. Prefer res:// for data that ships with the game; user:// for a file the game itself wrote.","要读取的 .csv。随游戏一起发布的数据用 res://，游戏自己写出的文件用 user://。"
+"First line","第一行"
 "How the file's first line is read. Naming the columns gives one record per row, so a field is reachable as row[""price""]; otherwise every line is a plain list of cells.","文件第一行如何读取。若它给出列名，则每行是一条记录，字段可用 row[""price""] 取到；否则每行只是一串单元格。"
-The first line names the columns,第一行是列名
-Every line is a row,每一行都是数据行
-Write Table To File,把表格写入文件
-"Writes rows back out as a .csv with Godot's own CSV writer, so a cell holding the separator or a quote is quoted the way the engine quotes it - and a file written here reads back through Table Of File unchanged.",用 Godot 自己的 CSV 写入器把这些行写回 .csv，含分隔符或引号的单元格会按引擎的方式加引号 - 在这里写出的文件可用「文件的表格」原样读回。
-write table [b]{table}[/b] to [b]{path}[/b] - {headers},把表格 [b]{table}[/b] 写入 [b]{path}[/b] - {headers}
-File to write. OVERWRITES any existing file. Use user:// - res:// is read-only once the game is exported.,要写入的文件。会覆盖已有文件。请用 user:// - 游戏导出后 res:// 是只读的。
-"The rows to write - the Array variable a table expression filled, or one the sheet built itself.",要写出的行 - 由表格表达式填好的 Array 变量，或事件表自己拼出来的那一个。
-"Whether to write a first line naming the columns. Naming them writes one line per record, in the order the first record's fields are in; otherwise every entry is written as a plain list of cells.",是否写出一行列名。写的话，会按第一条记录的字段顺序，每条记录写一行；不写的话，每一项就写成一串单元格。
-For Each Line In File,对文件的每一行
-"Runs this event's actions once per LINE of a text file, skipping blank ones. The file is read once and the loop then walks text already in memory, so nothing stays open behind the loop. Windows (CRLF) and old-Mac (CR) endings are handled, and a file that is not there walks nothing. Read the current one as `line`.",对文本文件的每一行执行本事件的动作，空行跳过。文件只读一次，之后循环走的是内存里的文本，所以循环背后不会留下打开的东西。Windows (CRLF) 与旧版 Mac (CR) 的换行都能处理，文件不存在则一行都不走。当前行用 `line` 读取。
-for each line of [b]{path}[/b],对 [b]{path}[/b] 的每一行
-"The text file to walk line by line - a log you wrote earlier, a list of level names, a leaderboard body.",要逐行走过的文本文件 - 之前写下的日志、一份关卡名单、一段排行榜正文。
-written,写入
-read,读取
-read and written,读取并写入
-asks the player to pick a file,请玩家挑一个文件
-and %d more path(s),另有 %d 条路径
-On Files Dropped,拖入文件时
-"Runs when the player drags files from their desktop onto the game window and lets go. DESKTOP ONLY: Windows, macOS and Linux raise it, and a web or mobile build never does, so keep another way in beside it.",当玩家把文件从桌面拖到游戏窗口并松开时运行。仅限桌面：Windows、macOS 和 Linux 会触发，网页或移动版本永远不会，所以请另外留一条入口。
-On files dropped {files},拖入文件 {files} 时
-"Every path the player let go of, in one list - a drop can carry more than one file. They are real paths on that machine, not res:// or user:// ones.",玩家松开的每一个路径，汇成一个列表 - 一次拖放可以携带多个文件。它们是那台机器上的真实路径，不是 res:// 或 user:// 路径。
-Ask For A File To Open,询问要打开的文件
-"Opens the player's own file chooser so they can pick a file to read. The answer arrives as On a file chosen, or as On the ask cancelled - both of which the sheet needs an event for, because the emitted line calls them by name.",打开玩家自己的文件选择器，让他们挑一个文件来读取。答案会以「选好文件时」或「取消询问时」到达 - 事件表两者都要有对应事件，因为生成的代码是按名字调用它们的。
-Ask for a file to open ({filters}),询问要打开的文件 ({filters})
-Filters,筛选
+"The first line names the columns","第一行是列名"
+"Every line is a row","每一行都是数据行"
+"Write Table To File","把表格写入文件"
+"Writes rows back out as a .csv with Godot's own CSV writer, so a cell holding the separator or a quote is quoted the way the engine quotes it - and a file written here reads back through Table Of File unchanged.","用 Godot 自己的 CSV 写入器把这些行写回 .csv，含分隔符或引号的单元格会按引擎的方式加引号 - 在这里写出的文件可用「文件的表格」原样读回。"
+"write table [b]{table}[/b] to [b]{path}[/b] - {headers}","把表格 [b]{table}[/b] 写入 [b]{path}[/b] - {headers}"
+"File to write. OVERWRITES any existing file. Use user:// - res:// is read-only once the game is exported.","要写入的文件。会覆盖已有文件。请用 user:// - 游戏导出后 res:// 是只读的。"
+"The rows to write - the Array variable a table expression filled, or one the sheet built itself.","要写出的行 - 由表格表达式填好的 Array 变量，或事件表自己拼出来的那一个。"
+"Whether to write a first line naming the columns. Naming them writes one line per record, in the order the first record's fields are in; otherwise every entry is written as a plain list of cells.","是否写出一行列名。写的话，会按第一条记录的字段顺序，每条记录写一行；不写的话，每一项就写成一串单元格。"
+"For Each Line In File","对文件的每一行"
+"Runs this event's actions once per LINE of a text file, skipping blank ones. The file is read once and the loop then walks text already in memory, so nothing stays open behind the loop. Windows (CRLF) and old-Mac (CR) endings are handled, and a file that is not there walks nothing. Read the current one as `line`.","对文本文件的每一行执行本事件的动作，空行跳过。文件只读一次，之后循环走的是内存里的文本，所以循环背后不会留下打开的东西。Windows (CRLF) 与旧版 Mac (CR) 的换行都能处理，文件不存在则一行都不走。当前行用 `line` 读取。"
+"for each line of [b]{path}[/b]","对 [b]{path}[/b] 的每一行"
+"The text file to walk line by line - a log you wrote earlier, a list of level names, a leaderboard body.","要逐行走过的文本文件 - 之前写下的日志、一份关卡名单、一段排行榜正文。"
+"written","写入"
+"read","读取"
+"read and written","读取并写入"
+"asks the player to pick a file","请玩家挑一个文件"
+"and %d more path(s)","另有 %d 条路径"
+"On Files Dropped","拖入文件时"
+"Runs when the player drags files from their desktop onto the game window and lets go. DESKTOP ONLY: Windows, macOS and Linux raise it, and a web or mobile build never does, so keep another way in beside it.","当玩家把文件从桌面拖到游戏窗口并松开时运行。仅限桌面：Windows、macOS 和 Linux 会触发，网页或移动版本永远不会，所以请另外留一条入口。"
+"On files dropped {files}","拖入文件 {files} 时"
+"Every path the player let go of, in one list - a drop can carry more than one file. They are real paths on that machine, not res:// or user:// ones.","玩家松开的每一个路径，汇成一个列表 - 一次拖放可以携带多个文件。它们是那台机器上的真实路径，不是 res:// 或 user:// 路径。"
+"Ask For A File To Open","询问要打开的文件"
+"Opens the player's own file chooser so they can pick a file to read. The answer arrives as On a file chosen, or as On the ask cancelled - both of which the sheet needs an event for, because the emitted line calls them by name.","打开玩家自己的文件选择器，让他们挑一个文件来读取。答案会以「选好文件时」或「取消询问时」到达 - 事件表两者都要有对应事件，因为生成的代码是按名字调用它们的。"
+"Ask for a file to open ({filters})","询问要打开的文件 ({filters})"
+"Filters","筛选"
 "Which files the player may pick. One entry per line of the list, spelled the way Godot spells a filter: the patterns, a semicolon, then the words the chooser shows - ""*.png,*.jpg;Images"".","玩家可以挑选哪些文件。列表每行一条，按 Godot 的筛选写法书写：模式、一个分号，然后是选择器显示的文字 - ""*.png,*.jpg;Images""。"
-Ask Where To Save,询问保存位置
-"Opens the player's own save chooser so they can name a file and a folder to write into. Nothing is written by this row: the path arrives as On a file chosen, and a write row does the writing.",打开玩家自己的保存选择器，让他们给文件和文件夹取名。这一行本身不写入任何东西：路径会以「选好文件时」到达，写入由写入行完成。
-Ask where to save ({filters}),询问保存位置 ({filters})
+"Ask Where To Save","询问保存位置"
+"Opens the player's own save chooser so they can name a file and a folder to write into. Nothing is written by this row: the path arrives as On a file chosen, and a write row does the writing.","打开玩家自己的保存选择器，让他们给文件和文件夹取名。这一行本身不写入任何东西：路径会以「选好文件时」到达，写入由写入行完成。"
+"Ask where to save ({filters})","询问保存位置 ({filters})"
 "Which kind of file is being written. One entry per line of the list, spelled the way Godot spells a filter: the patterns, a semicolon, then the words the chooser shows - ""*.png;PNG image"".","要写入的是哪一类文件。列表每行一条，按 Godot 的筛选写法书写：模式、一个分号，然后是选择器显示的文字 - ""*.png;PNG image""。"
-On A File Chosen,选好文件时
-"Runs when the player answered an Ask row by picking a file. Both Ask rows end here, so a sheet that asks two different questions remembers which one it asked.",当玩家为某个询问行挑好文件时运行。两个询问行都在这里收尾，所以问了两个不同问题的事件表要记住自己问的是哪一个。
-On a file chosen {path},选好文件 {path} 时
-"The file the player picked, as a real path on their machine. It is a path and nothing more - reading it is a separate row.",玩家挑中的文件，是他们机器上的真实路径。它只是一个路径 - 读取它是另一行的事。
-On The Ask Cancelled,取消询问时
-Runs when the player closed an Ask row's chooser without picking anything. Put whatever was waiting on the answer back the way it was here.,当玩家没有挑任何东西就关掉询问行的选择器时运行。把等着这个答案的东西在这里恢复原样。
-On the ask cancelled,取消询问时
-Image From File,文件的图像
-"Reads a picture from outside the project and answers with a texture, ready to hand to a Sprite or a TextureRect. No import step is involved: what you get back is a texture in a variable, and it lives only as long as something holds it.",读取项目之外的图片，并以纹理作答，可以直接交给 Sprite 或 TextureRect。没有导入步骤：拿回来的是变量里的一张纹理，只在有东西持有它的时候存在。
-"image of file {path}, or {fallback}",文件 {path} 的图像，否则 {fallback}
-"The picture to read, in any format Godot decodes at runtime: .png, .jpg / .jpeg, .webp, .bmp, .tga, .svg, .ktx, .dds and .hdr.",要读取的图片，可用 Godot 在运行时能解码的任何格式：.png、.jpg / .jpeg、.webp、.bmp、.tga、.svg、.ktx、.dds 和 .hdr。
-If missing,若不存在
-"What the expression reads as when there is no file at that path. Leave it blank to read the file plainly, with no guard around it.",当那个路径上没有文件时，这个表达式读作什么。留空则原样读取文件，不加任何守卫。
-Sound From File,文件的声音
-"Reads a sound from outside the project and answers with an audio stream, ready to hand to a player node. The line names one reader per format the engine decodes at runtime, so a file it cannot decode reads as the fallback rather than as silence nobody explained.",读取项目之外的声音，并以音频流作答，可以直接交给播放节点。这一行为引擎在运行时能解码的每种格式各写一个读取方式，所以解不开的文件会读作备用值，而不是无人解释的静音。
-"sound of file {path}, or {fallback}",文件 {path} 的声音，否则 {fallback}
-"The sound to read. EXACTLY THREE formats decode at runtime and the line checks for those three by extension: .mp3, .ogg (Ogg Vorbis) and .wav. Prefer a variable here - the path is read once per format the line checks.",要读取的声音。运行时能解码的格式恰好只有三种，这一行按扩展名逐一检查：.mp3、.ogg (Ogg Vorbis) 和 .wav。这里最好放一个变量 - 每检查一种格式，路径就会被读一次。
-"What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it.",当那个路径上没有文件，或它的扩展名不属于这三种时，这个表达式读作什么。留空则原样读取文件，不加任何守卫。
+"On A File Chosen","选好文件时"
+"Runs when the player answered an Ask row by picking a file. Both Ask rows end here, so a sheet that asks two different questions remembers which one it asked.","当玩家为某个询问行挑好文件时运行。两个询问行都在这里收尾，所以问了两个不同问题的事件表要记住自己问的是哪一个。"
+"On a file chosen {path}","选好文件 {path} 时"
+"The file the player picked, as a real path on their machine. It is a path and nothing more - reading it is a separate row.","玩家挑中的文件，是他们机器上的真实路径。它只是一个路径 - 读取它是另一行的事。"
+"On The Ask Cancelled","取消询问时"
+"Runs when the player closed an Ask row's chooser without picking anything. Put whatever was waiting on the answer back the way it was here.","当玩家没有挑任何东西就关掉询问行的选择器时运行。把等着这个答案的东西在这里恢复原样。"
+"On the ask cancelled","取消询问时"
+"Image From File","文件的图像"
+"Reads a picture from outside the project and answers with a texture, ready to hand to a Sprite or a TextureRect. No import step is involved: what you get back is a texture in a variable, and it lives only as long as something holds it.","读取项目之外的图片，并以纹理作答，可以直接交给 Sprite 或 TextureRect。没有导入步骤：拿回来的是变量里的一张纹理，只在有东西持有它的时候存在。"
+"image of file {path}, or {fallback}","文件 {path} 的图像，否则 {fallback}"
+"The picture to read, in any format Godot decodes at runtime: .png, .jpg / .jpeg, .webp, .bmp, .tga, .svg, .ktx, .dds and .hdr.","要读取的图片，可用 Godot 在运行时能解码的任何格式：.png、.jpg / .jpeg、.webp、.bmp、.tga、.svg、.ktx、.dds 和 .hdr。"
+"If missing","若不存在"
+"What the expression reads as when there is no file at that path. Leave it blank to read the file plainly, with no guard around it.","当那个路径上没有文件时，这个表达式读作什么。留空则原样读取文件，不加任何守卫。"
+"Sound From File","文件的声音"
+"Reads a sound from outside the project and answers with an audio stream, ready to hand to a player node. The line names one reader per format the engine decodes at runtime, so a file it cannot decode reads as the fallback rather than as silence nobody explained.","读取项目之外的声音，并以音频流作答，可以直接交给播放节点。这一行为引擎在运行时能解码的每种格式各写一个读取方式，所以解不开的文件会读作备用值，而不是无人解释的静音。"
+"sound of file {path}, or {fallback}","文件 {path} 的声音，否则 {fallback}"
+"The sound to read. EXACTLY THREE formats decode at runtime and the line checks for those three by extension: .mp3, .ogg (Ogg Vorbis) and .wav. Prefer a variable here - the path is read once per format the line checks.","要读取的声音。运行时能解码的格式恰好只有三种，这一行按扩展名逐一检查：.mp3、.ogg (Ogg Vorbis) 和 .wav。这里最好放一个变量 - 每检查一种格式，路径就会被读一次。"
+"What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it.","当那个路径上没有文件，或它的扩展名不属于这三种时，这个表达式读作什么。留空则原样读取文件，不加任何守卫。"
 Pack Folder Into Zip,将文件夹打包为 Zip
 "Writes the files in one folder into a .zip archive, using the engine's own packer. The loop is emitted into your script, so you can see exactly which files it walks - the ones directly in that folder, not the ones inside its subfolders.",使用引擎自带的打包器把一个文件夹里的文件写入 .zip 归档。循环会写进你的脚本，所以你能确切看到它遍历了哪些文件 - 是该文件夹里直接放着的文件，不是子文件夹里的。
 Files: Archives,文件：归档
@@ -5687,7 +5687,7 @@ the %s state,%s 状态
 "True while this object has been in the given state for longer than that many seconds - the timed half of Is in. The clock restarts every time the state changes, so a stagger that ends after a second is this row and nothing else.",当这个对象处于指定状态的时间超过这么多秒时为真 - 这是「处于」的计时版本。每次状态改变时计时都会重新开始，所以一秒后结束的踉跄就只是这一行。
 "True while the state this object was in BEFORE the current one is the given state. Answers ""what did we come from"" - the chase that began from patrolling is a different chase from the one that began from being staggered.",当这个对象在当前状态「之前」所处的状态是指定状态时为真。回答「我们从哪里来」- 从巡逻开始的追击和从踉跄开始的追击并不一样。
 "Moves this object into another state and says so: On leaving the old one and On entering the new one both run, in that order. Going to the state it is already in changes nothing and announces nothing.",把这个对象移入另一个状态并宣告：旧状态的「离开时」与新状态的「进入时」都会运行，且按此顺序。前往它已经处于的状态则什么都不改变，也什么都不宣告。
-"Runs the moment this object enters the given state, after every On leaving row of the state it came from, so what is being left has finished tidying up before the new one starts. A Go to written inside one of these rows is a second change announced straight away: its own rows run to the end first, and the rows left in this one then run for a state the object has already left.",在这个对象进入指定状态的那一刻运行，且排在它来自的那个状态的全部「离开时」行之后，所以被离开的状态会先收拾干净，新状态才开始。写在这些行里的「前往」是立即宣告的第二次变化：它自己的行会先整段跑完，本行剩下的行随后才跑，而那时对象已经离开了这个状态。
+"Runs the moment this object enters the given state, after every On leaving row of the state it came from, so what is being left has finished tidying up before the new one starts. A Go to written inside one of these rows is a second change announced straight away: its own rows run to the end first, and the rows left in this one then run for a state the object has already left.","在这个对象进入指定状态的那一刻运行，且排在它来自的那个状态的全部「离开时」行之后，所以被离开的状态会先收拾干净，新状态才开始。写在这些行里的「前往」是立即宣告的第二次变化：它自己的行会先整段跑完，本行剩下的行随后才跑，而那时对象已经离开了这个状态。"
 "Runs the moment this object leaves the given state, before anything answering the state it is entering. Put back here whatever the state switched on - the alarm it raised, the shader it turned red.",在这个对象离开指定状态的那一刻运行，早于任何回应它所进入状态的内容。在这里把该状态开启的东西收回来：拉响的警报、变红的着色器。
 "Which of this object's declared states. The Declare states dialog on the sheet head is where they are declared, and this list is exactly what it wrote.",这个对象已声明的状态之一。它们在表头的「声明状态」对话框中声明，这个列表正是它写下的内容。
 How long the object must already have been in that state for this to be true. The clock starts again on every change of state.,对象必须已经处于该状态多久，这一条才为真。每次状态改变时计时都会重新开始。
@@ -5704,10 +5704,10 @@ re-entered %s,重新进入 %s
 This happened %d times in this run.,本次运行中这种情况发生了 %d 次。
 Row,行
 States,状态
-OK,确定
-Patrol · Chase · Stagger,巡逻 · 追击 · 踉跄
-"The states this one object can be in, separated by anything you like. They become an enum, and every row that names a state is offered this list as it types - so a state is picked rather than remembered, and a row naming one that is not here is what the Doctor calls out.",这一个对象可以处于的状态，用什么分隔都行。它们会成为一个枚举，每一个指明状态的行在输入时都会得到这份列表 - 状态是选出来的，不是记出来的，而指了一个不在这里的名字的行，由 Doctor 说出来。
-The state the object opens in - the value the state variable is declared with. It is also the one state that needs no row going to it.,对象一开始所处的状态，也就是状态变量声明时的值。它也是唯一一个不需要任何行前往的状态。
+"OK","确定"
+"Patrol · Chase · Stagger","巡逻 · 追击 · 踉跄"
+"The states this one object can be in, separated by anything you like. They become an enum, and every row that names a state is offered this list as it types - so a state is picked rather than remembered, and a row naming one that is not here is what the Doctor calls out.","这一个对象可以处于的状态，用什么分隔都行。它们会成为一个枚举，每一个指明状态的行在输入时都会得到这份列表 - 状态是选出来的，不是记出来的，而指了一个不在这里的名字的行，由 Doctor 说出来。"
+"The state the object opens in - the value the state variable is declared with. It is also the one state that needs no row going to it.","对象一开始所处的状态，也就是状态变量声明时的值。它也是唯一一个不需要任何行前往的状态。"
 Error,错误
 Warning,警告
 this sheet,此事件表
@@ -5718,9 +5718,9 @@ Add row,添加行
 "Find ""%s"" in every sheet…",在所有事件表中查找“%s”…
 "That row is in %s, which is not open.",该行位于 %s 中，但它没有打开。
 "%s is declared in %s - opened it, but the row it is on has moved.",%s 声明于 %s - 已打开，但它所在的行已经移动。
-"%s is declared in %s, which would not open.",%s 声明在 %s 中，但该文件打不开。
+"%s is declared in %s, which would not open.","%s 声明在 %s 中，但该文件打不开。"
 %s is a mode of this sheet's own declaration.,%s 是此事件表自身声明的模式。
-"Opened %s, but the row that finding named is not there any more - this is the last audit's list. Run the Doctor again.",已打开 %s，但该条发现指名的行已经不在了 - 这是上一次体检的清单。请再跑一次 Doctor。
+"Opened %s, but the row that finding named is not there any more - this is the last audit's list. Run the Doctor again.","已打开 %s，但该条发现指名的行已经不在了 - 这是上一次体检的清单。请再跑一次 Doctor。"
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.",该发现项关于 %s，它不是事件表 - 请从 FileSystem 面板打开。
 %s is not in the scene that is open.,%s 不在当前打开的场景中。
 %s is no longer in the project.,%s 已不在项目中。
@@ -5750,8 +5750,8 @@ Layout,布局
 Add layout {path} on top as {layout_name},将布局 {path} 以 {layout_name} 添加到上层
 Remove layout {layout_name} from on top,从上层移除布局 {layout_name}
 layout {layout_name} is on top,布局 {layout_name} 在上层
-"Puts a layout over the running game instead of replacing it - a pause menu, an inventory, a dialogue box. The copy is added under the tree root, so it outlives a change of layout underneath it, and it takes the name you give so the two rows below can find it again. A name that is already on top is left alone and nothing is loaded, because two layouts under one name would mean one of them could never be found or removed again.",把一个布局盖在运行中的游戏之上，而不是替换它 - 暂停菜单、物品栏、对话框。副本被添加到树根之下，因此下面的布局改变时它仍然存在，并且取你给的名字，好让下面两行还能找到它。已经在上面的名字会被原样保留，也不会加载任何东西，因为同一个名字下有两个布局就意味着其中一个再也无法被找到或移除。
-"Takes a layout added by Add Layout On Top back off again. It comes off the tree straight away and is freed the deferred way, so Layout Is On Top answers false in the same frame and an add right after it puts the new one up under the same name. A name nothing is under quietly does nothing, so a close row is safe to run twice.",把由“在上面添加布局”添加的布局再取下来。它会立刻离开树，并以延迟方式释放，所以“布局在上面”在同一帧就返回假，紧接着的添加能用同一个名字放上新的。名字下没有东西时会安静地什么也不做，所以关闭行运行两次也安全。
+"Puts a layout over the running game instead of replacing it - a pause menu, an inventory, a dialogue box. The copy is added under the tree root, so it outlives a change of layout underneath it, and it takes the name you give so the two rows below can find it again. A name that is already on top is left alone and nothing is loaded, because two layouts under one name would mean one of them could never be found or removed again.","把一个布局盖在运行中的游戏之上，而不是替换它 - 暂停菜单、物品栏、对话框。副本被添加到树根之下，因此下面的布局改变时它仍然存在，并且取你给的名字，好让下面两行还能找到它。已经在上面的名字会被原样保留，也不会加载任何东西，因为同一个名字下有两个布局就意味着其中一个再也无法被找到或移除。"
+"Takes a layout added by Add Layout On Top back off again. It comes off the tree straight away and is freed the deferred way, so Layout Is On Top answers false in the same frame and an add right after it puts the new one up under the same name. A name nothing is under quietly does nothing, so a close row is safe to run twice.","把由“在上面添加布局”添加的布局再取下来。它会立刻离开树，并以延迟方式释放，所以“布局在上面”在同一帧就返回假，紧接着的添加能用同一个名字放上新的。名字下没有东西时会安静地什么也不做，所以关闭行运行两次也安全。"
 "True while a layout added by Add Layout On Top is still there. Use it to stop a menu opening twice, or to answer the same key differently while one is open.",只要「在上层添加布局」加上的布局还在，就为真。可用来阻止菜单被打开两次，或在打开期间让同一个按键有不同反应。
 "Layout file to put on top. Its root node keeps its own Process Mode, which is what decides whether it runs while the game is paused.",要叠在上层的布局文件。它的根节点保留自己的处理模式，是否在暂停时继续运行由该设置决定。
 "The name the copy is given under the tree root. Remove Layout On Top and Layout Is On Top find it by this name, so keep all three saying the same one.",副本在树根之下获得的名称。「移除上层布局」和「布局在上层」按这个名称查找，所以三行请保持一致。
@@ -5782,11 +5782,11 @@ random place [b]{radius}[/b] around [i]{node}[/i],[i]{node}[/i] 周围 [b]{radiu
 "The node to spawn around - the player, a totem, a spawner. Its own place is the centre of the ring.",围着它生成的节点 - 玩家、一个图腾、一个生成器。它自己的位置就是圆环的中心。
 "How far out from that node the point sits, in metres. Every point is exactly this far out - it is a ring, not a filled circle.",点离该节点多远，单位是米。每个点都恰好在这个距离上 - 这是一个圆环，不是实心圆。
 On Node Joins Group,当节点加入分组时
-"Runs the moment a node that belongs to a group enters the world - a spawned enemy that should get a minimap marker, a pickup that should be counted, a door that should be wired up. It listens to the scene tree's own node-added signal and adds the group question below as a condition you can see and edit, so nothing about it happens off the row. The guard runs for every node entering the world: measured, one handler asking one group question costs about 0.34 microseconds per node added, which is a third of a millisecond on a 1000-node scene load and still most of the cost of adding a node - so it is the wrong tool inside a particle storm. A group set in the scene file is already there when the node arrives, but a group joined in _ready is joined too late: node-added is emitted first, so that node is never matched by this trigger at all. Join the group before the node enters the tree, or on the row that spawns it.",在一个属于某个组的节点进入世界的那一刻运行 - 需要小地图标记的生成敌人、需要计数的拾取物、需要接线的门。它监听场景树自己的 node-added 信号，并把组的问题作为一个你看得见、改得动的条件放在下面，所以没有任何事情发生在这一行之外。这个判断会为每个进入世界的节点运行：实测中，一个做一次组判断的处理器每添加一个节点约花 0.34 微秒，加载 1000 个节点的场景约三分之一毫秒，却仍占添加节点开销的大半 - 所以在粒子风暴里它是错的工具。在场景文件里设置的组在节点到来时就已经存在，但在 _ready 里加入的组太晚了：node-added 先发出，因此那个节点永远不会被这个触发器匹配到。请在节点进入树之前加入组，或者在生成它的那一行加入。
+"Runs the moment a node that belongs to a group enters the world - a spawned enemy that should get a minimap marker, a pickup that should be counted, a door that should be wired up. It listens to the scene tree's own node-added signal and adds the group question below as a condition you can see and edit, so nothing about it happens off the row. The guard runs for every node entering the world: measured, one handler asking one group question costs about 0.34 microseconds per node added, which is a third of a millisecond on a 1000-node scene load and still most of the cost of adding a node - so it is the wrong tool inside a particle storm. A group set in the scene file is already there when the node arrives, but a group joined in _ready is joined too late: node-added is emitted first, so that node is never matched by this trigger at all. Join the group before the node enters the tree, or on the row that spawns it.","在一个属于某个组的节点进入世界的那一刻运行 - 需要小地图标记的生成敌人、需要计数的拾取物、需要接线的门。它监听场景树自己的 node-added 信号，并把组的问题作为一个你看得见、改得动的条件放在下面，所以没有任何事情发生在这一行之外。这个判断会为每个进入世界的节点运行：实测中，一个做一次组判断的处理器每添加一个节点约花 0.34 微秒，加载 1000 个节点的场景约三分之一毫秒，却仍占添加节点开销的大半 - 所以在粒子风暴里它是错的工具。在场景文件里设置的组在节点到来时就已经存在，但在 _ready 里加入的组太晚了：node-added 先发出，因此那个节点永远不会被这个触发器匹配到。请在节点进入树之前加入组，或者在生成它的那一行加入。"
 On a node joining {group},当节点加入 {group} 时
 "The group whose members this event answers. It is an ordinary Godot group, so anything else in the project that uses groups sees the same members. Choose Any group to answer every node entering or leaving the world, which is what a debug overlay or an editor tool wants.",本事件所回应成员的分组。它是普通的 Godot 分组，所以项目里任何使用分组的东西看到的成员都一样。选「任意分组」就会回应每一个进入或离开世界的节点，这正是调试叠层或编辑器工具想要的。
 On Node Leaves Group,当节点离开分组时
-"Runs the moment a node that belongs to a group leaves the world - the marker to take off the minimap, the entry to remove from a list, the connection to drop. A leaving node is still listed in its groups at that moment, which is what lets the question be asked at all. It fires for every departure, a move to another parent included: when what you mean is the crowd being emptied by a destroy, On The Last One Destroyed asks those further questions and this one deliberately does not. TEARDOWN IS A DEPARTURE TOO: every member of the group leaves when the branch holding it is freed and when the game quits, so this body runs once per member against a tree that is being taken apart - write it so that is harmless, or ask whether the tree is quitting first.",在一个属于某个组的节点离开世界的那一刻运行 - 要从小地图上取下的标记、要从列表中删除的条目、要断开的连接。离开中的节点在那一刻仍然列在它的组里，这正是这个问题问得出来的原因。它会在每一次离开时触发，包括换到另一个父节点：如果你要说的是一群东西被销毁到空，那么“最后一个被销毁时”会去问那些额外的问题，而这一行故意不问。拆解也是离开：当持有它的分支被释放时、以及游戏退出时，组里的每个成员都会离开，所以这段主体会针对一棵正在被拆散的树按成员各运行一次 - 请把它写成无害的，或者先问一下树是不是正在退出。
+"Runs the moment a node that belongs to a group leaves the world - the marker to take off the minimap, the entry to remove from a list, the connection to drop. A leaving node is still listed in its groups at that moment, which is what lets the question be asked at all. It fires for every departure, a move to another parent included: when what you mean is the crowd being emptied by a destroy, On The Last One Destroyed asks those further questions and this one deliberately does not. TEARDOWN IS A DEPARTURE TOO: every member of the group leaves when the branch holding it is freed and when the game quits, so this body runs once per member against a tree that is being taken apart - write it so that is harmless, or ask whether the tree is quitting first.","在一个属于某个组的节点离开世界的那一刻运行 - 要从小地图上取下的标记、要从列表中删除的条目、要断开的连接。离开中的节点在那一刻仍然列在它的组里，这正是这个问题问得出来的原因。它会在每一次离开时触发，包括换到另一个父节点：如果你要说的是一群东西被销毁到空，那么“最后一个被销毁时”会去问那些额外的问题，而这一行故意不问。拆解也是离开：当持有它的分支被释放时、以及游戏退出时，组里的每个成员都会离开，所以这段主体会针对一棵正在被拆散的树按成员各运行一次 - 请把它写成无害的，或者先问一下树是不是正在退出。"
 On a node leaving {group},当节点离开 {group} 时
 Any group - every node entering or leaving the world,任意分组 - 每一个进入或离开世界的节点
 "The check runs for every node entering or leaving the world - nothing at the scale a game spawns things at, and the wrong tool inside a particle storm. A group set in the scene file is already there when the node arrives; a group a script adds after add_child is announced by the next node to join, not by that one.",这个判断会对每一个进入或离开世界的节点执行 - 在游戏生成物件的量级上不算什么，但在粒子风暴里就是错的工具。写在场景文件里的分组在节点进入时就已经在了；脚本在 add_child 之后加的分组，要由下一个加入的节点来通报，而不是这一个。
@@ -5838,14 +5838,14 @@ Make it undoable,改为可撤销
 "This is only asked of a Tool sheet - a sheet that runs in the game is not editing anybody's scene, and has no history to be missing from.",这只会对工具表提出：在游戏中运行的表并没有在编辑任何人的场景，也不存在它可能缺席的历史。
 This row already goes through the editor's undo history.,这一行已经走编辑器的撤销历史了。
 Save Branch As Scene File,把分支保存为场景文件
-"Writes a branch of the running game out as a scene file, so a level, a room or a ship the player assembled can be loaded again later. It walks the branch first and lends every ownerless node under it the branch root as its owner, because Godot writes out only what the root owns - that walk is the whole reason this is a row and not one line - and gives that ownership back once the file is packed, so the running game is left as it was and a branch inside a branch you already saved still writes a whole file. Editor Tools ▸ Save Node As Scene is the same job on the editor's side of the line, packing the node you are editing from a Tool sheet; this is the game's side, writing what the player made. Both the pack and the write report a failure through the debugger rather than doing nothing quietly.",把运行中游戏的一条分支写成场景文件，这样玩家搭出来的关卡、房间或飞船以后还能再加载。它先走一遍这条分支，把分支根借给下面每个没有所有者的节点当所有者，因为 Godot 只写出根所拥有的东西 - 这次遍历正是它成为一行事件而不是一行代码的全部理由 - 并在文件打包完成后把这份所有权还回去，于是运行中的游戏保持原样，保存已保存过的分支里面的分支也照样写出完整文件。编辑器工具 ▸ 将节点保存为场景 是这条界线另一侧的同一件事，从工具表把你正在编辑的节点打包；这一行是游戏这一侧，写出玩家做的东西。打包和写入都会通过调试器报告失败，而不是悄悄什么也不做。
+"Writes a branch of the running game out as a scene file, so a level, a room or a ship the player assembled can be loaded again later. It walks the branch first and lends every ownerless node under it the branch root as its owner, because Godot writes out only what the root owns - that walk is the whole reason this is a row and not one line - and gives that ownership back once the file is packed, so the running game is left as it was and a branch inside a branch you already saved still writes a whole file. Editor Tools ▸ Save Node As Scene is the same job on the editor's side of the line, packing the node you are editing from a Tool sheet; this is the game's side, writing what the player made. Both the pack and the write report a failure through the debugger rather than doing nothing quietly.","把运行中游戏的一条分支写成场景文件，这样玩家搭出来的关卡、房间或飞船以后还能再加载。它先走一遍这条分支，把分支根借给下面每个没有所有者的节点当所有者，因为 Godot 只写出根所拥有的东西 - 这次遍历正是它成为一行事件而不是一行代码的全部理由 - 并在文件打包完成后把这份所有权还回去，于是运行中的游戏保持原样，保存已保存过的分支里面的分支也照样写出完整文件。编辑器工具 ▸ 将节点保存为场景 是这条界线另一侧的同一件事，从工具表把你正在编辑的节点打包；这一行是游戏这一侧，写出玩家做的东西。打包和写入都会通过调试器报告失败，而不是悄悄什么也不做。"
 save branch {branch} as scene file {path},把分支 {branch} 保存为场景文件 {path}
 Branch,分支
-"The node whose whole branch is written out. It becomes the root of the scene file, and every node under it that has no owner yet is LENT this node as its owner while the file is packed - which is what puts them in the file at all - and gets it back the moment the pack is done, so saving a branch and then a branch above it both write whole files. A node that already belongs to another scene keeps that owner and is left out, so a branch full of instanced scenes saves as the branch plus those instances, not as a copy of their insides.",整条分支被写出的那个节点。它成为场景文件的根，其下每个尚无所有者的节点在打包期间会被借用这个节点作为所有者 - 这正是它们能进入文件的原因 - 并在打包完成的那一刻归还，所以先保存一条分支、再保存它上面的分支，两次写出的都是完整文件。已经属于另一个场景的节点保留原有所有者并被排除在外，因此满是实例化场景的分支会保存为该分支加上那些实例，而不是它们内部的副本。
+"The node whose whole branch is written out. It becomes the root of the scene file, and every node under it that has no owner yet is LENT this node as its owner while the file is packed - which is what puts them in the file at all - and gets it back the moment the pack is done, so saving a branch and then a branch above it both write whole files. A node that already belongs to another scene keeps that owner and is left out, so a branch full of instanced scenes saves as the branch plus those instances, not as a copy of their insides.","整条分支被写出的那个节点。它成为场景文件的根，其下每个尚无所有者的节点在打包期间会被借用这个节点作为所有者 - 这正是它们能进入文件的原因 - 并在打包完成的那一刻归还，所以先保存一条分支、再保存它上面的分支，两次写出的都是完整文件。已经属于另一个场景的节点保留原有所有者并被排除在外，因此满是实例化场景的分支会保存为该分支加上那些实例，而不是它们内部的副本。"
 Save To,保存到
 "Where to write the scene file. Prefer user:// - res:// is the game's own files and is read-only once the game is exported, so a level the player built cannot be saved there.",场景文件写到哪里。优先用 user:// - res:// 是游戏自己的文件，游戏导出之后就是只读的，所以玩家搭出来的关卡没法存到那里。
 Scene File Is Data-Only,场景文件只有数据
-"True when a scene file brings nothing in from outside the game: no script written inside it, and every file it points at under res://, which is the game's own. It reads the file's own resource table as TEXT, tag by tag the way the engine's own parser reads it, and instantiates nothing. Ask it above a row that builds a scene which did not come with the game - a level the player built, a pack somebody sent them - because a scene file can name a script, and building one runs that script with everything this game can reach. Anything it cannot read as a scene table answers false, because an unfamiliar file is not a file that has been cleared.",当场景文件不从游戏之外带入任何东西时为真：其中没有写入脚本，并且它指向的每个文件都在 res:// 之下，也就是游戏自己的文件。它把该文件自身的资源表当作文本来读，像引擎自己的解析器那样逐个标签地读，并且不实例化任何东西。把它问在构建非游戏自带场景的那一行上方 - 玩家搭建的关卡、别人发来的包 - 因为场景文件可以指定脚本，构建它会让那段脚本以这个游戏能触及的一切来运行。任何它无法当作场景表读取的东西都返回假，因为陌生的文件不是已通过检查的文件。
+"True when a scene file brings nothing in from outside the game: no script written inside it, and every file it points at under res://, which is the game's own. It reads the file's own resource table as TEXT, tag by tag the way the engine's own parser reads it, and instantiates nothing. Ask it above a row that builds a scene which did not come with the game - a level the player built, a pack somebody sent them - because a scene file can name a script, and building one runs that script with everything this game can reach. Anything it cannot read as a scene table answers false, because an unfamiliar file is not a file that has been cleared.","当场景文件不从游戏之外带入任何东西时为真：其中没有写入脚本，并且它指向的每个文件都在 res:// 之下，也就是游戏自己的文件。它把该文件自身的资源表当作文本来读，像引擎自己的解析器那样逐个标签地读，并且不实例化任何东西。把它问在构建非游戏自带场景的那一行上方 - 玩家搭建的关卡、别人发来的包 - 因为场景文件可以指定脚本，构建它会让那段脚本以这个游戏能触及的一切来运行。任何它无法当作场景表读取的东西都返回假，因为陌生的文件不是已通过检查的文件。"
 scene file {path} is data-only,场景文件 {path} 只有数据
 Scene File,场景文件
 "The scene file to read. It is read as TEXT and nothing in it is built, so asking this question about a file from anywhere is safe. A file that is missing, unreadable, or saved in the binary form this cannot read answers false - an unreadable file is not a file that has been cleared.",要读的场景文件。它按文本读取，里面的东西一个也不构建，所以对任何来路的文件问这个问题都是安全的。缺失的文件、读不了的文件，或者以这里读不了的二进制形式保存的文件，都回答假 - 读不了的文件不等于已经查明干净的文件。
@@ -5944,7 +5944,7 @@ Add event,添加事件
 + Add…,+ 添加…
 Add an event to this sheet.,向该表添加一个事件。
 Everything you can add here - the same menu right-clicking empty space opens.,你可以在这里添加的一切 - 与右键点击空白处打开的菜单相同。
-"The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back.",工具栏已收起：每个按钮都在菜单或折叠箭头下，快捷键不变。视图 > 完整工具栏可全部恢复。
+"The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back.","工具栏已收起：每个按钮都在菜单或折叠箭头下，快捷键不变。视图 > 完整工具栏可全部恢复。"
 Sheet theme,事件表主题
 "The theme this sheet is drawn with - the bundled presets, plus Match Editor, which derives the sheet's colours from your own editor theme. Remembered on the sheet, so it travels with the file.",绘制此事件表所用的主题 - 内置预设，以及从你自己的编辑器主题推导事件表配色的 Match Editor。记在事件表上，因此随文件一同移动。
 Variable rows,变量行
@@ -7032,9 +7032,9 @@ one amount,单个数值
 "%s travels to ""%s"", which no animation tree in its scene declares. A misspelled state travels nowhere and is never reported by the game itself.","%s 前往 ""%s""，但其场景中没有任何动画树声明该状态。拼错的状态哪里也去不了，游戏本身也不会报告。"
 "Did you mean ""%s""?","你是指 ""%s"" 吗？"
 "%s writes a vector into ""%s"", which is a one-dimensional blend space. Only the first number is used - the rest of the direction is dropped without a word.","%s 向 ""%s"" 写入了向量，而它是一维混合空间。只有第一个数字会被使用，方向的其余部分会被悄悄丢弃。"
-"%s starts watching a folder and never stops watching it. A watch is a directory read every few seconds for the rest of the session, so one started on a screen the player walks away from goes on reading the disk behind whatever they moved on to. First: %s.",%s 开始监视一个文件夹，却从不停止。监视就是在这一局余下的时间里每隔几秒读一次目录，所以在玩家离开的界面上启动的监视，会在他转去的任何地方背后继续读磁盘。第一处：%s。
-"Stop Watching ends it, and a stopped watcher parks its per-frame tick - the engine stops visiting it at all.",“停止监视”会结束它，而停下来的监视者会停住每帧的处理 - 引擎从此完全不再造访它。
-"This reads one file at a time: a Stop Watching in another script, or one reached through a variable holding the watcher, is a stop this check cannot see.",它一次只读一个文件：写在另一个脚本里的“停止监视”，或者通过持有监视者的变量调用的那一个，都是这项检查看不到的停止。
+"%s starts watching a folder and never stops watching it. A watch is a directory read every few seconds for the rest of the session, so one started on a screen the player walks away from goes on reading the disk behind whatever they moved on to. First: %s.","%s 开始监视一个文件夹，却从不停止。监视就是在这一局余下的时间里每隔几秒读一次目录，所以在玩家离开的界面上启动的监视，会在他转去的任何地方背后继续读磁盘。第一处：%s。"
+"Stop Watching ends it, and a stopped watcher parks its per-frame tick - the engine stops visiting it at all.","“停止监视”会结束它，而停下来的监视者会停住每帧的处理 - 引擎从此完全不再造访它。"
+"This reads one file at a time: a Stop Watching in another script, or one reached through a variable holding the watcher, is a stop this check cannot see.","它一次只读一个文件：写在另一个脚本里的“停止监视”，或者通过持有监视者的变量调用的那一个，都是这项检查看不到的停止。"
 "%s chooses a difficulty, but nothing in this project reads a factor out of one - the menu changes nothing. Multiply by Difficulty Factor where the difficulty is meant to be felt.",%s 会选难度，但这个项目里没有任何地方从中读出系数 - 菜单什么也没改变。在应该让人感到难度的地方乘上难度系数。
 "Reads the surface's colour back: `material_override.albedo_color`. A mesh drawing with nothing, or wearing somebody's shader, answers with the value a new material starts on rather than reaching through what is not there. Use it in any value field.",读回表面的颜色：`material_override.albedo_color`。用不着任何材质绘制的网格，或者穿着别人着色器的网格，会用一个新材质起始的值来回答，而不是伸手去够本来就不在的东西。可用在任何值字段里。
 "Reads the surface's glow back: `material_override.emission_energy_multiplier`. A mesh drawing with nothing, or wearing somebody's shader, answers with the value a new material starts on rather than reaching through what is not there. Use it in any value field.",读回表面的自发光：`material_override.emission_energy_multiplier`。用不着任何材质绘制的网格，或者穿着别人着色器的网格，会用一个新材质起始的值来回答，而不是伸手去够本来就不在的东西。可用在任何值字段里。
@@ -7142,14 +7142,14 @@ On unpack finished {entries} {bytes} {skipped},当解压完成 {entries} {bytes}
 Skipped,已跳过
 "How many entries did not land: one the reader answered with no bytes for - a truncated or corrupted archive, or an entry that really is empty, which reads exactly the same way - and one the machine refused to write, such as a name the file system will not take or a full disk. Nothing of theirs is on disk. A finish with a number here reached the end of the archive but did not unpack all of it, which is worth saying on screen rather than treating as a clean install.",有多少条目没有写入：读取器返回不到一个字节的条目，被截断或损坏的压缩包，或真正为空、读起来完全一样的条目，以及机器拒绝写入的条目，例如文件系统不接受的名字或磁盘已满。它们没有任何内容留在磁盘上。这里带着数字的完成，意味着走到了压缩包的末尾却没有全部解压，值得在画面上说出来，而不是当作一次干净的安装。
 "How many numbers to try before giving up. The questions are only asked when the path you wanted is already taken - and then ALL of them are asked, not just up to the first free one: the line builds every candidate and keeps the free ones, so a taken path costs this many file_exists questions whatever the answer turns out to be. When all of them are taken the answer is the path you asked for, so the row after this one overwrites - name a number you are comfortable with.",在放弃之前尝试多少个编号。只有当你想要的路径已被占用时才会发问，而一旦发问就会全部问一遍，而不是问到第一个空闲的为止：这一行会构造出每个候选并保留空闲的那些，所以一个被占用的路径无论结果如何都要花掉这么多次 file_exists。若全部被占用，答案就是你原本要的路径，于是下一行会覆盖它，请填一个你放心的数字。
-"This project plays haptics (first in %s). They are felt on a pad and on a phone, and are silent on the web and on a desktop with no pad - quietly, with no warning per row. Carry the same beat in sound or picture too, and let the options screen turn the rumble down: Set Haptic Strength is the one dial every haptic row reads.",本项目会播放触觉反馈（首次出现在 %s）。它在手柄和手机上可以感受到，在网页和没有手柄的桌面上则完全静默，也不会为每一行发出警告。请同时用声音或画面传达同样的节拍，并让选项界面可以调低震动：Set Haptic Strength 是每一条触觉行都会读取的唯一旋钮。
+"This project plays haptics (first in %s). They are felt on a pad and on a phone, and are silent on the web and on a desktop with no pad - quietly, with no warning per row. Carry the same beat in sound or picture too, and let the options screen turn the rumble down: Set Haptic Strength is the one dial every haptic row reads.","本项目会播放触觉反馈（首次出现在 %s）。它在手柄和手机上可以感受到，在网页和没有手柄的桌面上则完全静默，也不会为每一行发出警告。请同时用声音或画面传达同样的节拍，并让选项界面可以调低震动：Set Haptic Strength 是每一条触觉行都会读取的唯一旋钮。"
 New Moment…,新建时刻…
 Open Moment File As Block…,将时刻文件作为块打开…
 Save Moment As File…,将时刻保存为文件…
 Delete Step,删除步骤
-"A .gd file IS code, a .gdextension is a native library, and a .tres or a .res is a table that can name a script, so loading any of them runs its author's code with everything this game can reach: the player's files, their network, their machine. A .pck or a .zip is wider still: it MOUNTS its contents into res://, so it can replace the game's own files rather than only add to them.",.gd 文件本身就是代码，.gdextension 是原生库，.tres 或 .res 是可以指名一份脚本的表，因此加载其中任何一个，都会让它作者的代码带着这个游戏能触及的一切运行：玩家的文件、他们的网络、他们的机器。.pck 或 .zip 走得更远：它会把自己的内容挂载到 res:// 下，因此不只是往游戏里添文件，还能替换掉游戏自己的文件。
+"A .gd file IS code, a .gdextension is a native library, and a .tres or a .res is a table that can name a script, so loading any of them runs its author's code with everything this game can reach: the player's files, their network, their machine. A .pck or a .zip is wider still: it MOUNTS its contents into res://, so it can replace the game's own files rather than only add to them.",".gd 文件本身就是代码，.gdextension 是原生库，.tres 或 .res 是可以指名一份脚本的表，因此加载其中任何一个，都会让它作者的代码带着这个游戏能触及的一切运行：玩家的文件、他们的网络、他们的机器。.pck 或 .zip 走得更远：它会把自己的内容挂载到 res:// 下，因此不只是往游戏里添文件，还能替换掉游戏自己的文件。"
 (none),(无)
-"%s marches the dashes on %s, and that shape has none to march: its Dashed box is off in %s, and no row here turns it on. Turn Dashed on in the Inspector, or put a Set Dashes row before the Scroll Dashes.",%s 让 %s 的虚线流动，但那个形状没有可流动的虚线：它在 %s 中的虚线开关是关闭的，而这个表里没有任何一行把它打开。请在检查器中打开虚线，或在流动虚线一行之前放一行设置虚线。
+"%s marches the dashes on %s, and that shape has none to march: its Dashed box is off in %s, and no row here turns it on. Turn Dashed on in the Inspector, or put a Set Dashes row before the Scroll Dashes.","%s 让 %s 的虚线流动，但那个形状没有可流动的虚线：它在 %s 中的虚线开关是关闭的，而这个表里没有任何一行把它打开。请在检查器中打开虚线，或在流动虚线一行之前放一行设置虚线。"
 """%s"" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling.","""%s"" 不在输入映射中 - 该控制永远不会触发，也没有任何提示。请在项目 ▸ 输入映射中添加它，或修正拼写。"
 What this file is. ▸ opens the lines behind it.,这个文件是什么。▸ 展开它背后的行。
 Open the base script as a sheet.,将基类脚本作为事件表打开。
@@ -7239,7 +7239,7 @@ No problems,没有问题
 1 problem,1 个问题
 %d problems,%d 个问题
 Add Links On Hover,悬停时显示添加链接
-"Add condition and Add action appear as links under the lanes of the event under the pointer, of the selected event and under an empty lane. Click one to pick what to add. Off draws them as pills in the same places.",添加条件和添加动作以链接形式出现在指针下的事件、选中的事件以及空通道的下方。点击其中一个来选择要添加的内容。关闭时在相同位置绘制为按钮。
+"Add condition and Add action appear as links under the lanes of the event under the pointer, of the selected event and under an empty lane. Click one to pick what to add. Off draws them as pills in the same places.","添加条件和添加动作以链接形式出现在指针下的事件、选中的事件以及空通道的下方。点击其中一个来选择要添加的内容。关闭时在相同位置绘制为按钮。"
 Active,启用
 sentence,句子
 code,代码
@@ -7247,7 +7247,7 @@ What this file is: a script.,这个文件是什么: 一个脚本。
 Add to Class Head…,添加到类头…
 Click to change what kind of script it is.,点击以更改脚本的类型。
 Event %d selected,已选择事件 %d
-Comment - drag the grip to move it into an event's actions or between events.,注释 - 拖动手柄可将其移入某个事件的动作中或事件之间。
+Comment - drag the grip to move it into an event's actions or between events.,"注释 - 拖动手柄可将其移入某个事件的动作中或事件之间。"
 Side Rail,侧边栏
 "The panels beside the sheet - Open Sheets, Objects, Functions. Unticked, the rail is tucked away and the sheet takes the width.",表格旁的面板 - 打开的表格、对象、函数。取消勾选后侧边栏会收起，表格占满整个宽度。
 Move every child of %s to %s,将 %s 的每个子节点移到 %s
@@ -9377,7 +9377,7 @@ Only two numbers share a line; this field and %s are drawn one per line.,只有�
 %d entries,%d 项
 "A class inside this script: its own variables and functions, folded under one head. Other code makes one with %s.new().",此脚本内的类：它自己的变量和函数，折叠在一个标题下。其他代码用 %s.new() 创建它。
 extends %s,extends %s
-"%d compute shaders (.glsl) are imported on several threads at once, and Godot can crash part way through importing them, leaving the files after them unimported. Turn off Project Settings > Editor > Import > Use Multiple Threads.",%d 个计算着色器 (.glsl) 正在多个线程上同时导入，Godot 可能在导入途中崩溃，使其后的文件保持未导入状态。请关闭 项目设置 > 编辑器 > 导入 > 使用多线程。
+"%d compute shaders (.glsl) are imported on several threads at once, and Godot can crash part way through importing them, leaving the files after them unimported. Turn off Project Settings > Editor > Import > Use Multiple Threads.","%d 个计算着色器 (.glsl) 正在多个线程上同时导入，Godot 可能在导入途中崩溃，使其后的文件保持未导入状态。请关闭 项目设置 > 编辑器 > 导入 > 使用多线程。"
 "Off and not switchable: %s is left out of the game entirely, and Set group active cannot reach it. Tick Can be switched at runtime to turn it on from an event.",关闭且不可切换：%s 被完全排除在游戏之外，设置分组激活也无法触及它。勾选 运行时可切换，即可从事件中开启它。
 Off at start; events can switch it on.,启动时关闭；事件可以将其开启。
 Can Be Switched At Runtime,运行时可切换
@@ -9496,7 +9496,7 @@ The Inspector hides it unless another setting is on.,除非另一项设置已开
 %s:,%s：
 Listed under its own name in the picker and the Add behaviour list. The usual choice.,以自己的名字列在选择器和“添加行为”列表中。通常的选择。
 "%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.",%s 是 %s，不是节点：表格从它的文件中读取它，所以它永远不会被添加到对象上。
-"%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.",%d 个包类没有被任何表、场景或自动加载引用 - 如果你在手写的 GDScript 中调用它们则无妨：%s。
+"%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.","%d 个包类没有被任何表、场景或自动加载引用 - 如果你在手写的 GDScript 中调用它们则无妨：%s。"
 %s (autoload),%s（自动加载）
 %s is not in the library.,%s 不在库中。
 %s could not be copied into the project (%s).,无法将 %s 复制到项目中 (%s)。
@@ -9726,10 +9726,10 @@ Fold or unfold what this kind inherits.,折叠或展开此类继承的内容。
 "read here, changed on %s's sheet",在此只读，在 %s 的表中修改
 Double-click to start it at another value.,双击可将起始值改为其他值。
 Right-click to replace it in %s.,右键单击可在 %s 中替换它。
-"%s changed since this step, so no file was written and the sheet is not saved.",%s 在此步骤之后已被更改，因此没有写入任何文件，工作表也未保存。
-"In %s, 1 test of %s will test %s instead.",在 %s 中，1 处对 %s 的判断将改为判断 %s。
-"In %s, %d tests of %s will test %s instead.",在 %s 中，%d 处对 %s 的判断将改为判断 %s。
-"%s saves %s as a number: after the removal, a saved number can name a different state.",%s 将 %s 保存为数字：移除后，保存的数字可能指向另一个状态。
+"%s changed since this step, so no file was written and the sheet is not saved.","%s 在此步骤之后已被更改，因此没有写入任何文件，工作表也未保存。"
+"In %s, 1 test of %s will test %s instead.","在 %s 中，1 处对 %s 的判断将改为判断 %s。"
+"In %s, %d tests of %s will test %s instead.","在 %s 中，%d 处对 %s 的判断将改为判断 %s。"
+"%s saves %s as a number: after the removal, a saved number can name a different state.","%s 将 %s 保存为数字：移除后，保存的数字可能指向另一个状态。"
 + Add to '%s'…,+ 向 '%s' 添加…
 "+ Add to ""%s""…","+ 向 ""%s"" 添加…"
 "Add event to ""%s""","向 ""%s"" 添加事件"
@@ -10027,34 +10027,34 @@ Value of the wrong kind,类型不对的值
 Every physics tick,每个物理 tick
 every physics tick,每个物理 tick
 no starting value,无初始值
-"%s is Array[%s] and %s is Array[%s], and a typed array only holds its own type.",%s 是 Array[%s]，%s 是 Array[%s]，类型化数组只能保存自己的类型。
-different types,类型不同
-the two types differ,两种类型不同
-For each popped from the front of %s as %s,对从 %s 前端取出的每一项，命名为 %s
-For each popped from the back of %s as %s,对从 %s 末端取出的每一项，命名为 %s
+"%s is Array[%s] and %s is Array[%s], and a typed array only holds its own type.","%s 是 Array[%s]，%s 是 Array[%s]，类型化数组只能保存自己的类型。"
+different types,"类型不同"
+the two types differ,"两种类型不同"
+For each popped from the front of %s as %s,"对从 %s 前端取出的每一项，命名为 %s"
+For each popped from the back of %s as %s,"对从 %s 末端取出的每一项，命名为 %s"
 Edit it anyway,仍然编辑
 %s is now editable.,%s 现已可编辑。
 %s is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.,%s 是随附的行为:添加该包的新版本会替换此文件及你的修改。
 This function is locked - right-click it and choose Unlock this function,此函数已锁定 - 右键单击并选择“解锁此函数”
-group %s,分组 %s
-list %s,列表 %s
-Choose a group or list,选择分组或列表
-Use a group instead of %s,改用分组代替 %s
+group %s,"分组 %s"
+list %s,"列表 %s"
+Choose a group or list,"选择分组或列表"
+Use a group instead of %s,"改用分组代替 %s"
 "%s is now the group ""%s"": add_to_group, remove_from_group, is_in_group and For each in group.","%s 现在是分组 ""%s"":add_to_group、remove_from_group、is_in_group 和 For each in group。"
-Pick the %s,选择 %s
-This event now picks %s.,此事件现在会选择 %s。
-Drop freed instances first,先清除已释放的实例
+Pick the %s,"选择 %s"
+This event now picks %s.,"此事件现在会选择 %s。"
+Drop freed instances first,"先清除已释放的实例"
 Added a row above the loop that drops freed instances from %s.,"已在循环上方添加一行,用于清除 %s 中已释放的实例。"
-Use a group instead,改用分组
+Use a group instead,"改用分组"
 "%s holds nodes but is never read by position or order. A group is Godot's way to keep an unordered set of nodes, and it drops a destroyed instance by itself.","%s 里存放着节点,但从未按位置或顺序读取。分组是 Godot 保存无序节点集合的方式,并且会自动丢弃已销毁的实例。"
 "%s is read in a loop but nothing on this sheet ever takes a destroyed instance out of it, and the next use of a freed one is an error (a group needs no such clean-up).","%s 在循环中被读取,但这张表里没有任何地方会把已销毁的实例从中移除,下次使用已释放的实例就会报错(分组不需要这种清理)。"
-Pick the %s from a group,从分组中选择 %s
-Pick the %s from %s,从 %s 中选择 %s
+Pick the %s from a group,"从分组中选择 %s"
+Pick the %s from %s,"从 %s 中选择 %s"
 "This row reaches into %s, a list that belongs to another object. It works, but the object that owns a list should be asked for it through a function or a signal instead.","这一行伸手去取 %s,这是属于另一个对象的列表。它能用,但应当通过函数或信号向拥有该列表的对象询问。"
 "No %s is picked here. A pick lasts for its own event and the sub-events under it, so this row has nothing to act on.","这里没有选中任何 %s。选择只在它自己的事件及其下的子事件里有效,所以这一行没有可作用的对象。"
-Picked here,此处已选取
-"The instances this event picked or was handed, by the names the code uses.",此事件选取或收到的实例，使用代码中的名称。
-"The %s this event picked, written as %s. Rows you add here act on it.",此事件选取的 %s，写作 %s。你在此添加的行会作用于它。
+Picked here,"此处已选取"
+"The instances this event picked or was handed, by the names the code uses.","此事件选取或收到的实例，使用代码中的名称。"
+"The %s this event picked, written as %s. Rows you add here act on it.","此事件选取的 %s，写作 %s。你在此添加的行会作用于它。"
 %s - variables,%s - 变量
 Variable…,变量…
 %s is in the secret group. Add the event that counts it the first time the player walks in?,%s 在 secret 组中。是否添加在玩家首次进入时计数的事件？
@@ -10486,19 +10486,19 @@ and %d more.,另有 %d 个。
 "%s declares the class %s, and so does the plugin's own %s. Godot keeps one class per name, so the plugin cannot load while both exist. Rename your class.",%s 声明了类 %s，插件自己的 %s 也是。Godot 每个名称只允许一个类，所以两者并存时插件无法加载。请重命名你的类。
 "%s declares the class %s, and so does %s, a behaviour in this project. Godot keeps one class per name, so one of the two scripts does not load. Rename your class, or remove the behaviour.",%s 声明了类 %s，此项目中的行为 %s 也是。Godot 每个名称只允许一个类，所以其中一个脚本不会加载。请重命名你的类，或移除该行为。
 "%s declares the class %s, a name the plugin's behaviour %s also uses. Nothing is broken yet, but Add to project will refuse that behaviour while your class has the name.",%s 声明了类 %s，插件的行为 %s 也使用这个名称。目前没有损坏，但只要你的类用着这个名称，“添加到项目”就会拒绝该行为。
-"Line %d starts with %s, which is not a word this reads, so it is only a note. Check the spelling.",第 %d 行以 %s 开头，这不是会被读取的词，因此只是一条注释。请检查拼写。
-"Line %d starts with %s, which is not a word this reads, so it is only a note. Did you mean %s?",第 %d 行以 %s 开头，这不是会被读取的词，因此只是一条注释。你是想写 %s 吗？
-"Line %d: %s is not a setting a parameter line reads, so it is left out. It reads hint, options, default, default_word, default_code, autocomplete and desc.",第 %d 行：%s 不是参数行会读取的设置，因此被忽略。会读取 hint、options、default、default_word、default_code、autocomplete 和 desc。
-"Line %d: %s is not a setting a parameter line reads, so it is left out. Did you mean %s?",第 %d 行：%s 不是参数行会读取的设置，因此被忽略。你是想写 %s 吗？
-"Line %d: %s has no colon, so it is left out. Write it as key: value.",第 %d 行：%s 没有冒号，因此被忽略。请写成 键: 值 的形式。
-"Line %d is a # comment between the words above it and %s, so %s reads with none of them. Start that line with ## instead.",第 %d 行是位于上方词语与 %s 之间的 # 注释，因此 %s 读取时不会带有这些词。请改为以 ## 开头。
-"%s has no return type, so it reads as an action. Add -> bool to make it a condition, or a type to make it an expression.",%s 没有返回类型，因此被读作动作。添加 -> bool 可变成条件，添加类型可变成表达式。
+"Line %d starts with %s, which is not a word this reads, so it is only a note. Check the spelling.","第 %d 行以 %s 开头，这不是会被读取的词，因此只是一条注释。请检查拼写。"
+"Line %d starts with %s, which is not a word this reads, so it is only a note. Did you mean %s?","第 %d 行以 %s 开头，这不是会被读取的词，因此只是一条注释。你是想写 %s 吗？"
+"Line %d: %s is not a setting a parameter line reads, so it is left out. It reads hint, options, default, default_word, default_code, autocomplete and desc.","第 %d 行：%s 不是参数行会读取的设置，因此被忽略。会读取 hint、options、default、default_word、default_code、autocomplete 和 desc。"
+"Line %d: %s is not a setting a parameter line reads, so it is left out. Did you mean %s?","第 %d 行：%s 不是参数行会读取的设置，因此被忽略。你是想写 %s 吗？"
+"Line %d: %s has no colon, so it is left out. Write it as key: value.","第 %d 行：%s 没有冒号，因此被忽略。请写成 键: 值 的形式。"
+"Line %d is a # comment between the words above it and %s, so %s reads with none of them. Start that line with ## instead.","第 %d 行是位于上方词语与 %s 之间的 # 注释，因此 %s 读取时不会带有这些词。请改为以 ## 开头。"
+"%s has no return type, so it reads as an action. Add -> bool to make it a condition, or a type to make it an expression.","%s 没有返回类型，因此被读作动作。添加 -> bool 可变成条件，添加类型可变成表达式。"
 Event sheets with changes that are not saved yet:,有尚未保存更改的事件表：
 it was not saved - open it in the EventSheet screen and press Save,未能保存 - 请在 EventSheet 界面中打开它并点击保存
 These event sheets were not saved: %s,这些事件表未保存：%s
-"it has never been saved, so it has no file yet - use Save As in the EventSheet screen to give it one",它从未保存过，所以还没有文件 - 请在 EventSheet 界面中使用另存为来创建文件
+"it has never been saved, so it has no file yet - use Save As in the EventSheet screen to give it one","它从未保存过，所以还没有文件 - 请在 EventSheet 界面中使用另存为来创建文件"
 its file still holds unresolved merge markers - finish the merge first,文件中仍有未解决的合并标记 - 请先完成合并
-"it is open read-only - press Edit Events, or use Save As to keep a copy",它以只读方式打开 - 请点击编辑事件，或使用另存为保存一份副本
+"it is open read-only - press Edit Events, or use Save As to keep a copy","它以只读方式打开 - 请点击编辑事件，或使用另存为保存一份副本"
 "%s could not be written, so no file was changed.",无法写入 %s，因此没有更改任何文件。
 %d kept,已保留 %d 个
 open it,请打开
@@ -10529,13 +10529,13 @@ Couldn't save %s: %s.,无法保存 %s：%s。
 "Ctrl+Z undoes all of it in this sheet. Other sheets were saved, each with a backup: open one and use Tools > Sheet Backups to get its old version back.",Ctrl+Z 可以撤销此事件表中的全部改动。其他事件表已保存，且都有备份：打开其中一个，用 工具 > 事件表备份 即可找回旧版本。
 Text that mentions the name - left as it is,提到该名称的文字 - 保持原样
 " %d file(s) of the behaviours that ship with this plugin also say that name, and nothing in them refers to this script, so they are not listed.", 随此插件提供的行为中有 %d 个文件也使用这个名称，但其中没有任何内容指向这个脚本，所以没有列出。
-"%s sits inside a %s, and a Container places its children itself: the next time it arranges them it moves this Control back, so this row seems to do nothing. To place it yourself, put the Control under a plain Control node instead; to change where it ends up inside the Container, change the Container's own settings or this Control's size flags and custom minimum size.",%s 位于 %s 内，而 Container 会自行摆放它的子节点：下次重新排列时它会把这个 Control 放回原处，所以这一行看起来什么也没做。想自己摆放它，请把 Control 放到普通的 Control 节点下面；想改变它在 Container 中的位置，请修改 Container 本身的设置，或这个 Control 的 Size Flags 和自定义最小尺寸。
-Apply Central Impulse (3D),施加中心冲量 (3D)
-Apply Central Impulse,施加中心冲量
-"%s is a %s, which the physics engine moves every physics frame, so a Tween on its %s fights the engine: the body jitters, snaps back or is pushed through walls. Tween a child node instead (a Sprite2D, say), move the body with %s, or turn on Freeze on the body first so code may move it.",%s 是一个 %s，物理引擎每个物理帧都会移动它，所以对它的 %s 使用 Tween 会和引擎对抗：物体会抖动、弹回原处或穿过墙壁。请改为对子节点（例如 Sprite2D）使用 Tween，用 %s 来移动物体，或者先打开该物体的 Freeze，这样代码才可以移动它。
-"This behaviour sits under %s, a %s, and it writes its parent's %s every frame while the physics engine moves that body too, so the two fight: the body jitters, snaps back or is pushed through walls. Put the behaviour on a node that is not a physics body (the Sprite2D inside it, or a plain Node2D), or move the body with %s instead.",这个行为位于 %s（%s）之下，每一帧都会写入其父节点的 %s，而物理引擎也在移动同一个物体，所以两者会对抗：物体会抖动、弹回原处或穿过墙壁。请把这个行为放到不是物理物体的节点上（其中的 Sprite2D，或普通的 Node2D），或者改用 %s 来移动物体。
-"An edit was started inside another edit, which cannot be undone as two steps, so it was not applied. Make both changes in the outer edit.",在一次编辑内部又开始了另一次编辑，这无法作为两步撤销，所以没有应用。请把两处更改都放在外层编辑里。
-"That edit stopped on a script error, so the sheet was left exactly as it was.",该编辑因脚本错误而中止，因此工作表保持原样。
+"%s sits inside a %s, and a Container places its children itself: the next time it arranges them it moves this Control back, so this row seems to do nothing. To place it yourself, put the Control under a plain Control node instead; to change where it ends up inside the Container, change the Container's own settings or this Control's size flags and custom minimum size.","%s 位于 %s 内，而 Container 会自行摆放它的子节点：下次重新排列时它会把这个 Control 放回原处，所以这一行看起来什么也没做。想自己摆放它，请把 Control 放到普通的 Control 节点下面；想改变它在 Container 中的位置，请修改 Container 本身的设置，或这个 Control 的 Size Flags 和自定义最小尺寸。"
+"Apply Central Impulse (3D)","施加中心冲量 (3D)"
+"Apply Central Impulse","施加中心冲量"
+"%s is a %s, which the physics engine moves every physics frame, so a Tween on its %s fights the engine: the body jitters, snaps back or is pushed through walls. Tween a child node instead (a Sprite2D, say), move the body with %s, or turn on Freeze on the body first so code may move it.","%s 是一个 %s，物理引擎每个物理帧都会移动它，所以对它的 %s 使用 Tween 会和引擎对抗：物体会抖动、弹回原处或穿过墙壁。请改为对子节点（例如 Sprite2D）使用 Tween，用 %s 来移动物体，或者先打开该物体的 Freeze，这样代码才可以移动它。"
+"This behaviour sits under %s, a %s, and it writes its parent's %s every frame while the physics engine moves that body too, so the two fight: the body jitters, snaps back or is pushed through walls. Put the behaviour on a node that is not a physics body (the Sprite2D inside it, or a plain Node2D), or move the body with %s instead.","这个行为位于 %s（%s）之下，每一帧都会写入其父节点的 %s，而物理引擎也在移动同一个物体，所以两者会对抗：物体会抖动、弹回原处或穿过墙壁。请把这个行为放到不是物理物体的节点上（其中的 Sprite2D，或普通的 Node2D），或者改用 %s 来移动物体。"
+"An edit was started inside another edit, which cannot be undone as two steps, so it was not applied. Make both changes in the outer edit.","在一次编辑内部又开始了另一次编辑，这无法作为两步撤销，所以没有应用。请把两处更改都放在外层编辑里。"
+"That edit stopped on a script error, so the sheet was left exactly as it was.","该编辑因脚本错误而中止，因此工作表保持原样。"
 Could not save %s - Godot says: %s. %s,无法保存 %s - Godot 提示:%s。%s
 "Nothing was changed. Check that the file is not read-only or open in another program, that its folder exists and that the disk has room, then try again.","没有任何更改。请检查文件是否为只读或被其他程序打开、其文件夹是否存在、磁盘是否有空间,然后重试。"
 Could not delete %s - Godot says: %s. %s,无法删除 %s - Godot 提示:%s。%s
@@ -10682,36 +10682,36 @@ Nothing here can be rewritten on its own - %d rows are listed below with the rea
 %d rows are left exactly as they are.,%d 行保持原样。
 After the hold,Hold 之后
 Start together,同时开始
-Apply keeps a saved theme for this script in this project. Nothing is written into the script.,应用会在此项目中为该脚本记住已保存的主题。不会向脚本中写入任何内容。
-Revert,还原
-Match Editor,匹配编辑器
-Untitled theme,未命名主题
-Theme Editor - %s,主题编辑器 - %s
-%s (changed),%s（已更改）
-Save a Copy…,保存副本…
-Theme saved: %s,主题已保存：%s
-Theme could not be saved: %s (%s),无法保存主题：%s（%s）
-Save a Copy,保存副本
-Save Theme As,主题另存为
-Save changes to %s?,要保存对 %s 的更改吗？
-The swatches you changed are not in the file yet.,你更改的颜色尚未写入文件。
-Discard throws the changes away. Cancel keeps the window as it is.,放弃会丢掉这些更改。取消则保持窗口不变。
-Your themes,你的主题
-Starters,起始模板
-Open now,当前打开
-Theme,主题
-Open / Close %s,展开 / 折叠 %s
-Open All / Close All %s,全部展开 / 折叠：%s
-Put Selection into New %s,将所选内容放入新的%s
-Close %s,折叠 %s
-Use For Every Sheet,用于所有事件表
-Makes this theme the one every sheet wears unless it chose its own. Kept in Project Settings.,让所有没有自选主题的事件表都使用此主题。保存在项目设置中。
-That file is not an event sheet theme.,该文件不是事件表主题。
-This sheet's look has no theme file. Save it from the Theme Editor first.,此事件表的外观没有主题文件。请先在主题编辑器中保存。
-Sheets with no theme of their own match the editor again.,没有自选主题的事件表再次跟随编辑器。
-Every sheet with no theme of its own now wears %s.,所有没有自选主题的事件表现在都使用 %s。
-Project theme: %s,项目主题：%s
-Edit in Theme Editor,在主题编辑器中编辑
+Apply keeps a saved theme for this script in this project. Nothing is written into the script.,"应用会在此项目中为该脚本记住已保存的主题。不会向脚本中写入任何内容。"
+Revert,"还原"
+Match Editor,"匹配编辑器"
+Untitled theme,"未命名主题"
+Theme Editor - %s,"主题编辑器 - %s"
+%s (changed),"%s（已更改）"
+Save a Copy…,"保存副本…"
+Theme saved: %s,"主题已保存：%s"
+Theme could not be saved: %s (%s),"无法保存主题：%s（%s）"
+Save a Copy,"保存副本"
+Save Theme As,"主题另存为"
+Save changes to %s?,"要保存对 %s 的更改吗？"
+The swatches you changed are not in the file yet.,"你更改的颜色尚未写入文件。"
+Discard throws the changes away. Cancel keeps the window as it is.,"放弃会丢掉这些更改。取消则保持窗口不变。"
+Your themes,"你的主题"
+Starters,"起始模板"
+Open now,"当前打开"
+Theme,"主题"
+Open / Close %s,"展开 / 折叠 %s"
+Open All / Close All %s,"全部展开 / 折叠：%s"
+Put Selection into New %s,"将所选内容放入新的%s"
+Close %s,"折叠 %s"
+Use For Every Sheet,"用于所有事件表"
+Makes this theme the one every sheet wears unless it chose its own. Kept in Project Settings.,"让所有没有自选主题的事件表都使用此主题。保存在项目设置中。"
+That file is not an event sheet theme.,"该文件不是事件表主题。"
+This sheet's look has no theme file. Save it from the Theme Editor first.,"此事件表的外观没有主题文件。请先在主题编辑器中保存。"
+Sheets with no theme of their own match the editor again.,"没有自选主题的事件表再次跟随编辑器。"
+Every sheet with no theme of its own now wears %s.,"所有没有自选主题的事件表现在都使用 %s。"
+Project theme: %s,"项目主题：%s"
+Edit in Theme Editor,"在主题编辑器中编辑"
 A fixed direction,固定方向
 "A label counts from the number it shows to a number. The number is a plain number or a name from your game, such as GameState.score.","标签从当前显示的数字数到目标数字。数字可以是普通数字,也可以是游戏里的名称,例如 GameState.score。"
 A node,一个节点
@@ -10866,30 +10866,30 @@ Force y,力 y
 Force z,力 z
 Label node,标签节点
 Pick a property first,请先选择属性
-"A base for dark and a base for light, one accent, a text colour for each. Generate fills both columns at once; anything you then change by hand stays yours.",为深色选一个底色，为浅色选一个底色，再选一个强调色，以及各自的文字颜色。生成会一次填好两列；之后你手动改的内容会保留。
-"Rebuild every colour token, dark and light, from the colours above.",根据上面的颜色重新生成每一种深色和浅色。
-The open sheet keeps its own copy of a theme; pick the theme again to update it.,已打开的表单保留着自己的主题副本；请重新选择该主题来更新它。
-Preview as,预览为
-Dark,深色
-Only the sample sheet changes. Your sheet wears the side that matches Godot's editor theme.,只有示例表单会变化。你的表单使用与 Godot 编辑器主题相符的一侧。
-Contrast %s : 1 on %s (%s); %s : 1 reads comfortably.,对比度 %s : 1，位于 %s 上（%s）；%s : 1 阅读舒适。
-(no light line: one colour for both),（无浅色行：两侧同一种颜色）
-(no light line: worked out from the editor),（无浅色行：由编辑器计算）
-Same colour in dark and light: click to give light its own,深色与浅色相同：点击为浅色指定自己的颜色
-Separate colours: click to use the dark colour in both,两侧颜色不同：点击让两侧都使用深色
-Worked out from the editor. Pick a colour to give light its own.,由编辑器计算。选择一种颜色可为浅色指定自己的颜色。
-auto,自动
-Follow the editor in light,浅色时跟随编辑器
-Follows the editor,跟随编辑器
-Starters (copy to edit),模板(复制后编辑)
-worked out from the editor,由编辑器推算
-same colour in both,两边使用同一颜色
-hard to read on its row,在其所在行上难以阅读
+"A base for dark and a base for light, one accent, a text colour for each. Generate fills both columns at once; anything you then change by hand stays yours.","为深色选一个底色，为浅色选一个底色，再选一个强调色，以及各自的文字颜色。生成会一次填好两列；之后你手动改的内容会保留。"
+"Rebuild every colour token, dark and light, from the colours above.","根据上面的颜色重新生成每一种深色和浅色。"
+The open sheet keeps its own copy of a theme; pick the theme again to update it.,"已打开的表单保留着自己的主题副本；请重新选择该主题来更新它。"
+Preview as,"预览为"
+Dark,"深色"
+Only the sample sheet changes. Your sheet wears the side that matches Godot's editor theme.,"只有示例表单会变化。你的表单使用与 Godot 编辑器主题相符的一侧。"
+Contrast %s : 1 on %s (%s); %s : 1 reads comfortably.,"对比度 %s : 1，位于 %s 上（%s）；%s : 1 阅读舒适。"
+(no light line: one colour for both),"（无浅色行：两侧同一种颜色）"
+(no light line: worked out from the editor),"（无浅色行：由编辑器计算）"
+Same colour in dark and light: click to give light its own,"深色与浅色相同：点击为浅色指定自己的颜色"
+Separate colours: click to use the dark colour in both,"两侧颜色不同：点击让两侧都使用深色"
+Worked out from the editor. Pick a colour to give light its own.,"由编辑器计算。选择一种颜色可为浅色指定自己的颜色。"
+auto,"自动"
+Follow the editor in light,"浅色时跟随编辑器"
+Follows the editor,"跟随编辑器"
+Starters (copy to edit),"模板(复制后编辑)"
+worked out from the editor,"由编辑器推算"
+same colour in both,"两边使用同一颜色"
+hard to read on its row,"在其所在行上难以阅读"
 "Worked out from Godot's editor, dark or light. Change anything and it becomes a theme of your own: Save As asks where to keep it.","由 Godot 编辑器推算,深色或浅色。改动任何内容后它就成为你自己的主题:另存为会询问保存位置。"
 "A starter that comes with the plugin, so a plugin update would replace it. Save a Copy makes your own in eventsheet_themes/ and leaves the starter as shipped.","随插件提供的模板,插件更新会将其替换。保存副本会在 eventsheet_themes/ 中创建你自己的主题,模板保持原样。"
 A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,"随演示提供的主题。保存副本会在 eventsheet_themes/ 中创建你自己的主题,此主题保持原样。"
 A file in your project. Save writes it in place (Ctrl+S) and every open sheet wearing it repaints.,"项目中的文件。保存会就地写入 (Ctrl+S),所有使用它的已打开表格都会重绘。"
-not a file: the colours come from Godot's editor theme,不是文件:颜色来自 Godot 编辑器主题
+not a file: the colours come from Godot's editor theme,"不是文件:颜色来自 Godot 编辑器主题"
 a card of yours plays here only when its script is marked @tool,自定义卡片仅在其脚本标记为 @tool 时才会在此播放
 Edit this value in the card's script.,请在卡片的脚本中编辑此值。
 Yours,自定义
@@ -10900,7 +10900,7 @@ Show its cards,显示其卡片
 Showing the cards of %s.,正在显示 %s 的卡片。
 No sheet in this project plays %s.,此项目中没有表播放 %s。
 Find what plays this,查找谁在播放它
-"There is no file at %s, so no sheet was opened.",%s 处没有文件，因此没有打开工作表。
+"There is no file at %s, so no sheet was opened.","%s 处没有文件，因此没有打开工作表。"
 A block cannot be disabled. Delete it to stop it writing its line.,代码块无法禁用。请删除它，让它不再写出自己的那一行。
 "This block is marked disabled, but it still runs. Delete it to stop it writing its line.",此代码块被标记为已禁用，但它仍会运行。请删除它，让它不再写出自己的那一行。
 "This card's timing is not the default: it waits, repeats, counts real time, or is not always felt.",这张卡片的时序不是默认值：它会等待、重复、按真实时间计时，或并非每次都触发。
@@ -10927,7 +10927,7 @@ Ring,圆环
 Cone,扇形
 Stamp,图章
 radius %s,半径 %s
-"radius %s, %s px thick",半径 %s，粗细 %s px
+"radius %s, %s px thick","半径 %s，粗细 %s px"
 %s x %s,%s × %s
 %s px long,长 %s px
 %s° wide,宽 %s°
@@ -10947,22 +10947,22 @@ Dash,线段
 Style,样式
 Line look,线条外观
 grows with the stamp,随图章一起缩放
-"Drawn first, underneath",最先绘制，位于最下层
-"Drawn last, on top",最后绘制，位于最上层
+"Drawn first, underneath","最先绘制，位于最下层"
+"Drawn last, on top","最后绘制，位于最上层"
 Add shape,添加形状
 Enter adds the highlighted shape.,按 Enter 添加高亮的形状。
 texture not found,找不到纹理
 %s (not found),%s（未找到）
-"Radius is 0, so this circle draws nothing.",半径为 0，所以这个圆形不会绘制任何内容。
-"Radius is 0, so this ring draws nothing.",半径为 0，所以这个圆环不会绘制任何内容。
-"Width is 0, so this rectangle draws nothing.",宽度为 0，所以这个矩形不会绘制任何内容。
-"Height is 0, so this rectangle draws nothing.",高度为 0，所以这个矩形不会绘制任何内容。
-"The start and the end are the same point, so this line has no length.",起点和终点是同一个点，所以这条线没有长度。
-"FOV is 0, so this cone draws nothing.",视野为 0，所以这个扇形不会绘制任何内容。
-"Radius is 0, so this cone draws nothing.",半径为 0，所以这个扇形不会绘制任何内容。
-"No texture yet, so this shape draws nothing.",还没有纹理，所以这个形状不会绘制任何内容。
-"The texture could not be loaded, so this shape draws nothing.",无法加载纹理，所以这个形状不会绘制任何内容。
-"""%s"" is not a shape this list knows. It is kept as it is.",“%s”不是此列表认识的形状，将原样保留。
+"Radius is 0, so this circle draws nothing.","半径为 0，所以这个圆形不会绘制任何内容。"
+"Radius is 0, so this ring draws nothing.","半径为 0，所以这个圆环不会绘制任何内容。"
+"Width is 0, so this rectangle draws nothing.","宽度为 0，所以这个矩形不会绘制任何内容。"
+"Height is 0, so this rectangle draws nothing.","高度为 0，所以这个矩形不会绘制任何内容。"
+"The start and the end are the same point, so this line has no length.","起点和终点是同一个点，所以这条线没有长度。"
+"FOV is 0, so this cone draws nothing.","视野为 0，所以这个扇形不会绘制任何内容。"
+"Radius is 0, so this cone draws nothing.","半径为 0，所以这个扇形不会绘制任何内容。"
+"No texture yet, so this shape draws nothing.","还没有纹理，所以这个形状不会绘制任何内容。"
+"The texture could not be loaded, so this shape draws nothing.","无法加载纹理，所以这个形状不会绘制任何内容。"
+"""%s"" is not a shape this list knows. It is kept as it is.","“%s”不是此列表认识的形状，将原样保留。"
 Unknown shape,未知形状
 Shows this same list as a table. Nothing is saved differently.,以表格显示同一个列表。保存的内容不会有任何变化。
 Show as cards,显示为卡片
@@ -10970,7 +10970,7 @@ Shows this list as cards again.,再次以卡片显示此列表。
 Move to bottom,移到底部
 Shapes (%d),形状 (%d)
 Dash offset,虚线偏移
-Line %d: rename %s to %s. Nothing else changed.,第 %d 行：把 %s 改名为 %s。其他内容没有变化。
+"Line %d: rename %s to %s. Nothing else changed.","第 %d 行：把 %s 改名为 %s。其他内容没有变化。"
 Fade in,淡入
 Custom curve,自定义曲线
 rises from nothing,从零开始上升
@@ -10982,13 +10982,13 @@ Starts at nothing and reaches %s at %s s.,"从零开始,在 %s 秒时达到 %s�
 Starts at %s and is gone at %s s.,"从 %s 开始,在 %s 秒时消失。"
 "Holds %s for %s s, then stops.","保持 %s 共 %s 秒,然后停止。"
 Save the new file where the card can find it,将新文件保存在卡片能找到的位置
-Preview its behaviours,预览其行为
-Stop previews,停止预览
-"Loop is on and nothing in this list takes time, so the player plays it again every frame. Add a Pause or a card with a length.",Loop 已开启，但此列表中没有任何需要时间的内容，因此播放器每一帧都会重新播放。请添加暂停，或添加有时长的卡片。
-"Nothing in this loop takes time, so the play gives up after %d steps. Give a card in it a length, or the Loop Back a Pause.",此循环中没有任何需要时间的内容，因此播放会在 %d 步后放弃。请给循环中的卡片设置时长，或给 Loop Back 添加暂停。
+Preview its behaviours,"预览其行为"
+Stop previews,"停止预览"
+"Loop is on and nothing in this list takes time, so the player plays it again every frame. Add a Pause or a card with a length.","Loop 已开启，但此列表中没有任何需要时间的内容，因此播放器每一帧都会重新播放。请添加暂停，或添加有时长的卡片。"
+"Nothing in this loop takes time, so the play gives up after %d steps. Give a card in it a length, or the Loop Back a Pause.","此循环中没有任何需要时间的内容，因此播放会在 %d 步后放弃。请给循环中的卡片设置时长，或给 Loop Back 添加暂停。"
 1 card,1 张卡片
 %d cards,%d 张卡片
-This curve has changes that are not saved to its file yet. The game plays the saved file.,此曲线有尚未保存到其文件的更改。游戏使用已保存的文件。
+This curve has changes that are not saved to its file yet. The game plays the saved file.,"此曲线有尚未保存到其文件的更改。游戏使用已保存的文件。"
 Flip,切换
 Pause Or Resume A Juice Player,暂停或继续 Juice Player
 "Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on until it is resumed.",暂停、继续或切换另一个 Juice Player，或者当前这个：比如门开着时暂停的循环警报。暂停的列表会停在当前卡片上，直到继续。
@@ -11143,19 +11143,19 @@ A scene,场景
 "Comes back to rest without swinging past it, in about %s s.","不会越过静止位置,约 %s 秒后回到静止。"
 Swings past rest once and settles in about %s s.,"越过静止位置一次,约 %s 秒后稳定。"
 Swings past rest %d times and settles in about %s s.,"越过静止位置 %d 次,约 %s 秒后稳定。"
-"Amount is 0, so the colours are never split.",数量为 0，所以颜色永远不会分离。
-"The colours stay %s px apart along %s degrees, then snap together after %s s.",颜色保持相距 %s px，沿 %s 度方向，然后在 %s 秒后骤然合拢。
-The colours part by up to %s px along %s degrees and are back together after %s s.,颜色最多分开 %s px，沿 %s 度方向，并在 %s 秒后重新合拢。
-"The colours stay %s px apart, turning as they go, then snap together after %s s.",颜色保持相距 %s px 并不断转向，然后在 %s 秒后骤然合拢。
-"The colours part by up to %s px, turning as they go, and are back together after %s s.",颜色最多分开 %s px 并不断转向，在 %s 秒后重新合拢。
-"There is no Juice node beside this player, so this card does nothing. Add a Juice node under the same object.",此播放器旁边没有 Juice 节点，所以这张卡片什么也不做。请在同一对象下添加 Juice 节点。
-Chromatic Shake,色差抖动
-"Splits the red, green and blue of the screen apart along a direction for a moment, then lets them close again: the colour fringe of a hit, a dash or a landing. It plays through the Juice node beside the player, with the same no-flashing and reduced-effects choices as its Chromatic Shake row.",沿一个方向让屏幕的红、绿、蓝色短暂分开，然后再合拢：受击、冲刺或落地时的色彩边缘。它通过播放器旁边的 Juice 节点播放，与 Chromatic Shake 行一样遵循无闪烁和降低效果的设置。
-Ends,结束方式
-Closes steadily,逐渐合拢
-Holds then snaps shut,保持后骤然合拢
-Wanders,游走
-Along an angle,沿一个角度
+"Amount is 0, so the colours are never split.","数量为 0，所以颜色永远不会分离。"
+"The colours stay %s px apart along %s degrees, then snap together after %s s.","颜色保持相距 %s px，沿 %s 度方向，然后在 %s 秒后骤然合拢。"
+"The colours part by up to %s px along %s degrees and are back together after %s s.","颜色最多分开 %s px，沿 %s 度方向，并在 %s 秒后重新合拢。"
+"The colours stay %s px apart, turning as they go, then snap together after %s s.","颜色保持相距 %s px 并不断转向，然后在 %s 秒后骤然合拢。"
+"The colours part by up to %s px, turning as they go, and are back together after %s s.","颜色最多分开 %s px 并不断转向，在 %s 秒后重新合拢。"
+"There is no Juice node beside this player, so this card does nothing. Add a Juice node under the same object.","此播放器旁边没有 Juice 节点，所以这张卡片什么也不做。请在同一对象下添加 Juice 节点。"
+"Chromatic Shake","色差抖动"
+"Splits the red, green and blue of the screen apart along a direction for a moment, then lets them close again: the colour fringe of a hit, a dash or a landing. It plays through the Juice node beside the player, with the same no-flashing and reduced-effects choices as its Chromatic Shake row.","沿一个方向让屏幕的红、绿、蓝色短暂分开，然后再合拢：受击、冲刺或落地时的色彩边缘。它通过播放器旁边的 Juice 节点播放，与 Chromatic Shake 行一样遵循无闪烁和降低效果的设置。"
+"Ends","结束方式"
+"Closes steadily","逐渐合拢"
+"Holds then snaps shut","保持后骤然合拢"
+"Wanders","游走"
+"Along an angle","沿一个角度"
 Replace scenes?,替换场景?
 "This writes over %d scene(s), starting with %s, and Ctrl+Z cannot take it back.","这会覆盖 %d 个场景(从 %s 开始),Ctrl+Z 无法撤销。"
 Each is kept in Sheet Backups first.,每个文件都会先保存到工作表备份中。
@@ -11245,15 +11245,15 @@ Opened the issue form in your browser. Nothing is sent until you press Submit th
 The script %s followed its sheet to its new place.,脚本 %s 已跟随它的表单到新位置。
 "The open sheet follows %s to its new place, and its script %s goes with it.",已打开的表单会跟随 %s 到新位置，它的脚本 %s 也会一起移动。
 the Load bindings row of the same pair,同一对中的“加载按键绑定”行
-"The slot card, which the Save System keeps for the load menu:",存档位卡片，由 Save System 为读取菜单保存：
+"The slot card, which the Save System keeps for the load menu:","存档位卡片，由 Save System 为读取菜单保存："
 "Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.",键盘 ▸ 保存按键绑定 会写入 %s；Settings ▸ Save Bindings 则把它们保存在 %s 的 [%s] 段中，与选项放在一起。
 "Keyboard ▸ Save bindings, or Settings ▸ Save Bindings",键盘 ▸ 保存按键绑定，或 Settings ▸ Save Bindings
-Saved %s. %s,已保存 %s。%s
-"%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.",未写入 %s：它是你自己的脚本，不是这个事件表生成的，写入会替换你的代码。请重命名这个事件表或该脚本，使两个名称不同，然后重试。
-"%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.",未写入 %s：它属于事件表 %s。请重命名两个事件表中的一个，使名称不同，然后重试。
-"Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.",此表中还没有发布到选择器的内容。在某个函数上勾选“其他表可以使用”，它就会按选择器显示的样子列在这里。
-%d sheet(s) that name it follow it too.,引用它的 %d 个事件表也已一并更新。
-Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.,仍然引用旧路径的你的脚本：%d 个。工具 > 在项目中查找 可列出它们。
+"Saved %s. %s","已保存 %s。%s"
+"%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.","未写入 %s：它是你自己的脚本，不是这个事件表生成的，写入会替换你的代码。请重命名这个事件表或该脚本，使两个名称不同，然后重试。"
+"%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.","未写入 %s：它属于事件表 %s。请重命名两个事件表中的一个，使名称不同，然后重试。"
+"Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.","此表中还没有发布到选择器的内容。在某个函数上勾选“其他表可以使用”，它就会按选择器显示的样子列在这里。"
+"%d sheet(s) that name it follow it too.","引用它的 %d 个事件表也已一并更新。"
+"Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.","仍然引用旧路径的你的脚本：%d 个。工具 > 在项目中查找 可列出它们。"
 The tests could not be started in a second copy of Godot.,无法在第二个 Godot 副本中启动测试。
 The test run ended before it wrote a report. Run the tests from a terminal to see why.,测试运行在写出报告之前就结束了。请在终端中运行测试以查看原因。
 Ctrl+Z takes it out again.,Ctrl+Z 可再次移除。
