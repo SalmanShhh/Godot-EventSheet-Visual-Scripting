@@ -66,7 +66,7 @@ const GODOT_NAMES: Dictionary = {
 	"rotate_to": {"degrees": "Node2D.rotation"},
 	"rotation_shake": {"degrees": "Node2D.rotation"},
 	"position_shake": {"amount": "Node2D.position"},
-	"grayscale": {"amount": "CanvasItem.modulate"},
+	"grayscale": {"amount": "ShaderMaterial.set_shader_parameter"},
 	"light": {"energy_from": "Light2D.energy", "energy_to": "Light2D.energy", "colour_from": "Light2D.color", "colour_to": "Light2D.color"},
 	"scene_look": {"node": "WorldEnvironment.environment"},
 	"bus_effect": {"bus": "AudioServer.get_bus_index"},
