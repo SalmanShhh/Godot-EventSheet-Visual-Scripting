@@ -342,8 +342,12 @@ at all.
 An Android game also needs the **Vibrate** permission ticked in its export preset (Project > Export,
 under Permissions). Without it the phone never buzzes and nothing says why, so the Project Doctor
 warns when an Android preset has it off and the project vibrates. It only reads
-`export_presets.cfg`; ticking the box is yours to do. There is no pattern option on the card: put the
-card between **Loop Start** and **Loop Back** with a **Pause** to pulse it.
+`export_presets.cfg`; ticking the box is yours to do. A pulse pattern needs no extra card: open the
+card's **Timing** foldout and set **Repeat** (how many buzzes) and **Every** (seconds from the start of
+one buzz to the start of the next, so keep it longer than **For** to leave a gap). The badge and the
+list's length count every buzz. **Stop**, **Restore** and leaving the scene end the pattern and quiet
+the motors the player started; a phone cannot be told to stop, so its last buzz finishes. In a script,
+call `vibrate()` again on a timer.
 
 ---
 
