@@ -2969,7 +2969,7 @@ func _tween_card(card: Dictionary, at: float, seconds: float) -> void:
 	tween_property(target, str(card.get("effect", "")), goal, seconds, card.get("from"), trans, eased, bool(card.get("back", false)), relative)
 
 ## The one-number Tween Property card, on the object this player is under.
-func _tween_property(card: Dictionary, property: String, value: float, seconds: float) -> void:
+func _tween_property(_card: Dictionary, property: String, value: float, seconds: float) -> void:
 	if host == null:
 		return
 	tween_property(host, property, value, seconds)
@@ -3321,16 +3321,16 @@ func push_along_motion(body: Node, speed: float = 300.0) -> void:
 		return
 	_shove(body, _no_direction(body is Node3D), speed)
 
-## Shoves a body in a fixed direction, at `speed`. The direction is made one long; a 2D body uses its x and y.
+## Shoves a body along `way`, at `speed`. The way is made one long; a 2D body uses its x and y.
 ## @ace_hidden
-func push_towards(body: Node, direction: Vector3, speed: float = 300.0) -> void:
+func push_towards(body: Node, way: Vector3, speed: float = 300.0) -> void:
 	if body == null:
 		_miss("points at no body")
 		return
 	if body is Node3D:
-		_shove(body, direction.normalized(), speed)
+		_shove(body, way.normalized(), speed)
 	else:
-		_shove(body, Vector2(direction.x, direction.y).normalized(), speed)
+		_shove(body, Vector2(way.x, way.y).normalized(), speed)
 
 ## A Push card. The strength of the play scales the speed unless the card says it does not.
 func _push(card: Dictionary, at: float) -> void:

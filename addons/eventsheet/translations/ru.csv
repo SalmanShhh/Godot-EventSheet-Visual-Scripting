@@ -2116,7 +2116,7 @@ not in %s,нет в %s
 %d triggers,Триггеров: %d
 %d used,используется: %d
 %d more,ещё %d
-"%s - starts in %s","%s - начинает в %s"
+%s - starts in %s,%s - начинает в %s
 "Sort by reading order, by count or by name.","Сортировка по порядку чтения, по количеству или по имени."
 Nothing in this sheet names an object yet.,Пока ничто в этом листе не называет объект.
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,"Этот скрипт ещё не на сцене - перетащите его на узел в доке «Сцена», и его объекты появятся здесь."
@@ -5016,8 +5016,8 @@ Pick Behavior here and the host verbs come off grey.,"Выберите здес�
 "%s already has a script - attach %s to a child node instead, from the Scene dock.","У %s уже есть скрипт - прикрепите %s к дочернему узлу, через панель «Сцена»."
 Couldn't load %s to attach it.,"Не удалось загрузить %s, чтобы прикрепить его."
 Attached %s to %s - its triggers listen to this scene now.,%s прикреплён к %s - его триггеры теперь слушают эту сцену.
-"Inserted ""%s"" - retune the values on the rows themselves.","«%s» вставлен - донастройте значения прямо на строках."
-"Couldn't insert ""%s"" here - open its guide page from the Manual instead.","Не удалось вставить «%s» здесь - откройте вместо этого его страницу в руководстве."
+"Inserted ""%s"" - retune the values on the rows themselves.",«%s» вставлен - донастройте значения прямо на строках.
+"Couldn't insert ""%s"" here - open its guide page from the Manual instead.",Не удалось вставить «%s» здесь - откройте вместо этого его страницу в руководстве.
 Runs only on a behavior sheet - it reads the behavior's host.,Работает только на листе поведения - он читает хост поведения.
 Make this a behavior sheet…,Сделать этот лист листом поведения…
 Runs only inside the editor - this sheet needs Tool switched on.,Работает только внутри редактора - этому листу нужен включённый Tool.
@@ -5346,7 +5346,7 @@ pooled as %s,в пуле как %s
 browse the scene,показать сцену
 "This one is named by an expression the sheet works out as it runs, so there is no file to show.","Она задана выражением, которое лист вычисляет во время работы, поэтому показывать нечего."
 %s - shown in the FileSystem dock.,%s - показан в доке файловой системы.
-"This adds a node to the tree inside a collision callback. A 2D physics body or area added there makes Godot print errors while the physics server is busy. Add it on the next idle moment instead.","Здесь узел добавляется в дерево внутри обратного вызова столкновения. Добавленные так 2D-физическое тело или область заставляют Godot выводить ошибки, пока занят сервер физики. Добавьте его в ближайший свободный момент."
+This adds a node to the tree inside a collision callback. A 2D physics body or area added there makes Godot print errors while the physics server is busy. Add it on the next idle moment instead.,"Здесь узел добавляется в дерево внутри обратного вызова столкновения. Добавленные так 2D-физическое тело или область заставляют Godot выводить ошибки, пока занят сервер физики. Добавьте его в ближайший свободный момент."
 Add it on the next idle moment,Добавить в ближайший свободный момент
 Use the safe spawn row,Использовать безопасную строку появления
 "%s is kept between frames, and anything could have destroyed it by now. Ask whether it is still here before reaching into it.","%s хранится между кадрами, и что угодно могло его уже уничтожить. Спросите, здесь ли он ещё, прежде чем к нему обращаться."
@@ -5388,7 +5388,7 @@ Layer Names,Имена слоёв
 "Type the layer's name first, then Name it…","Сначала введите имя слоя, затем Назвать…"
 """%s"" is already layer %d.","""%s"" - это уже слой %d."
 Layer %d could not be named.,Не удалось назвать слой %d.
-"%s. Undo puts the number back.","%s. Отмена возвращает номер."
+%s. Undo puts the number back.,%s. Отмена возвращает номер.
 Name physics layer,Назвать слой физики
 "%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.","%s обращается к слою столкновений %d, а в Godot слои с 1 по 32 - этот вызов ничего не делает."
 "%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.","%s относится к слою столкновений %d, которому проект не дал имени, - строка читается как число, тогда как все остальные читаются словом. Назовите его в Настройках проекта ▸ Имена слоёв или направьте строку на переименованный слой."
@@ -5401,68 +5401,68 @@ Name physics layer,Назвать слой физики
 "%s is one-way and turned over, so bodies fall through it from above and are stopped from below. The rows here are waiting for the landing it blocks.","%s односторонний и перевёрнут, поэтому тела проваливаются сквозь него сверху и останавливаются снизу. Строки здесь ждут приземления, которое он не пропускает."
 "%s watches %s, and everything in this project that can collide sits on %s - so nothing can reach this trigger. This reads every layer in use, because the trigger names no group.","%s следит за %s, а всё, что может сталкиваться в этом проекте, находится на %s - значит, до этого триггера ничто не дотянется. Здесь читаются все используемые слои, потому что триггер не называет группу."
 "%s watches %s, and the members of ""%s"" sit on %s - so this trigger never fires.","%s следит за %s, а участники ""%s"" находятся на %s - значит, этот триггер никогда не срабатывает."
-"Godot has collision layers 1 to 32.","В Godot слои столкновений с 1 по 32."
-"Open %s to change what it collides with.","Откройте %s, чтобы изменить, с чем оно сталкивается."
-"Show me in the scene","Показать в сцене"
-"Switch monitoring on","Включить отслеживание"
-"Watch collision layer %d","Следить за слоем столкновений %d"
-"monitoring off","отслеживание выключено"
-"monitoring on","отслеживание включено"
-"seen by %s","видят %s"
-"sees %s","видит %s"
-"%s is selected in %s.","%s выделен в %s."
-"%s is not in the project any more.","%s больше нет в проекте."
-"On Collision With Group","При столкновении с группой"
+Godot has collision layers 1 to 32.,В Godot слои столкновений с 1 по 32.
+Open %s to change what it collides with.,"Откройте %s, чтобы изменить, с чем оно сталкивается."
+Show me in the scene,Показать в сцене
+Switch monitoring on,Включить отслеживание
+Watch collision layer %d,Следить за слоем столкновений %d
+monitoring off,отслеживание выключено
+monitoring on,отслеживание включено
+seen by %s,видят %s
+sees %s,видит %s
+%s is selected in %s.,%s выделен в %s.
+%s is not in the project any more.,%s больше нет в проекте.
+On Collision With Group,При столкновении с группой
 "Runs when something from one group hits this body. The group is the filter: the handler's first line leaves at once for anything else, and what did hit rides into the rows underneath. This body BLOCKS what it hits - it needs Contact Monitor switched on and its Max Contacts Reported above zero before Godot will report the hit at all.","Срабатывает, когда что-то из группы ударяет это тело. Группа - это фильтр: первая строка обработчика сразу выходит для всего остального, а то, что ударило, переходит в строки ниже. Это тело ОСТАНАВЛИВАЕТ то, во что врезается - нужно включить Contact Monitor и задать Max Contacts Reported больше нуля, иначе Godot не сообщит об ударе."
-"On collision with {group}","При столкновении с {group}"
+On collision with {group},При столкновении с {group}
 "Only react when the thing that arrived is in this group. Any node joins a group from the Node dock, and the emitted handler leaves immediately when it is not in it.","Реагировать только если пришедшее входит в эту группу. Любой узел вступает в группу из панели Node, и сгенерированный обработчик сразу выходит, если это не так."
-"body","тело"
+body,тело
 "The body that arrived, already known to be in the group. Filled in for you when the trigger fires - use it in the rows underneath.","Пришедшее тело, о котором уже известно, что оно в группе. Заполняется за вас при срабатывании - используйте его в строках ниже."
-"On Stopped Colliding With Group","Когда столкновение с группой закончилось"
+On Stopped Colliding With Group,Когда столкновение с группой закончилось
 "Runs when something from one group stops touching this body - the other half of the collision, for ending a push, a grind or a stand-on. Needs the same Contact Monitor setting the starting half does.","Срабатывает, когда что-то из группы перестаёт касаться этого тела - вторая половина столкновения, чтобы закончить толчок, скольжение или стояние сверху. Нужна та же настройка Contact Monitor, что и для первой половины."
-"On stopped colliding with {group}","Когда столкновение с {group} закончилось"
+On stopped colliding with {group},Когда столкновение с {group} закончилось
 "The body that left, already known to be in the group. Filled in for you when the trigger fires - use it in the rows underneath.","Ушедшее тело, о котором уже известно, что оно в группе. Заполняется за вас при срабатывании - используйте его в строках ниже."
-"On Collision With Group (3D)","При столкновении с группой (3D)"
-"On Stopped Colliding With Group (3D)","Когда столкновение с группой закончилось (3D)"
-"On Overlap With Group","При пересечении с группой"
+On Collision With Group (3D),При столкновении с группой (3D)
+On Stopped Colliding With Group (3D),Когда столкновение с группой закончилось (3D)
+On Overlap With Group,При пересечении с группой
 "Runs when something from one group moves into this area. An area DETECTS and does not block, so the thing keeps going - this is the trigger a checkpoint, a pickup zone or a damage field is written from. What arrived rides into the rows underneath.","Срабатывает, когда что-то из группы входит в эту область. Область ЗАМЕЧАЕТ и не останавливает, так что объект летит дальше - с этого триггера пишут контрольную точку, зону подбора или поле урона. Пришедшее переходит в строки ниже."
-"On overlap with {group}","При пересечении с {group}"
-"On Overlap Ended With Group","Когда пересечение с группой закончилось"
+On overlap with {group},При пересечении с {group}
+On Overlap Ended With Group,Когда пересечение с группой закончилось
 "Runs when something from one group leaves this area - the moment a player walks out of a safe zone, or the last enemy clears a trap.","Срабатывает, когда что-то из группы покидает эту область - момент, когда игрок выходит из безопасной зоны или последний враг сходит с ловушки."
-"On overlap ended with {group}","Когда пересечение с {group} закончилось"
-"On Overlap With Group (3D)","При пересечении с группой (3D)"
-"On Overlap Ended With Group (3D)","Когда пересечение с группой закончилось (3D)"
-"Is Touching Group","Касается группы"
+On overlap ended with {group},Когда пересечение с {group} закончилось
+On Overlap With Group (3D),При пересечении с группой (3D)
+On Overlap Ended With Group (3D),Когда пересечение с группой закончилось (3D)
+Is Touching Group,Касается группы
 "True while at least one body from this group is inside this area. The standing question beside the two arrival triggers - ask it when what matters is the state now, not the moment it changed.","Истина, пока хотя бы одно тело из этой группы находится внутри области. Постоянный вопрос рядом с двумя триггерами прибытия - задавайте его, когда важно нынешнее состояние, а не момент изменения."
-"is touching {group}","касается {group}"
-"The group to look for among the bodies inside this area right now.","Группа, которую искать среди тел, находящихся сейчас внутри области."
-"Is Touching Group (3D)","Касается группы (3D)"
+is touching {group},касается {group}
+The group to look for among the bodies inside this area right now.,"Группа, которую искать среди тел, находящихся сейчас внутри области."
+Is Touching Group (3D),Касается группы (3D)
 "This node is an area: it notices what arrives and lets it through. Blocking is a body's job, so pair this with a body if the thing should also be stopped.","Этот узел - область: он замечает пришедшее и пропускает его. Останавливать - дело тела, так что поставьте рядом тело, если объект должен ещё и остановиться."
 "This node is a body: what it hits stops, and the hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero. An area would notice the same arrival without stopping anything.","Этот узел - тело: то, во что оно врезается, останавливается, а об ударе сообщается только пока включён Contact Monitor и Max Contacts Reported больше нуля. Область заметила бы то же прибытие, ничего не останавливая."
-"On Landed","При приземлении"
-"On Landed (3D)","При приземлении (3D)"
-"On Left The Ground","При отрыве от земли"
-"On Left The Ground (3D)","При отрыве от земли (3D)"
-"Just Landed","Только что приземлился"
-"Just Landed (3D)","Только что приземлился (3D)"
-"Just Left The Ground","Только что оторвался от земли"
-"Just Left The Ground (3D)","Только что оторвался от земли (3D)"
-"On First Overlap","При первом перекрытии"
-"On First Overlap (3D)","При первом перекрытии (3D)"
-"On Last Overlap Ended","Когда закончилось последнее перекрытие"
-"On Last Overlap Ended (3D)","Когда закончилось последнее перекрытие (3D)"
-"Is The First One In","Первый внутри"
-"Is The First One In (3D)","Первый внутри (3D)"
-"Was The Last One Out","Был последним снаружи"
-"Was The Last One Out (3D)","Был последним снаружи (3D)"
-"On landed","При приземлении"
-"On left the ground","При отрыве от земли"
-"just landed","только что приземлился"
-"just left the ground","только что оторвался от земли"
-"On first overlap","При первом перекрытии"
-"On last overlap ended","Когда закончилось последнее перекрытие"
-"is the first one in","первый внутри"
-"was the last one out","был последним снаружи"
+On Landed,При приземлении
+On Landed (3D),При приземлении (3D)
+On Left The Ground,При отрыве от земли
+On Left The Ground (3D),При отрыве от земли (3D)
+Just Landed,Только что приземлился
+Just Landed (3D),Только что приземлился (3D)
+Just Left The Ground,Только что оторвался от земли
+Just Left The Ground (3D),Только что оторвался от земли (3D)
+On First Overlap,При первом перекрытии
+On First Overlap (3D),При первом перекрытии (3D)
+On Last Overlap Ended,Когда закончилось последнее перекрытие
+On Last Overlap Ended (3D),Когда закончилось последнее перекрытие (3D)
+Is The First One In,Первый внутри
+Is The First One In (3D),Первый внутри (3D)
+Was The Last One Out,Был последним снаружи
+Was The Last One Out (3D),Был последним снаружи (3D)
+On landed,При приземлении
+On left the ground,При отрыве от земли
+just landed,только что приземлился
+just left the ground,только что оторвался от земли
+On first overlap,При первом перекрытии
+On last overlap ended,Когда закончилось последнее перекрытие
+is the first one in,первый внутри
+was the last one out,был последним снаружи
 "Runs on the step this character's feet arrive on the floor - the landing itself, not the standing that follows it. Landing is where the dust, the thud and the squash go. It is a moment of the physics step rather than a signal, so the question underneath says which step.","Выполняется на том шаге, когда ноги этого персонажа встают на пол - само приземление, а не стояние после него. Пыль, удар и сжатие относятся сюда. Это момент шага физики, а не сигнал, поэтому вопрос ниже говорит, о каком шаге речь."
 "Runs on the step this character's feet leave the floor, whichever way they left it: a jump and a walked-off ledge are the same moment to this row. The half that starts coyote time, and the half a fall animation begins on.","Выполняется на том шаге, когда ноги этого персонажа отрываются от пола, каким бы способом это ни произошло: прыжок и сход с уступа для этой строки один и тот же момент. Половина, с которой начинается койот-тайм и запускается анимация падения."
 "True on the one step the feet arrive on the floor: on the floor now, and not on it last step. It keeps last step's footing in a variable of its own and updates it AFTER asking - a memory updated before the question is asked would always agree with the present, and the row could never be true.","Истинно ровно на том шаге, когда ноги встают на пол: сейчас на полу, а на прошлом шаге не были. Опора прошлого шага хранится в собственной переменной, которая обновляется ПОСЛЕ вопроса - память, обновлённая до него, всегда совпадала бы с настоящим, и строка никогда не была бы истинной."
@@ -5471,47 +5471,47 @@ Name physics layer,Назвать слой физики
 "Runs when something leaves this area and nothing is left inside - the plate coming back up, the room going quiet. The other half of the first arrival, and the pair a door or a lift is written from.","Выполняется, когда что-то покидает эту область и внутри ничего не остаётся - плита возвращается, комната затихает. Вторая половина первого входа и пара, из которой пишется дверь или лифт."
 "True when exactly one body is inside this area. Asked in an arrival, that is the arrival which filled an empty area: what just came in is already listed by then, so a list of one held nothing a moment ago.","Истинно, когда внутри этой области ровно одно тело. Спрошенное во входе, это тот вход, который заполнил пустую область: только что вошедшее уже в списке, значит список из одного мгновение назад был пуст."
 "True when nothing is inside this area. Asked in a departure, that is the departure which emptied it: what just left is already off the list by then, so an empty list means it was the last one.","Истинно, когда внутри этой области ничего нет. Спрошенное в выходе, это тот выход, который её опустошил: только что вышедшее уже вне списка, значит пустой список означает, что оно было последним."
-"The body that arrived. Filled in for you when the trigger fires - use it in the rows underneath.","Тело, которое прибыло. Заполняется за вас при срабатывании триггера - используйте его в строках ниже."
-"The body that left. Filled in for you when the trigger fires - use it in the rows underneath.","Тело, которое ушло. Заполняется за вас при срабатывании триггера - используйте его в строках ниже."
+The body that arrived. Filled in for you when the trigger fires - use it in the rows underneath.,"Тело, которое прибыло. Заполняется за вас при срабатывании триггера - используйте его в строках ниже."
+The body that left. Filled in for you when the trigger fires - use it in the rows underneath.,"Тело, которое ушло. Заполняется за вас при срабатывании триггера - используйте его в строках ниже."
 "This node is a character body: your own rows drive it, one move at a time, and it stops when it runs into something. What it hit comes back from its own move rather than from a signal.","Этот узел - тело персонажа: его двигают ваши собственные строки, по одному движению за раз, и оно останавливается, когда во что-то упирается. Что оно задело, возвращается из самого движения, а не из сигнала."
-"This node is a rigid body: physics throws it around and it stops what it hits. The hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero.","Этот узел - твёрдое тело: физика бросает его и оно останавливает то, во что попадает. Столкновение сообщается, только пока включён Contact Monitor и Max Contacts Reported больше нуля."
+This node is a rigid body: physics throws it around and it stops what it hits. The hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero.,"Этот узел - твёрдое тело: физика бросает его и оно останавливает то, во что попадает. Столкновение сообщается, только пока включён Contact Monitor и Max Contacts Reported больше нуля."
 "This node is a static body: it stands still and things stop against it. It never moves itself, so the news of a touch usually belongs on whatever ran into it.","Этот узел - статическое тело: оно стоит на месте, и вещи останавливаются об него. Само оно никогда не двигается, поэтому весть о касании обычно принадлежит тому, что в него врезалось."
-"Nothing in this scene can touch anything yet - this row needs one: %s.","В этой сцене пока ничто не может ничего коснуться - этой строке нужен один: %s."
-"%d claimed by an entry · %d nothing claims · %d%% renders as rows rather than blocks","%d заявлено записью · %d никем не заявлено · %d%% рисуется строками, а не блоками"
-"Saves back byte-identical.","Сохраняется байт в байт."
-"Line %d comes back different.","Строка %d возвращается другой."
-"buffer","буфер"
-"saved","сохранено"
+Nothing in this scene can touch anything yet - this row needs one: %s.,В этой сцене пока ничто не может ничего коснуться - этой строке нужен один: %s.
+%d claimed by an entry · %d nothing claims · %d%% renders as rows rather than blocks,"%d заявлено записью · %d никем не заявлено · %d%% рисуется строками, а не блоками"
+Saves back byte-identical.,Сохраняется байт в байт.
+Line %d comes back different.,Строка %d возвращается другой.
+buffer,буфер
+saved,сохранено
 "Mark each value span as [[name: text]], then check it.","Отметьте каждый участок значения как [[name: text]], затем проверьте."
-"Refused: %s","Отказ: %s"
-"This example derives an entry.","Из этого примера выводится запись."
-"Lift Workbench - what claims each line","Верстак чтения - что заявляет каждую строку"
-"Paste code here","Вставьте код сюда"
-"Claimed by","Заявлена"
-"What claims each line","Что заявляет каждую строку"
-"What it saves back as","Что будет сохранено"
-"The rows it opens as","Строки, какими оно откроется"
-"Draft an example…","Набросать пример…"
-"Take the selected unclaimed line to the by-example form and derive an entry from it.","Перенести выбранную незаявленную строку в форму по примеру и вывести из неё запись."
-"Draft an example","Набросать пример"
-"The line, with its value spans marked","Строка с отмеченными участками значений"
+Refused: %s,Отказ: %s
+This example derives an entry.,Из этого примера выводится запись.
+Lift Workbench - what claims each line,Верстак чтения - что заявляет каждую строку
+Paste code here,Вставьте код сюда
+Claimed by,Заявлена
+What claims each line,Что заявляет каждую строку
+What it saves back as,Что будет сохранено
+The rows it opens as,"Строки, какими оно откроется"
+Draft an example…,Набросать пример…
+Take the selected unclaimed line to the by-example form and derive an entry from it.,Перенести выбранную незаявленную строку в форму по примеру и вывести из неё запись.
+Draft an example,Набросать пример
+"The line, with its value spans marked",Строка с отмеченными участками значений
 "A value span is [[name: text]], or [[name|fragment: text]] to say which fragment it is. Everything outside a span is matched literally.","Участок значения записывается как [[name: text]] или [[name|fragment: text]], чтобы назвать фрагмент. Всё вне участка сверяется дословно."
-"Entry id","Идентификатор записи"
-"Row it means","Какую строку означает"
-"The entry this derives","Запись, которая отсюда выводится"
+Entry id,Идентификатор записи
+Row it means,Какую строку означает
+The entry this derives,"Запись, которая отсюда выводится"
 Nothing drafted yet.,Пока ничего не набросано.
 "These are asked before every shipped spelling, in this window only. They are gone when it closes, and nothing on disk is written.",Их спрашивают раньше любого поставляемого написания и только в этом окне. С закрытием окна они исчезают; на диск ничего не пишется.
 Clear drafts,Очистить черновики
 "Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.","Очищает черновики этого окна, и каждая строка, которую они забирали, снова читается как раньше."
-"Check","Проверить"
-"Add draft","Добавить черновик"
+Check,Проверить
+Add draft,Добавить черновик
 "Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.","Прочитаны первые %d скрипт(ов) из %d, в порядке путей. Список ниже - выборка по этому проекту, а не весь проект: каждый раз читаются одни и те же скрипты."
 "%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.","%d%% прочитанного рисуется строками, и у каждой из них есть имя. Здесь ничто не остаётся кодом."
 "%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.","%d%% прочитанного рисуется строками - это вопрос отрисовки. Вопрос имён ниже: %d строк(и) остаются честным кодом, потому что ни один словарь их пока не называет. Оба утверждения верны, и это не одно и то же число."
 "%d more shape(s) are said more than once here, over %d line(s). The ledger names the commonest and counts the rest.","Здесь ещё %d форм(ы) встречаются более одного раза, на %d строк(ах). Список называет самые частые и считает остальные."
-"%d line(s) are the same shape: %s","%d строк(и) имеют одну и ту же форму: %s"
-"line %d: %s","строка %d: %s"
-"... and %d more line(s) of the same shape.","... и ещё %d строк(и) той же формы."
+%d line(s) are the same shape: %s,%d строк(и) имеют одну и ту же форму: %s
+line %d: %s,строка %d: %s
+... and %d more line(s) of the same shape.,... и ещё %d строк(и) той же формы.
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d строк(и) имеют формы, которые здесь больше ничто не повторяет. Их считают, а не перечисляют: строка, сказанная один раз, ничья таблица, и ей положено остаться кодом."
 "%d line(s) inside those runs hold no statement to shape - a note, or the inside of a text block.","%d строк(и) внутри этих участков не содержат инструкции, у которой была бы форма: это заметка или содержимое текстового блока."
 On object freed,При освобождении объекта
@@ -5539,68 +5539,68 @@ Notifications,Уведомления
 "Runs as the very last thing that happens to this object, just before its memory goes. Different from On destroyed, which is the node leaving the tree and can happen more than once - this happens exactly once and nothing follows it, so it is where a handle held somewhere else gets given back.","Выполняется самым последним из того, что происходит с этим объектом, прямо перед освобождением памяти. Это не то же самое, что уничтожение: выход узла из дерева может случиться не один раз, а это случается ровно один раз, и после него ничего нет, поэтому здесь возвращают ссылку, которую держали где-то ещё."
 "Runs when the player closes the window - the X, or the system asking the game to quit. The game does NOT quit by itself when this arrives if the project is set to handle it, which is what makes room for a ""save first?"" prompt.","Выполняется, когда игрок закрывает окно - крестиком или когда система просит игру завершиться. Игра НЕ закрывается сама, когда это приходит, если проект настроен обрабатывать это самостоятельно, и именно это оставляет место для вопроса ""сохранить сначала?""."
 "user:// - the player's folder: writable, one per player, survives updates.","user:// - папка игрока: доступна для записи, своя у каждого игрока, переживает обновления."
-"res:// - the game's own files: READ-ONLY once exported.","res:// - собственные файлы игры: ТОЛЬКО ДЛЯ ЧТЕНИЯ после экспорта."
-"an absolute path: this folder exists on one computer and nowhere else.","абсолютный путь: такая папка есть только на одном компьютере и нигде больше."
+res:// - the game's own files: READ-ONLY once exported.,res:// - собственные файлы игры: ТОЛЬКО ДЛЯ ЧТЕНИЯ после экспорта.
+an absolute path: this folder exists on one computer and nowhere else.,абсолютный путь: такая папка есть только на одном компьютере и нигде больше.
 "user:// is a real folder on the player's machine: %APPDATA%\Godot\app_userdata\<project> on Windows, ~/Library/Application Support/Godot/app_userdata/<project> on macOS, ~/.local/share/godot/app_userdata/<project> on Linux. Open the player's data folder opens it while the game runs.","user:// - это настоящая папка на машине игрока: %APPDATA%\Godot\app_userdata\<project> в Windows, ~/Library/Application Support/Godot/app_userdata/<project> в macOS, ~/.local/share/godot/app_userdata/<project> в Linux. Действие ""Открыть папку данных игрока"" открывает её прямо во время игры."
 "%s writes to a res:// path, which works here and fails in every exported build - res:// is a packed archive once the game is built, not a folder. First: %s.","%s пишет по пути res://, что работает здесь и не работает ни в одной экспортированной сборке - после сборки res:// это упакованный архив, а не папка. Первое: %s."
 "A game writes to user:// - the player's folder, which is writable, one per player, and survives the game being updated.","Игра пишет в user:// - папку игрока: она доступна для записи, своя у каждого игрока и переживает обновление игры."
 "%s reaches a file by an absolute path, which names a folder on one computer and on no other. First: %s.","%s обращается к файлу по абсолютному пути, который называет папку только на одном компьютере. Первое: %s."
-"A file the game WRITES belongs under user://; a file it SHIPS WITH belongs under res:// and inside the project.","Файл, который игра ПИШЕТ, живёт под user://; файл, который она ПОСТАВЛЯЕТ с собой, - под res:// и внутри проекта."
+A file the game WRITES belongs under user://; a file it SHIPS WITH belongs under res:// and inside the project.,"Файл, который игра ПИШЕТ, живёт под user://; файл, который она ПОСТАВЛЯЕТ с собой, - под res:// и внутри проекта."
 "%s reads a user:// file without saying what to use when it is not there, and the first run of a game has no save, no settings and no log. Godot answers with empty text rather than an error, so the game reads nothing as data. First: %s.","%s читает файл user://, не говоря, что использовать, когда его нет, а при первом запуске игры нет ни сохранения, ни настроек, ни лога. Godot отвечает пустым текстом, а не ошибкой, поэтому игра читает пустоту как данные. Первое: %s."
 "Read Text File (or a fallback) says the answer out loud, and the guard is written into the line.","""Прочитать текстовый файл (или запасное значение)"" произносит ответ вслух, и защита записана прямо в строке."
-"%d more like it in this file.","Ещё %d таких же в этом файле."
-"the player's folder","папка игрока"
+%d more like it in this file.,Ещё %d таких же в этом файле.
+the player's folder,папка игрока
 "the game's own files, read-only once exported","собственные файлы игры, после экспорта только для чтения"
-"Table Of File","Таблица файла"
+Table Of File,Таблица файла
 "Reads a .csv with Godot's own CSV reader, one line at a time, and gives you the rows. Quoting is exactly the engine's: a cell in ""double quotes"" may hold the separator, and a doubled """" inside one is a single quote character. Store it with a Set action - the read is several lines long, so it belongs in an action rather than squeezed into a condition.","Читает .csv собственным CSV-читателем Godot, по одной строке за раз, и отдаёт строки. Кавычки работают ровно так, как в движке: ячейка в ""двойных кавычках"" может содержать разделитель, а удвоенные """" внутри неё дают один символ кавычки. Сохраните результат действием ""Задать"": чтение занимает несколько строк, поэтому ему место в действии, а не втиснутым в условие."
-"table of [b]{path}[/b] - {headers}","таблица [b]{path}[/b] - {headers}"
-"The .csv to read. Prefer res:// for data that ships with the game; user:// for a file the game itself wrote.","Читаемый .csv. Для данных, поставляемых с игрой, выбирайте res://; для файла, который игра записала сама, - user://."
-"First line","Первая строка"
+table of [b]{path}[/b] - {headers},таблица [b]{path}[/b] - {headers}
+The .csv to read. Prefer res:// for data that ships with the game; user:// for a file the game itself wrote.,"Читаемый .csv. Для данных, поставляемых с игрой, выбирайте res://; для файла, который игра записала сама, - user://."
+First line,Первая строка
 "How the file's first line is read. Naming the columns gives one record per row, so a field is reachable as row[""price""]; otherwise every line is a plain list of cells.","Как читается первая строка файла. Если она называет столбцы, получается по одной записи на строку и до поля можно дотянуться как row[""price""]; иначе каждая строка - это просто список ячеек."
-"The first line names the columns","Первая строка называет столбцы"
-"Every line is a row","Каждая строка - это строка данных"
-"Write Table To File","Записать таблицу в файл"
+The first line names the columns,Первая строка называет столбцы
+Every line is a row,Каждая строка - это строка данных
+Write Table To File,Записать таблицу в файл
 "Writes rows back out as a .csv with Godot's own CSV writer, so a cell holding the separator or a quote is quoted the way the engine quotes it - and a file written here reads back through Table Of File unchanged.","Записывает строки обратно в .csv собственным CSV-писателем Godot, так что ячейка с разделителем или кавычкой заключается в кавычки ровно так, как это делает движок, - и записанный здесь файл без изменений читается обратно через ""Таблицу файла""."
-"write table [b]{table}[/b] to [b]{path}[/b] - {headers}","записать таблицу [b]{table}[/b] в [b]{path}[/b] - {headers}"
-"File to write. OVERWRITES any existing file. Use user:// - res:// is read-only once the game is exported.","Файл для записи. ПЕРЕЗАПИСЫВАЕТ существующий файл. Используйте user:// - res:// после экспорта игры доступен только для чтения."
+write table [b]{table}[/b] to [b]{path}[/b] - {headers},записать таблицу [b]{table}[/b] в [b]{path}[/b] - {headers}
+File to write. OVERWRITES any existing file. Use user:// - res:// is read-only once the game is exported.,Файл для записи. ПЕРЕЗАПИСЫВАЕТ существующий файл. Используйте user:// - res:// после экспорта игры доступен только для чтения.
 "The rows to write - the Array variable a table expression filled, or one the sheet built itself.","Записываемые строки - переменная Array, заполненная табличным выражением, или собранная самим листом."
 "Whether to write a first line naming the columns. Naming them writes one line per record, in the order the first record's fields are in; otherwise every entry is written as a plain list of cells.","Писать ли первую строку с названиями столбцов. Если да, пишется по строке на запись, в порядке полей первой записи; иначе каждая запись пишется как простой список ячеек."
-"For Each Line In File","Для каждой строки файла"
+For Each Line In File,Для каждой строки файла
 "Runs this event's actions once per LINE of a text file, skipping blank ones. The file is read once and the loop then walks text already in memory, so nothing stays open behind the loop. Windows (CRLF) and old-Mac (CR) endings are handled, and a file that is not there walks nothing. Read the current one as `line`.","Выполняет действия этого события один раз на каждую СТРОКУ текстового файла, пропуская пустые. Файл читается один раз, дальше цикл идёт по тексту в памяти, так что за циклом ничего не остаётся открытым. Окончания строк Windows (CRLF) и старого Mac (CR) обрабатываются, а отсутствующий файл не даёт ни одного прохода. Текущую строку читайте как `line`."
-"for each line of [b]{path}[/b]","для каждой строки [b]{path}[/b]"
+for each line of [b]{path}[/b],для каждой строки [b]{path}[/b]
 "The text file to walk line by line - a log you wrote earlier, a list of level names, a leaderboard body.","Текстовый файл, который проходится построчно, - записанный ранее журнал, список названий уровней, тело таблицы рекордов."
-"written","записывается"
-"read","читается"
-"read and written","читается и записывается"
-"asks the player to pick a file","просит игрока выбрать файл"
-"and %d more path(s)","и ещё %d путь(и)"
-"On Files Dropped","При перетаскивании файлов"
+written,записывается
+read,читается
+read and written,читается и записывается
+asks the player to pick a file,просит игрока выбрать файл
+and %d more path(s),и ещё %d путь(и)
+On Files Dropped,При перетаскивании файлов
 "Runs when the player drags files from their desktop onto the game window and lets go. DESKTOP ONLY: Windows, macOS and Linux raise it, and a web or mobile build never does, so keep another way in beside it.","Выполняется, когда игрок перетаскивает файлы с рабочего стола в окно игры и отпускает их. ТОЛЬКО НА ДЕСКТОПЕ: Windows, macOS и Linux вызывают это событие, а веб- или мобильная сборка - никогда, поэтому оставьте и другой путь."
-"On files dropped {files}","При перетаскивании файлов {files}"
+On files dropped {files},При перетаскивании файлов {files}
 "Every path the player let go of, in one list - a drop can carry more than one file. They are real paths on that machine, not res:// or user:// ones.","Все пути, которые отпустил игрок, одним списком - за одно перетаскивание может прийти несколько файлов. Это настоящие пути на той машине, а не res:// или user://."
-"Ask For A File To Open","Спросить, какой файл открыть"
+Ask For A File To Open,"Спросить, какой файл открыть"
 "Opens the player's own file chooser so they can pick a file to read. The answer arrives as On a file chosen, or as On the ask cancelled - both of which the sheet needs an event for, because the emitted line calls them by name.","Открывает собственный выбор файлов игрока, чтобы он указал файл для чтения. Ответ приходит как При выбранном файле или как При отменённом вопросе - листу нужны оба события, потому что созданная строка вызывает их по имени."
-"Ask for a file to open ({filters})","Спросить, какой файл открыть ({filters})"
-"Filters","Фильтры"
+Ask for a file to open ({filters}),"Спросить, какой файл открыть ({filters})"
+Filters,Фильтры
 "Which files the player may pick. One entry per line of the list, spelled the way Godot spells a filter: the patterns, a semicolon, then the words the chooser shows - ""*.png,*.jpg;Images"".","Какие файлы может выбрать игрок. По одной записи на строку списка, записанной так, как фильтр пишет Godot: шаблоны, точка с запятой, затем слова, которые покажет диалог - ""*.png,*.jpg;Images""."
-"Ask Where To Save","Спросить, куда сохранить"
+Ask Where To Save,"Спросить, куда сохранить"
 "Opens the player's own save chooser so they can name a file and a folder to write into. Nothing is written by this row: the path arrives as On a file chosen, and a write row does the writing.","Открывает собственный диалог сохранения игрока, чтобы он назвал файл и папку. Эта строка ничего не пишет: путь приходит как При выбранном файле, а пишет строка записи."
-"Ask where to save ({filters})","Спросить, куда сохранить ({filters})"
+Ask where to save ({filters}),"Спросить, куда сохранить ({filters})"
 "Which kind of file is being written. One entry per line of the list, spelled the way Godot spells a filter: the patterns, a semicolon, then the words the chooser shows - ""*.png;PNG image"".","Какой файл записывается. По одной записи на строку списка, записанной так, как фильтр пишет Godot: шаблоны, точка с запятой, затем слова, которые покажет диалог - ""*.png;PNG image""."
-"On A File Chosen","При выбранном файле"
+On A File Chosen,При выбранном файле
 "Runs when the player answered an Ask row by picking a file. Both Ask rows end here, so a sheet that asks two different questions remembers which one it asked.","Выполняется, когда игрок ответил на строку вопроса, выбрав файл. Обе строки вопроса заканчиваются здесь, поэтому лист с двумя разными вопросами запоминает, какой из них задал."
-"On a file chosen {path}","При выбранном файле {path}"
+On a file chosen {path},При выбранном файле {path}
 "The file the player picked, as a real path on their machine. It is a path and nothing more - reading it is a separate row.","Файл, который выбрал игрок, как настоящий путь на его машине. Это только путь - чтение является отдельной строкой."
-"On The Ask Cancelled","При отменённом вопросе"
-"Runs when the player closed an Ask row's chooser without picking anything. Put whatever was waiting on the answer back the way it was here.","Выполняется, когда игрок закрыл диалог строки вопроса, ничего не выбрав. Верните здесь в прежнее состояние то, что ждало ответа."
-"On the ask cancelled","При отменённом вопросе"
-"Image From File","Изображение из файла"
+On The Ask Cancelled,При отменённом вопросе
+Runs when the player closed an Ask row's chooser without picking anything. Put whatever was waiting on the answer back the way it was here.,"Выполняется, когда игрок закрыл диалог строки вопроса, ничего не выбрав. Верните здесь в прежнее состояние то, что ждало ответа."
+On the ask cancelled,При отменённом вопросе
+Image From File,Изображение из файла
 "Reads a picture from outside the project and answers with a texture, ready to hand to a Sprite or a TextureRect. No import step is involved: what you get back is a texture in a variable, and it lives only as long as something holds it.","Читает картинку вне проекта и отвечает текстурой, готовой для Sprite или TextureRect. Никакого импорта: возвращается текстура в переменной, и живёт она только пока её кто-то держит."
 "image of file {path}, or {fallback}","изображение файла {path}, иначе {fallback}"
 "The picture to read, in any format Godot decodes at runtime: .png, .jpg / .jpeg, .webp, .bmp, .tga, .svg, .ktx, .dds and .hdr.","Картинка для чтения, в любом формате, который Godot декодирует во время выполнения: .png, .jpg / .jpeg, .webp, .bmp, .tga, .svg, .ktx, .dds и .hdr."
-"If missing","Если нет"
+If missing,Если нет
 "What the expression reads as when there is no file at that path. Leave it blank to read the file plainly, with no guard around it.","Чем становится выражение, когда по этому пути файла нет. Оставьте пустым, чтобы читать файл напрямую, без охраны вокруг."
-"Sound From File","Звук из файла"
+Sound From File,Звук из файла
 "Reads a sound from outside the project and answers with an audio stream, ready to hand to a player node. The line names one reader per format the engine decodes at runtime, so a file it cannot decode reads as the fallback rather than as silence nobody explained.","Читает звук вне проекта и отвечает аудиопотоком, готовым для узла воспроизведения. В строке названо по одному читателю на каждый формат, который движок декодирует во время выполнения, поэтому файл, который он не может декодировать, читается как запасное значение, а не как необъяснённая тишина."
 "sound of file {path}, or {fallback}","звук файла {path}, иначе {fallback}"
 "The sound to read. EXACTLY THREE formats decode at runtime and the line checks for those three by extension: .mp3, .ogg (Ogg Vorbis) and .wav. Prefer a variable here - the path is read once per format the line checks.","Звук для чтения. Во время выполнения декодируются РОВНО ТРИ формата, и строка проверяет эти три по расширению: .mp3, .ogg (Ogg Vorbis) и .wav. Лучше передать сюда переменную - путь читается по разу на каждый проверяемый формат."
@@ -5704,10 +5704,10 @@ re-entered %s,снова вошёл в %s
 This happened %d times in this run.,Это произошло %d раз за этот запуск.
 Row,Строка
 States,Состояния
-"OK","OK"
-"Patrol · Chase · Stagger","Патруль · Погоня · Оглушение"
+OK,OK
+Patrol · Chase · Stagger,Патруль · Погоня · Оглушение
 "The states this one object can be in, separated by anything you like. They become an enum, and every row that names a state is offered this list as it types - so a state is picked rather than remembered, and a row naming one that is not here is what the Doctor calls out.","Состояния, в которых может находиться этот объект; разделяйте чем угодно. Они становятся перечислением, и каждой строке, называющей состояние, этот список предлагается прямо при наборе - состояние выбирают, а не вспоминают, а о строке, назвавшей отсутствующее здесь, скажет Doctor."
-"The state the object opens in - the value the state variable is declared with. It is also the one state that needs no row going to it.","Состояние, в котором объект начинает, - значение, с которым объявлена переменная состояния. Это также единственное состояние, к которому не нужна ведущая строка."
+The state the object opens in - the value the state variable is declared with. It is also the one state that needs no row going to it.,"Состояние, в котором объект начинает, - значение, с которым объявлена переменная состояния. Это также единственное состояние, к которому не нужна ведущая строка."
 Error,Ошибка
 Warning,Предупреждение
 this sheet,этот лист
@@ -5943,7 +5943,7 @@ The play button runs %s now.,Кнопка запуска теперь выпол
 Add event,Добавить событие
 + Add…,+ Добавить…
 Add an event to this sheet.,Добавить событие в этот лист.
-"Everything you can add here - the same menu right-clicking empty space opens.","Всё, что здесь можно добавить - то же меню, что открывает правый клик по пустому месту."
+Everything you can add here - the same menu right-clicking empty space opens.,"Всё, что здесь можно добавить - то же меню, что открывает правый клик по пустому месту."
 "The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back.","Панель инструментов отдыхает: каждая кнопка находится в меню или под стрелкой, клавиши не изменились. Вид > Полная панель инструментов вернёт всё."
 Sheet theme,Тема листа
 "The theme this sheet is drawn with - the bundled presets, plus Match Editor, which derives the sheet's colours from your own editor theme. Remembered on the sheet, so it travels with the file.","Тема, которой отрисован этот лист - встроенные пресеты и Match Editor, выводящий цвета листа из вашей темы редактора. Запоминается в листе, поэтому путешествует вместе с файлом."
@@ -9727,9 +9727,9 @@ Fold or unfold what this kind inherits.,Свернуть или разверну
 Double-click to start it at another value.,Двойной щелчок - начать с другого значения.
 Right-click to replace it in %s.,Правый щелчок - заменить в %s.
 "%s changed since this step, so no file was written and the sheet is not saved.","%s изменился после этого шага, поэтому ни один файл не записан и лист не сохранён."
-"In %s, 1 test of %s will test %s instead.","В %s 1 проверка %s теперь будет проверять %s."
-"In %s, %d tests of %s will test %s instead.","В %s: проверок (%d) состояния %s теперь будут проверять %s."
-"%s saves %s as a number: after the removal, a saved number can name a different state.","%s хранит %s как число: после удаления сохранённое число может обозначать другое состояние."
+"In %s, 1 test of %s will test %s instead.",В %s 1 проверка %s теперь будет проверять %s.
+"In %s, %d tests of %s will test %s instead.",В %s: проверок (%d) состояния %s теперь будут проверять %s.
+"%s saves %s as a number: after the removal, a saved number can name a different state.",%s хранит %s как число: после удаления сохранённое число может обозначать другое состояние.
 + Add to '%s'…,+ Добавить в '%s'…
 "+ Add to ""%s""…","+ Добавить в ""%s""…"
 "Add event to ""%s""","Добавить событие в ""%s"""
@@ -10028,31 +10028,31 @@ Every physics tick,Каждый физический тик
 every physics tick,каждый физический тик
 no starting value,нет начального значения
 "%s is Array[%s] and %s is Array[%s], and a typed array only holds its own type.","%s - Array[%s], а %s - Array[%s]; типизированный массив хранит только свой тип."
-different types,"разные типы"
-the two types differ,"типы различаются"
+different types,разные типы
+the two types differ,типы различаются
 For each popped from the front of %s as %s,"Для каждого элемента, извлечённого из начала %s, как %s"
 For each popped from the back of %s as %s,"Для каждого элемента, извлечённого из конца %s, как %s"
 Edit it anyway,Всё равно изменить
 %s is now editable.,%s теперь можно редактировать.
 %s is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.,%s - встроенное поведение: добавление новой версии пака заменит этот файл и ваши правки.
 This function is locked - right-click it and choose Unlock this function,Эта функция заблокирована - щёлкните правой кнопкой и выберите Разблокировать эту функцию
-group %s,"группа %s"
-list %s,"список %s"
-Choose a group or list,"Выбрать группу или список"
-Use a group instead of %s,"Использовать группу вместо %s"
+group %s,группа %s
+list %s,список %s
+Choose a group or list,Выбрать группу или список
+Use a group instead of %s,Использовать группу вместо %s
 "%s is now the group ""%s"": add_to_group, remove_from_group, is_in_group and For each in group.","%s теперь группа ""%s"": add_to_group, remove_from_group, is_in_group и For each in group."
-Pick the %s,"Выбрать %s"
-This event now picks %s.,"Теперь это событие выбирает %s."
-Drop freed instances first,"Сначала убрать освобождённые экземпляры"
+Pick the %s,Выбрать %s
+This event now picks %s.,Теперь это событие выбирает %s.
+Drop freed instances first,Сначала убрать освобождённые экземпляры
 Added a row above the loop that drops freed instances from %s.,"Над циклом добавлена строка, убирающая освобождённые экземпляры из %s."
-Use a group instead,"Использовать группу вместо этого"
+Use a group instead,Использовать группу вместо этого
 "%s holds nodes but is never read by position or order. A group is Godot's way to keep an unordered set of nodes, and it drops a destroyed instance by itself.","%s хранит узлы, но никогда не читается по позиции или порядку. Группа - способ Godot хранить неупорядоченный набор узлов, она сама убирает уничтоженный экземпляр."
 "%s is read in a loop but nothing on this sheet ever takes a destroyed instance out of it, and the next use of a freed one is an error (a group needs no such clean-up).","%s читается в цикле, но ничто в этом листе не убирает из неё уничтоженный экземпляр, а следующее использование освобождённого - ошибка (группе такая очистка не нужна)."
-Pick the %s from a group,"Выбрать %s из группы"
-Pick the %s from %s,"Выбрать %s из %s"
+Pick the %s from a group,Выбрать %s из группы
+Pick the %s from %s,Выбрать %s из %s
 "This row reaches into %s, a list that belongs to another object. It works, but the object that owns a list should be asked for it through a function or a signal instead.","Эта строка лезет в %s - список, принадлежащий другому объекту. Это работает, но объект-владелец списка лучше спрашивать через функцию или сигнал."
 "No %s is picked here. A pick lasts for its own event and the sub-events under it, so this row has nothing to act on.","Здесь не выбран ни один %s. Выбор действует в своём событии и в подсобытиях под ним, поэтому у этой строки нет объекта для действия."
-Picked here,"Выбрано здесь"
+Picked here,Выбрано здесь
 "The instances this event picked or was handed, by the names the code uses.","Экземпляры, которые это событие выбрало или получило, под именами из кода."
 "The %s this event picked, written as %s. Rows you add here act on it.","%s, выбранный этим событием, записан как %s. Строки, добавленные здесь, действуют на него."
 %s - variables,%s - переменные
@@ -10530,8 +10530,8 @@ Couldn't save %s: %s.,Не удалось сохранить %s: %s.
 Text that mentions the name - left as it is,"Текст, где упоминается имя, - остаётся как есть"
 " %d file(s) of the behaviours that ship with this plugin also say that name, and nothing in them refers to this script, so they are not listed."," %d файл(ов) поведений, входящих в этот плагин, тоже содержат это имя, но ничто в них не обращается к этому скрипту, поэтому они не перечислены."
 "%s sits inside a %s, and a Container places its children itself: the next time it arranges them it moves this Control back, so this row seems to do nothing. To place it yourself, put the Control under a plain Control node instead; to change where it ends up inside the Container, change the Container's own settings or this Control's size flags and custom minimum size.","%s находится внутри %s, а Container сам размещает своих детей: при следующей раскладке он вернёт этот Control на место, поэтому эта строка как будто ничего не делает. Чтобы разместить его самому, поместите Control под обычный узел Control; чтобы изменить, где он окажется внутри Container, измените настройки самого Container или Size Flags и пользовательский минимальный размер этого Control."
-"Apply Central Impulse (3D)","Применить центральный импульс (3D)"
-"Apply Central Impulse","Применить центральный импульс"
+Apply Central Impulse (3D),Применить центральный импульс (3D)
+Apply Central Impulse,Применить центральный импульс
 "%s is a %s, which the physics engine moves every physics frame, so a Tween on its %s fights the engine: the body jitters, snaps back or is pushed through walls. Tween a child node instead (a Sprite2D, say), move the body with %s, or turn on Freeze on the body first so code may move it.","%s - это %s, который физический движок двигает в каждом физическом кадре, поэтому Tween на его %s борется с движком: тело дрожит, откатывается назад или проходит сквозь стены. Лучше примените Tween к дочернему узлу (например, Sprite2D), двигайте тело через %s или сначала включите Freeze у тела, чтобы код мог его двигать."
 "This behaviour sits under %s, a %s, and it writes its parent's %s every frame while the physics engine moves that body too, so the two fight: the body jitters, snaps back or is pushed through walls. Put the behaviour on a node that is not a physics body (the Sprite2D inside it, or a plain Node2D), or move the body with %s instead.","Это поведение находится под %s (%s) и каждый кадр записывает %s родителя, в то время как физический движок тоже двигает это тело, поэтому они борются: тело дрожит, откатывается назад или проходит сквозь стены. Поместите поведение на узел, который не является физическим телом (Sprite2D внутри него или обычный Node2D), или двигайте тело через %s."
 "An edit was started inside another edit, which cannot be undone as two steps, so it was not applied. Make both changes in the outer edit.","Внутри одной правки была начата другая правка. Такое нельзя отменить как два шага, поэтому она не была применена. Внесите оба изменения во внешней правке."
@@ -10682,36 +10682,36 @@ Nothing here can be rewritten on its own - %d rows are listed below with the rea
 %d rows are left exactly as they are.,%d строк остаются ровно как есть.
 After the hold,После Hold
 Start together,Начинаются вместе
-Apply keeps a saved theme for this script in this project. Nothing is written into the script.,"«Применить» запоминает сохранённую тему для этого скрипта в этом проекте. В сам скрипт ничего не записывается."
-Revert,"Вернуть"
-Match Editor,"Как в редакторе"
-Untitled theme,"Тема без названия"
-Theme Editor - %s,"Редактор тем - %s"
-%s (changed),"%s (изменено)"
-Save a Copy…,"Сохранить копию…"
-Theme saved: %s,"Тема сохранена: %s"
-Theme could not be saved: %s (%s),"Не удалось сохранить тему: %s (%s)"
-Save a Copy,"Сохранить копию"
-Save Theme As,"Сохранить тему как"
-Save changes to %s?,"Сохранить изменения в %s?"
-The swatches you changed are not in the file yet.,"Изменённые цвета ещё не записаны в файл."
-Discard throws the changes away. Cancel keeps the window as it is.,"«Отклонить» выбрасывает изменения. «Отмена» оставляет окно как есть."
-Your themes,"Ваши темы"
-Starters,"Заготовки"
-Open now,"Открыта сейчас"
-Theme,"Тема"
-Open / Close %s,"Открыть / закрыть %s"
-Open All / Close All %s,"Открыть / закрыть все: %s"
-Put Selection into New %s,"Поместить выделенное в новый блок (%s)"
-Close %s,"Закрыть %s"
-Use For Every Sheet,"Использовать для всех листов"
+Apply keeps a saved theme for this script in this project. Nothing is written into the script.,«Применить» запоминает сохранённую тему для этого скрипта в этом проекте. В сам скрипт ничего не записывается.
+Revert,Вернуть
+Match Editor,Как в редакторе
+Untitled theme,Тема без названия
+Theme Editor - %s,Редактор тем - %s
+%s (changed),%s (изменено)
+Save a Copy…,Сохранить копию…
+Theme saved: %s,Тема сохранена: %s
+Theme could not be saved: %s (%s),Не удалось сохранить тему: %s (%s)
+Save a Copy,Сохранить копию
+Save Theme As,Сохранить тему как
+Save changes to %s?,Сохранить изменения в %s?
+The swatches you changed are not in the file yet.,Изменённые цвета ещё не записаны в файл.
+Discard throws the changes away. Cancel keeps the window as it is.,«Отклонить» выбрасывает изменения. «Отмена» оставляет окно как есть.
+Your themes,Ваши темы
+Starters,Заготовки
+Open now,Открыта сейчас
+Theme,Тема
+Open / Close %s,Открыть / закрыть %s
+Open All / Close All %s,Открыть / закрыть все: %s
+Put Selection into New %s,Поместить выделенное в новый блок (%s)
+Close %s,Закрыть %s
+Use For Every Sheet,Использовать для всех листов
 Makes this theme the one every sheet wears unless it chose its own. Kept in Project Settings.,"Делает эту тему темой всех листов, у которых нет своей. Хранится в настройках проекта."
-That file is not an event sheet theme.,"Этот файл не является темой листов событий."
-This sheet's look has no theme file. Save it from the Theme Editor first.,"У вида этого листа нет файла темы. Сначала сохраните его в редакторе тем."
-Sheets with no theme of their own match the editor again.,"Листы без своей темы снова подстраиваются под редактор."
-Every sheet with no theme of its own now wears %s.,"Все листы без своей темы теперь используют %s."
-Project theme: %s,"Тема проекта: %s"
-Edit in Theme Editor,"Изменить в редакторе тем"
+That file is not an event sheet theme.,Этот файл не является темой листов событий.
+This sheet's look has no theme file. Save it from the Theme Editor first.,У вида этого листа нет файла темы. Сначала сохраните его в редакторе тем.
+Sheets with no theme of their own match the editor again.,Листы без своей темы снова подстраиваются под редактор.
+Every sheet with no theme of its own now wears %s.,Все листы без своей темы теперь используют %s.
+Project theme: %s,Тема проекта: %s
+Edit in Theme Editor,Изменить в редакторе тем
 A fixed direction,Заданное направление
 "A label counts from the number it shows to a number. The number is a plain number or a name from your game, such as GameState.score.","Метка отсчитывает от показанного числа до заданного. Число - обычное число или имя из вашей игры, например GameState.score."
 A node,Узел
@@ -10869,27 +10869,27 @@ Pick a property first,Сначала выберите свойство
 "A base for dark and a base for light, one accent, a text colour for each. Generate fills both columns at once; anything you then change by hand stays yours.","Основа для тёмной и основа для светлой, один акцент, цвет текста для каждой. «Создать» заполняет обе колонки сразу; то, что вы потом измените вручную, остаётся вашим."
 "Rebuild every colour token, dark and light, from the colours above.","Пересобирает каждый цвет, тёмный и светлый, из цветов выше."
 The open sheet keeps its own copy of a theme; pick the theme again to update it.,"Открытый лист хранит собственную копию темы; выберите тему снова, чтобы обновить её."
-Preview as,"Просмотр как"
-Dark,"Тёмная"
+Preview as,Просмотр как
+Dark,Тёмная
 Only the sample sheet changes. Your sheet wears the side that matches Godot's editor theme.,"Меняется только образец листа. Ваш лист использует сторону, которая соответствует теме редактора Godot."
-Contrast %s : 1 on %s (%s); %s : 1 reads comfortably.,"Контраст %s : 1 на %s (%s); %s : 1 читается комфортно."
-(no light line: one colour for both),"(нет светлой строки: один цвет для обеих)"
-(no light line: worked out from the editor),"(нет светлой строки: вычислено по редактору)"
+Contrast %s : 1 on %s (%s); %s : 1 reads comfortably.,Контраст %s : 1 на %s (%s); %s : 1 читается комфортно.
+(no light line: one colour for both),(нет светлой строки: один цвет для обеих)
+(no light line: worked out from the editor),(нет светлой строки: вычислено по редактору)
 Same colour in dark and light: click to give light its own,"Один цвет для тёмной и светлой: нажмите, чтобы дать светлой свой"
 Separate colours: click to use the dark colour in both,"Разные цвета: нажмите, чтобы использовать тёмный цвет в обеих"
 Worked out from the editor. Pick a colour to give light its own.,"Вычислено по редактору. Выберите цвет, чтобы дать светлой свой."
-auto,"авто"
-Follow the editor in light,"Следовать за редактором в светлой"
-Follows the editor,"Следует редактору"
-Starters (copy to edit),"Шаблоны (копировать для правки)"
-worked out from the editor,"вычислено из редактора"
-same colour in both,"один цвет в обоих"
-hard to read on its row,"плохо читается в своей строке"
+auto,авто
+Follow the editor in light,Следовать за редактором в светлой
+Follows the editor,Следует редактору
+Starters (copy to edit),Шаблоны (копировать для правки)
+worked out from the editor,вычислено из редактора
+same colour in both,один цвет в обоих
+hard to read on its row,плохо читается в своей строке
 "Worked out from Godot's editor, dark or light. Change anything and it becomes a theme of your own: Save As asks where to keep it.","Вычислено из редактора Godot, тёмного или светлого. Измените что-нибудь, и это станет вашей темой: Сохранить как спросит, где её хранить."
 "A starter that comes with the plugin, so a plugin update would replace it. Save a Copy makes your own in eventsheet_themes/ and leaves the starter as shipped.","Шаблон, поставляемый с плагином, поэтому обновление плагина заменит его. Сохранить копию создаёт вашу в eventsheet_themes/ и оставляет шаблон как поставлен."
 A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,"Тема, поставляемая с демо. Сохранить копию создаёт вашу в eventsheet_themes/ и оставляет эту как поставлена."
 A file in your project. Save writes it in place (Ctrl+S) and every open sheet wearing it repaints.,"Файл вашего проекта. Сохранить записывает его на месте (Ctrl+S), и каждый открытый лист с этой темой перерисовывается."
-not a file: the colours come from Godot's editor theme,"не файл: цвета берутся из темы редактора Godot"
+not a file: the colours come from Godot's editor theme,не файл: цвета берутся из темы редактора Godot
 a card of yours plays here only when its script is marked @tool,"собственная карточка проигрывается здесь, только если её скрипт помечен как @tool"
 Edit this value in the card's script.,Измените это значение в скрипте карточки.
 Yours,Ваши
@@ -10970,7 +10970,7 @@ Shows this list as cards again.,Снова показывает этот спи�
 Move to bottom,Переместить вниз
 Shapes (%d),Фигуры (%d)
 Dash offset,Смещение штриха
-"Line %d: rename %s to %s. Nothing else changed.","Строка %d: переименуйте %s в %s. Больше ничего не изменилось."
+Line %d: rename %s to %s. Nothing else changed.,Строка %d: переименуйте %s в %s. Больше ничего не изменилось.
 Fade in,Нарастание
 Custom curve,Своя кривая
 rises from nothing,нарастает с нуля
@@ -10982,8 +10982,8 @@ Starts at nothing and reaches %s at %s s.,Начинается с нуля и д
 Starts at %s and is gone at %s s.,Начинается с %s и пропадает на %s с.
 "Holds %s for %s s, then stops.","Держит %s в течение %s с, затем останавливается."
 Save the new file where the card can find it,"Сохраните новый файл там, где карточка сможет его найти"
-Preview its behaviours,"Предпросмотр его поведений"
-Stop previews,"Остановить предпросмотры"
+Preview its behaviours,Предпросмотр его поведений
+Stop previews,Остановить предпросмотры
 "Loop is on and nothing in this list takes time, so the player plays it again every frame. Add a Pause or a card with a length.","Loop включён, но ничто в этом списке не занимает времени, поэтому проигрыватель запускает его заново каждый кадр. Добавьте паузу или карточку с длительностью."
 "Nothing in this loop takes time, so the play gives up after %d steps. Give a card in it a length, or the Loop Back a Pause.","Ничто в этом цикле не занимает времени, поэтому воспроизведение сдаётся после %d шагов. Задайте длительность карточке в цикле или паузу для Loop Back."
 1 card,1 карточка
@@ -11141,21 +11141,21 @@ A scene this sheet holds.,"Сцена, которую хранит этот ли
 A scene,Сцена
 "A scene file kept in a slot, to make copies of: a bullet, an enemy, a pickup. The Inspector shows a slot you drop a .tscn file into, and a spawn row copies it with its own instantiate().","Файл сцены в слоте, с которого делают копии: пуля, враг, предмет. Инспектор показывает слот, в который перетаскивают файл .tscn, а строка создания копирует его своим instantiate()."
 "Comes back to rest without swinging past it, in about %s s.","Возвращается в покой без перелёта, примерно за %s с."
-Swings past rest once and settles in about %s s.,"Один раз проходит мимо покоя и успокаивается примерно за %s с."
-Swings past rest %d times and settles in about %s s.,"Проходит мимо покоя %d раз и успокаивается примерно за %s с."
+Swings past rest once and settles in about %s s.,Один раз проходит мимо покоя и успокаивается примерно за %s с.
+Swings past rest %d times and settles in about %s s.,Проходит мимо покоя %d раз и успокаивается примерно за %s с.
 "Amount is 0, so the colours are never split.","Величина равна 0, поэтому цвета никогда не расходятся."
 "The colours stay %s px apart along %s degrees, then snap together after %s s.","Цвета остаются разведены на %s px вдоль %s градусов, затем резко сходятся через %s с."
-"The colours part by up to %s px along %s degrees and are back together after %s s.","Цвета расходятся до %s px вдоль %s градусов и снова сходятся через %s с."
+The colours part by up to %s px along %s degrees and are back together after %s s.,Цвета расходятся до %s px вдоль %s градусов и снова сходятся через %s с.
 "The colours stay %s px apart, turning as they go, then snap together after %s s.","Цвета остаются разведены на %s px, поворачиваясь, затем резко сходятся через %s с."
 "The colours part by up to %s px, turning as they go, and are back together after %s s.","Цвета расходятся до %s px, поворачиваясь, и снова сходятся через %s с."
 "There is no Juice node beside this player, so this card does nothing. Add a Juice node under the same object.","Рядом с этим проигрывателем нет узла Juice, поэтому эта карточка ничего не делает. Добавьте узел Juice под тем же объектом."
-"Chromatic Shake","Хроматическая тряска"
+Chromatic Shake,Хроматическая тряска
 "Splits the red, green and blue of the screen apart along a direction for a moment, then lets them close again: the colour fringe of a hit, a dash or a landing. It plays through the Juice node beside the player, with the same no-flashing and reduced-effects choices as its Chromatic Shake row.","На миг разводит красный, зелёный и синий цвета экрана вдоль направления, а затем снова сводит их: цветная кайма удара, рывка или приземления. Играется через узел Juice рядом с проигрывателем, с теми же настройками без мерцания и сниженных эффектов, что и строка Chromatic Shake."
-"Ends","Окончание"
-"Closes steadily","Плавно сходится"
-"Holds then snaps shut","Держится, затем резко сходится"
-"Wanders","Блуждает"
-"Along an angle","Вдоль угла"
+Ends,Окончание
+Closes steadily,Плавно сходится
+Holds then snaps shut,"Держится, затем резко сходится"
+Wanders,Блуждает
+Along an angle,Вдоль угла
 Replace scenes?,Заменить сцены?
 "This writes over %d scene(s), starting with %s, and Ctrl+Z cannot take it back.","Это перезапишет сцен: %d (начиная с %s), и Ctrl+Z этого не отменит."
 Each is kept in Sheet Backups first.,Каждая сначала сохраняется в резервных копиях листов.
@@ -11248,12 +11248,12 @@ the Load bindings row of the same pair,строка «Загрузить при�
 "The slot card, which the Save System keeps for the load menu:","Карточка слота, которую Save System хранит для меню загрузки:"
 "Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.","Клавиатура ▸ Сохранить привязки пишет %s; Settings ▸ Save Bindings хранит их в %s в разделе [%s], рядом с настройками."
 "Keyboard ▸ Save bindings, or Settings ▸ Save Bindings",Клавиатура ▸ Сохранить привязки или Settings ▸ Save Bindings
-"Saved %s. %s","%s сохранён. %s"
+Saved %s. %s,%s сохранён. %s
 "%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.","%s не записан: это ваш собственный скрипт, а не созданный этим листом, и запись заменила бы ваш код. Переименуйте лист или этот скрипт, чтобы имена различались, и повторите попытку."
 "%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.","%s не записан: он принадлежит листу %s. Переименуйте один из двух листов, чтобы имена различались, и повторите попытку."
 "Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.","В этом листе пока ничего не опубликовано для выбора. Отметьте у функции «Могут использовать другие листы», и она появится здесь так, как её покажет окно выбора."
-"%d sheet(s) that name it follow it too.","Листов, которые на него ссылаются, тоже обновлено: %d."
-"Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.","Ваших скриптов, которые всё ещё называют старый путь: %d. Список покажет Инструменты > Найти в проекте."
+%d sheet(s) that name it follow it too.,"Листов, которые на него ссылаются, тоже обновлено: %d."
+Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.,"Ваших скриптов, которые всё ещё называют старый путь: %d. Список покажет Инструменты > Найти в проекте."
 The tests could not be started in a second copy of Godot.,Не удалось запустить тесты во второй копии Godot.
 The test run ended before it wrote a report. Run the tests from a terminal to see why.,"Прогон тестов завершился, не записав отчёт. Запустите тесты из терминала, чтобы узнать причину."
 Ctrl+Z takes it out again.,Ctrl+Z снова уберёт это.
@@ -11415,18 +11415,18 @@ Copy to the clipboard,Скопировать в буфер обмена
 Copy these rows as shareable snippet text.,"Копирует эти строки как текст фрагмента, которым можно поделиться."
 "Jump to ""%s"".",Перейти к «%s».
 Off means the Start page only opens from Sheet ▸ Start page.,"Если выключено, стартовая страница открывается только через Лист ▸ Стартовая страница."
-"The screen goes grey except a circle that opens to %s pixels over %s s, and stays grey until told.",
-"The screen goes grey except a circle that opens to %s pixels over %s s, then the colour comes back.",
-A circle of grey grows to %s pixels over %s s and stays until told.,
-"A circle of grey grows to %s pixels over %s s, then fades away.",
-The screen goes %s grey and stays grey until told.,
-"The screen goes %s grey for %s s, then the colour comes back.",
-"In the editor the play button greys the object this player is under, as a stand-in. In the game the whole screen goes grey, through the Screen FX layer of the scene.",
-"Moves up to %s from where it is over %s s, following your curve, and ends exactly where it began.",
-Moves up to %s from where it is half way and is back at %s s.,
-"Starts still and moves up to %s by %s s, then is put back.",
-Moves up to %s at first and is back where it was at %s s.,
-"Moves up to %s for %s s, then is put back.",
+"The screen goes grey except a circle that opens to %s pixels over %s s, and stays grey until told.","Экран становится серым, кроме круга, который раскрывается до %s пикселей за %s с, и остаётся серым, пока не скажут."
+"The screen goes grey except a circle that opens to %s pixels over %s s, then the colour comes back.","Экран становится серым, кроме круга, который раскрывается до %s пикселей за %s с, затем цвет возвращается."
+A circle of grey grows to %s pixels over %s s and stays until told.,"Серый круг растёт до %s пикселей за %s с и остаётся, пока не скажут."
+"A circle of grey grows to %s pixels over %s s, then fades away.","Серый круг растёт до %s пикселей за %s с, затем исчезает."
+The screen goes %s grey and stays grey until told.,"Экран становится серым на %s и остаётся серым, пока не скажут."
+"The screen goes %s grey for %s s, then the colour comes back.","Экран становится серым на %s на %s с, затем цвет возвращается."
+"In the editor the play button greys the object this player is under, as a stand-in. In the game the whole screen goes grey, through the Screen FX layer of the scene.","В редакторе кнопка воспроизведения делает серым объект, под которым находится этот плеер, как замену. В игре серым становится весь экран через слой Screen FX сцены."
+"Moves up to %s from where it is over %s s, following your curve, and ends exactly where it began.","Смещается до %s от своего места за %s с, следуя вашей кривой, и заканчивает точно там, где начал."
+Moves up to %s from where it is half way and is back at %s s.,"Смещается до %s от своего места, к середине возвращается и на %s с снова на месте."
+"Starts still and moves up to %s by %s s, then is put back.","Начинает неподвижно и смещается до %s к %s с, затем возвращается на место."
+Moves up to %s at first and is back where it was at %s s.,"Сначала смещается до %s, а к %s с снова там, где был."
+"Moves up to %s for %s s, then is put back.","Смещается до %s на %s с, затем возвращается на место."
 Grayscale,Оттенки серого
 "Puts the colour out of the screen: all of it, or a circle of grey that grows from this object or from a place on the screen (or the other way round, a circle of colour in a grey world). It can stay grey until told, for a death or a flashback, and Stop brings the colour back. It plays through the scene's Screen FX layer, so the no-flashing and reduced-effects choices hold it. To grey one object, use the Grayscale behaviour instead.","Убирает цвет с экрана: весь или серым кругом, который растёт от этого объекта или от точки на экране (или наоборот, цветной круг в сером мире). Может оставаться серым, пока не скажут, для смерти или флешбэка, а Stop возвращает цвет. Воспроизводится через слой Screen FX сцены, поэтому действуют настройки без мерцания и сниженных эффектов. Чтобы сделать серым один объект, используйте вместо этого поведение Grayscale."
 Grayness,Степень серого

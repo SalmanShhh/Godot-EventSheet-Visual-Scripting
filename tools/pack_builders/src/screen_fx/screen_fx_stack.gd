@@ -4,6 +4,12 @@
 # scaffolding the pack declares for itself at build time and never reads from here.
 extends CanvasLayer
 
+
+## Scaffolding only, so this file parses on its own: the pack's own runtime block turns a world point into a place on the screen.
+func _screen_point(world: Vector2) -> Vector2:
+	return world
+
+
 #region stack
 ## Folder holding the pack's shaders once installed.
 const POST_DIRECTORY: String = "res://eventsheet_addons/screen_fx/"

@@ -271,7 +271,7 @@ func _on_death() -> void:
 | Show Or Hide | `show_node(node)`, `hide_node(node)`, `show_node_for(node, seconds)` | `JuicePlayer` |
 | Call Method | `call_method(node, method, args)` | `JuicePlayer` |
 | Spawn Scene | `spawn_scene(scene, at)` | `JuicePlayer` |
-| Push | `push_away_from(body, from, speed)`, `push_along_motion(body, speed)`, `push_towards(body, direction, speed)` | `JuicePlayer` |
+| Push | `push_away_from(body, from, speed)`, `push_along_motion(body, speed)`, `push_towards(body, way, speed)` | `JuicePlayer` |
 | Force, Gravity, Freeze | `force_for_a_time(body, force, seconds)`, `gravity_for_a_time(body, gravity_scale, seconds)`, `freeze_body(body, seconds)` | `JuicePlayer` |
 | Pop, Fade | `pop(node, scale_to, seconds)`, `fade_node(node, alpha, seconds)` | `JuicePlayer` |
 | Grab Focus | `focus_control(control)` | `JuicePlayer` |

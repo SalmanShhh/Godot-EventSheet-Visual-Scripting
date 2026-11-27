@@ -2116,7 +2116,7 @@ not in %s,%s에 없음
 %d triggers,트리거 %d개
 %d used,사용 중 %d개
 %d more,그 외 %d개
-"%s - starts in %s","%s - %s 에서 시작"
+%s - starts in %s,%s - %s 에서 시작
 "Sort by reading order, by count or by name.","읽는 순서, 개수, 이름순으로 정렬합니다."
 Nothing in this sheet names an object yet.,이 시트는 아직 어떤 오브젝트도 가리키지 않습니다.
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,이 스크립트는 아직 씬에 올려져 있지 않습니다. 씬 독의 노드에 끌어다 놓으면 그 오브젝트가 여기에 나타납니다.
@@ -5346,7 +5346,7 @@ pooled as %s,%s(으)로 풀링
 browse the scene,씬 보기
 "This one is named by an expression the sheet works out as it runs, so there is no file to show.",이것은 시트가 실행 중에 계산하는 식으로 지정되므로 보여줄 파일이 없습니다.
 %s - shown in the FileSystem dock.,%s - 파일시스템 독에 표시했습니다.
-"This adds a node to the tree inside a collision callback. A 2D physics body or area added there makes Godot print errors while the physics server is busy. Add it on the next idle moment instead.",충돌 콜백 안에서 노드를 트리에 추가하고 있습니다. 거기서 추가한 2D 물리 바디나 영역은 물리 서버가 처리 중일 때 Godot이 오류를 출력하게 합니다. 다음 유휴 시점에 추가하세요.
+This adds a node to the tree inside a collision callback. A 2D physics body or area added there makes Godot print errors while the physics server is busy. Add it on the next idle moment instead.,충돌 콜백 안에서 노드를 트리에 추가하고 있습니다. 거기서 추가한 2D 물리 바디나 영역은 물리 서버가 처리 중일 때 Godot이 오류를 출력하게 합니다. 다음 유휴 시점에 추가하세요.
 Add it on the next idle moment,다음 유휴 시점에 추가
 Use the safe spawn row,안전한 생성 행 사용
 "%s is kept between frames, and anything could have destroyed it by now. Ask whether it is still here before reaching into it.","%s은(는) 프레임을 넘어 유지되며, 그사이 무언가가 파괴했을 수 있습니다. 접근하기 전에 아직 있는지 확인하세요."
@@ -5388,7 +5388,7 @@ Layer Names,레이어 이름
 "Type the layer's name first, then Name it…",먼저 레이어 이름을 입력한 다음 이름 지정…을 누르세요.
 """%s"" is already layer %d.","""%s""은(는) 이미 레이어 %d입니다."
 Layer %d could not be named.,레이어 %d의 이름을 지정할 수 없습니다.
-"%s. Undo puts the number back.","%s. 실행 취소하면 번호로 되돌아갑니다."
+%s. Undo puts the number back.,%s. 실행 취소하면 번호로 되돌아갑니다.
 Name physics layer,물리 레이어 이름 지정
 "%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.","%s이(가) 충돌 레이어 %d을(를) 가리키지만, Godot의 레이어는 1부터 32까지입니다. 이 호출은 아무것도 하지 않습니다."
 "%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.","%s은(는) 충돌 레이어 %d에 관한 것이지만, 이 프로젝트는 그 레이어에 이름을 붙이지 않았습니다. 다른 행은 단어로 읽히는데 이 행만 숫자로 읽힙니다. 프로젝트 설정 ▸ 레이어 이름에서 이름을 붙이거나, 이름이 바뀐 레이어로 행을 돌리세요."
@@ -5396,122 +5396,122 @@ Name physics layer,물리 레이어 이름 지정
 "The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.","감시할 레이어를, 이 프로젝트가 프로젝트 설정 ▸ 레이어 이름 ▸ 3D 물리에서 붙인 이름으로 지정합니다. 이름이 없는 레이어는 번호로 표시되며 여기서 이름을 붙일 수 있습니다."
 "The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 2D Physics. A layer the project never named shows as its number, and can be named from here.","속할 레이어를, 이 프로젝트가 프로젝트 설정 ▸ 레이어 이름 ▸ 2D 물리에서 붙인 이름으로 지정합니다. 이름이 없는 레이어는 번호로 표시되며 여기서 이름을 붙일 수 있습니다."
 "The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.","속할 레이어를, 이 프로젝트가 프로젝트 설정 ▸ 레이어 이름 ▸ 3D 물리에서 붙인 이름으로 지정합니다. 이름이 없는 레이어는 번호로 표시되며 여기서 이름을 붙일 수 있습니다."
-"%s has monitoring switched off in the scene, so it reports no touches at all - every row waiting on one here is unreachable.","%s 은(는) 씬에서 모니터링이 꺼져 있어 접촉을 전혀 보고하지 않습니다. 여기서 접촉을 기다리는 모든 행은 도달할 수 없습니다."
-"%s has no shape, so it cannot collide or interact with anything. Add a CollisionShape or a CollisionPolygon under it in the scene.","%s 에는 형태가 없어 아무것과도 충돌하거나 상호작용할 수 없습니다. 씬에서 그 아래에 CollisionShape 또는 CollisionPolygon 을 추가하세요."
+"%s has monitoring switched off in the scene, so it reports no touches at all - every row waiting on one here is unreachable.",%s 은(는) 씬에서 모니터링이 꺼져 있어 접촉을 전혀 보고하지 않습니다. 여기서 접촉을 기다리는 모든 행은 도달할 수 없습니다.
+"%s has no shape, so it cannot collide or interact with anything. Add a CollisionShape or a CollisionPolygon under it in the scene.",%s 에는 형태가 없어 아무것과도 충돌하거나 상호작용할 수 없습니다. 씬에서 그 아래에 CollisionShape 또는 CollisionPolygon 을 추가하세요.
 "%s is one-way and turned over, so bodies fall through it from above and are stopped from below. The rows here are waiting for the landing it blocks.","%s 은(는) 한쪽 방향이며 뒤집혀 있어, 물체가 위에서는 통과하고 아래에서 막힙니다. 여기 행들은 그것이 막고 있는 착지를 기다리고 있습니다."
 "%s watches %s, and everything in this project that can collide sits on %s - so nothing can reach this trigger. This reads every layer in use, because the trigger names no group.","%s 은(는) %s 을(를) 감시하지만, 이 프로젝트에서 충돌할 수 있는 모든 것은 %s 에 있습니다. 따라서 이 트리거에는 아무것도 도달할 수 없습니다. 트리거가 그룹을 지정하지 않아 사용 중인 모든 레이어를 읽습니다."
 "%s watches %s, and the members of ""%s"" sit on %s - so this trigger never fires.","%s 은(는) %s 을(를) 감시하지만, ""%s"" 의 구성원은 %s 에 있습니다. 따라서 이 트리거는 절대 발생하지 않습니다."
-"Godot has collision layers 1 to 32.","Godot 의 충돌 레이어는 1 부터 32 까지입니다."
-"Open %s to change what it collides with.","무엇과 충돌할지 바꾸려면 %s 을(를) 여세요."
-"Show me in the scene","씬에서 보기"
-"Switch monitoring on","모니터링 켜기"
-"Watch collision layer %d","충돌 레이어 %d 감시"
-"monitoring off","모니터링 꺼짐"
-"monitoring on","모니터링 켜짐"
-"seen by %s","%s 에게 보임"
-"sees %s","%s 을(를) 봄"
-"%s is selected in %s.","%s 을(를) %s 에서 선택했습니다."
-"%s is not in the project any more.","%s 은(는) 더 이상 프로젝트에 없습니다."
-"On Collision With Group","그룹과 충돌할 때"
+Godot has collision layers 1 to 32.,Godot 의 충돌 레이어는 1 부터 32 까지입니다.
+Open %s to change what it collides with.,무엇과 충돌할지 바꾸려면 %s 을(를) 여세요.
+Show me in the scene,씬에서 보기
+Switch monitoring on,모니터링 켜기
+Watch collision layer %d,충돌 레이어 %d 감시
+monitoring off,모니터링 꺼짐
+monitoring on,모니터링 켜짐
+seen by %s,%s 에게 보임
+sees %s,%s 을(를) 봄
+%s is selected in %s.,%s 을(를) %s 에서 선택했습니다.
+%s is not in the project any more.,%s 은(는) 더 이상 프로젝트에 없습니다.
+On Collision With Group,그룹과 충돌할 때
 "Runs when something from one group hits this body. The group is the filter: the handler's first line leaves at once for anything else, and what did hit rides into the rows underneath. This body BLOCKS what it hits - it needs Contact Monitor switched on and its Max Contacts Reported above zero before Godot will report the hit at all.","그룹에 속한 무언가가 이 바디에 부딪힐 때 실행됩니다. 그룹이 필터입니다. 핸들러의 첫 줄이 그 외의 것은 즉시 빠져나가고, 부딪힌 것은 아래 행으로 전달됩니다. 이 바디는 부딪힌 것을 막습니다 - Contact Monitor를 켜고 Max Contacts Reported를 0보다 크게 해야 Godot가 충돌을 알려줍니다."
-"On collision with {group}","{group}과(와) 충돌할 때"
+On collision with {group},{group}과(와) 충돌할 때
 "Only react when the thing that arrived is in this group. Any node joins a group from the Node dock, and the emitted handler leaves immediately when it is not in it.","도착한 것이 이 그룹에 속할 때만 반응합니다. 노드는 Node 독에서 그룹에 참여하며, 속하지 않으면 생성된 핸들러는 즉시 빠져나갑니다."
-"body","바디"
-"The body that arrived, already known to be in the group. Filled in for you when the trigger fires - use it in the rows underneath.","도착한 바디입니다. 그룹에 속한 것은 이미 확인되었습니다. 트리거가 발생하면 자동으로 채워지니 아래 행에서 사용하세요."
-"On Stopped Colliding With Group","그룹과 충돌이 끝날 때"
+body,바디
+"The body that arrived, already known to be in the group. Filled in for you when the trigger fires - use it in the rows underneath.",도착한 바디입니다. 그룹에 속한 것은 이미 확인되었습니다. 트리거가 발생하면 자동으로 채워지니 아래 행에서 사용하세요.
+On Stopped Colliding With Group,그룹과 충돌이 끝날 때
 "Runs when something from one group stops touching this body - the other half of the collision, for ending a push, a grind or a stand-on. Needs the same Contact Monitor setting the starting half does.","그룹에 속한 무언가가 이 바디에서 떨어질 때 실행됩니다. 충돌의 나머지 절반으로, 밀기나 미끄러짐, 올라선 상태를 끝낼 때 씁니다. 시작 쪽과 같은 Contact Monitor 설정이 필요합니다."
-"On stopped colliding with {group}","{group}과(와) 충돌이 끝날 때"
-"The body that left, already known to be in the group. Filled in for you when the trigger fires - use it in the rows underneath.","떠난 바디입니다. 그룹에 속한 것은 이미 확인되었습니다. 트리거가 발생하면 자동으로 채워지니 아래 행에서 사용하세요."
-"On Collision With Group (3D)","그룹과 충돌할 때 (3D)"
-"On Stopped Colliding With Group (3D)","그룹과 충돌이 끝날 때 (3D)"
-"On Overlap With Group","그룹과 겹칠 때"
+On stopped colliding with {group},{group}과(와) 충돌이 끝날 때
+"The body that left, already known to be in the group. Filled in for you when the trigger fires - use it in the rows underneath.",떠난 바디입니다. 그룹에 속한 것은 이미 확인되었습니다. 트리거가 발생하면 자동으로 채워지니 아래 행에서 사용하세요.
+On Collision With Group (3D),그룹과 충돌할 때 (3D)
+On Stopped Colliding With Group (3D),그룹과 충돌이 끝날 때 (3D)
+On Overlap With Group,그룹과 겹칠 때
 "Runs when something from one group moves into this area. An area DETECTS and does not block, so the thing keeps going - this is the trigger a checkpoint, a pickup zone or a damage field is written from. What arrived rides into the rows underneath.","그룹에 속한 무언가가 이 영역에 들어올 때 실행됩니다. 영역은 감지만 하고 막지 않으므로 대상은 그대로 지나갑니다 - 체크포인트, 획득 구역, 피해 지대를 이 트리거로 만듭니다. 들어온 것은 아래 행으로 전달됩니다."
-"On overlap with {group}","{group}과(와) 겹칠 때"
-"On Overlap Ended With Group","그룹과 겹침이 끝날 때"
+On overlap with {group},{group}과(와) 겹칠 때
+On Overlap Ended With Group,그룹과 겹침이 끝날 때
 "Runs when something from one group leaves this area - the moment a player walks out of a safe zone, or the last enemy clears a trap.","그룹에 속한 무언가가 이 영역을 떠날 때 실행됩니다 - 플레이어가 안전 구역을 벗어나는 순간이나, 마지막 적이 함정에서 빠져나가는 순간입니다."
-"On overlap ended with {group}","{group}과(와) 겹침이 끝날 때"
-"On Overlap With Group (3D)","그룹과 겹칠 때 (3D)"
-"On Overlap Ended With Group (3D)","그룹과 겹침이 끝날 때 (3D)"
-"Is Touching Group","그룹에 닿아 있음"
+On overlap ended with {group},{group}과(와) 겹침이 끝날 때
+On Overlap With Group (3D),그룹과 겹칠 때 (3D)
+On Overlap Ended With Group (3D),그룹과 겹침이 끝날 때 (3D)
+Is Touching Group,그룹에 닿아 있음
 "True while at least one body from this group is inside this area. The standing question beside the two arrival triggers - ask it when what matters is the state now, not the moment it changed.","이 그룹의 바디가 하나라도 이 영역 안에 있는 동안 참입니다. 두 도착 트리거 옆에 놓이는 상시 질문으로, 변한 순간이 아니라 지금 상태가 중요할 때 사용합니다."
-"is touching {group}","{group}에 닿아 있음"
-"The group to look for among the bodies inside this area right now.","지금 이 영역 안에 있는 바디들 중에서 찾을 그룹입니다."
-"Is Touching Group (3D)","그룹에 닿아 있음 (3D)"
+is touching {group},{group}에 닿아 있음
+The group to look for among the bodies inside this area right now.,지금 이 영역 안에 있는 바디들 중에서 찾을 그룹입니다.
+Is Touching Group (3D),그룹에 닿아 있음 (3D)
 "This node is an area: it notices what arrives and lets it through. Blocking is a body's job, so pair this with a body if the thing should also be stopped.","이 노드는 영역입니다. 들어온 것을 알아차릴 뿐 통과시킵니다. 막는 것은 바디의 일이므로, 멈추게 하려면 바디를 함께 두세요."
 "This node is a body: what it hits stops, and the hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero. An area would notice the same arrival without stopping anything.","이 노드는 바디입니다. 부딪힌 것은 멈추고, 충돌은 Contact Monitor가 켜져 있고 Max Contacts Reported가 0보다 클 때만 보고됩니다. 영역이라면 같은 도착을 알아차리되 아무것도 멈추지 않습니다."
-"On Landed","착지했을 때"
-"On Landed (3D)","착지했을 때 (3D)"
-"On Left The Ground","땅에서 떨어졌을 때"
-"On Left The Ground (3D)","땅에서 떨어졌을 때 (3D)"
-"Just Landed","막 착지함"
-"Just Landed (3D)","막 착지함 (3D)"
-"Just Left The Ground","막 땅에서 떨어짐"
-"Just Left The Ground (3D)","막 땅에서 떨어짐 (3D)"
-"On First Overlap","첫 겹침이 생겼을 때"
-"On First Overlap (3D)","첫 겹침이 생겼을 때 (3D)"
-"On Last Overlap Ended","마지막 겹침이 끝났을 때"
-"On Last Overlap Ended (3D)","마지막 겹침이 끝났을 때 (3D)"
-"Is The First One In","처음 들어온 것임"
-"Is The First One In (3D)","처음 들어온 것임 (3D)"
-"Was The Last One Out","마지막으로 나간 것임"
-"Was The Last One Out (3D)","마지막으로 나간 것임 (3D)"
-"On landed","착지했을 때"
-"On left the ground","땅에서 떨어졌을 때"
-"just landed","막 착지함"
-"just left the ground","막 땅에서 떨어짐"
-"On first overlap","첫 겹침이 생겼을 때"
-"On last overlap ended","마지막 겹침이 끝났을 때"
-"is the first one in","처음 들어온 것임"
-"was the last one out","마지막으로 나간 것임"
+On Landed,착지했을 때
+On Landed (3D),착지했을 때 (3D)
+On Left The Ground,땅에서 떨어졌을 때
+On Left The Ground (3D),땅에서 떨어졌을 때 (3D)
+Just Landed,막 착지함
+Just Landed (3D),막 착지함 (3D)
+Just Left The Ground,막 땅에서 떨어짐
+Just Left The Ground (3D),막 땅에서 떨어짐 (3D)
+On First Overlap,첫 겹침이 생겼을 때
+On First Overlap (3D),첫 겹침이 생겼을 때 (3D)
+On Last Overlap Ended,마지막 겹침이 끝났을 때
+On Last Overlap Ended (3D),마지막 겹침이 끝났을 때 (3D)
+Is The First One In,처음 들어온 것임
+Is The First One In (3D),처음 들어온 것임 (3D)
+Was The Last One Out,마지막으로 나간 것임
+Was The Last One Out (3D),마지막으로 나간 것임 (3D)
+On landed,착지했을 때
+On left the ground,땅에서 떨어졌을 때
+just landed,막 착지함
+just left the ground,막 땅에서 떨어짐
+On first overlap,첫 겹침이 생겼을 때
+On last overlap ended,마지막 겹침이 끝났을 때
+is the first one in,처음 들어온 것임
+was the last one out,마지막으로 나간 것임
 "Runs on the step this character's feet arrive on the floor - the landing itself, not the standing that follows it. Landing is where the dust, the thud and the squash go. It is a moment of the physics step rather than a signal, so the question underneath says which step.","이 캐릭터의 발이 바닥에 닿는 스텝에 실행됩니다. 착지 그 자체이며, 그 뒤에 서 있는 상태가 아닙니다. 먼지, 착지음, 찌그러짐은 여기에 넣습니다. 시그널이 아니라 물리 스텝의 한 순간이므로, 어느 스텝인지는 아래 조건이 말합니다."
-"Runs on the step this character's feet leave the floor, whichever way they left it: a jump and a walked-off ledge are the same moment to this row. The half that starts coyote time, and the half a fall animation begins on.","이 캐릭터의 발이 땅에서 떨어지는 스텝에 실행됩니다. 어떻게 떨어졌는지는 상관없습니다. 점프도 발판에서 걸어 나간 것도 이 행에는 같은 순간입니다. 코요테 타임이 시작되는 쪽이자 낙하 애니메이션이 시작되는 쪽입니다."
+"Runs on the step this character's feet leave the floor, whichever way they left it: a jump and a walked-off ledge are the same moment to this row. The half that starts coyote time, and the half a fall animation begins on.",이 캐릭터의 발이 땅에서 떨어지는 스텝에 실행됩니다. 어떻게 떨어졌는지는 상관없습니다. 점프도 발판에서 걸어 나간 것도 이 행에는 같은 순간입니다. 코요테 타임이 시작되는 쪽이자 낙하 애니메이션이 시작되는 쪽입니다.
 "True on the one step the feet arrive on the floor: on the floor now, and not on it last step. It keeps last step's footing in a variable of its own and updates it AFTER asking - a memory updated before the question is asked would always agree with the present, and the row could never be true.","발이 바닥에 닿는 그 한 스텝에만 참입니다. 지금은 바닥 위이고 이전 스텝에는 아니었다는 뜻입니다. 이전 스텝의 접지를 자체 변수에 기억해 두고, 물어본 뒤에 갱신합니다. 먼저 갱신하면 기억이 늘 현재와 같아져서 이 행은 결코 참이 될 수 없습니다."
-"True on the one step the feet leave the floor: not on it now, and on it last step. The same memory the landing question keeps, read the other way round.","발이 땅에서 떨어지는 그 한 스텝에만 참입니다. 지금은 접지하지 않았고 이전 스텝에는 접지했다는 뜻입니다. 착지 질문이 가진 것과 같은 기억을 반대로 읽은 것입니다."
+"True on the one step the feet leave the floor: not on it now, and on it last step. The same memory the landing question keeps, read the other way round.",발이 땅에서 떨어지는 그 한 스텝에만 참입니다. 지금은 접지하지 않았고 이전 스텝에는 접지했다는 뜻입니다. 착지 질문이 가진 것과 같은 기억을 반대로 읽은 것입니다.
 "Runs when something moves into this area and the area was empty until then - the pressure plate going down, the room waking up. Later arrivals do not run it again; the question underneath is what says so, and it is an ordinary condition you can read and edit.","무언가가 이 영역에 들어오고, 그때까지 영역이 비어 있었을 때 실행됩니다. 압력판이 내려가고 방이 깨어나는 장면입니다. 이후의 진입으로는 다시 실행되지 않습니다. 그렇게 말하는 것은 아래의 조건이며, 읽고 편집할 수 있는 평범한 조건입니다."
 "Runs when something leaves this area and nothing is left inside - the plate coming back up, the room going quiet. The other half of the first arrival, and the pair a door or a lift is written from.","무언가가 이 영역을 떠나고 안에 아무것도 남지 않았을 때 실행됩니다. 압력판이 되돌아오고 방이 조용해지는 장면입니다. 첫 진입의 다른 한쪽이며, 문이나 리프트는 이 둘로 씁니다."
 "True when exactly one body is inside this area. Asked in an arrival, that is the arrival which filled an empty area: what just came in is already listed by then, so a list of one held nothing a moment ago.","이 영역 안에 바디가 정확히 하나 있을 때 참입니다. 진입 안에서 물으면, 그것은 빈 영역을 채운 진입입니다. 방금 들어온 것은 그 시점에 이미 목록에 있으므로, 하나뿐인 목록은 조금 전까지 비어 있었습니다."
 "True when nothing is inside this area. Asked in a departure, that is the departure which emptied it: what just left is already off the list by then, so an empty list means it was the last one.","이 영역 안에 아무것도 없을 때 참입니다. 이탈 안에서 물으면, 그것은 영역을 비운 이탈입니다. 방금 나간 것은 그 시점에 이미 목록에서 빠졌으므로, 빈 목록은 그것이 마지막이었다는 뜻입니다."
-"The body that arrived. Filled in for you when the trigger fires - use it in the rows underneath.","도착한 바디입니다. 트리거가 발동할 때 자동으로 채워지니 아래 행에서 사용하세요."
-"The body that left. Filled in for you when the trigger fires - use it in the rows underneath.","떠난 바디입니다. 트리거가 발동할 때 자동으로 채워지니 아래 행에서 사용하세요."
+The body that arrived. Filled in for you when the trigger fires - use it in the rows underneath.,도착한 바디입니다. 트리거가 발동할 때 자동으로 채워지니 아래 행에서 사용하세요.
+The body that left. Filled in for you when the trigger fires - use it in the rows underneath.,떠난 바디입니다. 트리거가 발동할 때 자동으로 채워지니 아래 행에서 사용하세요.
 "This node is a character body: your own rows drive it, one move at a time, and it stops when it runs into something. What it hit comes back from its own move rather than from a signal.","이 노드는 캐릭터 바디입니다. 당신의 행이 한 번에 한 걸음씩 움직이고, 무언가에 부딪히면 멈춥니다. 무엇에 부딪혔는지는 시그널이 아니라 그 이동 자체에서 돌아옵니다."
-"This node is a rigid body: physics throws it around and it stops what it hits. The hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero.","이 노드는 리지드 바디입니다. 물리가 이리저리 던지고, 부딪힌 것을 멈춰 세웁니다. 충돌은 Contact Monitor가 켜져 있고 Max Contacts Reported가 0보다 클 때만 보고됩니다."
+This node is a rigid body: physics throws it around and it stops what it hits. The hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero.,"이 노드는 리지드 바디입니다. 물리가 이리저리 던지고, 부딪힌 것을 멈춰 세웁니다. 충돌은 Contact Monitor가 켜져 있고 Max Contacts Reported가 0보다 클 때만 보고됩니다."
 "This node is a static body: it stands still and things stop against it. It never moves itself, so the news of a touch usually belongs on whatever ran into it.","이 노드는 스태틱 바디입니다. 가만히 서 있고 물체가 그것에 부딪혀 멈춥니다. 스스로 움직이지 않으므로, 접촉 소식은 보통 부딪혀 온 쪽에 두는 것이 맞습니다."
-"Nothing in this scene can touch anything yet - this row needs one: %s.","이 씬에는 아직 무언가에 닿을 수 있는 것이 없습니다. 이 행에는 %s 이(가) 필요합니다."
-"%d claimed by an entry · %d nothing claims · %d%% renders as rows rather than blocks","%d개는 항목이 주장 · %d개는 아무도 주장하지 않음 · %d%%는 블록이 아니라 행으로 그려짐"
-"Saves back byte-identical.","바이트 단위로 동일하게 다시 저장됩니다."
-"Line %d comes back different.","%d번째 줄이 다르게 돌아옵니다."
-"buffer","버퍼"
-"saved","저장됨"
-"Mark each value span as [[name: text]], then check it.","값 구간을 [[name: text]] 로 표시한 뒤 확인하세요."
-"Refused: %s","거부됨: %s"
-"This example derives an entry.","이 예제에서 항목을 도출합니다."
-"Lift Workbench - what claims each line","리프트 작업대 - 각 줄을 무엇이 주장하는가"
-"Paste code here","여기에 코드를 붙여넣으세요"
-"Claimed by","주장한 쪽"
-"What claims each line","각 줄을 무엇이 주장하는가"
-"What it saves back as","다시 저장될 모습"
-"The rows it opens as","열릴 때의 행"
-"Draft an example…","예제 초안 쓰기…"
-"Take the selected unclaimed line to the by-example form and derive an entry from it.","선택한 미주장 줄을 예제 양식으로 가져가 항목을 도출합니다."
-"Draft an example","예제 초안 쓰기"
-"The line, with its value spans marked","값 구간을 표시한 줄"
+Nothing in this scene can touch anything yet - this row needs one: %s.,이 씬에는 아직 무언가에 닿을 수 있는 것이 없습니다. 이 행에는 %s 이(가) 필요합니다.
+%d claimed by an entry · %d nothing claims · %d%% renders as rows rather than blocks,%d개는 항목이 주장 · %d개는 아무도 주장하지 않음 · %d%%는 블록이 아니라 행으로 그려짐
+Saves back byte-identical.,바이트 단위로 동일하게 다시 저장됩니다.
+Line %d comes back different.,%d번째 줄이 다르게 돌아옵니다.
+buffer,버퍼
+saved,저장됨
+"Mark each value span as [[name: text]], then check it.",값 구간을 [[name: text]] 로 표시한 뒤 확인하세요.
+Refused: %s,거부됨: %s
+This example derives an entry.,이 예제에서 항목을 도출합니다.
+Lift Workbench - what claims each line,리프트 작업대 - 각 줄을 무엇이 주장하는가
+Paste code here,여기에 코드를 붙여넣으세요
+Claimed by,주장한 쪽
+What claims each line,각 줄을 무엇이 주장하는가
+What it saves back as,다시 저장될 모습
+The rows it opens as,열릴 때의 행
+Draft an example…,예제 초안 쓰기…
+Take the selected unclaimed line to the by-example form and derive an entry from it.,선택한 미주장 줄을 예제 양식으로 가져가 항목을 도출합니다.
+Draft an example,예제 초안 쓰기
+"The line, with its value spans marked",값 구간을 표시한 줄
 "A value span is [[name: text]], or [[name|fragment: text]] to say which fragment it is. Everything outside a span is matched literally.","값 구간은 [[name: text]] 이며, 어떤 조각인지 말하려면 [[name|fragment: text]] 로 씁니다. 구간 밖은 그대로 비교됩니다."
-"Entry id","항목 ID"
-"Row it means","뜻하는 행"
-"The entry this derives","여기서 도출되는 항목"
+Entry id,항목 ID
+Row it means,뜻하는 행
+The entry this derives,여기서 도출되는 항목
 Nothing drafted yet.,아직 작성된 초안이 없습니다.
 "These are asked before every shipped spelling, in this window only. They are gone when it closes, and nothing on disk is written.","이 창에서만, 기본 제공 표기보다 먼저 조회됩니다. 창을 닫으면 사라지며 디스크에는 아무것도 쓰지 않습니다."
 Clear drafts,초안 지우기
 "Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.","이 창이 보관 중인 초안을 비워, 초안이 차지하던 각 줄을 이전 상태로 되돌립니다."
-"Check","확인"
-"Add draft","초안 추가"
+Check,확인
+Add draft,초안 추가
 "Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.",경로 순서로 %d개 스크립트(전체 %d개 중)를 읽었습니다. 아래 기록은 이 프로젝트의 표본이며 전체가 아닙니다. 매번 같은 스크립트를 읽습니다.
 "%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.","읽은 내용의 %d%%가 행으로 그려지고, 모든 줄에 이름이 붙어 있습니다. 여기에 코드로 남는 것은 없습니다."
 "%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.","읽은 내용의 %d%%가 행으로 그려집니다 - 이것은 그리기에 대한 물음입니다. 이름에 대한 물음은 그 아래에 있습니다: %d줄은 정직한 코드로 남습니다. 아직 어떤 어휘도 그것을 주장하지 않기 때문입니다. 둘 다 참이고, 같은 숫자가 아닙니다."
 "%d more shape(s) are said more than once here, over %d line(s). The ledger names the commonest and counts the rest.","여기에서 %d개의 형태가 더 여러 번 나타나며, %d줄에 걸쳐 있습니다. 장부는 가장 흔한 것을 이름 짓고 나머지는 셉니다."
-"%d line(s) are the same shape: %s","%d줄이 같은 형태입니다: %s"
-"line %d: %s","%d번째 줄: %s"
-"... and %d more line(s) of the same shape.","... 같은 형태의 줄이 %d개 더 있습니다."
+%d line(s) are the same shape: %s,%d줄이 같은 형태입니다: %s
+line %d: %s,%d번째 줄: %s
+... and %d more line(s) of the same shape.,... 같은 형태의 줄이 %d개 더 있습니다.
 "%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d줄은 여기의 다른 어떤 것도 반복하지 않는 형태입니다. 나열하지 않고 셉니다: 한 번만 말해진 줄은 누구의 표도 아니며, 코드로 남는 것이 맞습니다."
 "%d line(s) inside those runs hold no statement to shape - a note, or the inside of a text block.",해당 구간의 %d개 줄에는 형태를 잡을 문장이 없습니다. 주석이거나 텍스트 블록의 내부입니다.
 On object freed,객체 해제 시
@@ -5539,72 +5539,72 @@ Notifications,알림
 "Runs as the very last thing that happens to this object, just before its memory goes. Different from On destroyed, which is the node leaving the tree and can happen more than once - this happens exactly once and nothing follows it, so it is where a handle held somewhere else gets given back.","이 객체에 일어나는 맨 마지막 일로, 메모리가 사라지기 직전에 실행됩니다. 노드가 트리에서 빠지는 파괴되었을 때와는 다르며 그쪽은 여러 번 일어날 수 있습니다 - 이것은 정확히 한 번만 일어나고 뒤에 아무것도 오지 않으므로, 다른 곳에서 들고 있던 핸들을 돌려주는 자리입니다."
 "Runs when the player closes the window - the X, or the system asking the game to quit. The game does NOT quit by itself when this arrives if the project is set to handle it, which is what makes room for a ""save first?"" prompt.","플레이어가 창을 닫을 때 - 닫기 버튼, 또는 시스템이 게임에 종료를 요청할 때 - 실행됩니다. 프로젝트가 이것을 직접 처리하도록 설정되어 있으면 이 알림이 와도 게임은 스스로 종료하지 않습니다. 그래서 먼저 저장할까요 하고 물을 여지가 생깁니다."
 "user:// - the player's folder: writable, one per player, survives updates.","user:// - 플레이어의 폴더: 쓰기 가능, 플레이어마다 하나, 업데이트 후에도 남습니다."
-"res:// - the game's own files: READ-ONLY once exported.","res:// - 게임 자체의 파일: 내보낸 뒤에는 읽기 전용입니다."
-"an absolute path: this folder exists on one computer and nowhere else.","절대 경로: 이 폴더는 컴퓨터 한 대에만 존재합니다."
+res:// - the game's own files: READ-ONLY once exported.,res:// - 게임 자체의 파일: 내보낸 뒤에는 읽기 전용입니다.
+an absolute path: this folder exists on one computer and nowhere else.,절대 경로: 이 폴더는 컴퓨터 한 대에만 존재합니다.
 "user:// is a real folder on the player's machine: %APPDATA%\Godot\app_userdata\<project> on Windows, ~/Library/Application Support/Godot/app_userdata/<project> on macOS, ~/.local/share/godot/app_userdata/<project> on Linux. Open the player's data folder opens it while the game runs.","user:// 는 플레이어 컴퓨터의 실제 폴더입니다: Windows 에서는 %APPDATA%\Godot\app_userdata\<project>, macOS 에서는 ~/Library/Application Support/Godot/app_userdata/<project>, Linux 에서는 ~/.local/share/godot/app_userdata/<project>. ""플레이어의 데이터 폴더 열기"" 는 게임이 실행되는 동안 그 폴더를 엽니다."
-"%s writes to a res:// path, which works here and fails in every exported build - res:// is a packed archive once the game is built, not a folder. First: %s.","%s 이(가) res:// 경로에 씁니다. 여기서는 동작하지만 내보낸 빌드에서는 항상 실패합니다 - 빌드된 뒤의 res:// 는 폴더가 아니라 패킹된 아카이브입니다. 처음: %s."
+"%s writes to a res:// path, which works here and fails in every exported build - res:// is a packed archive once the game is built, not a folder. First: %s.",%s 이(가) res:// 경로에 씁니다. 여기서는 동작하지만 내보낸 빌드에서는 항상 실패합니다 - 빌드된 뒤의 res:// 는 폴더가 아니라 패킹된 아카이브입니다. 처음: %s.
 "A game writes to user:// - the player's folder, which is writable, one per player, and survives the game being updated.","게임은 user:// 에 씁니다 - 플레이어의 폴더로, 쓰기 가능하고 플레이어마다 하나이며 게임을 업데이트해도 남습니다."
-"%s reaches a file by an absolute path, which names a folder on one computer and on no other. First: %s.","%s 이(가) 절대 경로로 파일에 접근합니다. 이는 컴퓨터 한 대에만 있는 폴더를 가리킵니다. 처음: %s."
-"A file the game WRITES belongs under user://; a file it SHIPS WITH belongs under res:// and inside the project.","게임이 쓰는 파일은 user:// 아래에, 게임과 함께 배포되는 파일은 res:// 아래 프로젝트 안에 둡니다."
-"%s reads a user:// file without saying what to use when it is not there, and the first run of a game has no save, no settings and no log. Godot answers with empty text rather than an error, so the game reads nothing as data. First: %s.","%s 이(가) user:// 파일을 읽지만 파일이 없을 때 무엇을 쓸지 말하지 않습니다. 게임의 첫 실행에는 세이브도 설정도 로그도 없습니다. Godot 은 오류 대신 빈 텍스트를 돌려주므로 게임은 아무것도 없는 것을 데이터로 읽습니다. 처음: %s."
+"%s reaches a file by an absolute path, which names a folder on one computer and on no other. First: %s.",%s 이(가) 절대 경로로 파일에 접근합니다. 이는 컴퓨터 한 대에만 있는 폴더를 가리킵니다. 처음: %s.
+A file the game WRITES belongs under user://; a file it SHIPS WITH belongs under res:// and inside the project.,"게임이 쓰는 파일은 user:// 아래에, 게임과 함께 배포되는 파일은 res:// 아래 프로젝트 안에 둡니다."
+"%s reads a user:// file without saying what to use when it is not there, and the first run of a game has no save, no settings and no log. Godot answers with empty text rather than an error, so the game reads nothing as data. First: %s.",%s 이(가) user:// 파일을 읽지만 파일이 없을 때 무엇을 쓸지 말하지 않습니다. 게임의 첫 실행에는 세이브도 설정도 로그도 없습니다. Godot 은 오류 대신 빈 텍스트를 돌려주므로 게임은 아무것도 없는 것을 데이터로 읽습니다. 처음: %s.
 "Read Text File (or a fallback) says the answer out loud, and the guard is written into the line.","""텍스트 파일 읽기 (없을 때 쓸 값)"" 은 답을 소리 내어 말하고, 그 보호는 줄 안에 그대로 쓰입니다."
-"%d more like it in this file.","이 파일에 같은 것이 %d 개 더 있습니다."
-"the player's folder","플레이어의 폴더"
+%d more like it in this file.,이 파일에 같은 것이 %d 개 더 있습니다.
+the player's folder,플레이어의 폴더
 "the game's own files, read-only once exported","게임 자체의 파일, 내보낸 뒤에는 읽기 전용"
-"Table Of File","파일의 표"
+Table Of File,파일의 표
 "Reads a .csv with Godot's own CSV reader, one line at a time, and gives you the rows. Quoting is exactly the engine's: a cell in ""double quotes"" may hold the separator, and a doubled """" inside one is a single quote character. Store it with a Set action - the read is several lines long, so it belongs in an action rather than squeezed into a condition.","Godot 자체의 CSV 리더로 .csv 파일을 한 줄씩 읽어 행을 돌려줍니다. 따옴표 규칙은 엔진의 규칙 그대로입니다. ""큰따옴표""로 감싼 칸에는 구분자를 넣을 수 있고, 그 안의 겹친 """"는 따옴표 한 글자입니다. 결과는 설정 액션으로 저장하세요. 읽기가 여러 줄이라 조건에 밀어 넣는 대신 액션에 두는 것이 맞습니다."
-"table of [b]{path}[/b] - {headers}","[b]{path}[/b] 의 표 - {headers}"
-"The .csv to read. Prefer res:// for data that ships with the game; user:// for a file the game itself wrote.","읽어들일 .csv 파일. 게임과 함께 배포되는 데이터는 res://, 게임이 직접 쓴 파일은 user:// 를 쓰세요."
-"First line","첫 줄"
+table of [b]{path}[/b] - {headers},[b]{path}[/b] 의 표 - {headers}
+The .csv to read. Prefer res:// for data that ships with the game; user:// for a file the game itself wrote.,"읽어들일 .csv 파일. 게임과 함께 배포되는 데이터는 res://, 게임이 직접 쓴 파일은 user:// 를 쓰세요."
+First line,첫 줄
 "How the file's first line is read. Naming the columns gives one record per row, so a field is reachable as row[""price""]; otherwise every line is a plain list of cells.","파일의 첫 줄을 어떻게 읽을지. 열 이름으로 읽으면 한 줄이 레코드 하나가 되어 row[""price""] 로 각 항목에 닿을 수 있고, 그렇지 않으면 각 줄은 그냥 칸의 목록입니다."
-"The first line names the columns","첫 줄이 열 이름"
-"Every line is a row","모든 줄이 데이터 행"
-"Write Table To File","표를 파일에 쓰기"
+The first line names the columns,첫 줄이 열 이름
+Every line is a row,모든 줄이 데이터 행
+Write Table To File,표를 파일에 쓰기
 "Writes rows back out as a .csv with Godot's own CSV writer, so a cell holding the separator or a quote is quoted the way the engine quotes it - and a file written here reads back through Table Of File unchanged.","Godot 자체의 CSV 라이터로 행을 다시 .csv 로 씁니다. 구분자나 따옴표가 든 칸은 엔진이 감싸는 방식 그대로 감싸이며, 여기서 쓴 파일은 「파일의 표」로 그대로 다시 읽힙니다."
-"write table [b]{table}[/b] to [b]{path}[/b] - {headers}","표 [b]{table}[/b] 를 [b]{path}[/b] 에 쓰기 - {headers}"
-"File to write. OVERWRITES any existing file. Use user:// - res:// is read-only once the game is exported.","쓸 파일. 기존 파일을 덮어씁니다. user:// 를 쓰세요. res:// 는 게임을 내보내면 읽기 전용이 됩니다."
+write table [b]{table}[/b] to [b]{path}[/b] - {headers},표 [b]{table}[/b] 를 [b]{path}[/b] 에 쓰기 - {headers}
+File to write. OVERWRITES any existing file. Use user:// - res:// is read-only once the game is exported.,쓸 파일. 기존 파일을 덮어씁니다. user:// 를 쓰세요. res:// 는 게임을 내보내면 읽기 전용이 됩니다.
 "The rows to write - the Array variable a table expression filled, or one the sheet built itself.","쓸 행들. 표 식이 채운 Array 변수이거나, 시트가 직접 만든 것."
 "Whether to write a first line naming the columns. Naming them writes one line per record, in the order the first record's fields are in; otherwise every entry is written as a plain list of cells.","열 이름을 담은 첫 줄을 쓸지 여부. 쓰면 첫 레코드의 항목 순서대로 레코드마다 한 줄씩 쓰고, 쓰지 않으면 각 항목을 그냥 칸의 목록으로 씁니다."
-"For Each Line In File","파일의 각 줄마다"
+For Each Line In File,파일의 각 줄마다
 "Runs this event's actions once per LINE of a text file, skipping blank ones. The file is read once and the loop then walks text already in memory, so nothing stays open behind the loop. Windows (CRLF) and old-Mac (CR) endings are handled, and a file that is not there walks nothing. Read the current one as `line`.","텍스트 파일의 각 줄마다 이 이벤트의 액션을 실행하며, 빈 줄은 건너뜁니다. 파일은 한 번만 읽고 그 뒤로는 메모리에 있는 글을 훑으므로 루프 뒤에 열린 채 남는 것이 없습니다. Windows(CRLF)와 옛 Mac(CR) 줄바꿈도 처리하고, 없는 파일은 아무것도 훑지 않습니다. 현재 줄은 `line` 으로 읽습니다."
-"for each line of [b]{path}[/b]","[b]{path}[/b] 의 각 줄마다"
+for each line of [b]{path}[/b],[b]{path}[/b] 의 각 줄마다
 "The text file to walk line by line - a log you wrote earlier, a list of level names, a leaderboard body.","한 줄씩 훑을 텍스트 파일. 앞서 써 둔 로그, 레벨 이름 목록, 순위표 본문 같은 것."
-"written","쓰기"
-"read","읽기"
-"read and written","읽기와 쓰기"
-"asks the player to pick a file","플레이어에게 파일을 고르게 함"
-"and %d more path(s)","그 밖에 경로 %d 개"
-"On Files Dropped","파일을 놓았을 때"
+written,쓰기
+read,읽기
+read and written,읽기와 쓰기
+asks the player to pick a file,플레이어에게 파일을 고르게 함
+and %d more path(s),그 밖에 경로 %d 개
+On Files Dropped,파일을 놓았을 때
 "Runs when the player drags files from their desktop onto the game window and lets go. DESKTOP ONLY: Windows, macOS and Linux raise it, and a web or mobile build never does, so keep another way in beside it.","플레이어가 바탕화면에서 게임 창으로 파일을 끌어다 놓았을 때 실행됩니다. 데스크톱 전용: Windows, macOS, Linux만 발생시키며 웹이나 모바일 빌드에서는 발생하지 않으므로 다른 경로도 함께 두세요."
-"On files dropped {files}","파일 {files} 을(를) 놓았을 때"
-"Every path the player let go of, in one list - a drop can carry more than one file. They are real paths on that machine, not res:// or user:// ones.","플레이어가 놓은 모든 경로를 하나의 목록으로 담습니다. 한 번의 드롭에 여러 파일이 실릴 수 있습니다. res:// 나 user:// 가 아니라 그 컴퓨터의 실제 경로입니다."
-"Ask For A File To Open","열 파일을 물어보기"
-"Opens the player's own file chooser so they can pick a file to read. The answer arrives as On a file chosen, or as On the ask cancelled - both of which the sheet needs an event for, because the emitted line calls them by name.","플레이어 자신의 파일 선택 창을 열어 읽을 파일을 고르게 합니다. 답은 '파일을 골랐을 때' 또는 '묻기를 취소했을 때'로 도착합니다. 생성된 줄이 이름으로 호출하므로 시트에는 두 이벤트가 모두 필요합니다."
-"Ask for a file to open ({filters})","열 파일을 물어보기 ({filters})"
-"Filters","필터"
+On files dropped {files},파일 {files} 을(를) 놓았을 때
+"Every path the player let go of, in one list - a drop can carry more than one file. They are real paths on that machine, not res:// or user:// ones.",플레이어가 놓은 모든 경로를 하나의 목록으로 담습니다. 한 번의 드롭에 여러 파일이 실릴 수 있습니다. res:// 나 user:// 가 아니라 그 컴퓨터의 실제 경로입니다.
+Ask For A File To Open,열 파일을 물어보기
+"Opens the player's own file chooser so they can pick a file to read. The answer arrives as On a file chosen, or as On the ask cancelled - both of which the sheet needs an event for, because the emitted line calls them by name.",플레이어 자신의 파일 선택 창을 열어 읽을 파일을 고르게 합니다. 답은 '파일을 골랐을 때' 또는 '묻기를 취소했을 때'로 도착합니다. 생성된 줄이 이름으로 호출하므로 시트에는 두 이벤트가 모두 필요합니다.
+Ask for a file to open ({filters}),열 파일을 물어보기 ({filters})
+Filters,필터
 "Which files the player may pick. One entry per line of the list, spelled the way Godot spells a filter: the patterns, a semicolon, then the words the chooser shows - ""*.png,*.jpg;Images"".","플레이어가 고를 수 있는 파일. 목록 한 줄에 한 항목씩, Godot 의 필터 표기대로 씁니다 - 패턴, 세미콜론, 그다음 선택 창에 보일 말 - ""*.png,*.jpg;Images""."
-"Ask Where To Save","저장할 곳을 물어보기"
+Ask Where To Save,저장할 곳을 물어보기
 "Opens the player's own save chooser so they can name a file and a folder to write into. Nothing is written by this row: the path arrives as On a file chosen, and a write row does the writing.","플레이어 자신의 저장 위치 선택 창을 열어 파일 이름과 폴더를 정하게 합니다. 이 행은 아무것도 쓰지 않습니다. 경로는 '파일을 골랐을 때'로 도착하고, 쓰기는 쓰기 행이 합니다."
-"Ask where to save ({filters})","저장할 곳을 물어보기 ({filters})"
+Ask where to save ({filters}),저장할 곳을 물어보기 ({filters})
 "Which kind of file is being written. One entry per line of the list, spelled the way Godot spells a filter: the patterns, a semicolon, then the words the chooser shows - ""*.png;PNG image"".","어떤 종류의 파일을 쓰는지. 목록 한 줄에 한 항목씩, Godot 의 필터 표기대로 씁니다 - 패턴, 세미콜론, 그다음 선택 창에 보일 말 - ""*.png;PNG image""."
-"On A File Chosen","파일을 골랐을 때"
+On A File Chosen,파일을 골랐을 때
 "Runs when the player answered an Ask row by picking a file. Both Ask rows end here, so a sheet that asks two different questions remembers which one it asked.","플레이어가 묻기 행에 파일을 골라 답했을 때 실행됩니다. 두 묻기 행이 모두 여기로 끝나므로, 서로 다른 두 가지를 묻는 시트는 어느 쪽을 물었는지 기억해 두세요."
-"On a file chosen {path}","파일 {path} 을(를) 골랐을 때"
+On a file chosen {path},파일 {path} 을(를) 골랐을 때
 "The file the player picked, as a real path on their machine. It is a path and nothing more - reading it is a separate row.","플레이어가 고른 파일을 그 컴퓨터의 실제 경로로 돌려줍니다. 경로일 뿐이며, 읽는 것은 별도의 행이 합니다."
-"On The Ask Cancelled","묻기를 취소했을 때"
-"Runs when the player closed an Ask row's chooser without picking anything. Put whatever was waiting on the answer back the way it was here.","플레이어가 묻기 행의 선택 창을 아무것도 고르지 않고 닫았을 때 실행됩니다. 답을 기다리던 것을 여기서 원래대로 되돌리세요."
-"On the ask cancelled","묻기를 취소했을 때"
-"Image From File","파일의 이미지"
+On The Ask Cancelled,묻기를 취소했을 때
+Runs when the player closed an Ask row's chooser without picking anything. Put whatever was waiting on the answer back the way it was here.,플레이어가 묻기 행의 선택 창을 아무것도 고르지 않고 닫았을 때 실행됩니다. 답을 기다리던 것을 여기서 원래대로 되돌리세요.
+On the ask cancelled,묻기를 취소했을 때
+Image From File,파일의 이미지
 "Reads a picture from outside the project and answers with a texture, ready to hand to a Sprite or a TextureRect. No import step is involved: what you get back is a texture in a variable, and it lives only as long as something holds it.","프로젝트 바깥의 그림을 읽어 텍스처로 돌려줍니다. Sprite 나 TextureRect 에 바로 넘길 수 있습니다. 가져오기 단계는 없습니다. 돌아오는 것은 변수 속의 텍스처이며, 무언가가 붙들고 있는 동안만 존재합니다."
 "image of file {path}, or {fallback}","파일 {path} 의 이미지, 없으면 {fallback}"
 "The picture to read, in any format Godot decodes at runtime: .png, .jpg / .jpeg, .webp, .bmp, .tga, .svg, .ktx, .dds and .hdr.","읽을 그림. Godot 가 실행 중에 해독하는 형식이면 무엇이든 됩니다: .png, .jpg / .jpeg, .webp, .bmp, .tga, .svg, .ktx, .dds, .hdr."
-"If missing","없을 때"
-"What the expression reads as when there is no file at that path. Leave it blank to read the file plainly, with no guard around it.","그 경로에 파일이 없을 때 이 식이 무엇이 되는지. 비워 두면 아무 보호 없이 그대로 읽습니다."
-"Sound From File","파일의 소리"
+If missing,없을 때
+"What the expression reads as when there is no file at that path. Leave it blank to read the file plainly, with no guard around it.",그 경로에 파일이 없을 때 이 식이 무엇이 되는지. 비워 두면 아무 보호 없이 그대로 읽습니다.
+Sound From File,파일의 소리
 "Reads a sound from outside the project and answers with an audio stream, ready to hand to a player node. The line names one reader per format the engine decodes at runtime, so a file it cannot decode reads as the fallback rather than as silence nobody explained.","프로젝트 바깥의 소리를 읽어 오디오 스트림으로 돌려줍니다. 재생 노드에 바로 넘길 수 있습니다. 이 줄은 엔진이 실행 중에 해독하는 형식마다 읽는 쪽을 따로 적으므로, 해독하지 못하는 파일은 설명 없는 침묵이 아니라 대신 쓸 값이 됩니다."
 "sound of file {path}, or {fallback}","파일 {path} 의 소리, 없으면 {fallback}"
 "The sound to read. EXACTLY THREE formats decode at runtime and the line checks for those three by extension: .mp3, .ogg (Ogg Vorbis) and .wav. Prefer a variable here - the path is read once per format the line checks.","읽을 소리. 실행 중에 해독되는 형식은 정확히 셋이며, 이 줄은 확장자로 그 셋을 가려냅니다: .mp3, .ogg (Ogg Vorbis), .wav. 여기에는 변수를 넣는 편이 좋습니다 - 경로는 확인하는 형식마다 한 번씩 읽힙니다."
-"What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it.","그 경로에 파일이 없거나 확장자가 셋 중 어느 것도 아닐 때 이 식이 무엇이 되는지. 비워 두면 아무 보호 없이 그대로 읽습니다."
+"What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it.",그 경로에 파일이 없거나 확장자가 셋 중 어느 것도 아닐 때 이 식이 무엇이 되는지. 비워 두면 아무 보호 없이 그대로 읽습니다.
 Pack Folder Into Zip,폴더를 Zip으로 묶기
 "Writes the files in one folder into a .zip archive, using the engine's own packer. The loop is emitted into your script, so you can see exactly which files it walks - the ones directly in that folder, not the ones inside its subfolders.","엔진 자체 패커로 한 폴더 안의 파일들을 .zip 아카이브에 씁니다. 반복문이 스크립트에 그대로 출력되므로 어떤 파일을 훑는지 정확히 보입니다 - 그 폴더 바로 아래의 파일이며, 하위 폴더 안의 파일은 아닙니다."
 Files: Archives,파일: 아카이브
@@ -5704,10 +5704,10 @@ re-entered %s,%s 에 다시 진입
 This happened %d times in this run.,이번 실행에서 %d 번 일어났습니다.
 Row,행
 States,상태
-"OK","확인"
-"Patrol · Chase · Stagger","순찰 · 추격 · 비틀거림"
+OK,확인
+Patrol · Chase · Stagger,순찰 · 추격 · 비틀거림
 "The states this one object can be in, separated by anything you like. They become an enum, and every row that names a state is offered this list as it types - so a state is picked rather than remembered, and a row naming one that is not here is what the Doctor calls out.","이 오브젝트 하나가 가질 수 있는 상태들입니다. 구분 기호는 무엇이든 좋습니다. 이것들은 열거형이 되고, 상태를 지정하는 모든 행에는 입력하는 동안 이 목록이 제시됩니다. 그래서 상태는 기억하는 것이 아니라 고르는 것이 되고, 여기에 없는 이름을 쓴 행은 Doctor가 알려 줍니다."
-"The state the object opens in - the value the state variable is declared with. It is also the one state that needs no row going to it.","오브젝트가 처음 있는 상태입니다. 상태 변수가 선언되는 값이기도 합니다. 그리로 가는 행이 필요 없는 유일한 상태이기도 합니다."
+The state the object opens in - the value the state variable is declared with. It is also the one state that needs no row going to it.,오브젝트가 처음 있는 상태입니다. 상태 변수가 선언되는 값이기도 합니다. 그리로 가는 행이 필요 없는 유일한 상태이기도 합니다.
 Error,오류
 Warning,경고
 this sheet,이 시트
@@ -5718,9 +5718,9 @@ Add row,행 추가
 "Find ""%s"" in every sheet…","모든 시트에서 ""%s"" 찾기…"
 "That row is in %s, which is not open.",그 행은 %s 에 있으며 열려 있지 않습니다.
 "%s is declared in %s - opened it, but the row it is on has moved.",%s 은(는) %s 에 선언되어 있습니다 - 열었지만 해당 행이 이동했습니다.
-"%s is declared in %s, which would not open.","%s 은(는) %s 에 선언되어 있지만 그 파일을 열지 못했습니다."
+"%s is declared in %s, which would not open.",%s 은(는) %s 에 선언되어 있지만 그 파일을 열지 못했습니다.
 %s is a mode of this sheet's own declaration.,%s 은(는) 이 시트 자체 선언의 모드입니다.
-"Opened %s, but the row that finding named is not there any more - this is the last audit's list. Run the Doctor again.","%s 을(를) 열었지만 그 지적이 가리킨 행은 더 이상 없습니다. 이것은 지난 점검의 목록입니다. Doctor를 다시 실행하세요."
+"Opened %s, but the row that finding named is not there any more - this is the last audit's list. Run the Doctor again.",%s 을(를) 열었지만 그 지적이 가리킨 행은 더 이상 없습니다. 이것은 지난 점검의 목록입니다. Doctor를 다시 실행하세요.
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.",이 발견 항목은 %s 에 대한 것이며 시트가 아닙니다 - FileSystem 독에서 여세요.
 %s is not in the scene that is open.,%s 은(는) 열려 있는 씬에 없습니다.
 %s is no longer in the project.,%s 은(는) 더 이상 프로젝트에 없습니다.
@@ -5944,7 +5944,7 @@ Add event,이벤트 추가
 + Add…,+ 추가…
 Add an event to this sheet.,이 시트에 이벤트를 추가합니다.
 Everything you can add here - the same menu right-clicking empty space opens.,여기에 추가할 수 있는 모든 것 - 빈 공간을 오른쪽 클릭할 때와 같은 메뉴입니다.
-"The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back.","툴바가 쉬고 있습니다: 모든 버튼은 메뉴 또는 화살표 안에 있으며 단축키는 그대로입니다. 보기 > 전체 툴바로 모두 되돌립니다."
+"The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back.",툴바가 쉬고 있습니다: 모든 버튼은 메뉴 또는 화살표 안에 있으며 단축키는 그대로입니다. 보기 > 전체 툴바로 모두 되돌립니다.
 Sheet theme,시트 테마
 "The theme this sheet is drawn with - the bundled presets, plus Match Editor, which derives the sheet's colours from your own editor theme. Remembered on the sheet, so it travels with the file.","이 시트를 그리는 테마 - 기본 제공 프리셋과, 편집기 테마에서 시트 색을 이끌어내는 Match Editor. 시트에 기억되므로 파일과 함께 이동합니다."
 Variable rows,변수 행
@@ -7247,7 +7247,7 @@ What this file is: a script.,이 파일의 정체: 스크립트.
 Add to Class Head…,클래스 헤드에 추가…
 Click to change what kind of script it is.,클릭하여 스크립트 종류를 변경합니다.
 Event %d selected,이벤트 %d 선택됨
-Comment - drag the grip to move it into an event's actions or between events.,"주석 - 손잡이를 끌어 이벤트의 액션 안이나 이벤트 사이로 옮깁니다."
+Comment - drag the grip to move it into an event's actions or between events.,주석 - 손잡이를 끌어 이벤트의 액션 안이나 이벤트 사이로 옮깁니다.
 Side Rail,사이드 레일
 "The panels beside the sheet - Open Sheets, Objects, Functions. Unticked, the rail is tucked away and the sheet takes the width.","시트 옆의 패널 - 열린 시트, 오브젝트, 함수. 체크를 해제하면 레일이 접히고 시트가 전체 너비를 차지합니다."
 Move every child of %s to %s,%s의 모든 자식을 %s(으)로 옮기기
@@ -8907,7 +8907,7 @@ Renaming changes its class name and every use in one undo step; the places are l
 Renaming changes its name in Project Settings > Globals and every use; the places are listed before anything is written. The file keeps its name.,이름을 바꾸면 프로젝트 설정 > Globals의 이름과 모든 사용처가 바뀝니다. 무엇이든 쓰기 전에 위치가 나열됩니다. 파일 이름은 그대로입니다.
 "Click one to see its properties, double-click to add it. Ones made for another kind of object are greyed, with the reason on hover.","클릭하면 속성을 보여 주고, 더블 클릭하면 추가합니다. 다른 종류의 오브젝트용은 회색으로 표시되며, 마우스를 올리면 이유가 나옵니다."
 No lines yet - Find text fills it.,아직 줄이 없습니다 - 텍스트 찾기로 채워집니다.
-"Your unsaved edits could not be kept as a backup, so the file on disk was not loaded. Save this version, or fix what stops it compiling, and choose again.","저장하지 않은 편집을 백업으로 남길 수 없어 디스크의 파일을 불러오지 않았습니다. 이 버전을 저장하거나 컴파일을 막는 문제를 고친 뒤 다시 선택하세요."
+"Your unsaved edits could not be kept as a backup, so the file on disk was not loaded. Save this version, or fix what stops it compiling, and choose again.",저장하지 않은 편집을 백업으로 남길 수 없어 디스크의 파일을 불러오지 않았습니다. 이 버전을 저장하거나 컴파일을 막는 문제를 고친 뒤 다시 선택하세요.
 "A picture's path - type it, or drag the picture here from the FileSystem dock.",그림의 경로입니다. 직접 입력하거나 파일시스템 독에서 그림을 여기로 끌어 오세요.
 "A picture: an icon, a portrait, a sprite. The cell holds its file path; drag one in from the FileSystem dock.","그림: 아이콘, 초상화, 스프라이트. 셀에는 파일 경로가 들어갑니다. 파일시스템 독에서 끌어 넣으세요."
 "What a new row starts with in this column, here and in the Inspector's Add Row.",새 행이 이 열에서 처음 갖는 값입니다. 여기와 인스펙터의 행 추가 모두에서 쓰입니다.
@@ -9218,7 +9218,7 @@ Rows the checker flags,검사기가 표시한 행
 "Each moment is counted off the game's report frames, so it is accurate to a quarter of a second and no finer. The game reports one state per running copy without saying which node sent it, so this describes ONE running object: with several stateful objects alive at once their reports interleave here.","각 순간은 게임의 보고 프레임으로 세므로 정밀도는 0.25초까지입니다. 게임은 실행 중인 사본마다 상태 하나를 보고하지만 어느 노드가 보냈는지는 말하지 않으므로, 이것은 실행 중인 오브젝트 하나를 설명합니다. 상태를 가진 오브젝트가 동시에 여럿 있으면 보고가 여기서 섞입니다."
 Nothing to point at in this trail.,이 기록에서 짚을 것이 없습니다.
 No change of state in this run yet.,이번 실행에서는 아직 상태 변화가 없습니다.
-"%d catalogs here were made by hand, so nothing was written to them: %s.","%d개의 카탈로그는 직접 만든 것이라 아무것도 쓰지 않았습니다: %s."
+"%d catalogs here were made by hand, so nothing was written to them: %s.",%d개의 카탈로그는 직접 만든 것이라 아무것도 쓰지 않았습니다: %s.
 This variable lives in %s; open that file to end its group.,이 변수는 %s에 있습니다. 그룹을 끝내려면 그 파일을 여세요.
 Values players already saved under %s will not load after the rename: their save files keep them under the old name.,플레이어가 %s 이름으로 이미 저장한 값은 이름을 바꾼 뒤에는 불러오지 않습니다. 저장 파일에는 옛 이름으로 남아 있습니다.
 Keep loading the old name,옛 이름도 계속 불러오기
@@ -9726,10 +9726,10 @@ Fold or unfold what this kind inherits.,이 종류가 상속받는 것을 접거
 "read here, changed on %s's sheet","여기서는 읽기만, 변경은 %s의 시트에서"
 Double-click to start it at another value.,더블 클릭하여 다른 값으로 시작합니다.
 Right-click to replace it in %s.,오른쪽 클릭하여 %s에서 대체합니다.
-"%s changed since this step, so no file was written and the sheet is not saved.","%s이(가) 이 단계 이후 변경되어 파일을 쓰지 않았고 시트도 저장하지 않았습니다."
-"In %s, 1 test of %s will test %s instead.","%s에서 %s을(를) 확인하는 테스트 1개가 대신 %s을(를) 확인합니다."
-"In %s, %d tests of %s will test %s instead.","%s에서 %d개의 %s 테스트가 대신 %s을(를) 확인합니다."
-"%s saves %s as a number: after the removal, a saved number can name a different state.","%s은(는) %s을(를) 숫자로 저장합니다. 제거 후에는 저장된 숫자가 다른 상태를 가리킬 수 있습니다."
+"%s changed since this step, so no file was written and the sheet is not saved.",%s이(가) 이 단계 이후 변경되어 파일을 쓰지 않았고 시트도 저장하지 않았습니다.
+"In %s, 1 test of %s will test %s instead.",%s에서 %s을(를) 확인하는 테스트 1개가 대신 %s을(를) 확인합니다.
+"In %s, %d tests of %s will test %s instead.",%s에서 %d개의 %s 테스트가 대신 %s을(를) 확인합니다.
+"%s saves %s as a number: after the removal, a saved number can name a different state.",%s은(는) %s을(를) 숫자로 저장합니다. 제거 후에는 저장된 숫자가 다른 상태를 가리킬 수 있습니다.
 + Add to '%s'…,+ '%s'에 추가…
 "+ Add to ""%s""…","+ ""%s""에 추가…"
 "Add event to ""%s""","""%s""에 이벤트 추가"
@@ -10028,33 +10028,33 @@ Every physics tick,매 물리 틱
 every physics tick,매 물리 틱
 no starting value,시작 값 없음
 "%s is Array[%s] and %s is Array[%s], and a typed array only holds its own type.","%s은(는) Array[%s]이고 %s은(는) Array[%s]이며, 형식이 지정된 배열은 자신의 형식만 담습니다."
-different types,"형식이 다릅니다"
-the two types differ,"두 형식이 다릅니다"
-For each popped from the front of %s as %s,"%s의 앞에서 꺼낸 각 항목을 %s(으)로"
-For each popped from the back of %s as %s,"%s의 뒤에서 꺼낸 각 항목을 %s(으)로"
+different types,형식이 다릅니다
+the two types differ,두 형식이 다릅니다
+For each popped from the front of %s as %s,%s의 앞에서 꺼낸 각 항목을 %s(으)로
+For each popped from the back of %s as %s,%s의 뒤에서 꺼낸 각 항목을 %s(으)로
 Edit it anyway,그래도 편집
 %s is now editable.,%s 편집이 가능해졌습니다.
 %s is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.,%s은(는) 기본 제공 동작입니다. 팩의 새 버전을 추가하면 이 파일과 수정 내용이 교체됩니다.
 This function is locked - right-click it and choose Unlock this function,이 함수는 잠겨 있습니다 - 우클릭 후 이 함수 잠금 해제를 선택하세요
-group %s,"그룹 %s"
-list %s,"리스트 %s"
-Choose a group or list,"그룹 또는 리스트 고르기"
-Use a group instead of %s,"%s 대신 그룹 사용"
+group %s,그룹 %s
+list %s,리스트 %s
+Choose a group or list,그룹 또는 리스트 고르기
+Use a group instead of %s,%s 대신 그룹 사용
 "%s is now the group ""%s"": add_to_group, remove_from_group, is_in_group and For each in group.","%s이(가) 이제 그룹 ""%s""입니다: add_to_group, remove_from_group, is_in_group, For each in group."
-Pick the %s,"%s 고르기"
-This event now picks %s.,"이 이벤트는 이제 %s을(를) 고릅니다."
-Drop freed instances first,"먼저 해제된 인스턴스 제거"
-Added a row above the loop that drops freed instances from %s.,"루프 위에 %s에서 해제된 인스턴스를 제거하는 행을 추가했습니다."
-Use a group instead,"대신 그룹 사용"
+Pick the %s,%s 고르기
+This event now picks %s.,이 이벤트는 이제 %s을(를) 고릅니다.
+Drop freed instances first,먼저 해제된 인스턴스 제거
+Added a row above the loop that drops freed instances from %s.,루프 위에 %s에서 해제된 인스턴스를 제거하는 행을 추가했습니다.
+Use a group instead,대신 그룹 사용
 "%s holds nodes but is never read by position or order. A group is Godot's way to keep an unordered set of nodes, and it drops a destroyed instance by itself.","%s에는 노드가 들어 있지만 위치나 순서로 읽히는 일이 없습니다. 그룹은 순서 없는 노드 집합을 담는 Godot의 방식이며, 파괴된 인스턴스를 스스로 제거합니다."
 "%s is read in a loop but nothing on this sheet ever takes a destroyed instance out of it, and the next use of a freed one is an error (a group needs no such clean-up).","%s은(는) 루프에서 읽히지만 이 시트에는 파괴된 인스턴스를 제거하는 곳이 없고, 해제된 인스턴스를 다음에 쓰면 오류입니다(그룹은 이런 정리가 필요 없습니다)."
-Pick the %s from a group,"그룹에서 %s 고르기"
-Pick the %s from %s,"%s에서 %s 고르기"
+Pick the %s from a group,그룹에서 %s 고르기
+Pick the %s from %s,%s에서 %s 고르기
 "This row reaches into %s, a list that belongs to another object. It works, but the object that owns a list should be asked for it through a function or a signal instead.","이 행은 다른 오브젝트의 리스트 %s에 손을 뻗습니다. 동작은 하지만, 리스트를 가진 오브젝트에는 함수나 시그널로 물어보는 편이 좋습니다."
-"No %s is picked here. A pick lasts for its own event and the sub-events under it, so this row has nothing to act on.","여기에는 선택된 %s이(가) 없습니다. 선택은 자기 이벤트와 그 아래 하위 이벤트에서만 유지되므로 이 행은 작용할 대상이 없습니다."
-Picked here,"여기서 선택됨"
+"No %s is picked here. A pick lasts for its own event and the sub-events under it, so this row has nothing to act on.",여기에는 선택된 %s이(가) 없습니다. 선택은 자기 이벤트와 그 아래 하위 이벤트에서만 유지되므로 이 행은 작용할 대상이 없습니다.
+Picked here,여기서 선택됨
 "The instances this event picked or was handed, by the names the code uses.","이 이벤트가 선택했거나 전달받은 인스턴스이며, 코드에서 쓰는 이름으로 표시됩니다."
-"The %s this event picked, written as %s. Rows you add here act on it.","이 이벤트가 선택한 %s이며 %s(으)로 쓰여 있습니다. 여기서 추가하는 행은 그것에 작용합니다."
+"The %s this event picked, written as %s. Rows you add here act on it.",이 이벤트가 선택한 %s이며 %s(으)로 쓰여 있습니다. 여기서 추가하는 행은 그것에 작용합니다.
 %s - variables,%s - 변수
 Variable…,변수…
 %s is in the secret group. Add the event that counts it the first time the player walks in?,%s 은(는) secret 그룹에 있습니다. 플레이어가 처음 들어갈 때 세는 이벤트를 추가할까요?
@@ -10489,16 +10489,16 @@ and %d more.,그 외 %d개.
 "Line %d starts with %s, which is not a word this reads, so it is only a note. Check the spelling.","%d번째 줄은 %s(으)로 시작하는데, 읽히는 단어가 아니라서 그냥 메모가 됩니다. 철자를 확인하세요."
 "Line %d starts with %s, which is not a word this reads, so it is only a note. Did you mean %s?","%d번째 줄은 %s(으)로 시작하는데, 읽히는 단어가 아니라서 그냥 메모가 됩니다. %s을(를) 말씀하신 건가요?"
 "Line %d: %s is not a setting a parameter line reads, so it is left out. It reads hint, options, default, default_word, default_code, autocomplete and desc.","%d번째 줄: %s은(는) 매개변수 줄이 읽는 설정이 아니라서 건너뜁니다. hint, options, default, default_word, default_code, autocomplete, desc를 읽습니다."
-"Line %d: %s is not a setting a parameter line reads, so it is left out. Did you mean %s?","%d번째 줄: %s은(는) 매개변수 줄이 읽는 설정이 아니라서 건너뜁니다. %s을(를) 말씀하신 건가요?"
-"Line %d: %s has no colon, so it is left out. Write it as key: value.","%d번째 줄: %s에 콜론이 없어서 건너뜁니다. 키: 값 형태로 쓰세요."
+"Line %d: %s is not a setting a parameter line reads, so it is left out. Did you mean %s?",%d번째 줄: %s은(는) 매개변수 줄이 읽는 설정이 아니라서 건너뜁니다. %s을(를) 말씀하신 건가요?
+"Line %d: %s has no colon, so it is left out. Write it as key: value.",%d번째 줄: %s에 콜론이 없어서 건너뜁니다. 키: 값 형태로 쓰세요.
 "Line %d is a # comment between the words above it and %s, so %s reads with none of them. Start that line with ## instead.","%d번째 줄은 위의 단어들과 %s 사이에 있는 # 주석이라서, %s은(는) 그 단어들 없이 읽힙니다. 이 줄을 ##로 시작하세요."
 "%s has no return type, so it reads as an action. Add -> bool to make it a condition, or a type to make it an expression.","%s에 반환 형식이 없어서 동작으로 읽힙니다. 조건으로 만들려면 -> bool을, 식으로 만들려면 형식을 추가하세요."
 Event sheets with changes that are not saved yet:,아직 저장되지 않은 변경 사항이 있는 이벤트 시트:
 it was not saved - open it in the EventSheet screen and press Save,저장되지 않았습니다 - EventSheet 화면에서 열고 저장을 누르세요
 These event sheets were not saved: %s,다음 이벤트 시트는 저장되지 않았습니다: %s
-"it has never been saved, so it has no file yet - use Save As in the EventSheet screen to give it one","한 번도 저장된 적이 없어 아직 파일이 없습니다 - EventSheet 화면에서 다른 이름으로 저장을 눌러 파일을 만드세요"
+"it has never been saved, so it has no file yet - use Save As in the EventSheet screen to give it one",한 번도 저장된 적이 없어 아직 파일이 없습니다 - EventSheet 화면에서 다른 이름으로 저장을 눌러 파일을 만드세요
 its file still holds unresolved merge markers - finish the merge first,파일에 해결되지 않은 병합 표시가 남아 있습니다 - 먼저 병합을 끝내세요
-"it is open read-only - press Edit Events, or use Save As to keep a copy","읽기 전용으로 열려 있습니다 - 이벤트 편집을 누르거나 다른 이름으로 저장으로 사본을 만드세요"
+"it is open read-only - press Edit Events, or use Save As to keep a copy",읽기 전용으로 열려 있습니다 - 이벤트 편집을 누르거나 다른 이름으로 저장으로 사본을 만드세요
 "%s could not be written, so no file was changed.",%s을(를) 쓸 수 없어서 어떤 파일도 변경되지 않았습니다.
 %d kept,%d개 유지
 open it,열어 보세요
@@ -10530,12 +10530,12 @@ Couldn't save %s: %s.,%s을(를) 저장하지 못했습니다: %s.
 Text that mentions the name - left as it is,이름을 언급하는 텍스트 - 그대로 둡니다
 " %d file(s) of the behaviours that ship with this plugin also say that name, and nothing in them refers to this script, so they are not listed."," 이 플러그인과 함께 제공되는 동작 중 %d개 파일도 같은 이름을 쓰지만, 이 스크립트를 가리키는 것은 없어서 목록에 넣지 않았습니다."
 "%s sits inside a %s, and a Container places its children itself: the next time it arranges them it moves this Control back, so this row seems to do nothing. To place it yourself, put the Control under a plain Control node instead; to change where it ends up inside the Container, change the Container's own settings or this Control's size flags and custom minimum size.","%s 은(는) %s 안에 있고, Container는 자식을 직접 배치합니다. 다음에 정렬할 때 이 Control을 제자리로 되돌리므로 이 행은 아무 일도 하지 않는 것처럼 보입니다. 직접 배치하려면 Control을 일반 Control 노드 아래에 두세요. Container 안에서의 위치를 바꾸려면 Container 자체의 설정이나 이 Control의 Size Flags와 사용자 지정 최소 크기를 바꾸세요."
-"Apply Central Impulse (3D)","중앙 충격 적용 (3D)"
-"Apply Central Impulse","중앙 충격 적용"
+Apply Central Impulse (3D),중앙 충격 적용 (3D)
+Apply Central Impulse,중앙 충격 적용
 "%s is a %s, which the physics engine moves every physics frame, so a Tween on its %s fights the engine: the body jitters, snaps back or is pushed through walls. Tween a child node instead (a Sprite2D, say), move the body with %s, or turn on Freeze on the body first so code may move it.","%s 은(는) %s 이며 물리 엔진이 물리 프레임마다 움직이므로, 그 %s 에 Tween을 쓰면 엔진과 충돌합니다. 몸체가 떨리거나, 되돌아가거나, 벽을 뚫고 지나갑니다. 대신 자식 노드(예: Sprite2D)에 Tween을 쓰거나, %s 로 몸체를 움직이거나, 먼저 몸체의 Freeze를 켜서 코드로 움직일 수 있게 하세요."
 "This behaviour sits under %s, a %s, and it writes its parent's %s every frame while the physics engine moves that body too, so the two fight: the body jitters, snaps back or is pushed through walls. Put the behaviour on a node that is not a physics body (the Sprite2D inside it, or a plain Node2D), or move the body with %s instead.","이 동작은 %s(%s) 아래에 있으며 매 프레임 부모의 %s 을(를) 쓰는데, 물리 엔진도 같은 몸체를 움직이므로 서로 충돌합니다. 몸체가 떨리거나, 되돌아가거나, 벽을 뚫고 지나갑니다. 동작을 물리 몸체가 아닌 노드(안에 있는 Sprite2D나 일반 Node2D)에 두거나, 대신 %s 로 몸체를 움직이세요."
-"An edit was started inside another edit, which cannot be undone as two steps, so it was not applied. Make both changes in the outer edit.","편집 안에서 다른 편집이 시작되었습니다. 두 단계로 되돌릴 수 없으므로 적용되지 않았습니다. 두 변경을 바깥쪽 편집 안에서 함께 하세요."
-"That edit stopped on a script error, so the sheet was left exactly as it was.","그 편집은 스크립트 오류로 멈췄으므로 시트는 원래 그대로 남았습니다."
+"An edit was started inside another edit, which cannot be undone as two steps, so it was not applied. Make both changes in the outer edit.",편집 안에서 다른 편집이 시작되었습니다. 두 단계로 되돌릴 수 없으므로 적용되지 않았습니다. 두 변경을 바깥쪽 편집 안에서 함께 하세요.
+"That edit stopped on a script error, so the sheet was left exactly as it was.",그 편집은 스크립트 오류로 멈췄으므로 시트는 원래 그대로 남았습니다.
 Could not save %s - Godot says: %s. %s,%s을(를) 저장하지 못했습니다 - Godot의 설명: %s. %s
 "Nothing was changed. Check that the file is not read-only or open in another program, that its folder exists and that the disk has room, then try again.","아무것도 바뀌지 않았습니다. 파일이 읽기 전용이거나 다른 프로그램에서 열려 있지 않은지, 폴더가 있는지, 디스크에 공간이 있는지 확인한 뒤 다시 시도하세요."
 Could not delete %s - Godot says: %s. %s,%s을(를) 삭제하지 못했습니다 - Godot의 설명: %s. %s
@@ -10682,36 +10682,36 @@ Nothing here can be rewritten on its own - %d rows are listed below with the rea
 %d rows are left exactly as they are.,%d개 행은 그대로 남습니다.
 After the hold,Hold 이후
 Start together,함께 시작
-Apply keeps a saved theme for this script in this project. Nothing is written into the script.,"적용은 저장된 테마를 이 프로젝트에서 이 스크립트용으로 기억합니다. 스크립트에는 아무것도 쓰지 않습니다."
-Revert,"되돌리기"
-Match Editor,"Match 편집기"
-Untitled theme,"제목 없는 테마"
-Theme Editor - %s,"테마 편집기 - %s"
-%s (changed),"%s (변경됨)"
-Save a Copy…,"사본 저장…"
-Theme saved: %s,"테마를 저장했습니다: %s"
-Theme could not be saved: %s (%s),"테마를 저장할 수 없습니다: %s (%s)"
-Save a Copy,"사본 저장"
-Save Theme As,"테마를 다른 이름으로 저장"
-Save changes to %s?,"%s의 변경 사항을 저장할까요?"
-The swatches you changed are not in the file yet.,"변경한 색은 아직 파일에 없습니다."
-Discard throws the changes away. Cancel keeps the window as it is.,"버리기는 변경 사항을 버립니다. 취소는 창을 그대로 둡니다."
-Your themes,"내 테마"
-Starters,"스타터"
-Open now,"지금 열려 있음"
-Theme,"테마"
-Open / Close %s,"%s 열기 / 닫기"
-Open All / Close All %s,"모든 %s 열기 / 닫기"
-Put Selection into New %s,"선택 항목을 새 %s에 넣기"
-Close %s,"%s 닫기"
-Use For Every Sheet,"모든 시트에 사용"
-Makes this theme the one every sheet wears unless it chose its own. Kept in Project Settings.,"이 테마를 직접 고르지 않은 모든 시트에 씁니다. 프로젝트 설정에 저장됩니다."
-That file is not an event sheet theme.,"그 파일은 이벤트 시트 테마가 아닙니다."
-This sheet's look has no theme file. Save it from the Theme Editor first.,"이 시트의 모양에는 테마 파일이 없습니다. 먼저 테마 편집기에서 저장하세요."
-Sheets with no theme of their own match the editor again.,"자체 테마가 없는 시트는 다시 편집기를 따릅니다."
-Every sheet with no theme of its own now wears %s.,"자체 테마가 없는 모든 시트가 이제 %s을(를) 씁니다."
-Project theme: %s,"프로젝트 테마: %s"
-Edit in Theme Editor,"테마 편집기에서 편집"
+Apply keeps a saved theme for this script in this project. Nothing is written into the script.,적용은 저장된 테마를 이 프로젝트에서 이 스크립트용으로 기억합니다. 스크립트에는 아무것도 쓰지 않습니다.
+Revert,되돌리기
+Match Editor,Match 편집기
+Untitled theme,제목 없는 테마
+Theme Editor - %s,테마 편집기 - %s
+%s (changed),%s (변경됨)
+Save a Copy…,사본 저장…
+Theme saved: %s,테마를 저장했습니다: %s
+Theme could not be saved: %s (%s),테마를 저장할 수 없습니다: %s (%s)
+Save a Copy,사본 저장
+Save Theme As,테마를 다른 이름으로 저장
+Save changes to %s?,%s의 변경 사항을 저장할까요?
+The swatches you changed are not in the file yet.,변경한 색은 아직 파일에 없습니다.
+Discard throws the changes away. Cancel keeps the window as it is.,버리기는 변경 사항을 버립니다. 취소는 창을 그대로 둡니다.
+Your themes,내 테마
+Starters,스타터
+Open now,지금 열려 있음
+Theme,테마
+Open / Close %s,%s 열기 / 닫기
+Open All / Close All %s,모든 %s 열기 / 닫기
+Put Selection into New %s,선택 항목을 새 %s에 넣기
+Close %s,%s 닫기
+Use For Every Sheet,모든 시트에 사용
+Makes this theme the one every sheet wears unless it chose its own. Kept in Project Settings.,이 테마를 직접 고르지 않은 모든 시트에 씁니다. 프로젝트 설정에 저장됩니다.
+That file is not an event sheet theme.,그 파일은 이벤트 시트 테마가 아닙니다.
+This sheet's look has no theme file. Save it from the Theme Editor first.,이 시트의 모양에는 테마 파일이 없습니다. 먼저 테마 편집기에서 저장하세요.
+Sheets with no theme of their own match the editor again.,자체 테마가 없는 시트는 다시 편집기를 따릅니다.
+Every sheet with no theme of its own now wears %s.,자체 테마가 없는 모든 시트가 이제 %s을(를) 씁니다.
+Project theme: %s,프로젝트 테마: %s
+Edit in Theme Editor,테마 편집기에서 편집
 A fixed direction,고정된 방향
 "A label counts from the number it shows to a number. The number is a plain number or a name from your game, such as GameState.score.",라벨이 표시 중인 숫자에서 지정한 숫자까지 세어 올라갑니다. 숫자는 일반 숫자이거나 GameState.score 같은 게임 안의 이름입니다.
 A node,노드
@@ -10867,29 +10867,29 @@ Force z,힘 z
 Label node,라벨 노드
 Pick a property first,먼저 속성을 고르세요
 "A base for dark and a base for light, one accent, a text colour for each. Generate fills both columns at once; anything you then change by hand stays yours.","어두운 쪽 기본색과 밝은 쪽 기본색, 강조색 하나, 각각의 글자색을 고릅니다. 생성하면 두 열이 한꺼번에 채워지고, 이후 손으로 바꾼 것은 그대로 남습니다."
-"Rebuild every colour token, dark and light, from the colours above.","위의 색으로 어두운 쪽과 밝은 쪽의 모든 색을 다시 만듭니다."
-The open sheet keeps its own copy of a theme; pick the theme again to update it.,"열려 있는 시트는 테마의 자체 사본을 갖고 있습니다. 갱신하려면 테마를 다시 고르세요."
-Preview as,"미리보기 모드"
-Dark,"어두움"
-Only the sample sheet changes. Your sheet wears the side that matches Godot's editor theme.,"샘플 시트만 바뀝니다. 내 시트는 Godot 편집기 테마에 맞는 쪽으로 표시됩니다."
+"Rebuild every colour token, dark and light, from the colours above.",위의 색으로 어두운 쪽과 밝은 쪽의 모든 색을 다시 만듭니다.
+The open sheet keeps its own copy of a theme; pick the theme again to update it.,열려 있는 시트는 테마의 자체 사본을 갖고 있습니다. 갱신하려면 테마를 다시 고르세요.
+Preview as,미리보기 모드
+Dark,어두움
+Only the sample sheet changes. Your sheet wears the side that matches Godot's editor theme.,샘플 시트만 바뀝니다. 내 시트는 Godot 편집기 테마에 맞는 쪽으로 표시됩니다.
 Contrast %s : 1 on %s (%s); %s : 1 reads comfortably.,"대비 %s : 1 (%s 위, %s); %s : 1이면 편하게 읽힙니다."
-(no light line: one colour for both),"(밝은 줄 없음: 두 쪽에 같은 색)"
-(no light line: worked out from the editor),"(밝은 줄 없음: 편집기에서 계산됨)"
-Same colour in dark and light: click to give light its own,"어두운 쪽과 밝은 쪽이 같은 색: 클릭하면 밝은 쪽에 별도 색을 줍니다"
-Separate colours: click to use the dark colour in both,"서로 다른 색: 클릭하면 두 쪽 모두 어두운 색을 씁니다"
-Worked out from the editor. Pick a colour to give light its own.,"편집기에서 계산된 색입니다. 색을 고르면 밝은 쪽에 별도 색을 줍니다."
-auto,"자동"
-Follow the editor in light,"밝은 쪽에서 편집기를 따름"
-Follows the editor,"에디터를 따름"
-Starters (copy to edit),"템플릿 (복사해서 편집)"
-worked out from the editor,"에디터에서 계산됨"
-same colour in both,"양쪽에 같은 색"
-hard to read on its row,"그 줄에서 읽기 어려움"
+(no light line: one colour for both),(밝은 줄 없음: 두 쪽에 같은 색)
+(no light line: worked out from the editor),(밝은 줄 없음: 편집기에서 계산됨)
+Same colour in dark and light: click to give light its own,어두운 쪽과 밝은 쪽이 같은 색: 클릭하면 밝은 쪽에 별도 색을 줍니다
+Separate colours: click to use the dark colour in both,서로 다른 색: 클릭하면 두 쪽 모두 어두운 색을 씁니다
+Worked out from the editor. Pick a colour to give light its own.,편집기에서 계산된 색입니다. 색을 고르면 밝은 쪽에 별도 색을 줍니다.
+auto,자동
+Follow the editor in light,밝은 쪽에서 편집기를 따름
+Follows the editor,에디터를 따름
+Starters (copy to edit),템플릿 (복사해서 편집)
+worked out from the editor,에디터에서 계산됨
+same colour in both,양쪽에 같은 색
+hard to read on its row,그 줄에서 읽기 어려움
 "Worked out from Godot's editor, dark or light. Change anything and it becomes a theme of your own: Save As asks where to keep it.","Godot 에디터에서 계산한 어두운 또는 밝은 모습입니다. 무엇이든 바꾸면 나만의 테마가 되며, 다른 이름으로 저장이 저장 위치를 묻습니다."
-"A starter that comes with the plugin, so a plugin update would replace it. Save a Copy makes your own in eventsheet_themes/ and leaves the starter as shipped.","플러그인과 함께 제공되는 템플릿이라 플러그인을 업데이트하면 교체됩니다. 사본 저장은 eventsheet_themes/ 에 내 것을 만들고 템플릿은 제공된 그대로 둡니다."
-A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,"데모와 함께 제공되는 테마입니다. 사본 저장은 eventsheet_themes/ 에 내 것을 만들고 이것은 제공된 그대로 둡니다."
+"A starter that comes with the plugin, so a plugin update would replace it. Save a Copy makes your own in eventsheet_themes/ and leaves the starter as shipped.",플러그인과 함께 제공되는 템플릿이라 플러그인을 업데이트하면 교체됩니다. 사본 저장은 eventsheet_themes/ 에 내 것을 만들고 템플릿은 제공된 그대로 둡니다.
+A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,데모와 함께 제공되는 테마입니다. 사본 저장은 eventsheet_themes/ 에 내 것을 만들고 이것은 제공된 그대로 둡니다.
 A file in your project. Save writes it in place (Ctrl+S) and every open sheet wearing it repaints.,"프로젝트의 파일입니다. 저장하면 그 자리에 쓰이고 (Ctrl+S), 이 테마를 쓰는 열린 시트가 모두 다시 그려집니다."
-not a file: the colours come from Godot's editor theme,"파일이 아님: 색은 Godot 에디터 테마에서 옵니다"
+not a file: the colours come from Godot's editor theme,파일이 아님: 색은 Godot 에디터 테마에서 옵니다
 a card of yours plays here only when its script is marked @tool,직접 만든 카드는 스크립트가 @tool로 표시된 경우에만 여기서 재생됩니다
 Edit this value in the card's script.,이 값은 카드의 스크립트에서 편집하세요.
 Yours,내 카드
@@ -10900,7 +10900,7 @@ Show its cards,카드 보기
 Showing the cards of %s.,%s의 카드를 보여 주고 있습니다.
 No sheet in this project plays %s.,이 프로젝트에는 %s를 재생하는 시트가 없습니다.
 Find what plays this,이것을 재생하는 것 찾기
-"There is no file at %s, so no sheet was opened.","%s에 파일이 없어서 시트를 열지 않았습니다."
+"There is no file at %s, so no sheet was opened.",%s에 파일이 없어서 시트를 열지 않았습니다.
 A block cannot be disabled. Delete it to stop it writing its line.,블록은 비활성화할 수 없습니다. 줄이 기록되지 않게 하려면 블록을 삭제하세요.
 "This block is marked disabled, but it still runs. Delete it to stop it writing its line.",이 블록은 비활성화로 표시되어 있지만 그래도 실행됩니다. 줄이 기록되지 않게 하려면 블록을 삭제하세요.
 "This card's timing is not the default: it waits, repeats, counts real time, or is not always felt.","이 카드의 타이밍은 기본값이 아닙니다. 기다리거나, 반복하거나, 실제 시간으로 세거나, 항상 재생되지는 않습니다."
@@ -10953,15 +10953,15 @@ Add shape,도형 추가
 Enter adds the highlighted shape.,Enter를 누르면 선택한 도형이 추가됩니다.
 texture not found,텍스처를 찾을 수 없음
 %s (not found),%s (찾을 수 없음)
-"Radius is 0, so this circle draws nothing.","반지름이 0이라서 이 원은 아무것도 그리지 않습니다."
-"Radius is 0, so this ring draws nothing.","반지름이 0이라서 이 링은 아무것도 그리지 않습니다."
-"Width is 0, so this rectangle draws nothing.","너비가 0이라서 이 사각형은 아무것도 그리지 않습니다."
-"Height is 0, so this rectangle draws nothing.","높이가 0이라서 이 사각형은 아무것도 그리지 않습니다."
-"The start and the end are the same point, so this line has no length.","시작점과 끝점이 같아서 이 선에는 길이가 없습니다."
-"FOV is 0, so this cone draws nothing.","시야각이 0이라서 이 부채꼴은 아무것도 그리지 않습니다."
-"Radius is 0, so this cone draws nothing.","반지름이 0이라서 이 부채꼴은 아무것도 그리지 않습니다."
-"No texture yet, so this shape draws nothing.","아직 텍스처가 없어서 이 도형은 아무것도 그리지 않습니다."
-"The texture could not be loaded, so this shape draws nothing.","텍스처를 불러올 수 없어서 이 도형은 아무것도 그리지 않습니다."
+"Radius is 0, so this circle draws nothing.",반지름이 0이라서 이 원은 아무것도 그리지 않습니다.
+"Radius is 0, so this ring draws nothing.",반지름이 0이라서 이 링은 아무것도 그리지 않습니다.
+"Width is 0, so this rectangle draws nothing.",너비가 0이라서 이 사각형은 아무것도 그리지 않습니다.
+"Height is 0, so this rectangle draws nothing.",높이가 0이라서 이 사각형은 아무것도 그리지 않습니다.
+"The start and the end are the same point, so this line has no length.",시작점과 끝점이 같아서 이 선에는 길이가 없습니다.
+"FOV is 0, so this cone draws nothing.",시야각이 0이라서 이 부채꼴은 아무것도 그리지 않습니다.
+"Radius is 0, so this cone draws nothing.",반지름이 0이라서 이 부채꼴은 아무것도 그리지 않습니다.
+"No texture yet, so this shape draws nothing.",아직 텍스처가 없어서 이 도형은 아무것도 그리지 않습니다.
+"The texture could not be loaded, so this shape draws nothing.",텍스처를 불러올 수 없어서 이 도형은 아무것도 그리지 않습니다.
 """%s"" is not a shape this list knows. It is kept as it is.","""%s""는 이 목록에서 알 수 없는 도형입니다. 그대로 유지됩니다."
 Unknown shape,알 수 없는 도형
 Shows this same list as a table. Nothing is saved differently.,같은 목록을 표로 보여 줍니다. 저장되는 내용은 달라지지 않습니다.
@@ -10970,7 +10970,7 @@ Shows this list as cards again.,이 목록을 다시 카드로 보여 줍니다.
 Move to bottom,맨 아래로 이동
 Shapes (%d),도형 (%d)
 Dash offset,대시 오프셋
-"Line %d: rename %s to %s. Nothing else changed.","%d번째 줄: %s을(를) %s(으)로 바꾸세요. 다른 것은 바뀌지 않았습니다."
+Line %d: rename %s to %s. Nothing else changed.,%d번째 줄: %s을(를) %s(으)로 바꾸세요. 다른 것은 바뀌지 않았습니다.
 Fade in,페이드 인
 Custom curve,사용자 지정 곡선
 rises from nothing,0에서 올라감
@@ -10982,13 +10982,13 @@ Starts at nothing and reaches %s at %s s.,0에서 시작해 %s초에 %s에 이�
 Starts at %s and is gone at %s s.,%s에서 시작해 %s초에 사라집니다.
 "Holds %s for %s s, then stops.",%s을(를) %s초 동안 유지한 뒤 멈춥니다.
 Save the new file where the card can find it,카드가 찾을 수 있는 곳에 새 파일 저장
-Preview its behaviours,"동작 미리보기"
-Stop previews,"미리보기 중지"
-"Loop is on and nothing in this list takes time, so the player plays it again every frame. Add a Pause or a card with a length.","Loop가 켜져 있는데 이 목록에는 시간이 걸리는 것이 없어서 플레이어가 매 프레임 다시 재생합니다. 일시정지나 길이가 있는 카드를 추가하세요."
-"Nothing in this loop takes time, so the play gives up after %d steps. Give a card in it a length, or the Loop Back a Pause.","이 루프에는 시간이 걸리는 것이 없어서 재생이 %d단계 뒤에 중단됩니다. 루프 안의 카드에 길이를 주거나 Loop Back에 일시정지를 넣으세요."
+Preview its behaviours,동작 미리보기
+Stop previews,미리보기 중지
+"Loop is on and nothing in this list takes time, so the player plays it again every frame. Add a Pause or a card with a length.",Loop가 켜져 있는데 이 목록에는 시간이 걸리는 것이 없어서 플레이어가 매 프레임 다시 재생합니다. 일시정지나 길이가 있는 카드를 추가하세요.
+"Nothing in this loop takes time, so the play gives up after %d steps. Give a card in it a length, or the Loop Back a Pause.",이 루프에는 시간이 걸리는 것이 없어서 재생이 %d단계 뒤에 중단됩니다. 루프 안의 카드에 길이를 주거나 Loop Back에 일시정지를 넣으세요.
 1 card,카드 1장
 %d cards,카드 %d장
-This curve has changes that are not saved to its file yet. The game plays the saved file.,"이 곡선에는 아직 파일에 저장되지 않은 변경 사항이 있습니다. 게임은 저장된 파일을 사용합니다."
+This curve has changes that are not saved to its file yet. The game plays the saved file.,이 곡선에는 아직 파일에 저장되지 않은 변경 사항이 있습니다. 게임은 저장된 파일을 사용합니다.
 Flip,전환
 Pause Or Resume A Juice Player,Juice Player 일시정지 또는 재개
 "Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on until it is resumed.",다른 Juice Player 또는 이 Juice Player를 일시정지하거나 재개하거나 전환합니다. 문이 열려 있는 동안 멈춰 있는 반복 경보처럼 쓸 수 있습니다. 일시정지된 목록은 재개할 때까지 현재 카드에서 멈춰 있습니다.
@@ -11140,22 +11140,22 @@ A scene this sheet holds.,이 시트가 가지고 있는 씬.
 %s is empty in %s. Set it in the Inspector.,%s이(가) %s에서 비어 있습니다. 인스펙터에서 설정하세요.
 A scene,씬
 "A scene file kept in a slot, to make copies of: a bullet, an enemy, a pickup. The Inspector shows a slot you drop a .tscn file into, and a spawn row copies it with its own instantiate().","복사본을 만들기 위해 슬롯에 담아 두는 씬 파일: 총알, 적, 아이템 등. 인스펙터에 .tscn 파일을 끌어다 놓는 슬롯이 보이고, 생성 행이 자체 instantiate()로 복사합니다."
-"Comes back to rest without swinging past it, in about %s s.","넘어가지 않고 약 %s초 만에 원래 자리로 돌아옵니다."
-Swings past rest once and settles in about %s s.,"한 번 넘어간 뒤 약 %s초 만에 자리를 잡습니다."
-Swings past rest %d times and settles in about %s s.,"%d번 넘어간 뒤 약 %s초 만에 자리를 잡습니다."
-"Amount is 0, so the colours are never split.","양이 0 이므로 색은 절대 분리되지 않습니다."
-"The colours stay %s px apart along %s degrees, then snap together after %s s.","색은 %s px 떨어진 채 %s도 방향으로 유지되다가 %s초 뒤에 한순간에 합쳐집니다."
-"The colours part by up to %s px along %s degrees and are back together after %s s.","색은 최대 %s px까지 %s도 방향으로 갈라졌다가 %s초 뒤에 다시 합쳐집니다."
-"The colours stay %s px apart, turning as they go, then snap together after %s s.","색은 %s px 떨어진 채 방향을 바꾸다가 %s초 뒤에 한순간에 합쳐집니다."
-"The colours part by up to %s px, turning as they go, and are back together after %s s.","색은 최대 %s px까지 갈라지며 방향을 바꾸다가 %s초 뒤에 다시 합쳐집니다."
-"There is no Juice node beside this player, so this card does nothing. Add a Juice node under the same object.","이 플레이어 옆에 Juice 노드가 없어서 이 카드는 아무것도 하지 않습니다. 같은 오브젝트 아래에 Juice 노드를 추가하세요."
-"Chromatic Shake","색수차 흔들림"
+"Comes back to rest without swinging past it, in about %s s.",넘어가지 않고 약 %s초 만에 원래 자리로 돌아옵니다.
+Swings past rest once and settles in about %s s.,한 번 넘어간 뒤 약 %s초 만에 자리를 잡습니다.
+Swings past rest %d times and settles in about %s s.,%d번 넘어간 뒤 약 %s초 만에 자리를 잡습니다.
+"Amount is 0, so the colours are never split.",양이 0 이므로 색은 절대 분리되지 않습니다.
+"The colours stay %s px apart along %s degrees, then snap together after %s s.",색은 %s px 떨어진 채 %s도 방향으로 유지되다가 %s초 뒤에 한순간에 합쳐집니다.
+The colours part by up to %s px along %s degrees and are back together after %s s.,색은 최대 %s px까지 %s도 방향으로 갈라졌다가 %s초 뒤에 다시 합쳐집니다.
+"The colours stay %s px apart, turning as they go, then snap together after %s s.",색은 %s px 떨어진 채 방향을 바꾸다가 %s초 뒤에 한순간에 합쳐집니다.
+"The colours part by up to %s px, turning as they go, and are back together after %s s.",색은 최대 %s px까지 갈라지며 방향을 바꾸다가 %s초 뒤에 다시 합쳐집니다.
+"There is no Juice node beside this player, so this card does nothing. Add a Juice node under the same object.",이 플레이어 옆에 Juice 노드가 없어서 이 카드는 아무것도 하지 않습니다. 같은 오브젝트 아래에 Juice 노드를 추가하세요.
+Chromatic Shake,색수차 흔들림
 "Splits the red, green and blue of the screen apart along a direction for a moment, then lets them close again: the colour fringe of a hit, a dash or a landing. It plays through the Juice node beside the player, with the same no-flashing and reduced-effects choices as its Chromatic Shake row.","화면의 빨강, 초록, 파랑을 한순간 한 방향으로 벌렸다가 다시 합칩니다. 타격, 대시, 착지의 색 번짐입니다. 플레이어 옆의 Juice 노드를 통해 재생되며, Chromatic Shake 행과 같은 깜빡임 없음 및 효과 줄이기 설정을 따릅니다."
-"Ends","끝나는 방식"
-"Closes steadily","점점 닫힘"
-"Holds then snaps shut","유지하다가 한순간에 닫힘"
-"Wanders","떠돌아다님"
-"Along an angle","각도를 따라"
+Ends,끝나는 방식
+Closes steadily,점점 닫힘
+Holds then snaps shut,유지하다가 한순간에 닫힘
+Wanders,떠돌아다님
+Along an angle,각도를 따라
 Replace scenes?,장면을 바꿀까요?
 "This writes over %d scene(s), starting with %s, and Ctrl+Z cannot take it back.",%d개의 장면(%s 등)을 덮어씁니다. Ctrl+Z로 되돌릴 수 없습니다.
 Each is kept in Sheet Backups first.,각각 먼저 시트 백업에 보관됩니다.
@@ -11245,15 +11245,15 @@ Opened the issue form in your browser. Nothing is sent until you press Submit th
 The script %s followed its sheet to its new place.,스크립트 %s가 시트의 새 위치를 따라갔습니다.
 "The open sheet follows %s to its new place, and its script %s goes with it.","열려 있는 시트가 %s의 새 위치를 따라가고, 스크립트 %s도 함께 옮겨집니다."
 the Load bindings row of the same pair,같은 쌍의 바인딩 불러오기 행
-"The slot card, which the Save System keeps for the load menu:","슬롯 카드 - 불러오기 메뉴를 위해 Save System이 보관합니다:"
+"The slot card, which the Save System keeps for the load menu:",슬롯 카드 - 불러오기 메뉴를 위해 Save System이 보관합니다:
 "Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.","키보드 ▸ 바인딩 저장은 %s에 쓰고, Settings ▸ Save Bindings는 옵션 옆의 %s 안 [%s]에 보관합니다."
 "Keyboard ▸ Save bindings, or Settings ▸ Save Bindings","키보드 ▸ 바인딩 저장, 또는 Settings ▸ Save Bindings"
-"Saved %s. %s","%s을(를) 저장했습니다. %s"
+Saved %s. %s,%s을(를) 저장했습니다. %s
 "%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.","%s을(를) 쓰지 않았습니다. 이 시트가 만든 것이 아니라 직접 작성한 스크립트이며, 쓰면 작성한 코드가 대체됩니다. 두 이름이 달라지도록 시트나 그 스크립트의 이름을 바꾼 다음 다시 시도하세요."
-"%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.","%s을(를) 쓰지 않았습니다. 시트 %s의 것입니다. 두 이름이 달라지도록 두 시트 중 하나의 이름을 바꾼 다음 다시 시도하세요."
-"Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.","이 시트에는 아직 피커에 게시된 항목이 없습니다. 함수에서 “다른 시트에서 사용 가능”을 선택하면 피커에 표시되는 모습 그대로 여기에 나열됩니다."
-"%d sheet(s) that name it follow it too.","이 파일을 가리키는 시트 %d개도 함께 따라갑니다."
-"Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.","이전 경로를 아직 가리키는 내 스크립트: %d개. 도구 > 프로젝트에서 찾기에서 볼 수 있습니다."
+"%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.",%s을(를) 쓰지 않았습니다. 시트 %s의 것입니다. 두 이름이 달라지도록 두 시트 중 하나의 이름을 바꾼 다음 다시 시도하세요.
+"Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.",이 시트에는 아직 피커에 게시된 항목이 없습니다. 함수에서 “다른 시트에서 사용 가능”을 선택하면 피커에 표시되는 모습 그대로 여기에 나열됩니다.
+%d sheet(s) that name it follow it too.,이 파일을 가리키는 시트 %d개도 함께 따라갑니다.
+Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.,이전 경로를 아직 가리키는 내 스크립트: %d개. 도구 > 프로젝트에서 찾기에서 볼 수 있습니다.
 The tests could not be started in a second copy of Godot.,두 번째 Godot 사본에서 테스트를 시작할 수 없었습니다.
 The test run ended before it wrote a report. Run the tests from a terminal to see why.,보고서를 쓰기 전에 테스트 실행이 끝났습니다. 터미널에서 테스트를 실행해 이유를 확인하세요.
 Ctrl+Z takes it out again.,Ctrl+Z로 다시 뺄 수 있습니다.
@@ -11415,18 +11415,18 @@ Copy to the clipboard,클립보드에 복사
 Copy these rows as shareable snippet text.,이 행들을 공유할 수 있는 스니펫 텍스트로 복사합니다.
 "Jump to ""%s"".","""%s""(으)로 이동합니다."
 Off means the Start page only opens from Sheet ▸ Start page.,끄면 시작 페이지는 시트 ▸ 시작 페이지에서만 열립니다.
-"The screen goes grey except a circle that opens to %s pixels over %s s, and stays grey until told.",
-"The screen goes grey except a circle that opens to %s pixels over %s s, then the colour comes back.",
-A circle of grey grows to %s pixels over %s s and stays until told.,
-"A circle of grey grows to %s pixels over %s s, then fades away.",
-The screen goes %s grey and stays grey until told.,
-"The screen goes %s grey for %s s, then the colour comes back.",
-"In the editor the play button greys the object this player is under, as a stand-in. In the game the whole screen goes grey, through the Screen FX layer of the scene.",
-"Moves up to %s from where it is over %s s, following your curve, and ends exactly where it began.",
-Moves up to %s from where it is half way and is back at %s s.,
-"Starts still and moves up to %s by %s s, then is put back.",
-Moves up to %s at first and is back where it was at %s s.,
-"Moves up to %s for %s s, then is put back.",
+"The screen goes grey except a circle that opens to %s pixels over %s s, and stays grey until told.","화면이 회색이 되고 %s픽셀까지 %s초 동안 열리는 원만 남으며, 해제할 때까지 회색으로 유지됩니다."
+"The screen goes grey except a circle that opens to %s pixels over %s s, then the colour comes back.","화면이 회색이 되고 %s픽셀까지 %s초 동안 열리는 원만 남으며, 그 뒤 색이 돌아옵니다."
+A circle of grey grows to %s pixels over %s s and stays until told.,회색 원이 %s픽셀까지 %s초 동안 커지고 해제할 때까지 유지됩니다.
+"A circle of grey grows to %s pixels over %s s, then fades away.",회색 원이 %s픽셀까지 %s초 동안 커진 뒤 사라집니다.
+The screen goes %s grey and stays grey until told.,화면이 %s만큼 회색이 되고 해제할 때까지 회색으로 유지됩니다.
+"The screen goes %s grey for %s s, then the colour comes back.",화면이 %s만큼 %s초 동안 회색이 된 뒤 색이 돌아옵니다.
+"In the editor the play button greys the object this player is under, as a stand-in. In the game the whole screen goes grey, through the Screen FX layer of the scene.",에디터에서는 재생 버튼이 이 플레이어가 있는 오브젝트를 대신 회색으로 만듭니다. 게임에서는 씬의 Screen FX 레이어를 통해 화면 전체가 회색이 됩니다.
+"Moves up to %s from where it is over %s s, following your curve, and ends exactly where it began.","원래 자리에서 최대 %s까지 %s초 동안 곡선을 따라 움직이고, 시작한 곳과 정확히 같은 곳에서 끝납니다."
+Moves up to %s from where it is half way and is back at %s s.,원래 자리에서 최대 %s까지 움직여 중간에 돌아오기 시작하고 %s초에 제자리로 돌아옵니다.
+"Starts still and moves up to %s by %s s, then is put back.",가만히 시작해 최대 %s만큼 움직이고(%s초에 도달) 제자리로 돌려놓습니다.
+Moves up to %s at first and is back where it was at %s s.,처음에 최대 %s까지 움직이고 %s초에는 원래 있던 곳으로 돌아옵니다.
+"Moves up to %s for %s s, then is put back.",원래 자리에서 최대 %s까지 %s초 동안 움직인 뒤 제자리로 돌려놓습니다.
 Grayscale,그레이스케일
 "Puts the colour out of the screen: all of it, or a circle of grey that grows from this object or from a place on the screen (or the other way round, a circle of colour in a grey world). It can stay grey until told, for a death or a flashback, and Stop brings the colour back. It plays through the scene's Screen FX layer, so the no-flashing and reduced-effects choices hold it. To grey one object, use the Grayscale behaviour instead.","화면에서 색을 뺍니다. 화면 전체이거나, 이 오브젝트 또는 화면의 한 지점에서 커지는 회색 원입니다(반대로 회색 세계 안의 색이 있는 원도 가능). 해제할 때까지 회색으로 둘 수 있어 죽음이나 회상에 쓰며, Stop이 색을 되돌립니다. 씬의 Screen FX 레이어를 통해 재생되므로 깜박임 없음과 효과 줄이기 설정이 적용됩니다. 오브젝트 하나만 회색으로 만들려면 대신 Grayscale 동작을 쓰세요."
 Grayness,회색 정도

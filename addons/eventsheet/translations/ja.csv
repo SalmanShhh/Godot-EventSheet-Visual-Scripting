@@ -2116,7 +2116,7 @@ not in %s,%s にありません
 %d triggers,トリガー %d 件
 %d used,使用中 %d 件
 %d more,他 %d 件
-"%s - starts in %s","%s - 開始は %s"
+%s - starts in %s,%s - 開始は %s
 "Sort by reading order, by count or by name.",読み順・件数・名前で並べ替えます。
 Nothing in this sheet names an object yet.,このシートはまだどのオブジェクトも指していません。
 This script is not on a scene yet - drop it on a node in the Scene dock and its objects appear here.,このスクリプトはまだシーンに置かれていません。シーンドックのノードにドロップすると、そのオブジェクトがここに表示されます。
@@ -5346,7 +5346,7 @@ pooled as %s,%s としてプール
 browse the scene,シーンを表示
 "This one is named by an expression the sheet works out as it runs, so there is no file to show.",これはシートが実行時に組み立てる式で指定されているため、表示できるファイルはありません。
 %s - shown in the FileSystem dock.,%s - ファイルシステムドックに表示しました。
-"This adds a node to the tree inside a collision callback. A 2D physics body or area added there makes Godot print errors while the physics server is busy. Add it on the next idle moment instead.",衝突コールバックの中でノードをツリーへ追加しています。そこで追加した 2D の物理ボディやエリアは、物理サーバーが処理中のあいだ Godot にエラーを出させます。次のアイドル時に追加してください。
+This adds a node to the tree inside a collision callback. A 2D physics body or area added there makes Godot print errors while the physics server is busy. Add it on the next idle moment instead.,衝突コールバックの中でノードをツリーへ追加しています。そこで追加した 2D の物理ボディやエリアは、物理サーバーが処理中のあいだ Godot にエラーを出させます。次のアイドル時に追加してください。
 Add it on the next idle moment,次のアイドル時に追加
 Use the safe spawn row,安全な生成行を使う
 "%s is kept between frames, and anything could have destroyed it by now. Ask whether it is still here before reaching into it.",%s はフレームをまたいで保持されており、すでに何かが破棄した可能性があります。触れる前にまだ存在するか確かめてください。
@@ -5388,7 +5388,7 @@ Layer Names,レイヤー名
 "Type the layer's name first, then Name it…",先にレイヤーの名前を入力してから、名前を付ける… を押してください。
 """%s"" is already layer %d.","""%s"" はすでにレイヤー %d です。"
 Layer %d could not be named.,レイヤー %d に名前を付けられませんでした。
-"%s. Undo puts the number back.","%s。元に戻すと番号に戻ります。"
+%s. Undo puts the number back.,%s。元に戻すと番号に戻ります。
 Name physics layer,物理レイヤーに名前を付ける
 "%s addresses collision layer %d, and Godot has layers 1 to 32 - that call does nothing.",%s は衝突レイヤー %d を指していますが、Godot のレイヤーは 1 から 32 までです。この呼び出しは何もしません。
 "%s is about collision layer %d, which this project does not name - the row reads as the number while every other row reads as a word. Name it in Project Settings ▸ Layer Names, or point the row at the layer that was renamed.",%s は衝突レイヤー %d についてですが、このプロジェクトはそのレイヤーに名前を付けていません。他の行が言葉で読めるのに、この行だけ数字で読めてしまいます。プロジェクト設定 ▸ レイヤー名で名前を付けるか、名前が変わったレイヤーに行を向けてください。
@@ -5396,123 +5396,123 @@ Name physics layer,物理レイヤーに名前を付ける
 "The layer to watch for, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.",見張るレイヤーを、このプロジェクトがプロジェクト設定 ▸ レイヤー名 ▸ 3D 物理で付けた名前で指定します。名前のないレイヤーは番号で表示され、ここから名前を付けられます。
 "The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 2D Physics. A layer the project never named shows as its number, and can be named from here.",乗るレイヤーを、このプロジェクトがプロジェクト設定 ▸ レイヤー名 ▸ 2D 物理で付けた名前で指定します。名前のないレイヤーは番号で表示され、ここから名前を付けられます。
 "The layer to sit on, by the name this project gave it in Project Settings ▸ Layer Names ▸ 3D Physics. A layer the project never named shows as its number, and can be named from here.",乗るレイヤーを、このプロジェクトがプロジェクト設定 ▸ レイヤー名 ▸ 3D 物理で付けた名前で指定します。名前のないレイヤーは番号で表示され、ここから名前を付けられます。
-"%s has monitoring switched off in the scene, so it reports no touches at all - every row waiting on one here is unreachable.","%s はシーンでモニタリングがオフになっているため、接触をまったく報告しません。ここで接触を待つ行はすべて到達不能です。"
-"%s has no shape, so it cannot collide or interact with anything. Add a CollisionShape or a CollisionPolygon under it in the scene.","%s には形状がないため、何とも衝突できず、やり取りもできません。シーンでその下に CollisionShape か CollisionPolygon を追加してください。"
-"%s is one-way and turned over, so bodies fall through it from above and are stopped from below. The rows here are waiting for the landing it blocks.","%s は片側のみで、上下逆に回転しています。そのため物体は上からすり抜け、下から止められます。ここの行は、それが妨げている着地を待っています。"
-"%s watches %s, and everything in this project that can collide sits on %s - so nothing can reach this trigger. This reads every layer in use, because the trigger names no group.","%s は %s を見張っていますが、このプロジェクトで衝突しうるものはすべて %s にあります。したがって、このトリガーには何も届きません。トリガーがグループを指定していないため、使用中のすべてのレイヤーを読み取っています。"
+"%s has monitoring switched off in the scene, so it reports no touches at all - every row waiting on one here is unreachable.",%s はシーンでモニタリングがオフになっているため、接触をまったく報告しません。ここで接触を待つ行はすべて到達不能です。
+"%s has no shape, so it cannot collide or interact with anything. Add a CollisionShape or a CollisionPolygon under it in the scene.",%s には形状がないため、何とも衝突できず、やり取りもできません。シーンでその下に CollisionShape か CollisionPolygon を追加してください。
+"%s is one-way and turned over, so bodies fall through it from above and are stopped from below. The rows here are waiting for the landing it blocks.",%s は片側のみで、上下逆に回転しています。そのため物体は上からすり抜け、下から止められます。ここの行は、それが妨げている着地を待っています。
+"%s watches %s, and everything in this project that can collide sits on %s - so nothing can reach this trigger. This reads every layer in use, because the trigger names no group.",%s は %s を見張っていますが、このプロジェクトで衝突しうるものはすべて %s にあります。したがって、このトリガーには何も届きません。トリガーがグループを指定していないため、使用中のすべてのレイヤーを読み取っています。
 "%s watches %s, and the members of ""%s"" sit on %s - so this trigger never fires.","%s は %s を見張っていますが、""%s"" のメンバーは %s にいます。したがって、このトリガーは決して発火しません。"
-"Godot has collision layers 1 to 32.","Godot の衝突レイヤーは 1 から 32 までです。"
-"Open %s to change what it collides with.","何と衝突するかを変えるには %s を開いてください。"
-"Show me in the scene","シーンで表示"
-"Switch monitoring on","モニタリングをオンにする"
-"Watch collision layer %d","衝突レイヤー %d を見張る"
-"monitoring off","モニタリング オフ"
-"monitoring on","モニタリング オン"
-"seen by %s","%s から見える"
-"sees %s","%s を見る"
-"%s is selected in %s.","%s を %s で選択しました。"
-"%s is not in the project any more.","%s はもうプロジェクトにありません。"
-"On Collision With Group","グループと衝突したとき"
-"Runs when something from one group hits this body. The group is the filter: the handler's first line leaves at once for anything else, and what did hit rides into the rows underneath. This body BLOCKS what it hits - it needs Contact Monitor switched on and its Max Contacts Reported above zero before Godot will report the hit at all.","グループに属する何かがこのボディに当たったときに実行されます。グループがフィルターです。ハンドラーの最初の行がそれ以外をすぐに抜け、当たったものは下の行へ渡されます。このボディは当たったものを止めます - Contact Monitor をオンにし、Max Contacts Reported を 0 より大きくしないと Godot は衝突を報告しません。"
-"On collision with {group}","{group} と衝突したとき"
-"Only react when the thing that arrived is in this group. Any node joins a group from the Node dock, and the emitted handler leaves immediately when it is not in it.","到着したものがこのグループに入っているときだけ反応します。ノードは Node ドックからグループに参加でき、入っていなければ生成されたハンドラーはすぐに抜けます。"
-"body","ボディ"
-"The body that arrived, already known to be in the group. Filled in for you when the trigger fires - use it in the rows underneath.","到着したボディ。グループに入っていることはすでに分かっています。トリガー時に自動で入るので、下の行で使えます。"
-"On Stopped Colliding With Group","グループとの衝突が終わったとき"
-"Runs when something from one group stops touching this body - the other half of the collision, for ending a push, a grind or a stand-on. Needs the same Contact Monitor setting the starting half does.","グループに属する何かがこのボディに触れなくなったときに実行されます。衝突のもう半分で、押し合いやこすれ、上に乗った状態を終わらせるために使います。始まりの側と同じ Contact Monitor 設定が必要です。"
-"On stopped colliding with {group}","{group} との衝突が終わったとき"
-"The body that left, already known to be in the group. Filled in for you when the trigger fires - use it in the rows underneath.","離れたボディ。グループに入っていることはすでに分かっています。トリガー時に自動で入るので、下の行で使えます。"
-"On Collision With Group (3D)","グループと衝突したとき (3D)"
-"On Stopped Colliding With Group (3D)","グループとの衝突が終わったとき (3D)"
-"On Overlap With Group","グループと重なったとき"
-"Runs when something from one group moves into this area. An area DETECTS and does not block, so the thing keeps going - this is the trigger a checkpoint, a pickup zone or a damage field is written from. What arrived rides into the rows underneath.","グループに属する何かがこのエリアに入ったときに実行されます。エリアは検知するだけで止めないので、対象はそのまま進みます - チェックポイントや取得エリア、ダメージ床はこのトリガーから書きます。入ってきたものは下の行へ渡されます。"
-"On overlap with {group}","{group} と重なったとき"
-"On Overlap Ended With Group","グループとの重なりが終わったとき"
-"Runs when something from one group leaves this area - the moment a player walks out of a safe zone, or the last enemy clears a trap.","グループに属する何かがこのエリアから出たときに実行されます - プレイヤーが安全地帯を離れた瞬間や、最後の敵が罠から抜けた瞬間です。"
-"On overlap ended with {group}","{group} との重なりが終わったとき"
-"On Overlap With Group (3D)","グループと重なったとき (3D)"
-"On Overlap Ended With Group (3D)","グループとの重なりが終わったとき (3D)"
-"Is Touching Group","グループに触れている"
-"True while at least one body from this group is inside this area. The standing question beside the two arrival triggers - ask it when what matters is the state now, not the moment it changed.","このグループのボディが少なくとも一つこのエリアの中にある間、真になります。二つの到着トリガーと並ぶ常時の問いで、変わった瞬間ではなく今の状態が大事なときに使います。"
-"is touching {group}","{group} に触れている"
-"The group to look for among the bodies inside this area right now.","今このエリアの中にあるボディの中から探すグループです。"
-"Is Touching Group (3D)","グループに触れている (3D)"
-"This node is an area: it notices what arrives and lets it through. Blocking is a body's job, so pair this with a body if the thing should also be stopped.","このノードはエリアです。来たものに気づくだけで、通してしまいます。止めるのはボディの仕事なので、止めたいならボディを組み合わせてください。"
-"This node is a body: what it hits stops, and the hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero. An area would notice the same arrival without stopping anything.","このノードはボディです。当たったものは止まり、衝突が報告されるのは Contact Monitor がオンで Max Contacts Reported が 0 より大きいときだけです。エリアなら同じ到着に気づきますが、何も止めません。"
-"On Landed","着地したとき"
-"On Landed (3D)","着地したとき (3D)"
-"On Left The Ground","地面を離れたとき"
-"On Left The Ground (3D)","地面を離れたとき (3D)"
-"Just Landed","着地した直後"
-"Just Landed (3D)","着地した直後 (3D)"
-"Just Left The Ground","地面を離れた直後"
-"Just Left The Ground (3D)","地面を離れた直後 (3D)"
-"On First Overlap","最初の重なりのとき"
-"On First Overlap (3D)","最初の重なりのとき (3D)"
-"On Last Overlap Ended","最後の重なりが終わったとき"
-"On Last Overlap Ended (3D)","最後の重なりが終わったとき (3D)"
-"Is The First One In","最初に入ったもの"
-"Is The First One In (3D)","最初に入ったもの (3D)"
-"Was The Last One Out","最後に出たもの"
-"Was The Last One Out (3D)","最後に出たもの (3D)"
-"On landed","着地したとき"
-"On left the ground","地面を離れたとき"
-"just landed","着地した直後"
-"just left the ground","地面を離れた直後"
-"On first overlap","最初の重なりのとき"
-"On last overlap ended","最後の重なりが終わったとき"
-"is the first one in","最初に入ったもの"
-"was the last one out","最後に出たもの"
-"Runs on the step this character's feet arrive on the floor - the landing itself, not the standing that follows it. Landing is where the dust, the thud and the squash go. It is a moment of the physics step rather than a signal, so the question underneath says which step.","このキャラクターの足が床に着いたステップで実行されます。着地そのものであり、そのあと立っている状態のことではありません。ほこり、着地音、つぶれの演出はここに置きます。シグナルではなく物理ステップの一瞬なので、どのステップかは下の条件が言います。"
-"Runs on the step this character's feet leave the floor, whichever way they left it: a jump and a walked-off ledge are the same moment to this row. The half that starts coyote time, and the half a fall animation begins on.","このキャラクターの足が地面を離れたステップで実行されます。離れ方は問いません。ジャンプも足場から歩き落ちるのも、この行にとっては同じ一瞬です。コヨーテタイムが始まる側であり、落下アニメーションが始まる側です。"
-"True on the one step the feet arrive on the floor: on the floor now, and not on it last step. It keeps last step's footing in a variable of its own and updates it AFTER asking - a memory updated before the question is asked would always agree with the present, and the row could never be true.","足が床に着いたその一ステップだけ真になります。今は床の上で、前のステップでは床の上ではなかった、ということです。前のステップの接地を専用の変数に覚えておき、質問した「あと」で更新します。先に更新してしまうと記憶は常に現在と一致してしまい、この行は決して真になりません。"
-"True on the one step the feet leave the floor: not on it now, and on it last step. The same memory the landing question keeps, read the other way round.","足が地面を離れたその一ステップだけ真になります。今は接地しておらず、前のステップでは接地していた、ということです。着地の質問が持つのと同じ記憶を、逆向きに読んだものです。"
-"Runs when something moves into this area and the area was empty until then - the pressure plate going down, the room waking up. Later arrivals do not run it again; the question underneath is what says so, and it is an ordinary condition you can read and edit.","何かがこのエリアに入り、それまでエリアが空だったときに実行されます。感圧板が沈む、部屋が目を覚ます、といった場面です。あとから入ってきたものでは再実行されません。そう言っているのは下の条件で、読んで編集できるふつうの条件です。"
-"Runs when something leaves this area and nothing is left inside - the plate coming back up, the room going quiet. The other half of the first arrival, and the pair a door or a lift is written from.","何かがこのエリアを出て、中に何も残っていないときに実行されます。感圧板が戻る、部屋が静かになる、といった場面です。最初の到着のもう片方であり、扉やリフトはこの二つで書きます。"
-"True when exactly one body is inside this area. Asked in an arrival, that is the arrival which filled an empty area: what just came in is already listed by then, so a list of one held nothing a moment ago.","このエリアの中にボディがちょうど一つだけあるとき真になります。到着の中で尋ねれば、それは空のエリアを満たした到着です。入ってきたものはその時点ですでに一覧に載っているので、一つだけの一覧は少し前まで空でした。"
-"True when nothing is inside this area. Asked in a departure, that is the departure which emptied it: what just left is already off the list by then, so an empty list means it was the last one.","このエリアの中に何もないとき真になります。退出の中で尋ねれば、それはエリアを空にした退出です。出ていったものはその時点ですでに一覧から外れているので、空の一覧は「それが最後だった」という意味になります。"
-"The body that arrived. Filled in for you when the trigger fires - use it in the rows underneath.","到着したボディです。トリガーが発火したときに自動で入るので、下の行で使ってください。"
-"The body that left. Filled in for you when the trigger fires - use it in the rows underneath.","去っていったボディです。トリガーが発火したときに自動で入るので、下の行で使ってください。"
-"This node is a character body: your own rows drive it, one move at a time, and it stops when it runs into something. What it hit comes back from its own move rather than from a signal.","このノードはキャラクターボディです。あなたの行が一手ずつ動かし、何かにぶつかると止まります。何にぶつかったかはシグナルではなく、その移動自体から返ってきます。"
-"This node is a rigid body: physics throws it around and it stops what it hits. The hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero.","このノードはリジッドボディです。物理が投げ回し、ぶつかった相手を止めます。衝突が報告されるのは Contact Monitor がオンで、Max Contacts Reported が 0 より大きいあいだだけです。"
-"This node is a static body: it stands still and things stop against it. It never moves itself, so the news of a touch usually belongs on whatever ran into it.","このノードはスタティックボディです。じっと立っていて、ものはそこで止まります。自分から動くことはないので、接触の知らせはふつう、ぶつかってきた側に置きます。"
-"Nothing in this scene can touch anything yet - this row needs one: %s.","このシーンにはまだ何かに触れられるものがありません。この行には %s が必要です。"
-"%d claimed by an entry · %d nothing claims · %d%% renders as rows rather than blocks","%d 件はエントリが講求 · %d 件は誰も講求せず · %d%% はブロックではなく行として描かれます"
-"Saves back byte-identical.","バイト単位で同じものが保存されます。"
-"Line %d comes back different.","%d 行目が違う形で戻ってきます。"
-"buffer","バッファ"
-"saved","保存後"
-"Mark each value span as [[name: text]], then check it.","値の範囲を [[name: text]] で印を付けてから確認してください。"
-"Refused: %s","拒否: %s"
-"This example derives an entry.","この例からエントリを導けます。"
-"Lift Workbench - what claims each line","リフト作業台 - 各行を何が講求するか"
-"Paste code here","ここにコードを貼り付け"
-"Claimed by","講求したもの"
-"What claims each line","各行を何が講求するか"
-"What it saves back as","保存したときの形"
-"The rows it opens as","開いたときの行"
-"Draft an example…","例を下書き…"
-"Take the selected unclaimed line to the by-example form and derive an entry from it.","選んだ未講求の行を例フォームに持ち込み、エントリを導きます。"
-"Draft an example","例を下書き"
-"The line, with its value spans marked","値の範囲に印を付けた行"
-"A value span is [[name: text]], or [[name|fragment: text]] to say which fragment it is. Everything outside a span is matched literally.","値の範囲は [[name: text]]、どのフラグメントかを言うなら [[name|fragment: text]] です。範囲の外側はそのまま照合されます。"
-"Entry id","エントリ ID"
-"Row it means","意味する行"
-"The entry this derives","これから導かれるエントリ"
+Godot has collision layers 1 to 32.,Godot の衝突レイヤーは 1 から 32 までです。
+Open %s to change what it collides with.,何と衝突するかを変えるには %s を開いてください。
+Show me in the scene,シーンで表示
+Switch monitoring on,モニタリングをオンにする
+Watch collision layer %d,衝突レイヤー %d を見張る
+monitoring off,モニタリング オフ
+monitoring on,モニタリング オン
+seen by %s,%s から見える
+sees %s,%s を見る
+%s is selected in %s.,%s を %s で選択しました。
+%s is not in the project any more.,%s はもうプロジェクトにありません。
+On Collision With Group,グループと衝突したとき
+"Runs when something from one group hits this body. The group is the filter: the handler's first line leaves at once for anything else, and what did hit rides into the rows underneath. This body BLOCKS what it hits - it needs Contact Monitor switched on and its Max Contacts Reported above zero before Godot will report the hit at all.",グループに属する何かがこのボディに当たったときに実行されます。グループがフィルターです。ハンドラーの最初の行がそれ以外をすぐに抜け、当たったものは下の行へ渡されます。このボディは当たったものを止めます - Contact Monitor をオンにし、Max Contacts Reported を 0 より大きくしないと Godot は衝突を報告しません。
+On collision with {group},{group} と衝突したとき
+"Only react when the thing that arrived is in this group. Any node joins a group from the Node dock, and the emitted handler leaves immediately when it is not in it.",到着したものがこのグループに入っているときだけ反応します。ノードは Node ドックからグループに参加でき、入っていなければ生成されたハンドラーはすぐに抜けます。
+body,ボディ
+"The body that arrived, already known to be in the group. Filled in for you when the trigger fires - use it in the rows underneath.",到着したボディ。グループに入っていることはすでに分かっています。トリガー時に自動で入るので、下の行で使えます。
+On Stopped Colliding With Group,グループとの衝突が終わったとき
+"Runs when something from one group stops touching this body - the other half of the collision, for ending a push, a grind or a stand-on. Needs the same Contact Monitor setting the starting half does.",グループに属する何かがこのボディに触れなくなったときに実行されます。衝突のもう半分で、押し合いやこすれ、上に乗った状態を終わらせるために使います。始まりの側と同じ Contact Monitor 設定が必要です。
+On stopped colliding with {group},{group} との衝突が終わったとき
+"The body that left, already known to be in the group. Filled in for you when the trigger fires - use it in the rows underneath.",離れたボディ。グループに入っていることはすでに分かっています。トリガー時に自動で入るので、下の行で使えます。
+On Collision With Group (3D),グループと衝突したとき (3D)
+On Stopped Colliding With Group (3D),グループとの衝突が終わったとき (3D)
+On Overlap With Group,グループと重なったとき
+"Runs when something from one group moves into this area. An area DETECTS and does not block, so the thing keeps going - this is the trigger a checkpoint, a pickup zone or a damage field is written from. What arrived rides into the rows underneath.",グループに属する何かがこのエリアに入ったときに実行されます。エリアは検知するだけで止めないので、対象はそのまま進みます - チェックポイントや取得エリア、ダメージ床はこのトリガーから書きます。入ってきたものは下の行へ渡されます。
+On overlap with {group},{group} と重なったとき
+On Overlap Ended With Group,グループとの重なりが終わったとき
+"Runs when something from one group leaves this area - the moment a player walks out of a safe zone, or the last enemy clears a trap.",グループに属する何かがこのエリアから出たときに実行されます - プレイヤーが安全地帯を離れた瞬間や、最後の敵が罠から抜けた瞬間です。
+On overlap ended with {group},{group} との重なりが終わったとき
+On Overlap With Group (3D),グループと重なったとき (3D)
+On Overlap Ended With Group (3D),グループとの重なりが終わったとき (3D)
+Is Touching Group,グループに触れている
+"True while at least one body from this group is inside this area. The standing question beside the two arrival triggers - ask it when what matters is the state now, not the moment it changed.",このグループのボディが少なくとも一つこのエリアの中にある間、真になります。二つの到着トリガーと並ぶ常時の問いで、変わった瞬間ではなく今の状態が大事なときに使います。
+is touching {group},{group} に触れている
+The group to look for among the bodies inside this area right now.,今このエリアの中にあるボディの中から探すグループです。
+Is Touching Group (3D),グループに触れている (3D)
+"This node is an area: it notices what arrives and lets it through. Blocking is a body's job, so pair this with a body if the thing should also be stopped.",このノードはエリアです。来たものに気づくだけで、通してしまいます。止めるのはボディの仕事なので、止めたいならボディを組み合わせてください。
+"This node is a body: what it hits stops, and the hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero. An area would notice the same arrival without stopping anything.",このノードはボディです。当たったものは止まり、衝突が報告されるのは Contact Monitor がオンで Max Contacts Reported が 0 より大きいときだけです。エリアなら同じ到着に気づきますが、何も止めません。
+On Landed,着地したとき
+On Landed (3D),着地したとき (3D)
+On Left The Ground,地面を離れたとき
+On Left The Ground (3D),地面を離れたとき (3D)
+Just Landed,着地した直後
+Just Landed (3D),着地した直後 (3D)
+Just Left The Ground,地面を離れた直後
+Just Left The Ground (3D),地面を離れた直後 (3D)
+On First Overlap,最初の重なりのとき
+On First Overlap (3D),最初の重なりのとき (3D)
+On Last Overlap Ended,最後の重なりが終わったとき
+On Last Overlap Ended (3D),最後の重なりが終わったとき (3D)
+Is The First One In,最初に入ったもの
+Is The First One In (3D),最初に入ったもの (3D)
+Was The Last One Out,最後に出たもの
+Was The Last One Out (3D),最後に出たもの (3D)
+On landed,着地したとき
+On left the ground,地面を離れたとき
+just landed,着地した直後
+just left the ground,地面を離れた直後
+On first overlap,最初の重なりのとき
+On last overlap ended,最後の重なりが終わったとき
+is the first one in,最初に入ったもの
+was the last one out,最後に出たもの
+"Runs on the step this character's feet arrive on the floor - the landing itself, not the standing that follows it. Landing is where the dust, the thud and the squash go. It is a moment of the physics step rather than a signal, so the question underneath says which step.",このキャラクターの足が床に着いたステップで実行されます。着地そのものであり、そのあと立っている状態のことではありません。ほこり、着地音、つぶれの演出はここに置きます。シグナルではなく物理ステップの一瞬なので、どのステップかは下の条件が言います。
+"Runs on the step this character's feet leave the floor, whichever way they left it: a jump and a walked-off ledge are the same moment to this row. The half that starts coyote time, and the half a fall animation begins on.",このキャラクターの足が地面を離れたステップで実行されます。離れ方は問いません。ジャンプも足場から歩き落ちるのも、この行にとっては同じ一瞬です。コヨーテタイムが始まる側であり、落下アニメーションが始まる側です。
+"True on the one step the feet arrive on the floor: on the floor now, and not on it last step. It keeps last step's footing in a variable of its own and updates it AFTER asking - a memory updated before the question is asked would always agree with the present, and the row could never be true.",足が床に着いたその一ステップだけ真になります。今は床の上で、前のステップでは床の上ではなかった、ということです。前のステップの接地を専用の変数に覚えておき、質問した「あと」で更新します。先に更新してしまうと記憶は常に現在と一致してしまい、この行は決して真になりません。
+"True on the one step the feet leave the floor: not on it now, and on it last step. The same memory the landing question keeps, read the other way round.",足が地面を離れたその一ステップだけ真になります。今は接地しておらず、前のステップでは接地していた、ということです。着地の質問が持つのと同じ記憶を、逆向きに読んだものです。
+"Runs when something moves into this area and the area was empty until then - the pressure plate going down, the room waking up. Later arrivals do not run it again; the question underneath is what says so, and it is an ordinary condition you can read and edit.",何かがこのエリアに入り、それまでエリアが空だったときに実行されます。感圧板が沈む、部屋が目を覚ます、といった場面です。あとから入ってきたものでは再実行されません。そう言っているのは下の条件で、読んで編集できるふつうの条件です。
+"Runs when something leaves this area and nothing is left inside - the plate coming back up, the room going quiet. The other half of the first arrival, and the pair a door or a lift is written from.",何かがこのエリアを出て、中に何も残っていないときに実行されます。感圧板が戻る、部屋が静かになる、といった場面です。最初の到着のもう片方であり、扉やリフトはこの二つで書きます。
+"True when exactly one body is inside this area. Asked in an arrival, that is the arrival which filled an empty area: what just came in is already listed by then, so a list of one held nothing a moment ago.",このエリアの中にボディがちょうど一つだけあるとき真になります。到着の中で尋ねれば、それは空のエリアを満たした到着です。入ってきたものはその時点ですでに一覧に載っているので、一つだけの一覧は少し前まで空でした。
+"True when nothing is inside this area. Asked in a departure, that is the departure which emptied it: what just left is already off the list by then, so an empty list means it was the last one.",このエリアの中に何もないとき真になります。退出の中で尋ねれば、それはエリアを空にした退出です。出ていったものはその時点ですでに一覧から外れているので、空の一覧は「それが最後だった」という意味になります。
+The body that arrived. Filled in for you when the trigger fires - use it in the rows underneath.,到着したボディです。トリガーが発火したときに自動で入るので、下の行で使ってください。
+The body that left. Filled in for you when the trigger fires - use it in the rows underneath.,去っていったボディです。トリガーが発火したときに自動で入るので、下の行で使ってください。
+"This node is a character body: your own rows drive it, one move at a time, and it stops when it runs into something. What it hit comes back from its own move rather than from a signal.",このノードはキャラクターボディです。あなたの行が一手ずつ動かし、何かにぶつかると止まります。何にぶつかったかはシグナルではなく、その移動自体から返ってきます。
+This node is a rigid body: physics throws it around and it stops what it hits. The hit is reported only while Contact Monitor is on and Max Contacts Reported is above zero.,このノードはリジッドボディです。物理が投げ回し、ぶつかった相手を止めます。衝突が報告されるのは Contact Monitor がオンで、Max Contacts Reported が 0 より大きいあいだだけです。
+"This node is a static body: it stands still and things stop against it. It never moves itself, so the news of a touch usually belongs on whatever ran into it.",このノードはスタティックボディです。じっと立っていて、ものはそこで止まります。自分から動くことはないので、接触の知らせはふつう、ぶつかってきた側に置きます。
+Nothing in this scene can touch anything yet - this row needs one: %s.,このシーンにはまだ何かに触れられるものがありません。この行には %s が必要です。
+%d claimed by an entry · %d nothing claims · %d%% renders as rows rather than blocks,%d 件はエントリが講求 · %d 件は誰も講求せず · %d%% はブロックではなく行として描かれます
+Saves back byte-identical.,バイト単位で同じものが保存されます。
+Line %d comes back different.,%d 行目が違う形で戻ってきます。
+buffer,バッファ
+saved,保存後
+"Mark each value span as [[name: text]], then check it.",値の範囲を [[name: text]] で印を付けてから確認してください。
+Refused: %s,拒否: %s
+This example derives an entry.,この例からエントリを導けます。
+Lift Workbench - what claims each line,リフト作業台 - 各行を何が講求するか
+Paste code here,ここにコードを貼り付け
+Claimed by,講求したもの
+What claims each line,各行を何が講求するか
+What it saves back as,保存したときの形
+The rows it opens as,開いたときの行
+Draft an example…,例を下書き…
+Take the selected unclaimed line to the by-example form and derive an entry from it.,選んだ未講求の行を例フォームに持ち込み、エントリを導きます。
+Draft an example,例を下書き
+"The line, with its value spans marked",値の範囲に印を付けた行
+"A value span is [[name: text]], or [[name|fragment: text]] to say which fragment it is. Everything outside a span is matched literally.",値の範囲は [[name: text]]、どのフラグメントかを言うなら [[name|fragment: text]] です。範囲の外側はそのまま照合されます。
+Entry id,エントリ ID
+Row it means,意味する行
+The entry this derives,これから導かれるエントリ
 Nothing drafted yet.,まだ下書きはありません。
 "These are asked before every shipped spelling, in this window only. They are gone when it closes, and nothing on disk is written.",同梱の綴りより先に、このウィンドウ内だけで参照されます。ウィンドウを閉じると消え、ディスクには何も書き込まれません。
 Clear drafts,下書きを消去
 "Empties the drafts this window keeps, so every line they were claiming goes back to whatever claimed it before.",このウィンドウが保持する下書きを空にし、下書きが主張していた各行を元の扱いに戻します。
-"Check","確認"
-"Add draft","下書きを追加"
+Check,確認
+Add draft,下書きを追加
 "Read the first %d script(s) of %d, in path order. The ledger below is a sample of this project, not the whole of it - the same scripts are read every time.",パス順で最初の %d 個のスクリプト（全 %d 個中）を読み取りました。以下の記録はこのプロジェクトの一部であり、全体ではありません。毎回同じスクリプトが読み取られます。
-"%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.","読み取った分の %d%% が行として描かれ、そのすべてに名前が付いています。ここにコードのまま残るものはありません。"
-"%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.","読み取った分の %d%% が行として描かれます - これは描画の問いです。名前の問いはその下にあります: %d 行は正直なコードのまま残ります。まだどの語彙もそれを名乗っていないからです。どちらも本当で、同じ数ではありません。"
-"%d more shape(s) are said more than once here, over %d line(s). The ledger names the commonest and counts the rest.","ここではさらに %d 個の形が複数回現れ、%d 行にわたります。台帳は最も多いものを挙げ、残りを数えます。"
-"%d line(s) are the same shape: %s","%d 行が同じ形です: %s"
-"line %d: %s","%d 行目: %s"
-"... and %d more line(s) of the same shape.","... 同じ形の行がさらに %d 行あります。"
-"%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.","%d 行は、ここの他の何も繰り返さない形です。列挙せずに数えます: 一度しか言われない行は誰のテーブルでもなく、コードのままでよいのです。"
+"%d%% of what was read draws as rows, and every line of it has a name on it. Nothing here stays code.",読み取った分の %d%% が行として描かれ、そのすべてに名前が付いています。ここにコードのまま残るものはありません。
+"%d%% of what was read draws as rows - that is the drawing question. The naming question is below it: %d line(s) stay honest code, because no vocabulary claims them yet. Both are true, and they are not the same number.",読み取った分の %d%% が行として描かれます - これは描画の問いです。名前の問いはその下にあります: %d 行は正直なコードのまま残ります。まだどの語彙もそれを名乗っていないからです。どちらも本当で、同じ数ではありません。
+"%d more shape(s) are said more than once here, over %d line(s). The ledger names the commonest and counts the rest.",ここではさらに %d 個の形が複数回現れ、%d 行にわたります。台帳は最も多いものを挙げ、残りを数えます。
+%d line(s) are the same shape: %s,%d 行が同じ形です: %s
+line %d: %s,%d 行目: %s
+... and %d more line(s) of the same shape.,... 同じ形の行がさらに %d 行あります。
+"%d line(s) are shapes nothing else here repeats. Counted rather than listed: a line said once is nobody's table, and it is meant to stay code.",%d 行は、ここの他の何も繰り返さない形です。列挙せずに数えます: 一度しか言われない行は誰のテーブルでもなく、コードのままでよいのです。
 "%d line(s) inside those runs hold no statement to shape - a note, or the inside of a text block.",それらの範囲内の %d 行には形にできる文がありません。注釈か、テキストブロックの内側です。
 On object freed,オブジェクト解放時
 Event Is Action Pressed,イベントがアクションの押下である
@@ -5538,73 +5538,73 @@ Notifications,通知
 "Runs when the game comes back off pause, on the same nodes. The other half of On paused, and where the music and the menu go back the way they were.",ゲームが一時停止から戻ったとき、同じノードで実行されます。一時停止したときのもう半分で、音楽とメニューを元に戻す場所です。
 "Runs as the very last thing that happens to this object, just before its memory goes. Different from On destroyed, which is the node leaving the tree and can happen more than once - this happens exactly once and nothing follows it, so it is where a handle held somewhere else gets given back.",このオブジェクトに起きる最後の出来事として、メモリが解放される直前に実行されます。ノードがツリーから外れる「破棄されたとき」とは別物で、あちらは何度も起こり得ます - こちらはちょうど一度だけ起き、後には何も続きません。だから、どこかで持っている参照を返す場所になります。
 "Runs when the player closes the window - the X, or the system asking the game to quit. The game does NOT quit by itself when this arrives if the project is set to handle it, which is what makes room for a ""save first?"" prompt.",プレイヤーがウィンドウを閉じたとき - 閉じるボタン、またはシステムから終了を求められたとき - に実行されます。プロジェクトがこれを自分で扱う設定なら、これが届いてもゲームは自分から終了しません。だから「先に保存しますか？」と尋ねる余地が生まれます。
-"user:// - the player's folder: writable, one per player, survives updates.","user:// - プレイヤーのフォルダー: 書き込み可能、プレイヤーごとに1つ、更新後も残ります。"
-"res:// - the game's own files: READ-ONLY once exported.","res:// - ゲーム自身のファイル: エクスポート後は読み取り専用です。"
-"an absolute path: this folder exists on one computer and nowhere else.","絶対パス: このフォルダーは1台のコンピューターにしか存在しません。"
-"user:// is a real folder on the player's machine: %APPDATA%\Godot\app_userdata\<project> on Windows, ~/Library/Application Support/Godot/app_userdata/<project> on macOS, ~/.local/share/godot/app_userdata/<project> on Linux. Open the player's data folder opens it while the game runs.","user:// はプレイヤーのマシン上の実在のフォルダーです: Windows では %APPDATA%\Godot\app_userdata\<project>、macOS では ~/Library/Application Support/Godot/app_userdata/<project>、Linux では ~/.local/share/godot/app_userdata/<project>。「プレイヤーのデータフォルダーを開く」はゲーム実行中にそこを開きます。"
-"%s writes to a res:// path, which works here and fails in every exported build - res:// is a packed archive once the game is built, not a folder. First: %s.","%s は res:// のパスに書き込んでいます。ここでは動きますが、エクスポートしたビルドでは必ず失敗します - ビルド後の res:// はフォルダーではなくパックされたアーカイブです。最初: %s。"
-"A game writes to user:// - the player's folder, which is writable, one per player, and survives the game being updated.","ゲームは user:// に書き込みます - プレイヤーのフォルダーで、書き込み可能、プレイヤーごとに1つ、ゲームを更新しても残ります。"
-"%s reaches a file by an absolute path, which names a folder on one computer and on no other. First: %s.","%s は絶対パスでファイルに届いています。これは1台のコンピューターにしかないフォルダーを指します。最初: %s。"
-"A file the game WRITES belongs under user://; a file it SHIPS WITH belongs under res:// and inside the project.","ゲームが書き込むファイルは user:// の下に、ゲームに同梱するファイルは res:// の下、プロジェクトの中に置きます。"
-"%s reads a user:// file without saying what to use when it is not there, and the first run of a game has no save, no settings and no log. Godot answers with empty text rather than an error, so the game reads nothing as data. First: %s.","%s は user:// のファイルを読みますが、ファイルが無いときに何を使うかを言っていません。ゲームの初回起動にはセーブも設定もログもありません。Godot はエラーではなく空のテキストを返すため、ゲームは「何もない」をデータとして読みます。最初: %s。"
-"Read Text File (or a fallback) says the answer out loud, and the guard is written into the line.","「テキストファイルを読む (足りないときの値つき)」は答えをはっきり言い、その守りは行そのものに書かれます。"
-"%d more like it in this file.","このファイルには同様のものがあと %d 件あります。"
-"the player's folder","プレイヤーのフォルダー"
-"the game's own files, read-only once exported","ゲーム自身のファイル、エクスポート後は読み取り専用"
-"Table Of File","ファイルの表"
+"user:// - the player's folder: writable, one per player, survives updates.",user:// - プレイヤーのフォルダー: 書き込み可能、プレイヤーごとに1つ、更新後も残ります。
+res:// - the game's own files: READ-ONLY once exported.,res:// - ゲーム自身のファイル: エクスポート後は読み取り専用です。
+an absolute path: this folder exists on one computer and nowhere else.,絶対パス: このフォルダーは1台のコンピューターにしか存在しません。
+"user:// is a real folder on the player's machine: %APPDATA%\Godot\app_userdata\<project> on Windows, ~/Library/Application Support/Godot/app_userdata/<project> on macOS, ~/.local/share/godot/app_userdata/<project> on Linux. Open the player's data folder opens it while the game runs.",user:// はプレイヤーのマシン上の実在のフォルダーです: Windows では %APPDATA%\Godot\app_userdata\<project>、macOS では ~/Library/Application Support/Godot/app_userdata/<project>、Linux では ~/.local/share/godot/app_userdata/<project>。「プレイヤーのデータフォルダーを開く」はゲーム実行中にそこを開きます。
+"%s writes to a res:// path, which works here and fails in every exported build - res:// is a packed archive once the game is built, not a folder. First: %s.",%s は res:// のパスに書き込んでいます。ここでは動きますが、エクスポートしたビルドでは必ず失敗します - ビルド後の res:// はフォルダーではなくパックされたアーカイブです。最初: %s。
+"A game writes to user:// - the player's folder, which is writable, one per player, and survives the game being updated.",ゲームは user:// に書き込みます - プレイヤーのフォルダーで、書き込み可能、プレイヤーごとに1つ、ゲームを更新しても残ります。
+"%s reaches a file by an absolute path, which names a folder on one computer and on no other. First: %s.",%s は絶対パスでファイルに届いています。これは1台のコンピューターにしかないフォルダーを指します。最初: %s。
+A file the game WRITES belongs under user://; a file it SHIPS WITH belongs under res:// and inside the project.,ゲームが書き込むファイルは user:// の下に、ゲームに同梱するファイルは res:// の下、プロジェクトの中に置きます。
+"%s reads a user:// file without saying what to use when it is not there, and the first run of a game has no save, no settings and no log. Godot answers with empty text rather than an error, so the game reads nothing as data. First: %s.",%s は user:// のファイルを読みますが、ファイルが無いときに何を使うかを言っていません。ゲームの初回起動にはセーブも設定もログもありません。Godot はエラーではなく空のテキストを返すため、ゲームは「何もない」をデータとして読みます。最初: %s。
+"Read Text File (or a fallback) says the answer out loud, and the guard is written into the line.",「テキストファイルを読む (足りないときの値つき)」は答えをはっきり言い、その守りは行そのものに書かれます。
+%d more like it in this file.,このファイルには同様のものがあと %d 件あります。
+the player's folder,プレイヤーのフォルダー
+"the game's own files, read-only once exported",ゲーム自身のファイル、エクスポート後は読み取り専用
+Table Of File,ファイルの表
 "Reads a .csv with Godot's own CSV reader, one line at a time, and gives you the rows. Quoting is exactly the engine's: a cell in ""double quotes"" may hold the separator, and a doubled """" inside one is a single quote character. Store it with a Set action - the read is several lines long, so it belongs in an action rather than squeezed into a condition.","Godot 自身の CSV リーダーで .csv を 1 行ずつ読み、その行を返します。引用符の扱いはエンジンそのものです。""二重引用符"" で囲んだセルには区切り文字を入れられ、その中の """" は引用符 1 文字になります。結果は「設定」アクションで変数に入れてください。読み取りは複数行になるため、条件に押し込むのではなくアクションに置きます。"
-"table of [b]{path}[/b] - {headers}","[b]{path}[/b] の表 - {headers}"
-"The .csv to read. Prefer res:// for data that ships with the game; user:// for a file the game itself wrote.","読み取る .csv。ゲームと一緒に配布するデータには res://、ゲーム自身が書いたファイルには user:// を使ってください。"
-"First line","最初の行"
+table of [b]{path}[/b] - {headers},[b]{path}[/b] の表 - {headers}
+The .csv to read. Prefer res:// for data that ships with the game; user:// for a file the game itself wrote.,読み取る .csv。ゲームと一緒に配布するデータには res://、ゲーム自身が書いたファイルには user:// を使ってください。
+First line,最初の行
 "How the file's first line is read. Naming the columns gives one record per row, so a field is reachable as row[""price""]; otherwise every line is a plain list of cells.","ファイルの最初の行をどう読むか。列名として読むと 1 行につき 1 レコードになり、各項目に row[""price""] で届きます。そうでなければ、各行は単なるセルの並びです。"
-"The first line names the columns","最初の行が列名"
-"Every line is a row","どの行もデータ行"
-"Write Table To File","表をファイルに書き出す"
-"Writes rows back out as a .csv with Godot's own CSV writer, so a cell holding the separator or a quote is quoted the way the engine quotes it - and a file written here reads back through Table Of File unchanged.","Godot 自身の CSV ライターで行を .csv として書き戻します。区切り文字や引用符を含むセルは、エンジンがそうするとおりに引用されます。ここで書いたファイルは「ファイルの表」でそのまま読み戻せます。"
-"write table [b]{table}[/b] to [b]{path}[/b] - {headers}","表 [b]{table}[/b] を [b]{path}[/b] に書き出す - {headers}"
-"File to write. OVERWRITES any existing file. Use user:// - res:// is read-only once the game is exported.","書き込むファイル。既存のファイルを上書きします。user:// を使ってください。res:// はゲームを書き出すと読み取り専用になります。"
-"The rows to write - the Array variable a table expression filled, or one the sheet built itself.","書き出す行。表の式が入れた Array 変数か、シートが自分で組み立てたもの。"
-"Whether to write a first line naming the columns. Naming them writes one line per record, in the order the first record's fields are in; otherwise every entry is written as a plain list of cells.","列名の行を最初に書くかどうか。書く場合は 1 レコードにつき 1 行を、最初のレコードの項目順で書きます。書かない場合は、各項目を単なるセルの並びとして書きます。"
-"For Each Line In File","ファイルの各行について"
-"Runs this event's actions once per LINE of a text file, skipping blank ones. The file is read once and the loop then walks text already in memory, so nothing stays open behind the loop. Windows (CRLF) and old-Mac (CR) endings are handled, and a file that is not there walks nothing. Read the current one as `line`.","テキストファイルの各行についてこのイベントのアクションを実行し、空行は飛ばします。ファイルは一度だけ読み、その後はメモリ上の文字列をたどるので、ループの後ろに開いたままのものは残りません。Windows (CRLF) や旧 Mac (CR) の改行も扱え、存在しないファイルは何もたどりません。現在の行は `line` で読めます。"
-"for each line of [b]{path}[/b]","[b]{path}[/b] の各行について"
-"The text file to walk line by line - a log you wrote earlier, a list of level names, a leaderboard body.","1 行ずつたどるテキストファイル。以前に書いたログ、レベル名の一覧、ランキングの本文など。"
-"written","書き込み"
-"read","読み取り"
-"read and written","読み取りと書き込み"
-"asks the player to pick a file","プレイヤーにファイルを選んでもらう"
-"and %d more path(s)","ほか %d 件のパス"
-"On Files Dropped","ファイルがドロップされたとき"
-"Runs when the player drags files from their desktop onto the game window and lets go. DESKTOP ONLY: Windows, macOS and Linux raise it, and a web or mobile build never does, so keep another way in beside it.","プレイヤーがデスクトップからゲームウィンドウにファイルをドラッグして放したときに実行されます。デスクトップ専用: Windows、macOS、Linux は発生させますが、Web やモバイルのビルドは決して発生させないため、別の入り口も用意してください。"
-"On files dropped {files}","ファイル {files} がドロップされたとき"
-"Every path the player let go of, in one list - a drop can carry more than one file. They are real paths on that machine, not res:// or user:// ones.","プレイヤーが放したすべてのパスを 1 つのリストで返します。1 回のドロップで複数のファイルを運べます。res:// や user:// ではなく、そのマシン上の実際のパスです。"
-"Ask For A File To Open","開くファイルをたずねる"
-"Opens the player's own file chooser so they can pick a file to read. The answer arrives as On a file chosen, or as On the ask cancelled - both of which the sheet needs an event for, because the emitted line calls them by name.","プレイヤー自身のファイル選択画面を開き、読み込むファイルを選んでもらいます。答えは「ファイルが選ばれたとき」または「たずねるのが取り消されたとき」として届きます。生成される行は名前でそれらを呼ぶため、シートには両方のイベントが必要です。"
-"Ask for a file to open ({filters})","開くファイルをたずねる ({filters})"
-"Filters","フィルター"
+The first line names the columns,最初の行が列名
+Every line is a row,どの行もデータ行
+Write Table To File,表をファイルに書き出す
+"Writes rows back out as a .csv with Godot's own CSV writer, so a cell holding the separator or a quote is quoted the way the engine quotes it - and a file written here reads back through Table Of File unchanged.",Godot 自身の CSV ライターで行を .csv として書き戻します。区切り文字や引用符を含むセルは、エンジンがそうするとおりに引用されます。ここで書いたファイルは「ファイルの表」でそのまま読み戻せます。
+write table [b]{table}[/b] to [b]{path}[/b] - {headers},表 [b]{table}[/b] を [b]{path}[/b] に書き出す - {headers}
+File to write. OVERWRITES any existing file. Use user:// - res:// is read-only once the game is exported.,書き込むファイル。既存のファイルを上書きします。user:// を使ってください。res:// はゲームを書き出すと読み取り専用になります。
+"The rows to write - the Array variable a table expression filled, or one the sheet built itself.",書き出す行。表の式が入れた Array 変数か、シートが自分で組み立てたもの。
+"Whether to write a first line naming the columns. Naming them writes one line per record, in the order the first record's fields are in; otherwise every entry is written as a plain list of cells.",列名の行を最初に書くかどうか。書く場合は 1 レコードにつき 1 行を、最初のレコードの項目順で書きます。書かない場合は、各項目を単なるセルの並びとして書きます。
+For Each Line In File,ファイルの各行について
+"Runs this event's actions once per LINE of a text file, skipping blank ones. The file is read once and the loop then walks text already in memory, so nothing stays open behind the loop. Windows (CRLF) and old-Mac (CR) endings are handled, and a file that is not there walks nothing. Read the current one as `line`.",テキストファイルの各行についてこのイベントのアクションを実行し、空行は飛ばします。ファイルは一度だけ読み、その後はメモリ上の文字列をたどるので、ループの後ろに開いたままのものは残りません。Windows (CRLF) や旧 Mac (CR) の改行も扱え、存在しないファイルは何もたどりません。現在の行は `line` で読めます。
+for each line of [b]{path}[/b],[b]{path}[/b] の各行について
+"The text file to walk line by line - a log you wrote earlier, a list of level names, a leaderboard body.",1 行ずつたどるテキストファイル。以前に書いたログ、レベル名の一覧、ランキングの本文など。
+written,書き込み
+read,読み取り
+read and written,読み取りと書き込み
+asks the player to pick a file,プレイヤーにファイルを選んでもらう
+and %d more path(s),ほか %d 件のパス
+On Files Dropped,ファイルがドロップされたとき
+"Runs when the player drags files from their desktop onto the game window and lets go. DESKTOP ONLY: Windows, macOS and Linux raise it, and a web or mobile build never does, so keep another way in beside it.",プレイヤーがデスクトップからゲームウィンドウにファイルをドラッグして放したときに実行されます。デスクトップ専用: Windows、macOS、Linux は発生させますが、Web やモバイルのビルドは決して発生させないため、別の入り口も用意してください。
+On files dropped {files},ファイル {files} がドロップされたとき
+"Every path the player let go of, in one list - a drop can carry more than one file. They are real paths on that machine, not res:// or user:// ones.",プレイヤーが放したすべてのパスを 1 つのリストで返します。1 回のドロップで複数のファイルを運べます。res:// や user:// ではなく、そのマシン上の実際のパスです。
+Ask For A File To Open,開くファイルをたずねる
+"Opens the player's own file chooser so they can pick a file to read. The answer arrives as On a file chosen, or as On the ask cancelled - both of which the sheet needs an event for, because the emitted line calls them by name.",プレイヤー自身のファイル選択画面を開き、読み込むファイルを選んでもらいます。答えは「ファイルが選ばれたとき」または「たずねるのが取り消されたとき」として届きます。生成される行は名前でそれらを呼ぶため、シートには両方のイベントが必要です。
+Ask for a file to open ({filters}),開くファイルをたずねる ({filters})
+Filters,フィルター
 "Which files the player may pick. One entry per line of the list, spelled the way Godot spells a filter: the patterns, a semicolon, then the words the chooser shows - ""*.png,*.jpg;Images"".","プレイヤーが選べるファイルの種類。リストの 1 行につき 1 件、Godot のフィルター記法で書きます - パターン、セミコロン、そして選択画面に出す言葉 - ""*.png,*.jpg;Images""。"
-"Ask Where To Save","保存先をたずねる"
-"Opens the player's own save chooser so they can name a file and a folder to write into. Nothing is written by this row: the path arrives as On a file chosen, and a write row does the writing.","プレイヤー自身の保存先選択画面を開き、ファイル名とフォルダーを決めてもらいます。この行は何も書き込みません。パスは「ファイルが選ばれたとき」に届き、書き込みは書き込みの行が行います。"
-"Ask where to save ({filters})","保存先をたずねる ({filters})"
+Ask Where To Save,保存先をたずねる
+"Opens the player's own save chooser so they can name a file and a folder to write into. Nothing is written by this row: the path arrives as On a file chosen, and a write row does the writing.",プレイヤー自身の保存先選択画面を開き、ファイル名とフォルダーを決めてもらいます。この行は何も書き込みません。パスは「ファイルが選ばれたとき」に届き、書き込みは書き込みの行が行います。
+Ask where to save ({filters}),保存先をたずねる ({filters})
 "Which kind of file is being written. One entry per line of the list, spelled the way Godot spells a filter: the patterns, a semicolon, then the words the chooser shows - ""*.png;PNG image"".","書き込むファイルの種類。リストの 1 行につき 1 件、Godot のフィルター記法で書きます - パターン、セミコロン、そして選択画面に出す言葉 - ""*.png;PNG image""。"
-"On A File Chosen","ファイルが選ばれたとき"
-"Runs when the player answered an Ask row by picking a file. Both Ask rows end here, so a sheet that asks two different questions remembers which one it asked.","プレイヤーがたずねる行にファイルを選んで答えたときに実行されます。2 つのたずねる行はどちらもここに届くので、別々の問いを立てるシートはどちらを問うたかを覚えておいてください。"
-"On a file chosen {path}","ファイル {path} が選ばれたとき"
-"The file the player picked, as a real path on their machine. It is a path and nothing more - reading it is a separate row.","プレイヤーが選んだファイルを、そのマシン上の実際のパスとして返します。パスであるだけで、読み込むのは別の行の仕事です。"
-"On The Ask Cancelled","たずねるのが取り消されたとき"
-"Runs when the player closed an Ask row's chooser without picking anything. Put whatever was waiting on the answer back the way it was here.","プレイヤーがたずねる行の選択画面を何も選ばずに閉じたときに実行されます。答えを待っていたものを、ここで元に戻してください。"
-"On the ask cancelled","たずねるのが取り消されたとき"
-"Image From File","ファイルの画像"
-"Reads a picture from outside the project and answers with a texture, ready to hand to a Sprite or a TextureRect. No import step is involved: what you get back is a texture in a variable, and it lives only as long as something holds it.","プロジェクトの外にある画像を読み、テクスチャとして返します。Sprite や TextureRect にそのまま渡せます。インポート処理はありません。返るのは変数の中のテクスチャで、何かが保持している間だけ存在します。"
-"image of file {path}, or {fallback}","ファイル {path} の画像、なければ {fallback}"
-"The picture to read, in any format Godot decodes at runtime: .png, .jpg / .jpeg, .webp, .bmp, .tga, .svg, .ktx, .dds and .hdr.","読み込む画像。Godot が実行時にデコードできる形式であれば何でも使えます: .png、.jpg / .jpeg、.webp、.bmp、.tga、.svg、.ktx、.dds、.hdr。"
-"If missing","見つからない場合"
-"What the expression reads as when there is no file at that path. Leave it blank to read the file plainly, with no guard around it.","そのパスにファイルがないとき、この式が何になるか。空のままにすると、守りを付けずにそのまま読み込みます。"
-"Sound From File","ファイルの音"
-"Reads a sound from outside the project and answers with an audio stream, ready to hand to a player node. The line names one reader per format the engine decodes at runtime, so a file it cannot decode reads as the fallback rather than as silence nobody explained.","プロジェクトの外にある音を読み、オーディオストリームとして返します。再生ノードにそのまま渡せます。この行はエンジンが実行時にデコードできる形式ごとに読み取り側を書き分けるので、デコードできないファイルは説明のない無音ではなく代わりの値になります。"
-"sound of file {path}, or {fallback}","ファイル {path} の音、なければ {fallback}"
-"The sound to read. EXACTLY THREE formats decode at runtime and the line checks for those three by extension: .mp3, .ogg (Ogg Vorbis) and .wav. Prefer a variable here - the path is read once per format the line checks.","読み込む音。実行時にデコードできるのはちょうど 3 つの形式で、この行は拡張子でその 3 つを見分けます: .mp3、.ogg (Ogg Vorbis)、.wav。ここには変数を渡すのが無難です。パスは調べる形式ごとに 1 回ずつ読まれます。"
-"What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it.","そのパスにファイルがないとき、または拡張子が 3 つのどれでもないとき、この式が何になるか。空のままにすると、守りを付けずにそのまま読み込みます。"
+On A File Chosen,ファイルが選ばれたとき
+"Runs when the player answered an Ask row by picking a file. Both Ask rows end here, so a sheet that asks two different questions remembers which one it asked.",プレイヤーがたずねる行にファイルを選んで答えたときに実行されます。2 つのたずねる行はどちらもここに届くので、別々の問いを立てるシートはどちらを問うたかを覚えておいてください。
+On a file chosen {path},ファイル {path} が選ばれたとき
+"The file the player picked, as a real path on their machine. It is a path and nothing more - reading it is a separate row.",プレイヤーが選んだファイルを、そのマシン上の実際のパスとして返します。パスであるだけで、読み込むのは別の行の仕事です。
+On The Ask Cancelled,たずねるのが取り消されたとき
+Runs when the player closed an Ask row's chooser without picking anything. Put whatever was waiting on the answer back the way it was here.,プレイヤーがたずねる行の選択画面を何も選ばずに閉じたときに実行されます。答えを待っていたものを、ここで元に戻してください。
+On the ask cancelled,たずねるのが取り消されたとき
+Image From File,ファイルの画像
+"Reads a picture from outside the project and answers with a texture, ready to hand to a Sprite or a TextureRect. No import step is involved: what you get back is a texture in a variable, and it lives only as long as something holds it.",プロジェクトの外にある画像を読み、テクスチャとして返します。Sprite や TextureRect にそのまま渡せます。インポート処理はありません。返るのは変数の中のテクスチャで、何かが保持している間だけ存在します。
+"image of file {path}, or {fallback}",ファイル {path} の画像、なければ {fallback}
+"The picture to read, in any format Godot decodes at runtime: .png, .jpg / .jpeg, .webp, .bmp, .tga, .svg, .ktx, .dds and .hdr.",読み込む画像。Godot が実行時にデコードできる形式であれば何でも使えます: .png、.jpg / .jpeg、.webp、.bmp、.tga、.svg、.ktx、.dds、.hdr。
+If missing,見つからない場合
+"What the expression reads as when there is no file at that path. Leave it blank to read the file plainly, with no guard around it.",そのパスにファイルがないとき、この式が何になるか。空のままにすると、守りを付けずにそのまま読み込みます。
+Sound From File,ファイルの音
+"Reads a sound from outside the project and answers with an audio stream, ready to hand to a player node. The line names one reader per format the engine decodes at runtime, so a file it cannot decode reads as the fallback rather than as silence nobody explained.",プロジェクトの外にある音を読み、オーディオストリームとして返します。再生ノードにそのまま渡せます。この行はエンジンが実行時にデコードできる形式ごとに読み取り側を書き分けるので、デコードできないファイルは説明のない無音ではなく代わりの値になります。
+"sound of file {path}, or {fallback}",ファイル {path} の音、なければ {fallback}
+"The sound to read. EXACTLY THREE formats decode at runtime and the line checks for those three by extension: .mp3, .ogg (Ogg Vorbis) and .wav. Prefer a variable here - the path is read once per format the line checks.",読み込む音。実行時にデコードできるのはちょうど 3 つの形式で、この行は拡張子でその 3 つを見分けます: .mp3、.ogg (Ogg Vorbis)、.wav。ここには変数を渡すのが無難です。パスは調べる形式ごとに 1 回ずつ読まれます。
+"What the expression reads as when there is no file at that path, or when its extension is none of the three. Leave it blank to read the file plainly, with no guard around it.",そのパスにファイルがないとき、または拡張子が 3 つのどれでもないとき、この式が何になるか。空のままにすると、守りを付けずにそのまま読み込みます。
 Pack Folder Into Zip,フォルダーをZipにまとめる
 "Writes the files in one folder into a .zip archive, using the engine's own packer. The loop is emitted into your script, so you can see exactly which files it walks - the ones directly in that folder, not the ones inside its subfolders.",エンジン自身のパッカーを使って、1つのフォルダー内のファイルを .zip アーカイブに書き出します。ループはスクリプトに出力されるので、どのファイルをたどるかがそのまま見えます - そのフォルダー直下のファイルであり、サブフォルダーの中身ではありません。
 Files: Archives,ファイル: アーカイブ
@@ -5687,7 +5687,7 @@ the %s state,%s 状態
 "True while this object has been in the given state for longer than that many seconds - the timed half of Is in. The clock restarts every time the state changes, so a stagger that ends after a second is this row and nothing else.",このオブジェクトが指定した状態に、その秒数より長くとどまっている間、真になります。「〜にいる」の時間版です。時計は状態が変わるたびに始まり直すので、1 秒で終わるよろめきはこの行だけで書けます。
 "True while the state this object was in BEFORE the current one is the given state. Answers ""what did we come from"" - the chase that began from patrolling is a different chase from the one that began from being staggered.",このオブジェクトが現在の状態の「前」にいた状態が、指定した状態である間、真になります。「どこから来たか」に答えます。巡回から始まった追跡と、よろめきから始まった追跡は別物です。
 "Moves this object into another state and says so: On leaving the old one and On entering the new one both run, in that order. Going to the state it is already in changes nothing and announces nothing.",このオブジェクトを別の状態へ移し、それを知らせます。元の状態の「出るとき」と、新しい状態の「入るとき」が、その順に走ります。すでにいる状態へ移っても何も変わらず、何も知らされません。
-"Runs the moment this object enters the given state, after every On leaving row of the state it came from, so what is being left has finished tidying up before the new one starts. A Go to written inside one of these rows is a second change announced straight away: its own rows run to the end first, and the rows left in this one then run for a state the object has already left.","このオブジェクトが指定した状態に入った瞬間に、元の状態の「出るとき」の行がすべて走ったあとで実行されます。去る状態の後始末が終わってから新しい状態が始まります。これらの行の中に書かれた「移動」は、ただちに知らされる二度目の変化です。その行が最後まで先に走り、この行に残った行はそのあとで、オブジェクトがすでに去った状態のために走ります。"
+"Runs the moment this object enters the given state, after every On leaving row of the state it came from, so what is being left has finished tidying up before the new one starts. A Go to written inside one of these rows is a second change announced straight away: its own rows run to the end first, and the rows left in this one then run for a state the object has already left.",このオブジェクトが指定した状態に入った瞬間に、元の状態の「出るとき」の行がすべて走ったあとで実行されます。去る状態の後始末が終わってから新しい状態が始まります。これらの行の中に書かれた「移動」は、ただちに知らされる二度目の変化です。その行が最後まで先に走り、この行に残った行はそのあとで、オブジェクトがすでに去った状態のために走ります。
 "Runs the moment this object leaves the given state, before anything answering the state it is entering. Put back here whatever the state switched on - the alarm it raised, the shader it turned red.",このオブジェクトが指定した状態を出た瞬間に、入る状態に応えるものより先に走ります。その状態が入れたものをここで戻します。鳴らした警報、赤くしたシェーダー。
 "Which of this object's declared states. The Declare states dialog on the sheet head is where they are declared, and this list is exactly what it wrote.",このオブジェクトが宣言した状態のどれか。宣言はシート見出しの「状態を宣言」ダイアログで行い、この一覧はそこで書かれたものそのものです。
 How long the object must already have been in that state for this to be true. The clock starts again on every change of state.,これが真になるために、オブジェクトがその状態にすでにどれだけとどまっている必要があるか。時計は状態が変わるたびに始まり直します。
@@ -5704,10 +5704,10 @@ re-entered %s,%s に再入場
 This happened %d times in this run.,この実行中に %d 回起きています。
 Row,行
 States,状態
-"OK","OK"
-"Patrol · Chase · Stagger","巡回 · 追跡 · ひるみ"
-"The states this one object can be in, separated by anything you like. They become an enum, and every row that names a state is offered this list as it types - so a state is picked rather than remembered, and a row naming one that is not here is what the Doctor calls out.","この一つのオブジェクトが取りうる状態です。区切り方は自由です。これらは列挙型になり、状態を指すすべての行には入力中にこの一覧が示されます。つまり状態は覚えるものではなく選ぶものになり、ここにない名前を指した行は Doctor が知らせます。"
-"The state the object opens in - the value the state variable is declared with. It is also the one state that needs no row going to it.","オブジェクトが最初にいる状態です。状態変数が宣言される値でもあります。そこへ向かう行が要らない唯一の状態でもあります。"
+OK,OK
+Patrol · Chase · Stagger,巡回 · 追跡 · ひるみ
+"The states this one object can be in, separated by anything you like. They become an enum, and every row that names a state is offered this list as it types - so a state is picked rather than remembered, and a row naming one that is not here is what the Doctor calls out.",この一つのオブジェクトが取りうる状態です。区切り方は自由です。これらは列挙型になり、状態を指すすべての行には入力中にこの一覧が示されます。つまり状態は覚えるものではなく選ぶものになり、ここにない名前を指した行は Doctor が知らせます。
+The state the object opens in - the value the state variable is declared with. It is also the one state that needs no row going to it.,オブジェクトが最初にいる状態です。状態変数が宣言される値でもあります。そこへ向かう行が要らない唯一の状態でもあります。
 Error,エラー
 Warning,警告
 this sheet,このシート
@@ -5718,9 +5718,9 @@ Add row,行を追加
 "Find ""%s"" in every sheet…",すべてのシートで「%s」を検索…
 "That row is in %s, which is not open.",その行は %s にありますが、開かれていません。
 "%s is declared in %s - opened it, but the row it is on has moved.",%s は %s で宣言されています - 開きましたが、その行は移動しています。
-"%s is declared in %s, which would not open.","%s は %s で宣言されていますが、そのファイルを開けませんでした。"
+"%s is declared in %s, which would not open.",%s は %s で宣言されていますが、そのファイルを開けませんでした。
 %s is a mode of this sheet's own declaration.,%s はこのシート自身の宣言によるモードです。
-"Opened %s, but the row that finding named is not there any more - this is the last audit's list. Run the Doctor again.","%s を開きましたが、その指摘が名指しした行はもうありません。これは前回の点検の一覧です。Doctor をもう一度実行してください。"
+"Opened %s, but the row that finding named is not there any more - this is the last audit's list. Run the Doctor again.",%s を開きましたが、その指摘が名指しした行はもうありません。これは前回の点検の一覧です。Doctor をもう一度実行してください。
 "That finding is about %s, which is not a sheet - open it from the FileSystem dock.",この指摘は %s についてですが、シートではありません - FileSystem ドックから開いてください。
 %s is not in the scene that is open.,%s は開いているシーンにありません。
 %s is no longer in the project.,%s はプロジェクトにもうありません。
@@ -5750,8 +5750,8 @@ Layout,レイアウト
 Add layout {path} on top as {layout_name},レイアウト {path} を {layout_name} として上に重ねる
 Remove layout {layout_name} from on top,上に重ねたレイアウト {layout_name} を外す
 layout {layout_name} is on top,レイアウト {layout_name} が上に重なっている
-"Puts a layout over the running game instead of replacing it - a pause menu, an inventory, a dialogue box. The copy is added under the tree root, so it outlives a change of layout underneath it, and it takes the name you give so the two rows below can find it again. A name that is already on top is left alone and nothing is loaded, because two layouts under one name would mean one of them could never be found or removed again.","実行中のゲームを置き換えるのではなく、その上にレイアウトを重ねます - ポーズメニュー、インベントリ、会話ウィンドウなど。コピーはツリーのルート直下に追加されるので、下のレイアウトが変わっても生き残り、あなたが付けた名前を持つので下の2行から見つけられます。すでにその名前が上に出ている場合は手を触れず、何も読み込みません。1つの名前に2つのレイアウトがあると、そのうち片方は二度と見つけることも取り除くこともできなくなるからです。"
-"Takes a layout added by Add Layout On Top back off again. It comes off the tree straight away and is freed the deferred way, so Layout Is On Top answers false in the same frame and an add right after it puts the new one up under the same name. A name nothing is under quietly does nothing, so a close row is safe to run twice.","「レイアウトを上に追加」で追加したレイアウトを取り外します。すぐにツリーから外され、解放は遅延方式で行われるので、「レイアウトが上にある」は同じフレームで偽を返し、直後の追加は同じ名前で新しいものを上げられます。何も置かれていない名前では静かに何も起きないので、閉じる行は二度実行しても安全です。"
+"Puts a layout over the running game instead of replacing it - a pause menu, an inventory, a dialogue box. The copy is added under the tree root, so it outlives a change of layout underneath it, and it takes the name you give so the two rows below can find it again. A name that is already on top is left alone and nothing is loaded, because two layouts under one name would mean one of them could never be found or removed again.",実行中のゲームを置き換えるのではなく、その上にレイアウトを重ねます - ポーズメニュー、インベントリ、会話ウィンドウなど。コピーはツリーのルート直下に追加されるので、下のレイアウトが変わっても生き残り、あなたが付けた名前を持つので下の2行から見つけられます。すでにその名前が上に出ている場合は手を触れず、何も読み込みません。1つの名前に2つのレイアウトがあると、そのうち片方は二度と見つけることも取り除くこともできなくなるからです。
+"Takes a layout added by Add Layout On Top back off again. It comes off the tree straight away and is freed the deferred way, so Layout Is On Top answers false in the same frame and an add right after it puts the new one up under the same name. A name nothing is under quietly does nothing, so a close row is safe to run twice.",「レイアウトを上に追加」で追加したレイアウトを取り外します。すぐにツリーから外され、解放は遅延方式で行われるので、「レイアウトが上にある」は同じフレームで偽を返し、直後の追加は同じ名前で新しいものを上げられます。何も置かれていない名前では静かに何も起きないので、閉じる行は二度実行しても安全です。
 "True while a layout added by Add Layout On Top is still there. Use it to stop a menu opening twice, or to answer the same key differently while one is open.",「レイアウトを上に重ねる」で追加したレイアウトがまだある間は真になります。メニューが二重に開くのを防いだり、開いている間だけ同じキーへの反応を変えたりするのに使います。
 "Layout file to put on top. Its root node keeps its own Process Mode, which is what decides whether it runs while the game is paused.",上に重ねるレイアウトファイル。そのルートノードは自身の処理モードを保つので、ポーズ中に動くかどうかはそれが決めます。
 "The name the copy is given under the tree root. Remove Layout On Top and Layout Is On Top find it by this name, so keep all three saying the same one.",ツリーのルート下でコピーに付く名前。「上に重ねたレイアウトを外す」と「レイアウトが上に重なっている」はこの名前で探すので、3 行すべてで同じ名前にしてください。
@@ -5782,11 +5782,11 @@ random place [b]{radius}[/b] around [i]{node}[/i],[i]{node}[/i] のまわり [b]
 "The node to spawn around - the player, a totem, a spawner. Its own place is the centre of the ring.",まわりに生成するノード。プレイヤー、トーテム、スポナーなど。そのノード自身の場所が輪の中心になります。
 "How far out from that node the point sits, in metres. Every point is exactly this far out - it is a ring, not a filled circle.",そのノードからどれだけ外側に点を置くか、メートル単位で。すべての点はちょうどこの距離にあります。塗りつぶした円ではなく輪です。
 On Node Joins Group,ノードがグループに加わったとき
-"Runs the moment a node that belongs to a group enters the world - a spawned enemy that should get a minimap marker, a pickup that should be counted, a door that should be wired up. It listens to the scene tree's own node-added signal and adds the group question below as a condition you can see and edit, so nothing about it happens off the row. The guard runs for every node entering the world: measured, one handler asking one group question costs about 0.34 microseconds per node added, which is a third of a millisecond on a 1000-node scene load and still most of the cost of adding a node - so it is the wrong tool inside a particle storm. A group set in the scene file is already there when the node arrives, but a group joined in _ready is joined too late: node-added is emitted first, so that node is never matched by this trigger at all. Join the group before the node enters the tree, or on the row that spawns it.","グループに属するノードが世界に入ってきた瞬間に実行されます - ミニマップの目印を付けたい出現した敵、数えたい拾い物、つなぎたい扉など。シーンツリー自身の node-added シグナルを聞き、グループの質問を下に見える・編集できる条件として置くので、行の外では何も起きません。この判定は世界に入るすべてのノードで走ります。実測では、グループの質問を1つ行うハンドラの費用はノード1つの追加あたり約 0.34 マイクロ秒で、1000ノードのシーン読み込みで 3 分の 1 ミリ秒ほど、それでもノード追加の費用の大半を占めます - パーティクルの嵐の中では向いていない道具です。シーンファイルで設定されたグループはノードの到着時にすでにありますが、_ready で入ったグループは遅すぎます。node-added が先に発せられるため、そのノードはこのトリガーに一度も捕まりません。ノードがツリーに入る前か、それを出現させる行でグループに入れてください。"
+"Runs the moment a node that belongs to a group enters the world - a spawned enemy that should get a minimap marker, a pickup that should be counted, a door that should be wired up. It listens to the scene tree's own node-added signal and adds the group question below as a condition you can see and edit, so nothing about it happens off the row. The guard runs for every node entering the world: measured, one handler asking one group question costs about 0.34 microseconds per node added, which is a third of a millisecond on a 1000-node scene load and still most of the cost of adding a node - so it is the wrong tool inside a particle storm. A group set in the scene file is already there when the node arrives, but a group joined in _ready is joined too late: node-added is emitted first, so that node is never matched by this trigger at all. Join the group before the node enters the tree, or on the row that spawns it.",グループに属するノードが世界に入ってきた瞬間に実行されます - ミニマップの目印を付けたい出現した敵、数えたい拾い物、つなぎたい扉など。シーンツリー自身の node-added シグナルを聞き、グループの質問を下に見える・編集できる条件として置くので、行の外では何も起きません。この判定は世界に入るすべてのノードで走ります。実測では、グループの質問を1つ行うハンドラの費用はノード1つの追加あたり約 0.34 マイクロ秒で、1000ノードのシーン読み込みで 3 分の 1 ミリ秒ほど、それでもノード追加の費用の大半を占めます - パーティクルの嵐の中では向いていない道具です。シーンファイルで設定されたグループはノードの到着時にすでにありますが、_ready で入ったグループは遅すぎます。node-added が先に発せられるため、そのノードはこのトリガーに一度も捕まりません。ノードがツリーに入る前か、それを出現させる行でグループに入れてください。
 On a node joining {group},ノードが {group} に加わったとき
 "The group whose members this event answers. It is an ordinary Godot group, so anything else in the project that uses groups sees the same members. Choose Any group to answer every node entering or leaving the world, which is what a debug overlay or an editor tool wants.",このイベントが応答するメンバーのグループ。ごく普通の Godot のグループなので、プロジェクト内でグループを使う他のものからも同じメンバーが見えます。「すべてのグループ」を選ぶと、ワールドに入る・出るすべてのノードに応答します。デバッグ表示やエディタツールが欲しがるのはこれです。
 On Node Leaves Group,ノードがグループから抜けたとき
-"Runs the moment a node that belongs to a group leaves the world - the marker to take off the minimap, the entry to remove from a list, the connection to drop. A leaving node is still listed in its groups at that moment, which is what lets the question be asked at all. It fires for every departure, a move to another parent included: when what you mean is the crowd being emptied by a destroy, On The Last One Destroyed asks those further questions and this one deliberately does not. TEARDOWN IS A DEPARTURE TOO: every member of the group leaves when the branch holding it is freed and when the game quits, so this body runs once per member against a tree that is being taken apart - write it so that is harmless, or ask whether the tree is quitting first.","グループに属するノードが世界から出ていく瞬間に実行されます - ミニマップから外す目印、リストから消す項目、切る接続など。出ていくノードはその瞬間まだ自分のグループに載っており、だからこそ質問ができます。移動による親の変更も含め、あらゆる離脱で発火します。破棄によって群れが空になることを指したいなら、「最後の1体が破棄されたとき」がその追加の質問をし、こちらはあえてしません。片付けも離脱です。グループの各メンバーは、それを抱える枝が解放されるときとゲーム終了時に去るので、この本体は解体中のツリーに対してメンバーごとに1回走ります - それが無害になるように書くか、先にツリーが終了中かどうかを尋ねてください。"
+"Runs the moment a node that belongs to a group leaves the world - the marker to take off the minimap, the entry to remove from a list, the connection to drop. A leaving node is still listed in its groups at that moment, which is what lets the question be asked at all. It fires for every departure, a move to another parent included: when what you mean is the crowd being emptied by a destroy, On The Last One Destroyed asks those further questions and this one deliberately does not. TEARDOWN IS A DEPARTURE TOO: every member of the group leaves when the branch holding it is freed and when the game quits, so this body runs once per member against a tree that is being taken apart - write it so that is harmless, or ask whether the tree is quitting first.",グループに属するノードが世界から出ていく瞬間に実行されます - ミニマップから外す目印、リストから消す項目、切る接続など。出ていくノードはその瞬間まだ自分のグループに載っており、だからこそ質問ができます。移動による親の変更も含め、あらゆる離脱で発火します。破棄によって群れが空になることを指したいなら、「最後の1体が破棄されたとき」がその追加の質問をし、こちらはあえてしません。片付けも離脱です。グループの各メンバーは、それを抱える枝が解放されるときとゲーム終了時に去るので、この本体は解体中のツリーに対してメンバーごとに1回走ります - それが無害になるように書くか、先にツリーが終了中かどうかを尋ねてください。
 On a node leaving {group},ノードが {group} から抜けたとき
 Any group - every node entering or leaving the world,すべてのグループ - ワールドに入る・出るすべてのノード
 "The check runs for every node entering or leaving the world - nothing at the scale a game spawns things at, and the wrong tool inside a particle storm. A group set in the scene file is already there when the node arrives; a group a script adds after add_child is announced by the next node to join, not by that one.",この判定はワールドに入る・出るすべてのノードで走ります。ゲームが物を出す規模では無視できますが、パーティクルの嵐の中では誤った道具です。シーンファイルで設定したグループはノードが到着した時点で既にあります。スクリプトが add_child のあとで追加したグループは、そのノードではなく次に加わるノードで知らされます。
@@ -5838,14 +5838,14 @@ Make it undoable,取り消し可能にする
 "This is only asked of a Tool sheet - a sheet that runs in the game is not editing anybody's scene, and has no history to be missing from.",これはツールシートにだけ問われます。ゲームの中で走るシートは誰のシーンも編集しておらず、欠けるべき履歴も持ちません。
 This row already goes through the editor's undo history.,この行はすでにエディタの取り消し履歴を通っています。
 Save Branch As Scene File,ブランチをシーンファイルとして保存
-"Writes a branch of the running game out as a scene file, so a level, a room or a ship the player assembled can be loaded again later. It walks the branch first and lends every ownerless node under it the branch root as its owner, because Godot writes out only what the root owns - that walk is the whole reason this is a row and not one line - and gives that ownership back once the file is packed, so the running game is left as it was and a branch inside a branch you already saved still writes a whole file. Editor Tools ▸ Save Node As Scene is the same job on the editor's side of the line, packing the node you are editing from a Tool sheet; this is the game's side, writing what the player made. Both the pack and the write report a failure through the debugger rather than doing nothing quietly.","実行中のゲームの枝をシーンファイルとして書き出します。プレイヤーが組み立てたレベル、部屋、船を後でもう一度読み込めるようにするためです。まず枝をたどり、その下のオーナーを持たないノードに枝のルートをオーナーとして貸します - Godot はルートが所有するものしか書き出さないからで、この歩き回りこそがこれを1行のコードではなくシートの1行にしている理由です - そしてファイルをパックし終えたらその所有権を返すので、実行中のゲームは元のままで、すでに保存した枝の中の枝を保存しても欠けのないファイルになります。エディタツール ▸ ノードをシーンとして保存 は境界の向こう側での同じ仕事で、ツールシートから編集中のノードをパックします。こちらはゲーム側で、プレイヤーが作ったものを書き出します。パックも書き込みも、静かに何もしないのではなくデバッガを通して失敗を報告します。"
+"Writes a branch of the running game out as a scene file, so a level, a room or a ship the player assembled can be loaded again later. It walks the branch first and lends every ownerless node under it the branch root as its owner, because Godot writes out only what the root owns - that walk is the whole reason this is a row and not one line - and gives that ownership back once the file is packed, so the running game is left as it was and a branch inside a branch you already saved still writes a whole file. Editor Tools ▸ Save Node As Scene is the same job on the editor's side of the line, packing the node you are editing from a Tool sheet; this is the game's side, writing what the player made. Both the pack and the write report a failure through the debugger rather than doing nothing quietly.",実行中のゲームの枝をシーンファイルとして書き出します。プレイヤーが組み立てたレベル、部屋、船を後でもう一度読み込めるようにするためです。まず枝をたどり、その下のオーナーを持たないノードに枝のルートをオーナーとして貸します - Godot はルートが所有するものしか書き出さないからで、この歩き回りこそがこれを1行のコードではなくシートの1行にしている理由です - そしてファイルをパックし終えたらその所有権を返すので、実行中のゲームは元のままで、すでに保存した枝の中の枝を保存しても欠けのないファイルになります。エディタツール ▸ ノードをシーンとして保存 は境界の向こう側での同じ仕事で、ツールシートから編集中のノードをパックします。こちらはゲーム側で、プレイヤーが作ったものを書き出します。パックも書き込みも、静かに何もしないのではなくデバッガを通して失敗を報告します。
 save branch {branch} as scene file {path},ブランチ {branch} をシーンファイル {path} として保存
 Branch,ブランチ
-"The node whose whole branch is written out. It becomes the root of the scene file, and every node under it that has no owner yet is LENT this node as its owner while the file is packed - which is what puts them in the file at all - and gets it back the moment the pack is done, so saving a branch and then a branch above it both write whole files. A node that already belongs to another scene keeps that owner and is left out, so a branch full of instanced scenes saves as the branch plus those instances, not as a copy of their insides.","枝ごと書き出す対象のノードです。これがシーンファイルのルートになり、その下でまだオーナーを持たないノードには、パックの間だけこのノードがオーナーとして貸し出されます - それがファイルに入る理由です - そしてパックが終わった瞬間に返されるので、ある枝を保存してからその上の枝を保存しても、どちらも欠けのないファイルになります。すでに別のシーンに属しているノードはそのオーナーを保ち、対象から外れます。したがってインスタンス化されたシーンだらけの枝は、その中身の複製ではなく、枝とそれらのインスタンスとして保存されます。"
+"The node whose whole branch is written out. It becomes the root of the scene file, and every node under it that has no owner yet is LENT this node as its owner while the file is packed - which is what puts them in the file at all - and gets it back the moment the pack is done, so saving a branch and then a branch above it both write whole files. A node that already belongs to another scene keeps that owner and is left out, so a branch full of instanced scenes saves as the branch plus those instances, not as a copy of their insides.",枝ごと書き出す対象のノードです。これがシーンファイルのルートになり、その下でまだオーナーを持たないノードには、パックの間だけこのノードがオーナーとして貸し出されます - それがファイルに入る理由です - そしてパックが終わった瞬間に返されるので、ある枝を保存してからその上の枝を保存しても、どちらも欠けのないファイルになります。すでに別のシーンに属しているノードはそのオーナーを保ち、対象から外れます。したがってインスタンス化されたシーンだらけの枝は、その中身の複製ではなく、枝とそれらのインスタンスとして保存されます。
 Save To,保存先
 "Where to write the scene file. Prefer user:// - res:// is the game's own files and is read-only once the game is exported, so a level the player built cannot be saved there.",シーンファイルの書き込み先。user:// を選んでください。res:// はゲーム自身のファイルで、書き出し後は読み取り専用になるため、プレイヤーが作ったレベルをそこへ保存することはできません。
 Scene File Is Data-Only,シーンファイルがデータだけである
-"True when a scene file brings nothing in from outside the game: no script written inside it, and every file it points at under res://, which is the game's own. It reads the file's own resource table as TEXT, tag by tag the way the engine's own parser reads it, and instantiates nothing. Ask it above a row that builds a scene which did not come with the game - a level the player built, a pack somebody sent them - because a scene file can name a script, and building one runs that script with everything this game can reach. Anything it cannot read as a scene table answers false, because an unfamiliar file is not a file that has been cleared.","シーンファイルがゲームの外から何も持ち込まないときに真になります。中に書かれたスクリプトがなく、指し示すファイルがすべて res:// 配下、つまりゲーム自身のファイルであることです。ファイル自身のリソーステーブルをテキストとして、エンジン自身のパーサーと同じようにタグ単位で読み、何もインスタンス化しません。ゲームに同梱されていないシーンを構築する行の上で尋ねてください - プレイヤーが作ったレベル、誰かが送ってきたパック - シーンファイルはスクリプトを指名でき、構築するとそのスクリプトがこのゲームの届く範囲すべてとともに実行されるからです。シーンテーブルとして読めないものはすべて偽になります。見慣れないファイルは、確認済みのファイルではないからです。"
+"True when a scene file brings nothing in from outside the game: no script written inside it, and every file it points at under res://, which is the game's own. It reads the file's own resource table as TEXT, tag by tag the way the engine's own parser reads it, and instantiates nothing. Ask it above a row that builds a scene which did not come with the game - a level the player built, a pack somebody sent them - because a scene file can name a script, and building one runs that script with everything this game can reach. Anything it cannot read as a scene table answers false, because an unfamiliar file is not a file that has been cleared.",シーンファイルがゲームの外から何も持ち込まないときに真になります。中に書かれたスクリプトがなく、指し示すファイルがすべて res:// 配下、つまりゲーム自身のファイルであることです。ファイル自身のリソーステーブルをテキストとして、エンジン自身のパーサーと同じようにタグ単位で読み、何もインスタンス化しません。ゲームに同梱されていないシーンを構築する行の上で尋ねてください - プレイヤーが作ったレベル、誰かが送ってきたパック - シーンファイルはスクリプトを指名でき、構築するとそのスクリプトがこのゲームの届く範囲すべてとともに実行されるからです。シーンテーブルとして読めないものはすべて偽になります。見慣れないファイルは、確認済みのファイルではないからです。
 scene file {path} is data-only,シーンファイル {path} がデータだけである
 Scene File,シーンファイル
 "The scene file to read. It is read as TEXT and nothing in it is built, so asking this question about a file from anywhere is safe. A file that is missing, unreadable, or saved in the binary form this cannot read answers false - an unreadable file is not a file that has been cleared.",読み取るシーンファイル。テキストとして読まれ、中身は何も組み立てられないので、どこから来たファイルについて尋ねても安全です。存在しないファイル、読めないファイル、これが読めないバイナリ形式で保存されたファイルは偽を返します。読めないファイルは、きれいだと確かめられたファイルではありません。
@@ -5944,7 +5944,7 @@ Add event,イベントを追加
 + Add…,+ 追加…
 Add an event to this sheet.,このシートにイベントを追加します。
 Everything you can add here - the same menu right-clicking empty space opens.,ここに追加できるものすべて - 空白部分を右クリックしたときと同じメニューです。
-"The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back.","ツールバーは休止中です: すべてのボタンはメニューまたは矢印の中にあり、キーは変わりません。表示 > フルツールバーですべて戻ります。"
+"The toolbar is resting: every button is under Menu or the chevron, keys unchanged. View > Full toolbar brings it all back.",ツールバーは休止中です: すべてのボタンはメニューまたは矢印の中にあり、キーは変わりません。表示 > フルツールバーですべて戻ります。
 Sheet theme,シートのテーマ
 "The theme this sheet is drawn with - the bundled presets, plus Match Editor, which derives the sheet's colours from your own editor theme. Remembered on the sheet, so it travels with the file.",このシートを描画するテーマ - 同梱プリセットに加え、エディターのテーマからシートの色を導き出す Match Editor。シート自身に記憶されるため、ファイルと一緒に移動します。
 Variable rows,変数の行
@@ -7032,9 +7032,9 @@ one amount,値ひとつ
 "%s travels to ""%s"", which no animation tree in its scene declares. A misspelled state travels nowhere and is never reported by the game itself.","%s は ""%s"" へ遷移しますが、そのシーンのどのアニメーションツリーにもこの状態はありません。綴りを誤った状態はどこにも遷移せず、ゲーム自身は何も報告しません。"
 "Did you mean ""%s""?","もしかして ""%s"" ですか?"
 "%s writes a vector into ""%s"", which is a one-dimensional blend space. Only the first number is used - the rest of the direction is dropped without a word.","%s は ""%s"" にベクトルを書き込んでいますが、これは1次元のブレンド空間です。最初の数値だけが使われ、残りの向きは何も告げずに捨てられます。"
-"%s starts watching a folder and never stops watching it. A watch is a directory read every few seconds for the rest of the session, so one started on a screen the player walks away from goes on reading the disk behind whatever they moved on to. First: %s.","%s はフォルダーの監視を始めますが、一度も止めません。監視とは、セッションが終わるまで数秒おきにディレクトリを読み続けることです。プレイヤーが離れた画面で始めた監視は、移った先の裏でディスクを読み続けます。最初: %s。"
-"Stop Watching ends it, and a stopped watcher parks its per-frame tick - the engine stops visiting it at all.","「監視をやめる」がそれを終わらせます。止まった監視役は毎フレームの処理を止め、エンジンはもうそこを訪れません。"
-"This reads one file at a time: a Stop Watching in another script, or one reached through a variable holding the watcher, is a stop this check cannot see.","これは一度に一つのファイルを読みます。別のスクリプトにある「監視をやめる」や、監視役を持つ変数を通して呼ばれるものは、この検査には見えない停止です。"
+"%s starts watching a folder and never stops watching it. A watch is a directory read every few seconds for the rest of the session, so one started on a screen the player walks away from goes on reading the disk behind whatever they moved on to. First: %s.",%s はフォルダーの監視を始めますが、一度も止めません。監視とは、セッションが終わるまで数秒おきにディレクトリを読み続けることです。プレイヤーが離れた画面で始めた監視は、移った先の裏でディスクを読み続けます。最初: %s。
+"Stop Watching ends it, and a stopped watcher parks its per-frame tick - the engine stops visiting it at all.",「監視をやめる」がそれを終わらせます。止まった監視役は毎フレームの処理を止め、エンジンはもうそこを訪れません。
+"This reads one file at a time: a Stop Watching in another script, or one reached through a variable holding the watcher, is a stop this check cannot see.",これは一度に一つのファイルを読みます。別のスクリプトにある「監視をやめる」や、監視役を持つ変数を通して呼ばれるものは、この検査には見えない停止です。
 "%s chooses a difficulty, but nothing in this project reads a factor out of one - the menu changes nothing. Multiply by Difficulty Factor where the difficulty is meant to be felt.",%s は難易度を選びますが、このプロジェクトにはそこから係数を読むものが何もなく、メニューは何も変えていません。難易度を感じさせたいところで「難易度係数を掛ける」を使ってください。
 "Reads the surface's colour back: `material_override.albedo_color`. A mesh drawing with nothing, or wearing somebody's shader, answers with the value a new material starts on rather than reaching through what is not there. Use it in any value field.",表面の色を読み返します: `material_override.albedo_color`。何も使って描いていないメッシュや、誰かのシェーダーを着ているメッシュは、そこにないものをたどらず、新しいマテリアルが始まる値で答えます。どの値フィールドでも使えます。
 "Reads the surface's glow back: `material_override.emission_energy_multiplier`. A mesh drawing with nothing, or wearing somebody's shader, answers with the value a new material starts on rather than reaching through what is not there. Use it in any value field.",表面の発光を読み返します: `material_override.emission_energy_multiplier`。何も使って描いていないメッシュや、誰かのシェーダーを着ているメッシュは、そこにないものをたどらず、新しいマテリアルが始まる値で答えます。どの値フィールドでも使えます。
@@ -7142,14 +7142,14 @@ On unpack finished {entries} {bytes} {skipped},展開が終わったとき {entr
 Skipped,スキップ
 "How many entries did not land: one the reader answered with no bytes for - a truncated or corrupted archive, or an entry that really is empty, which reads exactly the same way - and one the machine refused to write, such as a name the file system will not take or a full disk. Nothing of theirs is on disk. A finish with a number here reached the end of the archive but did not unpack all of it, which is worth saying on screen rather than treating as a clean install.",書き込まれなかった項目の数です。リーダーが 1 バイトも返さなかった項目 - 途中で切れた、あるいは壊れたアーカイブや、本当に空でまったく同じに読める項目 - と、マシンが書き込みを拒んだ項目 (ファイルシステムが受け付けない名前、ディスクの空き不足など) です。それらはディスク上にありません。ここに数が出た終了は、アーカイブの最後までは進んだが全部は展開できていないということなので、きれいなインストールとして扱わず画面に出す価値があります。
 "How many numbers to try before giving up. The questions are only asked when the path you wanted is already taken - and then ALL of them are asked, not just up to the first free one: the line builds every candidate and keeps the free ones, so a taken path costs this many file_exists questions whatever the answer turns out to be. When all of them are taken the answer is the path you asked for, so the row after this one overwrites - name a number you are comfortable with.",あきらめるまでにいくつの番号を試すか。質問は望んだパスが既に使われているときだけ行われ、そのときは最初の空きまでではなく、すべてが尋ねられます。行はすべての候補を組み立てて空いているものを残すため、使われているパスは結果がどうであれこの数だけ file_exists を尋ねます。すべて使われていた場合の答えは元のパスなので、次の行は上書きします。納得できる数を決めてください。
-"This project plays haptics (first in %s). They are felt on a pad and on a phone, and are silent on the web and on a desktop with no pad - quietly, with no warning per row. Carry the same beat in sound or picture too, and let the options screen turn the rumble down: Set Haptic Strength is the one dial every haptic row reads.","このプロジェクトは触覚フィードバックを再生します (最初は %s)。パッドやスマートフォンでは感じられますが、Web やパッドのないデスクトップでは静かに何も起きず、行ごとの警告も出ません。同じ手応えを音や絵でも伝え、オプション画面で振動を下げられるようにしてください: Set Haptic Strength はすべての触覚行が読む唯一のつまみです。"
+"This project plays haptics (first in %s). They are felt on a pad and on a phone, and are silent on the web and on a desktop with no pad - quietly, with no warning per row. Carry the same beat in sound or picture too, and let the options screen turn the rumble down: Set Haptic Strength is the one dial every haptic row reads.",このプロジェクトは触覚フィードバックを再生します (最初は %s)。パッドやスマートフォンでは感じられますが、Web やパッドのないデスクトップでは静かに何も起きず、行ごとの警告も出ません。同じ手応えを音や絵でも伝え、オプション画面で振動を下げられるようにしてください: Set Haptic Strength はすべての触覚行が読む唯一のつまみです。
 New Moment…,新しいモーメント…
 Open Moment File As Block…,モーメントファイルをブロックとして開く…
 Save Moment As File…,モーメントをファイルとして保存…
 Delete Step,ステップを削除
-"A .gd file IS code, a .gdextension is a native library, and a .tres or a .res is a table that can name a script, so loading any of them runs its author's code with everything this game can reach: the player's files, their network, their machine. A .pck or a .zip is wider still: it MOUNTS its contents into res://, so it can replace the game's own files rather than only add to them.",".gd ファイルはそれ自体がコードで、.gdextension はネイティブライブラリ、.tres や .res はスクリプトを名指しできるテーブルです。どれを読み込んでも、その作者のコードがこのゲームの届く範囲すべて - プレイヤーのファイル、ネットワーク、マシン - を持って動きます。.pck や .zip はさらに広く、その中身を res:// 以下にマウントするので、ゲーム自身のファイルに付け足すだけでなく、置き換えることもできます。"
+"A .gd file IS code, a .gdextension is a native library, and a .tres or a .res is a table that can name a script, so loading any of them runs its author's code with everything this game can reach: the player's files, their network, their machine. A .pck or a .zip is wider still: it MOUNTS its contents into res://, so it can replace the game's own files rather than only add to them.",.gd ファイルはそれ自体がコードで、.gdextension はネイティブライブラリ、.tres や .res はスクリプトを名指しできるテーブルです。どれを読み込んでも、その作者のコードがこのゲームの届く範囲すべて - プレイヤーのファイル、ネットワーク、マシン - を持って動きます。.pck や .zip はさらに広く、その中身を res:// 以下にマウントするので、ゲーム自身のファイルに付け足すだけでなく、置き換えることもできます。
 (none),(なし)
-"%s marches the dashes on %s, and that shape has none to march: its Dashed box is off in %s, and no row here turns it on. Turn Dashed on in the Inspector, or put a Set Dashes row before the Scroll Dashes.","%s は %s の破線を流していますが、そのシェイプには流す破線がありません。%s では破線のチェックがオフで、このシート内のどの行もオンにしていません。インスペクターで破線をオンにするか、破線を流す行の前に破線を設定する行を置いてください。"
+"%s marches the dashes on %s, and that shape has none to march: its Dashed box is off in %s, and no row here turns it on. Turn Dashed on in the Inspector, or put a Set Dashes row before the Scroll Dashes.",%s は %s の破線を流していますが、そのシェイプには流す破線がありません。%s では破線のチェックがオフで、このシート内のどの行もオンにしていません。インスペクターで破線をオンにするか、破線を流す行の前に破線を設定する行を置いてください。
 """%s"" is not in the Input Map - the control never fires and nothing says so. Add it in Project ▸ Input Map, or fix the spelling.","""%s"" は入力マップにありません - この操作は決して発火せず、何も告げません。プロジェクト ▸ 入力マップで追加するか、綴りを修正してください。"
 What this file is. ▸ opens the lines behind it.,このファイルが何か。▸ で背後の行を開きます。
 Open the base script as a sheet.,ベーススクリプトをシートとして開く。
@@ -7239,7 +7239,7 @@ No problems,問題なし
 1 problem,問題 1 件
 %d problems,問題 %d 件
 Add Links On Hover,ホバー時の追加リンク
-"Add condition and Add action appear as links under the lanes of the event under the pointer, of the selected event and under an empty lane. Click one to pick what to add. Off draws them as pills in the same places.","条件を追加とアクションを追加は、ポインター下のイベント、選択中のイベント、空のレーンの下にリンクとして表示されます。クリックすると追加するものを選べます。オフにすると同じ場所にボタンとして描画します。"
+"Add condition and Add action appear as links under the lanes of the event under the pointer, of the selected event and under an empty lane. Click one to pick what to add. Off draws them as pills in the same places.",条件を追加とアクションを追加は、ポインター下のイベント、選択中のイベント、空のレーンの下にリンクとして表示されます。クリックすると追加するものを選べます。オフにすると同じ場所にボタンとして描画します。
 Active,有効
 sentence,文
 code,コード
@@ -7247,7 +7247,7 @@ What this file is: a script.,このファイルの種類: スクリプト。
 Add to Class Head…,クラスヘッドに追加…
 Click to change what kind of script it is.,クリックしてスクリプトの種類を変更します。
 Event %d selected,イベント %d を選択中
-Comment - drag the grip to move it into an event's actions or between events.,"コメント - つまみをドラッグして、イベントのアクション内やイベントの間に移動します。"
+Comment - drag the grip to move it into an event's actions or between events.,コメント - つまみをドラッグして、イベントのアクション内やイベントの間に移動します。
 Side Rail,サイドレール
 "The panels beside the sheet - Open Sheets, Objects, Functions. Unticked, the rail is tucked away and the sheet takes the width.",シートの横のパネル - 開いているシート、オブジェクト、関数。チェックを外すとレールがしまわれ、シートが幅いっぱいに広がります。
 Move every child of %s to %s,%s の子をすべて %s へ移動
@@ -9377,7 +9377,7 @@ Only two numbers share a line; this field and %s are drawn one per line.,一行�
 %d entries,%d 件
 "A class inside this script: its own variables and functions, folded under one head. Other code makes one with %s.new().",このスクリプトの中のクラス: 自分の変数と関数を、ひとつの見出しの下に折りたたんでいます。ほかのコードは %s.new() で作ります。
 extends %s,extends %s
-"%d compute shaders (.glsl) are imported on several threads at once, and Godot can crash part way through importing them, leaving the files after them unimported. Turn off Project Settings > Editor > Import > Use Multiple Threads.","%d 個のコンピュートシェーダー (.glsl) が複数のスレッドで同時にインポートされます。Godot はその途中でクラッシュすることがあり、その後のファイルがインポートされないまま残ります。プロジェクト設定 > エディター > インポート > 複数スレッドを使用 をオフにしてください。"
+"%d compute shaders (.glsl) are imported on several threads at once, and Godot can crash part way through importing them, leaving the files after them unimported. Turn off Project Settings > Editor > Import > Use Multiple Threads.",%d 個のコンピュートシェーダー (.glsl) が複数のスレッドで同時にインポートされます。Godot はその途中でクラッシュすることがあり、その後のファイルがインポートされないまま残ります。プロジェクト設定 > エディター > インポート > 複数スレッドを使用 をオフにしてください。
 "Off and not switchable: %s is left out of the game entirely, and Set group active cannot reach it. Tick Can be switched at runtime to turn it on from an event.",オフで切り替え不可: %s はゲームから完全に外され、グループを有効にする で届きません。イベントからオンにするには 実行中に切り替え可能 にチェックを入れてください。
 Off at start; events can switch it on.,開始時はオフ。イベントでオンにできます。
 Can Be Switched At Runtime,実行中に切り替え可能
@@ -9496,7 +9496,7 @@ The Inspector hides it unless another setting is on.,別の設定がオンにな
 %s:,%s：
 Listed under its own name in the picker and the Add behaviour list. The usual choice.,ピッカーと「ビヘイビアを追加」の一覧に自分の名前で並びます。いつもの選択です。
 "%s is a %s, not a node: a sheet reads it from its file, so it is never added to an object.",%s は %s でノードではありません。シートはそのファイルから読み込むので、オブジェクトに追加されることはありません。
-"%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.","%d 個のパッククラスはどのシート、シーン、オートロードからも参照されていません - 手書きの GDScript から呼ぶなら問題ありません: %s。"
+"%d pack class(es) are referenced by no sheet, scene or autoload - fine if you call them from hand-written GDScript: %s.",%d 個のパッククラスはどのシート、シーン、オートロードからも参照されていません - 手書きの GDScript から呼ぶなら問題ありません: %s。
 %s (autoload),%s (自動読み込み)
 %s is not in the library.,%s はライブラリにありません。
 %s could not be copied into the project (%s).,%s をプロジェクトにコピーできませんでした (%s)。
@@ -9726,10 +9726,10 @@ Fold or unfold what this kind inherits.,この種類が継承するものを折�
 "read here, changed on %s's sheet",ここでは読み取り専用、変更は %s のシートで
 Double-click to start it at another value.,ダブルクリックで別の値で開始します。
 Right-click to replace it in %s.,右クリックで %s の中で置き換えます。
-"%s changed since this step, so no file was written and the sheet is not saved.","%s はこの手順の後で変更されたため、ファイルは書き込まれず、シートも保存されていません。"
-"In %s, 1 test of %s will test %s instead.","%s では、%s を調べる 1 件のテストが代わりに %s を調べます。"
-"In %s, %d tests of %s will test %s instead.","%s では、%d 件の %s のテストが代わりに %s を調べます。"
-"%s saves %s as a number: after the removal, a saved number can name a different state.","%s は %s を数値として保存しています。削除後は、保存された数値が別の状態を指すことがあります。"
+"%s changed since this step, so no file was written and the sheet is not saved.",%s はこの手順の後で変更されたため、ファイルは書き込まれず、シートも保存されていません。
+"In %s, 1 test of %s will test %s instead.",%s では、%s を調べる 1 件のテストが代わりに %s を調べます。
+"In %s, %d tests of %s will test %s instead.",%s では、%d 件の %s のテストが代わりに %s を調べます。
+"%s saves %s as a number: after the removal, a saved number can name a different state.",%s は %s を数値として保存しています。削除後は、保存された数値が別の状態を指すことがあります。
 + Add to '%s'…,+ '%s' に追加…
 "+ Add to ""%s""…","+ ""%s"" に追加…"
 "Add event to ""%s""","""%s"" にイベントを追加"
@@ -10027,34 +10027,34 @@ Value of the wrong kind,種類の違う値
 Every physics tick,毎物理ティック
 every physics tick,毎物理ティック
 no starting value,初期値なし
-"%s is Array[%s] and %s is Array[%s], and a typed array only holds its own type.","%s は Array[%s]、%s は Array[%s] で、型付き配列は自分の型しか持てません。"
-different types,"型が違います"
-the two types differ,"2つの型が異なります"
-For each popped from the front of %s as %s,"%s の先頭から取り出した各要素を %s として"
-For each popped from the back of %s as %s,"%s の末尾から取り出した各要素を %s として"
+"%s is Array[%s] and %s is Array[%s], and a typed array only holds its own type.",%s は Array[%s]、%s は Array[%s] で、型付き配列は自分の型しか持てません。
+different types,型が違います
+the two types differ,2つの型が異なります
+For each popped from the front of %s as %s,%s の先頭から取り出した各要素を %s として
+For each popped from the back of %s as %s,%s の末尾から取り出した各要素を %s として
 Edit it anyway,それでも編集する
 %s is now editable.,%s を編集できるようになりました。
 %s is a shipped behaviour: adding a newer version of the pack replaces this file and your edits.,%s は同梱のビヘイビアです。パックの新しいバージョンを追加すると、このファイルと編集内容が置き換えられます。
 This function is locked - right-click it and choose Unlock this function,この関数はロックされています - 右クリックして「この関数のロックを解除」を選んでください
-group %s,"グループ %s"
-list %s,"リスト %s"
-Choose a group or list,"グループまたはリストを選ぶ"
-Use a group instead of %s,"%s の代わりにグループを使う"
+group %s,グループ %s
+list %s,リスト %s
+Choose a group or list,グループまたはリストを選ぶ
+Use a group instead of %s,%s の代わりにグループを使う
 "%s is now the group ""%s"": add_to_group, remove_from_group, is_in_group and For each in group.","%s はグループ ""%s"" になりました: add_to_group、remove_from_group、is_in_group、For each in group。"
-Pick the %s,"%s を選ぶ"
-This event now picks %s.,"このイベントは %s を選ぶようになりました。"
-Drop freed instances first,"先に解放されたインスタンスを外す"
-Added a row above the loop that drops freed instances from %s.,"ループの上に、%s から解放されたインスタンスを外す行を追加しました。"
-Use a group instead,"代わりにグループを使う"
-"%s holds nodes but is never read by position or order. A group is Godot's way to keep an unordered set of nodes, and it drops a destroyed instance by itself.","%s はノードを持っていますが、位置や順序では一度も読まれません。グループは順序のないノードの集まりを持つGodotの方法で、破棄されたインスタンスを自動で外します。"
-"%s is read in a loop but nothing on this sheet ever takes a destroyed instance out of it, and the next use of a freed one is an error (a group needs no such clean-up).","%s はループで読まれていますが、このシートには破棄されたインスタンスを取り除くものがなく、解放済みのものを次に使うとエラーになります(グループにはこの後片付けが要りません)。"
-Pick the %s from a group,"グループから %s を選ぶ"
-Pick the %s from %s,"%s から %s を選ぶ"
-"This row reaches into %s, a list that belongs to another object. It works, but the object that owns a list should be asked for it through a function or a signal instead.","この行は別のオブジェクトのリスト %s に手を伸ばしています。動きますが、リストを持つオブジェクトには関数やシグナルで尋ねるほうが適切です。"
-"No %s is picked here. A pick lasts for its own event and the sub-events under it, so this row has nothing to act on.","ここでは %s が選ばれていません。選択は自分のイベントとその下のサブイベントの間だけ続くため、この行には作用する対象がありません。"
-Picked here,"ここで選択済み"
-"The instances this event picked or was handed, by the names the code uses.","このイベントが選択した、または受け取ったインスタンス（コードで使われている名前）。"
-"The %s this event picked, written as %s. Rows you add here act on it.","このイベントが選択した %s（%s と書かれています）。ここで追加する行はそれに対して働きます。"
+Pick the %s,%s を選ぶ
+This event now picks %s.,このイベントは %s を選ぶようになりました。
+Drop freed instances first,先に解放されたインスタンスを外す
+Added a row above the loop that drops freed instances from %s.,ループの上に、%s から解放されたインスタンスを外す行を追加しました。
+Use a group instead,代わりにグループを使う
+"%s holds nodes but is never read by position or order. A group is Godot's way to keep an unordered set of nodes, and it drops a destroyed instance by itself.",%s はノードを持っていますが、位置や順序では一度も読まれません。グループは順序のないノードの集まりを持つGodotの方法で、破棄されたインスタンスを自動で外します。
+"%s is read in a loop but nothing on this sheet ever takes a destroyed instance out of it, and the next use of a freed one is an error (a group needs no such clean-up).",%s はループで読まれていますが、このシートには破棄されたインスタンスを取り除くものがなく、解放済みのものを次に使うとエラーになります(グループにはこの後片付けが要りません)。
+Pick the %s from a group,グループから %s を選ぶ
+Pick the %s from %s,%s から %s を選ぶ
+"This row reaches into %s, a list that belongs to another object. It works, but the object that owns a list should be asked for it through a function or a signal instead.",この行は別のオブジェクトのリスト %s に手を伸ばしています。動きますが、リストを持つオブジェクトには関数やシグナルで尋ねるほうが適切です。
+"No %s is picked here. A pick lasts for its own event and the sub-events under it, so this row has nothing to act on.",ここでは %s が選ばれていません。選択は自分のイベントとその下のサブイベントの間だけ続くため、この行には作用する対象がありません。
+Picked here,ここで選択済み
+"The instances this event picked or was handed, by the names the code uses.",このイベントが選択した、または受け取ったインスタンス（コードで使われている名前）。
+"The %s this event picked, written as %s. Rows you add here act on it.",このイベントが選択した %s（%s と書かれています）。ここで追加する行はそれに対して働きます。
 %s - variables,%s - 変数
 Variable…,変数…
 %s is in the secret group. Add the event that counts it the first time the player walks in?,%s はグループ secret に入っています。プレイヤーが初めて入ったときに数えるイベントを追加しますか？
@@ -10486,19 +10486,19 @@ and %d more.,ほか %d 件。
 "%s declares the class %s, and so does the plugin's own %s. Godot keeps one class per name, so the plugin cannot load while both exist. Rename your class.",%s はクラス %s を宣言していますが、プラグイン側の %s も同じ名前です。Godot ではクラス名ごとに 1 つしか使えないため、両方ある間はプラグインを読み込めません。自分のクラスの名前を変えてください。
 "%s declares the class %s, and so does %s, a behaviour in this project. Godot keeps one class per name, so one of the two scripts does not load. Rename your class, or remove the behaviour.",%s はクラス %s を宣言していますが、このプロジェクトの挙動 %s も同じ名前です。Godot ではクラス名ごとに 1 つしか使えないため、どちらかのスクリプトが読み込まれません。クラスの名前を変えるか、挙動を取り除いてください。
 "%s declares the class %s, a name the plugin's behaviour %s also uses. Nothing is broken yet, but Add to project will refuse that behaviour while your class has the name.",%s はクラス %s を宣言していますが、この名前はプラグインの挙動 %s も使っています。まだ壊れてはいませんが、あなたのクラスがこの名前の間は「プロジェクトに追加」がその挙動を拒否します。
-"Line %d starts with %s, which is not a word this reads, so it is only a note. Check the spelling.","%d 行目は %s で始まっていますが、これは読み取られる語ではないため、ただのメモになります。綴りを確認してください。"
-"Line %d starts with %s, which is not a word this reads, so it is only a note. Did you mean %s?","%d 行目は %s で始まっていますが、これは読み取られる語ではないため、ただのメモになります。%s のことですか？"
-"Line %d: %s is not a setting a parameter line reads, so it is left out. It reads hint, options, default, default_word, default_code, autocomplete and desc.","%d 行目: %s はパラメータ行が読み取る設定ではないため、無視されます。読み取られるのは hint、options、default、default_word、default_code、autocomplete、desc です。"
-"Line %d: %s is not a setting a parameter line reads, so it is left out. Did you mean %s?","%d 行目: %s はパラメータ行が読み取る設定ではないため、無視されます。%s のことですか？"
-"Line %d: %s has no colon, so it is left out. Write it as key: value.","%d 行目: %s にはコロンがないため、無視されます。キー: 値 の形で書いてください。"
-"Line %d is a # comment between the words above it and %s, so %s reads with none of them. Start that line with ## instead.","%d 行目は、上の語と %s の間にある # コメントなので、%s はそれらなしで読み取られます。この行は代わりに ## で始めてください。"
-"%s has no return type, so it reads as an action. Add -> bool to make it a condition, or a type to make it an expression.","%s には戻り値の型がないため、アクションとして読み取られます。条件にするには -> bool を、式にするには型を追加してください。"
+"Line %d starts with %s, which is not a word this reads, so it is only a note. Check the spelling.",%d 行目は %s で始まっていますが、これは読み取られる語ではないため、ただのメモになります。綴りを確認してください。
+"Line %d starts with %s, which is not a word this reads, so it is only a note. Did you mean %s?",%d 行目は %s で始まっていますが、これは読み取られる語ではないため、ただのメモになります。%s のことですか？
+"Line %d: %s is not a setting a parameter line reads, so it is left out. It reads hint, options, default, default_word, default_code, autocomplete and desc.",%d 行目: %s はパラメータ行が読み取る設定ではないため、無視されます。読み取られるのは hint、options、default、default_word、default_code、autocomplete、desc です。
+"Line %d: %s is not a setting a parameter line reads, so it is left out. Did you mean %s?",%d 行目: %s はパラメータ行が読み取る設定ではないため、無視されます。%s のことですか？
+"Line %d: %s has no colon, so it is left out. Write it as key: value.",%d 行目: %s にはコロンがないため、無視されます。キー: 値 の形で書いてください。
+"Line %d is a # comment between the words above it and %s, so %s reads with none of them. Start that line with ## instead.",%d 行目は、上の語と %s の間にある # コメントなので、%s はそれらなしで読み取られます。この行は代わりに ## で始めてください。
+"%s has no return type, so it reads as an action. Add -> bool to make it a condition, or a type to make it an expression.",%s には戻り値の型がないため、アクションとして読み取られます。条件にするには -> bool を、式にするには型を追加してください。
 Event sheets with changes that are not saved yet:,まだ保存されていない変更があるイベントシート:
 it was not saved - open it in the EventSheet screen and press Save,保存されませんでした - EventSheet 画面で開いて「保存」を押してください
 These event sheets were not saved: %s,次のイベントシートは保存されませんでした: %s
-"it has never been saved, so it has no file yet - use Save As in the EventSheet screen to give it one","まだ一度も保存されておらず、ファイルがありません - EventSheet 画面の「名前を付けて保存」でファイルを作ってください"
+"it has never been saved, so it has no file yet - use Save As in the EventSheet screen to give it one",まだ一度も保存されておらず、ファイルがありません - EventSheet 画面の「名前を付けて保存」でファイルを作ってください
 its file still holds unresolved merge markers - finish the merge first,ファイルにまだ解決されていないマージマーカーが残っています - 先にマージを完了してください
-"it is open read-only - press Edit Events, or use Save As to keep a copy","読み取り専用で開いています - 「イベントを編集」を押すか、「名前を付けて保存」でコピーを残してください"
+"it is open read-only - press Edit Events, or use Save As to keep a copy",読み取り専用で開いています - 「イベントを編集」を押すか、「名前を付けて保存」でコピーを残してください
 "%s could not be written, so no file was changed.",%s を書き込めなかったため、どのファイルも変更されていません。
 %d kept,%d 個を保持
 open it,開いてください
@@ -10529,13 +10529,13 @@ Couldn't save %s: %s.,%s を保存できませんでした: %s。
 "Ctrl+Z undoes all of it in this sheet. Other sheets were saved, each with a backup: open one and use Tools > Sheet Backups to get its old version back.",Ctrl+Z でこのシートの変更はすべて元に戻せます。ほかのシートは保存され、それぞれバックアップがあります。開いて ツール > シートのバックアップ から古いバージョンを取り戻せます。
 Text that mentions the name - left as it is,名前に触れているテキスト - そのまま残します
 " %d file(s) of the behaviours that ship with this plugin also say that name, and nothing in them refers to this script, so they are not listed.", このプラグインに付属するビヘイビアのうち %d 個のファイルも同じ名前を使っていますが、このスクリプトを指すものはないため、一覧には載せていません。
-"%s sits inside a %s, and a Container places its children itself: the next time it arranges them it moves this Control back, so this row seems to do nothing. To place it yourself, put the Control under a plain Control node instead; to change where it ends up inside the Container, change the Container's own settings or this Control's size flags and custom minimum size.","%s は %s の中にあり、Container は子を自分で配置します。次に並べ直すときにこの Control を元に戻すため、この行は何もしていないように見えます。自分で配置したいときは、Control を通常の Control ノードの下に置いてください。Container の中での位置を変えたいときは、Container 自体の設定か、この Control の Size Flags とカスタム最小サイズを変えてください。"
-"Apply Central Impulse (3D)","中心に力を加える (3D)"
-"Apply Central Impulse","中心に力を加える"
-"%s is a %s, which the physics engine moves every physics frame, so a Tween on its %s fights the engine: the body jitters, snaps back or is pushed through walls. Tween a child node instead (a Sprite2D, say), move the body with %s, or turn on Freeze on the body first so code may move it.","%s は %s で、物理エンジンが物理フレームごとに動かすため、その %s への Tween はエンジンと争います。ボディが震えたり、元に戻ったり、壁をすり抜けたりします。代わりに子ノード（たとえば Sprite2D）を Tween するか、%s でボディを動かすか、先にボディの Freeze をオンにしてコードで動かせるようにしてください。"
-"This behaviour sits under %s, a %s, and it writes its parent's %s every frame while the physics engine moves that body too, so the two fight: the body jitters, snaps back or is pushed through walls. Put the behaviour on a node that is not a physics body (the Sprite2D inside it, or a plain Node2D), or move the body with %s instead.","この挙動は %s（%s）の下にあり、毎フレーム親の %s を書き換えますが、物理エンジンも同じボディを動かすため、両者が争います。ボディが震えたり、元に戻ったり、壁をすり抜けたりします。挙動は物理ボディではないノード（中の Sprite2D か、通常の Node2D）に置くか、代わりに %s でボディを動かしてください。"
-"An edit was started inside another edit, which cannot be undone as two steps, so it was not applied. Make both changes in the outer edit.","編集の中で別の編集が始まりました。これは 2 つの手順として元に戻せないため、適用されませんでした。両方の変更を外側の編集の中で行ってください。"
-"That edit stopped on a script error, so the sheet was left exactly as it was.","その編集はスクリプトエラーで止まったため、シートは元のままです。"
+"%s sits inside a %s, and a Container places its children itself: the next time it arranges them it moves this Control back, so this row seems to do nothing. To place it yourself, put the Control under a plain Control node instead; to change where it ends up inside the Container, change the Container's own settings or this Control's size flags and custom minimum size.",%s は %s の中にあり、Container は子を自分で配置します。次に並べ直すときにこの Control を元に戻すため、この行は何もしていないように見えます。自分で配置したいときは、Control を通常の Control ノードの下に置いてください。Container の中での位置を変えたいときは、Container 自体の設定か、この Control の Size Flags とカスタム最小サイズを変えてください。
+Apply Central Impulse (3D),中心に力を加える (3D)
+Apply Central Impulse,中心に力を加える
+"%s is a %s, which the physics engine moves every physics frame, so a Tween on its %s fights the engine: the body jitters, snaps back or is pushed through walls. Tween a child node instead (a Sprite2D, say), move the body with %s, or turn on Freeze on the body first so code may move it.",%s は %s で、物理エンジンが物理フレームごとに動かすため、その %s への Tween はエンジンと争います。ボディが震えたり、元に戻ったり、壁をすり抜けたりします。代わりに子ノード（たとえば Sprite2D）を Tween するか、%s でボディを動かすか、先にボディの Freeze をオンにしてコードで動かせるようにしてください。
+"This behaviour sits under %s, a %s, and it writes its parent's %s every frame while the physics engine moves that body too, so the two fight: the body jitters, snaps back or is pushed through walls. Put the behaviour on a node that is not a physics body (the Sprite2D inside it, or a plain Node2D), or move the body with %s instead.",この挙動は %s（%s）の下にあり、毎フレーム親の %s を書き換えますが、物理エンジンも同じボディを動かすため、両者が争います。ボディが震えたり、元に戻ったり、壁をすり抜けたりします。挙動は物理ボディではないノード（中の Sprite2D か、通常の Node2D）に置くか、代わりに %s でボディを動かしてください。
+"An edit was started inside another edit, which cannot be undone as two steps, so it was not applied. Make both changes in the outer edit.",編集の中で別の編集が始まりました。これは 2 つの手順として元に戻せないため、適用されませんでした。両方の変更を外側の編集の中で行ってください。
+"That edit stopped on a script error, so the sheet was left exactly as it was.",その編集はスクリプトエラーで止まったため、シートは元のままです。
 Could not save %s - Godot says: %s. %s,%s を保存できませんでした - Godot のメッセージ: %s。%s
 "Nothing was changed. Check that the file is not read-only or open in another program, that its folder exists and that the disk has room, then try again.",何も変更されていません。ファイルが読み取り専用でないか、別のプログラムで開かれていないか、フォルダが存在するか、ディスクに空きがあるかを確認して、もう一度お試しください。
 Could not delete %s - Godot says: %s. %s,%s を削除できませんでした - Godot のメッセージ: %s。%s
@@ -10682,36 +10682,36 @@ Nothing here can be rewritten on its own - %d rows are listed below with the rea
 %d rows are left exactly as they are.,%d 行はそのまま残ります。
 After the hold,Hold のあと
 Start together,同時に始まる
-Apply keeps a saved theme for this script in this project. Nothing is written into the script.,"「適用」は保存済みのテーマをこのプロジェクト内でこのスクリプトに記憶します。スクリプト自体には何も書き込まれません。"
-Revert,"復元"
-Match Editor,"Match エディター"
-Untitled theme,"無題のテーマ"
-Theme Editor - %s,"テーマエディター - %s"
-%s (changed),"%s（変更あり）"
-Save a Copy…,"コピーを保存…"
-Theme saved: %s,"テーマを保存しました: %s"
-Theme could not be saved: %s (%s),"テーマを保存できませんでした: %s (%s)"
-Save a Copy,"コピーを保存"
-Save Theme As,"テーマに名前を付けて保存"
-Save changes to %s?,"%s への変更を保存しますか?"
-The swatches you changed are not in the file yet.,"変更した色はまだファイルに入っていません。"
-Discard throws the changes away. Cancel keeps the window as it is.,"「破棄」は変更を捨てます。「キャンセル」はウィンドウをそのままにします。"
-Your themes,"自分のテーマ"
-Starters,"スターター"
-Open now,"現在開いている"
-Theme,"テーマ"
-Open / Close %s,"%s を開く / 閉じる"
-Open All / Close All %s,"すべての%sを開く / 閉じる"
-Put Selection into New %s,"選択範囲を新しい%sに入れる"
-Close %s,"%s を閉じる"
-Use For Every Sheet,"すべてのシートに使う"
-Makes this theme the one every sheet wears unless it chose its own. Kept in Project Settings.,"このテーマを、自分のテーマを選んでいないすべてのシートで使います。プロジェクト設定に保存されます。"
-That file is not an event sheet theme.,"そのファイルはイベントシートのテーマではありません。"
-This sheet's look has no theme file. Save it from the Theme Editor first.,"このシートの見た目にはテーマファイルがありません。先にテーマエディターで保存してください。"
-Sheets with no theme of their own match the editor again.,"自分のテーマを持たないシートは、再びエディターに合わせます。"
-Every sheet with no theme of its own now wears %s.,"自分のテーマを持たないシートはすべて %s を使います。"
-Project theme: %s,"プロジェクトのテーマ: %s"
-Edit in Theme Editor,"テーマエディターで編集"
+Apply keeps a saved theme for this script in this project. Nothing is written into the script.,「適用」は保存済みのテーマをこのプロジェクト内でこのスクリプトに記憶します。スクリプト自体には何も書き込まれません。
+Revert,復元
+Match Editor,Match エディター
+Untitled theme,無題のテーマ
+Theme Editor - %s,テーマエディター - %s
+%s (changed),%s（変更あり）
+Save a Copy…,コピーを保存…
+Theme saved: %s,テーマを保存しました: %s
+Theme could not be saved: %s (%s),テーマを保存できませんでした: %s (%s)
+Save a Copy,コピーを保存
+Save Theme As,テーマに名前を付けて保存
+Save changes to %s?,%s への変更を保存しますか?
+The swatches you changed are not in the file yet.,変更した色はまだファイルに入っていません。
+Discard throws the changes away. Cancel keeps the window as it is.,「破棄」は変更を捨てます。「キャンセル」はウィンドウをそのままにします。
+Your themes,自分のテーマ
+Starters,スターター
+Open now,現在開いている
+Theme,テーマ
+Open / Close %s,%s を開く / 閉じる
+Open All / Close All %s,すべての%sを開く / 閉じる
+Put Selection into New %s,選択範囲を新しい%sに入れる
+Close %s,%s を閉じる
+Use For Every Sheet,すべてのシートに使う
+Makes this theme the one every sheet wears unless it chose its own. Kept in Project Settings.,このテーマを、自分のテーマを選んでいないすべてのシートで使います。プロジェクト設定に保存されます。
+That file is not an event sheet theme.,そのファイルはイベントシートのテーマではありません。
+This sheet's look has no theme file. Save it from the Theme Editor first.,このシートの見た目にはテーマファイルがありません。先にテーマエディターで保存してください。
+Sheets with no theme of their own match the editor again.,自分のテーマを持たないシートは、再びエディターに合わせます。
+Every sheet with no theme of its own now wears %s.,自分のテーマを持たないシートはすべて %s を使います。
+Project theme: %s,プロジェクトのテーマ: %s
+Edit in Theme Editor,テーマエディターで編集
 A fixed direction,決まった方向
 "A label counts from the number it shows to a number. The number is a plain number or a name from your game, such as GameState.score.",ラベルが表示中の数値から指定の数値までカウントします。数値は普通の数か、GameState.score のようなゲーム内の名前です。
 A node,ノード
@@ -10866,30 +10866,30 @@ Force y,力 y
 Force z,力 z
 Label node,ラベルノード
 Pick a property first,先にプロパティを選んでください
-"A base for dark and a base for light, one accent, a text colour for each. Generate fills both columns at once; anything you then change by hand stays yours.","暗用のベースと明用のベース、アクセント1色、それぞれのテキスト色を選びます。生成すると両方の列が一度に埋まり、その後に手で変えたものはそのまま残ります。"
-"Rebuild every colour token, dark and light, from the colours above.","上の色から、暗と明のすべての色を作り直します。"
-The open sheet keeps its own copy of a theme; pick the theme again to update it.,"開いているシートはテーマの独自コピーを持っています。更新するにはテーマをもう一度選んでください。"
-Preview as,"プレビュー表示"
-Dark,"暗"
-Only the sample sheet changes. Your sheet wears the side that matches Godot's editor theme.,"サンプルシートだけが変わります。あなたのシートは Godot のエディターテーマに合う側で表示されます。"
-Contrast %s : 1 on %s (%s); %s : 1 reads comfortably.,"コントラスト %s : 1（%s 上、%s）。%s : 1 で読みやすくなります。"
-(no light line: one colour for both),"(明の行なし: 両方に同じ色)"
-(no light line: worked out from the editor),"(明の行なし: エディターから算出)"
-Same colour in dark and light: click to give light its own,"暗と明で同じ色: クリックで明に専用の色を設定"
-Separate colours: click to use the dark colour in both,"別々の色: クリックで両方に暗の色を使用"
-Worked out from the editor. Pick a colour to give light its own.,"エディターから算出された色です。色を選ぶと明に専用の色を設定できます。"
-auto,"自動"
-Follow the editor in light,"明でエディターに合わせる"
-Follows the editor,"エディターに従う"
-Starters (copy to edit),"テンプレート (コピーして編集)"
-worked out from the editor,"エディターから算出"
-same colour in both,"両方で同じ色"
-hard to read on its row,"その行では読みにくい"
-"Worked out from Godot's editor, dark or light. Change anything and it becomes a theme of your own: Save As asks where to keep it.","Godot のエディターから算出した、ダークまたはライトの見た目です。何かを変えると自分のテーマになり、名前を付けて保存で保存先を尋ねます。"
-"A starter that comes with the plugin, so a plugin update would replace it. Save a Copy makes your own in eventsheet_themes/ and leaves the starter as shipped.","プラグインに付属するテンプレートで、プラグインを更新すると置き換わります。コピーを保存すると eventsheet_themes/ に自分用が作られ、テンプレートはそのまま残ります。"
-A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,"デモに付属するテーマです。コピーを保存すると eventsheet_themes/ に自分用が作られ、これはそのまま残ります。"
-A file in your project. Save writes it in place (Ctrl+S) and every open sheet wearing it repaints.,"プロジェクト内のファイルです。保存するとその場所に書き込まれ (Ctrl+S)、このテーマを使っている開いているシートがすべて描き直されます。"
-not a file: the colours come from Godot's editor theme,"ファイルではありません: 色は Godot のエディターテーマから来ています"
+"A base for dark and a base for light, one accent, a text colour for each. Generate fills both columns at once; anything you then change by hand stays yours.",暗用のベースと明用のベース、アクセント1色、それぞれのテキスト色を選びます。生成すると両方の列が一度に埋まり、その後に手で変えたものはそのまま残ります。
+"Rebuild every colour token, dark and light, from the colours above.",上の色から、暗と明のすべての色を作り直します。
+The open sheet keeps its own copy of a theme; pick the theme again to update it.,開いているシートはテーマの独自コピーを持っています。更新するにはテーマをもう一度選んでください。
+Preview as,プレビュー表示
+Dark,暗
+Only the sample sheet changes. Your sheet wears the side that matches Godot's editor theme.,サンプルシートだけが変わります。あなたのシートは Godot のエディターテーマに合う側で表示されます。
+Contrast %s : 1 on %s (%s); %s : 1 reads comfortably.,コントラスト %s : 1（%s 上、%s）。%s : 1 で読みやすくなります。
+(no light line: one colour for both),(明の行なし: 両方に同じ色)
+(no light line: worked out from the editor),(明の行なし: エディターから算出)
+Same colour in dark and light: click to give light its own,暗と明で同じ色: クリックで明に専用の色を設定
+Separate colours: click to use the dark colour in both,別々の色: クリックで両方に暗の色を使用
+Worked out from the editor. Pick a colour to give light its own.,エディターから算出された色です。色を選ぶと明に専用の色を設定できます。
+auto,自動
+Follow the editor in light,明でエディターに合わせる
+Follows the editor,エディターに従う
+Starters (copy to edit),テンプレート (コピーして編集)
+worked out from the editor,エディターから算出
+same colour in both,両方で同じ色
+hard to read on its row,その行では読みにくい
+"Worked out from Godot's editor, dark or light. Change anything and it becomes a theme of your own: Save As asks where to keep it.",Godot のエディターから算出した、ダークまたはライトの見た目です。何かを変えると自分のテーマになり、名前を付けて保存で保存先を尋ねます。
+"A starter that comes with the plugin, so a plugin update would replace it. Save a Copy makes your own in eventsheet_themes/ and leaves the starter as shipped.",プラグインに付属するテンプレートで、プラグインを更新すると置き換わります。コピーを保存すると eventsheet_themes/ に自分用が作られ、テンプレートはそのまま残ります。
+A theme that comes with the demos. Save a Copy makes your own in eventsheet_themes/ and leaves this one as shipped.,デモに付属するテーマです。コピーを保存すると eventsheet_themes/ に自分用が作られ、これはそのまま残ります。
+A file in your project. Save writes it in place (Ctrl+S) and every open sheet wearing it repaints.,プロジェクト内のファイルです。保存するとその場所に書き込まれ (Ctrl+S)、このテーマを使っている開いているシートがすべて描き直されます。
+not a file: the colours come from Godot's editor theme,ファイルではありません: 色は Godot のエディターテーマから来ています
 a card of yours plays here only when its script is marked @tool,自作のカードは、スクリプトが @tool の場合のみここで再生されます
 Edit this value in the card's script.,この値はカードのスクリプトで編集してください。
 Yours,自作
@@ -10900,7 +10900,7 @@ Show its cards,カードを表示
 Showing the cards of %s.,%s のカードを表示しています。
 No sheet in this project plays %s.,このプロジェクトに %s を再生するシートはありません。
 Find what plays this,これを再生するものを探す
-"There is no file at %s, so no sheet was opened.","%s にファイルがないため、シートを開きませんでした。"
+"There is no file at %s, so no sheet was opened.",%s にファイルがないため、シートを開きませんでした。
 A block cannot be disabled. Delete it to stop it writing its line.,ブロックは無効にできません。行を書き出さないようにするには、ブロックを削除してください。
 "This block is marked disabled, but it still runs. Delete it to stop it writing its line.",このブロックは無効と記録されていますが、実際には実行されます。行を書き出さないようにするには、ブロックを削除してください。
 "This card's timing is not the default: it waits, repeats, counts real time, or is not always felt.",このカードのタイミングは初期設定ではありません。待つ、繰り返す、実時間で数える、または毎回は再生されません。
@@ -10927,7 +10927,7 @@ Ring,リング
 Cone,扇形
 Stamp,スタンプ
 radius %s,半径 %s
-"radius %s, %s px thick","半径 %s、太さ %s px"
+"radius %s, %s px thick",半径 %s、太さ %s px
 %s x %s,%s × %s
 %s px long,長さ %s px
 %s° wide,幅 %s°
@@ -10947,22 +10947,22 @@ Dash,線の長さ
 Style,スタイル
 Line look,線の見た目
 grows with the stamp,スタンプと一緒に拡大
-"Drawn first, underneath","最初に描かれる、一番下"
-"Drawn last, on top","最後に描かれる、一番上"
+"Drawn first, underneath",最初に描かれる、一番下
+"Drawn last, on top",最後に描かれる、一番上
 Add shape,図形を追加
 Enter adds the highlighted shape.,Enter で選択中の図形を追加します。
 texture not found,テクスチャが見つかりません
 %s (not found),%s (見つかりません)
-"Radius is 0, so this circle draws nothing.","半径が 0 なので、この円は何も描きません。"
-"Radius is 0, so this ring draws nothing.","半径が 0 なので、このリングは何も描きません。"
-"Width is 0, so this rectangle draws nothing.","幅が 0 なので、この長方形は何も描きません。"
-"Height is 0, so this rectangle draws nothing.","高さが 0 なので、この長方形は何も描きません。"
-"The start and the end are the same point, so this line has no length.","始点と終点が同じ位置なので、この線には長さがありません。"
-"FOV is 0, so this cone draws nothing.","視野が 0 なので、この扇形は何も描きません。"
-"Radius is 0, so this cone draws nothing.","半径が 0 なので、この扇形は何も描きません。"
-"No texture yet, so this shape draws nothing.","まだテクスチャがないので、この図形は何も描きません。"
-"The texture could not be loaded, so this shape draws nothing.","テクスチャを読み込めないので、この図形は何も描きません。"
-"""%s"" is not a shape this list knows. It is kept as it is.","「%s」はこのリストにない図形です。そのまま保持されます。"
+"Radius is 0, so this circle draws nothing.",半径が 0 なので、この円は何も描きません。
+"Radius is 0, so this ring draws nothing.",半径が 0 なので、このリングは何も描きません。
+"Width is 0, so this rectangle draws nothing.",幅が 0 なので、この長方形は何も描きません。
+"Height is 0, so this rectangle draws nothing.",高さが 0 なので、この長方形は何も描きません。
+"The start and the end are the same point, so this line has no length.",始点と終点が同じ位置なので、この線には長さがありません。
+"FOV is 0, so this cone draws nothing.",視野が 0 なので、この扇形は何も描きません。
+"Radius is 0, so this cone draws nothing.",半径が 0 なので、この扇形は何も描きません。
+"No texture yet, so this shape draws nothing.",まだテクスチャがないので、この図形は何も描きません。
+"The texture could not be loaded, so this shape draws nothing.",テクスチャを読み込めないので、この図形は何も描きません。
+"""%s"" is not a shape this list knows. It is kept as it is.",「%s」はこのリストにない図形です。そのまま保持されます。
 Unknown shape,不明な図形
 Shows this same list as a table. Nothing is saved differently.,同じリストを表として表示します。保存内容は変わりません。
 Show as cards,カードで表示
@@ -10970,7 +10970,7 @@ Shows this list as cards again.,このリストをもう一度カードで表示
 Move to bottom,末尾へ移動
 Shapes (%d),図形 (%d)
 Dash offset,ダッシュのオフセット
-"Line %d: rename %s to %s. Nothing else changed.","%d 行目: %s を %s に変更してください。ほかに変更はありません。"
+Line %d: rename %s to %s. Nothing else changed.,%d 行目: %s を %s に変更してください。ほかに変更はありません。
 Fade in,フェードイン
 Custom curve,カスタムカーブ
 rises from nothing,ゼロから上がる
@@ -10982,13 +10982,13 @@ Starts at nothing and reaches %s at %s s.,ゼロから始まり、%s 秒で %s �
 Starts at %s and is gone at %s s.,%s から始まり、%s 秒で消えます。
 "Holds %s for %s s, then stops.",%s を %s 秒保ち、その後止まります。
 Save the new file where the card can find it,カードが見つけられる場所に新しいファイルを保存
-Preview its behaviours,"ビヘイビアをプレビュー"
-Stop previews,"プレビューを停止"
-"Loop is on and nothing in this list takes time, so the player plays it again every frame. Add a Pause or a card with a length.","Loop がオンですが、このリストには時間のかかるものがないため、プレイヤーは毎フレーム再生し直します。ポーズか、長さのあるカードを追加してください。"
-"Nothing in this loop takes time, so the play gives up after %d steps. Give a card in it a length, or the Loop Back a Pause.","このループには時間のかかるものがないため、再生は %d ステップで打ち切られます。ループ内のカードに長さを付けるか、Loop Back にポーズを付けてください。"
+Preview its behaviours,ビヘイビアをプレビュー
+Stop previews,プレビューを停止
+"Loop is on and nothing in this list takes time, so the player plays it again every frame. Add a Pause or a card with a length.",Loop がオンですが、このリストには時間のかかるものがないため、プレイヤーは毎フレーム再生し直します。ポーズか、長さのあるカードを追加してください。
+"Nothing in this loop takes time, so the play gives up after %d steps. Give a card in it a length, or the Loop Back a Pause.",このループには時間のかかるものがないため、再生は %d ステップで打ち切られます。ループ内のカードに長さを付けるか、Loop Back にポーズを付けてください。
 1 card,カード 1 枚
 %d cards,カード %d 枚
-This curve has changes that are not saved to its file yet. The game plays the saved file.,"このカーブには、まだファイルに保存されていない変更があります。ゲームは保存済みのファイルを使います。"
+This curve has changes that are not saved to its file yet. The game plays the saved file.,このカーブには、まだファイルに保存されていない変更があります。ゲームは保存済みのファイルを使います。
 Flip,切り替え
 Pause Or Resume A Juice Player,Juice Player を一時停止または再開
 "Pauses, resumes or flips another Juice Player, or this one: a looping alarm that holds while a door is open. A paused list holds at the card it is on until it is resumed.",ほかの Juice Player、またはこの Juice Player を一時停止・再開・切り替えします。たとえば、ドアが開いている間だけ止まるループするアラームに使えます。一時停止したリストは、再開するまで今のカードで止まります。
@@ -11140,22 +11140,22 @@ A scene this sheet holds.,このシートが持つシーン。
 %s is empty in %s. Set it in the Inspector.,%s は %s で空です。インスペクターで設定してください。
 A scene,シーン
 "A scene file kept in a slot, to make copies of: a bullet, an enemy, a pickup. The Inspector shows a slot you drop a .tscn file into, and a spawn row copies it with its own instantiate().",コピーを作るために枠に入れておくシーンファイル：弾、敵、拾えるアイテムなど。インスペクターには .tscn ファイルをドロップする枠が表示され、生成の行が自身の instantiate() でそれをコピーします。
-"Comes back to rest without swinging past it, in about %s s.","行き過ぎることなく、約%s秒で静止位置に戻ります。"
-Swings past rest once and settles in about %s s.,"静止位置を一度行き過ぎ、約%s秒で落ち着きます。"
-Swings past rest %d times and settles in about %s s.,"静止位置を%d回行き過ぎ、約%s秒で落ち着きます。"
-"Amount is 0, so the colours are never split.","量が 0 なので、色は分離されません。"
-"The colours stay %s px apart along %s degrees, then snap together after %s s.","色は %s px ずれたまま、%s 度の方向に保たれ、%s 秒後に一気に重なります。"
-"The colours part by up to %s px along %s degrees and are back together after %s s.","色は最大 %s px、%s 度の方向に分かれ、%s 秒後にまた重なります。"
-"The colours stay %s px apart, turning as they go, then snap together after %s s.","色は %s px ずれたまま向きを変え続け、%s 秒後に一気に重なります。"
-"The colours part by up to %s px, turning as they go, and are back together after %s s.","色は最大 %s px 分かれながら向きを変え、%s 秒後にまた重なります。"
-"There is no Juice node beside this player, so this card does nothing. Add a Juice node under the same object.","このプレイヤーの隣に Juice ノードがないため、このカードは何もしません。同じオブジェクトの下に Juice ノードを追加してください。"
-"Chromatic Shake","色収差シェイク"
-"Splits the red, green and blue of the screen apart along a direction for a moment, then lets them close again: the colour fringe of a hit, a dash or a landing. It plays through the Juice node beside the player, with the same no-flashing and reduced-effects choices as its Chromatic Shake row.","画面の赤・緑・青を一瞬だけ一方向にずらし、その後また重ねます。ヒット、ダッシュ、着地の色のにじみです。プレイヤーの隣の Juice ノードで再生され、Chromatic Shake の行と同じ点滅なし・効果軽減の設定が効きます。"
-"Ends","終わり方"
-"Closes steadily","少しずつ閉じる"
-"Holds then snaps shut","保持してから一気に閉じる"
-"Wanders","さまよう"
-"Along an angle","角度に沿って"
+"Comes back to rest without swinging past it, in about %s s.",行き過ぎることなく、約%s秒で静止位置に戻ります。
+Swings past rest once and settles in about %s s.,静止位置を一度行き過ぎ、約%s秒で落ち着きます。
+Swings past rest %d times and settles in about %s s.,静止位置を%d回行き過ぎ、約%s秒で落ち着きます。
+"Amount is 0, so the colours are never split.",量が 0 なので、色は分離されません。
+"The colours stay %s px apart along %s degrees, then snap together after %s s.",色は %s px ずれたまま、%s 度の方向に保たれ、%s 秒後に一気に重なります。
+The colours part by up to %s px along %s degrees and are back together after %s s.,色は最大 %s px、%s 度の方向に分かれ、%s 秒後にまた重なります。
+"The colours stay %s px apart, turning as they go, then snap together after %s s.",色は %s px ずれたまま向きを変え続け、%s 秒後に一気に重なります。
+"The colours part by up to %s px, turning as they go, and are back together after %s s.",色は最大 %s px 分かれながら向きを変え、%s 秒後にまた重なります。
+"There is no Juice node beside this player, so this card does nothing. Add a Juice node under the same object.",このプレイヤーの隣に Juice ノードがないため、このカードは何もしません。同じオブジェクトの下に Juice ノードを追加してください。
+Chromatic Shake,色収差シェイク
+"Splits the red, green and blue of the screen apart along a direction for a moment, then lets them close again: the colour fringe of a hit, a dash or a landing. It plays through the Juice node beside the player, with the same no-flashing and reduced-effects choices as its Chromatic Shake row.",画面の赤・緑・青を一瞬だけ一方向にずらし、その後また重ねます。ヒット、ダッシュ、着地の色のにじみです。プレイヤーの隣の Juice ノードで再生され、Chromatic Shake の行と同じ点滅なし・効果軽減の設定が効きます。
+Ends,終わり方
+Closes steadily,少しずつ閉じる
+Holds then snaps shut,保持してから一気に閉じる
+Wanders,さまよう
+Along an angle,角度に沿って
 Replace scenes?,シーンを置き換えますか?
 "This writes over %d scene(s), starting with %s, and Ctrl+Z cannot take it back.",%d 個のシーン(%s など)を上書きします。Ctrl+Z では元に戻せません。
 Each is kept in Sheet Backups first.,それぞれ先にシートのバックアップに保存されます。
@@ -11245,15 +11245,15 @@ Opened the issue form in your browser. Nothing is sent until you press Submit th
 The script %s followed its sheet to its new place.,スクリプト %s はシートの新しい場所に追従しました。
 "The open sheet follows %s to its new place, and its script %s goes with it.",開いているシートは %s の新しい場所に追従し、スクリプト %s も一緒に移ります。
 the Load bindings row of the same pair,同じペアのバインドを読み込む行
-"The slot card, which the Save System keeps for the load menu:","セーブ枠のカード（ロード画面用に Save System が保持します）:"
+"The slot card, which the Save System keeps for the load menu:",セーブ枠のカード（ロード画面用に Save System が保持します）:
 "Keyboard ▸ Save bindings writes %s; Settings ▸ Save Bindings keeps them in %s under [%s], beside the options.",キーボード ▸ バインドを保存 は %s に書き込み、Settings ▸ Save Bindings はオプションと同じ %s の [%s] に保存します。
 "Keyboard ▸ Save bindings, or Settings ▸ Save Bindings",キーボード ▸ バインドを保存、または Settings ▸ Save Bindings
-"Saved %s. %s","%s を保存しました。%s"
-"%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.","%s は書き込まれませんでした。これはあなた自身のスクリプトで、このシートが作ったものではなく、書き込むとあなたのコードが置き換わってしまうためです。2つの名前が異なるように、シートかそのスクリプトの名前を変更してから、もう一度お試しください。"
-"%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.","%s は書き込まれませんでした。これはシート %s のものです。2つの名前が異なるように、どちらかのシートの名前を変更してから、もう一度お試しください。"
-"Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.","このシートにはピッカーに公開されているものがまだありません。関数で「他のシートで使える」にチェックを入れると、ピッカーに表示されるとおりにここへ一覧されます。"
-"%d sheet(s) that name it follow it too.","これを参照している %d 件のシートも一緒に更新されました。"
-"Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.","古いパスをまだ参照しているあなたのスクリプト: %d 件。ツール > プロジェクト内を検索 で一覧できます。"
+Saved %s. %s,%s を保存しました。%s
+"%s was not written: it is a script of your own, not one this sheet made, and writing it would replace your code. Rename the sheet or that script so the two names differ, then try again.",%s は書き込まれませんでした。これはあなた自身のスクリプトで、このシートが作ったものではなく、書き込むとあなたのコードが置き換わってしまうためです。2つの名前が異なるように、シートかそのスクリプトの名前を変更してから、もう一度お試しください。
+"%s was not written: it belongs to the sheet %s. Rename one of the two sheets so their names differ, then try again.",%s は書き込まれませんでした。これはシート %s のものです。2つの名前が異なるように、どちらかのシートの名前を変更してから、もう一度お試しください。
+"Nothing in this sheet is published to the picker yet. Tick ""Other sheets can use this"" on a function and it is listed here as the picker will show it.",このシートにはピッカーに公開されているものがまだありません。関数で「他のシートで使える」にチェックを入れると、ピッカーに表示されるとおりにここへ一覧されます。
+%d sheet(s) that name it follow it too.,これを参照している %d 件のシートも一緒に更新されました。
+Scripts of yours that still name the old path: %d. Tools > Find in Project lists them.,古いパスをまだ参照しているあなたのスクリプト: %d 件。ツール > プロジェクト内を検索 で一覧できます。
 The tests could not be started in a second copy of Godot.,2つ目のGodotでテストを開始できませんでした。
 The test run ended before it wrote a report. Run the tests from a terminal to see why.,レポートが書き込まれる前にテストの実行が終了しました。ターミナルからテストを実行して原因を確認してください。
 Ctrl+Z takes it out again.,Ctrl+Z でもう一度取り除けます。
@@ -11415,18 +11415,18 @@ Copy to the clipboard,クリップボードにコピー
 Copy these rows as shareable snippet text.,これらの行を共有できるスニペットのテキストとしてコピーします。
 "Jump to ""%s"".",「%s」へ移動します。
 Off means the Start page only opens from Sheet ▸ Start page.,オフの場合、スタートページはシート ▸ スタートページからのみ開きます。
-"The screen goes grey except a circle that opens to %s pixels over %s s, and stays grey until told.",
-"The screen goes grey except a circle that opens to %s pixels over %s s, then the colour comes back.",
-A circle of grey grows to %s pixels over %s s and stays until told.,
-"A circle of grey grows to %s pixels over %s s, then fades away.",
-The screen goes %s grey and stays grey until told.,
-"The screen goes %s grey for %s s, then the colour comes back.",
-"In the editor the play button greys the object this player is under, as a stand-in. In the game the whole screen goes grey, through the Screen FX layer of the scene.",
-"Moves up to %s from where it is over %s s, following your curve, and ends exactly where it began.",
-Moves up to %s from where it is half way and is back at %s s.,
-"Starts still and moves up to %s by %s s, then is put back.",
-Moves up to %s at first and is back where it was at %s s.,
-"Moves up to %s for %s s, then is put back.",
+"The screen goes grey except a circle that opens to %s pixels over %s s, and stays grey until told.",半径 %s ピクセルまで %s 秒で開く円を除いて画面が灰色になり、解除するまで灰色のままです。
+"The screen goes grey except a circle that opens to %s pixels over %s s, then the colour comes back.",半径 %s ピクセルまで %s 秒で開く円を除いて画面が灰色になり、その後色が戻ります。
+A circle of grey grows to %s pixels over %s s and stays until told.,灰色の円が %s ピクセルまで %s 秒で広がり、解除するまで残ります。
+"A circle of grey grows to %s pixels over %s s, then fades away.",灰色の円が %s ピクセルまで %s 秒で広がり、その後消えていきます。
+The screen goes %s grey and stays grey until told.,画面が %s の強さで灰色になり、解除するまで灰色のままです。
+"The screen goes %s grey for %s s, then the colour comes back.",画面が %s の強さで %s 秒間灰色になり、その後色が戻ります。
+"In the editor the play button greys the object this player is under, as a stand-in. In the game the whole screen goes grey, through the Screen FX layer of the scene.",エディターでは、再生ボタンがこのプレイヤーのあるオブジェクトを代わりに灰色にします。ゲームでは、シーンの Screen FX レイヤーを通して画面全体が灰色になります。
+"Moves up to %s from where it is over %s s, following your curve, and ends exactly where it began.",元の位置から最大 %s まで、%s 秒かけて、あなたのカーブに沿って動き、始まりとまったく同じ位置で終わります。
+Moves up to %s from where it is half way and is back at %s s.,元の位置から最大 %s まで動き、半分のところで戻り始め、%s 秒で元に戻ります。
+"Starts still and moves up to %s by %s s, then is put back.",静止から始まり、最大 %s まで動き(%s 秒で到達)、その後元に戻されます。
+Moves up to %s at first and is back where it was at %s s.,最初に最大 %s まで動き、%s 秒で元の位置に戻ります。
+"Moves up to %s for %s s, then is put back.",元の位置から最大 %s まで %s 秒間動き、その後元に戻されます。
 Grayscale,グレースケール
 "Puts the colour out of the screen: all of it, or a circle of grey that grows from this object or from a place on the screen (or the other way round, a circle of colour in a grey world). It can stay grey until told, for a death or a flashback, and Stop brings the colour back. It plays through the scene's Screen FX layer, so the no-flashing and reduced-effects choices hold it. To grey one object, use the Grayscale behaviour instead.",画面から色を抜きます。全体でも、このオブジェクトまたは画面上の一点から広がる灰色の円でも(逆に、灰色の世界の中の色のある円でも)できます。解除するまで灰色のままにでき、死亡や回想に使えます。Stop で色が戻ります。シーンの Screen FX レイヤーを通して再生されるため、点滅なし・効果を控えめにする設定が効きます。1つのオブジェクトだけを灰色にするなら、代わりに Grayscale ビヘイビアを使ってください。
 Grayness,グレーの強さ
