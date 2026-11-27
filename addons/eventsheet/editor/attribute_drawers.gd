@@ -589,10 +589,22 @@ class CardListProperty:
 		set_bottom_editor(panel)
 		draw_background = false
 
+	## The object the cards are about. A node is itself; a Resource file that holds cards (a Juice list) is the
+	## selected node that holds it in a slot when there is one, so node pickers and the play mark work as they do on
+	## the node, and the file itself otherwise.
+	func _acting_object() -> Object:
+		var edited: Object = get_edited_object()
+		if edited is Resource and Engine.is_editor_hint():
+			for node: Node in EditorInterface.get_selection().get_selected_nodes():
+				if node.get("moment_file") == edited:
+					return node
+		return edited
+
 	func _ready() -> void:
 		# The owner of the list is known once the property is on screen: tell the drawer, which builds
 		# whatever its schema declares under the cards (the Juice Player's strip of play buttons).
-		_list.call("set_edited_object", get_edited_object())
+		_list.set("list_file", get_edited_object() if get_edited_object() is Resource else null)
+		_list.call("set_edited_object", _acting_object())
 
 	func _on_changed(cards: Array) -> void:
 		# A script that runs for real in the editor keeps its list in a typed array, which refuses a plain one: hand it its own type.
@@ -613,7 +625,7 @@ class CardListProperty:
 		# it keeps the field being edited alive. Only an outside change (undo, reselecting) rebuilds.
 		var value: Variant = get_edited_object().get(get_edited_property())
 		var incoming: Array = value if value is Array else []
-		_list.call("set_edited_object", get_edited_object())
+		_list.call("set_edited_object", _acting_object())
 		var footer: Variant = _list.call("footer")
 		if footer is Control and (footer as Control).has_method("refresh"):
 			(footer as Control).call("refresh")

@@ -114,6 +114,10 @@ var _add_tree: Tree = null
 ## The object whose list this is, when the owner told us (the Inspector does). A card's pickers, its
 ## play mark and the footer under the list all need to know which object they are about.
 var _edited: Object = null
+## When the list being edited belongs to a Resource file (a Juice list) rather than a node, that file. `_edited` is then
+## the selected node holding the file in a slot, when there is one, so a card's pickers and play mark work as they do
+## on the node itself; the file is what the footer reads the cards from and what the owner writes them to.
+var list_file: Object = null
 ## What the schema's footer built for the edited object, kept so it can be refreshed as the list changes.
 var _footer: Control = null
 ## The note lines drawn right now, so one can be rewritten in place when a number beside it changes

@@ -37,4 +37,31 @@ static func build() -> bool:
 		"steps": {"type": "Array[Dictionary]", "default": [], "exported": true,
 			"attributes": {"tooltip": "Steps in order: each has a step word, amount, effect and seconds."}}
 	}
-	return Lib.save_pack(sheet, "res://eventsheet_addons/moment_resource/moment_resource")
+	var saved: bool = Lib.save_pack(sheet, "res://eventsheet_addons/moment_resource/moment_resource")
+	return build_juice_list() and saved
+
+
+## JuiceList: the whole card list of a Juice Player as a file.
+##
+## A moment file holds the ten moment words and four keys a step is made of. A Juice list holds EVERYTHING a
+## Juice Player's list can: every kind of card (sounds, tweens, timing words, loops, signals, scenes) with every
+## key it has, and it is edited in the Inspector with the very same card editor the Juice Player uses.
+##
+## Drop one on a Juice Player's Moment File slot and that player plays the file's cards in place of its own.
+## Edit the file once and every player using it changes, in the editor and in a running game, because a player
+## only READS the file while it plays (what a play counts down, the loops left, is kept by the player, never in
+## the file). A player that wants its own tweaks uses Godot's own Make Unique in the slot's menu.
+static func build_juice_list() -> bool:
+	var sheet: EventSheetResource = EventSheetResource.new()
+	sheet.host_class = "Resource"
+	sheet.custom_class_name = "JuiceList"
+	sheet.class_description = "A list of juice cards as a file: the same cards a Juice Player holds, with every kind and every key, edited with the same card editor. Drop it on a Juice Player's Moment File slot to play it; edit it once and every player using it changes."
+	sheet.variables = {
+		"steps": {"type": "Array[Dictionary]", "default": [], "exported": true,
+			"attributes": {"tooltip": "The juice cards this file holds, in order. Each one is a card: what it does, how much, how long, and the timing words between them.",
+				"drawer": "cards", "cards_schema": "feedback_steps", "cards_kind_key": "verb",
+				"cards_stripe_key": "category",
+				"header": "Juice list", "header_color": "#8a6fd4",
+				"info": "One juice card per effect, the same cards a Juice Player holds. Drop this file on a Juice Player's Moment File slot to play it there. Every player using the file changes when you edit it; to give one object its own tweaks, use Make Unique in the slot's menu."}}
+	}
+	return Lib.save_pack(sheet, "res://eventsheet_addons/moment_resource/juice_list")

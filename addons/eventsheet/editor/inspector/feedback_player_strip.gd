@@ -42,6 +42,9 @@ const WORLD_PATH: String = "res://addons/eventsheet/editor/inspector/juice_world
 ## same reason.
 const MOMENT_RESOURCE_PATH: String = "res://eventsheet_addons/moment_resource/moment_resource.gd"
 
+## The Juice list file's class, written when a list is saved out. By path, like the moment file's.
+const JUICE_LIST_PATH: String = "res://eventsheet_addons/moment_resource/juice_list.gd"
+
 ## The keys a moment FILE holds. A card using nothing else saves out exactly; a card that uses the
 ## timing keys is named in the report instead of being written down half.
 const FILE_KEYS: PackedStringArray = ["verb", "amount", "effect", "seconds"]
@@ -58,7 +61,12 @@ const TIMELINE_HEAD: Color = Color(0.96, 0.72, 0.32, 0.95)
 ## The most sounds a preview plays at once.
 const PREVIEW_VOICES: int = 4
 
+## The player this strip plays on: the object itself, or - when the strip sits under a Juice list file - the
+## selected player that holds that file in its slot. Null when a list is opened on its own, which has nothing
+## to play it on.
 var _player: Node = null
+## What holds the cards this strip reads: the player, or the Juice list file itself.
+var _source: Object = null
 var _head: Label = null
 var _timeline: Control = null
 var _lines: VBoxContainer = null
@@ -109,8 +117,9 @@ var _world_state: Dictionary = {}
 ## The strip for one player. The argument defaults so the class stays constructible with a bare
 ## new() - a Control with a class_name is offered by the editor's own node dialog. `drawer` is the card
 ## list this strip sits under, when there is one (the toolbar's own strip has none).
-func _init(player: Node = null, drawer: Control = null) -> void:
-	_player = player
+func _init(source: Object = null, drawer: Control = null) -> void:
+	_source = source
+	_player = source as Node if source is Node else host_player_of(source)
 	_drawer = drawer
 	add_theme_constant_override("separation", 4)
 	_head = Label.new()
@@ -135,34 +144,59 @@ func _init(player: Node = null, drawer: Control = null) -> void:
 	_loop_note.add_theme_color_override("font_color", EventSheetLookStyle.warning())
 	_loop_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_loop_note)
-	add_child(_build_try_rows())
+	var try_rows: Control = _build_try_rows()
+	# A list file opened on its own has nothing to play on, so it has nothing to repeat or try at a strength.
+	try_rows.visible = not (_is_list_file() and _player == null)
+	add_child(try_rows)
 	_timeline = _build_timeline()
 	add_child(_timeline)
 	_lines = VBoxContainer.new()
 	_lines.hide()
 	add_child(_lines)
 	refresh()
-	if _player != null:
-		load(PREVIEW_PATH).call("register", _player, self)
+	if _source != null:
+		load(PREVIEW_PATH).call("register", _registered_as(), self)
 	if Engine.is_editor_hint() and EditorInterface.get_inspector() != null:
 		EditorInterface.get_inspector().property_edited.connect(_on_property_edited)
 
 
 ## A tick or a number edited in the Inspector: the Loop line may have to appear or go.
 func _on_property_edited(_property: String) -> void:
-	if _player != null and is_instance_valid(_player):
+	if _source != null and is_instance_valid(_source):
 		refresh()
 
 
 func _exit_tree() -> void:
-	if _player != null and is_instance_valid(_player):
+	if _source != null and is_instance_valid(_source):
 		stop()
-		load(PREVIEW_PATH).call("unregister", _player, self)
+		load(PREVIEW_PATH).call("unregister", _registered_as(), self)
+
+
+## What the card list's play marks find this strip by: the player it plays on, else the file itself.
+func _registered_as() -> Object:
+	return _player if _player != null and is_instance_valid(_player) else _source
+
+
+## Whether the cards this strip sits under are a Juice list file rather than a player.
+func _is_list_file() -> bool:
+	return _source is Resource
+
+
+## The selected player that holds a Juice list file in its Moment File slot, or null. A file has nothing to play
+## on by itself, so while one is shown inside a player's slot the strip borrows that player, and the
+## buttons play the file's cards on it exactly as the player's own strip would.
+static func host_player_of(list: Object) -> Node:
+	if not (list is Resource) or not Engine.is_editor_hint():
+		return null
+	for node: Node in EditorInterface.get_selection().get_selected_nodes():
+		if node.get("moment_file") == list:
+			return node
+	return null
 
 
 ## The head line and the timeline, re-read from the player as it is edited.
 func refresh() -> void:
-	var list: Array = steps_of(_player)
+	var list: Array = steps_of(_source)
 	var looping: bool = bool(_player.get("loop")) if _player != null else false
 	# Everything the head, the loop note and the timeline show comes from the list and the Loop tick, so a refresh that finds
 	# both as they were (the Inspector asks again after every edit it makes, and so does the edit's own signal) has nothing
@@ -225,6 +259,16 @@ static func seconds_text(seconds: float) -> String:
 	return "%.2f s" % maxf(seconds, 0.0)
 
 
+## Every card of a list, each one a deep copy, as a Juice list file stores them: nothing is left behind, and a card
+## kept in the file shares no dictionary with the player it came from.
+static func cards_for_file(list: Array) -> Array[Dictionary]:
+	var cards: Array[Dictionary] = []
+	for entry: Variant in list:
+		if entry is Dictionary:
+			cards.append((entry as Dictionary).duplicate(true))
+	return cards
+
+
 ## The list as the steps a moment file can hold, plus the cards it cannot: {steps, left_behind}. A
 ## card that uses a key a file cannot hold is left behind by NAME rather than written down without it,
 ## because a file that plays everything at once, or a sound it cannot play, is not the beat the list was.
@@ -263,6 +307,12 @@ func _build_buttons() -> Control:
 		var button: Button = Button.new()
 		button.text = EventSheetL10n.translate(str(entry[0]))
 		button.pressed.connect(entry[1] as Callable)
+		# A Juice list file is the file already: saving and loading belong to the player that holds it, and the
+		# play doors need a player to play on and a sheet that plays it.
+		if _is_list_file() and (entry[1] == _on_save or entry[1] == _on_load or entry[1] == _on_find_plays):
+			continue
+		if _is_list_file() and _player == null and (entry[1] == play or entry[1] == stop or entry[1] == skip or entry[1] == restore):
+			continue
 		if entry[1] == _on_find_plays:
 			_find_button = button
 		row.add_child(button)
@@ -330,7 +380,7 @@ func _draw_timeline(canvas: Control) -> void:
 	var pack: Script = load(load(NAMES_PATH).pack_path()) as Script
 	if pack == null:
 		return
-	var list: Array = steps_of(_player)
+	var list: Array = steps_of(_source)
 	var plan: Array = pack.call("schedule_of", list)
 	var span: float = maxf(duration_of(list), 0.001)
 	var size: Vector2 = canvas.size
@@ -371,7 +421,7 @@ func _show_lines() -> void:
 		_lines.remove_child(stale)
 		stale.queue_free()
 	var pack: Script = load(load(NAMES_PATH).pack_path()) as Script
-	var list: Array = steps_of(_player)
+	var list: Array = steps_of(_source)
 	for position: int in range(list.size()):
 		if not (list[position] is Dictionary):
 			continue
@@ -428,7 +478,7 @@ func _begin_pass() -> void:
 	if target == null:
 		return
 	var preview: Script = load(PREVIEW_PATH) as Script
-	var list: Array = steps_of(_player)
+	var list: Array = steps_of(_source)
 	_run_positions = preview.call("sub_indices", list, _from, _mode)
 	_run_list = []
 	for taken: Variant in preview.call("sub_list", list, _from, _mode):
@@ -469,7 +519,7 @@ func stop() -> void:
 ## Jump to the end of the plan - the same door the running node's Skip To End is, in the one form an
 ## editor can honestly offer: the last frame of the beat, drawn.
 func skip() -> void:
-	_time = duration_of(_run_list if not _run_list.is_empty() else steps_of(_player))
+	_time = duration_of(_run_list if not _run_list.is_empty() else steps_of(_source))
 	_tick()
 
 
@@ -699,7 +749,7 @@ func _open_dialog(mode: int) -> void:
 	if _dialog == null:
 		_dialog = EditorFileDialog.new()
 		_dialog.access = EditorFileDialog.ACCESS_RESOURCES
-		_dialog.add_filter("*.tres", "Moment file")
+		_dialog.add_filter("*.tres", "Juice list file")
 		_dialog.file_selected.connect(_on_file_chosen)
 		add_child(_dialog)
 	_dialog.file_mode = mode as EditorFileDialog.FileMode
@@ -713,23 +763,17 @@ func _on_file_chosen(path: String) -> void:
 	if _player == null:
 		return
 	if _saving:
-		var script: Script = load(MOMENT_RESOURCE_PATH) as Script
+		var script: Script = load(JUICE_LIST_PATH) as Script
 		if script == null:
 			return
-		var carried: Dictionary = file_steps_of(steps_of(_player))
 		var file: Resource = script.new()
-		file.set("moment_name", path.get_file().get_basename())
-		file.set("steps", carried.get("steps"))
+		file.set("steps", cards_for_file(steps_of(_player)))
 		if ResourceSaver.save(file, path) != OK:
 			push_warning("Juice Player: %s could not be written." % path)
-			return
-		if not (carried.get("left_behind") as PackedStringArray).is_empty():
-			push_warning("Juice Player: %s holds the cards a file can hold. These use timing a file cannot carry and were left in the list: %s." % [
-				path.get_file(), ", ".join(carried.get("left_behind") as PackedStringArray)])
 		return
 	var loaded: Resource = load(path)
 	if loaded == null or not (loaded.get("steps") is Array):
-		push_warning("Juice Player: %s is not a moment file." % path.get_file())
+		push_warning("Juice Player: %s is not a Juice list or a moment file." % path.get_file())
 		return
 	# One step on Godot's own undo, like the card list: Ctrl+Z puts the old file back.
 	load("res://addons/eventforge/editor/undo_steps.gd").set_property_step(_player, "moment_file", loaded,
