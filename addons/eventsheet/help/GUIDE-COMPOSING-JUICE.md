@@ -310,9 +310,23 @@ moment file holds only the ten moment words; a Juice list holds everything.
 Edit the file once and every player using it changes, in the editor and in a running game, because a
 player only reads the file while it plays. What a play counts down (the loops left, a chance roll) is
 kept by the player and never written into the file, so two players can play the same file at the
-same moment without stepping on each other. A file that already exists as a moment file keeps working
-in the same slot; to turn one into a Juice list, load it into a player with **Load from file** and
-press **Save as file**.
+same moment without stepping on each other.
+
+An old moment file keeps working in the same slot, and it turns into a Juice list by itself:
+
+- **On the first edit.** Open the file, or its slot on a player, and its steps already show as
+  cards. Change anything and the file becomes a Juice list as part of that same edit, in place: the
+  same path and the same uid, so every scene and script pointing at it keeps working. One **Ctrl+Z**
+  gives you the old file back. A file you only look at is never rewritten.
+- **All at once.** The Project Doctor says "N old moment files can become Juice lists" and the button
+  under it converts every one of them in one undo step. Right-click an old moment file in the
+  FileSystem dock and choose **Make a Juice list** for just that file.
+
+The converted file plays the same cards, because a card of four keys is already a valid card. A
+running game never converts anything; it only reads. One thing does change: a script that loads the
+file and casts it to the old class, `load("res://hit.tres") as MomentResource`, gets nothing back from
+a Juice list. Handing the file to a Juice Player's Moment File slot, or reading its `steps`, works
+the same as before.
 
 When ONE object needs its own tweaks, use Godot's own **Make Unique** in the slot's menu: that
 object gets a private copy of the file and the others stay on the shared one. There is no

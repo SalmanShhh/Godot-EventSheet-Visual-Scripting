@@ -161,7 +161,8 @@ Two ways, and neither of them is code:
 
 1. **Duplicate a starter.** Copy `impact.tres`, rename it `boss_hit.tres`, open it in the Inspector
    and change the numbers. `Moment "boss_hit"` finds it by file name, because the Moment row looks in
-   the pack folder for a file of that name.
+   the pack folder for a file of that name. The first change you make turns your copy into a Juice
+   list, in place and with one undo; it plays the same.
 2. **Keep it wherever you like and name it once.** Make a new `MomentResource` in your own folder
    (right-click, New Resource, MomentResource), fill in its steps, and point a name at it:
 
