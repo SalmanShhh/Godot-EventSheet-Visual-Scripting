@@ -51,6 +51,7 @@ const CHECK_RENDERER := "ship-renderer-only"
 const CHECK_SKY_BACKDROP := "ship-sky-backdrop"
 const CHECK_LOADING_SCREEN := "ship-loading-screen"
 const CHECK_HAPTICS := "ship-haptics"
+const CHECK_VIBRATE_PERMISSION := "ship-vibrate-permission"
 
 ## Where Godot keeps the export presets, and the header a preset is one of.
 const EXPORT_PRESETS_PATH := "res://export_presets.cfg"
@@ -143,6 +144,7 @@ static func report_pieces(sources: Dictionary) -> Array[Callable]:
 		func() -> Array[Dictionary]: return sky_backdrop_findings(sources, flat_backdrop_scripts(sources)),
 		func() -> Array[Dictionary]: return loading_screen_findings(sources, plainly_opened_scene_sizes(sources)),
 		func() -> Array[Dictionary]: return haptics_findings(sources),
+		func() -> Array[Dictionary]: return vibrate_permission_findings(_read_text(EXPORT_PRESETS_PATH), sources),
 	]
 
 
@@ -164,7 +166,86 @@ static func report_pieces_in_turns(sources: Dictionary) -> Array[Callable]:
 		func() -> Array[Dictionary]: return await sky_backdrop_findings_in_turns(sources, await flat_backdrop_scripts_in_turns(sources)),
 		func() -> Array[Dictionary]: return await loading_screen_findings_in_turns(sources, await plainly_opened_scene_sizes_in_turns(sources)),
 		func() -> Array[Dictionary]: return await haptics_findings_in_turns(sources),
+		func() -> Array[Dictionary]: return vibrate_permission_findings(_read_text(EXPORT_PRESETS_PATH), sources),
 	]
+
+
+## The spellings that buzz a phone: the engine call, a Juice Player's own functions, a haptic row, and the
+## Vibrate card a scene or a Juice list file stores.
+const VIBRATE_SPELLINGS: PackedStringArray = [
+	"vibrate_handheld(", ".vibrate(", "EventForgeHaptics.", "\"verb\": \"vibrate\"",
+]
+
+
+## The names of the Android export presets whose Vibrate permission is not ticked. Read from the preset file's text:
+## a preset is `[preset.N]` with a `platform` line, and its permissions sit in `[preset.N.options]` as
+## `permissions/vibrate`. A preset that never mentions the permission has it off, which is Godot's own default.
+static func android_presets_without_vibrate(preset_text: String) -> PackedStringArray:
+	var names: Dictionary = {}
+	var platforms: Dictionary = {}
+	var ticked: Dictionary = {}
+	var section: String = ""
+	for raw_line: String in preset_text.split("\n"):
+		var line: String = raw_line.strip_edges()
+		if line.begins_with("["):
+			section = line.trim_prefix("[").trim_suffix("]")
+			continue
+		var equals: int = line.find("=")
+		if equals < 0 or not section.begins_with("preset."):
+			continue
+		var key: String = line.substr(0, equals).strip_edges()
+		var value: String = line.substr(equals + 1).strip_edges()
+		if section.ends_with(".options"):
+			if key == "permissions/vibrate":
+				ticked[section.trim_suffix(".options")] = value == "true"
+		elif key == "platform":
+			platforms[section] = value.trim_prefix("\"").trim_suffix("\"")
+		elif key == "name":
+			names[section] = value.trim_prefix("\"").trim_suffix("\"")
+	var missing: PackedStringArray = PackedStringArray()
+	for section_name: Variant in platforms:
+		if str(platforms[section_name]) == "Android" and not bool(ticked.get(section_name, false)):
+			missing.append(str(names.get(section_name, section_name)))
+	missing.sort()
+	return missing
+
+
+## Whether a text buzzes a phone anywhere.
+static func buzzes_a_phone(text: String) -> bool:
+	for spelling: String in VIBRATE_SPELLINGS:
+		if text.contains(spelling):
+			return true
+	return false
+
+
+## An Android game that vibrates but whose export preset does not have the Vibrate permission: the phone never
+## buzzes, and nothing says why. Reads `export_presets.cfg` and never changes it. The scripts are read first and
+## the scenes and resource files only when a preset is actually short of the permission, so a project with no Android
+## preset, or one that has it, pays nothing.
+static func vibrate_permission_findings(preset_text: String, sources: Dictionary) -> Array[Dictionary]:
+	var presets: PackedStringArray = android_presets_without_vibrate(preset_text)
+	if presets.is_empty():
+		return []
+	var found_in: String = ""
+	for script_path: String in _sorted_keys(sources):
+		if buzzes_a_phone(str(sources[script_path])):
+			found_in = script_path
+			break
+	if found_in.is_empty():
+		for extension: String in ["tscn", "tres"]:
+			for stored_path: String in EventSheetProjectDoctor._list_files_with_extension(extension):
+				if _is_someone_elses(stored_path):
+					continue
+				if buzzes_a_phone(_read_text(stored_path)):
+					found_in = stored_path
+					break
+			if not found_in.is_empty():
+				break
+	if found_in.is_empty():
+		return []
+	return [_finding("warning", CHECK_VIBRATE_PERMISSION, EXPORT_PRESETS_PATH,
+		EventSheetL10n.translate("This game vibrates (first in %s), but the Android export preset \"%s\" does not have the Vibrate permission ticked, so a phone will not buzz. Open Project > Export, pick that preset and tick Vibrate under Permissions.") % [found_in.get_file(), ", ".join(presets)],
+		"permissions/vibrate")]
 
 
 ## The project's own scripts and their text, read ONCE for the whole section. The listing comes from

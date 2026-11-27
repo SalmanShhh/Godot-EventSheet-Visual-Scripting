@@ -505,11 +505,13 @@ static func sound_control_kinds() -> Array:
 			"kind": VIBRATE,
 			"category": str(family_of().get(VIBRATE, "")),
 			"label": "Vibrate",
-			"help": "Rumbles every connected controller, the weak motor and the strong one, and buzzes a phone, for a time. Does nothing on the web. Scaled by the strength of the play.",
+			"help": "Rumbles a controller, the weak motor and the strong one, and buzzes a phone, for a time. Does nothing on the web. Scaled by the strength of the play. For a pulse pattern, put the card between Loop Start and Loop Back with a Pause.",
 			"fields": [
+				{"key": "controller", "label": "Controller", "drawer": "options:all=Every controller,last=The one used last,0=Controller 1,1=Controller 2,2=Controller 3,3=Controller 4", "default": "all", "unset": "all"},
 				{"key": "weak", "label": "Weak motor", "drawer": "num", "default": 0.5},
 				{"key": "strong", "label": "Strong motor", "drawer": "num", "default": 0.5},
-				{"key": SECONDS_KEY, "label": "For", "drawer": "unit:time", "default": 0.2}
+				{"key": SECONDS_KEY, "label": "For", "drawer": "unit:time", "default": 0.2},
+				{"key": "phone_says", "label": "", "drawer": "note", "text": phone_note}
 			],
 			"live": [],
 			"defaults": {"weak": 0.5, "strong": 0.5, SECONDS_KEY: 0.2},
@@ -617,13 +619,20 @@ static func hold_names_nothing(card: Dictionary, cards: Array, index: int) -> bo
 ## timeline. Built once for the object being edited, and handed the drawer so it can light the card
 ## that is sounding.
 static func strip_footer(object: Object, drawer: Control) -> Control:
-	return load(STRIP_PATH).new(object, drawer) as Control
+	# A list that is a file (a Juice list) is read from the file; its player, when one holds it, is who plays it.
+	var file: Variant = drawer.get("list_file")
+	return load(STRIP_PATH).new(file if file is Object else object, drawer) as Control
 
 
 ## What a card's play mark and the "Play from here" entry of its menu do: ask the strip under this list to
 ## play that part of it ("play_one", "play_from") or to stop ("stop").
 static func play_card(object: Object, action: String, index: int) -> void:
 	load(PREVIEW_PATH).call("card_action", object, action, index)
+
+
+## The grey line under a Vibrate card: what a phone does with it, and the permission an Android game needs.
+static func phone_note(_card: Dictionary) -> String:
+	return EventSheetL10n.translate("A phone has one motor, so it buzzes at the stronger of the two strengths, and an iPhone may ignore the strength. An Android game needs the Vibrate permission ticked in its export preset; the Project Doctor checks it. One chosen controller leaves the phone quiet.")
 
 
 ## The grey line under the pitch: the range a random roll lands in.

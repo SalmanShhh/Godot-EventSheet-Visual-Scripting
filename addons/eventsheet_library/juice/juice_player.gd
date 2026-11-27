@@ -74,7 +74,7 @@ signal on_loop(loops_left: int)
 @export_range(0, 10, 0.01, "or_greater", "suffix:s") var loop_wait: float = 0.0
 ## Seconds that must pass between plays; sooner requests are refused.
 @export var cooldown: float = 0.0
-## Optional: a moment file to play INSTEAD of the list. Drop one here to share a beat between objects; Save As File writes this list out as one.
+## Optional: a Juice list file (or an old moment file) to play INSTEAD of the list. Drop one here to share it between objects: edit the file once and every player using it changes. To give this one object its own tweaks, use Make Unique in this slot's menu. Save As File writes this list out as a Juice list file.
 @export var moment_file: Resource = null
 
 # --- Choices (the words the choice parameters take; saved scenes keep them) ---
@@ -852,6 +852,26 @@ func play_sound(stream: AudioStream, volume_db: float = 0.0, pitch: float = 1.0,
 		voice.set("global_position", host.get("global_position"))
 	voice.call("play")
 	_sounding[label] = voice
+## The controller number that means every connected controller and a phone.
+const EVERY_CONTROLLER: int = -1
+## The words a Vibrate card's controller choice holds besides a number.
+const CONTROLLER_ALL: String = "all"
+const CONTROLLER_LAST: String = "last"
+## The controller heard last, kept for the whole game by the one listener below.
+static var _last_pad: int = -1
+## The one listener, made by the first player to enter a scene.
+static var _pad_listener: Node = null
+
+## Listens for controller input and keeps the number of whichever controller spoke last. It reads nothing else,
+## and stick drift too small to be a push is ignored.
+class PadListener:
+	extends Node
+
+	func _input(event: InputEvent) -> void:
+		if event is InputEventJoypadButton:
+			JuicePlayer._last_pad = (event as InputEventJoypadButton).device
+		elif event is InputEventJoypadMotion and absf((event as InputEventJoypadMotion).axis_value) > 0.5:
+			JuicePlayer._last_pad = (event as InputEventJoypadMotion).device
 # @ace_hidden
 ## Moves one value of the shader on a node over `seconds`. With `only_this` on, the node gets a copy of its material to
 ## itself first, so the others that share the file are left alone, and Restore gives the node its own material back.
@@ -1926,6 +1946,7 @@ func loops_left(label: String) -> int:
 func _ready() -> void:
 	if not is_in_group(PLAYERS_GROUP):
 		add_to_group(PLAYERS_GROUP)
+	_listen_for_controllers()
 	if autoplay:
 		play(1.0)
 
@@ -3528,21 +3549,64 @@ func fade_bus(bus: String, to_db: float, seconds: float = 0.3) -> void:
 
 # @ace_hidden
 ## Rumbles every connected controller (the weak motor and the strong one, 0 to 1) and buzzes a phone for the same
-## time. The web has neither, so there it does nothing.
+## time. The web has neither, so there it does nothing. To pick one controller use vibrate_controller or
+## vibrate_last_used; a phone has one motor, so it buzzes at the stronger of the two strengths.
 func vibrate(weak: float = 0.5, strong: float = 0.5, seconds: float = 0.2) -> void:
+	vibrate_controller(EVERY_CONTROLLER, weak, strong, seconds)
+
+# @ace_hidden
+## Rumbles one controller by its number (0 is the first), or every controller and a phone when the number is
+## below 0. A number with no controller behind it does nothing. The web has no rumble, so there it does nothing.
+func vibrate_controller(controller: int, weak: float = 0.5, strong: float = 0.5, seconds: float = 0.2) -> void:
 	if OS.has_feature("web"):
 		return
 	seconds = maxf(seconds, 0.0)
 	weak = clampf(weak, 0.0, 1.0)
 	strong = clampf(strong, 0.0, 1.0)
+	if controller >= 0:
+		if Input.get_connected_joypads().has(controller):
+			Input.start_joy_vibration(controller, weak, strong, seconds)
+		return
 	for device: int in Input.get_connected_joypads():
 		Input.start_joy_vibration(device, weak, strong, seconds)
 	if OS.has_feature("mobile"):
 		Input.vibrate_handheld(int(seconds * 1000.0), maxf(weak, strong))
 
+# @ace_hidden
+## Rumbles the controller the player touched last, so the pad in their hands buzzes and the one on the shelf does
+## not. Before any controller was touched, or when that one has been unplugged, it rumbles every controller instead.
+func vibrate_last_used(weak: float = 0.5, strong: float = 0.5, seconds: float = 0.2) -> void:
+	var device: int = last_controller()
+	vibrate_controller(device if device >= 0 and Input.get_connected_joypads().has(device) else EVERY_CONTROLLER, weak, strong, seconds)
+
+# @ace_hidden
+## The number of the controller that sent the latest button press or stick push, or -1 when none has yet.
+static func last_controller() -> int:
+	return _last_pad
+
+## Starts the controller listener once for the whole game.
+func _listen_for_controllers() -> void:
+	if _pad_listener != null and is_instance_valid(_pad_listener):
+		return
+	var tree: SceneTree = get_tree()
+	if tree == null or tree.root == null:
+		return
+	_pad_listener = PadListener.new()
+	_pad_listener.name = "JuicePadListener"
+	tree.root.add_child.call_deferred(_pad_listener)
+
 ## A Vibrate card, each motor scaled by the strength of the play.
 func _vibrate(card: Dictionary, at: float) -> void:
-	vibrate(float(card.get("weak", 0.5)) * at, float(card.get("strong", 0.5)) * at, float(card.get("seconds", 0.0)))
+	var weak: float = float(card.get("weak", 0.5)) * at
+	var strong: float = float(card.get("strong", 0.5)) * at
+	var seconds: float = float(card.get("seconds", 0.0))
+	var which: String = str(card.get("controller", CONTROLLER_ALL)).strip_edges().to_lower()
+	if which == CONTROLLER_LAST:
+		vibrate_last_used(weak, strong, seconds)
+	elif which.is_valid_int():
+		vibrate_controller(int(which), weak, strong, seconds)
+	else:
+		vibrate(weak, strong, seconds)
 
 ## Whether a node is a particles node, said when it is not.
 func _is_particles(node: Node) -> bool:

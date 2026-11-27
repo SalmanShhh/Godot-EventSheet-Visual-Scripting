@@ -330,7 +330,8 @@ static func as_gdscript(card: Dictionary, player: Node = null) -> String:
 		"fade_bus":
 			return "var bus := AudioServer.get_bus_index(\"%s\")\nvar volume := Callable(AudioServer, \"set_bus_volume_db\").bind(bus)\ncreate_tween().tween_method(volume, AudioServer.get_bus_volume_db(bus), %s, %s)" % [str(card.get("effect", "Master")), _n(card.get("amount", -80.0)), seconds]
 		"vibrate":
-			return "Input.start_joy_vibration(0, %s, %s, %s)" % [_n(card.get("weak", 0.5)), _n(card.get("strong", 0.5)), seconds]
+			var pad: String = str(card.get("controller", "all")).strip_edges()
+			return "Input.start_joy_vibration(%s, %s, %s, %s)" % [pad if pad.is_valid_int() else "0", _n(card.get("weak", 0.5)), _n(card.get("strong", 0.5)), seconds]
 		"pause_player":
 			var who: String = _player_name(card, player, true)
 			match str(card.get("mode", "pause")):
