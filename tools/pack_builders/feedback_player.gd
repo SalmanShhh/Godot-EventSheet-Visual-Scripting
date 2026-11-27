@@ -3126,9 +3126,9 @@ func vibrate_controller(controller: int, weak: float = 0.5, strong: float = 0.5,
 	if OS.has_feature("mobile"):
 		Input.vibrate_handheld(int(seconds * 1000.0), maxf(weak, strong))
 
-## The controllers this player set rumbling and when the latest of those rumbles ends, kept in the player so two
-## players sharing one list never stop each other's motors.
+## The controllers this player set rumbling; a player never stops another's motors.
 var _rumbling: Array[int] = []
+## When the latest rumble this player started ends, in seconds of the game clock.
 var _rumble_ends_at: float = 0.0
 
 ## Writes down that a controller was set rumbling for a time.
