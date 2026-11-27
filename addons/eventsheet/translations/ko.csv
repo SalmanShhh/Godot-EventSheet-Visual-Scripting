@@ -11448,3 +11448,13 @@ Up and down,위아래
 Depth (3D),깊이 (3D)
 Jumps,점프 횟수
 "%s calls the node %s a %s (the variable %s), but in this scene it is %s. Godot stops at that line when the scene loads: give the node the %s script, or change the type the script declares.","%s 에서 노드 %s 을(를) %s(변수 %s)로 취급하지만 이 씬에서는 %s 입니다. 씬을 불러올 때 Godot가 그 줄에서 멈춥니다. 노드에 %s 스크립트를 지정하거나 스크립트에 선언한 타입을 바꾸세요."
+"A phone has one motor, so it buzzes at the stronger of the two strengths, and an iPhone may ignore the strength. An Android game needs the Vibrate permission ticked in its export preset; the Project Doctor checks it. One chosen controller leaves the phone quiet.","휴대폰에는 모터가 하나뿐이라 두 강도 중 더 강한 쪽으로 진동하며, iPhone은 강도를 무시할 수 있습니다. Android 게임은 내보내기 프리셋에서 진동 권한을 체크해야 합니다. 프로젝트 닥터가 이를 확인합니다. 컨트롤러 하나를 고르면 휴대폰은 진동하지 않습니다."
+"This game vibrates (first in %s), but the Android export preset ""%s"" does not have the Vibrate permission ticked, so a phone will not buzz. Open Project > Export, pick that preset and tick Vibrate under Permissions.","이 게임은 진동을 사용하지만(처음 발견된 곳: %s) Android 내보내기 프리셋 ""%s""에 진동 권한이 체크되어 있지 않아 휴대폰이 진동하지 않습니다. 프로젝트 > 내보내기를 열어 해당 프리셋을 선택하고 권한에서 진동을 체크하세요."
+"Rumbles a controller, the weak motor and the strong one, and buzzes a phone, for a time. Does nothing on the web. Scaled by the strength of the play. For a pulse pattern, put the card between Loop Start and Loop Back with a Pause.",컨트롤러를 약한 모터와 강한 모터로 진동시키고 휴대폰도 일정 시간 진동시킵니다. 웹에서는 아무 일도 하지 않습니다. 재생 강도에 따라 크기가 조절됩니다. 펄스 패턴을 만들려면 카드를 Loop Start와 Loop Back 사이에 두고 Pause를 넣으세요.
+Controller,컨트롤러
+Every controller,모든 컨트롤러
+The one used last,마지막으로 사용한 컨트롤러
+Controller 1,컨트롤러 1
+Controller 2,컨트롤러 2
+Controller 3,컨트롤러 3
+Controller 4,컨트롤러 4

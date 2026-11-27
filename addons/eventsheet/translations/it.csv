@@ -11448,3 +11448,13 @@ Up and down,Su e giù
 Depth (3D),Profondità (3D)
 Jumps,Salti
 "%s calls the node %s a %s (the variable %s), but in this scene it is %s. Godot stops at that line when the scene loads: give the node the %s script, or change the type the script declares.","%s chiama il nodo %s un %s (la variabile %s), ma in questa scena è %s. Godot si ferma su quella riga quando la scena viene caricata: dai al nodo lo script %s oppure cambia il tipo dichiarato dallo script."
+"A phone has one motor, so it buzzes at the stronger of the two strengths, and an iPhone may ignore the strength. An Android game needs the Vibrate permission ticked in its export preset; the Project Doctor checks it. One chosen controller leaves the phone quiet.","Un telefono ha un solo motore, quindi vibra con la più forte delle due intensità, e un iPhone può ignorare l'intensità. Un gioco Android ha bisogno del permesso Vibrazione spuntato nel preset di esportazione; il Doctor del progetto lo controlla. Scegliendo un solo controller il telefono resta fermo."
+"This game vibrates (first in %s), but the Android export preset ""%s"" does not have the Vibrate permission ticked, so a phone will not buzz. Open Project > Export, pick that preset and tick Vibrate under Permissions.","Questo gioco vibra (prima in %s), ma il preset di esportazione Android ""%s"" non ha il permesso Vibrazione spuntato, quindi un telefono non vibrerà. Apri Progetto > Esporta, scegli quel preset e spunta Vibrazione in Permessi."
+"Rumbles a controller, the weak motor and the strong one, and buzzes a phone, for a time. Does nothing on the web. Scaled by the strength of the play. For a pulse pattern, put the card between Loop Start and Loop Back with a Pause.","Fa vibrare un controller, motore debole e forte, e fa suonare un telefono, per un certo tempo. Non fa nulla sul web. Scalato dall'intensità di riproduzione. Per uno schema a impulsi, metti la carta tra Loop Start e Loop Back con una Pausa."
+Controller,Controller
+Every controller,Tutti i controller
+The one used last,L'ultimo usato
+Controller 1,Controller 1
+Controller 2,Controller 2
+Controller 3,Controller 3
+Controller 4,Controller 4

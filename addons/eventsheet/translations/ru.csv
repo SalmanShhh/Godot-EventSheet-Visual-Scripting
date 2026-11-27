@@ -11448,3 +11448,13 @@ Up and down,Вверх и вниз
 Depth (3D),Глубина (3D)
 Jumps,Скачки
 "%s calls the node %s a %s (the variable %s), but in this scene it is %s. Godot stops at that line when the scene loads: give the node the %s script, or change the type the script declares.","%s считает узел %s типом %s (переменная %s), но в этой сцене это %s. Godot останавливается на этой строке при загрузке сцены: назначьте узлу скрипт %s или измените тип, объявленный в скрипте."
+"A phone has one motor, so it buzzes at the stronger of the two strengths, and an iPhone may ignore the strength. An Android game needs the Vibrate permission ticked in its export preset; the Project Doctor checks it. One chosen controller leaves the phone quiet.","У телефона один мотор, поэтому он вибрирует с большей из двух сил, а iPhone может игнорировать силу. Игре на Android нужно разрешение «Вибрация» в пресете экспорта; Доктор проекта это проверяет. Если выбран один контроллер, телефон молчит."
+"This game vibrates (first in %s), but the Android export preset ""%s"" does not have the Vibrate permission ticked, so a phone will not buzz. Open Project > Export, pick that preset and tick Vibrate under Permissions.","Эта игра использует вибрацию (первое место: %s), но в пресете экспорта Android «%s» не отмечено разрешение «Вибрация», поэтому телефон не будет вибрировать. Откройте Проект > Экспорт, выберите этот пресет и отметьте «Вибрация» в разрешениях."
+"Rumbles a controller, the weak motor and the strong one, and buzzes a phone, for a time. Does nothing on the web. Scaled by the strength of the play. For a pulse pattern, put the card between Loop Start and Loop Back with a Pause.","Заставляет вибрировать контроллер, слабым и сильным моторами, и телефон, на время. В вебе ничего не делает. Масштабируется силой воспроизведения. Для пульсирующего рисунка поставьте карточку между Loop Start и Loop Back с Pause."
+Controller,Контроллер
+Every controller,Все контроллеры
+The one used last,Использованный последним
+Controller 1,Контроллер 1
+Controller 2,Контроллер 2
+Controller 3,Контроллер 3
+Controller 4,Контроллер 4

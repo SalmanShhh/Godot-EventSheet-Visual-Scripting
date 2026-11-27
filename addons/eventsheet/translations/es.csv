@@ -11448,3 +11448,13 @@ Up and down,Arriba y abajo
 Depth (3D),Profundidad (3D)
 Jumps,Saltos
 "%s calls the node %s a %s (the variable %s), but in this scene it is %s. Godot stops at that line when the scene loads: give the node the %s script, or change the type the script declares.","%s llama al nodo %s un %s (la variable %s), pero en esta escena es %s. Godot se detiene en esa línea cuando se carga la escena: dale al nodo el script %s o cambia el tipo que declara el script."
+"A phone has one motor, so it buzzes at the stronger of the two strengths, and an iPhone may ignore the strength. An Android game needs the Vibrate permission ticked in its export preset; the Project Doctor checks it. One chosen controller leaves the phone quiet.","Un teléfono tiene un solo motor, así que zumba con la más fuerte de las dos intensidades, y un iPhone puede ignorar la intensidad. Un juego de Android necesita el permiso Vibrar marcado en su preset de exportación; el Doctor del proyecto lo comprueba. Si eliges un mando, el teléfono no vibra."
+"This game vibrates (first in %s), but the Android export preset ""%s"" does not have the Vibrate permission ticked, so a phone will not buzz. Open Project > Export, pick that preset and tick Vibrate under Permissions.","Este juego vibra (primero en %s), pero el preset de exportación de Android ""%s"" no tiene marcado el permiso Vibrar, así que un teléfono no zumbará. Abre Proyecto > Exportar, elige ese preset y marca Vibrar en Permisos."
+"Rumbles a controller, the weak motor and the strong one, and buzzes a phone, for a time. Does nothing on the web. Scaled by the strength of the play. For a pulse pattern, put the card between Loop Start and Loop Back with a Pause.","Hace vibrar un mando, con el motor débil y el fuerte, y zumbar un teléfono, durante un tiempo. No hace nada en la web. Se escala con la intensidad de la reproducción. Para un patrón de pulsos, pon la tarjeta entre Loop Start y Loop Back con una Pausa."
+Controller,Mando
+Every controller,Todos los mandos
+The one used last,El último usado
+Controller 1,Mando 1
+Controller 2,Mando 2
+Controller 3,Mando 3
+Controller 4,Mando 4

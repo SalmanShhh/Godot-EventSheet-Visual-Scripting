@@ -24,6 +24,8 @@ GDScript in your own project folder. Nothing invents a parallel environment to l
 - [Backwards, reverted, skipped, put back](#backwards-reverted-skipped-put-back)
 - [What a beat says while it plays](#what-a-beat-says-while-it-plays)
 - [The Juice Player: the list an object carries](#the-juice-player-the-list-an-object-carries)
+- [Share one list between many objects](#share-one-list-between-many-objects)
+- [Which controller a Vibrate card rumbles](#which-controller-a-vibrate-card-rumbles)
 - [A card of your own](#a-card-of-your-own)
 - [Finding what went wrong](#finding-what-went-wrong)
 - [Every card, by its label](#every-card-by-its-label)
@@ -47,6 +49,7 @@ three homes, and they hold the same shape:
 | Home | What it is | Best for |
 | --- | --- | --- |
 | A **moment file** (`MomentResource`) | A `.tres` in your project holding the steps | A beat several objects share: the standard hit, the standard death |
+| A **Juice list** (`JuiceList`) | A `.tres` holding every card a Juice Player can hold, edited with the same card editor | A whole list several objects share, sounds and timing included |
 | A **Juice Player** node | A node under one object, whose Inspector is the list | This object's own beat: this enemy's hit, this button's hover |
 | A **Moment block** | A block of rows in the sheet, its children the steps | A beat with timing in it, read in the sheet beside the event that fires it |
 
@@ -248,8 +251,8 @@ In the game the card plays through four reusable voices on the Juice Player (a p
 the object is a 2D or 3D node, a flat one for Everywhere), so a fast run of hits does not make a node
 each, and it is muted with the Sound family, retimed with the rest, and counted by the head line, the
 badge and Hold. A card with no sound, or whose file has gone from the project, says so in quiet amber
-and plays nothing. Save as file leaves a Sound card out and names it, because a moment file cannot hold
-one. A Skip does not play a sound late: a sound is not a place the beat can jump to. For several
+and plays nothing. Save as file keeps a Sound card like every other card, because a Juice list holds
+all of them. A Skip does not play a sound late: a sound is not a place the beat can jump to. For several
 different takes of one sound, put a Godot AudioStreamRandomizer in a file and pick that.
 
 Each card head wears a small tile in its family's colour (Sound, Scene, Object, Device, Camera,
@@ -285,6 +288,62 @@ or not its box is ticked) and turns into a stop mark while it sounds. The menu o
 time it ends and reads the list as it is then, so a number you change while it repeats is the number the
 next pass uses. **Try at strength** plays at any strength; it is the same number the toolbar's "at" box
 sets, and neither is saved on the player.
+
+---
+
+## Share one list between many objects
+
+A Juice list is a file that holds a Juice Player's whole list: every kind of card, with every
+setting, including sounds, timing words, loops, signals and the cards that reach other nodes. A
+moment file holds only the ten moment words; a Juice list holds everything.
+
+1. In the FileSystem dock, right-click, choose **Create New > Resource** and pick **JuiceList**, or
+   press **Save as file** under a Juice Player's list. The second one writes the player's list out as
+   a Juice list with every card in it.
+2. Double-click the file. Its Inspector is the same card editor a Juice Player has: add cards, drag
+   them into order, open one to tune it, tick it off. Opened on its own the file has no object to
+   play on, so the Play buttons wait for the next step.
+3. Drop the file on the **Moment File** slot of every Juice Player that should play it. Select such
+   a player and open the slot, and the file's cards show right there with the Play buttons: they play
+   the file on the player you selected.
+
+Edit the file once and every player using it changes, in the editor and in a running game, because a
+player only reads the file while it plays. What a play counts down (the loops left, a chance roll) is
+kept by the player and never written into the file, so two players can play the same file at the
+same moment without stepping on each other. A file that already exists as a moment file keeps working
+in the same slot; to turn one into a Juice list, load it into a player with **Load from file** and
+press **Save as file**.
+
+When ONE object needs its own tweaks, use Godot's own **Make Unique** in the slot's menu: that
+object gets a private copy of the file and the others stay on the shared one. There is no
+separate override system, because Godot already has one. A row that edits the list (Scale Juice
+Amounts, Set Juice Card Field and the like) never writes into the shared file either: the first
+edit takes a copy into that player's own list and lets the slot go.
+
+Card settings that name a node, such as a Tween Property or a Spawn Scene card, are read from the
+player that plays the file, so the same file works on every object whose nodes carry those names.
+From a script, `player.moment_file = load("res://hit.tres")` is the whole door.
+
+---
+
+## Which controller a Vibrate card rumbles
+
+A **Vibrate** card has a **Controller** choice: every controller (the default, what older cards do),
+the one used last, or controller 1 to 4. A script reaches the same choice with `vibrate()` for every
+controller, `vibrate_controller(number, weak, strong, seconds)` for one by number (0 is the first),
+and `vibrate_last_used(weak, strong, seconds)` for the one the player touched last. The last one
+used is the controller that most recently sent a button press or a clear stick push; before any was
+touched, or after it was unplugged, every controller rumbles instead.
+
+A phone has one motor, so it buzzes at the stronger of the two strengths, and an iPhone may ignore
+the strength and just buzz. Choosing one controller leaves the phone quiet. A web page cannot rumble
+at all.
+
+An Android game also needs the **Vibrate** permission ticked in its export preset (Project > Export,
+under Permissions). Without it the phone never buzzes and nothing says why, so the Project Doctor
+warns when an Android preset has it off and the project vibrates. It only reads
+`export_presets.cfg`; ticking the box is yours to do. There is no pattern option on the card: put the
+card between **Loop Start** and **Loop Back** with a **Pause** to pulse it.
 
 ---
 

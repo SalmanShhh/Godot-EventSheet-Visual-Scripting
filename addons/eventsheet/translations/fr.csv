@@ -11448,3 +11448,13 @@ Up and down,Haut et bas
 Depth (3D),Profondeur (3D)
 Jumps,Sauts
 "%s calls the node %s a %s (the variable %s), but in this scene it is %s. Godot stops at that line when the scene loads: give the node the %s script, or change the type the script declares.","%s appelle le nœud %s un %s (la variable %s), mais dans cette scène c'est %s. Godot s'arrête sur cette ligne au chargement de la scène : donnez au nœud le script %s, ou changez le type que le script déclare."
+"A phone has one motor, so it buzzes at the stronger of the two strengths, and an iPhone may ignore the strength. An Android game needs the Vibrate permission ticked in its export preset; the Project Doctor checks it. One chosen controller leaves the phone quiet.","Un téléphone n'a qu'un moteur : il vibre donc à la plus forte des deux intensités, et un iPhone peut ignorer l'intensité. Un jeu Android a besoin de la permission Vibration cochée dans son préréglage d'export ; le Docteur du projet la vérifie. Choisir une seule manette laisse le téléphone silencieux."
+"This game vibrates (first in %s), but the Android export preset ""%s"" does not have the Vibrate permission ticked, so a phone will not buzz. Open Project > Export, pick that preset and tick Vibrate under Permissions.","Ce jeu vibre (d'abord dans %s), mais le préréglage d'export Android « %s » n'a pas la permission Vibration cochée : un téléphone ne vibrera pas. Ouvre Projet > Exporter, choisis ce préréglage et coche Vibration dans Permissions."
+"Rumbles a controller, the weak motor and the strong one, and buzzes a phone, for a time. Does nothing on the web. Scaled by the strength of the play. For a pulse pattern, put the card between Loop Start and Loop Back with a Pause.","Fait vibrer une manette, moteur faible et moteur fort, et un téléphone, pendant un temps. Sans effet sur le web. Mis à l'échelle par l'intensité de lecture. Pour un motif de pulsations, place la carte entre Loop Start et Loop Back avec une Pause."
+Controller,Manette
+Every controller,Toutes les manettes
+The one used last,La dernière utilisée
+Controller 1,Manette 1
+Controller 2,Manette 2
+Controller 3,Manette 3
+Controller 4,Manette 4
