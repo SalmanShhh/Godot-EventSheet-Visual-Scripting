@@ -27,15 +27,15 @@ extends RefCounted
 const WORDS: PackedStringArray = [
 	"particles", "animation", "sprite_animation", "show_hide", "squash_stretch", "punch_position",
 	"punch_rotation", "pop", "fade", "count_to", "reveal_text", "fill_bar", "shader_value",
-	"look_at", "rotate_by", "rotate_to", "rotation_shake", "draw_order", "light"
+	"look_at", "rotate_by", "rotate_to", "rotation_shake", "draw_order", "light", "position_shake", "grayscale"
 ]
 
 ## The cards that act on the object the player is under, whatever else they hold.
-const ON_HOST: PackedStringArray = ["squash_stretch", "punch_position", "punch_rotation"]
+const ON_HOST: PackedStringArray = ["squash_stretch", "punch_position", "punch_rotation", "grayscale"]
 
 ## The cards whose node, left empty, is the object the player is under.
 const HOST_WHEN_EMPTY: PackedStringArray = ["show_hide", "pop", "fade", "shader_value", "tween_property", "look_at", "rotate_by",
-	"rotate_to", "rotation_shake", "draw_order", "light"]
+	"rotate_to", "rotation_shake", "draw_order", "light", "position_shake"]
 
 ## The keys that make a Tween Property card the whole card, as the running player counts them.
 const TWEEN_KEYS: PackedStringArray = ["node", "to", "from", "trans", "ease", "relative", "back"]
@@ -132,6 +132,10 @@ static func watched(card: Dictionary, node: Node) -> Array:
 				made.append([node, "pivot_offset"])
 		"draw_order":
 			made.append([node, "z_index"])
+		"position_shake":
+			made.append([node, "position"])
+		"grayscale":
+			made.append([node, "modulate"])
 		"light":
 			var names: Dictionary = light_names(node)
 			for key: String in ["energy", "colour", "on"]:
@@ -202,6 +206,10 @@ static func step(card: Dictionary, node: Node, through: float, at: float, state:
 			_rotation_shake(card, node, held, at, seconds, state)
 		"look_at":
 			_look_at(card, node, held, state)
+		"position_shake":
+			_position_shake(card, node, held, at, seconds, state)
+		"grayscale":
+			_grayscale(card, node, through, at, seconds, state)
 		"draw_order":
 			node.set("z_index", clampi(int(card.get("z_index", 10)), -4096, 4096) if through < 1.0 else _rest(state, node, "z_index"))
 		"light":
@@ -326,6 +334,44 @@ static func _rotation_shake(card: Dictionary, node: Node, held: float, at: float
 		node.set("rotation", Vector3((rest as Vector3).x, (rest as Vector3).y + swing, (rest as Vector3).z))
 	else:
 		node.set("rotation", float(rest) + swing)
+
+
+## Position Shake: the position at rest plus a jump to a new place the shape of the shake makes larger or smaller, ending at
+## rest. The places are worked out from the time alone, so a second play draws the same shake.
+static func _position_shake(card: Dictionary, node: Node, held: float, at: float, seconds: float, state: Dictionary) -> void:
+	if not (node is Node2D or node is Control or node is Node3D):
+		return
+	var rest: Variant = _rest(state, node, "position")
+	var share: float = float(load("res://addons/eventsheet/editor/inspector/juice_shake_fields.gd").call("shape_at", card, held))
+	var jump: int = int(floor(held * seconds * maxf(float(card.get("jumps", 30.0)), 0.1)))
+	var level: float = float(card.get("amount", 8.0)) * at * share if held < 1.0 else 0.0
+	var way: Vector3 = Vector3(_scatter(jump, 1.0) * float(card.get("weight_x", 1.0)), _scatter(jump, 2.0) * float(card.get("weight_y", 1.0)), _scatter(jump, 3.0) * float(card.get("weight_z", 1.0)))
+	if rest is Vector3:
+		node.set("position", (rest as Vector3) + way * level)
+	else:
+		node.set("position", (rest as Vector2) + Vector2(way.x, way.y) * level)
+
+
+## A number from -1 to 1 that depends only on the jump and the axis, so the preview shakes the same way every time.
+static func _scatter(jump: int, axis: float) -> float:
+	return fposmod(sin(float(jump) * 12.9898 + axis * 78.233) * 43758.5453, 2.0) - 1.0
+
+
+## Grayscale: the object stands in for the screen, so the editor shows the colour draining out of it and coming back.
+static func _grayscale(card: Dictionary, node: Node, through: float, at: float, seconds: float, state: Dictionary) -> void:
+	if not (node is CanvasItem):
+		return
+	var rest: Color = _rest(state, node, "modulate") as Color
+	var total: float = maxf(seconds, 0.05)
+	var elapsed: float = through * total
+	var amount: float = clampf(float(card.get("amount", 1.0)) * at, 0.0, 1.0)
+	var drain: float = 0.0 if str(card.get("shape", "screen")) != "screen" else maxf(float(card.get("fade_in", 0.2)), 0.001)
+	var back: float = maxf(float(card.get("fade_out", 0.4)), 0.001)
+	var share: float = clampf(elapsed / drain, 0.0, 1.0) if drain > 0.001 else 1.0
+	if not bool(card.get("stay", false)) and elapsed > total - back:
+		share = clampf((total - elapsed) / back, 0.0, 1.0) * share
+	var luma: float = rest.r * 0.2126 + rest.g * 0.7152 + rest.b * 0.0722
+	node.set("modulate", rest.lerp(Color(luma, luma, luma, rest.a), amount * share))
 
 
 ## Look At: the node turns to face the node it names, over the card's length.

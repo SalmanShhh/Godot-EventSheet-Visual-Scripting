@@ -65,6 +65,8 @@ const GODOT_NAMES: Dictionary = {
 	"rotate_by": {"degrees": "Node2D.rotation"},
 	"rotate_to": {"degrees": "Node2D.rotation"},
 	"rotation_shake": {"degrees": "Node2D.rotation"},
+	"position_shake": {"amount": "Node2D.position"},
+	"grayscale": {"amount": "CanvasItem.modulate"},
 	"light": {"energy_from": "Light2D.energy", "energy_to": "Light2D.energy", "colour_from": "Light2D.color", "colour_to": "Light2D.color"},
 	"scene_look": {"node": "WorldEnvironment.environment"},
 	"bus_effect": {"bus": "AudioServer.get_bus_index"},
@@ -450,6 +452,10 @@ static func as_gdscript(card: Dictionary, player: Node = null) -> String:
 			return EventSheetL10n.agree_article("# The bus must already carry a %s.\nvar bus := AudioServer.get_bus_index(\"%s\")\nvar effect: %s\nfor slot in AudioServer.get_bus_effect_count(bus):\n\tif AudioServer.get_bus_effect(bus, slot) is %s:\n\t\teffect = AudioServer.get_bus_effect(bus, slot)\neffect.%s = %s\nawait get_tree().create_timer(%s).timeout\neffect.%s = %s" % [entry[0], bus, entry[0], entry[0], entry[1], _n(card.get("to", 400.0)), seconds, entry[1], entry[2]], str(entry[0]))
 		"chromatic_shake":
 			return _chromatic_shake_by_hand(card, seconds)
+		"position_shake":
+			return "var node: Node2D = %s\nvar rest := node.position\nvar elapsed := 0.0\nwhile elapsed < %s:\n\tvar left := 1.0 - elapsed / %s\n\tnode.position = rest + Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * %s * left\n\tawait get_tree().process_frame\n\telapsed += get_process_delta_time()\nnode.position = rest" % [target, seconds, seconds, _n(card.get("amount", 8.0))]
+		"grayscale":
+			return _grayscale_by_hand(card, seconds)
 		"spring":
 			var property: String = str(card.get("property", "scale"))
 			return "# Needs a Spring node under this node; it settles the value back to rest.\n%s.bump_property(\"%s\", %s)" % [_spring_name(card, player), property, _value(card.get("kick", 3.0))]
@@ -505,4 +511,49 @@ static func _chromatic_shake_by_hand(card: Dictionary, seconds: String) -> Strin
 		lines.append("tween.tween_property(screen.material, \"shader_parameter/split\", Vector2.ZERO, %s)" % seconds)
 		lines.append("await tween.finished")
 	lines.append("layer.queue_free()")
+	return "\n".join(lines)
+
+
+## The screen put to grey by hand: a full-screen rectangle whose shader mixes each pixel with its grey, a circle of the
+## picture when the card asks for one, and a tween that brings the colour back.
+static func _grayscale_by_hand(card: Dictionary, seconds: String) -> String:
+	var circle: bool = str(card.get("shape", "screen")) != "screen"
+	var lines: PackedStringArray = PackedStringArray([
+		"var layer := CanvasLayer.new()",
+		"var screen := ColorRect.new()",
+		"screen.set_anchors_preset(Control.PRESET_FULL_RECT)",
+		"screen.mouse_filter = Control.MOUSE_FILTER_IGNORE",
+		"var shader := Shader.new()",
+		"shader.code = \"\"\"",
+		"shader_type canvas_item;",
+		"uniform sampler2D screen_texture : hint_screen_texture, filter_linear;",
+		"uniform float amount;",
+		"uniform vec2 centre = vec2(0.5);",
+		"uniform float reach = -1.0;",
+		"void fragment() {",
+		"\tvec3 seen = texture(screen_texture, SCREEN_UV).rgb;",
+		"\tfloat grey = dot(seen, vec3(0.2126, 0.7152, 0.0722));",
+		"\tfloat share = 1.0;",
+		"\tif (reach >= 0.0) {",
+		"\t\tshare = 1.0 - smoothstep(reach * 0.8, reach, length((SCREEN_UV - centre) / SCREEN_PIXEL_SIZE));",
+		"\t}",
+		"\tCOLOR = vec4(mix(seen, vec3(grey), amount * share), 1.0);",
+		"}\"\"\"",
+		"screen.material = ShaderMaterial.new()",
+		"screen.material.shader = shader",
+		"layer.add_child(screen)",
+		"add_child(layer)",
+		"var tween := create_tween()"
+	])
+	var amount: String = _n(card.get("amount", 1.0))
+	if circle:
+		lines.append("screen.material.set_shader_parameter(\"centre\", Vector2(%s, %s))" % [_n(card.get("screen_x", 0.5)), _n(card.get("screen_y", 0.5))])
+		lines.append("screen.material.set_shader_parameter(\"amount\", %s)" % amount)
+		lines.append("tween.tween_property(screen.material, \"shader_parameter/reach\", %s, %s)" % [_n(card.get("reach", 800.0)), seconds])
+	else:
+		lines.append("tween.tween_property(screen.material, \"shader_parameter/amount\", %s, %s)" % [amount, _n(card.get("fade_in", 0.2))])
+	if not bool(card.get("stay", false)):
+		lines.append("tween.tween_property(screen.material, \"shader_parameter/amount\", 0.0, %s)" % _n(card.get("fade_out", 0.4)))
+		lines.append("await tween.finished")
+		lines.append("layer.queue_free()")
 	return "\n".join(lines)

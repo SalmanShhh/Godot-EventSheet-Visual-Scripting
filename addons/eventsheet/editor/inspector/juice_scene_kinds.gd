@@ -60,6 +60,7 @@ static func kinds(family_of: Dictionary) -> Array:
 	all.append_array(_light_look_sound_kinds(family_of))
 	all.append_array(_time_kinds(family_of))
 	all.append_array(_screen_kinds(family_of))
+	all.append_array(_position_kinds(family_of))
 	return all
 
 
@@ -191,6 +192,79 @@ static func _turning_kinds(family_of: Dictionary) -> Array:
 	]
 
 
+## Whether a Grayscale card draws a circle: the whole screen is the other shape.
+static func gray_is_circle(card: Dictionary) -> bool:
+	return str(card.get("shape", "screen")) != "screen"
+
+
+## Whether a Grayscale card starts its circle at a place on the screen rather than at the object.
+static func gray_from_screen(card: Dictionary) -> bool:
+	return str(card.get("shape", "screen")) == "circle_screen"
+
+
+## What a Grayscale card says it will do, in one grey sentence.
+static func gray_says(card: Dictionary) -> String:
+	var amount: String = str(snappedf(float(card.get("amount", 1.0)), 0.01)).trim_suffix(".0")
+	var seconds: String = str(snappedf(float(card.get("seconds", 1.0)), 0.01)).trim_suffix(".0")
+	var stay: bool = bool(card.get("stay", false))
+	if gray_is_circle(card):
+		var reach: String = str(int(float(card.get("reach", 800.0))))
+		if bool(card.get("colour_inside", false)):
+			if stay:
+				return EventSheetL10n.translate("The screen goes grey except a circle that opens to %s pixels over %s s, and stays grey until told.") % [reach, seconds]
+			return EventSheetL10n.translate("The screen goes grey except a circle that opens to %s pixels over %s s, then the colour comes back.") % [reach, seconds]
+		if stay:
+			return EventSheetL10n.translate("A circle of grey grows to %s pixels over %s s and stays until told.") % [reach, seconds]
+		return EventSheetL10n.translate("A circle of grey grows to %s pixels over %s s, then fades away.") % [reach, seconds]
+	if stay:
+		return EventSheetL10n.translate("The screen goes %s grey and stays grey until told.") % amount
+	return EventSheetL10n.translate("The screen goes %s grey for %s s, then the colour comes back.") % [amount, seconds]
+
+
+## The quiet line under a Grayscale card when the scene has no Screen FX layer to draw it, and the note that the
+## editor greys the object this player is under as a stand-in for the screen.
+static func gray_note(_card: Dictionary, _cards: Array, _index: int, _edited: Object) -> String:
+	return EventSheetL10n.translate("In the editor the play button greys the object this player is under, as a stand-in. In the game the whole screen goes grey, through the Screen FX layer of the scene.")
+
+
+## The sentence under a Position Shake card.
+static func position_says(card: Dictionary) -> String:
+	var amount: String = str(snappedf(float(card.get("amount", 8.0)), 0.001)).trim_suffix(".0")
+	var seconds: String = str(snappedf(float(card.get("seconds", 0.4)), 0.001)).trim_suffix(".0")
+	if not str(card.get("curve", "")).strip_edges().is_empty():
+		return EventSheetL10n.translate("Moves up to %s from where it is over %s s, following your curve, and ends exactly where it began.") % [amount, seconds]
+	var fade_in: bool = bool(card.get("fade_in", false))
+	var fade_out: bool = bool(card.get("fade_out", true))
+	if fade_in and fade_out:
+		return EventSheetL10n.translate("Moves up to %s from where it is half way and is back at %s s.") % [amount, seconds]
+	if fade_in:
+		return EventSheetL10n.translate("Starts still and moves up to %s by %s s, then is put back.") % [amount, seconds]
+	if fade_out:
+		return EventSheetL10n.translate("Moves up to %s at first and is back where it was at %s s.") % [amount, seconds]
+	return EventSheetL10n.translate("Moves up to %s for %s s, then is put back.") % [amount, seconds]
+
+
+## The cards that move one node's position.
+static func _position_kinds(family_of: Dictionary) -> Array:
+	var shake_fields: Array = (load(SHAKE_PATH) as Script).call("fields")
+	return [
+		_kind("position_shake", "Position Shake",
+			"Shakes ONLY the position of a node - never the camera, its angle or its size - for a time, and puts it back exactly where it was, so a node that is moving meanwhile keeps its own motion. Jitter a crate, tremble a door, rattle a button. The amount is in pixels for a 2D node or a Control and in metres for a 3D node. For the camera, use Shake; in a 3D game put a Juice 3D node beside the Juice Player and Shake shakes the 3D camera.",
+			family_of, [
+				_node("node", "Node", TURNABLE, "This object"),
+				{"key": "amount", "label": "Amount", "drawer": "num", "default": 8.0, "suffix": "pixels (metres in 3D)", "redraw": true},
+				{"key": "seconds", "label": "Over", "drawer": "unit:time", "default": 0.4},
+				shake_fields[0], shake_fields[1], shake_fields[2], shake_fields[3],
+				{"key": "weight_x", "label": "Sideways", "drawer": "num", "default": 1.0, "suffix": "of the amount"},
+				{"key": "weight_y", "label": "Up and down", "drawer": "num", "default": 1.0, "suffix": "of the amount"},
+				{"key": "weight_z", "label": "Depth (3D)", "drawer": "num", "default": 1.0, "suffix": "of the amount"},
+				{"key": "jumps", "label": "Jumps", "drawer": "num", "default": 30.0, "suffix": "a second"},
+				{"key": "position_says", "label": "", "drawer": "note", "text": position_says, "hide_empty": true},
+				_node_line("position_shake")
+			], {"amount": 8.0, "seconds": 0.4, "fade_out": true, "weight_x": 1.0, "weight_y": 1.0, "weight_z": 1.0, "jumps": 30.0}, TURNABLE, ["shake", "jitter", "tremble", "rumble", "wobble", "vibrate", "rattle"])
+	]
+
+
 static func _light_look_sound_kinds(family_of: Dictionary) -> Array:
 	return [
 		_kind("light", "Light",
@@ -265,7 +339,25 @@ static func _screen_kinds(family_of: Dictionary) -> Array:
 				{"key": "chroma_shape", "label": "", "drawer": "custom", "build": chroma_picture},
 				{"key": "chroma_note", "label": "", "drawer": "note", "text": chroma_says, "hide_empty": true, "warn_when": chroma_without_juice}
 			], {"amount": 12.0, "seconds": 0.3, "mode": "reducing", "direction": "wander"}, [],
-			["aberration", "rgb", "split", "glitch", "colour fringe", "color fringe", "offset", "channels", "hit"])
+			["aberration", "rgb", "split", "glitch", "colour fringe", "color fringe", "offset", "channels", "hit"]),
+		_kind("grayscale", "Grayscale",
+			"Puts the colour out of the screen: all of it, or a circle of grey that grows from this object or from a place on the screen (or the other way round, a circle of colour in a grey world). It can stay grey until told, for a death or a flashback, and Stop brings the colour back. It plays through the scene's Screen FX layer, so the no-flashing and reduced-effects choices hold it. To grey one object, use the Grayscale behaviour instead.",
+			family_of, [
+				{"key": "amount", "label": "Grayness", "drawer": "num", "default": 1.0, "suffix": "0 to 1"},
+				{"key": "shape", "label": "Shape", "drawer": "options:screen=Whole screen,circle=Circle from this object,circle_screen=Circle from a place on the screen", "default": "screen", "redraw": true},
+				{"key": "seconds", "label": "Over", "drawer": "unit:time", "default": 1.0},
+				{"key": "fade_in", "label": "Colour drains over", "drawer": "unit:time", "default": 0.2, "visible_when": func(card: Dictionary) -> bool: return not gray_is_circle(card)},
+				{"key": "fade_out", "label": "Colour returns over", "drawer": "unit:time", "default": 0.4},
+				{"key": "stay", "label": "Stay grey until told", "drawer": "bool", "default": false},
+				{"key": "screen_x", "label": "Across the screen", "drawer": "num", "default": 0.5, "suffix": "0 left, 1 right", "visible_when": gray_from_screen},
+				{"key": "screen_y", "label": "Down the screen", "drawer": "num", "default": 0.5, "suffix": "0 top, 1 bottom", "visible_when": gray_from_screen},
+				{"key": "reach", "label": "Grows to", "drawer": "num", "default": 800.0, "suffix": "pixels", "visible_when": gray_is_circle},
+				{"key": "softness", "label": "Edge softness", "drawer": "num", "default": 0.2, "suffix": "0 sharp, 1 soft", "visible_when": gray_is_circle},
+				{"key": "colour_inside", "label": "Colour inside, grey outside", "drawer": "bool", "default": false, "visible_when": gray_is_circle},
+				{"key": "gray_says", "label": "", "drawer": "note", "text": gray_says, "hide_empty": true},
+				{"key": "gray_note", "label": "", "drawer": "note", "text": gray_note, "hide_empty": true}
+			], {"amount": 1.0, "shape": "screen", "seconds": 1.0, "fade_in": 0.2, "fade_out": 0.4, "stay": false}, [],
+			["grey", "gray", "black and white", "desaturate", "monochrome", "radial", "expanding", "colour drain", "death"])
 	]
 
 
@@ -333,6 +425,7 @@ const NEEDS: Dictionary = {
 	"rotate_by": ["a node that can be turned", TURNABLE],
 	"rotate_to": ["a node that can be turned", TURNABLE],
 	"rotation_shake": ["a node that can be turned", TURNABLE],
+	"position_shake": ["a node with a position (2D, 3D or a Control)", TURNABLE],
 	"light": ["a light", LIGHTS],
 	"spring": ["a 2D node (a Spring node does not move a UI or a 3D node)", ["Node2D"]],
 	"animation_parameter": ["an animation tree", ["AnimationTree"]],
@@ -340,7 +433,7 @@ const NEEDS: Dictionary = {
 }
 
 ## The cards whose empty node means the object the player is under.
-const HOST_WHEN_EMPTY: Array = ["remove_node", "draw_order", "switch_node", "look_at", "rotate_by", "rotate_to", "rotation_shake", "light", "spring"]
+const HOST_WHEN_EMPTY: Array = ["remove_node", "draw_order", "switch_node", "look_at", "rotate_by", "rotate_to", "rotation_shake", "position_shake", "light", "spring"]
 
 
 ## What is wrong with the node a card points at, in one or two short sentences, or an empty text when nothing is.
