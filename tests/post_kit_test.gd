@@ -299,8 +299,9 @@ static func _the_companions_are_the_bytes_they_came_from() -> bool:
 		if not FileAccess.file_exists(shipped_path):
 			absent.append(file_name)
 			continue
-		if FileAccess.get_file_as_string(shipped_path) != FileAccess.get_file_as_string(
-				EFFECT_SOURCE_DIRECTORY + file_name):
+		var shipped_text: String = RegEx.create_from_string("(?m)^(@tool\n)class_name [A-Za-z0-9_]+\n").sub(
+			FileAccess.get_file_as_string(shipped_path), "$1", false)
+		if shipped_text != FileAccess.get_file_as_string(EFFECT_SOURCE_DIRECTORY + file_name):
 			differ.append(file_name)
 	return SUPPORT.pins(P, [
 		["every companion the source folder holds ships beside the pack", ",".join(absent), ""],

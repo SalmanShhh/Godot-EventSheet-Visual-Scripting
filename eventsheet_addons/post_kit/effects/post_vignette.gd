@@ -2,6 +2,7 @@
 ## Vignette: the frame darkens towards its corners, so the middle is where the eye goes. The oldest
 ## trick a lens plays, and the one a game reaches for when it wants a player to look at one thing.
 @tool
+class_name PostKitVignette
 extends "post_effect.gd"
 
 # @ace_hidden

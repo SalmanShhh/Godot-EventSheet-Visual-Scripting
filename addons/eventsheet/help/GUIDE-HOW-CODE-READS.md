@@ -22,6 +22,7 @@ project declares, never by a setting, a history or a guess.
 - [Where the derived layer gets its words](#where-the-derived-layer-gets-its-words)
 - [The ledger: Project Doctor - Reading](#the-ledger-project-doctor---reading)
 - [Seven idioms, before and after](#seven-idioms-before-and-after)
+- [Typed variables for the nodes a sheet calls](#typed-variables-for-the-nodes-a-sheet-calls)
 - [The boundary: what stays code, and why that is right](#the-boundary-what-stays-code-and-why-that-is-right)
 - [Raising the floor yourself](#raising-the-floor-yourself)
 
@@ -314,6 +315,47 @@ the thing that does not get written. That is the same ranking as everywhere else
 from the other end.
 
 ![A five-line held tween chain above the rows it already reads as: Tween opacity to 0 in 0.25 seconds ease = Sine, Tween position:y to -8 in 0.3 seconds ease = out (after the previous), Tween the next steps at the same time, and Tween size to (1, 1) in 0.2 seconds (at the same time)](images/tween-chain-rows.png)
+
+## Typed variables for the nodes a sheet calls
+
+A row that calls a behaviour on a child node used to compile to `$HudKit.set_text("Score", "10")`. That
+works, but Godot cannot say what `$HudKit` is, so nothing completes after the dot and a misspelt method
+is found only when the line runs. A sheet now compiles the same call as
+
+```gdscript
+@onready var hud_kit: HudKitBehavior = $HudKit
+
+
+func _ready() -> void:
+	hud_kit.set_text("Score", "10")
+```
+
+The node is declared once, under the class head, with the class its behaviour publishes (`HudKitBehavior`)
+and a name made from the node's own (`HudKit` becomes `hud_kit`). Every call goes through the variable.
+This is what Godot's own style guide recommends, and it is what gives you the list of what the node can
+do the moment you type `hud_kit.` in the script editor. Someone coming from another event-sheet editor
+learns what an object offers from exactly that list.
+
+What to know:
+
+- **The sheet looks the same.** A row reads the same words, takes the same values and saves back to the
+  same file. Only the compiled script changes.
+- **Older scripts are not rewritten behind your back.** A script written before this existed opens and
+  saves byte for byte, still saying `$HudKit.`. The first edit you make to it moves it to the new form,
+  and Undo puts the old one back.
+- **Two nodes with one name** (`$Player/Movement` and `$Jumper/Movement`) get `movement` and
+  `jumper_movement`. A name the script already uses, or a member the node's class already has, is never
+  taken: the declaration is then written `hud_kit_node`.
+- **Where a variable cannot serve, the path stays.** The handlers Godot runs before `@onready` variables
+  have a value (`_init`, `_enter_tree`), a `static` function, a class written inside the file, a
+  class-level initialiser, and any text or comment keep `$HudKit`. A node whose class the sheet does not
+  know (a plain "call method" row on a bare node) keeps its path too.
+- **If the node is a different kind in your scene,** Godot stops at the `@onready` line when the scene
+  loads and says it cannot assign one type to a variable of another. The Doctor says it first, in plain
+  words, naming the node and what it actually is: give the node the behaviour's script, or change the
+  type in the script.
+- **Your own variable is respected.** A script that already declares `@onready var hud: HudKitBehavior =
+  $HudKit` and calls through `hud` opens as it always did, and saves back the same bytes.
 
 ## The boundary: what stays code, and why that is right
 

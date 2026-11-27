@@ -3,6 +3,7 @@
 ## coming apart. Strength walks the block from one pixel up to the size below, so the effect can be
 ## faded in rather than switched on.
 @tool
+class_name PostKitPixelate
 extends "post_effect.gd"
 
 # @ace_hidden

@@ -4,6 +4,19 @@
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 
+## The class each effect script ships under, so a script can name one (`var look: PostKitVignette`). The base
+## is `PostKitEffect`; every effect extends it by its file name.
+const EFFECT_CLASSES: Dictionary = {
+	"post_effect.gd": "PostKitEffect",
+	"post_vignette.gd": "PostKitVignette",
+	"post_desaturate.gd": "PostKitDesaturate",
+	"post_pixelate.gd": "PostKitPixelate",
+	"post_tint.gd": "PostKitTint",
+	"post_fade.gd": "PostKitFade",
+	"post_outline.gd": "PostKitOutline",
+}
+
+
 ## Post Kit: the camera's own post stack, and an outline that goes through walls.
 ##
 ## Godot 4 gives a 3D camera a Compositor, and a Compositor a list of CompositorEffects: scripts that
@@ -39,4 +52,4 @@ static func build() -> bool:
 	# an entry to a stack that draws nothing. They ship in the same build, into a folder of their
 	# own beside the pack script.
 	return Lib.ship_files("post_kit_effects", "res://eventsheet_addons/post_kit/effects/post_kit_effects",
-		PackedStringArray(["gd", "glsl"]))
+		PackedStringArray(["gd", "glsl"]), EFFECT_CLASSES)

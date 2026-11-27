@@ -11447,3 +11447,4 @@ Sideways,横方向
 Up and down,上下
 Depth (3D),奥行き(3D)
 Jumps,ジャンプ回数
+"%s calls the node %s a %s (the variable %s), but in this scene it is %s. Godot stops at that line when the scene loads: give the node the %s script, or change the type the script declares.",

@@ -91,7 +91,7 @@ Everything else is in the **[documentation index](docs/README.md)** and inside t
 - **140 behavior packs**, all authored as event sheets: movement, AI, combat, narrative, drawing, lighting, shaders. See [docs/Addons/](docs/Addons/README.md).
 - **Game feel and drawing** - a Juice Player holds a list of juice cards you can play, copy and reorder without running the game, and every card is a typed function a script can call too; a Drawing Prefab draws shapes from a list; eighteen behaviours have a Preview button; your own numbers can go in Godot's Monitors tab.
 - **Your own code is vocabulary** - the picker lists your classes and autoloads as actions, conditions and expressions with zero setup, and a call you wrote by hand (`$Enemy.take_damage(25.0)`) offers to become the matching row from the right-click menu.
-- **Mistakes caught as you type** - type checking with Godot's own analyzer, autocomplete that follows the code, and checks for the errors Godot only reports when the game runs.
+- **Mistakes caught as you type** - type checking with Godot's own analyzer, autocomplete that follows the code, checks for the errors Godot only reports when the game runs, and the behaviours a sheet calls declared once with their type (`@onready var hud_kit: HudKitBehavior = $HudKit`), so Godot lists what a node can do the moment you type its name and a dot.
 
   <picture>
 	<source media="(prefers-color-scheme: light)" srcset="docs/previews/editor-type-check-light.png">

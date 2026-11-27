@@ -2,6 +2,7 @@
 ## Tint: every colour in the frame is multiplied by one colour. A cold blue night, a sick green
 ## corridor, a gold afternoon - the shading stays where it was and only the hue moves.
 @tool
+class_name PostKitTint
 extends "post_effect.gd"
 
 # @ace_hidden

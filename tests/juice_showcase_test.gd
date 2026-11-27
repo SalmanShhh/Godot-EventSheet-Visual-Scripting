@@ -13,6 +13,7 @@
 extends RefCounted
 
 const SUPPORT := preload("res://tests/support.gd")
+const NodeVariables := preload("res://addons/eventforge/compiler/node_variables.gd")
 
 const TEST_NAME: String = "juice_showcase"
 
@@ -112,7 +113,9 @@ static func _cube_has_paint() -> bool:
 
 
 static func _sheet_pins() -> bool:
-	var text: String = FileAccess.get_file_as_string(SHEET)
+	# Read back as paths: a showcase that keeps typed variables writes `juice_player.play(` for `$JuicePlayer.play(`.
+	var written: String = FileAccess.get_file_as_string(SHEET)
+	var text: String = str(NodeVariables.expand(written).get("text", written))
 	return SUPPORT.pins(TEST_NAME, [
 		["the start key plays the list", text.contains("$JuicePlayer.play(intensity * 0.6)"), true],
 		["instead of the impact moment", text.contains("moment(\"impact\""), false],

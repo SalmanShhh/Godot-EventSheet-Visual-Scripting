@@ -45,7 +45,7 @@ static func run() -> bool:
 			if not FileAccess.file_exists(into_path):
 				missing.append(into_path)
 				continue
-			if FileAccess.get_file_as_string(into_path) \
+			if _without_class_name(FileAccess.get_file_as_string(into_path)) \
 					!= FileAccess.get_file_as_string(from_dir.path_join(file_name)):
 				differ.append(into_path)
 	missing.sort()
@@ -128,3 +128,9 @@ static func _companions(from_dir: String, extensions: PackedStringArray) -> Pack
 			names.append(entry)
 	names.sort()
 	return names
+
+
+## A shipped script with the `class_name` line the builder adds under its `@tool` taken out: the source folder
+## sits inside the project, so the name is written in the copy and never in the source.
+static func _without_class_name(text: String) -> String:
+	return RegEx.create_from_string("(?m)^(@tool\n)class_name [A-Za-z0-9_]+\n").sub(text, "$1", false)

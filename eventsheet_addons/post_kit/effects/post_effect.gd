@@ -12,6 +12,7 @@
 ## and what its own dials hold. The push constant is the same 64 bytes for every effect, so one
 ## shader header is the whole contract.
 @tool
+class_name PostKitEffect
 extends CompositorEffect
 
 ## Folder holding the effect scripts and their compiled compute shader files once installed.

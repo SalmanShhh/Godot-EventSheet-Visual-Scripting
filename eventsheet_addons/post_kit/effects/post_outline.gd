@@ -10,6 +10,7 @@
 ## Fill turns the same mask into a silhouette instead of an edge, which is the other half of the
 ## same question - where is the thing, rather than what shape is it.
 @tool
+class_name PostKitOutline
 extends "post_effect.gd"
 
 # @ace_hidden
