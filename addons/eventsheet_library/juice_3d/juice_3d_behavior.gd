@@ -258,6 +258,12 @@ signal lean_finished
 # @ace_name("On Zoom Finished")
 signal zoom_finished
 
+# --- Choices (the words the choice parameters take; saved scenes keep them) ---
+## The word reducing.
+const MODE_REDUCING := "reducing"
+## The word constant.
+const MODE_CONSTANT := "constant"
+
 # --- Designer knobs (tune the FEEL in the Inspector) ---
 ## Peak shake rotation, in degrees, at full trauma (pitch/yaw; roll uses a third of it).
 @export_range(0.0, 30.0, 0.5) var max_shake_degrees: float = 4.0
@@ -946,7 +952,7 @@ func chromatic_kick(strength: float, seconds: float) -> void:
 
 # @ace_action
 # @ace_name("Chromatic Shake")
-# @ace_description("Shakes the screen's color channels apart along a direction that moves - the Shake you feel, on the screen instead of the camera. Magnitude is how far they split in pixels, and a reducing shake falls to nothing over the duration while a constant one holds and then stops dead. Leave the angle below zero and the split wanders with the same noise the camera shake uses (so the two read as one hit); give it an angle and the split stays on that line and only breathes. Firing again restarts it. It runs on the game's own time, so any change to Engine.time_scale glides it and a freeze holds it.")
+# @ace_description("Shakes the screen's color channels apart along a direction that moves - the Shake you feel, on the screen instead of the camera. Magnitude is how far they split in pixels, and a reducing shake falls to nothing over the duration while a constant one holds and then stops dead. Leave the angle below zero and the split wanders with the same noise the camera shake uses (so the two read as one hit); give it an angle and the split stays on that line and only breathes. Firing again restarts it. It runs on the game's own time, so any change to Engine.time_scale glides it and a freeze holds it. The words for mode are the constants MODE_REDUCING, MODE_CONSTANT.")
 # @ace_display_template("Chromatic shake [b]{magnitude}[/b] px for [b]{duration}[/b] s")
 # @ace_param_options(mode reducing, constant)
 # @ace_codegen_template("$Juice3DBehavior.chromatic_shake({magnitude}, {duration}, "{mode}", {angle_degrees})")

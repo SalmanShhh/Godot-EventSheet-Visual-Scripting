@@ -40,6 +40,7 @@ static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: S
 		var local_icon: String = base_path.get_base_dir() + "/icon.svg"
 		if FileAccess.file_exists(local_icon):
 			sheet.custom_class_icon = local_icon
+	_name_choices(sheet)
 	var write_path: String = base_path
 	if not output_override_dir.is_empty():
 		write_path = output_override_dir.path_join(base_path.get_file())
@@ -49,6 +50,104 @@ static func save_pack(sheet: EventSheetResource, base_path: String, icon_path: S
 		return false
 	print("[build_sample_behaviors] built %s (.gd), warnings: %s" % [base_path.get_file(), compile_result.get("warnings")])
 	return true
+
+
+## Names the words a verb's choice parameter accepts, as constants a game script can use instead of typing the
+## word: a verb that takes `ease: String` and is shown as a dropdown gets `EASE_LINEAR`, `EASE_EASE_IN` ... in a
+## block of its own, each carrying the dropdown's own label as its note, and the verb's description says
+## where they are. The constants are the same text the row stores, so a saved scene and a row that passes
+## the word keep working. The naming is the one the earlier passes used: the parameter, then the word, in
+## capitals. A parameter whose words the pack already names (any constant holding that text) is left alone,
+## so the packs that were done by hand keep their own spelling.
+static func _name_choices(sheet: EventSheetResource) -> void:
+	var named: Dictionary = {}
+	var taken: Dictionary = {}
+	var constant_line: RegEx = RegEx.create_from_string("^const ([A-Z][A-Z0-9_]*)(?:: String)? :?= \"([^\"]*)\"")
+	for entry: Variant in sheet.events:
+		if entry is RawCodeRow:
+			for line: String in (entry as RawCodeRow).code.split("
+"):
+				var found: RegExMatch = constant_line.search(line)
+				if found != null:
+					named[found.get_string(2)] = true
+					taken[found.get_string(1)] = true
+	var lines: PackedStringArray = PackedStringArray()
+	for function_resource: Variant in sheet.functions:
+		if not (function_resource is EventFunction):
+			continue
+		var event_function: EventFunction = function_resource as EventFunction
+		for parameter: ACEParam in event_function.params:
+			var words: Array = _choice_words(parameter)
+			if words.is_empty() or not _is_unnamed(words, named):
+				continue
+			var names: PackedStringArray = PackedStringArray()
+			for word: Array in words:
+				var constant_name: String = _choice_constant_name(parameter.id, str(word[0]))
+				names.append(constant_name)
+				if not taken.has(constant_name):
+					taken[constant_name] = true
+					lines.append("## %s" % _choice_note(str(word[0]), str(word[1])))
+					lines.append("const %s := \"%s\"" % [constant_name, str(word[0])])
+			if event_function.description.strip_edges().is_empty() or event_function.description.contains(" the constants %s" % names[0]):
+				continue
+			var closing: String = " " if event_function.description.ends_with(".") else ". "
+			event_function.description += "%sThe words for %s are the constants %s." % [closing, parameter.id, ", ".join(names)]
+	if lines.is_empty():
+		return
+	var block: RawCodeRow = RawCodeRow.new()
+	block.code = "# --- Choices (the words the choice parameters take; saved scenes keep them) ---
+" + "
+".join(lines)
+	var at: int = 0
+	while at < sheet.events.size() and sheet.events[at] is CommentRow:
+		at += 1
+	sheet.events.insert(at, block)
+
+
+## The [word, label] pairs a parameter offers, or [] when it offers none or any of them is not text.
+static func _choice_words(parameter: ACEParam) -> Array:
+	var words: Array = []
+	for option: Variant in parameter.options:
+		var word: String = ""
+		var label: String = ""
+		if option is Dictionary:
+			word = str((option as Dictionary).get("key", ""))
+			label = str((option as Dictionary).get("label", word))
+		elif option is String:
+			# `word=label` is how a pack writes a word with a note of its own; a bare word is its own label.
+			word = (option as String).get_slice("=", 0).strip_edges()
+			label = (option as String).substr((option as String).find("=") + 1).strip_edges() if (option as String).contains("=") else word
+		else:
+			return []
+		if word.is_empty() or word.is_valid_int() or word.is_valid_float():
+			return []
+		words.append([word, label])
+	return words
+
+
+## True unless every word of the set is already held by a constant the pack has.
+static func _is_unnamed(words: Array, named: Dictionary) -> bool:
+	for word: Array in words:
+		if not named.has(str(word[0])):
+			return true
+	return false
+
+
+static func _choice_constant_name(parameter_id: String, word: String) -> String:
+	var spelled: String = ("%s_%s" % [parameter_id, word]).to_upper()
+	var out: String = ""
+	for character: String in spelled:
+		out += character if (character >= "A" and character <= "Z") or (character >= "0" and character <= "9") else "_"
+	while out.contains("__"):
+		out = out.replace("__", "_")
+	return out.trim_suffix("_")
+
+
+static func _choice_note(word: String, label: String) -> String:
+	var text: String = label.strip_edges()
+	if text.is_empty() or text == word:
+		return "The word %s." % word
+	return "%s." % text.trim_suffix(".")
 
 
 ## Shared shape for the spring/tween builders: one exposed-as-ACE function. The optional
@@ -1290,7 +1389,11 @@ static func manifest() -> PackManifest:
 ##
 ## `extensions` names what to copy, without the dot, so a folder may hold both the source `.gd` the
 ## pieces come from (never shipped) and the companions that are.
-static func ship_files(source_dir: String, base_path: String, extensions: PackedStringArray) -> bool:
+##
+## `class_names` maps a companion script to the class name it ships under, written on the line after its
+## `@tool`. The name is added in the COPY and never in the source: the source folder sits inside the
+## project, so a class name there would be a second script with the same name, and Godot keeps one per name.
+static func ship_files(source_dir: String, base_path: String, extensions: PackedStringArray, class_names: Dictionary = {}) -> bool:
 	var from_dir: String = SOURCE_ROOT.path_join(source_dir)
 	var into_dir: String = base_path.get_base_dir()
 	if not output_override_dir.is_empty():
@@ -1313,6 +1416,19 @@ static func ship_files(source_dir: String, base_path: String, extensions: Packed
 		return false
 	for file_name: String in names:
 		var text: String = FileAccess.get_file_as_string(from_dir.path_join(file_name))
+		if class_names.has(file_name):
+			if not text.contains("
+@tool
+"):
+				push_error("companion script %s has no @tool line to put its class name under" % file_name)
+				return false
+			var tool_at: int = text.find("
+@tool
+") + "
+@tool
+".length()
+			text = text.substr(0, tool_at) + "class_name %s
+" % str(class_names[file_name]) + text.substr(tool_at)
 		var into_path: String = into_dir.path_join(file_name)
 		if FileAccess.file_exists(into_path) and FileAccess.get_file_as_string(into_path) == text:
 			continue

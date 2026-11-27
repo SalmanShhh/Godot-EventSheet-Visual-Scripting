@@ -31,6 +31,18 @@ signal on_drift_ended
 # @ace_name("On Drive Target Reached")
 signal on_drive_target_reached
 
+# --- Choices (the words the choice parameters take; saved scenes keep them) ---
+## The word up.
+const DIRECTION_UP := "up"
+## The word down.
+const DIRECTION_DOWN := "down"
+## The word left.
+const DIRECTION_LEFT := "left"
+## The word right.
+const DIRECTION_RIGHT := "right"
+## The word stop.
+const DIRECTION_STOP := "stop"
+
 # --- Designer knobs (tune the FEEL in the Inspector) ---
 ## Top forward speed, in pixels per second.
 @export var max_speed: float = 400.0
@@ -146,7 +158,7 @@ func set_steer(amount: float) -> void:
 # @ace_action
 # @ace_featured
 # @ace_name("Simulate Control")
-# @ace_description("The keyboard-style control: pass "up" / "down" / "left" / "right" while the key is held, or "stop" to release. Call it every frame the key is down (pair with Stop when no key is down).")
+# @ace_description("The keyboard-style control: pass "up" / "down" / "left" / "right" while the key is held, or "stop" to release. Call it every frame the key is down (pair with Stop when no key is down). The words for direction are the constants DIRECTION_UP, DIRECTION_DOWN, DIRECTION_LEFT, DIRECTION_RIGHT, DIRECTION_STOP.")
 # @ace_display_template("Drive [b]{direction}[/b]")
 # @ace_param_options(direction up, down, left, right, stop)
 # @ace_codegen_template("$PhysicsCar.simulate_control("{direction}")")

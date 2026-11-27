@@ -28,6 +28,16 @@ signal on_slide_stopped
 # @ace_name("On Hit Wall")
 signal on_hit_wall
 
+# --- Choices (the words the choice parameters take; saved scenes keep them) ---
+## The word left.
+const DIRECTION_LEFT := "left"
+## The word right.
+const DIRECTION_RIGHT := "right"
+## The word up.
+const DIRECTION_UP := "up"
+## The word down.
+const DIRECTION_DOWN := "down"
+
 # --- Designer knobs (tune the FEEL in the Inspector) ---
 ## Tile size in pixels - the character snaps to this grid.
 @export var grid_size: float = 64.0
@@ -67,7 +77,7 @@ func _physics_process(delta: float) -> void:
 # @ace_action
 # @ace_featured
 # @ace_name("Slide")
-# @ace_description("Starts a slide in a direction (left / right / up / down): the character glides until the tile ahead is a wall, then stops snapped to the grid. Ignored while already sliding; fires On Hit Wall immediately if the very next tile is a wall.")
+# @ace_description("Starts a slide in a direction (left / right / up / down): the character glides until the tile ahead is a wall, then stops snapped to the grid. Ignored while already sliding; fires On Hit Wall immediately if the very next tile is a wall. The words for direction are the constants DIRECTION_LEFT, DIRECTION_RIGHT, DIRECTION_UP, DIRECTION_DOWN.")
 # @ace_display_template("Slide [b]{direction}[/b]")
 # @ace_param_options(direction left, right, up, down)
 # @ace_codegen_template("$SlideMove.slide("{direction}")")
@@ -130,7 +140,7 @@ func is_sliding() -> bool:
 
 # @ace_condition
 # @ace_name("Can Slide")
-# @ace_description("Whether the tile next to the character in a direction is open (not a wall).")
+# @ace_description("Whether the tile next to the character in a direction is open (not a wall). The words for direction are the constants DIRECTION_LEFT, DIRECTION_RIGHT, DIRECTION_UP, DIRECTION_DOWN.")
 # @ace_param_options(direction left, right, up, down)
 # @ace_codegen_template("$SlideMove.can_slide("{direction}")")
 func can_slide(direction: String) -> bool:

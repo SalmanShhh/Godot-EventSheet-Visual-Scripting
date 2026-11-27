@@ -51,6 +51,22 @@ signal on_cooldown_ended
 # @ace_category("Utility AI")
 signal on_no_valid_action
 
+# --- Choices (the words the choice parameters take; saved scenes keep them) ---
+## The word linear.
+const CURVE_LINEAR := "linear"
+## The word inverse.
+const CURVE_INVERSE := "inverse"
+## The word quadratic.
+const CURVE_QUADRATIC := "quadratic"
+## The word inverse_quadratic.
+const CURVE_INVERSE_QUADRATIC := "inverse_quadratic"
+## The word logistic.
+const CURVE_LOGISTIC := "logistic"
+## The word threshold.
+const CURVE_THRESHOLD := "threshold"
+## The word bell.
+const CURVE_BELL := "bell"
+
 # --- Choices (the stored words are the promise: saved scenes keep them) ---
 ## The highest-scoring action wins.
 const SELECTION_MODE_HIGHEST := "highest"
@@ -133,7 +149,7 @@ func add_action(action_name: String, cooldown: float, interruptible: bool, prior
 
 # @ace_action
 # @ace_name("Add Consideration")
-# @ace_description("Adds a scoring factor to an action: it reads a world-state input (0-1) and maps it through a response curve to a 0-1 score. An action's considerations all multiply together, so any near-zero factor vetoes it. weight sharpens (>1) or softens (<1) this factor; center + slope tune the logistic / threshold / bell curves.")
+# @ace_description("Adds a scoring factor to an action: it reads a world-state input (0-1) and maps it through a response curve to a 0-1 score. An action's considerations all multiply together, so any near-zero factor vetoes it. weight sharpens (>1) or softens (<1) this factor; center + slope tune the logistic / threshold / bell curves. The words for curve are the constants CURVE_LINEAR, CURVE_INVERSE, CURVE_QUADRATIC, CURVE_INVERSE_QUADRATIC, CURVE_LOGISTIC, CURVE_THRESHOLD, CURVE_BELL.")
 # @ace_param_options(curve linear, inverse, quadratic, inverse_quadratic, logistic, threshold, bell)
 # @ace_codegen_template("$UtilityBrain.add_consideration({action_name}, {input_key}, "{curve}", {weight}, {curve_center}, {curve_slope})")
 func add_consideration(action_name: String, input_key: String, curve: String, weight: float, curve_center: float, curve_slope: float) -> void:

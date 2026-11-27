@@ -39,6 +39,18 @@ const OVERFLOW_MODE_CLAMP := "clamp"
 const OVERFLOW_MODE_WRAP := "wrap"
 ## Apply no limit.
 const OVERFLOW_MODE_NONE := "none"
+## Add the buff's value to the stat.
+const BUFF_MODE_ADD := "add"
+## Multiply the stat by the buff's value.
+const BUFF_MODE_MULTIPLY := "multiply"
+## Replace the stat with the buff's value; the highest override wins.
+const BUFF_MODE_OVERRIDE := "override"
+## Fire when the stat rises past the value.
+const THRESHOLD_DIRECTION_RISING := "rising"
+## Fire when the stat falls past the value.
+const THRESHOLD_DIRECTION_FALLING := "falling"
+## Fire when the stat crosses the value either way.
+const THRESHOLD_DIRECTION_BOTH := "both"
 
 # --- Designer knobs (tune in the Inspector) ---
 ## Temporary buffs count down automatically every frame. Off: drive time yourself with Advance Timers (turn-based games advance per turn).

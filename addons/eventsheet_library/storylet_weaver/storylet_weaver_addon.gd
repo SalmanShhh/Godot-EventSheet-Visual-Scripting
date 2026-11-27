@@ -19,6 +19,24 @@ signal on_choice_made
 # @ace_category("Storylets")
 signal on_none_available
 
+# --- Choices (the words the choice parameters take; saved scenes keep them) ---
+## =  equal to.
+const OP := "="
+## Set to.
+const OP_SET := "set"
+## Increment by.
+const OP_INC := "inc"
+## Decrement by.
+const OP_DEC := "dec"
+## Toggle (0/1).
+const OP_TOGGLE := "toggle"
+## Delete key.
+const OP_DELETE := "delete"
+## was NOT drawn recently.
+const MODE_NOT_RECENT := "not_recent"
+## was drawn recently.
+const MODE_RECENT := "recent"
+
 ## One rule a storylet or a choice needs: a comparison against a quality, a chance gate or a recency gate.
 class StoryRequirement extends RefCounted:
 	## The quality the rule reads; unused by a chance or recency gate.
@@ -182,7 +200,7 @@ func set_storylet_max_plays(id: String, max_plays: float) -> void:
 
 # @ace_action
 # @ace_name("Add Requirement")
-# @ace_description("A rule this storylet needs to be eligible, e.g. quality "courage" >= 3. A missing quality counts as 0 (or "").")
+# @ace_description("A rule this storylet needs to be eligible, e.g. quality "courage" >= 3. A missing quality counts as 0 (or ""). The words for op are the constants OP, OP, OP, OP, OP, OP.")
 # @ace_param_options(op "="==  equal to, "!="=≠  not equal to, <=<  less than, "<="=≤  at most, >=>  greater than, ">="=≥  at least)
 # @ace_codegen_template("Storylets.add_requirement({id}, {quality_key}, "{op}", {value})")
 func add_requirement(id: String, quality_key: String, op: String, value: Variant) -> void:
@@ -204,7 +222,7 @@ func add_choice(id: String, choice_id: String, text: String) -> void:
 
 # @ace_action
 # @ace_name("Add Choice Requirement")
-# @ace_description("A rule that must pass for this choice to be OFFERED, e.g. quality "gold" >= 10. Choices whose rules fail are hidden. Add the choice first with Add Choice.")
+# @ace_description("A rule that must pass for this choice to be OFFERED, e.g. quality "gold" >= 10. Choices whose rules fail are hidden. Add the choice first with Add Choice. The words for op are the constants OP, OP, OP, OP, OP, OP.")
 # @ace_param_options(op "="==  equal to, "!="=≠  not equal to, <=<  less than, "<="=≤  at most, >=>  greater than, ">="=≥  at least)
 # @ace_codegen_template("Storylets.add_choice_requirement({id}, {choice_id}, {quality_key}, "{op}", {value})")
 func add_choice_requirement(id: String, choice_id: String, quality_key: String, op: String, value: Variant) -> void:
@@ -218,7 +236,7 @@ func add_choice_requirement(id: String, choice_id: String, quality_key: String, 
 
 # @ace_action
 # @ace_name("Add Choice Effect")
-# @ace_description("A quality change applied automatically when this choice is picked - so a choice carries its own consequence instead of a per-choice branch. Add the choice first with Add Choice.")
+# @ace_description("A quality change applied automatically when this choice is picked - so a choice carries its own consequence instead of a per-choice branch. Add the choice first with Add Choice. The words for op are the constants OP_SET, OP_INC, OP_DEC, OP_TOGGLE, OP_DELETE.")
 # @ace_param_options(op set=Set to, inc=Increment by, dec=Decrement by, toggle=Toggle (0/1), delete=Delete key)
 # @ace_codegen_template("Storylets.add_choice_effect({id}, {choice_id}, "{op}", {key}, {value})")
 func add_choice_effect(id: String, choice_id: String, op: String, key: String, value: Variant) -> void:
@@ -232,7 +250,7 @@ func add_choice_effect(id: String, choice_id: String, op: String, key: String, v
 
 # @ace_action
 # @ace_name("Add Effect")
-# @ace_description("A quality change applied automatically when this storylet is DRAWN - so a beat carries its own consequence. Define the storylet first.")
+# @ace_description("A quality change applied automatically when this storylet is DRAWN - so a beat carries its own consequence. Define the storylet first. The words for op are the constants OP_SET, OP_INC, OP_DEC, OP_TOGGLE, OP_DELETE.")
 # @ace_param_options(op set=Set to, inc=Increment by, dec=Decrement by, toggle=Toggle (0/1), delete=Delete key)
 # @ace_codegen_template("Storylets.add_effect({id}, "{op}", {key}, {value})")
 func add_effect(id: String, op: String, key: String, value: Variant) -> void:
@@ -251,7 +269,7 @@ func add_meta(id: String, key: String, value: Variant) -> void:
 
 # @ace_action
 # @ace_name("Add Requirement (Key vs Key)")
-# @ace_description("A rule comparing one quality against ANOTHER quality's value, e.g. gold >= price - so a storylet reacts to a relationship between stats without hard-coding the number.")
+# @ace_description("A rule comparing one quality against ANOTHER quality's value, e.g. gold >= price - so a storylet reacts to a relationship between stats without hard-coding the number. The words for op are the constants OP, OP, OP, OP, OP, OP.")
 # @ace_param_options(op "="==  equal to, "!="=≠  not equal to, <=<  less than, "<="=≤  at most, >=>  greater than, ">="=≥  at least)
 # @ace_codegen_template("Storylets.add_requirement_key({id}, {quality_key}, "{op}", {other_key})")
 func add_requirement_key(id: String, quality_key: String, op: String, other_key: String) -> void:
@@ -274,7 +292,7 @@ func add_chance_requirement(id: String, percent: float) -> void:
 
 # @ace_action
 # @ace_name("Add Recency Requirement")
-# @ace_description("An anti-repeat (or must-be-recent) gate by DRAW history: eligible only when this storylet was / was not among the last N drawn storylets.")
+# @ace_description("An anti-repeat (or must-be-recent) gate by DRAW history: eligible only when this storylet was / was not among the last N drawn storylets. The words for mode are the constants MODE_NOT_RECENT, MODE_RECENT.")
 # @ace_param_options(mode not_recent=was NOT drawn recently, recent=was drawn recently)
 # @ace_codegen_template("Storylets.add_recency_requirement({id}, "{mode}", {within})")
 func add_recency_requirement(id: String, mode: String, within: int) -> void:

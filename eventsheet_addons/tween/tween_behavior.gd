@@ -249,6 +249,16 @@ signal tween_finished
 ## Motion curve every tween uses (sine, bounce, elastic, and so on).
 @export_enum("linear", "sine", "quad", "cubic", "quart", "quint", "expo", "circ", "elastic", "back", "bounce", "spring") var transition: String = "sine"
 
+# --- Choices (the words the choice parameters take; saved scenes keep them) ---
+## The word absolute.
+const MODE_ABSOLUTE := "absolute"
+## The word relative.
+const MODE_RELATIVE := "relative"
+## The word to destination.
+const MODE_TO_DESTINATION := "to destination"
+## The word remap.
+const MODE_REMAP := "remap"
+
 ## The tween that is running now, so a new one can stop it.
 var _active_tween: Tween = null
 
@@ -332,7 +342,7 @@ func stop_tweens() -> void:
 
 # @ace_action
 # @ace_name("Tween Property Along Curve")
-# @ace_description("Tweens a number property along a Curve file you own, in one of four readings: the curve as the value, added to where the property was, from there to a destination, or the curve's 0 to 1 remapped between two numbers. The value the property had before the first of these touched it is remembered, so Tween Property Back can return to it.")
+# @ace_description("Tweens a number property along a Curve file you own, in one of four readings: the curve as the value, added to where the property was, from there to a destination, or the curve's 0 to 1 remapped between two numbers. The value the property had before the first of these touched it is remembered, so Tween Property Back can return to it. The words for mode are the constants MODE_ABSOLUTE, MODE_RELATIVE, MODE_TO_DESTINATION, MODE_REMAP.")
 # @ace_display_template("Tween [b]{property_path}[/b] along [b]{curve}[/b] over [b]{seconds}[/b] s")
 # @ace_param(property_path, desc: "The number property to move, as the Inspector spells it: rotation_degrees, modulate:a, position:x.")
 # @ace_param(final_value, desc: "The number the mode reads: the value, the offset, or the destination. Ignored by remap.")
@@ -347,7 +357,7 @@ func tween_along(property_path: String, final_value: float, seconds: float, curv
 
 # @ace_action
 # @ace_name("Tween Property And Wait")
-# @ace_description("The same curve tween, waited on: the rows under it run when the property has arrived. Use it to write a beat as one column of rows instead of a timer guessed to match.")
+# @ace_description("The same curve tween, waited on: the rows under it run when the property has arrived. Use it to write a beat as one column of rows instead of a timer guessed to match. The words for mode are the constants MODE_ABSOLUTE, MODE_RELATIVE, MODE_TO_DESTINATION, MODE_REMAP.")
 # @ace_display_template("Tween [b]{property_path}[/b] along [b]{curve}[/b] over [b]{seconds}[/b] s and wait")
 # @ace_param(property_path, desc: "The number property to move, as the Inspector spells it.")
 # @ace_param(final_value, desc: "The number the mode reads: the value, the offset, or the destination. Ignored by remap.")

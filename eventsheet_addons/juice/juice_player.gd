@@ -77,6 +77,48 @@ signal on_loop(loops_left: int)
 ## Optional: a moment file to play INSTEAD of the list. Drop one here to share a beat between objects; Save As File writes this list out as one.
 @export var moment_file: Resource = null
 
+# --- Choices (the words the choice parameters take; saved scenes keep them) ---
+## The word amount.
+const FIELD_AMOUNT := "amount"
+## The word effect.
+const FIELD_EFFECT := "effect"
+## The word seconds.
+const FIELD_SECONDS := "seconds"
+## The word delay.
+const FIELD_DELAY := "delay"
+## The word interval.
+const FIELD_INTERVAL := "interval"
+## The word repeat.
+const FIELD_REPEAT := "repeat"
+## The word chance.
+const FIELD_CHANCE := "chance"
+## The word loops.
+const FIELD_LOOPS := "loops"
+## The word clock.
+const FIELD_CLOCK := "clock"
+## The word min_strength.
+const FIELD_MIN_STRENGTH := "min_strength"
+## The word max_strength.
+const FIELD_MAX_STRENGTH := "max_strength"
+## The word game.
+const CLOCK_GAME := "game"
+## The word real.
+const CLOCK_REAL := "real"
+## The word audio.
+const CATEGORY_AUDIO := "audio"
+## The word transform.
+const CATEGORY_TRANSFORM := "transform"
+## The word camera.
+const CATEGORY_CAMERA := "camera"
+## The word screen.
+const CATEGORY_SCREEN := "screen"
+## The word pause.
+const CATEGORY_PAUSE := "pause"
+## The word loop.
+const CATEGORY_LOOP := "loop"
+## The word signal.
+const CATEGORY_SIGNAL := "signal"
+
 # --- The play: one list, one head, one strength ---
 # A play is a walk down the list, and its identity is a TOKEN. Every walk in flight holds one, and a
 # suspended step does nothing at all once its token has left the live list - which is how a stop, a
@@ -1391,7 +1433,7 @@ func disable_feedback(label: String) -> void:
 
 # @ace_action
 # @ace_name("Set Juice Card Field")
-# @ace_description("Retunes ONE value on one card: how much, how long, which extra word. The number box in the Inspector, as a row, so a weapon or a difficulty can move an amount without a second list.")
+# @ace_description("Retunes ONE value on one card: how much, how long, which extra word. The number box in the Inspector, as a row, so a weapon or a difficulty can move an amount without a second list. The words for field are the constants FIELD_AMOUNT, FIELD_EFFECT, FIELD_SECONDS, FIELD_DELAY, FIELD_INTERVAL, FIELD_REPEAT, FIELD_CHANCE, FIELD_LOOPS, FIELD_CLOCK, FIELD_MIN_STRENGTH, FIELD_MAX_STRENGTH.")
 # @ace_display_template("Set juice card [b]{label}[/b] [b]{field}[/b] to [b]{value}[/b]")
 # @ace_lift_example("$FeedbackPlayer.set_feedback_field([[label|name: "shake"]], [[field|name: "amount"]], [[value|expression: 0.5]])")
 # @ace_lift_example("$JuicePlayer.set_feedback_field([[label|name: "shake"]], [[field|name: "amount"]], [[value|expression: 0.5]])")
@@ -1413,7 +1455,7 @@ func set_feedback_field(label: String, field: String, value: Variant) -> void:
 
 # @ace_action
 # @ace_name("Set Juice Card Timing")
-# @ace_description("Moves one card in time: how long it waits first, how many times it repeats and how far apart, and which clock it counts on. The card's Timing foldout, as a row.")
+# @ace_description("Moves one card in time: how long it waits first, how many times it repeats and how far apart, and which clock it counts on. The card's Timing foldout, as a row. The words for clock are the constants CLOCK_GAME, CLOCK_REAL.")
 # @ace_display_template("Set juice card [b]{label}[/b] timing: delay [b]{delay}[/b] s, [b]{repeat}[/b] times")
 # @ace_lift_example("$FeedbackPlayer.set_feedback_timing([[label|name: "shake"]], [[delay|argument: 0.0]], [[repeat|argument: 1]], [[interval|argument: 0.0]], [[clock|name: "game"]])")
 # @ace_lift_example("$JuicePlayer.set_feedback_timing([[label|name: "shake"]], [[delay|argument: 0.0]], [[repeat|argument: 1]], [[interval|argument: 0.0]], [[clock|name: "game"]])")
@@ -1602,7 +1644,7 @@ func set_can_play_while_playing(answer: String) -> void:
 
 # @ace_action
 # @ace_name("Mute Juice Family")
-# @ace_description("Silences a whole family of cards at once - every screen effect, every camera move, every sound - and lets them back with the same row. THE accessibility option: one row per switch on the settings screen, and no card has to be found and unticked.")
+# @ace_description("Silences a whole family of cards at once - every screen effect, every camera move, every sound - and lets them back with the same row. THE accessibility option: one row per switch on the settings screen, and no card has to be found and unticked. The words for category are the constants CATEGORY_AUDIO, CATEGORY_TRANSFORM, CATEGORY_CAMERA, CATEGORY_SCREEN, CATEGORY_PAUSE, CATEGORY_LOOP, CATEGORY_SIGNAL.")
 # @ace_display_template("Mute juice family [b]{category}[/b]: [b]{muted}[/b]")
 # @ace_lift_example("$FeedbackPlayer.mute_feedback_category([[category|name: "screen"]], [[muted|argument: true]])")
 # @ace_lift_example("$JuicePlayer.mute_feedback_category([[category|name: "screen"]], [[muted|argument: true]])")
@@ -1620,7 +1662,7 @@ func mute_feedback_category(category: String, muted: bool) -> void:
 
 # @ace_action
 # @ace_name("Mute Juice Family On Channel")
-# @ace_description("The same switch, thrown for every Juice Player in a group at once - which is what a settings screen wants, because the option is about the game rather than about one object.")
+# @ace_description("The same switch, thrown for every Juice Player in a group at once - which is what a settings screen wants, because the option is about the game rather than about one object. The words for category are the constants CATEGORY_AUDIO, CATEGORY_TRANSFORM, CATEGORY_CAMERA, CATEGORY_SCREEN, CATEGORY_PAUSE, CATEGORY_LOOP, CATEGORY_SIGNAL.")
 # @ace_display_template("Mute juice family [b]{category}[/b] on channel [b]{channel}[/b]: [b]{muted}[/b]")
 # @ace_lift_example("$FeedbackPlayer.mute_category_on_channel([[channel|name: "juice_players"]], [[category|name: "screen"]], [[muted|argument: true]])")
 # @ace_lift_example("$JuicePlayer.mute_category_on_channel([[channel|name: "juice_players"]], [[category|name: "screen"]], [[muted|argument: true]])")
@@ -1836,7 +1878,7 @@ func feedback_label_at(position: int) -> String:
 
 # @ace_expression
 # @ace_name("Juice Card Field")
-# @ace_description("What one card says at one of its fields - the amount it does, how long it lasts, the extra word it carries. The read half of Set Juice Card Field, so a slider can be shown at the value the list actually holds.")
+# @ace_description("What one card says at one of its fields - the amount it does, how long it lasts, the extra word it carries. The read half of Set Juice Card Field, so a slider can be shown at the value the list actually holds. The words for field are the constants FIELD_AMOUNT, FIELD_EFFECT, FIELD_SECONDS, FIELD_DELAY, FIELD_INTERVAL, FIELD_REPEAT, FIELD_CHANCE, FIELD_LOOPS, FIELD_CLOCK, FIELD_MIN_STRENGTH, FIELD_MAX_STRENGTH.")
 # @ace_param(label, hint: juice_card_label, default: shake, desc: "The label of the card being read.")
 # @ace_param(field, hint: juice_card_field, options: amount|effect|seconds|delay|interval|repeat|chance|loops|clock|min_strength|max_strength, autocomplete: amount|effect|seconds|delay|interval|repeat|chance|loops|clock|min_strength|max_strength, default: amount, desc: "Which value to read.")
 # @ace_codegen_template("$JuicePlayer.feedback_field("{label}", "{field}")")

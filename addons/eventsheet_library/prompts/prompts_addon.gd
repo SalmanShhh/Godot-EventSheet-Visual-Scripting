@@ -43,6 +43,20 @@ signal sequence_finished(completed: bool)
 ## Warn about prompt scene and lane mistakes; turn off for release.
 @export var debug_mode: bool = false
 
+# --- Choices (the words the choice parameters take; saved scenes keep them) ---
+## The word auto.
+const DEVICE_NAME_AUTO := "auto"
+## The word keyboard.
+const DEVICE_NAME_KEYBOARD := "keyboard"
+## The word pad.
+const DEVICE_NAME_PAD := "pad"
+## The word xbox.
+const DEVICE_NAME_XBOX := "xbox"
+## The word playstation.
+const DEVICE_NAME_PLAYSTATION := "playstation"
+## The word nintendo.
+const DEVICE_NAME_NINTENDO := "nintendo"
+
 ## Grade word for a prompt answered perfectly.
 const GRADE_PERFECT: String = "perfect"
 ## Grade word for a prompt answered in time.
@@ -320,7 +334,7 @@ func prompt_on_beat(action: String, lane: Node) -> void:
 
 # @ace_action
 # @ace_name("Force Device")
-# @ace_description("Shows every glyph for one device from now on, whatever the player last touched - the options screen showing a layout on purpose, the tutorial card printed for a console. "auto" hands it back to the last input event.")
+# @ace_description("Shows every glyph for one device from now on, whatever the player last touched - the options screen showing a layout on purpose, the tutorial card printed for a console. "auto" hands it back to the last input event. The words for device_name are the constants DEVICE_NAME_AUTO, DEVICE_NAME_KEYBOARD, DEVICE_NAME_PAD, DEVICE_NAME_XBOX, DEVICE_NAME_PLAYSTATION, DEVICE_NAME_NINTENDO.")
 # @ace_display_template("Force device [b]{device_name}[/b]")
 # @ace_param_options(device_name auto, keyboard, pad, xbox, playstation, nintendo)
 # @ace_codegen_template("Prompts.force_device("{device_name}")")

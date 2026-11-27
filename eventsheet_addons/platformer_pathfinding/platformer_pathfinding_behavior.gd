@@ -152,6 +152,64 @@ signal nav_graph_cleared
 ## Print each route found (waypoints, cost) and each failure with its reason to the Output panel.
 @export var debug_log: bool = false
 
+# --- Choices (the words the choice parameters take; saved scenes keep them) ---
+## The word nearest.
+const MODE_NEAREST := "nearest"
+## The word reach.
+const MODE_REACH := "reach"
+## The word relaxed.
+const MODE_RELAXED := "relaxed"
+## The word strict.
+const MODE_STRICT := "strict"
+## The word balanced.
+const STRATEGY_BALANCED := "balanced"
+## The word shortest.
+const STRATEGY_SHORTEST := "shortest"
+## The word safest.
+const STRATEGY_SAFEST := "safest"
+## The word ground_hugging.
+const STRATEGY_GROUND_HUGGING := "ground_hugging"
+## The word no_falling.
+const STRATEGY_NO_FALLING := "no_falling"
+## The word walk_only.
+const STRATEGY_WALK_ONLY := "walk_only"
+## The word jump_height.
+const LIMIT_JUMP_HEIGHT := "jump_height"
+## The word jump_distance.
+const LIMIT_JUMP_DISTANCE := "jump_distance"
+## The word max_fall.
+const LIMIT_MAX_FALL := "max_fall"
+## The word left.
+const DIRECTION_LEFT := "left"
+## The word right.
+const DIRECTION_RIGHT := "right"
+## The word any.
+const SIDE_ANY := "any"
+## The word left.
+const SIDE_LEFT := "left"
+## The word right.
+const SIDE_RIGHT := "right"
+## The word distance.
+const SETTING_DISTANCE := "distance"
+## The word cooldown.
+const SETTING_COOLDOWN := "cooldown"
+## The word give_up_time.
+const SETTING_GIVE_UP_TIME := "give_up_time"
+## The word nearest.
+const WHICH_NEAREST := "nearest"
+## The word furthest.
+const WHICH_FURTHEST := "furthest"
+## The word solid.
+const STATE_SOLID := "solid"
+## The word clear.
+const STATE_CLEAR := "clear"
+## The word jump_thru.
+const STATE_JUMP_THRU := "jump_thru"
+## The word slope_left.
+const STATE_SLOPE_LEFT := "slope_left"
+## The word slope_right.
+const STATE_SLOPE_RIGHT := "slope_right"
+
 ## The version written into an exported obstacle map, and the newest one this behaviour reads.
 const OBSTACLE_MAP_VERSION: int = 1
 ## One link out of a cell in the search graph.
@@ -881,7 +939,7 @@ func regenerate_nav_graph() -> void:
 # @ace_action
 # @ace_featured
 # @ace_name("Find Path To")
-# @ace_description("Routes to a world position and starts moving. Mode "reach" fails (On Path Failed) when the spot itself is unreachable; "nearest" never fails on a cut-off spot - it goes as close as it can get. Fires On Path Found / On Path Failed.")
+# @ace_description("Routes to a world position and starts moving. Mode "reach" fails (On Path Failed) when the spot itself is unreachable; "nearest" never fails on a cut-off spot - it goes as close as it can get. Fires On Path Found / On Path Failed. The words for mode are the constants MODE_NEAREST, MODE_REACH.")
 # @ace_display_template("Find path to ([b]{x}[/b], [b]{y}[/b]) mode [b]{mode}[/b]")
 # @ace_param_options(mode nearest, reach)
 # @ace_codegen_template("$PlatformerPathfinding.find_path_to({x}, {y}, "{mode}")")
@@ -893,7 +951,7 @@ func find_path_to(x: float, y: float, mode: String) -> void:
 
 # @ace_action
 # @ace_name("Find Path To Node")
-# @ace_description("Routes to another node's position AND keeps following it: the route auto-refreshes every Repath Interval once the node has moved Repath Threshold pixels (firing On Repath) - one call chases forever. Stop Pathfinding ends the follow.")
+# @ace_description("Routes to another node's position AND keeps following it: the route auto-refreshes every Repath Interval once the node has moved Repath Threshold pixels (firing On Repath) - one call chases forever. Stop Pathfinding ends the follow. The words for mode are the constants MODE_NEAREST, MODE_REACH.")
 # @ace_param_options(mode nearest, reach)
 # @ace_codegen_template("$PlatformerPathfinding.find_path_to_node({target}, "{mode}")")
 func find_path_to_node(target: Node, mode: String) -> void:
@@ -947,7 +1005,7 @@ func set_ledge_leniency(pixels: float) -> void:
 
 # @ace_action
 # @ace_name("Set Jump Positioning")
-# @ace_description("relaxed (default): leap the moment a jump leg starts. strict: walk onto the exact takeoff spot first - slower but precise on tight arcs.")
+# @ace_description("relaxed (default): leap the moment a jump leg starts. strict: walk onto the exact takeoff spot first - slower but precise on tight arcs. The words for mode are the constants MODE_RELAXED, MODE_STRICT.")
 # @ace_param_options(mode relaxed, strict)
 # @ace_codegen_template("$PlatformerPathfinding.set_jump_positioning("{mode}")")
 func set_jump_positioning(mode: String) -> void:
@@ -1076,7 +1134,7 @@ func is_enabled() -> bool:
 
 # @ace_action
 # @ace_name("Set Path Strategy")
-# @ace_description("How routes are picked from now on: balanced, shortest (fewest pixels, long jumps welcome), safest (short hops over long leaps and deep drops), ground_hugging (walks whenever it can), no_falling (never descends by air) or walk_only (never leaves its platform except by portal or moving platform).")
+# @ace_description("How routes are picked from now on: balanced, shortest (fewest pixels, long jumps welcome), safest (short hops over long leaps and deep drops), ground_hugging (walks whenever it can), no_falling (never descends by air) or walk_only (never leaves its platform except by portal or moving platform). The words for strategy are the constants STRATEGY_BALANCED, STRATEGY_SHORTEST, STRATEGY_SAFEST, STRATEGY_GROUND_HUGGING, STRATEGY_NO_FALLING, STRATEGY_WALK_ONLY.")
 # @ace_display_template("Pick routes by [b]{strategy}[/b]")
 # @ace_param(strategy, options: balanced|shortest|safest|ground_hugging|no_falling|walk_only, default_word: balanced, desc: "The strategy routes are priced by.")
 # @ace_codegen_template("$PlatformerPathfinding.set_path_strategy("{strategy}")")
@@ -1101,7 +1159,7 @@ func set_drift_repath_distance(pixels: float) -> void:
 
 # @ace_action
 # @ace_name("Set Movement Limit")
-# @ace_description("Overrides a movement limit the graph is built from instead of deriving it from the movement sibling: jump_height, jump_distance (pixels, 0 = derive again) or max_fall (pixels, negative = no limit). Regenerate Nav Graph afterwards.")
+# @ace_description("Overrides a movement limit the graph is built from instead of deriving it from the movement sibling: jump_height, jump_distance (pixels, 0 = derive again) or max_fall (pixels, negative = no limit). Regenerate Nav Graph afterwards. The words for limit are the constants LIMIT_JUMP_HEIGHT, LIMIT_JUMP_DISTANCE, LIMIT_MAX_FALL.")
 # @ace_param(limit, options: jump_height|jump_distance|max_fall, default_word: jump_height, desc: "Which limit to override.")
 # @ace_param(value, desc: "The new limit in pixels.")
 # @ace_codegen_template("$PlatformerPathfinding.set_movement_limit("{limit}", {value})")
@@ -1202,7 +1260,7 @@ func patrol_direction() -> int:
 
 # @ace_action
 # @ace_name("Find Path To Nearest Ledge")
-# @ace_description("Routes to the nearest edge of the agent's platform in a direction, stopping Distance pixels back from it. Fails (On Path Failed, reason no_ledge) when the platform has no ledge that way.")
+# @ace_description("Routes to the nearest edge of the agent's platform in a direction, stopping Distance pixels back from it. Fails (On Path Failed, reason no_ledge) when the platform has no ledge that way. The words for direction are the constants DIRECTION_LEFT, DIRECTION_RIGHT.")
 # @ace_param(direction, options: left|right, default_word: left, desc: "Which way to look for the ledge.")
 # @ace_param(distance, desc: "Pixels to stop short of the edge.")
 # @ace_codegen_template("$PlatformerPathfinding.find_path_to_nearest_ledge("{direction}", {distance})")
@@ -1222,7 +1280,7 @@ func find_path_to_nearest_ledge(direction: String, distance: float) -> void:
 
 # @ace_action
 # @ace_name("Find Path To Node Side")
-# @ace_description("Routes to a spot BESIDE a node instead of onto it, Distance pixels clear of it: left, right, or any (the nearer side, falling back to the other when it has no ground). Fires On Node Side Reached on arrival there; Reached Side says which side.")
+# @ace_description("Routes to a spot BESIDE a node instead of onto it, Distance pixels clear of it: left, right, or any (the nearer side, falling back to the other when it has no ground). Fires On Node Side Reached on arrival there; Reached Side says which side. The words for side are the constants SIDE_ANY, SIDE_LEFT, SIDE_RIGHT.")
 # @ace_param(target, desc: "The node to stand beside.")
 # @ace_param(side, options: any|left|right, default_word: any, desc: "Which side of it to stand on.")
 # @ace_param(distance, desc: "Gap in pixels between the two (one tile is always kept).")
@@ -1390,7 +1448,7 @@ func set_multi_agent_avoidance(enabled: bool) -> void:
 
 # @ace_action
 # @ace_name("Set Separation Setting")
-# @ace_description("Changes an idle separation setting: distance (personal space in pixels, 0 = off), cooldown (seconds of rest after giving up) or give_up_time (seconds of trying before resting).")
+# @ace_description("Changes an idle separation setting: distance (personal space in pixels, 0 = off), cooldown (seconds of rest after giving up) or give_up_time (seconds of trying before resting). The words for setting are the constants SETTING_DISTANCE, SETTING_COOLDOWN, SETTING_GIVE_UP_TIME.")
 # @ace_param(setting, options: distance|cooldown|give_up_time, default_word: distance, desc: "Which setting to change.")
 # @ace_param(value, desc: "Its new value.")
 # @ace_codegen_template("$PlatformerPathfinding.set_separation_setting("{setting}", {value})")
@@ -1474,7 +1532,7 @@ func is_position_on_same_platform(x: float, y: float) -> bool:
 
 # @ace_expression
 # @ace_name("Nearest Ledge")
-# @ace_description("The nearest ledge of the agent's platform in a direction (zero when there is none).")
+# @ace_description("The nearest ledge of the agent's platform in a direction (zero when there is none). The words for direction are the constants DIRECTION_LEFT, DIRECTION_RIGHT.")
 # @ace_param(direction, options: left|right, default_word: left, desc: "Which way to look.")
 # @ace_codegen_template("$PlatformerPathfinding.nearest_ledge("{direction}")")
 func nearest_ledge(direction: String) -> Vector2:
@@ -1483,7 +1541,7 @@ func nearest_ledge(direction: String) -> Vector2:
 
 # @ace_expression
 # @ace_name("Node On Platform")
-# @ace_description("The nearest or furthest node of a group that stands on the agent's own platform (reachable by walking alone), or null - pick a target it can walk to.")
+# @ace_description("The nearest or furthest node of a group that stands on the agent's own platform (reachable by walking alone), or null - pick a target it can walk to. The words for which are the constants WHICH_NEAREST, WHICH_FURTHEST.")
 # @ace_param(group, default_code: "", desc: "The group to search, in quotes.")
 # @ace_param(which, options: nearest|furthest, default_word: nearest, desc: "Nearest or furthest.")
 # @ace_codegen_template("$PlatformerPathfinding.node_on_platform({group}, "{which}")")
@@ -1529,7 +1587,7 @@ func create_obstacle_map(width: int, height: int, cell_size: float) -> void:
 
 # @ace_action
 # @ace_name("Set Tile State")
-# @ace_description("Overrides one cell of the map: solid, clear, jump_thru (a one-way platform), slope_left (rises to the right) or slope_right (rises to the left). Overrides survive Regenerate; call Regenerate Nav Graph after a batch of them.")
+# @ace_description("Overrides one cell of the map: solid, clear, jump_thru (a one-way platform), slope_left (rises to the right) or slope_right (rises to the left). Overrides survive Regenerate; call Regenerate Nav Graph after a batch of them. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT.")
 # @ace_param(gx, desc: "Grid X.")
 # @ace_param(gy, desc: "Grid Y.")
 # @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right, default_word: solid, desc: "The cell's new state.")
@@ -1542,7 +1600,7 @@ func set_tile_state(gx: int, gy: int, state: String) -> void:
 
 # @ace_action
 # @ace_name("Set Tile State At")
-# @ace_description("Set Tile State for the cell under a world position.")
+# @ace_description("Set Tile State for the cell under a world position. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT.")
 # @ace_param(x, desc: "World X.")
 # @ace_param(y, desc: "World Y.")
 # @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right, default_word: solid, desc: "The cell's new state.")
@@ -1682,7 +1740,7 @@ func tile_state(gx: int, gy: int) -> String:
 
 # @ace_condition
 # @ace_name("Tile Has State")
-# @ace_description("True when a cell has the given state.")
+# @ace_description("True when a cell has the given state. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT.")
 # @ace_param(gx, desc: "Grid X.")
 # @ace_param(gy, desc: "Grid Y.")
 # @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right, default_word: solid, desc: "The state to test for.")
@@ -1692,7 +1750,7 @@ func tile_has_state(gx: int, gy: int, state: String) -> bool:
 
 # @ace_condition
 # @ace_name("Tile Has State At")
-# @ace_description("True when the cell under a world position has the given state.")
+# @ace_description("True when the cell under a world position has the given state. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT.")
 # @ace_param(x, desc: "World X.")
 # @ace_param(y, desc: "World Y.")
 # @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right, default_word: solid, desc: "The state to test for.")

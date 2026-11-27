@@ -62,6 +62,32 @@ signal generation_complete
 ## Warn about walker mistakes and empty maps; turn off for release.
 @export var debug_mode: bool = false
 
+# --- Choices (the words the choice parameters take; saved scenes keep them) ---
+## Internal seeded.
+const SOURCE_INTERNAL := "internal"
+## Shared Advanced Random.
+const SOURCE_SHARED := "shared"
+## Injected queue.
+const SOURCE_INJECTED := "injected"
+## Cave.
+const PRESET_CAVE := "cave"
+## Corridors.
+const PRESET_CORRIDORS := "corridors"
+## River.
+const PRESET_RIVER := "river"
+## Ore Vein.
+const PRESET_ORE_VEIN := "ore_vein"
+## Lightning.
+const PRESET_LIGHTNING := "lightning"
+## Blob.
+const PRESET_BLOB := "blob"
+## Any cell.
+const PLACEMENT_ANY := "any"
+## Interior only.
+const PLACEMENT_INTERIOR := "interior"
+## Edge only.
+const PLACEMENT_EDGE := "edge"
+
 # A heading picks its neighbour by ROUNDING THE DEGREES into
 # this table rather than by taking a cosine, so the same heading picks the same neighbour on
 # every platform a game exports to - which is the whole determinism promise in one line.
@@ -449,7 +475,7 @@ func set_seed(seed_text: String) -> void:
 
 # @ace_action
 # @ace_name("Set Random Source")
-# @ace_description("Switches where every decision draws from: this pack's own seeded generator, the shared Advanced Random autoload, or the injected queue Inject Random fills. You may switch mid-run, so one pass can audit through a single stream while the rest does not.")
+# @ace_description("Switches where every decision draws from: this pack's own seeded generator, the shared Advanced Random autoload, or the injected queue Inject Random fills. You may switch mid-run, so one pass can audit through a single stream while the rest does not. The words for source are the constants SOURCE_INTERNAL, SOURCE_SHARED, SOURCE_INJECTED.")
 # @ace_display_template("draw randomness from [b]{source}[/b]")
 # @ace_param_options(source internal=Internal seeded, shared=Shared Advanced Random, injected=Injected queue)
 # @ace_codegen_template("DrunkenWalkers.set_random_source("{source}")")
@@ -493,7 +519,7 @@ func add_walker(id: String, start_x: int, start_y: int, steps: int, directions: 
 # @ace_action
 # @ace_featured
 # @ace_name("Add Walker From Preset")
-# @ace_description("Registers a walker from a named shape recipe - Cave, Corridors, River, Ore Vein, Lightning or Blob - so you only need a position, a tag and a carve value. Tune it afterwards with the Set Walker actions.")
+# @ace_description("Registers a walker from a named shape recipe - Cave, Corridors, River, Ore Vein, Lightning or Blob - so you only need a position, a tag and a carve value. Tune it afterwards with the Set Walker actions. The words for preset are the constants PRESET_CAVE, PRESET_CORRIDORS, PRESET_RIVER, PRESET_ORE_VEIN, PRESET_LIGHTNING, PRESET_BLOB.")
 # @ace_display_template("add a [b]{preset}[/b] walker [b]{id}[/b] at ([b]{start_x}[/b], [b]{start_y}[/b]), tagged [b]{tag}[/b], carving [b]{carve_value}[/b]")
 # @ace_param_options(preset cave=Cave, corridors=Corridors, river=River, ore_vein=Ore Vein, lightning=Lightning, blob=Blob)
 # @ace_codegen_template("DrunkenWalkers.add_walker_from_preset("{preset}", {id}, {start_x}, {start_y}, {tag}, {carve_value})")
@@ -761,7 +787,7 @@ func drop_marks_along_walk(walker_id: String, tag: String, every_steps: int, cha
 # @ace_action
 # @ace_featured
 # @ace_name("Scatter Marks")
-# @ace_description("Places up to this many tagged marks on cells holding a value, filtered by the placement rule and thinned by minimum spacing. The count is a maximum, not a promise: tight spacing or a rule that matches almost nothing places fewer, and Debug Mode says how many it managed.")
+# @ace_description("Places up to this many tagged marks on cells holding a value, filtered by the placement rule and thinned by minimum spacing. The count is a maximum, not a promise: tight spacing or a rule that matches almost nothing places fewer, and Debug Mode says how many it managed. The words for placement are the constants PLACEMENT_ANY, PLACEMENT_INTERIOR, PLACEMENT_EDGE.")
 # @ace_display_template("scatter [b]{count}[/b] [b]{tag}[/b] marks on [b]{value}[/b] cells, [b]{placement}[/b], spacing [b]{min_spacing}[/b]")
 # @ace_param_options(placement any=Any cell, interior=Interior only, edge=Edge only)
 # @ace_codegen_template("DrunkenWalkers.scatter_marks({count}, {tag}, {value}, "{placement}", {min_spacing})")

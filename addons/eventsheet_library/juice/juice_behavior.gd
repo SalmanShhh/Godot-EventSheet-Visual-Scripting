@@ -282,6 +282,42 @@ signal moment_skipped(moment_name: String)
 # @ace_name("On Moment Finished")
 signal moment_finished(moment_name: String, cut_short: bool)
 
+# --- Choices (the words the choice parameters take; saved scenes keep them) ---
+## The word realtime.
+const DURATION_CLOCK_REALTIME := "realtime"
+## The word gametime.
+const DURATION_CLOCK_GAMETIME := "gametime"
+## The word reducing.
+const MODE_REDUCING := "reducing"
+## The word constant.
+const MODE_CONSTANT := "constant"
+## The word linear.
+const FALLOFF_LINEAR := "linear"
+## The word smooth.
+const FALLOFF_SMOOTH := "smooth"
+## The word none.
+const FALLOFF_NONE := "none"
+## The word shake.
+const VERB_SHAKE := "shake"
+## The word hitstop.
+const VERB_HITSTOP := "hitstop"
+## The word slowmo.
+const VERB_SLOWMO := "slowmo"
+## The word flash.
+const VERB_FLASH := "flash"
+## The word punch.
+const VERB_PUNCH := "punch"
+## The word zoom.
+const VERB_ZOOM := "zoom"
+## The word shockwave.
+const VERB_SHOCKWAVE := "shockwave"
+## The word chromatic.
+const VERB_CHROMATIC := "chromatic"
+## The word pulse.
+const VERB_PULSE := "pulse"
+## The word hold.
+const VERB_HOLD := "hold"
+
 # --- Choices (the stored words are the promise: saved scenes keep them) ---
 ## The slowmo fade curve - a steady fade.
 const SLOWMO_TRANS_LINEAR := "linear"
@@ -1179,7 +1215,7 @@ func spring_squash(stretch: float) -> void:
 
 # @ace_action
 # @ace_name("Slowmo")
-# @ace_description("Briefly slows Engine.time_scale to the target, HOLDS for a duration, then eases back to normal. Fade curves are Inspector knobs; pick whether the hold counts in realtime or scaled game time. Emits On Slowmo Finished.")
+# @ace_description("Briefly slows Engine.time_scale to the target, HOLDS for a duration, then eases back to normal. Fade curves are Inspector knobs; pick whether the hold counts in realtime or scaled game time. Emits On Slowmo Finished. The words for duration_clock are the constants DURATION_CLOCK_REALTIME, DURATION_CLOCK_GAMETIME.")
 # @ace_param_options(duration_clock realtime, gametime)
 # @ace_codegen_template("$JuiceBehavior.slowmo({target_scale}, {hold_duration}, "{duration_clock}")")
 func slowmo(target_scale: float, hold_duration: float, duration_clock: String) -> void:
@@ -1390,7 +1426,7 @@ func chromatic_kick(strength: float, seconds: float) -> void:
 
 # @ace_action
 # @ace_name("Chromatic Shake")
-# @ace_description("Shakes the screen's color channels apart along a direction that moves - the Shake you feel, on the screen instead of the camera. Magnitude is how far they split in pixels, and a reducing shake falls to nothing over the duration while a constant one holds and then stops dead. Leave the angle below zero and the split wanders with the same noise the camera shake uses (so the two read as one hit); give it an angle and the split stays on that line and only breathes. Firing again restarts it. Slow motion glides it, a hitstop freezes it.")
+# @ace_description("Shakes the screen's color channels apart along a direction that moves - the Shake you feel, on the screen instead of the camera. Magnitude is how far they split in pixels, and a reducing shake falls to nothing over the duration while a constant one holds and then stops dead. Leave the angle below zero and the split wanders with the same noise the camera shake uses (so the two read as one hit); give it an angle and the split stays on that line and only breathes. Firing again restarts it. Slow motion glides it, a hitstop freezes it. The words for mode are the constants MODE_REDUCING, MODE_CONSTANT.")
 # @ace_display_template("Chromatic shake [b]{magnitude}[/b] px for [b]{duration}[/b] s")
 # @ace_param_options(mode reducing, constant)
 # @ace_codegen_template("$JuiceBehavior.chromatic_shake({magnitude}, {duration}, "{mode}", {angle_degrees})")
@@ -1513,7 +1549,7 @@ func define_moment(moment_name: String, moment: Resource) -> void:
 
 # @ace_action
 # @ace_name("Play Moment At")
-# @ace_description("Plays a moment WHERE it happened, so a far explosion is felt less than a near one. The strength falls off between that place and the edge of the range, and a moment that happened outside the range does not play at all. Leave the range at 0 and it plays everywhere at full strength, exactly as Moment does. Whatever is left is scaled by Set Moment Strength before anything is felt.")
+# @ace_description("Plays a moment WHERE it happened, so a far explosion is felt less than a near one. The strength falls off between that place and the edge of the range, and a moment that happened outside the range does not play at all. Leave the range at 0 and it plays everywhere at full strength, exactly as Moment does. Whatever is left is scaled by Set Moment Strength before anything is felt. The words for falloff are the constants FALLOFF_LINEAR, FALLOFF_SMOOTH, FALLOFF_NONE.")
 # @ace_display_template("Moment [b]{moment_name}[/b] at [b]{strength}[/b] from [i]{from}[/i] within [b]{within}[/b]")
 # @ace_param(moment_name, default: impact, desc: "Which moment to play - the same name Moment takes.")
 # @ace_param(strength, default: 1, desc: "The strength before the distance is paid for. 1 is the moment as written.")
@@ -1545,7 +1581,7 @@ func moment_strength() -> float:
 
 # @ace_action
 # @ace_name("Moment Step")
-# @ace_description("Plays ONE step of a moment - a shake, a hitstop, a flash - with no file behind it. It is the same step a moment file holds, played by the same code, so a beat written as rows and a beat kept as a file do exactly the same thing. Use it to write a beat straight into a sheet, or as the step of a Moment block. The strength scales the amounts a player sees, exactly as it does inside a moment.")
+# @ace_description("Plays ONE step of a moment - a shake, a hitstop, a flash - with no file behind it. It is the same step a moment file holds, played by the same code, so a beat written as rows and a beat kept as a file do exactly the same thing. Use it to write a beat straight into a sheet, or as the step of a Moment block. The strength scales the amounts a player sees, exactly as it does inside a moment. The words for verb are the constants VERB_SHAKE, VERB_HITSTOP, VERB_SLOWMO, VERB_FLASH, VERB_PUNCH, VERB_ZOOM, VERB_SHOCKWAVE, VERB_CHROMATIC, VERB_PULSE, VERB_HOLD.")
 # @ace_display_template("Moment step [b]{verb}[/b] at [b]{amount}[/b] for [b]{seconds}[/b] s")
 # @ace_param(verb, options: shake|hitstop|slowmo|flash|punch|zoom|shockwave|chromatic|pulse|hold, default: shake, desc: "What this step does - the same ten words a moment file's steps are made of.")
 # @ace_param(amount, default: 0.4, desc: "How much of it: a shake's amplitude, a flash's distance towards the colour, a zoom's percentage, for a hitstop the time scale it freezes to (0 is a full stop, 1 changes nothing), and for a slowmo the time scale it slows to.")

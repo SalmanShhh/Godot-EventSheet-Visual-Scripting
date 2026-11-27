@@ -42,6 +42,22 @@ signal assist_changed(assist_name: String, on: bool)
 ## File every save and load uses (default user://settings.cfg). An autoload has no Inspector: keep the node in a scene, or set it in code before Load All Settings.
 @export var settings_file: String = "user://settings.cfg"
 
+# --- Choices (the words the choice parameters take; saved scenes keep them) ---
+## Percent (0-100 slider).
+const KIND_PERCENT := "percent"
+## Yes/No.
+const KIND_TOGGLE := "toggle"
+## Choice.
+const KIND_CHOICE := "choice"
+## Number.
+const KIND_NUMBER := "number"
+## Text.
+const KIND_TEXT := "text"
+## Keyboard or mouse.
+const DEVICE_KEYBOARD := "keyboard"
+## Gamepad.
+const DEVICE_PAD := "pad"
+
 # Where settings live on disk: the same FILE the built-in Save Setting action writes to, in a
 # section named "settings". That action takes its section as a parameter (and offers "audio"),
 # so point it at "settings" if you want values saved that way picked up here.
@@ -183,7 +199,7 @@ var _assists: Dictionary = {}
 # @ace_action
 # @ace_featured
 # @ace_name("Declare Setting")
-# @ace_description("Names a setting once: what it is called, what it defaults to, what kind of value it is, (for a Choice) its options, and which options page it belongs on. Everything else in this pack reads that declaration, so the default is written in one place instead of at five call sites - and this is the single entry point for an option of ANY kind. Difficulty, motion blur and invert Y are one Declare row each plus one On Setting Changed reaction whose rows do what the setting means; the menu control, the saved value, Reset To Defaults and the boot re-apply all follow from the declaration, with nothing to register anywhere else. Declaring the same name again replaces the declaration and keeps any value already set.")
+# @ace_description("Names a setting once: what it is called, what it defaults to, what kind of value it is, (for a Choice) its options, and which options page it belongs on. Everything else in this pack reads that declaration, so the default is written in one place instead of at five call sites - and this is the single entry point for an option of ANY kind. Difficulty, motion blur and invert Y are one Declare row each plus one On Setting Changed reaction whose rows do what the setting means; the menu control, the saved value, Reset To Defaults and the boot re-apply all follow from the declaration, with nothing to register anywhere else. Declaring the same name again replaces the declaration and keeps any value already set. The words for kind are the constants KIND_PERCENT, KIND_TOGGLE, KIND_CHOICE, KIND_NUMBER, KIND_TEXT.")
 # @ace_display_template("Declare setting [b]{setting_name}[/b] default [b]{default_value}[/b] kind [b]{kind}[/b]")
 # @ace_lift_example("$Settings.declare_setting([[setting_name|argument: "master_volume"]], [[default_value|argument: 80]], [[kind|argument: "percent"]])")
 # @ace_lift_example("$Services/Settings.declare_setting([[setting_name|argument: "master_volume"]], [[default_value|argument: 80]], [[kind|argument: "percent"]])")
@@ -673,7 +689,7 @@ func pending_binding_words() -> String:
 
 # @ace_action
 # @ace_name("Listen For A New Binding")
-# @ace_description("Waits for the player to press a key, a mouse button or a pad button, and gives it to this control. A free key is bound straight away and On Binding Changed fires; a key something else already answers to fires On Binding Conflict instead and waits for one of the three answers. Only presses on the device you name are taken, so listening for a pad button is not ended by someone resting on the keyboard. Escape stops the listening and fires On Binding Cancelled, and a plain left click is left to the page so Swap, Reset and the other binding buttons still work.")
+# @ace_description("Waits for the player to press a key, a mouse button or a pad button, and gives it to this control. A free key is bound straight away and On Binding Changed fires; a key something else already answers to fires On Binding Conflict instead and waits for one of the three answers. Only presses on the device you name are taken, so listening for a pad button is not ended by someone resting on the keyboard. Escape stops the listening and fires On Binding Cancelled, and a plain left click is left to the page so Swap, Reset and the other binding buttons still work. The words for device are the constants DEVICE_KEYBOARD, DEVICE_PAD.")
 # @ace_display_template("Listen for a new [b]{device}[/b] binding for [b]{action}[/b]")
 # @ace_lift_example("$Settings.listen_for_binding([[action|argument: "jump"]], [[device|argument: "keyboard"]])")
 # @ace_lift_example("$Services/Settings.listen_for_binding([[action|argument: "jump"]], [[device|argument: "keyboard"]])")

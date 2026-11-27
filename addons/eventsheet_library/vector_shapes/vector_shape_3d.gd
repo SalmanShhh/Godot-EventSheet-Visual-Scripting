@@ -7,6 +7,18 @@ class_name VectorShape3D
 extends MeshInstance3D
 ## The base every 3D Vector Shape node extends: one quad wearing the spatial half of the pack's distance-field shader when the shape is flat or a billboard, a real mesh when it is volumetric, and the rows that drive both. Add a Line 3D, Disc 3D, Rect 3D, Polygon 3D, Polyline 3D, Regular Polygon 3D, Sphere, Cuboid, Cone or Torus from the Create Node dialog rather than this.
 
+# --- Choices (the words the choice parameters take; saved scenes keep them) ---
+## The word world.
+const UNIT_WORLD := "world"
+## The word screen.
+const UNIT_SCREEN := "screen"
+## The word plain.
+const STYLE_PLAIN := "plain"
+## The word angled.
+const STYLE_ANGLED := "angled"
+## The word rounded.
+const STYLE_ROUNDED := "rounded"
+
 ## Word lists shared by 2D and 3D shapes for shader arms and dash pictures.
 const SHAPE_WORDS := preload("res://eventsheet_addons/vector_shapes/vector_shape_2d.gd")
 
@@ -262,7 +274,7 @@ func _gradient_texture() -> Texture2D:
 # @ace_action
 # @ace_featured
 # @ace_name("Set Thickness")
-# @ace_description("Sets how wide the shape's stroke is, and what the number means. In world units it is the node's own units, so a rope five centimetres thick is 0.05; in screen units it is pixels, and the shape keeps that weight however far away the camera gets - which is what a range ring or a gizmo line wants.")
+# @ace_description("Sets how wide the shape's stroke is, and what the number means. In world units it is the node's own units, so a rope five centimetres thick is 0.05; in screen units it is pixels, and the shape keeps that weight however far away the camera gets - which is what a range ring or a gizmo line wants. The words for unit are the constants UNIT_WORLD, UNIT_SCREEN.")
 # @ace_display_template("Set thickness to [b]{value}[/b] [b]{unit}[/b]")
 # @ace_param_options(unit world, screen)
 # @ace_codegen_template("$VectorShape3D.set_thickness({value}, "{unit}")")
@@ -341,7 +353,7 @@ func set_fill(filled: bool) -> void:
 # @ace_action
 # @ace_featured
 # @ace_name("Set Dashes")
-# @ace_description("Sets the dash pattern in one row: how many dashes fit the shape however long it is, how much of each period is gap, and which of the three ends the dashes wear.")
+# @ace_description("Sets the dash pattern in one row: how many dashes fit the shape however long it is, how much of each period is gap, and which of the three ends the dashes wear. The words for style are the constants STYLE_PLAIN, STYLE_ANGLED, STYLE_ROUNDED.")
 # @ace_display_template("Set dashes [b]{count}[/b], spacing [b]{spacing}[/b], [b]{style}[/b]")
 # @ace_param_options(style plain, angled, rounded)
 # @ace_codegen_template("$VectorShape3D.set_dashes({count}, {spacing}, "{style}")")

@@ -53,6 +53,16 @@ var to_x: float = 0.0
 ## Y position of the tile the current step is heading to, in pixels.
 var to_y: float = 0.0
 
+# --- Choices (the words the choice parameters take; saved scenes keep them) ---
+## The word left.
+const DIRECTION_LEFT := "left"
+## The word right.
+const DIRECTION_RIGHT := "right"
+## The word up.
+const DIRECTION_UP := "up"
+## The word down.
+const DIRECTION_DOWN := "down"
+
 # @ace_hidden
 func to_grid(pixel: Vector2) -> Vector2i:
 	return Vector2i(roundi(pixel.x / tile_size), roundi(pixel.y / tile_size))
@@ -94,7 +104,7 @@ func _ready() -> void:
 
 # @ace_action
 # @ace_name("Simulate Step")
-# @ace_description("Steps one tile in a direction: left, right, up or down (simulate control).")
+# @ace_description("Steps one tile in a direction: left, right, up or down (simulate control). The words for direction are the constants DIRECTION_LEFT, DIRECTION_RIGHT, DIRECTION_UP, DIRECTION_DOWN.")
 # @ace_param_options(direction left, right, up, down)
 # @ace_codegen_template("$TileMovementBehavior.simulate_step("{direction}")")
 func simulate_step(direction: String) -> void:

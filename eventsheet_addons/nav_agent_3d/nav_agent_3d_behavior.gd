@@ -49,6 +49,12 @@ signal waypoint_reached
 ## Agents steer around each other (applies to the built-in driver; a driver sibling owns its own velocity).
 @export var avoidance_enabled: bool = false
 
+# --- Choices (the words the choice parameters take; saved scenes keep them) ---
+## The word nearest.
+const MODE_NEAREST := "nearest"
+## The word reach.
+const MODE_REACH := "reach"
+
 # --- Internal state ---
 ## The NavigationAgent3D that finds the route.
 var _agent: NavigationAgent3D = null
@@ -167,7 +173,7 @@ func _physics_process(delta: float) -> void:
 # @ace_action
 # @ace_featured
 # @ace_name("Find Path To")
-# @ace_description("Routes to a world position across the baked navmesh and starts moving. Mode "reach" fails (On Path Failed) when the spot is off the mesh; "nearest" never fails - the agent goes to the closest point on the mesh instead. Fires On Path Found / On Path Failed.")
+# @ace_description("Routes to a world position across the baked navmesh and starts moving. Mode "reach" fails (On Path Failed) when the spot is off the mesh; "nearest" never fails - the agent goes to the closest point on the mesh instead. Fires On Path Found / On Path Failed. The words for mode are the constants MODE_NEAREST, MODE_REACH.")
 # @ace_display_template("Find path to ([b]{x}[/b], [b]{y}[/b], [b]{z}[/b]) mode [b]{mode}[/b]")
 # @ace_param_options(mode nearest, reach)
 # @ace_codegen_template("$NavAgent3D.find_path_to({x}, {y}, {z}, "{mode}")")
@@ -186,7 +192,7 @@ func find_path_to(x: float, y: float, z: float, mode: String) -> void:
 
 # @ace_action
 # @ace_name("Find Path To Node")
-# @ace_description("Routes to another node's position (the player, a beacon) - Find Path To with the position read for you. Re-call on a timer to chase.")
+# @ace_description("Routes to another node's position (the player, a beacon) - Find Path To with the position read for you. Re-call on a timer to chase. The words for mode are the constants MODE_NEAREST, MODE_REACH.")
 # @ace_param_options(mode nearest, reach)
 # @ace_codegen_template("$NavAgent3D.find_path_to_node({target}, "{mode}")")
 func find_path_to_node(target: Node, mode: String) -> void:

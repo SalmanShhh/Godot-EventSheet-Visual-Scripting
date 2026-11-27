@@ -29,6 +29,16 @@ signal bound_hit(side: String)
 const BOUND_SPACE_SCREEN := "screen"
 ## Stay inside the custom bounds rectangle.
 const BOUND_SPACE_CUSTOM := "custom"
+## The left side of the bounds.
+const BOUND_SIDE_LEFT := "left"
+## The right side of the bounds.
+const BOUND_SIDE_RIGHT := "right"
+## The top side of the bounds.
+const BOUND_SIDE_TOP := "top"
+## The bottom side of the bounds.
+const BOUND_SIDE_BOTTOM := "bottom"
+## Any side of the bounds.
+const BOUND_SIDE_ANY := "any"
 
 # --- Designer knobs (tune in the Inspector) ---
 ## What to stay inside: the camera's on-screen view, or the custom bounds rectangle.
@@ -133,7 +143,7 @@ func set_bound_extents(new_half_width: float, new_half_height: float) -> void:
 
 # @ace_condition
 # @ace_name("Is At Bound")
-# @ace_description("True while the host is pressed against a bound. side: left / right / top / bottom / any.")
+# @ace_description("True while the host is pressed against a bound. side: left / right / top / bottom / any, named BOUND_SIDE_LEFT, BOUND_SIDE_RIGHT, BOUND_SIDE_TOP, BOUND_SIDE_BOTTOM and BOUND_SIDE_ANY.")
 # @ace_param_options(side left=Left edge, right=Right edge, top=Top edge, bottom=Bottom edge, any=Any edge)
 # @ace_codegen_template("$BoundToBehavior.is_at_bound("{side}")")
 func is_at_bound(side: String = "any") -> bool:

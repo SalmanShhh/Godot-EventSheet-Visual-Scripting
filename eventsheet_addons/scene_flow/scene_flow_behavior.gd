@@ -50,6 +50,30 @@ signal loading_finished
 ## Text file of loading tips, one per line; one is shown per load.
 @export_file("*.txt") var loading_tips_file: String = ""
 
+# --- Choices (the words the choice parameters take; saved scenes keep them) ---
+## The word fade.
+const TRANSITION_FADE := "fade"
+## The word wipe.
+const TRANSITION_WIPE := "wipe"
+## The word dissolve.
+const TRANSITION_DISSOLVE := "dissolve"
+## The word iris.
+const TRANSITION_IRIS := "iris"
+## The word blinds.
+const TRANSITION_BLINDS := "blinds"
+## The word pixelate.
+const TRANSITION_PIXELATE := "pixelate"
+## The word page curl.
+const TRANSITION_PAGE_CURL := "page curl"
+## The word linear.
+const EASE_LINEAR := "linear"
+## The word smooth.
+const EASE_SMOOTH := "smooth"
+## The word in.
+const EASE_IN := "in"
+## The word out.
+const EASE_OUT := "out"
+
 ## The root-parented fade overlay: fades out, swaps (or reloads) the scene, fades back in,
 ## then frees itself. Lives under the tree root so the running tween outlives the old scene;
 ## the "scene_flow_transition" group is the busy flag Is Transitioning reads.
@@ -403,7 +427,7 @@ func quit_game() -> void:
 # @ace_action
 # @ace_featured
 # @ace_name("Go To Scene With")
-# @ace_description("Changes to the scene with a transition drawn over it: the shape walks on over the first half, the scene is swapped under the cover, and it walks off again over the second. The shapes are fade, wipe (following the Wipe Image knob), dissolve, iris, blinds, pixelate and page curl. The cover colour is the node's Fade Color. Ignored while a transition is already running; emits On Transition Finished when the new scene is up and the cover is off.")
+# @ace_description("Changes to the scene with a transition drawn over it: the shape walks on over the first half, the scene is swapped under the cover, and it walks off again over the second. The shapes are fade, wipe (following the Wipe Image knob), dissolve, iris, blinds, pixelate and page curl. The cover colour is the node's Fade Color. Ignored while a transition is already running; emits On Transition Finished when the new scene is up and the cover is off. The words for transition are the constants TRANSITION_FADE, TRANSITION_WIPE, TRANSITION_DISSOLVE, TRANSITION_IRIS, TRANSITION_BLINDS, TRANSITION_PIXELATE, TRANSITION_PAGE_CURL. The words for ease are the constants EASE_LINEAR, EASE_SMOOTH, EASE_IN, EASE_OUT.")
 # @ace_display_template("Go to scene [b]{path}[/b] with a [b]{transition}[/b] over [b]{seconds}[/b] s")
 # @ace_param(path, default: ProjectSettings.get_setting("application/run/main_scene"), desc: "The scene to open. Its res:// path in quotes, or an expression that answers with one - it starts at the project's own main scene.")
 # @ace_param(transition, options: fade|wipe|dissolve|iris|blinds|pixelate|page curl, default: fade, desc: "The shape drawn over the change. Wipe follows the node's Wipe Image; pixelate and page curl read the screen back while they run.")
@@ -418,7 +442,7 @@ func go_to_scene_with(path: String, transition: String, seconds: float, ease: St
 
 # @ace_action
 # @ace_name("Reload Scene With")
-# @ace_description("Reloads the current scene with a transition drawn over it - the polished retry, in whichever shape the game uses everywhere else. Same shapes, same cover colour and same one-at-a-time rule as Go To Scene With; emits On Transition Finished when the fresh scene is up.")
+# @ace_description("Reloads the current scene with a transition drawn over it - the polished retry, in whichever shape the game uses everywhere else. Same shapes, same cover colour and same one-at-a-time rule as Go To Scene With; emits On Transition Finished when the fresh scene is up. The words for transition are the constants TRANSITION_FADE, TRANSITION_WIPE, TRANSITION_DISSOLVE, TRANSITION_IRIS, TRANSITION_BLINDS, TRANSITION_PIXELATE, TRANSITION_PAGE_CURL. The words for ease are the constants EASE_LINEAR, EASE_SMOOTH, EASE_IN, EASE_OUT.")
 # @ace_display_template("Reload with a [b]{transition}[/b] over [b]{seconds}[/b] s")
 # @ace_param(transition, options: fade|wipe|dissolve|iris|blinds|pixelate|page curl, default: fade, desc: "The shape drawn over the reload. Wipe follows the node's Wipe Image; pixelate and page curl read the screen back while they run.")
 # @ace_param(seconds, default: 0.6, desc: "How long the whole reload takes, on and off again. Held over a floor while no flashing is on.")
