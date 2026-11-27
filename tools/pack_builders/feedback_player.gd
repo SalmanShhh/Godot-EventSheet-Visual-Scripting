@@ -279,6 +279,7 @@ static func _looping_and_stopping_lines() -> PackedStringArray:
 		"## own, and the effects the Juice node is holding.",
 		"func _end_effects() -> void:",
 		"\t_stop_tweens()",
+		"\t_stop_rumble()",
 		"\tfor moved: Tween in _bus_tweens:",
 		"\t\tif moved != null and moved.is_valid():",
 		"\t\t\tmoved.kill()",
@@ -381,7 +382,7 @@ static func _verbs(sheet: EventSheetResource) -> void:
 		[], "if not playing:\n\treturn\n_live.clear()\n_paused = false\n_resumed.emit()\nvar left: Array = _order\nvar from: int = _head + 1 if _head_taken else _head\nvar at_strength: float = _head_strength\nvar late: Array = _waiting.values()\n_waiting.clear()\n_close()\n_end_chroma_shake()\n_told_nested(\"skip_to_end\")\nfor index: int in range(from, left.size()):\n\tif not (left[index] is Dictionary):\n\t\tcontinue\n\tvar card: Dictionary = left[index]\n\tif _card_runs(card, at_strength, index) and not _is_timing(word_of(card)):\n\t\t_do_step(card, at_strength, true)\nfor waiting: Variant in late:\n\tvar card: Dictionary = waiting as Dictionary\n\t_do_step(card, at_strength, true)")
 	Lib.append_function(sheet, "restore", "Restore Initial Values", "Juice Player",
 		"Puts every value this player's cards changed back to what it was before the FIRST card touched it, and ends the shake, the slowmo and the other effects the Juice node was holding for them. The undo of a list that moved the object rather than flashing it, or turned a light, a layer or a node's order.",
-		[], "_stop_tweens()\n_restore_buses()\n_release_forces()\n_release_holds()\n_take_ways_back()\n_tell_juice_ended(true)\n_told_own(\"restore\")\n_told_nested(\"restore\")\nfor entry: Variant in _restore_to:\n\tvar card: Dictionary = entry as Dictionary\n\tvar object: Object = card.get(\"object\") as Object\n\tif object != null and is_instance_valid(object):\n\t\tobject.set(str(card.get(\"property\", \"\")), card.get(\"value\"))\n_restore_to.clear()")
+		[], "_stop_tweens()\n_stop_rumble()\n_restore_buses()\n_release_forces()\n_release_holds()\n_take_ways_back()\n_tell_juice_ended(true)\n_told_own(\"restore\")\n_told_nested(\"restore\")\nfor entry: Variant in _restore_to:\n\tvar card: Dictionary = entry as Dictionary\n\tvar object: Object = card.get(\"object\") as Object\n\tif object != null and is_instance_valid(object):\n\t\tobject.set(str(card.get(\"property\", \"\")), card.get(\"value\"))\n_restore_to.clear()")
 	Lib.append_function(sheet, "revert", "Revert", "Juice Player",
 		"Stops the play and puts back what it changed, the LAST change first - so a stack of tweens unwinds in the order it was built rather than all at once.",
 		[], "stop()\n_restore_to.reverse()\nrestore()")
@@ -3117,11 +3118,34 @@ func vibrate_controller(controller: int, weak: float = 0.5, strong: float = 0.5,
 	if controller >= 0:
 		if Input.get_connected_joypads().has(controller):
 			Input.start_joy_vibration(controller, weak, strong, seconds)
+			_note_rumble(controller, seconds)
 		return
 	for device: int in Input.get_connected_joypads():
 		Input.start_joy_vibration(device, weak, strong, seconds)
+		_note_rumble(device, seconds)
 	if OS.has_feature("mobile"):
 		Input.vibrate_handheld(int(seconds * 1000.0), maxf(weak, strong))
+
+## The controllers this player set rumbling and when the latest of those rumbles ends, kept in the player so two
+## players sharing one list never stop each other's motors.
+var _rumbling: Array[int] = []
+var _rumble_ends_at: float = 0.0
+
+## Writes down that a controller was set rumbling for a time.
+func _note_rumble(device: int, seconds: float) -> void:
+	if not _rumbling.has(device):
+		_rumbling.append(device)
+	_rumble_ends_at = maxf(_rumble_ends_at, float(Time.get_ticks_msec()) / 1000.0 + seconds)
+
+## Stops the motors this player set going that are still running, so a Stop, a Restore or leaving the scene in
+## the middle of a pattern of buzzes does not leave the last one humming. A phone cannot be told to stop.
+func _stop_rumble() -> void:
+	if float(Time.get_ticks_msec()) / 1000.0 < _rumble_ends_at:
+		for device: int in _rumbling:
+			if Input.get_connected_joypads().has(device):
+				Input.stop_joy_vibration(device)
+	_rumbling.clear()
+	_rumble_ends_at = 0.0
 
 ## Rumbles the controller the player touched last, so the pad in their hands buzzes and the one on the shelf does
 ## not. Before any controller was touched, or when that one has been unplugged, it rumbles every controller instead.

@@ -505,7 +505,7 @@ static func sound_control_kinds() -> Array:
 			"kind": VIBRATE,
 			"category": str(family_of().get(VIBRATE, "")),
 			"label": "Vibrate",
-			"help": "Rumbles a controller, the weak motor and the strong one, and buzzes a phone, for a time. Does nothing on the web. Scaled by the strength of the play. For a pulse pattern, put the card between Loop Start and Loop Back with a Pause.",
+			"help": "Rumbles a controller, the weak motor and the strong one, and buzzes a phone, for a time. Does nothing on the web. Scaled by the strength of the play. For a pulse pattern, open the card's Timing foldout and set Repeat and Every: it buzzes that many times, one start every so many seconds. Stop ends the pattern and quiets the motors.",
 			"fields": [
 				{"key": "controller", "label": "Controller", "drawer": "options:all=Every controller,last=The one used last,0=Controller 1,1=Controller 2,2=Controller 3,3=Controller 4", "default": "all", "unset": "all"},
 				{"key": "weak", "label": "Weak motor", "drawer": "num", "default": 0.5},
