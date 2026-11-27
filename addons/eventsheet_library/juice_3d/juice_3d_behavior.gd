@@ -385,6 +385,53 @@ var _channel_rest: Vector3 = Vector3.ZERO
 ## True while a channel effect is moving the host.
 var _channel_driving: bool = false
 
+# --- Position Shake: an object's own position, shaken and put back ---
+# A Position Shake moves ONLY the position of a node - never the camera, the rotation or the scale. It is an offset that is
+# added to the position when a frame is built and taken off again once that frame has been drawn, so the object is at its own
+# place for every script and every physics step, ends exactly where it would have been, and keeps whatever motion it had.
+# Two shakes at once add. A Punch Position at the same time still works.
+
+## The position shakes running now: the node each one moves, how hard, how long, the shape, the weights and the jump it is on.
+var _position_shakes: Array[Dictionary] = []
+
+## What is added to each node's position right now, by node: the offset and the position it was left at, so it can be taken off again.
+var _position_added: Dictionary = {}
+
+## Whether the draw hook that takes the offsets off is connected.
+var _position_hooked: bool = false
+
+## How many times a second a position shake jumps to a new place when nothing says otherwise.
+const POSITION_SHAKE_JUMPS: float = 30.0
+# @ace_hidden
+## The same shake on any 3D node, scaled by `at_strength` (how a Juice Player card passes its strength). The
+## effect-strength dial scales the amount, and while no flashing is on the amount is held under the ceiling and the time over
+## the floor, so a player who asked for calm gets a calmer shake and not a jitter strobe. `weights` is how much of the amount
+## goes along x, y and z. Gives back true when it took the shake, false when the node is not one it can shake.
+func shake_position_on(node: Node, amount: float, seconds: float, fade_in: bool = false, fade_out: bool = true,
+		curve: Curve = null, weights: Vector3 = Vector3.ONE, jumps_per_second: float = POSITION_SHAKE_JUMPS, at_strength: float = 1.0) -> bool:
+	if not (node is Node3D) or amount <= 0.0 or at_strength <= 0.0:
+		return false
+	var size: float = amount * at_strength * maxf(float(Engine.get_meta("effect_strength", 1.0)), 0.0)
+	if bool(Engine.get_meta(NO_FLASHING_META, false)):
+		size *= STEP_FLASH_CEILING
+	_position_shakes.append({"node": node, "amount": size, "seconds": maxf(_step_seconds(seconds), STEP_NATURAL_SECONDS),
+		"elapsed": 0.0, "fade_in": fade_in, "fade_out": fade_out, "curve": curve, "x": weights.x, "y": weights.y, "z": weights.z,
+		"rate": maxf(jumps_per_second, 0.1), "jump": -1, "way": Vector3.ZERO})
+	_position_hook()
+	set_process(true)
+	return true
+
+# --- Timed shakes: a shake that lasts the Seconds it was given and has a shape ---
+# Shake adds trauma, which fades at Shake Decay whatever length a card says; a timed shake lasts exactly its length and has a
+# shape (fade in, fade out, both, neither, or a curve). The shape is applied to the amount BEFORE the camera mixer squares
+# it, timed shakes add to the trauma and to each other up to the same top of 1, and only the trauma decays.
+
+## The timed shakes running now: the amount, the length, the clock and the shape of each.
+var _timed_shakes: Array[Dictionary] = []
+
+## What the camera mixer drew its shake with on the last frame, before squaring: the trauma plus every timed shake, held to 1.
+var _shake_level: float = 0.0
+
 # The tint overlay: a top CanvasLayer ColorRect built on first use - the screen
 # wash for damage reds, poison greens, night blues. Strength IS the opacity.
 ## Screen layer that holds the tint.
@@ -608,13 +655,18 @@ func _on_tree_exiting() -> void:
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint() and not _previewing:
 		return
+	_position_shake_step(delta)
 	_chroma_shake_step(delta)
 	# Effect STATE advances camera-or-not (headless-safe); only the apply needs a camera.
+	var timed_level: float = _tick_timed_shakes(delta)
+	var shaking_now: bool = trauma > 0.0 or timed_level > 0.0 or not _timed_shakes.is_empty()
 	if trauma > 0.0:
 		trauma = maxf(trauma - shake_decay * delta, 0.0)
+	if shaking_now:
 		shake_time += delta
 		_shaking = true
-	if trauma <= 0.0 and _shaking:
+	_shake_level = clampf(trauma + timed_level, 0.0, 1.0)
+	if _shake_level <= 0.0 and _timed_shakes.is_empty() and _shaking:
 		_shaking = false
 		shake_stopped.emit()
 	_recoil_pitch = move_toward(_recoil_pitch, 0.0, recoil_recovery * delta)
@@ -639,9 +691,9 @@ func _process(delta: float) -> void:
 	# A held lean is NOT settled - it is re-applied after every unapply, so it keeps the tick
 	# alive, as does the tween still writing it.
 	var kicks_busy: bool = _recoil_pitch != 0.0 or _recoil_yaw != 0.0 or _fov_kick != 0.0 or _kick_vec != Vector3.ZERO
-	var effects_busy: bool = trauma > 0.0 or _bob_active or _jitter_active or _blink_active or absf(_lean_roll) > 0.0001 or _chroma_shake_active
+	var effects_busy: bool = trauma > 0.0 or not _timed_shakes.is_empty() or _bob_active or _jitter_active or _blink_active or absf(_lean_roll) > 0.0001 or _chroma_shake_active
 	var lean_running: bool = _lean_tween != null and is_instance_valid(_lean_tween) and _lean_tween.is_running()
-	if not (kicks_busy or effects_busy or lean_running or _channel_busy()):
+	if not (kicks_busy or effects_busy or lean_running or _channel_busy() or _position_busy()):
 		set_process(false)
 	var cam: Camera3D = _camera()
 	if cam == null:
@@ -649,9 +701,9 @@ func _process(delta: float) -> void:
 	_last_camera = cam
 	var fx_position: Vector3 = _kick_vec
 	var fx_rotation: Vector3 = Vector3(deg_to_rad(_recoil_pitch), deg_to_rad(_recoil_yaw), deg_to_rad(_lean_roll))
-	if trauma > 0.0:
+	if _shake_level > 0.0:
 		# Square the trauma so the shake ramps in perceptually (Squirrel Eiserloh's model).
-		var amount: float = trauma * trauma
+		var amount: float = _shake_level * _shake_level
 		var t: float = shake_time * shake_frequency
 		fx_rotation += Vector3(deg_to_rad(max_shake_degrees) * amount * _noise.get_noise_2d(t, 0.0), deg_to_rad(max_shake_degrees) * amount * _noise.get_noise_2d(0.0, t), deg_to_rad(max_shake_degrees) * amount * _noise.get_noise_2d(t, t) / 3.0)
 		fx_position += Vector3(max_shake_offset * amount * _noise.get_noise_2d(t, 50.0), max_shake_offset * amount * _noise.get_noise_2d(50.0, t), 0.0)
@@ -690,6 +742,8 @@ func shake(strength: float) -> void:
 # @ace_codegen_template("$Juice3DBehavior.stop_shake()")
 func stop_shake() -> void:
 	trauma = 0.0
+	_timed_shakes.clear()
+	_shake_level = 0.0
 	shake_time = 0.0
 	_shaking = false
 
@@ -1060,7 +1114,7 @@ func _unapply() -> void:
 # @ace_name("Is Shaking")
 # @ace_codegen_template("$Juice3DBehavior.is_shaking()")
 func is_shaking() -> bool:
-	return trauma > 0.0
+	return trauma > 0.0 or not _timed_shakes.is_empty()
 
 # @ace_expression
 # @ace_name("Trauma")
@@ -1134,6 +1188,175 @@ func _channel_put_back() -> void:
 ## Whether a channel shake is still costing anything - what the parking check asks.
 func _channel_busy() -> bool:
 	return _channel_left > 0.0 or _channel_driving
+
+# @ace_action
+# @ace_name("Shake Position")
+# @ace_description("Shakes ONLY the position of the 3D object this node is on - not the camera, not its rotation or its size - for exactly this long, then puts it back where it was. Jitter, tremble, rumble or wobble a sprite, a door, a button or a crate. Fade in rises from nothing, Fade out dies away, and a Curve you drew can be the shape. Weights let it shake sideways only (Y weight 0, Z weight 0). The amount is in metres. It adds to a Position Shake already running, and Stop Position Shake ends it.")
+# @ace_display_template("Shake position by [b]{amount}[/b] m for [b]{seconds}[/b] s, fade in [b]{fade_in}[/b], fade out [b]{fade_out}[/b]")
+# @ace_param(amount, default: 0.1, desc: "How far the object may move from where it is, in metres, at the strongest moment.")
+# @ace_param(seconds, default: 0.4, desc: "How long the shake lasts.")
+# @ace_param(fade_in, default: false, desc: "On: the shake rises from nothing to the amount.")
+# @ace_param(fade_out, default: true, desc: "On: the shake dies away to nothing by the end.")
+# @ace_param(curve, default: null, desc: "Optional Curve file that is the shape of the shake instead of the two ticks.")
+# @ace_param(x_weight, default: 1.0, desc: "How much of the amount it moves sideways. 0 shakes up and down only.")
+# @ace_param(y_weight, default: 1.0, desc: "How much of the amount it moves up and down. 0 shakes sideways only.")
+# @ace_param(z_weight, default: 1.0, desc: "How much of the amount it moves towards and away from the camera. 0 keeps it on its own plane.")
+# @ace_param(jumps_per_second, default: 30.0, desc: "How many times a second it jumps to a new place. Lower is a slow rumble, higher a buzz.")
+# @ace_codegen_template("$Juice3DBehavior.shake_position({amount}, {seconds}, {fade_in}, {fade_out}, {curve}, {x_weight}, {y_weight}, {z_weight}, {jumps_per_second})")
+## Shakes the position of the 3D object this node is on, for `seconds`, by up to `amount` metres, then puts it back exactly.
+func shake_position(amount: float = 0.1, seconds: float = 0.4, fade_in: bool = false, fade_out: bool = true, curve: Curve = null, x_weight: float = 1.0, y_weight: float = 1.0, z_weight: float = 1.0, jumps_per_second: float = 30.0) -> void:
+	shake_position_on(host, amount, seconds, fade_in, fade_out, curve, Vector3(x_weight, y_weight, z_weight), jumps_per_second, 1.0)
+
+# @ace_action
+# @ace_name("Stop Position Shake")
+# @ace_description("Ends every Position Shake on this node at once and puts the shaken objects back where they were.")
+# @ace_codegen_template("$Juice3DBehavior.stop_position_shake()")
+## Ends every position shake this node has going and puts each shaken object back where it was.
+func stop_position_shake() -> void:
+	_position_shakes.clear()
+	_position_take_off()
+	_position_unhook()
+
+# @ace_hidden
+## Whether any position shake is still going, for the tick's parking check.
+func _position_busy() -> bool:
+	return not _position_shakes.is_empty()
+
+# @ace_hidden
+## Connects the draw hook and the exit hook the first time a shake starts.
+func _position_hook() -> void:
+	if _position_hooked:
+		return
+	_position_hooked = true
+	RenderingServer.frame_post_draw.connect(_position_take_off)
+	if not tree_exiting.is_connected(_position_end):
+		tree_exiting.connect(_position_end)
+
+# @ace_hidden
+## Lets the hooks go once nothing is shaking.
+func _position_unhook() -> void:
+	if not _position_hooked:
+		return
+	_position_hooked = false
+	if RenderingServer.frame_post_draw.is_connected(_position_take_off):
+		RenderingServer.frame_post_draw.disconnect(_position_take_off)
+
+# @ace_hidden
+## This node is leaving the scene: nothing it shook may be left displaced.
+func _position_end() -> void:
+	_position_shakes.clear()
+	_position_take_off()
+	_position_unhook()
+
+# @ace_hidden
+## Takes every offset off its node. If something put the node back on its own place meanwhile (a script that sets the position
+## outright), there is nothing left to take off.
+func _position_take_off() -> void:
+	for node: Variant in _position_added.keys():
+		var held: Dictionary = _position_added[node]
+		if is_instance_valid(node):
+			var now: Vector3 = (node as Node3D).position
+			var added: Vector3 = held["added"]
+			if now == (held["left"] as Vector3):
+				(node as Node3D).position = held["base"]
+			elif not now.is_equal_approx((held["left"] as Vector3) - added):
+				(node as Node3D).position = now - added
+	_position_added.clear()
+
+# @ace_hidden
+## One frame of every position shake: the old offsets come off, the clocks move on, and the new offsets go on. Called from
+## the tick, so the position is the last thing written to the object before it is drawn.
+func _position_shake_step(delta: float) -> void:
+	_position_take_off()
+	if _position_shakes.is_empty():
+		_position_unhook()
+		return
+	var sums: Dictionary = {}
+	for at: int in range(_position_shakes.size() - 1, -1, -1):
+		var one: Dictionary = _position_shakes[at]
+		var node: Node = one["node"] as Node
+		one["elapsed"] = float(one["elapsed"]) + delta
+		var span: float = float(one["seconds"])
+		if not is_instance_valid(node) or float(one["elapsed"]) >= span:
+			_position_shakes.remove_at(at)
+			continue
+		var jump: int = int(floor(float(one["elapsed"]) * float(one["rate"])))
+		if jump != int(one["jump"]):
+			one["jump"] = jump
+			one["way"] = Vector3(randf_range(-1.0, 1.0) * float(one["x"]), randf_range(-1.0, 1.0) * float(one["y"]), randf_range(-1.0, 1.0) * float(one["z"]))
+		var level: float = float(one["amount"]) * _shake_shape(float(one["elapsed"]) / span, bool(one["fade_in"]), bool(one["fade_out"]), one["curve"] as Curve)
+		sums[node] = (sums.get(node, Vector3.ZERO) as Vector3) + (one["way"] as Vector3) * level
+	for node: Variant in sums.keys():
+		var offset: Vector3 = sums[node]
+		var now: Vector3 = (node as Node3D).position
+		(node as Node3D).position = now + offset
+		_position_added[node] = {"added": offset, "left": now + offset, "base": now}
+	if _position_shakes.is_empty():
+		_position_unhook()
+
+# @ace_hidden
+## Starts one timed shake of `amount` that lasts `seconds` (never under a twentieth of a second) with the shape the two ticks
+## and the curve ask for. A curve is the shape on its own and the ticks are not read.
+func _start_timed_shake(amount: float, seconds: float, fade_in: bool, fade_out: bool, curve: Curve) -> void:
+	if amount <= 0.0:
+		return
+	_timed_shakes.append({"amount": amount, "seconds": maxf(seconds, STEP_NATURAL_SECONDS), "elapsed": 0.0,
+		"fade_in": fade_in, "fade_out": fade_out, "curve": curve})
+	set_process(true)
+
+# @ace_hidden
+## Shakes the camera for `seconds` at `amount` (0 to 1) with the shape the two ticks and the curve ask for. The strength
+## scales the amount, and while no flashing is on the amount is held under the ceiling and the time over the floor.
+func shake_timed(amount: float, seconds: float, fade_in: bool = false, fade_out: bool = true, curve: Curve = null, at_strength: float = 1.0) -> void:
+	_start_timed_shake(_step_allowed(amount, at_strength), _step_seconds(seconds), fade_in, fade_out, curve)
+
+# @ace_hidden
+## Plays a Shake card that holds a tick or a curve: reads the card and calls shake_timed. The Juice Player calls this by
+## name when it finds it here.
+func shake_from_card(card: Dictionary, strength: float) -> void:
+	var curve: Curve = null
+	var kept: String = str(card.get("curve", "")).strip_edges()
+	if not kept.is_empty():
+		curve = load(kept) as Curve if ResourceLoader.exists(kept) else null
+		if curve == null:
+			push_warning("Juice 3D: a Shake card keeps the curve \"%s\", which is no Curve file now, so it shakes with its ticks instead." % kept)
+	shake_timed(float(card.get("amount", 1.0)), float(card.get("seconds", 0.0)), bool(card.get("fade_in", false)), bool(card.get("fade_out", false)), curve, strength)
+
+# @ace_hidden
+## Moves every timed shake on by one frame and gives back the level they add to the trauma. A shake that has run its whole
+## length is let go, and the ones left keep their own clocks.
+func _tick_timed_shakes(delta: float) -> float:
+	var level: float = 0.0
+	for at: int in range(_timed_shakes.size() - 1, -1, -1):
+		var one: Dictionary = _timed_shakes[at]
+		one["elapsed"] = float(one["elapsed"]) + delta
+		var span: float = float(one["seconds"])
+		if float(one["elapsed"]) >= span:
+			_timed_shakes.remove_at(at)
+			continue
+		level += float(one["amount"]) * _shake_shape(float(one["elapsed"]) / span, bool(one["fade_in"]), bool(one["fade_out"]), one["curve"] as Curve)
+	return level
+
+# @ace_hidden
+## The share of its amount a timed shake has `through` its length (0 at the first frame, 1 at the last): the same shape the
+## Juice pack draws. Fade out falls from the full amount to nothing, Fade in rises from nothing, both swell and die away, and
+## a curve is the shape on its own.
+static func _shake_shape(through: float, fade_in: bool, fade_out: bool, curve: Curve = null) -> float:
+	var t: float = clampf(through, 0.0, 1.0)
+	if curve != null and curve.point_count > 0:
+		return maxf(curve.sample(lerpf(curve.min_domain, curve.max_domain, t)), 0.0)
+	if fade_in and fade_out:
+		return 1.0 - absf(2.0 * t - 1.0)
+	if fade_in:
+		return t
+	if fade_out:
+		return 1.0 - t
+	return 1.0
+
+# @ace_hidden
+## What the camera mixer drew its shake with on the last frame, before squaring.
+func shake_level() -> float:
+	return _shake_level
 
 # @ace_hidden
 func _ensure_tint_overlay() -> void:
@@ -1411,9 +1634,12 @@ func moment_step(verb: String, amount: float, effect: String, seconds: float, st
 			if screen == null:
 				_moment_wants_screen(word)
 			else:
-				if float(screen.call("post_strength", named)) <= 0.0001:
-					screen.call("add_post_effect", named, named, 0.0)
-				screen.call("fade_post_strength", named, amount, span, 0.0)
+				if screen.has_method("hold_post_effect"):
+					screen.call("hold_post_effect", named, amount, span)
+				else:
+					if float(screen.call("post_strength", named)) <= 0.0001:
+						screen.call("add_post_effect", named, named, 0.0)
+					screen.call("fade_post_strength", named, amount, span, 0.0)
 		_:
 			push_warning("Juice 3D: no card word is called \"%s\" here." % word)
 
@@ -1534,6 +1760,7 @@ func juice_player_began(key: String, steps: Array) -> void:
 ## ends now, whether or not the list has finished walking. A value lands where the cards would have left it, or goes
 ## back to the first value the player saw. The shakes end either way.
 func juice_player_ended(key: String, put_back: bool) -> void:
+	stop_position_shake()
 	if trauma > 0.0 or _shaking:
 		stop_shake()
 	if _chroma_shake_active:

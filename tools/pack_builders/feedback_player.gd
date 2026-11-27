@@ -120,6 +120,10 @@ static func build() -> bool:
 	stopping.code = "\n".join(_looping_and_stopping_lines())
 	sheet.events.append(stopping)
 
+	var typed: RawCodeRow = RawCodeRow.new()
+	typed.code = "\n".join(_typed_card_lines())
+	sheet.events.append(typed)
+
 	_verbs(sheet)
 	_list_verbs(sheet)
 	_asking_verbs(sheet)
@@ -265,6 +269,7 @@ static func _looping_and_stopping_lines() -> PackedStringArray:
 		"## slowmo and the hold on the clock end either way.",
 		"func _tell_juice_ended(put_back: bool) -> void:",
 		"\t_end_chroma_shake()",
+		"\t_end_grayscale()",
 		"\tvar juice: Node = _juice_quiet()",
 		"\tif juice != null and juice.has_method(\"juice_player_ended\"):",
 		"\t\tjuice.call(\"juice_player_ended\", _key(), put_back)",
@@ -278,7 +283,7 @@ static func _looping_and_stopping_lines() -> PackedStringArray:
 		"\t\tif moved != null and moved.is_valid():",
 		"\t\t\tmoved.kill()",
 		"\t_bus_tweens.clear()",
-		"\t_stop_sound(\"\", 0.0)",
+		"\tstop_sound(\"\", 0.0)",
 		"\t_release_forces()",
 		"\t_release_holds()",
 		"\t_take_ways_back()",
@@ -1297,6 +1302,12 @@ static func _player_lines() -> PackedStringArray:
 		"## One juice card, felt. The ten moment words go to the Juice behaviour beside this node - the same",
 		"## call a moment file makes - and this node's own words are done here.",
 		"func _do_step(card: Dictionary, at_strength: float, skipping: bool = false) -> void:",
+		"\t_card_in_play = card",
+		"\t_play_card(card, at_strength, skipping)",
+		"\t_card_in_play = {}",
+		"",
+		"## One juice card, felt, with the card named while it plays so a typed function says what is wrong in its words.",
+		"func _play_card(card: Dictionary, at_strength: float, skipping: bool = false) -> void:",
 		"\tvar word: String = word_of(card)",
 		"\tvar amount: float = float(card.get(\"amount\", 1.0))",
 		"\tvar effect: String = str(card.get(\"effect\", \"\"))",
@@ -1337,19 +1348,17 @@ static func _player_lines() -> PackedStringArray:
 		"\t\t\t\t_play_sound(card, at)",
 		"\t\tSTOP_SOUND:",
 		"\t\t\tif not skipping:",
-		"\t\t\t\t_stop_sound(effect, seconds)",
+		"\t\t\t\tstop_sound(effect, seconds)",
 		"\t\tFADE_BUS:",
 		"\t\t\tif not skipping:",
-		"\t\t\t\t_fade_bus(card, effect, amount, seconds)",
+		"\t\t\t\tfade_bus(effect, amount, seconds)",
 		"\t\tVIBRATE:",
 		"\t\t\tif not skipping:",
 		"\t\t\t\t_vibrate(card, at)",
 		"\t\tPLAY_PLAYER:",
 		"\t\t\tvar other: Node = _player_to_play(card, effect)",
 		"\t\t\tif other != null and other.has_method(\"play\"):",
-		"\t\t\t\tif not _nested.has(other):",
-		"\t\t\t\t\t_nested.append(other)",
-		"\t\t\t\tother.call(\"play\", at * maxf(amount, 0.0))",
+		"\t\t\t\tplay_player(other, at * maxf(amount, 0.0))",
 		"\t\t\t\t# A play started BY a skip is skipped too. The list that started it has already been",
 		"\t\t\t\t# closed, so there is nothing left to tell it later - and a cutscene skip that leaves a",
 		"\t\t\t\t# nested beat running at its full length has not skipped the cutscene.",
@@ -1389,30 +1398,6 @@ static func _player_lines() -> PackedStringArray:
 		"\t\t\twalked.kill()",
 		"\t_tweens.clear()",
 		"\t_flares.clear()",
-		"",
-		"## A property on the host walked to a value, with what it was written down first so Restore can put",
-		"## it back. The walk is the engine's own tween, so nothing ticks while nothing is playing. A property the",
-		"## host does not have is said once, naming this player and the card.",
-		"func _tween_property(card: Dictionary, property: String, value: float, seconds: float) -> void:",
-		"\tif host == null or property.strip_edges().is_empty():",
-		"\t\treturn",
-		"\tvar before: Variant = host.get(property)",
-		"\tif before == null:",
-		"\t\t_card_missing(card, \"points at %s, which has no property called \\\"%s\\\"\" % [host.name, property])",
-		"\t\treturn",
-		"\t_keep_first(host, property, before)",
-		"\tif seconds <= 0.0:",
-		"\t\thost.set(property, value)",
-		"\t\treturn",
-		"\t# The handle is KEPT: a Restore that only writes the value back is written over again by this",
-		"\t# very tween on the next frame. Restoring stops them first.",
-		"\t# The ones that have finished are let go of here rather than kept for the life of the node.",
-		"\tfor held: int in range(_tweens.size() - 1, -1, -1):",
-		"\t\tif not is_instance_valid(_tweens[held]) or not _tweens[held].is_running():",
-		"\t\t\t_tweens.remove_at(held)",
-		"\tvar walked: Tween = create_tween()",
-		"\t_tweens.append(walked)",
-		"\twalked.tween_property(host, NodePath(property), value, seconds)",
 		"",
 		"## The Juice behaviour beside this node - found by the step call it answers rather than by its class,",
 		"## so this pack names no other pack. Said once when there is none, because a list of ten shakes with",
@@ -1528,37 +1513,6 @@ static func _player_lines() -> PackedStringArray:
 		"\tif path.is_empty() or not ResourceLoader.exists(path):",
 		"\t\treturn null",
 		"\treturn load(path) as AudioStream",
-		"",
-		"## One Sound card, heard. It plays through one of a few voices kept for the purpose, so a fast run of",
-		"## hits reuses them instead of making a node each. Muting the Sound family never reaches here: the walk",
-		"## has already stepped over the card.",
-		"func _play_sound(card: Dictionary, at: float) -> void:",
-		"\tvar settings: Dictionary = sound_settings(card, at, randf(), randf())",
-		"\tvar stream: AudioStream = _stream_at(str(settings.get(\"stream\", \"\")))",
-		"\tif stream == null:",
-		"\t\tif str(settings.get(\"stream\", \"\")).is_empty():",
-		"\t\t\t_tell_sound(card, \"has no sound picked, so it stayed silent.\")",
-		"\t\telse:",
-		"\t\t\t_tell_sound(card, \"cannot find its sound \\\"%s\\\", so it stayed silent.\" % str(settings.get(\"stream\", \"\")))",
-		"\t\treturn",
-		"\tvar bus: String = str(settings.get(\"bus\", \"Master\"))",
-		"\tif AudioServer.get_bus_index(bus) < 0:",
-		"\t\t_tell_sound(card, \"asks for the bus \\\"%s\\\", which this project does not have, so it played on Master.\" % bus)",
-		"\t\tbus = \"Master\"",
-		"\tvar kind: String = \"AudioStreamPlayer\"",
-		"\tif bool(settings.get(\"here\", true)) and host is Node2D:",
-		"\t\tkind = \"AudioStreamPlayer2D\"",
-		"\telif bool(settings.get(\"here\", true)) and host is Node3D:",
-		"\t\tkind = \"AudioStreamPlayer3D\"",
-		"\tvar voice: Node = _voice_for(kind)",
-		"\tvoice.set(\"stream\", stream)",
-		"\tvoice.set(\"volume_db\", float(settings.get(\"volume_db\", 0.0)))",
-		"\tvoice.set(\"pitch_scale\", float(settings.get(\"pitch_scale\", 1.0)))",
-		"\tvoice.set(\"bus\", bus)",
-		"\tif kind != \"AudioStreamPlayer\":",
-		"\t\tvoice.set(\"global_position\", host.get(\"global_position\"))",
-		"\tvoice.call(\"play\")",
-		"\t_sounding[_label_of(card)] = voice",
 		"",
 		"## A voice of the kind asked for: a free one if there is one, else a new one while there is room, else",
 		"## the oldest one taken over (and made the kind asked for).",
@@ -1741,41 +1695,6 @@ static func _player_lines() -> PackedStringArray:
 		"\t\twritten[\"scale\"] = (base[\"scale\"] as Vector2) * (1.0 + swell)",
 		"\treturn written",
 		"",
-		"## Stops the sound a Sound card of that name started, fading it out over `fade` seconds when asked. An",
-		"## empty name stops every sound this player has going. A sound that has already ended is left alone.",
-		"func _stop_sound(card_name: String, fade: float) -> void:",
-		"\tvar wanted: String = card_name.strip_edges()",
-		"\tfor label: Variant in _sounding.keys():",
-		"\t\tif not wanted.is_empty() and str(label) != wanted:",
-		"\t\t\tcontinue",
-		"\t\tvar voice: Node = _sounding[label] as Node",
-		"\t\t_sounding.erase(label)",
-		"\t\tif voice == null or not is_instance_valid(voice) or not bool(voice.get(\"playing\")):",
-		"\t\t\tcontinue",
-		"\t\tif fade > 0.0:",
-		"\t\t\tvar fading: Tween = create_tween()",
-		"\t\t\tfading.tween_property(voice, \"volume_db\", SILENT_DB, fade)",
-		"\t\t\tfading.tween_callback(voice.call.bind(\"stop\"))",
-		"\t\telse:",
-		"\t\t\tvoice.call(\"stop\")",
-		"",
-		"## Moves a bus's volume to `target_db` over `seconds`, remembering where it was so Restore can put it back.",
-		"## A bus this project does not have is said once and left alone.",
-		"func _fade_bus(card: Dictionary, bus: String, target_db: float, seconds: float) -> void:",
-		"\tvar index: int = AudioServer.get_bus_index(bus.strip_edges())",
-		"\tif index < 0:",
-		"\t\t_card_missing(card, \"names the bus \\\"%s\\\", which this project does not have\" % bus)",
-		"\t\treturn",
-		"\tvar key: String = AudioServer.get_bus_name(index)",
-		"\tif not _bus_restore.has(key):",
-		"\t\t_bus_restore[key] = AudioServer.get_bus_volume_db(index)",
-		"\tif seconds <= 0.0:",
-		"\t\tAudioServer.set_bus_volume_db(index, target_db)",
-		"\t\treturn",
-		"\tvar moved: Tween = get_tree().create_tween()",
-		"\t_bus_tweens.append(moved)",
-		"\tmoved.tween_method(func(level: float) -> void: AudioServer.set_bus_volume_db(index, level), AudioServer.get_bus_volume_db(index), target_db, seconds)",
-		"",
 		"## Puts every bus a Fade Bus card moved back to the volume it had.",
 		"func _restore_buses() -> void:",
 		"\tfor moved: Tween in _bus_tweens:",
@@ -1788,19 +1707,6 @@ static func _player_lines() -> PackedStringArray:
 		"\t\t\tAudioServer.set_bus_volume_db(index, float(_bus_restore[key]))",
 		"\t_bus_restore.clear()",
 		"",
-		"## Rumbles every controller that is connected - the weak motor and the strong one, each scaled by the",
-		"## strength of the play - and buzzes a phone for the same time. The web has neither, so there it does nothing.",
-		"func _vibrate(card: Dictionary, at: float) -> void:",
-		"\tif OS.has_feature(\"web\"):",
-		"\t\treturn",
-		"\tvar seconds: float = maxf(float(card.get(\"seconds\", 0.0)), 0.0)",
-		"\tvar weak: float = clampf(float(card.get(\"weak\", 0.5)) * at, 0.0, 1.0)",
-		"\tvar strong: float = clampf(float(card.get(\"strong\", 0.5)) * at, 0.0, 1.0)",
-		"\tfor device: int in Input.get_connected_joypads():",
-		"\t\tInput.start_joy_vibration(device, weak, strong, seconds)",
-		"\tif OS.has_feature(\"mobile\"):",
-		"\t\tInput.vibrate_handheld(int(seconds * 1000.0), maxf(weak, strong))",
-		"",
 		"## What the editor can show of a card's word: \"felt\" when it plays for real (a shake, a punch, a",
 		"## tweened property, a sound, and the cards that move another node), \"time\" when the editor shows only its length (a wait, a loop word,",
 		"## and the two that change the game's time), and \"skipped:<why>\" for the rest, with the reason in",
@@ -1808,7 +1714,7 @@ static func _player_lines() -> PackedStringArray:
 		"## @ace_hidden",
 		"static func editor_kind(word: String) -> String:",
 		"\tmatch word:",
-		"\t\t\"shake\", \"punch\", TWEEN_PROPERTY, SOUND, PARTICLES, ANIMATION, SPRITE_ANIMATION, SHOW_HIDE, SQUASH_STRETCH, PUNCH_POSITION, PUNCH_ROTATION, POP, FADE, COUNT_TO, REVEAL_TEXT, FILL_BAR, SHADER_VALUE, LOOK_AT, ROTATE_BY, ROTATE_TO, ROTATION_SHAKE, DRAW_ORDER, LIGHT:",
+		"\t\t\"shake\", \"punch\", TWEEN_PROPERTY, SOUND, PARTICLES, ANIMATION, SPRITE_ANIMATION, SHOW_HIDE, SQUASH_STRETCH, PUNCH_POSITION, PUNCH_ROTATION, POP, FADE, COUNT_TO, REVEAL_TEXT, FILL_BAR, SHADER_VALUE, LOOK_AT, ROTATE_BY, ROTATE_TO, ROTATION_SHAKE, DRAW_ORDER, LIGHT, POSITION_SHAKE, GRAYSCALE:",
 		"\t\t\treturn \"felt\"",
 		"\t\tPAUSE, HOLD_UNTIL, LOOP_START, LOOP_BACK, \"hitstop\", \"slowmo\":",
 		"\t\t\treturn \"time\"",
@@ -1926,7 +1832,9 @@ static func _addressing_lines() -> PackedStringArray:
 		"\t\"spring\": \"transform\",",
 		"\t\"slow_object\": \"pause\",",
 		"\t\"animation_parameter\": \"transform\",",
-		"\t\"chromatic_shake\": \"screen\"",
+		"\t\"chromatic_shake\": \"screen\",",
+		"\t\"grayscale\": \"screen\",",
+		"\t\"position_shake\": \"transform\"",
 		"}",
 		"",
 		"## Keys that Set Juice Card Field and Juice Card Field accept.",
@@ -2155,7 +2063,7 @@ static func _scene_card_lines() -> PackedStringArray:
 		"## The words whose effect a skip to the end leaves out, because they last only a time and the skip is already past it.",
 		"const LASTS_ONLY_A_TIME: PackedStringArray = [",
 		"\t\"collision_for\", \"collision_layer_for\", \"draw_order\", \"switch_node\", \"rotation_shake\", \"light\", \"scene_look\", \"bus_effect\",",
-		"\t\"spring\", \"slow_object\", \"animation_parameter\", \"chromatic_shake\"",
+		"\t\"spring\", \"slow_object\", \"animation_parameter\", \"chromatic_shake\", \"position_shake\"",
 		"]",
 		"",
 		"## The switch a value of the look does nothing without, by the start of its name. The longest start comes first.",
@@ -2285,39 +2193,6 @@ static func _scene_card_lines() -> PackedStringArray:
 		"\t\t\tfound.append(shape)",
 		"\treturn found",
 		"",
-		"## Switches a collision shape off for a time. Godot refuses a shape's disabled tick in the middle of a physics step,",
-		"## so it is changed at the safe moment, both ways.",
-		"func _collision_for(card: Dictionary, seconds: float) -> void:",
-		"\tvar target: Node = _target(card, \"node\", false)",
-		"\tif target == null or not _is_shape(target):",
-		"\t\t_card_missing(card, \"points at no collision shape\")",
-		"\t\treturn",
-		"\t_hold_for(target, \"disabled\", true, seconds, true)",
-		"",
-		"## Changes one layer of what a body is on, or of what it sees, for a time. Both are changed at the safe moment, so a",
-		"## card played from a collision is safe.",
-		"func _collision_layer_for(card: Dictionary, seconds: float) -> void:",
-		"\tvar target: Node = _target(card, \"node\", false)",
-		"\tif target == null or not (target is CollisionObject2D or target is CollisionObject3D):",
-		"\t\t_card_missing(card, \"points at no body or area\")",
-		"\t\treturn",
-		"\tvar part: String = \"collision_layer\" if str(card.get(\"part\", \"mask\")) == \"layer\" else \"collision_mask\"",
-		"\t_hold_for(target, part, bool(card.get(\"on\", false)), seconds, true, clampi(int(card.get(\"layer\", 1)), 1, 32))",
-		"",
-		"## Removes a node: handed back to its object pool when it came from one, freed when it did not. With \"after this list",
-		"## ends\" it waits for the list, so the sound and the particles of a death are not cut off with it; a node that holds",
-		"## this player waits whatever the tick says, because freeing it would end the list.",
-		"func _remove_node(card: Dictionary, skipping: bool) -> void:",
-		"\tvar target: Node = _target(card, \"node\", true)",
-		"\tif target == null:",
-		"\t\t_card_missing(card, \"points at a node that is not there\")",
-		"\t\treturn",
-		"\tvar holds_this_player: bool = target == self or target.is_ancestor_of(self)",
-		"\tif skipping or not playing or not (bool(card.get(\"after_list\", true)) or holds_this_player):",
-		"\t\t_retire(target)",
-		"\telif not _removals.has(target):",
-		"\t\t_removals.append(target)",
-		"",
 		"## Hands a node back to its pool, or frees it, through the file that decides which.",
 		"func _retire(target: Node) -> void:",
 		"\tif not is_instance_valid(target) or target.is_queued_for_deletion():",
@@ -2335,130 +2210,6 @@ static func _scene_card_lines() -> PackedStringArray:
 		"\tfor target: Node in waiting:",
 		"\t\t_retire(target)",
 		"",
-		"## Draws a 2D node in front of the rest, or behind it, for a time. Godot refuses a z index past 4096, so the number",
-		"## is held inside it.",
-		"func _draw_order(card: Dictionary, seconds: float) -> void:",
-		"\tvar target: Node = _target(card, \"node\", true)",
-		"\tif not (target is CanvasItem):",
-		"\t\t_card_missing(card, \"points at no 2D node, and a 3D node is drawn by its distance from the camera\")",
-		"\t\treturn",
-		"\t_hold_for(target, \"z_index\", clampi(int(card.get(\"z_index\", 10)), -MOST_Z_INDEX, MOST_Z_INDEX), seconds)",
-		"",
-		"## Switches a node off in the three ways Godot has, each its own tick: hidden, not processing, and its collision",
-		"## shapes disabled. For a time, or until a card switches it on again.",
-		"func _switch_node(card: Dictionary, seconds: float) -> void:",
-		"\tvar target: Node = _target(card, \"node\", true)",
-		"\tif target == null:",
-		"\t\t_card_missing(card, \"points at a node that is not there\")",
-		"\t\treturn",
-		"\tvar word: String = str(card.get(\"do\", \"for_a_time\"))",
-		"\tvar off: bool = word != \"on\"",
-		"\tvar timed: bool = word == \"for_a_time\"",
-		"\tvar done: bool = false",
-		"\tif bool(card.get(\"visible\", true)) and \"visible\" in target:",
-		"\t\t_switch_property(target, \"visible\", not off, timed, seconds, false)",
-		"\t\tdone = true",
-		"\tif bool(card.get(\"process\", true)):",
-		"\t\t_switch_property(target, \"process_mode\", Node.PROCESS_MODE_DISABLED if off else Node.PROCESS_MODE_INHERIT, timed, seconds, false)",
-		"\t\tdone = true",
-		"\tif bool(card.get(\"collision\", false)):",
-		"\t\tfor shape: Node in _shapes_under(target):",
-		"\t\t\t_switch_property(shape, \"disabled\", off, timed, seconds, true)",
-		"\t\t\tdone = true",
-		"\tif not done:",
-		"\t\t_card_missing(card, \"has nothing ticked to switch\")",
-		"",
-		"## One property of a switched node: held for a time, or written for good with Restore able to undo it.",
-		"func _switch_property(target: Object, property: String, value: Variant, timed: bool, seconds: float, deferred: bool) -> void:",
-		"\tif timed:",
-		"\t\t_hold_for(target, property, value, seconds, deferred)",
-		"\t\treturn",
-		"\t_keep_first(target, property, target.get(property))",
-		"\tif deferred:",
-		"\t\ttarget.set_deferred(property, value)",
-		"\telse:",
-		"\t\ttarget.set(property, value)",
-		"",
-		"## Whether a card turns a node that the physics engine owns. Turning one fights the engine, so the card says where to",
-		"## point it instead.",
-		"func _refuses_turning(card: Dictionary, node: Node) -> bool:",
-		"\tif node is RigidBody2D or node is RigidBody3D:",
-		"\t\t_card_missing(card, \"points at a RigidBody, which the physics engine turns (point it at the sprite or mesh under the body instead)\")",
-		"\t\treturn true",
-		"\treturn false",
-		"",
-		"## The property a turn writes: a 2D node and a Control turn by `rotation`, a 3D node about its up axis.",
-		"static func _turn_path(node: Node) -> String:",
-		"\treturn \"rotation:y\" if node is Node3D else \"rotation\"",
-		"",
-		"## Whether a node can be turned by this card at all.",
-		"static func _can_turn(node: Node) -> bool:",
-		"\treturn node is Node2D or node is Node3D or node is Control",
-		"",
-		"## Turns a node by an angle or to one, over a time. A Control turns about its middle. What the angle was is written",
-		"## down, so Restore turns it back.",
-		"func _turn(card: Dictionary, seconds: float, by: bool) -> void:",
-		"\tvar node: Node = _target(card, \"node\", true)",
-		"\tif node == null or not _can_turn(node):",
-		"\t\t_card_missing(card, \"points at no node that can be turned\")",
-		"\t\treturn",
-		"\tif _refuses_turning(card, node):",
-		"\t\treturn",
-		"\tvar path: NodePath = NodePath(_turn_path(node))",
-		"\tvar now: float = float(node.get_indexed(path))",
-		"\tvar wanted: float = deg_to_rad(float(card.get(\"degrees\", 45.0 if by else 90.0)))",
-		"\tvar goal: float = now + wanted if by else now + angle_difference(now, wanted)",
-		"\t_keep_first(node, \"rotation\", node.get(\"rotation\"))",
-		"\tif node is Control:",
-		"\t\t_keep_first(node, \"pivot_offset\", (node as Control).pivot_offset)",
-		"\t\t(node as Control).pivot_offset = (node as Control).size / 2.0",
-		"\tif seconds <= 0.0:",
-		"\t\tnode.set_indexed(path, goal)",
-		"\t\treturn",
-		"\t_new_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT).tween_property(node, path, goal, seconds)",
-		"",
-		"## Turns a node to face another node, over a time: in 2D the angle that points its right at it, in 3D the way the",
-		"## engine's own look at turns it, with the head up. A node at the same place has nothing to face, and a target",
-		"## straight above looks along the forward axis instead of flipping.",
-		"func _look_at(card: Dictionary, seconds: float) -> void:",
-		"\tvar node: Node = _target(card, \"node\", true)",
-		"\tvar goal: Node = _target(card, \"target\", false)",
-		"\tif node == null or goal == null:",
-		"\t\t_card_missing(card, \"points at a node or a target that is not there\")",
-		"\t\treturn",
-		"\tif _refuses_turning(card, node):",
-		"\t\treturn",
-		"\tif node is Node2D and goal is Node2D:",
-		"\t\tvar from: Node2D = node as Node2D",
-		"\t\tvar offset: Vector2 = (goal as Node2D).global_position - from.global_position",
-		"\t\tif offset.length() < 0.001:",
-		"\t\t\t_card_missing(card, \"is at the same place as its target (there is nothing to face)\")",
-		"\t\t\treturn",
-		"\t\tvar wanted: float = from.global_rotation + angle_difference(from.global_rotation, offset.angle())",
-		"\t\t_keep_first(from, \"rotation\", from.rotation)",
-		"\t\tif seconds <= 0.0:",
-		"\t\t\tfrom.global_rotation = wanted",
-		"\t\t\treturn",
-		"\t\t_new_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT).tween_property(from, NodePath(\"global_rotation\"), wanted, seconds)",
-		"\telif node is Node3D and goal is Node3D:",
-		"\t\tvar here: Node3D = node as Node3D",
-		"\t\tvar start: Vector3 = here.global_position",
-		"\t\tvar end: Vector3 = (goal as Node3D).global_position",
-		"\t\tif start.distance_to(end) < 0.001:",
-		"\t\t\t_card_missing(card, \"is at the same place as its target (there is nothing to face)\")",
-		"\t\t\treturn",
-		"\t\tvar up: Vector3 = Vector3.UP",
-		"\t\tif absf((end - start).normalized().dot(Vector3.UP)) > 0.999:",
-		"\t\t\tup = Vector3.FORWARD",
-		"\t\tvar goal_turn: Quaternion = Transform3D(Basis(), start).looking_at(end, up).basis.get_rotation_quaternion()",
-		"\t\t_keep_first(here, \"rotation\", here.rotation)",
-		"\t\tif seconds <= 0.0:",
-		"\t\t\t_turn_towards(1.0, here, here.global_transform.basis.get_rotation_quaternion(), goal_turn)",
-		"\t\t\treturn",
-		"\t\t_new_tween().tween_method(_turn_towards.bind(here, here.global_transform.basis.get_rotation_quaternion(), goal_turn), 0.0, 1.0, seconds)",
-		"\telse:",
-		"\t\t_card_missing(card, \"and its target are not both 2D nodes or both 3D nodes\")",
-		"",
 		"## One step of a 3D turn: the node's angle `through` of the way from where it was to where it faces, keeping its size",
 		"## and its place.",
 		"func _turn_towards(through: float, node: Node3D, from_turn: Quaternion, goal_turn: Quaternion) -> void:",
@@ -2466,25 +2217,6 @@ static func _scene_card_lines() -> PackedStringArray:
 		"\t\treturn",
 		"\tvar now: Transform3D = node.global_transform",
 		"\tnode.global_transform = Transform3D(Basis(from_turn.slerp(goal_turn, through)).scaled(now.basis.get_scale()), now.origin)",
-		"",
-		"## Wobbles the angle of a node and settles it, with the same fade ticks and curve a Shake card has. The angle it had",
-		"## is written back at the end, whatever the last step was.",
-		"func _rotation_shake(card: Dictionary, at: float, seconds: float) -> void:",
-		"\tvar node: Node = _target(card, \"node\", true)",
-		"\tif node == null or not _can_turn(node):",
-		"\t\t_card_missing(card, \"points at no node that can be turned\")",
-		"\t\treturn",
-		"\tif _refuses_turning(card, node):",
-		"\t\treturn",
-		"\tvar path: NodePath = NodePath(_turn_path(node))",
-		"\tvar rest: float = float(node.get_indexed(path))",
-		"\t_hold_for(node, \"rotation\", node.get(\"rotation\"), seconds)",
-		"\tvar curve: Curve = null",
-		"\tvar kept: String = str(card.get(\"curve\", \"\")).strip_edges()",
-		"\tif not kept.is_empty() and ResourceLoader.exists(kept):",
-		"\t\tcurve = load(kept) as Curve",
-		"\tvar radians: float = deg_to_rad(float(card.get(\"degrees\", 10.0))) * at",
-		"\t_new_tween().tween_method(_shake_turn.bind(node, path, rest, radians, maxf(seconds, 0.001), bool(card.get(\"fade_in\", false)), bool(card.get(\"fade_out\", true)), curve), 0.0, 1.0, maxf(seconds, 0.001))",
 		"",
 		"## One step of a rotation shake: the angle at rest plus a swing the shape of the shake makes smaller or larger. The",
 		"## last step is the rest itself.",
@@ -2506,43 +2238,6 @@ static func _scene_card_lines() -> PackedStringArray:
 		"\tif light is Light3D:",
 		"\t\treturn {\"energy\": \"light_energy\", \"colour\": \"light_color\", \"on\": \"visible\"}",
 		"\treturn {}",
-		"",
-		"## Flares a light to a brightness and a colour over a time, and lets it go back by itself. A light that was off is",
-		"## switched on for the flare and off again after. Stop leaves it where it got to; Restore puts it back.",
-		"func _light(card: Dictionary, at: float, seconds: float) -> void:",
-		"\tvar light: Node = _target(card, \"node\", true)",
-		"\tvar names: Dictionary = light_properties(light) if light != null else {}",
-		"\tif names.is_empty():",
-		"\t\t_card_missing(card, \"points at no light\")",
-		"\t\treturn",
-		"\tvar energy: String = str(names[\"energy\"])",
-		"\tvar colour: String = str(names[\"colour\"])",
-		"\tvar rest_energy: float = float(light.get(energy))",
-		"\tvar rest_colour: Color = light.get(colour)",
-		"\t_keep_first(light, energy, rest_energy)",
-		"\t_keep_first(light, colour, rest_colour)",
-		"\tvar peak: float = rest_energy + (float(card.get(\"energy_to\", 3.0)) - rest_energy) * at",
-		"\tvar tint: Color = rest_colour.lerp(_colour_of(card.get(\"colour_to\", Color(1.0, 0.6, 0.2))), clampf(at, 0.0, 1.0))",
-		"\t# A card that names no start begins where the light is now, as every card did before it could.",
-		"\tif card.has(\"energy_from\"):",
-		"\t\tlight.set(energy, float(card[\"energy_from\"]))",
-		"\tif card.has(\"colour_from\"):",
-		"\t\tlight.set(colour, _colour_of(card[\"colour_from\"]))",
-		"\tvar goes_back: bool = bool(card.get(\"back\", true))",
-		"\tvar back_seconds: float = maxf(float(card.get(\"back_seconds\", 0.2)), 0.0)",
-		"\tif not bool(light.get(str(names[\"on\"]))):",
-		"\t\tif goes_back:",
-		"\t\t\t_hold_for(light, str(names[\"on\"]), true, seconds + back_seconds)",
-		"\t\telse:",
-		"\t\t\tlight.set(str(names[\"on\"]), true)",
-		"\tvar made: Tween = _new_tween().set_parallel(true)",
-		"\t_eased(made, str(card.get(\"ease\", \"out\")))",
-		"\tmade.tween_property(light, NodePath(energy), peak, seconds)",
-		"\tmade.tween_property(light, NodePath(colour), tint, seconds)",
-		"\tif goes_back:",
-		"\t\tmade.chain().tween_property(light, NodePath(energy), rest_energy, back_seconds)",
-		"\t\tmade.tween_property(light, NodePath(colour), rest_colour, back_seconds)",
-		"\t\tmade.finished.connect(_forget_flare.bind(_note_flare(light, energy, colour, rest_energy, rest_colour)))",
 		"",
 		"## Writes down a light that is flaring and will go back by itself, so a player that goes away before the flare is",
 		"## over can put it back. Gives the note, which is what ends it.",
@@ -2566,18 +2261,6 @@ static func _scene_card_lines() -> PackedStringArray:
 		"\t\t\tlight.set(str(flare[\"colour\"]), flare[\"rest_colour\"])",
 		"\t_flares.clear()",
 		"",
-		"## The curve of a tween: the words a card keeps, as Godot's transition and ease.",
-		"func _eased(made: Tween, word: String) -> void:",
-		"\tmatch word:",
-		"\t\t\"linear\":",
-		"\t\t\tmade.set_trans(Tween.TRANS_LINEAR)",
-		"\t\t\"in\":",
-		"\t\t\tmade.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)",
-		"\t\t\"in_out\":",
-		"\t\t\tmade.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)",
-		"\t\t_:",
-		"\t\t\tmade.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)",
-		"",
 		"## A colour from what a card keeps: a colour, or the text of one.",
 		"static func _colour_of(value: Variant) -> Color:",
 		"\treturn value as Color if value is Color else Color(str(value))",
@@ -2590,15 +2273,6 @@ static func _scene_card_lines() -> PackedStringArray:
 		"\t\t\treturn str(entry[1])",
 		"\treturn \"\"",
 		"",
-		"## The node whose look a Scene Look card changes: the one it names, else the first WorldEnvironment in the running",
-		"## scene.",
-		"func _look_holder(card: Dictionary) -> Node:",
-		"\tvar named: Node = _target(card, \"node\", false)",
-		"\tif named != null or not is_inside_tree() or get_tree().current_scene == null:",
-		"\t\treturn named",
-		"\tvar found: Array[Node] = get_tree().current_scene.find_children(\"*\", \"WorldEnvironment\", true, false)",
-		"\treturn found[0] if not found.is_empty() else null",
-		"",
 		"## The resources a node holds a look in, as the members that hold them.",
 		"static func _look_members(holder: Node) -> PackedStringArray:",
 		"\tif holder is WorldEnvironment:",
@@ -2607,75 +2281,10 @@ static func _scene_card_lines() -> PackedStringArray:
 		"\t\treturn PackedStringArray([\"environment\", \"attributes\"])",
 		"\treturn PackedStringArray()",
 		"",
-		"## Moves one value of the scene's look to a number and back, on the scene's OWN copy of it. An Environment is a file",
-		"## many scenes share, so the first change gives this scene a copy; the file is never written and the original is put",
-		"## back when the time is up, on Stop and on Restore.",
-		"func _scene_look(card: Dictionary, seconds: float) -> void:",
-		"\tvar holder: Node = _look_holder(card)",
-		"\tvar property: String = str(card.get(\"property\", \"glow_intensity\"))",
-		"\tvar resource: Resource = null",
-		"\tvar members: PackedStringArray = _look_members(holder) if holder != null else PackedStringArray()",
-		"\tfor named: String in members:",
-		"\t\tvar held: Resource = holder.get(named) as Resource",
-		"\t\tvar probe: Resource = held",
-		"\t\tif probe == null:",
-		"\t\t\tif named == \"environment\":",
-		"\t\t\t\tprobe = Environment.new()",
-		"\t\t\telse:",
-		"\t\t\t\tprobe = CameraAttributesPractical.new()",
-		"\t\tif property in probe:",
-		"\t\t\tresource = probe",
-		"\t\t\tif held == null or not held.resource_path.is_empty():",
-		"\t\t\t\tresource = probe.duplicate() if held != null else probe",
-		"\t\t\t\t_hold_for(holder, named, resource, seconds + maxf(float(card.get(\"back_seconds\", 0.3)), 0.0))",
-		"\t\t\tbreak",
-		"\tif resource == null:",
-		"\t\t_card_missing(card, \"finds no look in this scene with a value called \\\"%s\\\"\" % property)",
-		"\t\treturn",
-		"\tvar back_seconds: float = maxf(float(card.get(\"back_seconds\", 0.3)), 0.0)",
-		"\tvar before: Variant = resource.get(property)",
-		"\tvar switch: String = look_switch_of(property)",
-		"\t_hold_for(resource, property, before, seconds + back_seconds)",
-		"\tif not switch.is_empty() and switch in resource and not bool(resource.get(switch)):",
-		"\t\t_hold_for(resource, switch, true, seconds + back_seconds)",
-		"\tvar made: Tween = _new_tween()",
-		"\tmade.tween_property(resource, NodePath(property), card.get(\"to\", before), seconds)",
-		"\tmade.tween_property(resource, NodePath(property), before, back_seconds)",
-		"",
 		"## The file that sweeps a bus, or null when the project does not carry it.",
 		"static func _bus_mix() -> Script:",
 		"\tvar path: String = \"res://eventsheet_addons/bus_mix.gd\"",
 		"\treturn load(path) as Script if ResourceLoader.exists(path) else null",
-		"",
-		"## Holds an effect of an audio bus for a time: switches one that is already on the bus on, or muffles, dives or",
-		"## washes the bus through the effect that does it, and puts it back by itself. An effect the bus lacks is added at",
-		"## its END, which moves none of the others, and is taken off again when the way back is done.",
-		"func _bus_effect(card: Dictionary, seconds: float) -> void:",
-		"\tvar bus: String = str(card.get(\"bus\", \"Master\"))",
-		"\tvar index: int = AudioServer.get_bus_index(bus)",
-		"\tif index < 0:",
-		"\t\t_card_missing(card, \"names the bus \\\"%s\\\", which this project does not have\" % bus)",
-		"\t\treturn",
-		"\tvar how: String = str(card.get(\"how\", \"muffle\"))",
-		"\tvar back_seconds: float = maxf(float(card.get(\"back_seconds\", 0.2)), 0.0)",
-		"\tif how == \"switch\":",
-		"\t\tvar slot: int = int(card.get(\"slot\", 0))",
-		"\t\tif slot < 0 or slot >= AudioServer.get_bus_effect_count(index):",
-		"\t\t\t_card_missing(card, \"names effect %d on the bus %s, which has %d\" % [slot, bus, AudioServer.get_bus_effect_count(index)])",
-		"\t\t\treturn",
-		"\t\tvar was_on: bool = AudioServer.is_bus_effect_enabled(index, slot)",
-		"\t\tAudioServer.set_bus_effect_enabled(index, slot, true)",
-		"\t\t_way_back_in(seconds, AudioServer.set_bus_effect_enabled.bind(index, slot, was_on))",
-		"\t\treturn",
-		"\tvar mix: Script = _bus_mix()",
-		"\tif mix == null or not is_inside_tree():",
-		"\t\t_card_missing(card, \"needs the bus mix file of the project\")",
-		"\t\treturn",
-		"\tvar wanted: float = bus_value_for(how, float(card.get(\"to\", 400.0)))",
-		"\tvar resting: float = float(mix.call(\"read\", bus, how))",
-		"\t_bus_hold(bus, how)",
-		"\tmix.call(\"sweep\", get_tree().root, bus, how, wanted, 0.0)",
-		"\t_way_back_in(seconds, _sweep_back.bind(bus, how, resting, back_seconds))",
 		"",
 		"## Walks a bus back to where one kind of effect rested, on the root of the tree, which no scene change can free.",
 		"## When this card added the effect, the last card to give it back takes it off the bus once the walk is done.",
@@ -2777,18 +2386,6 @@ static func _scene_card_lines() -> PackedStringArray:
 		"\t\t\t\tfound.append(node)",
 		"\treturn found",
 		"",
-		"## Slows the animations and particles under a node for a time, and puts their speed back. A node of your own code has",
-		"## no speed to slow, and Godot has nothing to slow it with. The speed is the node's own, which multiplies with the",
-		"## game's time scale.",
-		"func _slow_object(card: Dictionary, seconds: float) -> void:",
-		"\tvar root: Node = _target(card, \"node\", true)",
-		"\tvar found: Array[Node] = speed_nodes_under(root)",
-		"\tif found.is_empty():",
-		"\t\t_card_missing(card, \"finds nothing under %s that has a speed to slow\" % (str(root.name) if root != null else \"it\"))",
-		"\t\treturn",
-		"\tfor node: Node in found:",
-		"\t\t_hold_for(node, \"speed_scale\", maxf(float(card.get(\"speed\", 0.3)), 0.0), seconds)",
-		"",
 		"## The Spring node that moves a node's values: the node itself, or the child that can kick a property.",
 		"## @ace_hidden",
 		"static func spring_of(node: Node) -> Node:",
@@ -2822,38 +2419,6 @@ static func _scene_card_lines() -> PackedStringArray:
 		"\t\tTYPE_COLOR:",
 		"\t\t\treturn (amount as Color if amount is Color else Color(number, number, number, number)) * at",
 		"\treturn number * at",
-		"",
-		"## Kicks a value of a 2D node and lets its Spring node settle it. The Spring node moves it back to where it rested, so",
-		"## nothing is left changed; a Stop settles it at once, and Restore puts back the value from before the card.",
-		"func _spring(card: Dictionary, at: float) -> void:",
-		"\tvar target: Node = _target(card, \"node\", true)",
-		"\tif not (target is Node2D):",
-		"\t\t_card_missing(card, \"points at a node a Spring node cannot move, which has to be a 2D node\")",
-		"\t\treturn",
-		"\tvar spring: Node = spring_of(target)",
-		"\tif spring == null:",
-		"\t\t_card_missing(card, \"finds no Spring node under %s\" % target.name)",
-		"\t\treturn",
-		"\tvar property: String = str(card.get(\"property\", \"scale\"))",
-		"\tvar current: Variant = target.get_indexed(NodePath(property))",
-		"\tif not [TYPE_FLOAT, TYPE_INT, TYPE_VECTOR2, TYPE_VECTOR3, TYPE_COLOR].has(typeof(current)):",
-		"\t\t_card_missing(card, \"springs %s, which is not a number, a Vector2, a Vector3 or a colour\" % property)",
-		"\t\treturn",
-		"\tif card.has(\"damping\") or card.has(\"frequency\"):",
-		"\t\tvar damping: float = float(card.get(\"damping\", spring.get(\"default_damping\")))",
-		"\t\tvar frequency: float = float(card.get(\"frequency\", sqrt(float(spring.get(\"default_stiffness\"))) / TAU))",
-		"\t\tspring.call(\"set_property_spring\", property, damping, frequency)",
-		"\t_keep_first(target, property, current)",
-		"\tspring.call(\"bump_property\", property, spring_kick(card.get(\"kick\"), current, at))",
-		"\tvar key: String = \"%d|%s\" % [spring.get_instance_id(), property]",
-		"\tif _springs_moving.has(key):",
-		"\t\t_ways_back.erase(_springs_moving[key])",
-		"\tvar settle: Callable = _spring_rest.bind(spring, target, property)",
-		"\t_springs_moving[key] = settle",
-		"\t_ways_back.append(settle)",
-		"\tvar landed: Callable = _spring_landed.bind(spring)",
-		"\tif not spring.is_connected(\"spring_reached\", landed):",
-		"\t\tspring.connect(\"spring_reached\", landed)",
 		"",
 		"## Settles a spring at the value it rests on, at once: what a Stop does to a spring that is still bouncing.",
 		"func _spring_rest(spring: Node, target: Node, property: String) -> void:",
@@ -2891,42 +2456,6 @@ static func _scene_card_lines() -> PackedStringArray:
 		"\t\tif not TREE_BOOKKEEPING.has(named.get_file()):",
 		"\t\t\tfound.append(named)",
 		"\treturn found",
-		"",
-		"## Moves one parameter of an AnimationTree to a value over a time and brings it back. A number or a vector is walked; a",
-		"## tick or a whole number is set and put back when the time is up. Stop leaves it where it got to, Restore puts it back.",
-		"func _animation_parameter(card: Dictionary, seconds: float) -> void:",
-		"\tvar tree: AnimationTree = _target(card, \"node\", false) as AnimationTree",
-		"\tvar parameter: String = str(card.get(\"parameter\", \"\"))",
-		"\tif tree == null:",
-		"\t\t_card_missing(card, \"points at no animation tree\")",
-		"\t\treturn",
-		"\tif not writable_parameters(tree).has(parameter):",
-		"\t\t_card_missing(card, \"names the parameter \\\"%s\\\", which this tree has no writable parameter of\" % parameter)",
-		"\t\treturn",
-		"\tvar rest: Variant = tree.get(parameter)",
-		"\t_keep_first(tree, parameter, rest)",
-		"\tvar goes_back: bool = bool(card.get(\"back\", true))",
-		"\tvar back_seconds: float = maxf(float(card.get(\"back_seconds\", 0.2)), 0.0)",
-		"\tvar wanted: Variant = card.get(\"to\", rest)",
-		"\tmatch typeof(rest):",
-		"\t\tTYPE_BOOL:",
-		"\t\t\twanted = bool(wanted)",
-		"\t\tTYPE_INT:",
-		"\t\t\twanted = int(wanted)",
-		"\t\tTYPE_VECTOR2:",
-		"\t\t\twanted = wanted as Vector2 if wanted is Vector2 else Vector2(float(wanted), float(wanted))",
-		"\t\t_:",
-		"\t\t\twanted = float(wanted)",
-		"\tif typeof(rest) == TYPE_BOOL or typeof(rest) == TYPE_INT:",
-		"\t\tif goes_back:",
-		"\t\t\t_hold_for(tree, parameter, wanted, seconds)",
-		"\t\telse:",
-		"\t\t\ttree.set(parameter, wanted)",
-		"\t\treturn",
-		"\tvar made: Tween = _new_tween()",
-		"\tmade.tween_method(_set_parameter.bind(tree, parameter), rest, wanted, seconds)",
-		"\tif goes_back:",
-		"\t\tmade.tween_method(_set_parameter.bind(tree, parameter), wanted, rest, back_seconds)",
 		"",
 		"## Writes one parameter of an AnimationTree, unless the tree is gone.",
 		"func _set_parameter(value: Variant, tree: AnimationTree, parameter: String) -> void:",
@@ -3032,6 +2561,10 @@ static func _world_card_lines() -> PackedStringArray:
 		"const ANIMATION_PARAMETER: String = \"animation_parameter\"",
 		"## Step word: split the screen's colours apart along a direction for a time and let them close.",
 		"const CHROMATIC_SHAKE: String = \"chromatic_shake\"",
+		"## Step word: put the colour out of the screen, all of it or a circle growing from a point.",
+		"const GRAYSCALE: String = \"grayscale\"",
+		"## Step word: shake the position of a node and put it back.",
+		"const POSITION_SHAKE: String = \"position_shake\"",
 		"",
 		"## Every word this node plays itself that points at another node or at the world.",
 		"const WORLD_WORDS: PackedStringArray = [",
@@ -3039,7 +2572,7 @@ static func _world_card_lines() -> PackedStringArray:
 		"\t\"force_for_a_time\", \"gravity_for_a_time\", \"freeze_body\", \"squash_stretch\", \"punch_position\",",
 		"\t\"punch_rotation\", \"pop\", \"fade\", \"grab_focus\", \"count_to\", \"reveal_text\", \"fill_bar\", \"shader_value\", \"pause_player\",",
 		"\t\"collision_for\", \"collision_layer_for\", \"remove_node\", \"draw_order\", \"switch_node\", \"look_at\", \"rotate_by\",",
-		"\t\"rotate_to\", \"rotation_shake\", \"light\", \"scene_look\", \"bus_effect\", \"spring\", \"slow_object\", \"animation_parameter\", \"chromatic_shake\"",
+		"\t\"rotate_to\", \"rotation_shake\", \"light\", \"scene_look\", \"bus_effect\", \"spring\", \"slow_object\", \"animation_parameter\", \"chromatic_shake\", \"grayscale\", \"position_shake\"",
 		"]",
 		"",
 		"## Particles word: play the burst again from the start.",
@@ -3198,9 +2731,9 @@ static func _world_card_lines() -> PackedStringArray:
 		"\t\tLOOK_AT:",
 		"\t\t\t_look_at(card, 0.0 if skipping else seconds)",
 		"\t\tROTATE_BY:",
-		"\t\t\t_turn(card, 0.0 if skipping else seconds, true)",
+		"\t\t\t_turn_card(card, 0.0 if skipping else seconds, true)",
 		"\t\tROTATE_TO:",
-		"\t\t\t_turn(card, 0.0 if skipping else seconds, false)",
+		"\t\t\t_turn_card(card, 0.0 if skipping else seconds, false)",
 		"\t\tROTATION_SHAKE:",
 		"\t\t\t_rotation_shake(card, at, seconds)",
 		"\t\tLIGHT:",
@@ -3217,6 +2750,10 @@ static func _world_card_lines() -> PackedStringArray:
 		"\t\t\t_animation_parameter(card, seconds)",
 		"\t\tCHROMATIC_SHAKE:",
 		"\t\t\t_chromatic_shake(card, at, seconds)",
+		"\t\tGRAYSCALE:",
+		"\t\t\t_grayscale(card, at, seconds, skipping)",
+		"\t\tPOSITION_SHAKE:",
+		"\t\t\t_position_shake(card, at, seconds)",
 		"",
 		"## The Juice node a Chromatic Shake card started a shake on, so Stop, Restore and leaving the scene can close the split.",
 		"var _chroma_node: Node = null",
@@ -3268,188 +2805,6 @@ static func _world_card_lines() -> PackedStringArray:
 		"\t\t\treturn node",
 		"\treturn null",
 		"",
-		"## Restarts, starts or stops a particles node.",
-		"func _particles(card: Dictionary) -> void:",
-		"\tvar target: Node = _target(card, \"node\", false)",
-		"\tif target == null or not (\"emitting\" in target):",
-		"\t\t_card_missing(card, \"points at no particles node\")",
-		"\t\treturn",
-		"\t_remember(target, \"emitting\")",
-		"\tmatch str(card.get(\"do\", DO_RESTART)):",
-		"\t\tDO_STOP:",
-		"\t\t\ttarget.set(\"emitting\", false)",
-		"\t\tDO_START:",
-		"\t\t\ttarget.set(\"emitting\", true)",
-		"\t\t_:",
-		"\t\t\tif target.has_method(\"restart\"):",
-		"\t\t\t\ttarget.call(\"restart\")",
-		"\t\t\ttarget.set(\"emitting\", true)",
-		"",
-		"## Plays a clip of an AnimationPlayer. The card's seconds stretch the clip to that length, so Scale",
-		"## Juice Timing speeds an animation up with the rest of the list.",
-		"func _animation(card: Dictionary, seconds: float) -> void:",
-		"\tvar target: AnimationPlayer = _target(card, \"node\", false) as AnimationPlayer",
-		"\tif target == null:",
-		"\t\t_card_missing(card, \"points at no animation player\")",
-		"\t\treturn",
-		"\tvar clip_name: String = str(card.get(\"animation\", \"\"))",
-		"\tif not target.has_animation(clip_name):",
-		"\t\t_card_missing(card, \"names the animation \\\"%s\\\", which that player does not have\" % clip_name)",
-		"\t\treturn",
-		"\tvar length: float = target.get_animation(clip_name).length",
-		"\tvar speed: float = length / seconds if seconds > 0.0 and length > 0.0 else 1.0",
-		"\ttarget.play(clip_name, -1.0, speed)",
-		"",
-		"## Plays an animation of an AnimatedSprite2D or AnimatedSprite3D, stretched to the card's seconds.",
-		"func _sprite_animation(card: Dictionary, seconds: float) -> void:",
-		"\tvar target: Node = _target(card, \"node\", false)",
-		"\tvar frames: SpriteFrames = target.get(\"sprite_frames\") as SpriteFrames if target != null else null",
-		"\tif frames == null or not target.has_method(\"play\"):",
-		"\t\t_card_missing(card, \"points at no animated sprite\")",
-		"\t\treturn",
-		"\tvar clip_name: String = str(card.get(\"animation\", \"\"))",
-		"\tif not frames.has_animation(clip_name):",
-		"\t\t_card_missing(card, \"names the animation \\\"%s\\\", which that sprite does not have\" % clip_name)",
-		"\t\treturn",
-		"\tvar length: float = float(frames.get_frame_count(clip_name)) / maxf(frames.get_animation_speed(clip_name), 0.001)",
-		"\ttarget.call(\"play\", clip_name, length / seconds if seconds > 0.0 and length > 0.0 else 1.0)",
-		"",
-		"## Shows a node, hides it, or shows it for the card's seconds and hides it again.",
-		"func _show_hide(card: Dictionary, seconds: float) -> void:",
-		"\tvar target: Node = _target(card, \"node\", true)",
-		"\tif target == null or not (\"visible\" in target):",
-		"\t\t_card_missing(card, \"points at no node that can be shown or hidden\")",
-		"\t\treturn",
-		"\t_remember(target, \"visible\")",
-		"\tvar word: String = str(card.get(\"do\", DO_FLASH))",
-		"\ttarget.set(\"visible\", word != DO_HIDE)",
-		"\tif word == DO_FLASH:",
-		"\t\tget_tree().create_timer(maxf(seconds, 0.0)).timeout.connect(func() -> void:",
-		"\t\t\tif is_instance_valid(target):",
-		"\t\t\t\ttarget.set(\"visible\", false))",
-		"",
-		"## Calls a method of a node with the values the card holds.",
-		"func _call_method(card: Dictionary) -> void:",
-		"\tvar target: Node = _target(card, \"node\", false)",
-		"\tvar method: String = str(card.get(\"method\", \"\"))",
-		"\tif target == null or not target.has_method(method):",
-		"\t\t_card_missing(card, \"points at no node with a method called \\\"%s\\\"\" % method)",
-		"\t\treturn",
-		"\tvar given: Variant = card.get(\"args\", [])",
-		"\ttarget.callv(method, given if given is Array else [])",
-		"",
-		"## Adds a copy of a scene to the running scene, at this object or at a node, taking it from the",
-		"## object pool when that scene has one.",
-		"func _spawn_scene(card: Dictionary) -> void:",
-		"\tvar path: String = str(card.get(\"scene\", \"\"))",
-		"\tvar scene: PackedScene = load(path) as PackedScene if not path.is_empty() and ResourceLoader.exists(path) else null",
-		"\tif scene == null:",
-		"\t\t_card_missing(card, \"names a scene that is not in the project\")",
-		"\t\treturn",
-		"\tvar anchor: Node = _target(card, \"node\", true) if str(card.get(\"at\", \"here\")) == \"node\" else host",
-		"\tif anchor == null:",
-		"\t\t_card_missing(card, \"points at no node to drop the scene at\")",
-		"\t\treturn",
-		"\tvar place: Variant = anchor.get(\"global_position\")",
-		"\tvar pool: Node = get_node_or_null(\"/root/ObjectPool\")",
-		"\tvar pooled: String = _pool_named_for(pool, scene)",
-		"\tif not pooled.is_empty() and place != null:",
-		"\t\tpool.call(\"spawn_safely\", pooled, place)",
-		"\t\treturn",
-		"\tvar made: Node = scene.instantiate()",
-		"\tvar world: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()",
-		"\tworld.add_child.call_deferred(made)",
-		"\tif place != null:",
-		"\t\tmade.set.call_deferred(\"global_position\", place)",
-		"",
-		"## The name of the object pool that holds copies of this scene, or \"\" when none does.",
-		"func _pool_named_for(pool: Node, scene: PackedScene) -> String:",
-		"\tif pool == null or not pool.has_method(\"spawn_safely\"):",
-		"\t\treturn \"\"",
-		"\tvar pools: Variant = pool.get(\"_pools\")",
-		"\tif not (pools is Dictionary):",
-		"\t\treturn \"\"",
-		"\tfor pool_name: Variant in (pools as Dictionary):",
-		"\t\tvar entry: Variant = (pools as Dictionary)[pool_name]",
-		"\t\tif entry is Dictionary and (entry as Dictionary).get(\"scene\") == scene:",
-		"\t\t\treturn str(pool_name)",
-		"\treturn \"\"",
-		"",
-		"## The body a body card acts on, or null (said once) when the card names one that is not there.",
-		"func _body_of(card: Dictionary) -> Node:",
-		"\tvar body: Node = _target(card, \"body\", true)",
-		"\tif body == null:",
-		"\t\t_card_missing(card, \"points at no body\")",
-		"\treturn body",
-		"",
-		"## The direction a Push goes, always of length one, or a zero vector when it has none.",
-		"func _push_direction(card: Dictionary, body: Node) -> Variant:",
-		"\tvar in_3d: bool = body is Node3D",
-		"\tmatch str(card.get(\"direction\", PUSH_AWAY)):",
-		"\t\tPUSH_FIXED:",
-		"\t\t\tvar fixed: Vector3 = Vector3(float(card.get(\"x\", 0.0)), float(card.get(\"y\", -1.0)), float(card.get(\"z\", 0.0)))",
-		"\t\t\tif in_3d:",
-		"\t\t\t\treturn fixed.normalized()",
-		"\t\t\treturn Vector2(fixed.x, fixed.y).normalized()",
-		"\t\tPUSH_ALONG:",
-		"\t\t\tvar moving: Variant = body.get(\"linear_velocity\")",
-		"\t\t\tif moving == null:",
-		"\t\t\t\tmoving = body.get(\"velocity\")",
-		"\t\t\tif moving is Vector2 or moving is Vector3:",
-		"\t\t\t\treturn moving.normalized()",
-		"\t\t\treturn _no_direction(in_3d)",
-		"\tvar from: Variant = body.get(\"global_position\")",
-		"\tvar other: Node = _target(card, \"from\", false)",
-		"\tvar there: Variant = null",
-		"\tif other != null:",
-		"\t\tthere = other.get(\"global_position\")",
-		"\tif from == null or there == null or typeof(there) != typeof(from):",
-		"\t\treturn _no_direction(in_3d)",
-		"\treturn (from - there).normalized()",
-		"",
-		"## The direction of a push that has none: a vector of no length, of the kind the body uses.",
-		"static func _no_direction(in_3d: bool) -> Variant:",
-		"\tif in_3d:",
-		"\t\treturn Vector3.ZERO",
-		"\treturn Vector2.ZERO",
-		"",
-		"## A shove. A RigidBody takes it as an impulse, a CharacterBody has it added to its velocity once and",
-		"## carries on moving itself. Anything else is not a body, and the card says so.",
-		"func _push(card: Dictionary, at: float) -> void:",
-		"\tvar body: Node = _body_of(card)",
-		"\tif body == null:",
-		"\t\treturn",
-		"\tvar speed: float = float(card.get(\"speed\", 300.0)) * (at if bool(card.get(\"scaled\", true)) else 1.0)",
-		"\tvar way: Variant = _push_direction(card, body)",
-		"\tif body is RigidBody2D:",
-		"\t\t(body as RigidBody2D).apply_central_impulse((way as Vector2) * speed * (body as RigidBody2D).mass)",
-		"\telif body is RigidBody3D:",
-		"\t\t(body as RigidBody3D).apply_central_impulse((way as Vector3) * speed * (body as RigidBody3D).mass)",
-		"\telif body is CharacterBody2D:",
-		"\t\t(body as CharacterBody2D).velocity += (way as Vector2) * speed",
-		"\telif body is CharacterBody3D:",
-		"\t\t(body as CharacterBody3D).velocity += (way as Vector3) * speed",
-		"\telse:",
-		"\t\t_card_missing(card, \"points at something that is not a physics body\")",
-		"",
-		"## A steady force on a RigidBody for a time, taken away again when the time is up or on Restore.",
-		"func _force_for_a_time(card: Dictionary, seconds: float) -> void:",
-		"\tvar body: Node = _body_of(card)",
-		"\tif body == null:",
-		"\t\treturn",
-		"\tvar force: Variant = Vector3(float(card.get(\"x\", 0.0)), float(card.get(\"y\", -400.0)), float(card.get(\"z\", 0.0)))",
-		"\tif body is RigidBody2D:",
-		"\t\tforce = Vector2((force as Vector3).x, (force as Vector3).y)",
-		"\t\t(body as RigidBody2D).add_constant_central_force(force)",
-		"\telif body is RigidBody3D:",
-		"\t\t(body as RigidBody3D).add_constant_central_force(force)",
-		"\telse:",
-		"\t\t_card_missing(card, \"points at something that is not a RigidBody\")",
-		"\t\treturn",
-		"\tvar held: Dictionary = {\"body\": body, \"force\": force}",
-		"\t_held_forces.append(held)",
-		"\tget_tree().create_timer(maxf(seconds, 0.0)).timeout.connect(_release_force.bind(held))",
-		"",
 		"## Takes one held force off its body, once.",
 		"func _release_force(held: Dictionary) -> void:",
 		"\tif not _held_forces.has(held):",
@@ -3468,35 +2823,6 @@ static func _world_card_lines() -> PackedStringArray:
 		"\tfor held: Dictionary in _held_forces.duplicate():",
 		"\t\t_release_force(held)",
 		"",
-		"## A different gravity scale on a RigidBody for a time, then the one it had.",
-		"func _gravity_for_a_time(card: Dictionary, seconds: float) -> void:",
-		"\tvar body: Node = _body_of(card)",
-		"\tif body == null:",
-		"\t\treturn",
-		"\tif not (body is RigidBody2D or body is RigidBody3D):",
-		"\t\t_card_missing(card, \"points at something that is not a RigidBody\")",
-		"\t\treturn",
-		"\tvar before: Variant = _remember(body, \"gravity_scale\")",
-		"\tbody.set(\"gravity_scale\", float(card.get(\"amount\", 0.2)))",
-		"\tget_tree().create_timer(maxf(seconds, 0.0)).timeout.connect(func() -> void:",
-		"\t\tif is_instance_valid(body):",
-		"\t\t\tbody.set(\"gravity_scale\", before))",
-		"",
-		"## Holds a RigidBody still for a time. Freezing is not allowed in the middle of a physics step, so it",
-		"## is asked for at the end of the frame.",
-		"func _freeze_body(card: Dictionary, seconds: float) -> void:",
-		"\tvar body: Node = _body_of(card)",
-		"\tif body == null:",
-		"\t\treturn",
-		"\tif not (body is RigidBody2D or body is RigidBody3D):",
-		"\t\t_card_missing(card, \"points at something that is not a RigidBody\")",
-		"\t\treturn",
-		"\tvar before: Variant = _remember(body, \"freeze\")",
-		"\tbody.set_deferred(\"freeze\", true)",
-		"\tget_tree().create_timer(maxf(seconds, 0.0)).timeout.connect(func() -> void:",
-		"\t\tif is_instance_valid(body):",
-		"\t\t\tbody.set_deferred(\"freeze\", before))",
-		"",
 		"## Squash and stretch, a position kick or a rotation kick, done by the Juice node beside this one.",
 		"func _punch_through_juice(word: String, card: Dictionary, at: float, seconds: float) -> void:",
 		"\tvar juice: Node = _juice()",
@@ -3510,83 +2836,6 @@ static func _world_card_lines() -> PackedStringArray:
 		"\t\tPUNCH_ROTATION:",
 		"\t\t\tjuice.call(\"punch_rotation\", float(card.get(\"amount\", 10.0)) * at, seconds)",
 		"",
-		"## Scales a node up from its middle and lets it settle back.",
-		"func _pop(card: Dictionary, seconds: float) -> void:",
-		"\tvar target: Node = _target(card, \"node\", true)",
-		"\tif target == null or not (\"scale\" in target):",
-		"\t\t_card_missing(card, \"points at no node that can be scaled\")",
-		"\t\treturn",
-		"\tif target is Control:",
-		"\t\t(target as Control).pivot_offset = (target as Control).size / 2.0",
-		"\tvar rest: Variant = _remember(target, \"scale\")",
-		"\tvar peak: float = float(card.get(\"amount\", 1.3))",
-		"\tvar made: Tween = _new_tween()",
-		"\tmade.tween_property(target, \"scale\", rest * peak, seconds * 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)",
-		"\tmade.tween_property(target, \"scale\", rest, seconds * 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)",
-		"",
-		"## Fades a node to an alpha through its modulate.",
-		"func _fade(card: Dictionary, seconds: float) -> void:",
-		"\tvar target: Node = _target(card, \"node\", true)",
-		"\tif not (target is CanvasItem):",
-		"\t\t_card_missing(card, \"points at no node that can be faded\")",
-		"\t\treturn",
-		"\t_remember(target, \"modulate\")",
-		"\t_new_tween().tween_property(target, \"modulate:a\", float(card.get(\"amount\", 0.0)), seconds)",
-		"",
-		"## Gives a Control the keyboard and gamepad focus.",
-		"func _grab_focus(card: Dictionary) -> void:",
-		"\tvar target: Control = _target(card, \"node\", false) as Control",
-		"\tif target == null:",
-		"\t\t_card_missing(card, \"points at no control\")",
-		"\t\treturn",
-		"\ttarget.grab_focus()",
-		"",
-		"## A label counts from the number it shows to a number.",
-		"func _count_to(card: Dictionary, seconds: float) -> void:",
-		"\tvar target: Node = _target(card, \"node\", false)",
-		"\tvar goal: Variant = _number_from(str(card.get(\"to\", \"\")))",
-		"\tif target == null or not (\"text\" in target):",
-		"\t\t_card_missing(card, \"points at no label\")",
-		"\t\treturn",
-		"\tif goal == null:",
-		"\t\t_card_missing(card, \"names a number that is not there (\\\"%s\\\")\" % str(card.get(\"to\", \"\")))",
-		"\t\treturn",
-		"\t_remember(target, \"text\")",
-		"\tvar shown: String = str(target.get(\"text\")).strip_edges()",
-		"\tvar from: float = shown.to_float() if shown.is_valid_float() else 0.0",
-		"\t_new_tween().tween_method(func(value: float) -> void:",
-		"\t\tif is_instance_valid(target):",
-		"\t\t\ttarget.set(\"text\", str(int(round(value)))), from, float(goal), seconds)",
-		"",
-		"## The letters of a label appear one after another over the card's seconds.",
-		"func _reveal_text(card: Dictionary, seconds: float) -> void:",
-		"\tvar target: Node = _target(card, \"node\", false)",
-		"\tif target == null or not (\"visible_ratio\" in target):",
-		"\t\t_card_missing(card, \"points at no label\")",
-		"\t\treturn",
-		"\t_remember(target, \"visible_ratio\")",
-		"\ttarget.set(\"visible_ratio\", 0.0)",
-		"\t# A card that holds a speed (letters a second) reveals the text the label holds right now at that",
-		"\t# speed; a card with only seconds takes exactly that long.",
-		"\tvar span: float = seconds",
-		"\tvar speed: float = float(card.get(\"speed\", 0.0))",
-		"\tif speed > 0.0:",
-		"\t\tspan = float(str(target.get(\"text\")).length()) / speed",
-		"\t_new_tween().tween_property(target, \"visible_ratio\", 1.0, span)",
-		"",
-		"## A bar or slider glides to a number.",
-		"func _fill_bar(card: Dictionary, seconds: float) -> void:",
-		"\tvar target: Range = _target(card, \"node\", false) as Range",
-		"\tvar goal: Variant = _number_from(str(card.get(\"to\", \"\")))",
-		"\tif target == null:",
-		"\t\t_card_missing(card, \"points at no bar\")",
-		"\t\treturn",
-		"\tif goal == null:",
-		"\t\t_card_missing(card, \"names a number that is not there (\\\"%s\\\")\" % str(card.get(\"to\", \"\")))",
-		"\t\treturn",
-		"\t_remember(target, \"value\")",
-		"\t_new_tween().tween_property(target, \"value\", float(goal), seconds)",
-		"",
 		"## The shader material of a node: a CanvasItem's material, or a 3D object's material override.",
 		"static func _shader_material_of(target: Node) -> ShaderMaterial:",
 		"\tif target is CanvasItem:",
@@ -3594,75 +2843,6 @@ static func _world_card_lines() -> PackedStringArray:
 		"\tif target is GeometryInstance3D:",
 		"\t\treturn (target as GeometryInstance3D).material_override as ShaderMaterial",
 		"\treturn null",
-		"",
-		"## Moves one value of the shader on a node. With \"only this object\" on, the node gets a copy of its",
-		"## material to itself first, so the others that share the file are left alone; Restore gives the node",
-		"## its own material back.",
-		"func _shader_value(card: Dictionary, seconds: float) -> void:",
-		"\tvar target: Node = _target(card, \"node\", true)",
-		"\tvar shared: ShaderMaterial = _shader_material_of(target) if target != null else null",
-		"\tvar value_name: String = str(card.get(\"parameter\", \"\"))",
-		"\tif shared == null or shared.shader == null or value_name.is_empty():",
-		"\t\t_card_missing(card, \"points at no node with a shader to move\")",
-		"\t\treturn",
-		"\tvar material: ShaderMaterial = shared",
-		"\tif bool(card.get(\"only_this\", true)):",
-		"\t\tvar key: int = target.get_instance_id()",
-		"\t\tif not _own_materials.has(key) or not is_instance_valid(_own_materials[key]):",
-		"\t\t\t_own_materials[key] = shared.duplicate()",
-		"\t\t\tvar slot: String = \"material\" if target is CanvasItem else \"material_override\"",
-		"\t\t\t_remember(target, slot)",
-		"\t\t\ttarget.set(slot, _own_materials[key])",
-		"\t\tmaterial = _own_materials[key]",
-		"\tvar property: String = \"shader_parameter/\" + value_name",
-		"\tvar before: Variant = material.get_shader_parameter(value_name)",
-		"\tif before == null:",
-		"\t\tbefore = RenderingServer.shader_get_parameter_default(material.shader.get_rid(), value_name)",
-		"\tif before == null:",
-		"\t\t_card_missing(card, \"names the shader value \\\"%s\\\", which that shader does not declare\" % value_name)",
-		"\t\treturn",
-		"\t_keep_first(material, property, before)",
-		"\tvar goal: Variant = card.get(\"to\", before)",
-		"\tvar made: Tween = _new_tween()",
-		"\tvar way: Tween = made.set_trans(TRANSITIONS.get(str(card.get(\"trans\", \"sine\")), Tween.TRANS_SINE) as Tween.TransitionType)",
-		"\tif bool(card.get(\"back\", false)):",
-		"\t\tway.tween_property(material, property, goal, seconds * 0.5)",
-		"\t\tway.tween_property(material, property, before, seconds * 0.5)",
-		"\telse:",
-		"\t\tway.tween_property(material, property, goal, seconds)",
-		"",
-		"## A property of a node walked to a value, the whole card: any node, a typed value, where it starts,",
-		"## its transition and ease, and whether it comes back. Cards that hold none of these keys never reach",
-		"## here and play exactly as they always did.",
-		"func _tween_card(card: Dictionary, at: float, seconds: float) -> void:",
-		"\tvar target: Node = _target(card, \"node\", true)",
-		"\tvar property: String = str(card.get(\"effect\", \"\")).strip_edges()",
-		"\tif target == null:",
-		"\t\t_card_missing(card, \"points at a node that is not there\")",
-		"\t\treturn",
-		"\tif property.is_empty():",
-		"\t\treturn",
-		"\tvar before: Variant = target.get_indexed(NodePath(property))",
-		"\tif before == null:",
-		"\t\t_card_missing(card, \"points at %s, which has no property called \\\"%s\\\"\" % [target.name, property])",
-		"\t\treturn",
-		"\t_keep_first(target, property, before)",
-		"\tvar goal: Variant = card.get(\"to\", float(card.get(\"amount\", 1.0)))",
-		"\tvar relative: bool = bool(card.get(\"relative\", false))",
-		"\t# A number is scaled by the strength of the play, as the one-number tween always was; a colour or a",
-		"\t# position is a place, not an amount, so only a value added to what is there is scaled.",
-		"\tif goal is float or goal is int or (relative and (goal is Vector2 or goal is Vector3)):",
-		"\t\tgoal = goal * at",
-		"\tif card.has(\"from\"):",
-		"\t\ttarget.set_indexed(NodePath(property), card[\"from\"])",
-		"\tvar made: Tween = _new_tween()",
-		"\tvar shaped: Tween = made.set_trans(TRANSITIONS.get(str(card.get(\"trans\", \"linear\")), Tween.TRANS_LINEAR) as Tween.TransitionType)",
-		"\tshaped.set_ease(EASES.get(str(card.get(\"ease\", \"in_out\")), Tween.EASE_IN_OUT) as Tween.EaseType)",
-		"\tvar there: PropertyTweener = shaped.tween_property(target, NodePath(property), goal, seconds * (0.5 if bool(card.get(\"back\", false)) else 1.0))",
-		"\tif relative:",
-		"\t\tthere.as_relative()",
-		"\tif bool(card.get(\"back\", false)):",
-		"\t\tshaped.tween_property(target, NodePath(property), before, seconds * 0.5)",
 		"",
 		"## Whether a Tween Property card holds any of the keys that make it the whole card. A card that holds",
 		"## none of them is the one-number tween on this object it has always been.",
@@ -3675,16 +2855,6 @@ static func _world_card_lines() -> PackedStringArray:
 		"## Whether the card names a node under this key at all.",
 		"static func _names_a_node(card: Dictionary, key: String) -> bool:",
 		"\treturn not _path_of(card, key).is_empty()",
-		"",
-		"## Fires a signal of a node, with the values the card holds.",
-		"func _emit_on_node(card: Dictionary) -> void:",
-		"\tvar target: Node = _target(card, \"node\", false)",
-		"\tvar wanted: String = str(card.get(\"signal\", \"\"))",
-		"\tif target == null or not target.has_signal(wanted):",
-		"\t\t_card_missing(card, \"points at no node with a signal called \\\"%s\\\"\" % wanted)",
-		"\t\treturn",
-		"\tvar given: Variant = card.get(\"args\", [])",
-		"\ttarget.callv(\"emit_signal\", [wanted] + (given as Array if given is Array else []))",
 		"",
 		"## The player a Play Player card plays: the one it picked, else the one its old typed name finds. Said",
 		"## once, and refused, when it is this player itself or a player that is playing this one.",
@@ -3715,3 +2885,1253 @@ static func _world_card_lines() -> PackedStringArray:
 		"\t\t\treturn true",
 		"\treturn false"
 	])
+
+
+## The typed function behind every juice card: the work a card does, callable from code with named, typed arguments.
+## One raw string, so the code reads as the GDScript it becomes.
+static func _typed_card_lines() -> PackedStringArray:
+	return PackedStringArray(TYPED_CARD_CODE.split("\n"))
+
+
+const TYPED_CARD_CODE: String = r"""# --- Typed functions: the work of every card, callable from code ---
+# A card is a dictionary the Inspector edits. Each kind below reads its own keys and calls the typed function of the
+# same job, so a card, a sheet row and a line of hand-written GDScript all reach ONE implementation. On a typed
+# variable (`@onready var juice: JuicePlayer = $JuicePlayer`) the editor completes every one of these with named,
+# typed arguments, and a misspelt one is a parse error rather than a silent nothing. Every function returns nothing:
+# a Tween handle would be null whenever a target is missing, and awaiting a null is a crash, not a warning.
+
+## The four ways bus_effect_for changes an audio bus.
+enum BusWay { MUFFLE, DIVE, WASH, SWITCH }
+
+## The word a card keeps for each BusWay, in the enum's order.
+const BUS_WAY_WORDS: PackedStringArray = ["muffle", "dive", "wash", "switch"]
+
+## The card being played this instant, so a typed function that cannot do its work says so in that card's words.
+## Empty when the function was called from code.
+var _card_in_play: Dictionary = {}
+
+## Says once that a typed function could not do its work: in the card's name when a card asked, in this player's name when code did.
+func _miss(reason: String) -> void:
+	if not _card_in_play.is_empty():
+		_card_missing(_card_in_play, reason)
+		return
+	_warn_call(reason + ", so it did nothing")
+
+## Says one thing about a call from code, once, in this player's name.
+func _warn_call(text: String) -> void:
+	var told: String = "call: " + text
+	if _told_cards.has(told):
+		return
+	_told_cards[told] = true
+	push_warning("Juice Player: a call on %s %s." % [name, text])
+
+## Walks a property of a node to a value, the whole of the Tween Property card: where it starts, the transition and ease,
+## whether it comes back, and whether the value is added to what is there. With no time it is set at once. What the
+## property was is written down, so Restore Initial Values puts it back.
+## @ace_hidden
+func tween_property(target: Node, property: String, to: Variant, seconds: float = 0.2, from: Variant = null,
+		trans: Tween.TransitionType = Tween.TRANS_LINEAR, ease_type: Tween.EaseType = Tween.EASE_IN_OUT,
+		comes_back: bool = false, relative: bool = false) -> void:
+	if target == null:
+		_miss("points at a node that is not there")
+		return
+	property = property.strip_edges()
+	if property.is_empty():
+		return
+	var before: Variant = target.get_indexed(NodePath(property))
+	if before == null:
+		_miss("points at %s, which has no property called \"%s\"" % [target.name, property])
+		return
+	_keep_first(target, property, before)
+	if from != null:
+		target.set_indexed(NodePath(property), from)
+	if seconds <= 0.0 and not comes_back:
+		target.set_indexed(NodePath(property), (before + to) if relative else to)
+		return
+	var shaped: Tween = _new_tween().set_trans(trans).set_ease(ease_type)
+	var there: PropertyTweener = shaped.tween_property(target, NodePath(property), to, seconds * (0.5 if comes_back else 1.0))
+	if relative:
+		there.as_relative()
+	if comes_back:
+		shaped.tween_property(target, NodePath(property), before, seconds * 0.5)
+
+## A Tween Property card. One that holds none of the newer keys is the one-number tween on this object it always was.
+func _tween_card(card: Dictionary, at: float, seconds: float) -> void:
+	var target: Node = _target(card, "node", true)
+	var goal: Variant = card.get("to", float(card.get("amount", 1.0)))
+	var relative: bool = bool(card.get("relative", false))
+	# A number is scaled by the strength of the play, as the one-number tween always was; a colour or a
+	# position is a place, not an amount, so only a value added to what is there is scaled.
+	if goal is float or goal is int or (relative and (goal is Vector2 or goal is Vector3)):
+		goal = goal * at
+	var trans: Tween.TransitionType = TRANSITIONS.get(str(card.get("trans", "linear")), Tween.TRANS_LINEAR) as Tween.TransitionType
+	var eased: Tween.EaseType = EASES.get(str(card.get("ease", "in_out")), Tween.EASE_IN_OUT) as Tween.EaseType
+	tween_property(target, str(card.get("effect", "")), goal, seconds, card.get("from"), trans, eased, bool(card.get("back", false)), relative)
+
+## The one-number Tween Property card, on the object this player is under.
+func _tween_property(card: Dictionary, property: String, value: float, seconds: float) -> void:
+	if host == null:
+		return
+	tween_property(host, property, value, seconds)
+
+## Fires a signal of a node, with the values given.
+## @ace_hidden
+func emit_signal_on(node: Node, signal_name: String, args: Array = []) -> void:
+	if node == null or not node.has_signal(signal_name):
+		_miss("points at no node with a signal called \"%s\"" % signal_name)
+		return
+	node.callv("emit_signal", [signal_name] + args)
+
+## Says a word through On Juice Signal, for a row or a script that listens for it.
+## @ace_hidden
+func emit_juice_signal(word: String) -> void:
+	on_feedback_signal.emit(word)
+
+## An Emit Signal card: a signal of a node when it names both, else a word through On Juice Signal.
+func _emit_on_node(card: Dictionary) -> void:
+	var given: Variant = card.get("args", [])
+	emit_signal_on(_target(card, "node", false), str(card.get("signal", "")), given as Array if given is Array else [])
+
+## Plays another Juice Player (any node with a play method) with this one: it follows this player's Stop and Restore, and its strength is the one given.
+## @ace_hidden
+func play_player(other: Node, at_strength: float = 1.0) -> void:
+	if other == null or other == self or _plays_through(other, self, 0):
+		_miss("would play a player that is already playing it")
+		return
+	if not _nested.has(other):
+		_nested.append(other)
+	other.call("play", at_strength)
+
+## Plays one sound through a voice this player keeps, so a fast run of hits reuses its voices instead of making a node each.
+## It is heard from this object's place when `heard_from_here` is on and the object is a 2D or 3D node. `label` is the name
+## stop_sound finds it by.
+## @ace_hidden
+func play_sound(stream: AudioStream, volume_db: float = 0.0, pitch: float = 1.0, bus: String = "Master",
+		heard_from_here: bool = true, label: String = "") -> void:
+	if stream == null:
+		_miss("has no sound to play")
+		return
+	if AudioServer.get_bus_index(bus) < 0:
+		_warn_call("asks for the bus \"%s\", which this project does not have, so it played on Master" % bus)
+		bus = "Master"
+	var kind: String = "AudioStreamPlayer"
+	if heard_from_here and host is Node2D:
+		kind = "AudioStreamPlayer2D"
+	elif heard_from_here and host is Node3D:
+		kind = "AudioStreamPlayer3D"
+	var voice: Node = _voice_for(kind)
+	voice.set("stream", stream)
+	voice.set("volume_db", volume_db)
+	voice.set("pitch_scale", maxf(pitch, LOWEST_PITCH))
+	voice.set("bus", bus)
+	if kind != "AudioStreamPlayer":
+		voice.set("global_position", host.get("global_position"))
+	voice.call("play")
+	_sounding[label] = voice
+
+## One Sound card, heard. Muting the Sound family never reaches here: the walk has already stepped over the card.
+func _play_sound(card: Dictionary, at: float) -> void:
+	var settings: Dictionary = sound_settings(card, at, randf(), randf())
+	var stream: AudioStream = _stream_at(str(settings.get("stream", "")))
+	if stream == null:
+		if str(settings.get("stream", "")).is_empty():
+			_tell_sound(card, "has no sound picked, so it stayed silent.")
+		else:
+			_tell_sound(card, "cannot find its sound \"%s\", so it stayed silent." % str(settings.get("stream", "")))
+		return
+	var bus: String = str(settings.get("bus", "Master"))
+	if AudioServer.get_bus_index(bus) < 0:
+		_tell_sound(card, "asks for the bus \"%s\", which this project does not have, so it played on Master." % bus)
+		bus = "Master"
+	play_sound(stream, float(settings.get("volume_db", 0.0)), float(settings.get("pitch_scale", 1.0)), bus, bool(settings.get("here", true)), _label_of(card))
+
+## Stops the sound a Sound card named `label` started, or every sound this player has going when the label is empty,
+## fading it out over `fade` seconds when that is above 0.
+## @ace_hidden
+func stop_sound(label: String = "", fade: float = 0.0) -> void:
+	var wanted: String = label.strip_edges()
+	for sounding: Variant in _sounding.keys():
+		if not wanted.is_empty() and str(sounding) != wanted:
+			continue
+		var voice: Node = _sounding[sounding] as Node
+		_sounding.erase(sounding)
+		if voice == null or not is_instance_valid(voice) or not bool(voice.get("playing")):
+			continue
+		if fade > 0.0:
+			var fading: Tween = create_tween()
+			fading.tween_property(voice, "volume_db", SILENT_DB, fade)
+			fading.tween_callback(voice.call.bind("stop"))
+		else:
+			voice.call("stop")
+
+## Moves an audio bus's volume to `to_db` over `seconds`, remembering where it was so Restore can put it back. A bus this
+## project does not have is said once and left alone.
+## @ace_hidden
+func fade_bus(bus: String, to_db: float, seconds: float = 0.3) -> void:
+	var index: int = AudioServer.get_bus_index(bus.strip_edges())
+	if index < 0:
+		_miss("names the bus \"%s\", which this project does not have" % bus)
+		return
+	var key: String = AudioServer.get_bus_name(index)
+	if not _bus_restore.has(key):
+		_bus_restore[key] = AudioServer.get_bus_volume_db(index)
+	if seconds <= 0.0:
+		AudioServer.set_bus_volume_db(index, to_db)
+		return
+	var moved: Tween = get_tree().create_tween()
+	_bus_tweens.append(moved)
+	moved.tween_method(func(level: float) -> void: AudioServer.set_bus_volume_db(index, level), AudioServer.get_bus_volume_db(index), to_db, seconds)
+
+## Rumbles every connected controller (the weak motor and the strong one, 0 to 1) and buzzes a phone for the same
+## time. The web has neither, so there it does nothing.
+## @ace_hidden
+func vibrate(weak: float = 0.5, strong: float = 0.5, seconds: float = 0.2) -> void:
+	if OS.has_feature("web"):
+		return
+	seconds = maxf(seconds, 0.0)
+	weak = clampf(weak, 0.0, 1.0)
+	strong = clampf(strong, 0.0, 1.0)
+	for device: int in Input.get_connected_joypads():
+		Input.start_joy_vibration(device, weak, strong, seconds)
+	if OS.has_feature("mobile"):
+		Input.vibrate_handheld(int(seconds * 1000.0), maxf(weak, strong))
+
+## A Vibrate card, each motor scaled by the strength of the play.
+func _vibrate(card: Dictionary, at: float) -> void:
+	vibrate(float(card.get("weak", 0.5)) * at, float(card.get("strong", 0.5)) * at, float(card.get("seconds", 0.0)))
+
+## Whether a node is a particles node, said when it is not.
+func _is_particles(node: Node) -> bool:
+	if node == null or not ("emitting" in node):
+		_miss("points at no particles node")
+		return false
+	return true
+
+## Plays a particles node again from the start: a burst, a puff of dust.
+## @ace_hidden
+func restart_particles(node: Node) -> void:
+	if not _is_particles(node):
+		return
+	_remember(node, "emitting")
+	if node.has_method("restart"):
+		node.call("restart")
+	node.set("emitting", true)
+
+## Switches a particles node on, so it keeps emitting.
+## @ace_hidden
+func start_particles(node: Node) -> void:
+	if not _is_particles(node):
+		return
+	_remember(node, "emitting")
+	node.set("emitting", true)
+
+## Switches a particles node off.
+## @ace_hidden
+func stop_particles(node: Node) -> void:
+	if not _is_particles(node):
+		return
+	_remember(node, "emitting")
+	node.set("emitting", false)
+
+## A Particles card: restart, start or stop.
+func _particles(card: Dictionary) -> void:
+	var target: Node = _target(card, "node", false)
+	match str(card.get("do", DO_RESTART)):
+		DO_STOP:
+			stop_particles(target)
+		DO_START:
+			start_particles(target)
+		_:
+			restart_particles(target)
+
+## Plays a clip of an AnimationPlayer. With `seconds` above 0 the clip is stretched to that length, so Scale Juice
+## Timing speeds an animation up with the rest of the list.
+## @ace_hidden
+func play_animation(player: AnimationPlayer, animation: String, seconds: float = 0.0) -> void:
+	if player == null:
+		_miss("points at no animation player")
+		return
+	if not player.has_animation(animation):
+		_miss("names the animation \"%s\", which that player does not have" % animation)
+		return
+	var length: float = player.get_animation(animation).length
+	var speed: float = length / seconds if seconds > 0.0 and length > 0.0 else 1.0
+	player.play(animation, -1.0, speed)
+
+## An Animation card.
+func _animation(card: Dictionary, seconds: float) -> void:
+	play_animation(_target(card, "node", false) as AnimationPlayer, str(card.get("animation", "")), seconds)
+
+## Plays an animation of an AnimatedSprite2D or AnimatedSprite3D, stretched to `seconds` when that is above 0.
+## @ace_hidden
+func play_sprite_animation(sprite: Node, animation: String, seconds: float = 0.0) -> void:
+	var frames: SpriteFrames = sprite.get("sprite_frames") as SpriteFrames if sprite != null else null
+	if frames == null or not sprite.has_method("play"):
+		_miss("points at no animated sprite")
+		return
+	if not frames.has_animation(animation):
+		_miss("names the animation \"%s\", which that sprite does not have" % animation)
+		return
+	var length: float = float(frames.get_frame_count(animation)) / maxf(frames.get_animation_speed(animation), 0.001)
+	sprite.call("play", animation, length / seconds if seconds > 0.0 and length > 0.0 else 1.0)
+
+## A Sprite Animation card.
+func _sprite_animation(card: Dictionary, seconds: float) -> void:
+	play_sprite_animation(_target(card, "node", false), str(card.get("animation", "")), seconds)
+
+## Shows or hides a node, and for a flash hides it again after `flash_seconds`.
+func _show_or_hide(node: Node, shown: bool, flash_seconds: float) -> void:
+	if node == null or not ("visible" in node):
+		_miss("points at no node that can be shown or hidden")
+		return
+	_remember(node, "visible")
+	node.set("visible", shown)
+	if flash_seconds >= 0.0:
+		get_tree().create_timer(maxf(flash_seconds, 0.0)).timeout.connect(func() -> void:
+			if is_instance_valid(node):
+				node.set("visible", false))
+
+## Shows a node.
+## @ace_hidden
+func show_node(node: Node) -> void:
+	_show_or_hide(node, true, -1.0)
+
+## Hides a node.
+## @ace_hidden
+func hide_node(node: Node) -> void:
+	_show_or_hide(node, false, -1.0)
+
+## Shows a node for `seconds` and hides it again.
+## @ace_hidden
+func show_node_for(node: Node, seconds: float) -> void:
+	_show_or_hide(node, true, maxf(seconds, 0.0))
+
+## A Show Or Hide card.
+func _show_hide(card: Dictionary, seconds: float) -> void:
+	var target: Node = _target(card, "node", true)
+	match str(card.get("do", DO_FLASH)):
+		DO_HIDE:
+			hide_node(target)
+		DO_SHOW:
+			show_node(target)
+		_:
+			show_node_for(target, seconds)
+
+## Calls a method of a node with the values given.
+## @ace_hidden
+func call_method(node: Node, method: String, args: Array = []) -> void:
+	if node == null or not node.has_method(method):
+		_miss("points at no node with a method called \"%s\"" % method)
+		return
+	node.callv(method, args)
+
+## A Call Method card.
+func _call_method(card: Dictionary) -> void:
+	var given: Variant = card.get("args", [])
+	call_method(_target(card, "node", false), str(card.get("method", "")), given as Array if given is Array else [])
+
+## Adds a copy of a scene to the running scene, at `at` or at the object this player is under, taking it from the object
+## pool when that scene has one.
+## @ace_hidden
+func spawn_scene(scene: PackedScene, at: Node = null) -> void:
+	if scene == null:
+		_miss("names a scene that is not in the project")
+		return
+	var anchor: Node = at if at != null else host
+	if anchor == null:
+		_miss("points at no node to drop the scene at")
+		return
+	var place: Variant = anchor.get("global_position")
+	var pool: Node = get_node_or_null("/root/ObjectPool")
+	var pooled: String = _pool_named_for(pool, scene)
+	if not pooled.is_empty() and place != null:
+		pool.call("spawn_safely", pooled, place)
+		return
+	var made: Node = scene.instantiate()
+	var world: Node = get_tree().current_scene if get_tree().current_scene != null else get_parent()
+	world.add_child.call_deferred(made)
+	if place != null:
+		made.set.call_deferred("global_position", place)
+
+## A Spawn Scene card.
+func _spawn_scene(card: Dictionary) -> void:
+	var path: String = str(card.get("scene", ""))
+	var scene: PackedScene = load(path) as PackedScene if not path.is_empty() and ResourceLoader.exists(path) else null
+	var anchor: Node = _target(card, "node", true) if str(card.get("at", "here")) == "node" else host
+	spawn_scene(scene, anchor)
+
+## The name of the object pool that holds copies of this scene, or "" when none does.
+func _pool_named_for(pool: Node, scene: PackedScene) -> String:
+	if pool == null or not pool.has_method("spawn_safely"):
+		return ""
+	var pools: Variant = pool.get("_pools")
+	if not (pools is Dictionary):
+		return ""
+	for pool_name: Variant in (pools as Dictionary):
+		var entry: Variant = (pools as Dictionary)[pool_name]
+		if entry is Dictionary and (entry as Dictionary).get("scene") == scene:
+			return str(pool_name)
+	return ""
+
+## The direction of a push that has none: a vector of no length, of the kind the body uses.
+static func _no_direction(in_3d: bool) -> Variant:
+	if in_3d:
+		return Vector3.ZERO
+	return Vector2.ZERO
+
+## A shove. A RigidBody takes it as an impulse, a CharacterBody has it added to its velocity once and carries on
+## moving itself. Anything else is not a body, and the push says so.
+func _shove(body: Node, way: Variant, speed: float) -> void:
+	if body is RigidBody2D:
+		(body as RigidBody2D).apply_central_impulse((way as Vector2) * speed * (body as RigidBody2D).mass)
+	elif body is RigidBody3D:
+		(body as RigidBody3D).apply_central_impulse((way as Vector3) * speed * (body as RigidBody3D).mass)
+	elif body is CharacterBody2D:
+		(body as CharacterBody2D).velocity += (way as Vector2) * speed
+	elif body is CharacterBody3D:
+		(body as CharacterBody3D).velocity += (way as Vector3) * speed
+	else:
+		_miss("points at something that is not a physics body")
+
+## Shoves a body away from another node, at `speed`. A RigidBody takes it as an impulse; a CharacterBody has it added to
+## its velocity once and carries on moving itself.
+## @ace_hidden
+func push_away_from(body: Node, from: Node, speed: float = 300.0) -> void:
+	if body == null:
+		_miss("points at no body")
+		return
+	var here: Variant = body.get("global_position")
+	var there: Variant = from.get("global_position") if from != null else null
+	if here == null or there == null or typeof(there) != typeof(here):
+		_shove(body, _no_direction(body is Node3D), speed)
+		return
+	_shove(body, (here - there).normalized(), speed)
+
+## Shoves a body further along the way it is already moving, at `speed`.
+## @ace_hidden
+func push_along_motion(body: Node, speed: float = 300.0) -> void:
+	if body == null:
+		_miss("points at no body")
+		return
+	var moving: Variant = body.get("linear_velocity")
+	if moving == null:
+		moving = body.get("velocity")
+	if moving is Vector2 or moving is Vector3:
+		_shove(body, moving.normalized(), speed)
+		return
+	_shove(body, _no_direction(body is Node3D), speed)
+
+## Shoves a body in a fixed direction, at `speed`. The direction is made one long; a 2D body uses its x and y.
+## @ace_hidden
+func push_towards(body: Node, direction: Vector3, speed: float = 300.0) -> void:
+	if body == null:
+		_miss("points at no body")
+		return
+	if body is Node3D:
+		_shove(body, direction.normalized(), speed)
+	else:
+		_shove(body, Vector2(direction.x, direction.y).normalized(), speed)
+
+## A Push card. The strength of the play scales the speed unless the card says it does not.
+func _push(card: Dictionary, at: float) -> void:
+	var body: Node = _target(card, "body", true)
+	var speed: float = float(card.get("speed", 300.0)) * (at if bool(card.get("scaled", true)) else 1.0)
+	match str(card.get("direction", PUSH_AWAY)):
+		PUSH_FIXED:
+			push_towards(body, Vector3(float(card.get("x", 0.0)), float(card.get("y", -1.0)), float(card.get("z", 0.0))), speed)
+		PUSH_ALONG:
+			push_along_motion(body, speed)
+		_:
+			push_away_from(body, _target(card, "from", false), speed)
+
+## Pushes a steady force on a RigidBody for `seconds`, taken away again when the time is up or on Restore. A 2D body
+## uses the x and y of the force.
+## @ace_hidden
+func force_for_a_time(body: Node, force: Vector3, seconds: float = 0.5) -> void:
+	if body == null:
+		_miss("points at no body")
+		return
+	var held_force: Variant = force
+	if body is RigidBody2D:
+		held_force = Vector2(force.x, force.y)
+		(body as RigidBody2D).add_constant_central_force(held_force)
+	elif body is RigidBody3D:
+		(body as RigidBody3D).add_constant_central_force(force)
+	else:
+		_miss("points at something that is not a RigidBody")
+		return
+	var held: Dictionary = {"body": body, "force": held_force}
+	_held_forces.append(held)
+	get_tree().create_timer(maxf(seconds, 0.0)).timeout.connect(_release_force.bind(held))
+
+## A Force For A Time card.
+func _force_for_a_time(card: Dictionary, seconds: float) -> void:
+	force_for_a_time(_target(card, "body", true), Vector3(float(card.get("x", 0.0)), float(card.get("y", -400.0)), float(card.get("z", 0.0))), seconds)
+
+## Gives a RigidBody a different gravity scale for `seconds`, then the one it had.
+## @ace_hidden
+func gravity_for_a_time(body: Node, gravity_scale: float = 0.2, seconds: float = 0.5) -> void:
+	if body == null:
+		_miss("points at no body")
+		return
+	if not (body is RigidBody2D or body is RigidBody3D):
+		_miss("points at something that is not a RigidBody")
+		return
+	var before: Variant = _remember(body, "gravity_scale")
+	body.set("gravity_scale", gravity_scale)
+	get_tree().create_timer(maxf(seconds, 0.0)).timeout.connect(func() -> void:
+		if is_instance_valid(body):
+			body.set("gravity_scale", before))
+
+## A Gravity For A Time card.
+func _gravity_for_a_time(card: Dictionary, seconds: float) -> void:
+	gravity_for_a_time(_target(card, "body", true), float(card.get("amount", 0.2)), seconds)
+
+## Holds a RigidBody still for `seconds`. Freezing is not allowed in the middle of a physics step, so it is asked for at
+## the end of the frame.
+## @ace_hidden
+func freeze_body(body: Node, seconds: float = 0.1) -> void:
+	if body == null:
+		_miss("points at no body")
+		return
+	if not (body is RigidBody2D or body is RigidBody3D):
+		_miss("points at something that is not a RigidBody")
+		return
+	var before: Variant = _remember(body, "freeze")
+	body.set_deferred("freeze", true)
+	get_tree().create_timer(maxf(seconds, 0.0)).timeout.connect(func() -> void:
+		if is_instance_valid(body):
+			body.set_deferred("freeze", before))
+
+## A Freeze Body card.
+func _freeze_body(card: Dictionary, seconds: float) -> void:
+	freeze_body(_target(card, "body", true), seconds)
+
+## Scales a node up from its middle to `scale_to` times its size and lets it settle back over `seconds`.
+## @ace_hidden
+func pop(node: Node, scale_to: float = 1.3, seconds: float = 0.15) -> void:
+	if node == null or not ("scale" in node):
+		_miss("points at no node that can be scaled")
+		return
+	if node is Control:
+		(node as Control).pivot_offset = (node as Control).size / 2.0
+	var rest: Variant = _remember(node, "scale")
+	var made: Tween = _new_tween()
+	made.tween_property(node, "scale", rest * scale_to, seconds * 0.4).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	made.tween_property(node, "scale", rest, seconds * 0.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+## A Pop card.
+func _pop(card: Dictionary, seconds: float) -> void:
+	pop(_target(card, "node", true), float(card.get("amount", 1.3)), seconds)
+
+## Fades a node to an alpha (0 clear, 1 solid) through its modulate.
+## @ace_hidden
+func fade_node(node: Node, alpha: float = 0.0, seconds: float = 0.3) -> void:
+	if not (node is CanvasItem):
+		_miss("points at no node that can be faded")
+		return
+	_remember(node, "modulate")
+	_new_tween().tween_property(node, "modulate:a", alpha, seconds)
+
+## A Fade card.
+func _fade(card: Dictionary, seconds: float) -> void:
+	fade_node(_target(card, "node", true), float(card.get("amount", 0.0)), seconds)
+
+## Gives a Control the keyboard and gamepad focus.
+## @ace_hidden
+func focus_control(control: Control) -> void:
+	if control == null:
+		_miss("points at no control")
+		return
+	control.grab_focus()
+
+## A Grab Focus card.
+func _grab_focus(card: Dictionary) -> void:
+	focus_control(_target(card, "node", false) as Control)
+
+## Whether a node is a label-like node that holds text, said when it is not.
+func _is_text_node(node: Node) -> bool:
+	if node == null or not ("text" in node):
+		_miss("points at no label")
+		return false
+	return true
+
+## Counts a label from the number it shows to `to` over `seconds`.
+## @ace_hidden
+func count_label_to(label: Node, to: float, seconds: float = 0.6) -> void:
+	if not _is_text_node(label):
+		return
+	_remember(label, "text")
+	var shown: String = str(label.get("text")).strip_edges()
+	var from: float = shown.to_float() if shown.is_valid_float() else 0.0
+	_new_tween().tween_method(func(value: float) -> void:
+		if is_instance_valid(label):
+			label.set("text", str(int(round(value)))), from, to, seconds)
+
+## A Count To card: the number is a plain number or a name read from the game.
+func _count_to(card: Dictionary, seconds: float) -> void:
+	var target: Node = _target(card, "node", false)
+	var goal: Variant = _number_from(str(card.get("to", "")))
+	if not _is_text_node(target):
+		return
+	if goal == null:
+		_miss("names a number that is not there (\"%s\")" % str(card.get("to", "")))
+		return
+	count_label_to(target, float(goal), seconds)
+
+## Reveals the letters of a label one after another. With `letters_per_second` above 0 the text the label holds right now
+## is revealed at that speed; with 0 it takes exactly `seconds`.
+## @ace_hidden
+func reveal_text(label: Node, seconds: float = 0.8, letters_per_second: float = 0.0) -> void:
+	if label == null or not ("visible_ratio" in label):
+		_miss("points at no label")
+		return
+	_remember(label, "visible_ratio")
+	label.set("visible_ratio", 0.0)
+	var span: float = seconds
+	if letters_per_second > 0.0:
+		span = float(str(label.get("text")).length()) / letters_per_second
+	_new_tween().tween_property(label, "visible_ratio", 1.0, span)
+
+## A Reveal Text card.
+func _reveal_text(card: Dictionary, seconds: float) -> void:
+	reveal_text(_target(card, "node", false), seconds, float(card.get("speed", 0.0)))
+
+## Glides a bar or slider to `to` over `seconds`.
+## @ace_hidden
+func fill_bar_to(bar: Range, to: float, seconds: float = 0.3) -> void:
+	if bar == null:
+		_miss("points at no bar")
+		return
+	_remember(bar, "value")
+	_new_tween().tween_property(bar, "value", to, seconds)
+
+## A Fill Bar card: the number is a plain number or a name read from the game.
+func _fill_bar(card: Dictionary, seconds: float) -> void:
+	var target: Range = _target(card, "node", false) as Range
+	var goal: Variant = _number_from(str(card.get("to", "")))
+	if target == null:
+		_miss("points at no bar")
+		return
+	if goal == null:
+		_miss("names a number that is not there (\"%s\")" % str(card.get("to", "")))
+		return
+	fill_bar_to(target, float(goal), seconds)
+
+## Moves one value of the shader on a node over `seconds`. With `only_this` on, the node gets a copy of its material to
+## itself first, so the others that share the file are left alone, and Restore gives the node its own material back.
+## With `comes_back` the value goes there in half the time and back in the other half.
+## @ace_hidden
+func tween_shader_value(node: Node, parameter: String, to: Variant = null, seconds: float = 0.12,
+		trans: Tween.TransitionType = Tween.TRANS_QUAD, comes_back: bool = true, only_this: bool = true) -> void:
+	var shared: ShaderMaterial = _shader_material_of(node) if node != null else null
+	if shared == null or shared.shader == null or parameter.is_empty():
+		_miss("points at no node with a shader to move")
+		return
+	var material: ShaderMaterial = shared
+	if only_this:
+		var key: int = node.get_instance_id()
+		if not _own_materials.has(key) or not is_instance_valid(_own_materials[key]):
+			_own_materials[key] = shared.duplicate()
+			var slot: String = "material" if node is CanvasItem else "material_override"
+			_remember(node, slot)
+			node.set(slot, _own_materials[key])
+		material = _own_materials[key]
+	var property: String = "shader_parameter/" + parameter
+	var before: Variant = material.get_shader_parameter(parameter)
+	if before == null:
+		before = RenderingServer.shader_get_parameter_default(material.shader.get_rid(), parameter)
+	if before == null:
+		_miss("names the shader value \"%s\", which that shader does not declare" % parameter)
+		return
+	_keep_first(material, property, before)
+	var goal: Variant = to if to != null else before
+	var way: Tween = _new_tween().set_trans(trans)
+	if comes_back:
+		way.tween_property(material, property, goal, seconds * 0.5)
+		way.tween_property(material, property, before, seconds * 0.5)
+	else:
+		way.tween_property(material, property, goal, seconds)
+
+## A Shader Value card.
+func _shader_value(card: Dictionary, seconds: float) -> void:
+	var trans: Tween.TransitionType = TRANSITIONS.get(str(card.get("trans", "sine")), Tween.TRANS_SINE) as Tween.TransitionType
+	tween_shader_value(_target(card, "node", true), str(card.get("parameter", "")), card.get("to"), seconds, trans, bool(card.get("back", false)), bool(card.get("only_this", true)))
+
+## Switches a collision shape off for `seconds`. Godot refuses a shape's disabled tick in the middle of a physics step, so
+## it is changed at the safe moment, both ways.
+## @ace_hidden
+func disable_collision_for(shape: Node, seconds: float = 0.5) -> void:
+	if shape == null or not _is_shape(shape):
+		_miss("points at no collision shape")
+		return
+	_hold_for(shape, "disabled", true, seconds, true)
+
+## A Collision For A Time card.
+func _collision_for(card: Dictionary, seconds: float) -> void:
+	disable_collision_for(_target(card, "node", false), seconds)
+
+## Changes one layer of what a body is on, or of what it sees (`as_mask`), for `seconds`. Both are changed at the safe
+## moment, so a call from a collision is safe.
+## @ace_hidden
+func set_collision_bit_for(body: Node, layer: int, on: bool, seconds: float = 0.5, as_mask: bool = true) -> void:
+	if body == null or not (body is CollisionObject2D or body is CollisionObject3D):
+		_miss("points at no body or area")
+		return
+	var part: String = "collision_mask" if as_mask else "collision_layer"
+	_hold_for(body, part, on, seconds, true, clampi(layer, 1, 32))
+
+## A Collision Layer For A Time card.
+func _collision_layer_for(card: Dictionary, seconds: float) -> void:
+	set_collision_bit_for(_target(card, "node", false), int(card.get("layer", 1)), bool(card.get("on", false)), seconds, str(card.get("part", "mask")) != "layer")
+
+## Removes a node: handed back to its object pool when it came from one, freed when it did not. With `after_list` it waits
+## for the list to end, so the sound and the particles of a death are not cut off with it; a node that holds this player
+## waits whatever `after_list` says, because freeing it would end the list.
+## @ace_hidden
+func remove_node(node: Node, after_list: bool = true) -> void:
+	if node == null:
+		_miss("points at a node that is not there")
+		return
+	var holds_this_player: bool = node == self or node.is_ancestor_of(self)
+	if not playing or not (after_list or holds_this_player):
+		_retire(node)
+	elif not _removals.has(node):
+		_removals.append(node)
+
+## A Remove Node card. A skip to the end removes it at once.
+func _remove_node(card: Dictionary, skipping: bool) -> void:
+	var target: Node = _target(card, "node", true)
+	if skipping and target != null:
+		_retire(target)
+		return
+	remove_node(target, bool(card.get("after_list", true)))
+
+## Draws a 2D node in front of the rest (or behind it with a negative `z_index`) for `seconds`. Godot refuses a z index
+## past 4096, so the number is held inside it.
+## @ace_hidden
+func draw_order_for(node: Node, z_index: int = 10, seconds: float = 0.5) -> void:
+	if not (node is CanvasItem):
+		_miss("points at no 2D node, and a 3D node is drawn by its distance from the camera")
+		return
+	_hold_for(node, "z_index", clampi(z_index, -MOST_Z_INDEX, MOST_Z_INDEX), seconds)
+
+## A Draw Order card.
+func _draw_order(card: Dictionary, seconds: float) -> void:
+	draw_order_for(_target(card, "node", true), int(card.get("z_index", 10)), seconds)
+
+## Switches a node off or on in the three ways Godot has, each its own tick: hidden, not processing, and its collision
+## shapes disabled. `timed` holds the change for `seconds` and lets it go; otherwise it is written for good, with Restore
+## able to undo it.
+func _switch(node: Node, off: bool, timed: bool, seconds: float, hidden: bool, processing: bool, collision: bool) -> void:
+	if node == null:
+		_miss("points at a node that is not there")
+		return
+	var done: bool = false
+	if hidden and "visible" in node:
+		_switch_property(node, "visible", not off, timed, seconds, false)
+		done = true
+	if processing:
+		_switch_property(node, "process_mode", Node.PROCESS_MODE_DISABLED if off else Node.PROCESS_MODE_INHERIT, timed, seconds, false)
+		done = true
+	if collision:
+		for shape: Node in _shapes_under(node):
+			_switch_property(shape, "disabled", off, timed, seconds, true)
+			done = true
+	if not done:
+		_miss("has nothing ticked to switch")
+
+## One property of a switched node: held for a time, or written for good with Restore able to undo it.
+func _switch_property(target: Object, property: String, value: Variant, timed: bool, seconds: float, deferred: bool) -> void:
+	if timed:
+		_hold_for(target, property, value, seconds, deferred)
+		return
+	_keep_first(target, property, target.get(property))
+	if deferred:
+		target.set_deferred(property, value)
+	else:
+		target.set(property, value)
+
+## Switches a node off for `seconds` and then back on: hidden (`hidden`), not processing (`processing`) and with its
+## collision shapes disabled (`collision`), each its own tick.
+## @ace_hidden
+func switch_node_off_for(node: Node, seconds: float = 0.5, hidden: bool = true, processing: bool = true, collision: bool = false) -> void:
+	_switch(node, true, true, seconds, hidden, processing, collision)
+
+## Switches a node off until something switches it on again; Restore puts it back too.
+## @ace_hidden
+func switch_node_off(node: Node, hidden: bool = true, processing: bool = true, collision: bool = false) -> void:
+	_switch(node, true, false, 0.0, hidden, processing, collision)
+
+## Switches a node back on: shown, processing again and with its collision shapes enabled, as ticked.
+## @ace_hidden
+func switch_node_on(node: Node, hidden: bool = true, processing: bool = true, collision: bool = false) -> void:
+	_switch(node, false, false, 0.0, hidden, processing, collision)
+
+## A Switch Node card.
+func _switch_node(card: Dictionary, seconds: float) -> void:
+	var target: Node = _target(card, "node", true)
+	var hidden: bool = bool(card.get("visible", true))
+	var processing: bool = bool(card.get("process", true))
+	var collision: bool = bool(card.get("collision", false))
+	match str(card.get("do", "for_a_time")):
+		"on":
+			switch_node_on(target, hidden, processing, collision)
+		"off":
+			switch_node_off(target, hidden, processing, collision)
+		_:
+			switch_node_off_for(target, seconds, hidden, processing, collision)
+
+## Whether a node is one the physics engine owns. Turning one fights the engine, so the call says where to point it instead.
+func _refuses_turning(node: Node) -> bool:
+	if node is RigidBody2D or node is RigidBody3D:
+		_miss("points at a RigidBody, which the physics engine turns (point it at the sprite or mesh under the body instead)")
+		return true
+	return false
+
+## The property a turn writes: a 2D node and a Control turn by `rotation`, a 3D node about its up axis.
+static func _turn_path(node: Node) -> String:
+	return "rotation:y" if node is Node3D else "rotation"
+
+## Whether a node can be turned by these functions at all.
+static func _can_turn(node: Node) -> bool:
+	return node is Node2D or node is Node3D or node is Control
+
+## Turns a node by an angle or to one, over a time. A Control turns about its middle. What the angle was is written
+## down, so Restore turns it back.
+func _turn(node: Node, degrees: float, seconds: float, by: bool) -> void:
+	if node == null or not _can_turn(node):
+		_miss("points at no node that can be turned")
+		return
+	if _refuses_turning(node):
+		return
+	var path: NodePath = NodePath(_turn_path(node))
+	var now: float = float(node.get_indexed(path))
+	var wanted: float = deg_to_rad(degrees)
+	var goal: float = now + wanted if by else now + angle_difference(now, wanted)
+	_keep_first(node, "rotation", node.get("rotation"))
+	if node is Control:
+		_keep_first(node, "pivot_offset", (node as Control).pivot_offset)
+		(node as Control).pivot_offset = (node as Control).size / 2.0
+	if seconds <= 0.0:
+		node.set_indexed(path, goal)
+		return
+	_new_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT).tween_property(node, path, goal, seconds)
+
+## Turns a node by an angle in degrees over `seconds`. A 2D node and a Control turn by their rotation, a 3D node about
+## its up axis.
+## @ace_hidden
+func rotate_by(node: Node, degrees: float = 45.0, seconds: float = 0.2) -> void:
+	_turn(node, degrees, seconds, true)
+
+## Turns a node to an angle in degrees over `seconds`, the short way round.
+## @ace_hidden
+func rotate_to(node: Node, degrees: float = 90.0, seconds: float = 0.2) -> void:
+	_turn(node, degrees, seconds, false)
+
+## A Rotate By or Rotate To card.
+func _turn_card(card: Dictionary, seconds: float, by: bool) -> void:
+	var degrees: float = float(card.get("degrees", 45.0 if by else 90.0))
+	if by:
+		rotate_by(_target(card, "node", true), degrees, seconds)
+	else:
+		rotate_to(_target(card, "node", true), degrees, seconds)
+
+## Turns a node to face another node over `seconds`: in 2D the angle that points its right at it, in 3D the way the
+## engine's own look at turns it, with the head up. A node at the same place has nothing to face, and a target straight
+## above looks along the forward axis instead of flipping.
+## @ace_hidden
+func turn_to_face(node: Node, target: Node, seconds: float = 0.2) -> void:
+	if node == null or target == null:
+		_miss("points at a node or a target that is not there")
+		return
+	if _refuses_turning(node):
+		return
+	if node is Node2D and target is Node2D:
+		var from: Node2D = node as Node2D
+		var offset: Vector2 = (target as Node2D).global_position - from.global_position
+		if offset.length() < 0.001:
+			_miss("is at the same place as its target (there is nothing to face)")
+			return
+		var wanted: float = from.global_rotation + angle_difference(from.global_rotation, offset.angle())
+		_keep_first(from, "rotation", from.rotation)
+		if seconds <= 0.0:
+			from.global_rotation = wanted
+			return
+		_new_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT).tween_property(from, NodePath("global_rotation"), wanted, seconds)
+	elif node is Node3D and target is Node3D:
+		var here: Node3D = node as Node3D
+		var start: Vector3 = here.global_position
+		var end: Vector3 = (target as Node3D).global_position
+		if start.distance_to(end) < 0.001:
+			_miss("is at the same place as its target (there is nothing to face)")
+			return
+		var up: Vector3 = Vector3.UP
+		if absf((end - start).normalized().dot(Vector3.UP)) > 0.999:
+			up = Vector3.FORWARD
+		var goal_turn: Quaternion = Transform3D(Basis(), start).looking_at(end, up).basis.get_rotation_quaternion()
+		_keep_first(here, "rotation", here.rotation)
+		if seconds <= 0.0:
+			_turn_towards(1.0, here, here.global_transform.basis.get_rotation_quaternion(), goal_turn)
+			return
+		_new_tween().tween_method(_turn_towards.bind(here, here.global_transform.basis.get_rotation_quaternion(), goal_turn), 0.0, 1.0, seconds)
+	else:
+		_miss("and its target are not both 2D nodes or both 3D nodes")
+
+## A Look At card.
+func _look_at(card: Dictionary, seconds: float) -> void:
+	turn_to_face(_target(card, "node", true), _target(card, "target", false), seconds)
+
+## Wobbles the angle of a node by up to `degrees` and settles it, with the same fade ticks and curve a Shake card has.
+## The angle it had is written back at the end, whatever the last step was.
+## @ace_hidden
+func rotation_shake(node: Node, degrees: float = 10.0, seconds: float = 0.3, fade_in: bool = false,
+		fade_out: bool = true, curve: Curve = null) -> void:
+	if node == null or not _can_turn(node):
+		_miss("points at no node that can be turned")
+		return
+	if _refuses_turning(node):
+		return
+	var path: NodePath = NodePath(_turn_path(node))
+	var rest: float = float(node.get_indexed(path))
+	_hold_for(node, "rotation", node.get("rotation"), seconds)
+	_new_tween().tween_method(_shake_turn.bind(node, path, rest, deg_to_rad(degrees), maxf(seconds, 0.001), fade_in, fade_out, curve), 0.0, 1.0, maxf(seconds, 0.001))
+
+## A Rotation Shake card: the strength of the play scales the angle.
+func _rotation_shake(card: Dictionary, at: float, seconds: float) -> void:
+	var curve: Curve = null
+	var kept: String = str(card.get("curve", "")).strip_edges()
+	if not kept.is_empty() and ResourceLoader.exists(kept):
+		curve = load(kept) as Curve
+	rotation_shake(_target(card, "node", true), float(card.get("degrees", 10.0)) * at, seconds, bool(card.get("fade_in", false)), bool(card.get("fade_out", true)), curve)
+
+## The transition and ease a Light card's ease word stands for.
+static func _light_ease_of(word: String) -> Array:
+	match word:
+		"linear":
+			return [Tween.TRANS_LINEAR, Tween.EASE_IN_OUT]
+		"in":
+			return [Tween.TRANS_SINE, Tween.EASE_IN]
+		"in_out":
+			return [Tween.TRANS_SINE, Tween.EASE_IN_OUT]
+	return [Tween.TRANS_SINE, Tween.EASE_OUT]
+
+## Flares a light to `energy_to` and `colour_to` over `seconds`, and lets it go back by itself over `back_seconds` when
+## `comes_back` is on. A light that was off is switched on for the flare and off again after. `energy_from` and
+## `colour_from` name where the flare starts when it should not start where the light is now. `at_strength` scales how
+## far the flare goes. Stop leaves the light where it got to; Restore puts it back.
+## @ace_hidden
+func flare_light(light: Node, energy_to: float = 3.0, colour_to: Color = Color(1.0, 0.6, 0.2), seconds: float = 0.08,
+		comes_back: bool = true, back_seconds: float = 0.2, trans: Tween.TransitionType = Tween.TRANS_SINE,
+		ease_type: Tween.EaseType = Tween.EASE_OUT, energy_from: Variant = null, colour_from: Variant = null,
+		at_strength: float = 1.0) -> void:
+	var names: Dictionary = light_properties(light) if light != null else {}
+	if names.is_empty():
+		_miss("points at no light")
+		return
+	var energy: String = str(names["energy"])
+	var colour: String = str(names["colour"])
+	var rest_energy: float = float(light.get(energy))
+	var rest_colour: Color = light.get(colour)
+	_keep_first(light, energy, rest_energy)
+	_keep_first(light, colour, rest_colour)
+	var peak: float = rest_energy + (energy_to - rest_energy) * at_strength
+	var tint: Color = rest_colour.lerp(colour_to, clampf(at_strength, 0.0, 1.0))
+	if energy_from != null:
+		light.set(energy, float(energy_from))
+	if colour_from != null:
+		light.set(colour, _colour_of(colour_from))
+	back_seconds = maxf(back_seconds, 0.0)
+	if not bool(light.get(str(names["on"]))):
+		if comes_back:
+			_hold_for(light, str(names["on"]), true, seconds + back_seconds)
+		else:
+			light.set(str(names["on"]), true)
+	var made: Tween = _new_tween().set_parallel(true)
+	made.set_trans(trans).set_ease(ease_type)
+	made.tween_property(light, NodePath(energy), peak, seconds)
+	made.tween_property(light, NodePath(colour), tint, seconds)
+	if comes_back:
+		made.chain().tween_property(light, NodePath(energy), rest_energy, back_seconds)
+		made.tween_property(light, NodePath(colour), rest_colour, back_seconds)
+		made.finished.connect(_forget_flare.bind(_note_flare(light, energy, colour, rest_energy, rest_colour)))
+
+## A Light card.
+func _light(card: Dictionary, at: float, seconds: float) -> void:
+	var how: Array = _light_ease_of(str(card.get("ease", "out")))
+	flare_light(_target(card, "node", true), float(card.get("energy_to", 3.0)), _colour_of(card.get("colour_to", Color(1.0, 0.6, 0.2))), seconds,
+			bool(card.get("back", true)), float(card.get("back_seconds", 0.2)), how[0] as Tween.TransitionType, how[1] as Tween.EaseType,
+			card.get("energy_from") if card.has("energy_from") else null, card.get("colour_from") if card.has("colour_from") else null, at)
+
+## The node whose look a Scene Look changes when none is named: the first WorldEnvironment in the running scene.
+func _world_environment() -> Node:
+	if not is_inside_tree() or get_tree().current_scene == null:
+		return null
+	var found: Array[Node] = get_tree().current_scene.find_children("*", "WorldEnvironment", true, false)
+	return found[0] if not found.is_empty() else null
+
+## Moves one value of the scene's look to a number and back, on the scene's OWN copy of it. `property` is a value of the
+## Environment or the camera attributes, such as "glow_intensity". An Environment is a file many scenes share, so the
+## first change gives this scene a copy; the file is never written and the original is put back when the time is up, on
+## Stop and on Restore. `holder` is the WorldEnvironment or Camera3D to change; left empty it is the first WorldEnvironment in the scene.
+## @ace_hidden
+func tween_scene_look(property: String = "glow_intensity", to: float = 2.0, seconds: float = 0.1, back_seconds: float = 0.3, holder: Node = null) -> void:
+	holder = holder if holder != null else _world_environment()
+	var resource: Resource = null
+	var members: PackedStringArray = _look_members(holder) if holder != null else PackedStringArray()
+	back_seconds = maxf(back_seconds, 0.0)
+	for named: String in members:
+		var held: Resource = holder.get(named) as Resource
+		var probe: Resource = held
+		if probe == null:
+			if named == "environment":
+				probe = Environment.new()
+			else:
+				probe = CameraAttributesPractical.new()
+		if property in probe:
+			resource = probe
+			if held == null or not held.resource_path.is_empty():
+				resource = probe.duplicate() if held != null else probe
+				_hold_for(holder, named, resource, seconds + back_seconds)
+			break
+	if resource == null:
+		_miss("finds no look in this scene with a value called \"%s\"" % property)
+		return
+	var before: Variant = resource.get(property)
+	var switch: String = look_switch_of(property)
+	_hold_for(resource, property, before, seconds + back_seconds)
+	if not switch.is_empty() and switch in resource and not bool(resource.get(switch)):
+		_hold_for(resource, switch, true, seconds + back_seconds)
+	var made: Tween = _new_tween()
+	made.tween_property(resource, NodePath(property), before if is_nan(to) else to, seconds)
+	made.tween_property(resource, NodePath(property), before, back_seconds)
+
+## A Scene Look card.
+func _scene_look(card: Dictionary, seconds: float) -> void:
+	tween_scene_look(str(card.get("property", "glow_intensity")), float(card.get("to", NAN)), seconds, float(card.get("back_seconds", 0.3)), _target(card, "node", false))
+
+## Holds an effect of an audio bus for `seconds`: switches one that is already on the bus on (`BusWay.SWITCH`, with `slot`
+## its place), or muffles, dives or washes the bus (`to` is the cutoff in hertz, the level in decibels or the share of wet)
+## and puts it back by itself over `back_seconds`. An effect the bus lacks is added at its END, which moves none of the
+## others, and is taken off again when the way back is done.
+## @ace_hidden
+func bus_effect_for(bus: String = "Master", how: BusWay = BusWay.MUFFLE, to: float = 400.0, seconds: float = 0.5,
+		back_seconds: float = 0.2, slot: int = 0) -> void:
+	var index: int = AudioServer.get_bus_index(bus)
+	if index < 0:
+		_miss("names the bus \"%s\", which this project does not have" % bus)
+		return
+	var word: String = BUS_WAY_WORDS[how]
+	back_seconds = maxf(back_seconds, 0.0)
+	if how == BusWay.SWITCH:
+		if slot < 0 or slot >= AudioServer.get_bus_effect_count(index):
+			_miss("names effect %d on the bus %s, which has %d" % [slot, bus, AudioServer.get_bus_effect_count(index)])
+			return
+		var was_on: bool = AudioServer.is_bus_effect_enabled(index, slot)
+		AudioServer.set_bus_effect_enabled(index, slot, true)
+		_way_back_in(seconds, AudioServer.set_bus_effect_enabled.bind(index, slot, was_on))
+		return
+	var mix: Script = _bus_mix()
+	if mix == null or not is_inside_tree():
+		_miss("needs the bus mix file of the project")
+		return
+	var wanted: float = bus_value_for(word, to)
+	var resting: float = float(mix.call("read", bus, word))
+	_bus_hold(bus, word)
+	mix.call("sweep", get_tree().root, bus, word, wanted, 0.0)
+	_way_back_in(seconds, _sweep_back.bind(bus, word, resting, back_seconds))
+
+## A Bus Effect card.
+func _bus_effect(card: Dictionary, seconds: float) -> void:
+	var how: int = BUS_WAY_WORDS.find(str(card.get("how", "muffle")))
+	var way: BusWay = BusWay.MUFFLE
+	if how >= 0:
+		way = how as BusWay
+	bus_effect_for(str(card.get("bus", "Master")), way, float(card.get("to", 400.0)), seconds,
+			float(card.get("back_seconds", 0.2)), int(card.get("slot", 0)))
+
+## Slows the animations and particles under a node to `speed` times their own for `seconds`, and puts their speed back. A
+## node of your own code has no speed to slow, and Godot has nothing to slow it with. The speed is the node's own, which
+## multiplies with the game's time scale.
+## @ace_hidden
+func slow_object(node: Node, speed: float = 0.3, seconds: float = 0.5) -> void:
+	var found: Array[Node] = speed_nodes_under(node)
+	if found.is_empty():
+		_miss("finds nothing under %s that has a speed to slow" % (str(node.name) if node != null else "it"))
+		return
+	for slowed: Node in found:
+		_hold_for(slowed, "speed_scale", maxf(speed, 0.0), seconds)
+
+## A Slow One Object card.
+func _slow_object(card: Dictionary, seconds: float) -> void:
+	slow_object(_target(card, "node", true), float(card.get("speed", 0.3)), seconds)
+
+## Kicks a value of a 2D node (its scale, position, rotation or modulate) by `kick` and lets its Spring node settle it. The
+## Spring node moves it back to where it rested, so nothing is left changed; a Stop settles it at once, and Restore puts back
+## the value from before. `damping` and `frequency` retune the spring for this property; leave them at NAN to keep its own.
+## @ace_hidden
+func kick_spring(node: Node, property: String = "scale", kick: Variant = null, damping: float = NAN, frequency: float = NAN,
+		at_strength: float = 1.0) -> void:
+	if not (node is Node2D):
+		_miss("points at a node a Spring node cannot move, which has to be a 2D node")
+		return
+	var spring: Node = spring_of(node)
+	if spring == null:
+		_miss("finds no Spring node under %s" % node.name)
+		return
+	var current: Variant = node.get_indexed(NodePath(property))
+	if not [TYPE_FLOAT, TYPE_INT, TYPE_VECTOR2, TYPE_VECTOR3, TYPE_COLOR].has(typeof(current)):
+		_miss("springs %s, which is not a number, a Vector2, a Vector3 or a colour" % property)
+		return
+	if not is_nan(damping) or not is_nan(frequency):
+		var tuned_damping: float = damping if not is_nan(damping) else float(spring.get("default_damping"))
+		var tuned_frequency: float = frequency if not is_nan(frequency) else sqrt(float(spring.get("default_stiffness"))) / TAU
+		spring.call("set_property_spring", property, tuned_damping, tuned_frequency)
+	_keep_first(node, property, current)
+	spring.call("bump_property", property, spring_kick(kick, current, at_strength))
+	var key: String = "%d|%s" % [spring.get_instance_id(), property]
+	if _springs_moving.has(key):
+		_ways_back.erase(_springs_moving[key])
+	var settle: Callable = _spring_rest.bind(spring, node, property)
+	_springs_moving[key] = settle
+	_ways_back.append(settle)
+	var landed: Callable = _spring_landed.bind(spring)
+	if not spring.is_connected("spring_reached", landed):
+		spring.connect("spring_reached", landed)
+
+## A Spring card.
+func _spring(card: Dictionary, at: float) -> void:
+	kick_spring(_target(card, "node", true), str(card.get("property", "scale")), card.get("kick"),
+			float(card["damping"]) if card.has("damping") else NAN, float(card["frequency"]) if card.has("frequency") else NAN, at)
+
+## Moves one parameter of an AnimationTree to `to` over `seconds` and brings it back over `back_seconds` when `comes_back`
+## is on. A number or a vector is walked; a tick or a whole number is set and put back when the time is up. Stop leaves it
+## where it got to, Restore puts it back.
+## @ace_hidden
+func tween_animation_parameter(tree: AnimationTree, parameter: String, to: Variant = null, seconds: float = 0.2,
+		comes_back: bool = true, back_seconds: float = 0.2) -> void:
+	if tree == null:
+		_miss("points at no animation tree")
+		return
+	if not writable_parameters(tree).has(parameter):
+		_miss("names the parameter \"%s\", which this tree has no writable parameter of" % parameter)
+		return
+	var rest: Variant = tree.get(parameter)
+	_keep_first(tree, parameter, rest)
+	back_seconds = maxf(back_seconds, 0.0)
+	var wanted: Variant = to if to != null else rest
+	match typeof(rest):
+		TYPE_BOOL:
+			wanted = bool(wanted)
+		TYPE_INT:
+			wanted = int(wanted)
+		TYPE_VECTOR2:
+			wanted = wanted as Vector2 if wanted is Vector2 else Vector2(float(wanted), float(wanted))
+		_:
+			wanted = float(wanted)
+	if typeof(rest) == TYPE_BOOL or typeof(rest) == TYPE_INT:
+		if comes_back:
+			_hold_for(tree, parameter, wanted, seconds)
+		else:
+			tree.set(parameter, wanted)
+		return
+	var made: Tween = _new_tween()
+	made.tween_method(_set_parameter.bind(tree, parameter), rest, wanted, seconds)
+	if comes_back:
+		made.tween_method(_set_parameter.bind(tree, parameter), wanted, rest, back_seconds)
+
+## An Animation Parameter card.
+func _animation_parameter(card: Dictionary, seconds: float) -> void:
+	tween_animation_parameter(_target(card, "node", false) as AnimationTree, str(card.get("parameter", "")), card.get("to"), seconds,
+			bool(card.get("back", true)), float(card.get("back_seconds", 0.2)))
+
+# --- The Grayscale and Position Shake cards ---
+
+## The group the Screen FX layer joins, so this pack finds it without naming it.
+const SCREEN_FX_GROUP: StringName = &"screen_fx_post_stack"
+
+## The Screen FX layer a Grayscale card greyed, so Stop, Restore and leaving the scene can bring the colour back.
+var _gray_screen: Node = null
+
+## The Screen FX layer of the running scene, or null when there is none.
+func _screen_fx() -> Node:
+	if not is_inside_tree():
+		return null
+	return get_tree().get_first_node_in_group(SCREEN_FX_GROUP)
+
+## Where this player's object is for a screen effect: its place in the world for a 2D object, the place on the screen it
+## shows at for a 3D one (the second item is true when the first is already a screen place, 0 to 1 across and down).
+func _screen_origin() -> Array:
+	if host is Node3D and is_inside_tree():
+		var camera: Camera3D = get_viewport().get_camera_3d()
+		var size: Vector2 = get_viewport().get_visible_rect().size
+		if camera != null and size.x > 0.0 and size.y > 0.0:
+			return [camera.unproject_position((host as Node3D).global_position) / size, true]
+	if host is Control:
+		return [(host as Control).get_global_rect().get_center(), false]
+	if host is Node2D:
+		return [(host as Node2D).global_position, false]
+	return [Vector2(0.5, 0.5), true]
+
+## A Grayscale card: the whole screen, or a circle growing from the object or from a place on the screen. The Screen FX
+## layer does the work, so its no-flashing floor and ceiling and the effect-strength dial hold it.
+func _grayscale(card: Dictionary, at: float, seconds: float, skipping: bool) -> void:
+	var stay: bool = bool(card.get("stay", false))
+	if skipping and not stay:
+		return
+	var screen: Node = _screen_fx()
+	if screen == null or not screen.has_method("grayscale_from"):
+		_miss("finds no Screen FX layer in the scene to grey")
+		return
+	var amount: float = clampf(float(card.get("amount", 1.0)) * at, 0.0, 1.0)
+	_gray_screen = screen
+	if str(card.get("shape", "screen")) != "circle":
+		screen.call("grayscale", amount, seconds, float(card.get("fade_in", 0.2)), float(card.get("fade_out", 0.4)), stay)
+		return
+	var origin: Array = _screen_origin()
+	var point: Vector2 = origin[0]
+	var in_screen: bool = bool(origin[1])
+	if str(card.get("from", "here")) == "screen":
+		point = Vector2(float(card.get("screen_x", 0.5)), float(card.get("screen_y", 0.5)))
+		in_screen = true
+	screen.call("grayscale_from", point, float(card.get("reach", 800.0)), seconds, amount, float(card.get("softness", 0.2)),
+			bool(card.get("colour_inside", false)), float(card.get("fade_out", 0.4)), stay, in_screen)
+
+## Brings the colour back if a Grayscale card of this player greyed the screen.
+func _end_grayscale() -> void:
+	var screen: Node = _gray_screen
+	_gray_screen = null
+	if screen != null and is_instance_valid(screen) and screen.has_method("clear_grayscale"):
+		screen.call("clear_grayscale", 0.0)
+
+## Shakes ONLY the position of a node for `seconds`, by up to `amount` (pixels for a 2D node or a Control, metres for a
+## 3D node), then puts it back exactly: never the camera, the rotation or the size. The Juice node beside this player does
+## the shaking. The weights say how much of the amount goes along each axis (0 for none, so 0 and 1 and 0 shakes sideways
+## only); `jumps_per_second` is how often it jumps to a new place. `at_strength` scales the amount.
+## @ace_hidden
+func shake_position(node: Node, amount: float = 8.0, seconds: float = 0.4, fade_in: bool = false, fade_out: bool = true,
+		curve: Curve = null, x_weight: float = 1.0, y_weight: float = 1.0, z_weight: float = 1.0,
+		jumps_per_second: float = 30.0, at_strength: float = 1.0) -> void:
+	if node == null or not (node is Node2D or node is Control or node is Node3D):
+		_miss("points at no node whose position can be shaken")
+		return
+	var looked: Array = []
+	if host != null:
+		looked.append_array(host.get_children())
+	looked.append_array(get_children())
+	for child: Variant in looked:
+		var shaker: Node = child as Node
+		if shaker != null and shaker.has_method("shake_position_on") and bool(shaker.call("shake_position_on", node, amount, seconds,
+				fade_in, fade_out, curve, Vector3(x_weight, y_weight, z_weight), jumps_per_second, at_strength)):
+			return
+	_miss("finds no Juice node beside it that can shake %s" % node.name)
+
+## A Position Shake card.
+func _position_shake(card: Dictionary, at: float, seconds: float) -> void:
+	var curve: Curve = null
+	var kept: String = str(card.get("curve", "")).strip_edges()
+	if not kept.is_empty() and ResourceLoader.exists(kept):
+		curve = load(kept) as Curve
+	shake_position(_target(card, "node", true), float(card.get("amount", 8.0)), seconds, bool(card.get("fade_in", false)),
+			bool(card.get("fade_out", true)), curve, float(card.get("weight_x", 1.0)), float(card.get("weight_y", 1.0)),
+			float(card.get("weight_z", 1.0)), float(card.get("jumps", 30.0)), at)"""

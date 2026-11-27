@@ -169,6 +169,9 @@ func _shader_for(effect: String) -> Shader:
 		push_warning("Screen FX has no shader file for the \"%s\" effect at %s." % [effect, path])
 	_shaders[effect] = found
 	return found
+## The entry the Grayscale rows wear: the shipped Desaturate effect under its own name, so a project's own Desaturate
+## entry is left alone and Clear Grayscale takes away only what Grayscale made.
+const GRAYSCALE_ENTRY: String = "grayscale"
 
 func _ready() -> void:
 	# Findable by name rather than by a walk of the tree: a layer added after the game has started
@@ -919,5 +922,120 @@ func _walk_strength(called: String, to_value: float, seconds: float, back_to: fl
 	if drop_after:
 		walk.finished.connect(func() -> void: remove_post_effect(called))
 	_stack_walks[called] = walk
+
+# @ace_action
+# @ace_featured
+# @ace_name("Grayscale")
+# @ace_display_template("Grayscale the screen to [b]{amount}[/b] for [b]{seconds}[/b] s")
+# @ace_param(amount, default: 1.0, desc: "How grey, 0 to 1. 1 is black and white; 0 puts the colour back. Grey, gray, black and white, monochrome, desaturate.")
+# @ace_param(seconds, default: 1.0, desc: "How long the whole effect lasts: the drain in, the stay and the colour coming back.")
+# @ace_param(fade_in, default: 0.2, desc: "Seconds the colour takes to drain out.")
+# @ace_param(fade_out, default: 0.4, desc: "Seconds the colour takes to come back.")
+# @ace_param(stay, default: false, desc: "On: the screen stays grey until Clear Grayscale (a death moment, a flashback). Seconds and Fade out are then ignored.")
+# @ace_codegen_template("$ScreenFx.grayscale({amount}, {seconds}, {fade_in}, {fade_out}, {stay})")
+## Puts the colour out of the whole screen: it drains over `fade_in` seconds, stays grey, and comes back over `fade_out`
+## seconds so that all of it lasts `seconds`. `amount` is how grey, 0 to 1. With `stay` on the screen stays grey until
+## Clear Grayscale, a Grayscale of amount 0, or a Juice Player's Stop puts the colour back. It is the Desaturate effect of
+## the post stack, so the effect-strength dial scales it and while no flashing is on it is held under the ceiling and its
+## times over the floor. Use the Grayscale behaviour to grey ONE object instead of the screen.
+func grayscale(amount: float = 1.0, seconds: float = 1.0, fade_in: float = 0.2, fade_out: float = 0.4, stay: bool = false) -> void:
+	if amount <= 0.0:
+		clear_grayscale(fade_in)
+		return
+	_grayscale_entry(Vector2(0.5, 0.5), -1.0, 0.2, false)
+	_stop_walk_on(GRAYSCALE_ENTRY)
+	var drain: float = _slowed(fade_in)
+	var back: float = _slowed(fade_out)
+	var hold: float = maxf(_slowed(seconds) - drain - back, 0.0)
+	var wanted: float = clampf(amount, 0.0, 1.0)
+	if not is_inside_tree():
+		_write_strength(GRAYSCALE_ENTRY, wanted)
+		if not stay:
+			remove_post_effect(GRAYSCALE_ENTRY)
+		return
+	var walk: Tween = create_tween()
+	walk.tween_method(func(value: float) -> void: _write_strength(GRAYSCALE_ENTRY, value), 0.0, wanted, maxf(drain, 0.001))
+	if not stay:
+		walk.tween_interval(hold)
+		walk.tween_method(func(value: float) -> void: _write_strength(GRAYSCALE_ENTRY, value), wanted, 0.0, maxf(back, 0.001))
+		walk.tween_callback(remove_post_effect.bind(GRAYSCALE_ENTRY))
+	_stack_walks[GRAYSCALE_ENTRY] = walk
+
+# @ace_action
+# @ace_name("Grayscale From Point")
+# @ace_display_template("Grayscale spreading from [b]{point}[/b] to [b]{reach}[/b] px in [b]{seconds}[/b] s")
+# @ace_param(point, default: Vector2(0, 0), desc: "Where the circle starts: a place in the world, the way Shockwave takes one.")
+# @ace_param(reach, default: 800.0, desc: "How far the circle grows, in screen pixels from its middle. A circle about the screen's width covers the screen. Grey, gray, black and white, radial, expanding.")
+# @ace_param(seconds, default: 1.0, desc: "How long the circle takes to grow.")
+# @ace_param(amount, default: 1.0, desc: "How grey it goes inside the circle, 0 to 1.")
+# @ace_param(softness, default: 0.2, desc: "How soft the edge is, 0 sharp to 1 fading across the whole radius.")
+# @ace_param(colour_inside, default: false, desc: "On: colour inside the circle and grey outside it.")
+# @ace_param(fade_out, default: 0.4, desc: "Seconds the grey takes to fade away once the circle has grown.")
+# @ace_param(stay, default: false, desc: "On: the grey stays until Clear Grayscale.")
+# @ace_param(in_screen, default: false, desc: "On: the point is a place on the screen, 0 to 1 across and down, instead of a place in the world.")
+# @ace_codegen_template("$ScreenFx.grayscale_from({point}, {reach}, {seconds}, {amount}, {softness}, {colour_inside}, {fade_out}, {stay}, {in_screen})")
+## Puts the colour out of the screen in a circle that grows from a point: grey inside the circle and colour outside, the
+## circle widening from nothing to `reach` pixels over `seconds`. `point` is a place in the world (a screen place, 0 to 1
+## across and down, when `in_screen` is on). `softness` is how soft the edge is, 0 to 1 of the radius. `colour_inside` turns
+## it round: colour inside the circle and grey outside, so a bright patch opens in a grey world. When the circle has grown
+## the grey fades out over `fade_out` seconds, unless `stay` is on, which holds it until Clear Grayscale. The same ceiling,
+## floor and effect-strength dial as Grayscale apply.
+func grayscale_from(point: Vector2 = Vector2.ZERO, reach: float = 800.0, seconds: float = 1.0, amount: float = 1.0, softness: float = 0.2, colour_inside: bool = false, fade_out: float = 0.4, stay: bool = false, in_screen: bool = false) -> void:
+	if amount <= 0.0:
+		clear_grayscale(fade_out)
+		return
+	var centre: Vector2 = point if in_screen else _screen_point(point)
+	_grayscale_entry(centre, 0.0, softness, colour_inside)
+	_stop_walk_on(GRAYSCALE_ENTRY)
+	_write_strength(GRAYSCALE_ENTRY, clampf(amount, 0.0, 1.0))
+	var grow: float = _slowed(seconds)
+	var back: float = _slowed(fade_out)
+	if not is_inside_tree():
+		_write_params(GRAYSCALE_ENTRY, {"reach": maxf(reach, 0.0)})
+		if not stay:
+			remove_post_effect(GRAYSCALE_ENTRY)
+		return
+	var walk: Tween = create_tween()
+	walk.tween_method(func(value: float) -> void: _write_params(GRAYSCALE_ENTRY, {"reach": value}), 0.0, maxf(reach, 0.0), maxf(grow, 0.001))
+	if not stay:
+		walk.tween_method(func(value: float) -> void: _write_strength(GRAYSCALE_ENTRY, value), clampf(amount, 0.0, 1.0), 0.0, maxf(back, 0.001))
+		walk.tween_callback(remove_post_effect.bind(GRAYSCALE_ENTRY))
+	_stack_walks[GRAYSCALE_ENTRY] = walk
+
+# @ace_action
+# @ace_name("Clear Grayscale")
+# @ace_display_template("Bring the colour back over [b]{seconds}[/b] s")
+# @ace_param(seconds, default: 0.4, desc: "Seconds the colour takes to come back. 0 is at once.")
+# @ace_codegen_template("$ScreenFx.clear_grayscale({seconds})")
+## Brings the colour back after Grayscale or Grayscale From Point, over `seconds`, and takes the entry away. Nothing happens
+## when the screen is not grey.
+func clear_grayscale(seconds: float = 0.4) -> void:
+	var at: int = _find(GRAYSCALE_ENTRY)
+	if at < 0:
+		return
+	_stop_walk_on(GRAYSCALE_ENTRY)
+	var back: float = _slowed(seconds)
+	if back <= 0.0 or not is_inside_tree():
+		remove_post_effect(GRAYSCALE_ENTRY)
+		return
+	var walk: Tween = create_tween()
+	walk.tween_method(func(value: float) -> void: _write_strength(GRAYSCALE_ENTRY, value), _stack[at].strength, 0.0, back)
+	walk.tween_callback(remove_post_effect.bind(GRAYSCALE_ENTRY))
+	_stack_walks[GRAYSCALE_ENTRY] = walk
+
+## Makes the entry the Grayscale rows wear, at nothing, with the circle's own dials: where it starts (0 to 1 across the
+## screen), how far it reaches (below 0 is the whole screen), how soft the edge is and which side is grey.
+func _grayscale_entry(centre: Vector2, reach: float, softness: float, colour_inside: bool) -> void:
+	if _find(GRAYSCALE_ENTRY) < 0:
+		add_post_effect("desaturate", GRAYSCALE_ENTRY, 0.0)
+	_write_params(GRAYSCALE_ENTRY, {"centre": centre, "reach": reach, "softness": clampf(softness, 0.0, 1.0), "colour_inside": colour_inside})
+
+# @ace_hidden
+## Holds an effect of the stack at a strength for a time the way a moment's Hold step does: an effect the stack does not hold
+## yet is added at nothing first, so the walk has somewhere to start from, and one it already holds keeps its place in the order.
+func hold_post_effect(effect: String = "vignette", to: float = 1.0, seconds: float = 0.5) -> void:
+	if post_strength(effect) <= 0.0001:
+		add_post_effect(effect, effect, 0.0)
+	fade_post_strength(effect, to, seconds, 0.0)
 
 # Screen FX: add screen_fx.tscn to your scene once (the pack does it for you when you add it to an object) and the four verbs are rows - Shockwave at a world point, Fade To a colour, Blur, Chromatic Pulse. Fade To is awaited, so the rows after it run when the fade lands: that is the scene transition. The rectangle turns itself off whenever nothing is running. On top of those sits the post stack: Add Post Effect and Pulse Post Effect wear one of twelve shaders each on its own rectangle, in order, and a whole stack saves as one look file you own. This pack is an event sheet - extend it by editing it.
