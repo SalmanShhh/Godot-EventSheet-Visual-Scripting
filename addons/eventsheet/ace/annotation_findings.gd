@@ -58,6 +58,8 @@ static func read(source: String, all_untyped: bool = false) -> Array[Dictionary]
 				if directive.begins_with("@ace_"):
 					has_words = true
 			continue
+		if stripped == "# Nodes this sheet calls, declared once with their type.":
+			continue  # the compiler's own note over its typed declarations, never a cut
 		if stripped.begins_with("#"):
 			# The annotation block above a member is cleared by any line that is not a `##` line, so a
 			# single-hash comment between the two cuts the words off from the member they describe.

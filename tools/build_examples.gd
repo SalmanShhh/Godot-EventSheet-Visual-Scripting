@@ -329,41 +329,39 @@ func _attach_behavior(parent: Node, node_name: String, path: String, root: Node,
 	return node
 
 
-## The behaviours a showcase's scene already holds, from the scene file beside the script: `{"$Skater/Skateboard":
+## The behaviours a showcase's own scene already holds (the scene that carries the same name as the script, never a
+## neighbour in the folder: two showcases share a folder and give the same node name different classes): `{"$Skater/Skateboard":
 ## "SkateboardBehavior"}` for every node whose script publishes a class. Most showcases write the sheet before
 ## the scene (the scene points at the compiled script), so this is what lets a sheet call the behaviours of a
 ## scene that is written after it. A scene not written yet gives nothing, and the next build finds it.
-func _scene_behaviors(folder: String) -> Dictionary:
+func _scene_behaviors(scene_path: String) -> Dictionary:
 	var found: Dictionary = {}
-	for file_name: String in DirAccess.get_files_at(folder):
-		if not file_name.ends_with(".tscn"):
-			continue
-		var scripts: Dictionary = {}
-		var node_paths: Dictionary = {}
-		var current_path: String = ""
-		var in_node: bool = false
-		for line: String in FileAccess.get_file_as_string("%s/%s" % [folder, file_name]).split("
+	if not FileAccess.file_exists(scene_path):
+		return found
+	var scripts: Dictionary = {}
+	var current_path: String = ""
+	var in_node: bool = false
+	for line: String in FileAccess.get_file_as_string(scene_path).split("
 "):
-			if line.begins_with("[ext_resource") and line.contains("type=\"Script\""):
-				scripts[_quoted_after(line, " id=")] = _quoted_after(line, " path=")
-			elif line.begins_with("[node "):
-				in_node = true
-				var node_name: String = _quoted_after(line, " name=")
-				var parent: String = _quoted_after(line, " parent=")
-				if not line.contains(" parent="):
-					current_path = ""
-				elif parent == ".":
-					current_path = node_name
-				else:
-					current_path = "%s/%s" % [parent, node_name]
-			elif line.begins_with("["):
-				in_node = false
-			elif in_node and line.begins_with("script = ExtResource(") and not current_path.is_empty():
-				var script_path: String = str(scripts.get(_quoted_after(line, "ExtResource("), ""))
-				var script: GDScript = load(script_path) as GDScript if not script_path.is_empty() else null
-				if script != null and not script.get_global_name().is_empty():
-					node_paths["$" + current_path] = str(script.get_global_name())
-		found.merge(node_paths, true)
+		if line.begins_with("[ext_resource") and line.contains("type=\"Script\""):
+			scripts[_quoted_after(line, " id=")] = _quoted_after(line, " path=")
+		elif line.begins_with("[node "):
+			in_node = true
+			var node_name: String = _quoted_after(line, " name=")
+			var parent: String = _quoted_after(line, " parent=")
+			if not line.contains(" parent="):
+				current_path = ""
+			elif parent == ".":
+				current_path = node_name
+			else:
+				current_path = "%s/%s" % [parent, node_name]
+		elif line.begins_with("["):
+			in_node = false
+		elif in_node and line.begins_with("script = ExtResource(") and not current_path.is_empty():
+			var script_path: String = str(scripts.get(_quoted_after(line, "ExtResource("), ""))
+			var script: GDScript = load(script_path) as GDScript if not script_path.is_empty() else null
+			if script != null and not script.get_global_name().is_empty():
+				found["$" + current_path] = str(script.get_global_name())
 	return found
 
 
@@ -394,7 +392,7 @@ func _compile(sheet: EventSheetResource, _tres_path: String, gd_path: String) ->
 	EventSheets.stabilize_row_uids(sheet)
 	# The script declares one typed variable for each behaviour node it calls (see node_variables.gd).
 	sheet.typed_node_variables = true
-	sheet.node_variable_types = _scene_behaviors(gd_path.get_base_dir())
+	sheet.node_variable_types = _scene_behaviors(gd_path.get_basename() + ".tscn")
 	sheet.node_variable_types.merge(_attached, true)
 	# .gd-only: the showcase .gd IS the sheet (no .tres companion), banner-less so it's hand-editable.
 	# Normal synthesizing compile - do NOT set external_source_path (that path is only for opening an
@@ -5403,7 +5401,8 @@ const PIN_MODES_DIR := "res://demo/showcase/pin_modes"
 
 
 func _build_pin_modes() -> bool:
-	return _build_pin_modes_2d() and _build_pin_modes_3d()
+	# Two showcases in one call: the second starts with none of the first one's behaviours remembered.
+	return _build_pin_modes_2d() and _begin_showcase() and _build_pin_modes_3d()
 
 
 func _build_pin_modes_2d() -> bool:
