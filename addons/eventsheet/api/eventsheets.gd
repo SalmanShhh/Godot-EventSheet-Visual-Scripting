@@ -651,6 +651,19 @@ static func echo(sheet: EventSheetResource) -> Dictionary:
 	return EventSheetCompiler.echo(sheet)
 
 
+## `compile()` with a typed answer: the same compile, the same file written under the same rules, and the
+## result as an `EventSheetCompileResult` (`result.success`, `result.output`, `result.errors` ...) rather
+## than a Dictionary whose keys must be remembered. `compile()` itself is unchanged.
+static func compile_result(sheet: EventSheetResource, output_path: String = "") -> EventSheetCompileResult:
+	return EventSheetCompileResult.from_dictionary(compile(sheet, output_path))
+
+
+## `echo()` with a typed answer: the code a sheet compiles to, written nowhere, as an `EventSheetCompileResult`.
+## `echo()` itself is unchanged.
+static func echo_result(sheet: EventSheetResource) -> EventSheetCompileResult:
+	return EventSheetCompileResult.from_dictionary(echo(sheet))
+
+
 ## ALL the GDScript a variable compiles to - its "Ships as:" truth, decor comments, tooltip, grouping
 ## and the @export annotation included. Deterministic: same variable, same bytes. More than one line
 ## whenever the declaration needs one (a doc comment above it, a Static local's marker). For the ONE
