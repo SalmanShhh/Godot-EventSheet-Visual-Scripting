@@ -2,6 +2,7 @@ class_name TraversalCourseDemo
 extends Node2D
 ## [b]Traversal Course[/b] - the Traversal Kit on a CharacterBody2D, one move per station. Arrow keys run and jump (Platformer movement), and the kit does the rest: walk off the tower to hang from the lip and press Space to mantle, or Down to drop; press into the shaft walls to slide down them; stand on the ladder and hold Up; walk into the low block and press Space to vault it; swim in the pool. The kit writes velocity and Platformer movement does the moving, so both packs stack on the same body. Four actors run the same rows on a loop with no input at all: the Climber grabs and mantles, the Jumper wall-jumps up the shaft, and the Diver and the Stone fall together - one into the water, one beside it.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var movement: PlatformerMovement = $Jumper/Movement
 @onready var traversal: TraversalKit = $Player/Traversal
 @onready var player_movement: PlatformerMovement = $Player/Movement

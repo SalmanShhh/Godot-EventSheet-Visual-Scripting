@@ -2,6 +2,7 @@ class_name GuardBrainDemo
 extends Node2D
 ## [b]Guard Brain (Utility AI)[/b] - a self-driving guard with no input. The UtilityBrain scores three actions (patrol / chase / flee) from a threat signal that rises and falls plus a stamina wave; a response curve shapes each score, and the highest wins. Set Input -> Evaluate -> read Current Action is the whole loop - the addon drives a real decision maker, not a fixed state machine. Attach a UtilityBrain to any node and score your own actions the same way.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var brain: UtilityBrain = $Guard/Brain
 
 @export var t: float = 0.0

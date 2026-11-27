@@ -2,6 +2,7 @@ class_name InputRebindDemo
 extends Control
 ## [b]Input Rebind[/b] - a rebinding screen on the Game Settings rows. Click a key, press another, and a clash asks Swap, Take it anyway or Pick another key; Esc cancels; the keyboard and pad columns are kept side by side; and Save Bindings keeps the choice for the next launch (user://settings.cfg, section [bindings]). In your own project the Game Settings pack is the Settings autoload, so the rows read Settings.save_bindings(); here the same pack is a child node named Settings, so they read $Settings.save_bindings(). The two demo controls are declared the way Project Settings declares them, so Reset works exactly as in a real project, and project.godot is left alone.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var settings: GameSettingsAddon = $Settings
 @onready var hud_kit: HudKitBehavior = $HudKit
 

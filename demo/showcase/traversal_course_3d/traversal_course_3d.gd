@@ -2,6 +2,7 @@ class_name TraversalCourse3DDemo
 extends Node3D
 ## [b]Traversal Course 3D[/b] - the same five moves as the 2D course, in metres on a CharacterBody3D, with no controller pack anywhere. The sheet writes the two lines a mover writes - gravity and move_and_slide - and Traversal Kit 3D writes everything between them: the Climber grabs the tower's lip and mantles onto it, the Jumper wall jumps across the shaft (the push follows the wall's own normal), the Ladder Bot climbs a marked Area3D, the Vaulter throws itself over the low block, and the Diver and the Stone fall together - the Diver into a marked pool where Swim and Float hold it near the surface.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var traversal: TraversalKit3D = $Climber/Traversal
 @onready var jumper_traversal: TraversalKit3D = $Jumper/Traversal
 @onready var ladder_bot_traversal: TraversalKit3D = $LadderBot/Traversal

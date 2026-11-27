@@ -11447,4 +11447,4 @@ Sideways,Latéral
 Up and down,Haut et bas
 Depth (3D),Profondeur (3D)
 Jumps,Sauts
-"%s calls the node %s a %s (the variable %s), but in this scene it is %s. Godot stops at that line when the scene loads: give the node the %s script, or change the type the script declares.",
+"%s calls the node %s a %s (the variable %s), but in this scene it is %s. Godot stops at that line when the scene loads: give the node the %s script, or change the type the script declares.","%s appelle le nœud %s un %s (la variable %s), mais dans cette scène c'est %s. Godot s'arrête sur cette ligne au chargement de la scène : donnez au nœud le script %s, ou changez le type que le script déclare."

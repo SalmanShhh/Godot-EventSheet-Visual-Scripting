@@ -2,6 +2,7 @@ class_name MenuStarter
 extends Control
 ## [b]Menu Starter[/b] - a complete menu flow (title / settings / game / pause overlay) driven by [b]one HUD Kit behavior[/b]: screens switch by NAME, bars and labels update by NAME, and every Button reports through the pack's single [b]On Button Pressed[/b] trigger - the scene contains [b]zero connected signals[/b]. Copy this scene as your project's UI starting point.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var hud_kit: HudKitBehavior = $HudKit
 
 var time_alive: float = 0.0

@@ -91,6 +91,8 @@ const SKATEBOARD_PACK := "res://eventsheet_addons/skateboard/skateboard_behavior
 const SKATEBOARD_3D_PACK := "res://eventsheet_addons/skateboard_3d/skateboard_3d_behavior.gd"
 
 
+const NodeVariables := preload("res://addons/eventforge/compiler/node_variables.gd")
+
 static func run() -> bool:
 	var ok: bool = true
 	ok = _facts_and_refusals() and ok
@@ -372,7 +374,9 @@ static func _showcases() -> bool:
 	for named: Array in [["res://demo/showcase/skate_park/skate_park.gd", "roll_with_slope"],
 			["res://demo/showcase/skate_park_3d/skate_park_3d.gd", "align_board_to_surface"]]:
 		var path: String = str(named[0])
-		var source: String = FileAccess.get_file_as_string(path)
+		var shipped: String = FileAccess.get_file_as_string(path)
+		# Read back as paths: a showcase that keeps typed variables writes `skateboard.roll_with_slope()` for `$Skater/Skateboard.roll_with_slope()`.
+		var source: String = str(NodeVariables.expand(shipped).get("text", shipped))
 		ok = _check("%s ships" % path.get_file(), source.is_empty(), false) and ok
 		ok = _check("%s calls the pack rather than doing the math" % path.get_file(),
 			source.contains("$Skater/Skateboard.%s()" % str(named[1])), true) and ok
@@ -383,7 +387,7 @@ static func _showcases() -> bool:
 		# The sheet is a lens over this file, so it has to reopen as itself.
 		var sheet: EventSheetResource = EventSheetGDScriptImporter.new().import_external(path)
 		ok = _check("%s reopens and recompiles byte-identically" % path.get_file(),
-			str(EventSheetCompiler.compile(sheet, path).get("output", "")), source) and ok
+			str(EventSheetCompiler.compile(sheet, path).get("output", "")), shipped) and ok
 	# The measured physics, from the non-headless harness that ran these scenes (deleted after use).
 	# Written down because a number nobody recorded is a number nobody can notice changing:
 	#   2D  the board lands on the slope at frame 22 and its x speed goes 0.00 -> 93.61 over the

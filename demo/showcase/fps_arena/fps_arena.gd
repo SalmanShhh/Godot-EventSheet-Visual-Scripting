@@ -1,6 +1,7 @@
 extends Node3D
 ## [b]FPS Arena[/b] - A first-person controller with a weapon and targets. The FPSController behavior does all the work, and this sheet only prints the controls and flips the camera mode on Tab.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var navigator: NavAgent3D = $Stalker/Navigator
 @onready var fps_controller: FPSController = $Player/FPSController
 

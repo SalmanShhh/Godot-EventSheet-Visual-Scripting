@@ -2,6 +2,7 @@ class_name ObjectPoolingDemo
 extends Node2D
 ## [b]Object Pooling[/b] - a fountain throws about a hundred and twenty sparks a second, and each spark lives a little over a second. Press Space to switch pooling on and off and watch the strip at the foot of the screen: with pooling on, the first second makes about a hundred and fifty sparks and every spark after that is one that expired a moment ago, so nodes made stops climbing; with pooling off, every spark is a new node that is freed when it expires, so nodes made climbs for as long as you watch. A reused spark is put back to a fresh one by its own reset function, which the pool calls on every spawn. In your own project the Object Pool pack is the ObjectPool autoload, so the rows read ObjectPool.spawn(); here it sits as a child node of the same name, so they read $ObjectPool.spawn(), and an expired spark is handed back with Retire, which returns it to the pool that made it wherever that pool sits and frees a spark that was built new.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var object_pool: ObjectPoolAddon = $ObjectPool
 
 ## True while sparks come from the pool; false while every spark is a new node that is freed when it expires.

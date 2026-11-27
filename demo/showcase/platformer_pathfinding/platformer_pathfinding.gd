@@ -2,6 +2,7 @@ class_name PlatformerPathfindingDemo
 extends Node2D
 ## [b]Platformer Pathfinding[/b] - the smallest chaser the pack can make. On ready the graph is built from the TileMapLayer and Find Path To Node is called ONCE: the follow re-routes itself from then on, so there is no repath timer to write. The Chaser carries no movement code of its own - Platformer Pathfinding steers the sibling Platformer Movement through its ai_move_axis seam, which is why it accelerates, jumps the 3-tile gap and climbs both ledges under exactly the rules you play by. Green line = the route it is walking.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var pathfinding: PlatformerPathfinding = $Chaser/Pathfinding
 @onready var movement: PlatformerMovement = $Player/Movement
 

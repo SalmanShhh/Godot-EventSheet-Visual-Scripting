@@ -47,7 +47,9 @@ const GroupHeaders := preload("res://addons/eventforge/compiler/group_headers.gd
 ## A trigger handler's parameters the events under it never read, written `_name` (Godot's own cure for
 ## "The parameter is never used"). Heads are marked as they are written and spelled once the file is.
 const UnusedParams := preload("res://addons/eventforge/compiler/unused_params.gd")
-const NodeVariables := preload("res://addons/eventforge/compiler/node_variables.gd")
+## Typed variables for the nodes a sheet calls. Loaded by path, and only for a sheet that keeps them, so a sheet
+## that does not never compiles it.
+const NODE_VARIABLES_PATH := "res://addons/eventforge/compiler/node_variables.gd"
 const BehaviorPreviewEmit := preload("res://addons/eventforge/compiler/behavior_preview_emit.gd")
 ## Stamped by the lift on a kept handler head that was already spelled the compiler's way, so the
 ## compiler may spell it again against the body it has now.
@@ -1407,34 +1409,12 @@ static func _compile_external(sheet: EventSheetResource, result: Dictionary, out
 	return result
 
 
-## The typed variables for the nodes the sheet calls (compiler/node_variables.gd says what is written and
-## where), for a sheet that keeps them. The declarations land under the class head, so the source map
-## below it moves down by the lines added.
+## The typed variables for the nodes the sheet calls, for a sheet that keeps them (compiler/node_variables.gd
+## says what is written and where, and moves the source map down by the lines it adds).
 static func _write_node_variables(lines: PackedStringArray, sheet: EventSheetResource, result: Dictionary) -> void:
-	if not sheet.typed_node_variables or sheet.tool_mode or sheet.behavior_mode:
-		return
-	var types: Dictionary = _node_variable_classes(sheet)
-	var placed: Vector2i = NodeVariables.apply(lines, types)
-	if placed.y > 0:
-		_shift_source_map(result.get("source_map", []), placed.x + 1, placed.y)
-
-
-## The class each node path wears for this sheet: what the sheet remembers, then what its rows say (a
-## pack's verb is on that pack's node). A path two packs claim is left out, since neither is the answer.
-static func _node_variable_classes(sheet: EventSheetResource) -> Dictionary:
-	var types: Dictionary = sheet.node_variable_types.duplicate()
-	var conflicts: Dictionary = {}
-	var from_rows: Dictionary = {}
-	NodeVariables.types_from_rows(sheet.events, from_rows, conflicts)
-	for function_entry: Variant in sheet.functions:
-		if function_entry is EventFunction:
-			NodeVariables.types_from_rows(_function_body_rows(function_entry as EventFunction), from_rows, conflicts)
-	for path: Variant in from_rows:
-		if not types.has(path):
-			types[path] = from_rows[path]
-	for path: Variant in conflicts:
-		types.erase(path)
-	return types
+	if sheet.typed_node_variables and not sheet.tool_mode and not sheet.behavior_mode:
+		var node_variables: GDScript = load(NODE_VARIABLES_PATH)
+		node_variables.write_into(lines, sheet, result.get("source_map", []))
 
 
 ## The text with its annotation comments in the spelling the sheet keeps: one hash for a sheet built from rows

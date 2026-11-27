@@ -2,6 +2,7 @@ class_name GuardPostDemo
 extends Node2D
 ## [b]Guard Post (UHTN Planning)[/b] - Utility AI steering an HTN, fully data-driven. The whole plan lives in guard_plan.tres (Inspector grids: tasks, methods, preconditions, scorer curves) dropped on the planner's Plan Resource slot. The prowler sweeps in and out; a closeness fact through a linear curve ranks the chase method LIVE, so far = watch (fixed utility 0.25) and near = chase, with no re-authoring. Oscillating health feeds a fear scorer (inverse curve) whose flee method only competes while the hurt precondition holds. Every 9s Force Task pushes a scripted salute beat. The HUD shows both scorer values ticking - tune the curves in the .tres and watch behavior change.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var planner: UHTNPlanner = $Guard/Planner
 
 var __every_uhtn_replan: float = 0.0

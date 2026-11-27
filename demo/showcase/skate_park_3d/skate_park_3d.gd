@@ -2,6 +2,7 @@ class_name SkatePark3D
 extends Node3D
 ## [b]Skate Park 3D[/b] - the Skateboard 3D pack, playable. Roll With The Slope projects gravity onto the surface normal so the bank at the end carves, Align The Board To The Surface keeps the board flat on it, and leaving the bank fires On Launched Off The Lip. The rail is an ordinary Path3D. Space pushes, Up ollies, Right spins in the air.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var skateboard: Skateboard3DMovement = $Skater/Skateboard
 
 ## Everything banked so far this run.

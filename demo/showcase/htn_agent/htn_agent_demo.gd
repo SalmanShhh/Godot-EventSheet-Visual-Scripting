@@ -2,6 +2,7 @@ class_name ChefPlannerDemo
 extends Node2D
 ## [b]Chef Planner (HTN Agent)[/b] - a self-driving planner, no input. The compound task make_meal decomposes (via a method whose world-state condition holds) into an ordered plan gather -> cook -> serve; a tick marks each primitive task complete and walks the plan to the end. Add tasks + methods, Request Plan, Mark Task Complete - the whole hierarchical-planning loop. Attach an HTN Agent to any node and give it your own task network.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var planner: HTNAgent = $Chef/Planner
 
 var __every_chef: float = 0.0

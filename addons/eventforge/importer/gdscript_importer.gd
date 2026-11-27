@@ -11,8 +11,10 @@
 class_name EventSheetGDScriptImporter
 extends RefCounted
 
-## Typed variables for called nodes: taken out of a file before it is read, put back by the compiler.
-const NodeVariables := preload("res://addons/eventforge/compiler/node_variables.gd")
+## Typed variables for called nodes: taken out of a file before it is read, put back by the compiler. Loaded by
+## path, and only for a file that declares an `@onready` variable, so the first open of every other file never
+## compiles it.
+const NODE_VARIABLES_PATH := "res://addons/eventforge/compiler/node_variables.gd"
 
 ## The lift that takes a generated `_validate_property` back onto its variables. Loaded by path, and
 ## only for a file that carries the generated function's doc line, so the first open of every other
@@ -111,7 +113,11 @@ static func _autoload_target_matches(target: String, script_path: String) -> boo
 ## the spelling, so saving it writes the one hash back. A file that mixes the two spellings is read as it
 ## stands: its two-hash lines are annotations and its one-hash lines stay comments, which cannot move a byte.
 func import_external_source(source: String, lift: bool = true, script_path: String = "") -> EventSheetResource:
-	var typed: Dictionary = NodeVariables.expand(source)
+	var typed: Dictionary = {}
+	if source.contains("
+@onready var "):
+		var node_variables: GDScript = load(NODE_VARIABLES_PATH)
+		typed = node_variables.expand(source)
 	if not typed.is_empty():
 		# A file that declares typed variables for its nodes (compiler/node_variables.gd) is read as if it
 		# wrote the paths, so its rows are the rows the same file would have with `$Path`. The sheet then

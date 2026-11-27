@@ -34,6 +34,7 @@ extends RefCounted
 
 
 const SUPPORT := preload("res://tests/support.gd")
+const NodeVariables := preload("res://addons/eventforge/compiler/node_variables.gd")
 
 
 static func run() -> bool:
@@ -316,7 +317,9 @@ static func _enemies_and_pickups() -> bool:
 ## starts writing a different one both land here.
 static func _showcase_sheets() -> bool:
 	var ok: bool = true
-	var level: String = FileAccess.get_file_as_string("res://demo/showcase/boomer_level/boomer_level.gd")
+	# Read back as paths: a showcase that keeps typed variables writes `fps_controller.bob_with_movement(...)` for `$Player/FPSController.`.
+	var written: String = FileAccess.get_file_as_string("res://demo/showcase/boomer_level/boomer_level.gd")
+	var level: String = str(NodeVariables.expand(written).get("text", written))
 	var door: String = FileAccess.get_file_as_string("res://demo/showcase/boomer_level/keycard_door.gd")
 	var grunt: String = FileAccess.get_file_as_string("res://demo/showcase/boomer_level/grunt.gd")
 	var pickup: String = FileAccess.get_file_as_string("res://demo/showcase/boomer_level/health_pickup.gd")

@@ -93,7 +93,7 @@ static func _typed_form(ok: bool) -> bool:
 	var script: GDScript = GDScript.new()
 	script.source_code = typed
 	var rows: Array = [
-		["the declaration sits under the class head", typed.begins_with("extends Control\n\n@onready var hud_kit: HudKitBehavior = $HudKit\n\n\nfunc _ready()"), true],
+		["the declaration sits under the class head", typed.begins_with("extends Control\n\n# Nodes this sheet calls, declared once with their type.\n@onready var hud_kit: HudKitBehavior = $HudKit\n\n\nfunc _ready()"), true],
 		["calls go through the variable", typed.contains("\thud_kit.set_text(\"ScoreLabel\", \"Ready\")\n"), true],
 		["no call is left on the path", typed.contains("$HudKit.set_text"), false],
 		["the path is written once", typed.count("$HudKit"), 1],
@@ -190,8 +190,21 @@ func _ready() -> void:
 	hud.set_text("ScoreLabel", "Ready")
 """
 	var sheet: EventSheetResource = SUPPORT.reopen(source)
+	# The same lines as the compiler writes them, name and place and all, but without the comment it puts above
+	# them: still a script somebody wrote, so its variable stays a variable of its own.
+	var look_alike: String = """extends Control
+
+@onready var hud_kit: HudKitBehavior = $HudKit
+
+
+func _ready() -> void:
+	hud_kit.set_text("ScoreLabel", "Ready")
+"""
+	var alike: EventSheetResource = SUPPORT.reopen(look_alike)
 	var rows: Array = [
 		["a script with a variable of its own is read as it stands", sheet.typed_node_variables, false],
 		["and saves byte for byte", _compiled(sheet, path), source],
+		["so is one whose variable looks just like the compiler's", alike.typed_node_variables, false],
+		["and its variable is still a row of its own", _compiled(alike, path), look_alike],
 	]
 	return SUPPORT.pins(TEST_NAME, rows) and ok

@@ -2,6 +2,7 @@ class_name QuestFsm
 extends Node2D
 ## [b]Quest & Inventory FSM[/b] - a self-driving quest engine (no input): an enum+match state machine walks OFFERED -> ACTIVE -> COMPLETE, a reused grant_item() function fills a Dictionary inventory + Array quest log and emits signals, and signal: triggers spring/tween the icon on every beat. Proves the sheet compiles real software logic - collections, signals, functions, match - not just movement.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var spring_behavior: SpringBehavior = $Icon/SpringBehavior
 @onready var tween_behavior: TweenBehavior = $Icon/TweenBehavior
 

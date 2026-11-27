@@ -2,6 +2,7 @@ class_name DrawLabDemo
 extends Node2D
 ## [b]Draw Lab[/b] - four Drawing Canvases with different jobs. The Player carries an AUTO-CLEAR canvas redrawing a raycast Line Of Sight fan every tick (the walls carve it); the Enemy carries one redrawing a rotating attack-telegraph cone; the whole-screen PERSISTENT canvas keeps everything drawn on it - the paint trail dripping under the Player and the target-marker DRAWING PREFABS (an ordered shape formation authored as a .tres, replayed by Draw Prefab at any position/scale/rotation - press Space to stamp one where you stand); and the center canvas ribbons the orbiting comet.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var paint: DrawingCanvas = $PaintLayer/Paint
 @onready var fx: DrawingCanvas = $FxLayer/Fx
 @onready var vision: DrawingCanvas = $Player/Vision

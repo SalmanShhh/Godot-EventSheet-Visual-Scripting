@@ -11447,4 +11447,4 @@ Sideways,좌우
 Up and down,위아래
 Depth (3D),깊이 (3D)
 Jumps,점프 횟수
-"%s calls the node %s a %s (the variable %s), but in this scene it is %s. Godot stops at that line when the scene loads: give the node the %s script, or change the type the script declares.",
+"%s calls the node %s a %s (the variable %s), but in this scene it is %s. Godot stops at that line when the scene loads: give the node the %s script, or change the type the script declares.","%s 에서 노드 %s 을(를) %s(변수 %s)로 취급하지만 이 씬에서는 %s 입니다. 씬을 불러올 때 Godot가 그 줄에서 멈춥니다. 노드에 %s 스크립트를 지정하거나 스크립트에 선언한 타입을 바꾸세요."

@@ -2,6 +2,7 @@ class_name SkatePark
 extends Node2D
 ## [b]Skate Park[/b] - the Skateboard pack, playable. The slope hands you speed (Roll With The Slope projects gravity along the floor), the rail across the middle is an ordinary Path2D you snap to, and the quarterpipe at the end gives back what the drop gave you. Left/Right steer the balance, Space pushes, Up ollies, and holding Right in the air spins. Nothing here does skating math - every row is a Skateboard row.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var skateboard: SkateboardMovement = $Skater/Skateboard
 @onready var hud_kit: HudKitBehavior = $Hud/HudKit
 @onready var checkpoint: CheckpointBehavior = $Skater/Checkpoint

@@ -4,6 +4,7 @@ extends Node3D
 ##
 ## [b]Boomer Level[/b] - A keycard, a locked door and two grunts that turn on each other, ending in an exit tally. WASD moves, the mouse looks, Tab throws a rocket at the grunts. Find the red keycard, open the door, take the exit.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var fps_controller: FPSController = $Player/FPSController
 @onready var grunt_1: BoomerLevelGrunt = $Grunt1
 @onready var red_door: BoomerLevelDoor = $RedDoor

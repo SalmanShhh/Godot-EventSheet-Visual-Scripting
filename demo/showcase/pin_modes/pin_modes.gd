@@ -2,6 +2,7 @@ class_name PinModesDemo
 extends Node2D
 ## [b]Pin Modes[/b] - six ways one object can ride another, running at once. The sheet moves only the ANCHORS (the post, the engine, the walker); everything else is a Pin behavior in a different mode. Watch the rope go slack and then snap taut, the bar hold its length through every turn, the camera target trail behind, the hat overshoot and settle, the shadow keep its own ground line, and the sword stay in the hand rather than beside the body.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var pin: Pin3DBehavior = $Lantern/Pin
 @onready var cart_pin: Pin3DBehavior = $Cart/Pin
 @onready var cam_target_pin: Pin3DBehavior = $CamTarget/Pin

@@ -323,6 +323,7 @@ works, but Godot cannot say what `$HudKit` is, so nothing completes after the do
 is found only when the line runs. A sheet now compiles the same call as
 
 ```gdscript
+# Nodes this sheet calls, declared once with their type.
 @onready var hud_kit: HudKitBehavior = $HudKit
 
 
@@ -355,7 +356,8 @@ What to know:
   words, naming the node and what it actually is: give the node the behaviour's script, or change the
   type in the script.
 - **Your own variable is respected.** A script that already declares `@onready var hud: HudKitBehavior =
-  $HudKit` and calls through `hud` opens as it always did, and saves back the same bytes.
+  $HudKit` and calls through `hud` opens as it always did, and saves back the same bytes. The comment above the compiler's declarations is what marks them as the
+  compiler's: a variable you wrote yourself, even one that looks exactly the same, stays a variable of your own.
 
 ## The boundary: what stays code, and why that is right
 

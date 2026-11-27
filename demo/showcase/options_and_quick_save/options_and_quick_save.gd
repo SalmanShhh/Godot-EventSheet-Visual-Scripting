@@ -2,6 +2,7 @@ class_name OptionsAndQuickSaveDemo
 extends Control
 ## [b]Options and Quick Save[/b] - three kinds of thing a game keeps, each in its own file. Master volume and fullscreen are options (Settings, user://settings.cfg); the controls, F5 and F9 among them, are saved bindings (the same file, section [bindings]); and coins, player_spot and picked_coins are the game itself, set to Manually in Save Studio, Saving your game, What gets saved, so F5 (Save Game) writes them to user://save_0.cfg and F9 (Load Game) brings them back. picked_coins is there so a coin you picked up stays gone after a relaunch and a load: without it the player would load onto a coin that had come back and pick it up twice. Tab opens the options. In your own project the Game Settings and Save System packs are the Settings and SaveSystem autoloads, so the rows read Settings.save_all_settings() and SaveSystem.save_game(); here they sit under a plain Services node, standing in for the autoloads, so they read $Services/Settings. and $Services/SaveSystem. They are not children of the saved object on purpose: Save Game snapshots the behaviours that sit directly on a saved node, and the options are kept in their own file.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var settings: GameSettingsAddon = $Services/Settings
 @onready var save_system: SaveSystemAddon = $Services/SaveSystem
 @onready var hud_kit: HudKitBehavior = $HudKit

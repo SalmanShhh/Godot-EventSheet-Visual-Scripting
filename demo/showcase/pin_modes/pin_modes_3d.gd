@@ -2,6 +2,7 @@ class_name PinModes3DDemo
 extends Node3D
 ## [b]Pin Modes 3D[/b] - the same six relationships, on the Pin 3D pack. Nothing here is a child of anything it follows: every one of them is a pin, which is why each can let go and none of them is destroyed when its anchor is. The point pin rides a Marker3D on the walker, which is where a BoneAttachment3D would sit on a real rig.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var pin: PinBehavior = $Lantern/Pin
 @onready var cart_pin: PinBehavior = $Cart/Pin
 @onready var cam_target_pin: PinBehavior = $CamTarget/Pin

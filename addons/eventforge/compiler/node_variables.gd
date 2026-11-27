@@ -44,6 +44,11 @@ const RESERVED: PackedStringArray = [
 	"dict_to_inst", "weakref", "is_instance_valid", "is_instance_of", "type_string", "error_string", "fmod", "log", "exp",
 ]
 
+## The comment above the declarations. It tells a reader why the lines are there, and it is what marks them as
+## written by the compiler: a script that declares a variable of its own by hand, even one that looks the same,
+## is never read as having typed variables, so its variable stays a variable of its own.
+const MARKER: String = "# Nodes this sheet calls, declared once with their type."
+
 const _PATH: String = "[A-Za-z_][A-Za-z0-9_]*(?:/[A-Za-z_][A-Za-z0-9_]*)*"
 const _DECLARATION: String = "^@onready var ([a-z_][a-z0-9_]*): ([A-Za-z_][A-Za-z0-9_]*) = (\\$" + _PATH + ")$"
 
@@ -94,12 +99,41 @@ static func apply(lines: PackedStringArray, types: Dictionary) -> Vector2i:
 			line = line.substr(0, found_all[at].get_start()) + str(names[path]) + line.substr(found_all[at].get_end() - 1)
 		lines[index] = line
 	var insert_at: int = _head_end(lines, extends_at)
-	var block: PackedStringArray = PackedStringArray([""])
+	var block: PackedStringArray = PackedStringArray(["", MARKER])
 	for path: String in used:
 		block.append("@onready var %s: %s = %s" % [names[path], types[path], path])
 	for offset: int in range(block.size()):
 		lines.insert(insert_at + offset, block[offset])
 	return Vector2i(insert_at, block.size())
+
+
+## Writes the typed variables of a sheet into its finished lines, and moves the source map (1-based inclusive line
+## ranges) down by the lines added. The classes are what the sheet remembers, then what its rows say (a pack's
+## verb is on that pack's node); a path two packs claim is left out, since neither is the answer.
+static func write_into(lines: PackedStringArray, sheet: EventSheetResource, source_map: Array) -> void:
+	var types: Dictionary = sheet.node_variable_types.duplicate()
+	var conflicts: Dictionary = {}
+	var from_rows: Dictionary = {}
+	types_from_rows(sheet.events, from_rows, conflicts)
+	for function_entry: Variant in sheet.functions:
+		if function_entry is EventFunction:
+			var function_rows: Array = (function_entry as EventFunction).events
+			types_from_rows(function_rows if not function_rows.is_empty() else (function_entry as EventFunction).rows, from_rows, conflicts)
+	for path: Variant in from_rows:
+		if not types.has(path):
+			types[path] = from_rows[path]
+	for path: Variant in conflicts:
+		types.erase(path)
+	var placed: Vector2i = apply(lines, types)
+	if placed.y <= 0:
+		return
+	for entry: Variant in source_map:
+		if entry is Dictionary:
+			var range_entry: Dictionary = entry as Dictionary
+			if int(range_entry.get("start", 0)) >= placed.x + 1:
+				range_entry["start"] = int(range_entry["start"]) + placed.y
+			if int(range_entry.get("end", 0)) >= placed.x + 1:
+				range_entry["end"] = int(range_entry["end"]) + placed.y
 
 
 ## Where the declarations go: straight under the class head, after the comment block a class may carry
@@ -133,11 +167,11 @@ static func expand(source: String) -> Dictionary:
 	if extends_at < 0:
 		return {}
 	var at: int = _head_end(lines, extends_at)
-	if at >= lines.size() or not lines[at].is_empty():
+	if at + 1 >= lines.size() or not lines[at].is_empty() or lines[at + 1] != MARKER:
 		return {}
 	var paths: Dictionary = {}
 	var types: Dictionary = {}
-	var cursor: int = at + 1
+	var cursor: int = at + 2
 	while cursor < lines.size():
 		var found: RegExMatch = _declaration_re.search(lines[cursor])
 		if found == null:

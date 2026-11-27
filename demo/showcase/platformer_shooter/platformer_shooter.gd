@@ -2,6 +2,7 @@ class_name PlatformerShooter
 extends Node2D
 ## [b]Platformer-Shooter[/b] - the new Platformer + Weapon Kit packs working together. Run with A/D, jump with Up (double jump + coyote time + variable height from the Platformer pack), and hold Space to shoot (fire-rate, ammo and auto-reload from the Weapon Kit). Shots destroy the red targets drifting in from the right.
 
+# Nodes this sheet calls, declared once with their type.
 @onready var platformer_movement: PlatformerMovement = $Player/PlatformerMovement
 @onready var weapon_kit: WeaponKit = $Player/WeaponKit
 

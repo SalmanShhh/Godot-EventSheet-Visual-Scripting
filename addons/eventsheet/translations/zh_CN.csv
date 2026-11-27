@@ -11447,4 +11447,4 @@ Sideways,左右
 Up and down,上下
 Depth (3D),深度(3D)
 Jumps,跳动次数
-"%s calls the node %s a %s (the variable %s), but in this scene it is %s. Godot stops at that line when the scene loads: give the node the %s script, or change the type the script declares.",
+"%s calls the node %s a %s (the variable %s), but in this scene it is %s. Godot stops at that line when the scene loads: give the node the %s script, or change the type the script declares.","%s 把节点 %s 当作 %s(变量 %s),但在这个场景中它是 %s。场景加载时 Godot 会在那一行停止:请给节点挂上 %s 脚本,或修改脚本中声明的类型。"
