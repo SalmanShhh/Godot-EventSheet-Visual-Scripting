@@ -2,6 +2,10 @@ class_name PathChaseDemo
 extends Node2D
 ## [b]Path Chase[/b] - Platformer Pathfinding + Platformer Movement on one Chaser: the graph is built from the TileMapLayer once, then Find Path To Node re-routes to the Player every second. The pathfinder derives jump reach from the movement pack and steers it through the ai_move_axis seam - the same movement rules you play with, variable jump included. The purple PORTAL pair links the ground to the floating platform, the tile BRIDGE over the gap toggles every 3 seconds + Regenerate Nav Graph, the red zone is a DEADLY HAZARD routes refuse (forcing the high-platform detour), the orange ELEVATOR is a registered moving platform - the Chaser waits for it, rides it, and walks off onto the tower - and the yellow Guard PATROLS the high platform (Start Patrol: walk to an end, wait, turn), reusing the Chaser's graph because both carry the same Map Tag. Green line = the Chaser's path.
 
+@onready var pathfinding: PlatformerPathfinding = $Chaser/Pathfinding
+@onready var guard_pathfinding: PlatformerPathfinding = $Guard/Pathfinding
+@onready var movement: PlatformerMovement = $Player/Movement
+
 var bridge_on: bool = false
 var platform_time: float = 0.0
 var __every_repath: float = 0.0
@@ -9,15 +13,15 @@ var __every_bridge: float = 0.0
 
 
 func _ready() -> void:
-	$Chaser/Pathfinding.build_nav_graph($Level)
-	$Chaser/Pathfinding.add_portal(976.0, 528.0, 176.0, 304.0, true)
-	$Chaser/Pathfinding.add_hazard(704.0, 512.0, 192.0, 64.0, true)
-	$Chaser/Pathfinding.add_moving_platform($MovingPlatform, 1088.0, 552.0, 1088.0, 200.0)
-	$Chaser/Pathfinding.set_nav_debug_draw(true)
+	pathfinding.build_nav_graph($Level)
+	pathfinding.add_portal(976.0, 528.0, 176.0, 304.0, true)
+	pathfinding.add_hazard(704.0, 512.0, 192.0, 64.0, true)
+	pathfinding.add_moving_platform($MovingPlatform, 1088.0, 552.0, 1088.0, 200.0)
+	pathfinding.set_nav_debug_draw(true)
 	$Guard.add_collision_exception_with($Chaser)
 	$Guard.add_collision_exception_with($Player)
-	$Guard/Pathfinding.build_nav_graph($Level)
-	$Guard/Pathfinding.start_patrol(0.8, 8.0)
+	guard_pathfinding.build_nav_graph($Level)
+	guard_pathfinding.start_patrol(0.8, 8.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -39,15 +43,15 @@ func _process(delta: float) -> void:
 	__every_repath += delta
 	if __every_repath >= 1.0:
 		__every_repath = fmod(__every_repath, 1.0)
-		$Chaser/Pathfinding.find_path_to_node($Player, "nearest")
+		pathfinding.find_path_to_node($Player, "nearest")
 	__every_bridge += delta
 	if __every_bridge >= 3.0:
 		__every_bridge = fmod(__every_bridge, 3.0)
 		toggle_bridge()
 	if Input.is_action_just_pressed("ui_accept"):
-		$Player/Movement.jump()
+		movement.jump()
 	if Input.is_action_just_released("ui_accept"):
-		$Player/Movement.jump_released()
+		movement.jump_released()
 
 
 # @ace_hidden
@@ -58,4 +62,4 @@ func toggle_bridge() -> void:
 			$Level.set_cell(Vector2i(x, 17), 0, Vector2i.ZERO)
 		else:
 			$Level.erase_cell(Vector2i(x, 17))
-	$Chaser/Pathfinding.regenerate_nav_graph()
+	pathfinding.regenerate_nav_graph()

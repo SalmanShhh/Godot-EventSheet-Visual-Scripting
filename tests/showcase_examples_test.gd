@@ -10,6 +10,7 @@ extends RefCounted
 
 
 const SUPPORT := preload("res://tests/support.gd")
+const NodeVariables := preload("res://addons/eventforge/compiler/node_variables.gd")
 
 
 static func run() -> bool:
@@ -654,8 +655,11 @@ static func _check_sheet(label: String, path: String, required: Array) -> bool:
 	var script: GDScript = GDScript.new()
 	script.source_code = parse_source
 	ok = _check("%s output parses as GDScript" % label, script.reload(true) == OK, true) and ok
+	# The tokens below name the node a row calls by its path (`$HudKit.set_bar(`). A showcase that keeps typed
+	# variables writes that call through the variable instead, so the text is read back as paths first.
+	var as_paths: String = str(NodeVariables.expand(output).get("text", output))
 	for token: String in required:
-		ok = _check("%s output contains: %s" % [label, token], output.contains(token), true) and ok
+		ok = _check("%s output contains: %s" % [label, token], as_paths.contains(token), true) and ok
 	return ok
 
 

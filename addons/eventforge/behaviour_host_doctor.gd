@@ -80,7 +80,63 @@ static func report_for_scene(scene_path: String, text: String, behaviours: Dicti
 		var nearest: String = nearest_host(nodes, node, host_type)
 		findings.append(_found(scene_path, node, Articles.agree_article("%s is under a %s; it needs %s: put it under one, or set Acts on." % [
 			label, actual, EventSheetCompiler.host_phrase(host_type)], actual), nearest))
+	findings.append_array(_typed_variable_findings(scene_path, scene, behaviours))
 	return findings
+
+
+## A script that declares `@onready var hud_kit: HudKitBehavior = $HudKit` is promising Godot what the node
+## at that path is. When the scene holds the node and it is something else, Godot refuses the line when the
+## scene loads with a message about types and a variable name; this says it in plain words first, naming
+## the node and what it actually is. A node the scene does not hold (made while the game runs) or one that
+## is an instanced scene says nothing: without the evidence, silence.
+static func _typed_variable_findings(scene_path: String, scene: Dictionary, _behaviours: Dictionary) -> Array[Dictionary]:
+	var findings: Array[Dictionary] = []
+	var by_path: Dictionary = scene["by_path"] as Dictionary
+	var declaration: RegEx = RegEx.create_from_string("(?m)^@onready var ([A-Za-z_][A-Za-z0-9_]*): ([A-Za-z_][A-Za-z0-9_]*) = \\$([A-Za-z_][A-Za-z0-9_/]*)$")
+	for node: Dictionary in scene["nodes"] as Array:
+		var script_path: String = str((scene["scripts"] as Dictionary).get(str(node["script_id"]), ""))
+		if script_path.is_empty():
+			continue
+		var source: String = EventSheetProjectDoctor.source_of(script_path)
+		if not source.contains("\n@onready var "):
+			continue
+		for found: RegExMatch in declaration.search_all(source):
+			var node_path: String = found.get_string(3) if str(node["path"]) == "." else "%s/%s" % [str(node["path"]), found.get_string(3)]
+			var target: Dictionary = by_path.get(node_path, {}) as Dictionary
+			if target.is_empty() or str(target["type"]).is_empty():
+				continue
+			var declared: String = found.get_string(2)
+			var actual: String = _node_kind(target, scene)
+			if actual.is_empty() or _is_kind(actual, declared):
+				continue
+			findings.append(_found(scene_path, node, EventSheetL10n.translate(
+				"%s calls the node %s a %s (the variable %s), but in this scene it is %s. Godot stops at that line when the scene loads: give the node the %s script, or change the type the script declares.") % [
+				script_path.get_file(), found.get_string(3), declared, found.get_string(1), actual, declared], ""))
+	return findings
+
+
+## What a scene node is, in words: its script's class when it has one, else the engine type it was saved as.
+static func _node_kind(node: Dictionary, scene: Dictionary) -> String:
+	var script_path: String = str((scene["scripts"] as Dictionary).get(str(node["script_id"]), ""))
+	if script_path.is_empty():
+		return str(node["type"])
+	var named: RegExMatch = RegEx.create_from_string("(?m)^class_name ([A-Za-z_][A-Za-z0-9_]*)$").search(EventSheetProjectDoctor.source_of(script_path))
+	return named.get_string(1) if named != null else script_path.get_file()
+
+
+## True when a node of kind `actual` can stand where `declared` is promised: the same class, an engine class
+## that derives from it, or a script whose class derives from it by name.
+static func _is_kind(actual: String, declared: String) -> bool:
+	if actual == declared:
+		return true
+	if ClassDB.class_exists(actual) and ClassDB.class_exists(declared):
+		return ClassDB.is_parent_class(actual, declared)
+	for entry: Dictionary in ProjectSettings.get_global_class_list():
+		if str(entry.get("class", "")) == actual:
+			var base: String = str(entry.get("base", ""))
+			return base == declared or (base != actual and base != "" and _is_kind(base, declared))
+	# A script with no class name of its own: nothing to compare, so nothing to say.
+	return actual.ends_with(".gd")
 
 
 ## True when a node of type `actual` is a `host_type`. A type the engine does not know (a script's

@@ -2,6 +2,9 @@ class_name SkillTreeShowcase
 extends Control
 ## [b]Skill Tree[/b] - a data asset, laid out. Six skills in two branches live in adventurer_tree.tres with their costs, their prerequisites and what they grant. The screen spawns one button per skill and draws a line to each one it requires; grey means a prerequisite is missing, gold means it can be taken now, green means it is taken. Clicking one is a single Unlock row, which spends a point, records the level and hands the grant to StatForge - so Swift makes the runner faster with no formula written anywhere, and Double Jump grants nothing at all because the runner asks about it directly. Arrow keys move the runner, Space jumps.
 
+@onready var hud_kit: HudKitBehavior = $HudKit
+@onready var stats: StatForge = $Runner/Stats
+
 ## The Skill Tree data asset this screen draws.
 @export var tree: Resource = null
 var upgrades: Node = null
@@ -17,13 +20,13 @@ func _ready() -> void:
 	upgrades = $Upgrades
 	upgrades.load_skill_tree(tree)
 	upgrades.apply_grants_to($Runner/Stats)
-	$HudKit.on_button_pressed.connect(unlock_pressed)
+	hud_kit.on_button_pressed.connect(unlock_pressed)
 	lay_out()
 
 func _process(_delta: float) -> void:
 	refresh_states()
-	$HudKit.set_text("PointsValue", "Skill points left: %d" % upgrades.skill_points_left())
-	$HudKit.set_text("SpeedValue", "Speed: %0.0f" % $Runner/Stats.stat_total("speed"))
+	hud_kit.set_text("PointsValue", "Skill points left: %d" % upgrades.skill_points_left())
+	hud_kit.set_text("SpeedValue", "Speed: %0.0f" % stats.stat_total("speed"))
 
 # @ace_hidden
 func lay_out() -> void:
@@ -37,7 +40,7 @@ func lay_out() -> void:
 		button.mouse_entered.connect(show_grants.bind(id))
 		$TreeNodes.add_child(button)
 		buttons[id] = button
-	$HudKit.connect_buttons()
+	hud_kit.connect_buttons()
 	refresh_states()
 	queue_redraw()
 
@@ -56,13 +59,13 @@ func refresh_states() -> void:
 
 # @ace_hidden
 func unlock_pressed() -> void:
-	upgrades.unlock_skill($HudKit.last_button_name_value())
+	upgrades.unlock_skill(hud_kit.last_button_name_value())
 	refresh_states()
 
 # @ace_hidden
 func show_grants(id: String) -> void:
 	var grants: String = upgrades.skill_grants_text(id)
-	$HudKit.set_text("GrantsValue", grants if not grants.is_empty() else "a perk the runner asks about")
+	hud_kit.set_text("GrantsValue", grants if not grants.is_empty() else "a perk the runner asks about")
 
 # @ace_hidden
 func _draw() -> void:

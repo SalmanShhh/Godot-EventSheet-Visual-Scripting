@@ -55,38 +55,38 @@ func _init() -> void:
 		_committed = _read_tree()
 	var sidecars: Dictionary = UID_SIDECARS.snapshot(PackedStringArray([SHOWCASE_ROOT]))
 	var all_ok: bool = true
-	all_ok = _build_carousel() and all_ok
-	all_ok = _build_starfall() and all_ok
-	all_ok = _build_quest_fsm() and all_ok
-	all_ok = _build_platformer_shooter() and all_ok
-	all_ok = _build_swarm() and all_ok
-	all_ok = _build_family_arena() and all_ok
-	all_ok = _build_inspector_playground() and all_ok
-	all_ok = _build_enemy_stats() and all_ok
-	all_ok = _build_menu_starter() and all_ok
-	all_ok = _build_utility_ai() and all_ok
-	all_ok = _build_htn_agent() and all_ok
-	all_ok = _build_uhtn_planning() and all_ok
-	all_ok = _build_fps_arena() and all_ok
-	all_ok = _build_input_rebind() and all_ok
-	all_ok = _build_options_and_quick_save() and all_ok
-	all_ok = _build_path_chase() and all_ok
-	all_ok = _build_platformer_pathfinding() and all_ok
-	all_ok = _build_top_down_shooter() and all_ok
-	all_ok = _build_draw_lab() and all_ok
-	all_ok = _build_raycast_lab() and all_ok
-	all_ok = _build_raycast_lab_3d() and all_ok
-	all_ok = _build_hierarchy_playground() and all_ok
-	all_ok = _build_mirror_and_flip() and all_ok
-	all_ok = _build_boomer_level() and all_ok
-	all_ok = _build_pin_modes() and all_ok
-	all_ok = _build_skill_tree() and all_ok
-	all_ok = _build_skate_park() and all_ok
-	all_ok = _build_skate_park_3d() and all_ok
-	all_ok = _build_traversal_course() and all_ok
-	all_ok = _build_traversal_course_3d() and all_ok
-	all_ok = _build_combo_fighter() and all_ok
-	all_ok = _build_object_pooling() and all_ok
+	all_ok = _begin_showcase() and _build_carousel() and all_ok
+	all_ok = _begin_showcase() and _build_starfall() and all_ok
+	all_ok = _begin_showcase() and _build_quest_fsm() and all_ok
+	all_ok = _begin_showcase() and _build_platformer_shooter() and all_ok
+	all_ok = _begin_showcase() and _build_swarm() and all_ok
+	all_ok = _begin_showcase() and _build_family_arena() and all_ok
+	all_ok = _begin_showcase() and _build_inspector_playground() and all_ok
+	all_ok = _begin_showcase() and _build_enemy_stats() and all_ok
+	all_ok = _begin_showcase() and _build_menu_starter() and all_ok
+	all_ok = _begin_showcase() and _build_utility_ai() and all_ok
+	all_ok = _begin_showcase() and _build_htn_agent() and all_ok
+	all_ok = _begin_showcase() and _build_uhtn_planning() and all_ok
+	all_ok = _begin_showcase() and _build_fps_arena() and all_ok
+	all_ok = _begin_showcase() and _build_input_rebind() and all_ok
+	all_ok = _begin_showcase() and _build_options_and_quick_save() and all_ok
+	all_ok = _begin_showcase() and _build_path_chase() and all_ok
+	all_ok = _begin_showcase() and _build_platformer_pathfinding() and all_ok
+	all_ok = _begin_showcase() and _build_top_down_shooter() and all_ok
+	all_ok = _begin_showcase() and _build_draw_lab() and all_ok
+	all_ok = _begin_showcase() and _build_raycast_lab() and all_ok
+	all_ok = _begin_showcase() and _build_raycast_lab_3d() and all_ok
+	all_ok = _begin_showcase() and _build_hierarchy_playground() and all_ok
+	all_ok = _begin_showcase() and _build_mirror_and_flip() and all_ok
+	all_ok = _begin_showcase() and _build_boomer_level() and all_ok
+	all_ok = _begin_showcase() and _build_pin_modes() and all_ok
+	all_ok = _begin_showcase() and _build_skill_tree() and all_ok
+	all_ok = _begin_showcase() and _build_skate_park() and all_ok
+	all_ok = _begin_showcase() and _build_skate_park_3d() and all_ok
+	all_ok = _begin_showcase() and _build_traversal_course() and all_ok
+	all_ok = _begin_showcase() and _build_traversal_course_3d() and all_ok
+	all_ok = _begin_showcase() and _build_combo_fighter() and all_ok
+	all_ok = _begin_showcase() and _build_object_pooling() and all_ok
 	for path: String in UID_SIDECARS.changed_since(sidecars):
 		push_error("[build_examples] the build changed %s - put back as it was" % path)
 		all_ok = false
@@ -303,14 +303,77 @@ func _every(uid: String, seconds: String) -> ACECondition:
 	return every
 
 
+## The behaviours the showcase being built has put on its nodes, as the path a sheet writes after the `$`
+## (`Skater/Skateboard`) and the class each one wears. A sheet compiled for the showcase takes them as the
+## classes of its node variables, so a plain "call method" row on a child behaviour is written through a
+## typed variable too.
+var _attached: Dictionary = {}
+
+
+## Starts the next showcase with no behaviours remembered from the last one.
+func _begin_showcase() -> bool:
+	_attached.clear()
+	return true
+
+
 func _attach_behavior(parent: Node, node_name: String, path: String, root: Node, props: Dictionary = {}) -> Node:
-	var node: Node = (load(path) as GDScript).new()
+	var script: GDScript = load(path) as GDScript
+	var node: Node = script.new()
 	node.name = node_name
 	parent.add_child(node)
 	node.owner = root
+	if not script.get_global_name().is_empty():
+		_attached["$" + str(root.get_path_to(node))] = str(script.get_global_name())
 	for key: String in props.keys():
 		node.set(key, props[key])
 	return node
+
+
+## The behaviours a showcase's scene already holds, from the scene file beside the script: `{"$Skater/Skateboard":
+## "SkateboardBehavior"}` for every node whose script publishes a class. Most showcases write the sheet before
+## the scene (the scene points at the compiled script), so this is what lets a sheet call the behaviours of a
+## scene that is written after it. A scene not written yet gives nothing, and the next build finds it.
+func _scene_behaviors(folder: String) -> Dictionary:
+	var found: Dictionary = {}
+	for file_name: String in DirAccess.get_files_at(folder):
+		if not file_name.ends_with(".tscn"):
+			continue
+		var scripts: Dictionary = {}
+		var node_paths: Dictionary = {}
+		var current_path: String = ""
+		var in_node: bool = false
+		for line: String in FileAccess.get_file_as_string("%s/%s" % [folder, file_name]).split("
+"):
+			if line.begins_with("[ext_resource") and line.contains("type=\"Script\""):
+				scripts[_quoted_after(line, " id=")] = _quoted_after(line, " path=")
+			elif line.begins_with("[node "):
+				in_node = true
+				var node_name: String = _quoted_after(line, " name=")
+				var parent: String = _quoted_after(line, " parent=")
+				if not line.contains(" parent="):
+					current_path = ""
+				elif parent == ".":
+					current_path = node_name
+				else:
+					current_path = "%s/%s" % [parent, node_name]
+			elif line.begins_with("["):
+				in_node = false
+			elif in_node and line.begins_with("script = ExtResource(") and not current_path.is_empty():
+				var script_path: String = str(scripts.get(_quoted_after(line, "ExtResource("), ""))
+				var script: GDScript = load(script_path) as GDScript if not script_path.is_empty() else null
+				if script != null and not script.get_global_name().is_empty():
+					node_paths["$" + current_path] = str(script.get_global_name())
+		found.merge(node_paths, true)
+	return found
+
+
+## The text inside the first pair of quotes after `marker` on a line (`name="Skater"` gives `Skater`).
+func _quoted_after(line: String, marker: String) -> String:
+	var at: int = line.find(marker)
+	if at < 0:
+		return ""
+	var rest: String = line.substr(at + marker.length())
+	return rest.get_slice("\"", 1)
 
 
 ## Compile sheet straight to a banner-less .gd (no .tres) - the .gd IS the showcase sheet, hand-editable.
@@ -329,6 +392,10 @@ func _compile(sheet: EventSheetResource, _tres_path: String, gd_path: String) ->
 	# Deterministic row uids so rebuilding an unchanged showcase is byte-identical (no diff
 	# churn) - same fix the behavior-pack builder uses.
 	EventSheets.stabilize_row_uids(sheet)
+	# The script declares one typed variable for each behaviour node it calls (see node_variables.gd).
+	sheet.typed_node_variables = true
+	sheet.node_variable_types = _scene_behaviors(gd_path.get_base_dir())
+	sheet.node_variable_types.merge(_attached, true)
 	# .gd-only: the showcase .gd IS the sheet (no .tres companion), banner-less so it's hand-editable.
 	# Normal synthesizing compile - do NOT set external_source_path (that path is only for opening an
 	# existing .gd). Round-trip is covered by the showcase tests + import_external.

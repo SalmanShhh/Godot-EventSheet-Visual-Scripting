@@ -2,6 +2,9 @@ class_name QuestFsm
 extends Node2D
 ## [b]Quest & Inventory FSM[/b] - a self-driving quest engine (no input): an enum+match state machine walks OFFERED -> ACTIVE -> COMPLETE, a reused grant_item() function fills a Dictionary inventory + Array quest log and emits signals, and signal: triggers spring/tween the icon on every beat. Proves the sheet compiles real software logic - collections, signals, functions, match - not just movement.
 
+@onready var spring_behavior: SpringBehavior = $Icon/SpringBehavior
+@onready var tween_behavior: TweenBehavior = $Icon/TweenBehavior
+
 ## How far the quest has come, from first offered to handed in.
 enum QuestState {
 	## The quest is on the table; the next beat accepts it.
@@ -47,12 +50,12 @@ func _process(delta: float) -> void:
 	t = %d" % [["OFFERED", "ACTIVE", "COMPLETE"][quest_state], inventory.size(), quest_log.size(), tick]
 
 func _on_item_collected(_id: String) -> void:
-	$Icon/SpringBehavior.spring_host_scale(1.0)
-	$Icon/SpringBehavior.add_impulse("__scale", 6.0)
+	spring_behavior.spring_host_scale(1.0)
+	spring_behavior.add_impulse("__scale", 6.0)
 
 func _on_quest_advanced(_phase: int) -> void:
-	$Icon/TweenBehavior.tween_rotation($Icon.rotation_degrees + 120.0, 0.4)
-	$Icon/SpringBehavior.spring_host_scale(1.6)
+	tween_behavior.tween_rotation($Icon.rotation_degrees + 120.0, 0.4)
+	spring_behavior.spring_host_scale(1.6)
 
 # @ace_hidden
 func grant_item(id: String, qty: int) -> void:

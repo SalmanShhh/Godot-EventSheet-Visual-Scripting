@@ -55,6 +55,7 @@ static func run() -> bool:
 		EventSheetBehaviourHostDoctor.report_for_scene("res://instanced.tscn", WRONG.replace("name=\"Crate\" type=\"Node2D\"", "name=\"Crate\""), cache).size(), 0) and ok
 
 	ok = _move_pins(cache) and ok
+	ok = _typed_variable_pins(cache) and ok
 	ok = SUPPORT.pins(TEST_NAME, [
 		["class names read as words", [EventSheetCompiler.spaced_class_name("PlatformerMovement"), EventSheetCompiler.spaced_class_name("FPSController"), EventSheetCompiler.spaced_class_name("Camera3DRig")], ["Platformer Movement", "FPS Controller", "Camera3D Rig"]],
 		["the run-time sentence is the same words", EventSheetCompiler.host_warning_sentence("PlatformerMovement", "CharacterBody2D"), "Platformer Movement needs a CharacterBody2D: put it under one, or set Acts on."],
@@ -79,3 +80,25 @@ static func _move_pins(cache: Dictionary) -> bool:
 		after.replace("parent=\"Player\"]\nscript", "parent=\"Crate\"]\nscript").length() == WRONG.length(), true) and ok
 	DirAccess.remove_absolute(path)
 	return ok
+
+
+## A script that declares `@onready var hud_kit: HudKitBehavior = $HudKit` is promising what the node is: the
+## scene is read for a node that is something else, and a node it does not hold or cannot name stays quiet.
+static func _typed_variable_pins(cache: Dictionary) -> bool:
+	var script_path: String = SUPPORT.own_path("typed_variable_doctor.gd")
+	var file: FileAccess = FileAccess.open(script_path, FileAccess.WRITE)
+	file.store_string("extends Control\n\n@onready var hud_kit: HudKitBehavior = $HudKit\n")
+	file.close()
+	var head: String = "[gd_scene load_steps=2 format=3]\n\n[ext_resource type=\"Script\" path=\"%s\" id=\"1\"]\n\n" % script_path
+	var scene_head: String = head + "[node name=\"Menu\" type=\"Control\"]\nscript = ExtResource(\"1\")\n"
+	var wrong_kind: String = scene_head + "\n[node name=\"HudKit\" type=\"Label\" parent=\".\"]\n"
+	var unnamed: String = scene_head + "\n[node name=\"HudKit\" parent=\".\"]\n"
+	var wrong: Array[Dictionary] = EventSheetBehaviourHostDoctor.report_for_scene("res://typed.tscn", wrong_kind, cache)
+	var rows: Array = [
+		["a typed variable whose node is another kind is one finding", wrong.size(), 1],
+		["it names the variable, the node and what the node is", str(wrong[0]["message"]).contains("calls the node HudKit a HudKitBehavior (the variable hud_kit), but in this scene it is Label.") if wrong.size() == 1 else false, true],
+		["a node the scene does not hold says nothing", EventSheetBehaviourHostDoctor.report_for_scene("res://typed.tscn", scene_head, cache).size(), 0],
+		["an instanced scene's node says nothing", EventSheetBehaviourHostDoctor.report_for_scene("res://typed.tscn", unnamed, cache).size(), 0],
+	]
+	DirAccess.remove_absolute(script_path)
+	return SUPPORT.pins(TEST_NAME, rows)

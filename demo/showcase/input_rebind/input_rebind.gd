@@ -2,65 +2,68 @@ class_name InputRebindDemo
 extends Control
 ## [b]Input Rebind[/b] - a rebinding screen on the Game Settings rows. Click a key, press another, and a clash asks Swap, Take it anyway or Pick another key; Esc cancels; the keyboard and pad columns are kept side by side; and Save Bindings keeps the choice for the next launch (user://settings.cfg, section [bindings]). In your own project the Game Settings pack is the Settings autoload, so the rows read Settings.save_bindings(); here the same pack is a child node named Settings, so they read $Settings.save_bindings(). The two demo controls are declared the way Project Settings declares them, so Reset works exactly as in a real project, and project.godot is left alone.
 
+@onready var settings: GameSettingsAddon = $Settings
+@onready var hud_kit: HudKitBehavior = $HudKit
+
 
 func _ready() -> void:
-	$Settings.binding_changed.connect(_on_settings_binding_changed)
-	$Settings.binding_conflict.connect(_on_settings_binding_conflict)
+	settings.binding_changed.connect(_on_settings_binding_changed)
+	settings.binding_conflict.connect(_on_settings_binding_conflict)
 	$Column/ConflictPanel/Box/Answers/SwapButton.pressed.connect(_on_column_conflictpanel_box_answers_swapbutton_pressed)
 	$Column/ConflictPanel/Box/Answers/TakeButton.pressed.connect(_on_column_conflictpanel_box_answers_takebutton_pressed)
 	$Column/ConflictPanel/Box/Answers/PickAnotherButton.pressed.connect(_on_column_conflictpanel_box_answers_pickanotherbutton_pressed)
-	$Settings.binding_cancelled.connect(_on_settings_binding_cancelled)
+	settings.binding_cancelled.connect(_on_settings_binding_cancelled)
 	$Column/ResetAllButton.pressed.connect(_on_column_resetallbutton_pressed)
 	$Column/VibrateButton.pressed.connect(_on_column_vibratebutton_pressed)
 	define_demo_controls()
-	$Settings.load_bindings()
-	$Settings.build_controls_page($Column/Controls)
+	settings.load_bindings()
+	settings.build_controls_page($Column/Controls)
 
 
 func _on_settings_binding_changed(action: String) -> void:
-	$Settings.save_bindings()
-	$HudKit.set_text("StatusLabel", action + " is now " + $Settings.key_binding_of(action))
+	settings.save_bindings()
+	hud_kit.set_text("StatusLabel", action + " is now " + settings.key_binding_of(action))
 
 
 func _on_settings_binding_conflict(_action: String, taken_by: String) -> void:
-	$HudKit.show_panel("ConflictPanel")
-	$HudKit.set_text("ConflictLabel", $Settings.pending_binding_words() + " is already used by " + taken_by)
+	hud_kit.show_panel("ConflictPanel")
+	hud_kit.set_text("ConflictLabel", settings.pending_binding_words() + " is already used by " + taken_by)
 
 
 func _on_column_conflictpanel_box_answers_swapbutton_pressed() -> void:
-	$Settings.swap_the_binding()
-	$HudKit.hide_panel("ConflictPanel")
+	settings.swap_the_binding()
+	hud_kit.hide_panel("ConflictPanel")
 
 
 func _on_column_conflictpanel_box_answers_takebutton_pressed() -> void:
-	$Settings.take_the_binding_anyway()
-	$HudKit.hide_panel("ConflictPanel")
+	settings.take_the_binding_anyway()
+	hud_kit.hide_panel("ConflictPanel")
 
 
 func _on_column_conflictpanel_box_answers_pickanotherbutton_pressed() -> void:
-	$Settings.pick_another_key()
-	$HudKit.hide_panel("ConflictPanel")
+	settings.pick_another_key()
+	hud_kit.hide_panel("ConflictPanel")
 
 
 func _on_settings_binding_cancelled(_action: String) -> void:
-	$HudKit.hide_panel("ConflictPanel")
-	$HudKit.set_text("StatusLabel", "Kept the old key.")
+	hud_kit.hide_panel("ConflictPanel")
+	hud_kit.set_text("StatusLabel", "Kept the old key.")
 
 
 func _on_column_resetallbutton_pressed() -> void:
-	$Settings.reset_all_bindings()
-	$Settings.save_bindings()
+	settings.reset_all_bindings()
+	settings.save_bindings()
 
 
 func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed(&"demo_jump"):
-		$HudKit.show_toast("Jump!")
+		hud_kit.show_toast("Jump!")
 	if Input.is_action_just_pressed(&"demo_dash"):
-		$HudKit.show_toast("Dash!")
+		hud_kit.show_toast("Dash!")
 	if not Input.get_connected_joypads().is_empty():
-		$HudKit.set_text("GamepadLabel", gamepad_words())
+		hud_kit.set_text("GamepadLabel", gamepad_words())
 	else:
-		$HudKit.set_text("GamepadLabel", "Pad: none connected")
+		hud_kit.set_text("GamepadLabel", "Pad: none connected")
 
 
 func _on_column_vibratebutton_pressed() -> void:

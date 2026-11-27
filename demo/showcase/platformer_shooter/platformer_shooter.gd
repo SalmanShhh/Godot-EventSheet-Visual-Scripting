@@ -2,20 +2,23 @@ class_name PlatformerShooter
 extends Node2D
 ## [b]Platformer-Shooter[/b] - the new Platformer + Weapon Kit packs working together. Run with A/D, jump with Up (double jump + coyote time + variable height from the Platformer pack), and hold Space to shoot (fire-rate, ammo and auto-reload from the Weapon Kit). Shots destroy the red targets drifting in from the right.
 
+@onready var platformer_movement: PlatformerMovement = $Player/PlatformerMovement
+@onready var weapon_kit: WeaponKit = $Player/WeaponKit
+
 ## Targets destroyed.
 @export var score: int = 0
 var __every_ps_spawn: float = 0.0
 
 func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed(&"ui_up"):
-		$Player/PlatformerMovement.jump()
+		platformer_movement.jump()
 	if Input.is_action_just_released(&"ui_up"):
-		$Player/PlatformerMovement.jump_released()
-	if Input.is_action_pressed(&"ui_accept") and $Player/WeaponKit.can_fire():
-		$Player/WeaponKit.fire()
+		platformer_movement.jump_released()
+	if Input.is_action_pressed(&"ui_accept") and weapon_kit.can_fire():
+		weapon_kit.fire()
 		var __spawn_shot = load("res://demo/showcase/platformer_shooter/shot.tscn").instantiate()
-		__spawn_shot.position = $Player.position + Vector2(32.0 * $Player/PlatformerMovement.facing_direction(), -6.0)
-		__spawn_shot.rotation_degrees = 0.0 if $Player/PlatformerMovement.facing_direction() >= 0 else 180.0
+		__spawn_shot.position = $Player.position + Vector2(32.0 * platformer_movement.facing_direction(), -6.0)
+		__spawn_shot.rotation_degrees = 0.0 if platformer_movement.facing_direction() >= 0 else 180.0
 		add_child(__spawn_shot)
 		if "shots" != "": __spawn_shot.add_to_group("shots")
 	$Player.position.x = clampf($Player.position.x, 40.0, 1112.0)
@@ -39,4 +42,4 @@ func _physics_process(delta: float) -> void:
 			__node.queue_free()
 
 func _process(_delta: float) -> void:
-	$Hud.text = "Score %d    Ammo %d/%d    %s" % [score, $Player/WeaponKit.current_ammo, $Player/WeaponKit.max_ammo, ("RELOADING..." if $Player/WeaponKit.is_reloading() else "A/D move   Up jump   hold Space fire")]
+	$Hud.text = "Score %d    Ammo %d/%d    %s" % [score, weapon_kit.current_ammo, weapon_kit.max_ammo, ("RELOADING..." if weapon_kit.is_reloading() else "A/D move   Up jump   hold Space fire")]

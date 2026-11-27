@@ -3,6 +3,18 @@ extends Node2D
 ## [b]Carousel of Juice[/b] - 8 tiles sine-sway and spring-pop on the beat (one reused juice_tile function), and every beat pulses a vignette over the screen and pulls the colour channels apart along a fresh angle. A runtime-toggleable Juice group plus an if/elif/else keypress chain re-skin the board: [b]ui_accept[/b] starts the party - one row plays the Juice Player on the root, a list of juice cards that shakes and zooms the camera, freezes a few frames, splits the colours, pulses the vignette, glows the scene, muffles the sound, says a word the sheet counts and plays the players of the hero and of the 3D corner (where Juice 3D shakes, zooms, punches and flashes a cube); one tile keeps a looping player of its own - then one more effect on the post stack, then the live look written to user:// and worn straight back off disk - and [b]ui_cancel[/b] stops every Juice Player and puts back what they moved, slows time for a moment, calms it and starts over behind a fade. One tile is drawn blended as screen - Blend Modes ships as an autoload, and this row is that autoload's verb called on a child node of the same name, so the showcase runs with no project setting added. Watch beat/intensity/moments_played stream in Live Values.
 # @ace_group(uid="juice", name="Juice", color="#8C66D9", toggleable=true)
 
+@onready var screen_fx: ScreenFx = $ScreenFx
+@onready var juice_behavior: JuiceBehavior = $JuiceBehavior
+@onready var tween_behavior: TweenBehavior = $TweenBehavior
+@onready var flash_behavior: FlashBehavior = $FlashBehavior
+@onready var spring_behavior: SpringBehavior = $Hero/SpringBehavior
+@onready var hero_flash_behavior: FlashBehavior = $Hero/FlashBehavior
+@onready var juice_player: JuicePlayer = $JuicePlayer
+@onready var hero_tween_behavior: TweenBehavior = $Hero/TweenBehavior
+@onready var calm_player: JuicePlayer = $CalmPlayer
+@onready var scene_flow_behavior: SceneFlowBehavior = $SceneFlowBehavior
+@onready var blend_modes: BlendModesAddon = $BlendModes
+
 ## Beats elapsed.
 @export_range(0, 9999, 1) var beat: int = 0
 ## Spring kick strength.
@@ -26,34 +38,34 @@ func _process(delta: float) -> void:
 		__every_beat_caro = fmod(__every_beat_caro, 0.5)
 		beat += 1
 		juice_tile(beat, intensity * 5.0)
-		$ScreenFx.pulse_post_effect("vignette", 0.45, 0.35)
-		$JuiceBehavior.chromatic_shake(4.0, 0.3, "reducing", randf_range(0.0, 360.0))
+		screen_fx.pulse_post_effect("vignette", 0.45, 0.35)
+		juice_behavior.chromatic_shake(4.0, 0.3, "reducing", randf_range(0.0, 360.0))
 	__every_spin_caro += delta
 	# @group:juice
 	if __group_juice_active and __every_spin_caro >= 2.0:
 		__every_spin_caro = fmod(__every_spin_caro, 2.0)
-		$TweenBehavior.tween_rotation(rotation_degrees + 360.0, 1.8)
-		$FlashBehavior.flash(0.25)
+		tween_behavior.tween_rotation(rotation_degrees + 360.0, 1.8)
+		flash_behavior.flash(0.25)
 	if Input.is_action_just_pressed(&"ui_accept"):
 		party_on = true
 		set("__group_" + "juice" + "_active", true)
-		$Hero/SpringBehavior.add_impulse("__scale", intensity * 6.0)
-		$Hero/FlashBehavior.flash(0.4)
-		$JuicePlayer.play(intensity * 0.6)
+		spring_behavior.add_impulse("__scale", intensity * 6.0)
+		hero_flash_behavior.flash(0.4)
+		juice_player.play(intensity * 0.6)
 		moments_played += 1
-		$ScreenFx.add_post_effect("scanlines", "party", 0.3)
-		$ScreenFx.save_look("user://looks/carousel.tres", "Carousel")
-		$ScreenFx.use_look(ResourceLoader.load("user://looks/carousel.tres", "", ResourceLoader.CACHE_MODE_IGNORE))
+		screen_fx.add_post_effect("scanlines", "party", 0.3)
+		screen_fx.save_look("user://looks/carousel.tres", "Carousel")
+		screen_fx.use_look(ResourceLoader.load("user://looks/carousel.tres", "", ResourceLoader.CACHE_MODE_IGNORE))
 	elif Input.is_action_just_pressed(&"ui_cancel"):
 		party_on = false
 		set("__group_" + "juice" + "_active", false)
-		$Hero/TweenBehavior.tween_rotation(0.0, 0.4)
-		$JuicePlayer.stop_all_juice_players(true)
-		$CalmPlayer.play(1.0)
-		$JuiceBehavior.moment("calm", 1.0)
-		$SceneFlowBehavior.reload_scene_with("fade", 0.6, "smooth")
+		hero_tween_behavior.tween_rotation(0.0, 0.4)
+		juice_player.stop_all_juice_players(true)
+		calm_player.play(1.0)
+		juice_behavior.moment("calm", 1.0)
+		scene_flow_behavior.reload_scene_with("fade", 0.6, "smooth")
 	else:
-		$Hero/SpringBehavior.spring_host_scale(1.0 + sin(Time.get_ticks_msec() / 1000.0) * 0.04)
+		spring_behavior.spring_host_scale(1.0 + sin(Time.get_ticks_msec() / 1000.0) * 0.04)
 
 func _on_juiceplayer_on_feedback_signal(_word: String) -> void:
 	party_heard += 1
@@ -62,7 +74,7 @@ func _ready() -> void:
 	get_node("JuicePlayer").on_feedback_signal.connect(_on_juiceplayer_on_feedback_signal)
 	for c: Node in $Tiles.get_children():
 		c.get_node("SineBehavior").active = true
-	$BlendModes.blend_as($Tiles/Tile3, "screen", 1.0)
+	blend_modes.blend_as($Tiles/Tile3, "screen", 1.0)
 
 # @ace_hidden
 func juice_tile(index: int, kick: float) -> void:

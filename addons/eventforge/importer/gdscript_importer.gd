@@ -11,6 +11,9 @@
 class_name EventSheetGDScriptImporter
 extends RefCounted
 
+## Typed variables for called nodes: taken out of a file before it is read, put back by the compiler.
+const NodeVariables := preload("res://addons/eventforge/compiler/node_variables.gd")
+
 ## The lift that takes a generated `_validate_property` back onto its variables. Loaded by path, and
 ## only for a file that carries the generated function's doc line, so the first open of every other
 ## file never compiles it.
@@ -108,6 +111,20 @@ static func _autoload_target_matches(target: String, script_path: String) -> boo
 ## the spelling, so saving it writes the one hash back. A file that mixes the two spellings is read as it
 ## stands: its two-hash lines are annotations and its one-hash lines stay comments, which cannot move a byte.
 func import_external_source(source: String, lift: bool = true, script_path: String = "") -> EventSheetResource:
+	var typed: Dictionary = NodeVariables.expand(source)
+	if not typed.is_empty():
+		# A file that declares typed variables for its nodes (compiler/node_variables.gd) is read as if it
+		# wrote the paths, so its rows are the rows the same file would have with `$Path`. The sheet then
+		# has to write the file back exactly; one that does not is read as it stands, as before.
+		var read: EventSheetResource = _import_spelled(str(typed["text"]), lift, script_path)
+		read.typed_node_variables = true
+		read.node_variable_types = typed["types"]
+		if _writes_back(read, source):
+			return read
+	return _import_spelled(source, lift, script_path)
+
+
+func _import_spelled(source: String, lift: bool, script_path: String) -> EventSheetResource:
 	var spelling: String = EventSheetAnnotationLine.spelling_of(source)
 	if spelling != EventSheetAnnotationLine.ONE and spelling != "none":
 		return _import_canonical(source, lift, script_path)

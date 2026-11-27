@@ -61,6 +61,15 @@ extends Resource
 ## True only while the importer reads a one-hash file: the sheet is then asked what it writes in the two-hash
 ## form every reader is written for, so the byte gates compare like with like. Never saved.
 var annotation_gate_canonical: bool = false
+## True when the script this sheet writes declares one typed variable for each node it calls a behaviour on
+## (`@onready var hud_kit: HudKitBehavior = $HudKit`) and calls through it, rather than writing `$HudKit`
+## every time. A file read from disk says it by carrying those declarations; a file that does not stays as
+## it is written, so a script made before this existed opens and saves byte for byte.
+@export var typed_node_variables: bool = false
+## The class each node path wears, `{"$Skater/Skateboard": "SkateboardBehavior"}`, for the paths a row does
+## not name the class of (a plain "call method" row on a child node). Read from the declarations a file
+## carries and written back from them; a row that is a pack's own verb needs no entry here.
+@export var node_variable_types: Dictionary = {}
 ## Debug compile: emit `breakpoint` statements for rows flagged via the gutter (F9).
 @export var emit_breakpoints: bool = false
 ## Debug compile: stream this sheet's variables to the editor's Live Values window

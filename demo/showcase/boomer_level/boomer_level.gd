@@ -4,6 +4,10 @@ extends Node3D
 ##
 ## [b]Boomer Level[/b] - A keycard, a locked door and two grunts that turn on each other, ending in an exit tally. WASD moves, the mouse looks, Tab throws a rocket at the grunts. Find the red keycard, open the door, take the exit.
 
+@onready var fps_controller: FPSController = $Player/FPSController
+@onready var grunt_1: BoomerLevelGrunt = $Grunt1
+@onready var red_door: BoomerLevelDoor = $RedDoor
+
 var keys: Array = []
 var secrets_found: Array = []
 ## How many secrets this level hides.
@@ -28,18 +32,18 @@ func _physics_process(delta: float) -> void:
 		level_seconds += delta
 
 func _process(_delta: float) -> void:
-	$Player/FPSController.bob_with_movement($Player/Head/Weapon)
-	$Player/FPSController.sway_with_mouse($Player/Head/Weapon)
+	fps_controller.bob_with_movement($Player/Head/Weapon)
+	fps_controller.sway_with_mouse($Player/Head/Weapon)
 	if Input.is_action_just_pressed(&"ui_focus_next"):
 		var __blast_rocket = PhysicsShapeQueryParameters3D.new()
 		var __ball_rocket = SphereShape3D.new()
 		__ball_rocket.radius = 6.0
 		__blast_rocket.shape = __ball_rocket
-		__blast_rocket.transform = Transform3D(Basis(), $Grunt1.global_position)
+		__blast_rocket.transform = Transform3D(Basis(), grunt_1.global_position)
 		__blast_rocket.collision_mask = 1
 		for __caught_rocket in get_world_3d().direct_space_state.intersect_shape(__blast_rocket, 32):
 			var __body_rocket = __caught_rocket.collider
-			var __away_rocket = __body_rocket.global_position - $Grunt1.global_position
+			var __away_rocket = __body_rocket.global_position - grunt_1.global_position
 			var __falloff_rocket = clampf(1.0 - __away_rocket.length() / 6.0, 0.0, 1.0)
 			if __body_rocket.has_method("take_damage"):
 				__body_rocket.take_damage(35 * __falloff_rocket)
@@ -47,7 +51,7 @@ func _process(_delta: float) -> void:
 				__body_rocket.velocity += __away_rocket.normalized() * 10.0 * __falloff_rocket
 			elif __body_rocket is RigidBody3D:
 				__body_rocket.apply_impulse(__away_rocket.normalized() * 10.0 * __falloff_rocket)
-	$HudLayer/Hud.text = "Keys %d   Secrets %d of %d   %s" % [keys.size(), secrets_found.size(), secrets_total, $RedDoor.locked_hint]
+	$HudLayer/Hud.text = "Keys %d   Secrets %d of %d   %s" % [keys.size(), secrets_found.size(), secrets_total, red_door.locked_hint]
 
 func _on_redcard_body_entered(_body: Node) -> void:
 	keys.append("red_key")

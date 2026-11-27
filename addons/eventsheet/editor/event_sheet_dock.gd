@@ -8579,6 +8579,11 @@ func _perform_undoable_sheet_edit(action_name: String, operation: Callable, file
 	var changed: bool = bool(operation.call())
 	if not changed:
 		return false
+	# A script written before typed node variables existed is written in the new form from its first edit
+	# on, so the next save declares `@onready var hud_kit: HudKitBehavior = $HudKit` for the behaviours it
+	# calls. The step's own undo puts the old form back, since `before` was taken above.
+	if _current_sheet.external_source_path.ends_with(".gd"):
+		_current_sheet.typed_node_variables = true
 	var after: EventSheetResource = _capture_sheet_snapshot()
 	if before == null or after == null:
 		return false

@@ -2,15 +2,22 @@ class_name PinModes3DDemo
 extends Node3D
 ## [b]Pin Modes 3D[/b] - the same six relationships, on the Pin 3D pack. Nothing here is a child of anything it follows: every one of them is a pin, which is why each can let go and none of them is destroyed when its anchor is. The point pin rides a Marker3D on the walker, which is where a BoneAttachment3D would sit on a real rig.
 
+@onready var pin: PinBehavior = $Lantern/Pin
+@onready var cart_pin: PinBehavior = $Cart/Pin
+@onready var cam_target_pin: PinBehavior = $CamTarget/Pin
+@onready var hat_pin: PinBehavior = $Hat/Pin
+@onready var shadow_pin: PinBehavior = $Shadow/Pin
+@onready var sword_pin: PinBehavior = $Sword/Pin
+
 var t: float = 0.0
 
 func _ready() -> void:
-	$Lantern/Pin.pin_rope($Post, 2.0)
-	$Cart/Pin.pin_bar($Engine, 2.0)
-	$CamTarget/Pin.pin_soft($Player, 3.0)
-	$Hat/Pin.pin_spring($Player/Head, 140.0, 0.6)
-	$Shadow/Pin.pin_x_to($Player)
-	$Sword/Pin.pin_to_point($Player, "Hand")
+	pin.pin_rope($Post, 2.0)
+	cart_pin.pin_bar($Engine, 2.0)
+	cam_target_pin.pin_soft($Player, 3.0)
+	hat_pin.pin_spring($Player/Head, 140.0, 0.6)
+	shadow_pin.pin_x_to($Player)
+	sword_pin.pin_to_point($Player, "Hand")
 
 func _physics_process(delta: float) -> void:
 	t += delta
