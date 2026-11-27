@@ -11415,3 +11415,35 @@ Copy to the clipboard,클립보드에 복사
 Copy these rows as shareable snippet text.,이 행들을 공유할 수 있는 스니펫 텍스트로 복사합니다.
 "Jump to ""%s"".","""%s""(으)로 이동합니다."
 Off means the Start page only opens from Sheet ▸ Start page.,끄면 시작 페이지는 시트 ▸ 시작 페이지에서만 열립니다.
+"The screen goes grey except a circle that opens to %s pixels over %s s, and stays grey until told.",
+"The screen goes grey except a circle that opens to %s pixels over %s s, then the colour comes back.",
+A circle of grey grows to %s pixels over %s s and stays until told.,
+"A circle of grey grows to %s pixels over %s s, then fades away.",
+The screen goes %s grey and stays grey until told.,
+"The screen goes %s grey for %s s, then the colour comes back.",
+"In the editor the play button greys the object this player is under, as a stand-in. In the game the whole screen goes grey, through the Screen FX layer of the scene.",
+"Moves up to %s from where it is over %s s, following your curve, and ends exactly where it began.",
+Moves up to %s from where it is half way and is back at %s s.,
+"Starts still and moves up to %s by %s s, then is put back.",
+Moves up to %s at first and is back where it was at %s s.,
+"Moves up to %s for %s s, then is put back.",
+Grayscale,그레이스케일
+"Puts the colour out of the screen: all of it, or a circle of grey that grows from this object or from a place on the screen (or the other way round, a circle of colour in a grey world). It can stay grey until told, for a death or a flashback, and Stop brings the colour back. It plays through the scene's Screen FX layer, so the no-flashing and reduced-effects choices hold it. To grey one object, use the Grayscale behaviour instead.","화면에서 색을 뺍니다. 화면 전체이거나, 이 오브젝트 또는 화면의 한 지점에서 커지는 회색 원입니다(반대로 회색 세계 안의 색이 있는 원도 가능). 해제할 때까지 회색으로 둘 수 있어 죽음이나 회상에 쓰며, Stop이 색을 되돌립니다. 씬의 Screen FX 레이어를 통해 재생되므로 깜박임 없음과 효과 줄이기 설정이 적용됩니다. 오브젝트 하나만 회색으로 만들려면 대신 Grayscale 동작을 쓰세요."
+Grayness,회색 정도
+Whole screen,화면 전체
+Circle from this object,이 오브젝트에서 시작하는 원
+Circle from a place on the screen,화면의 한 지점에서 시작하는 원
+Colour drains over,색이 빠지는 시간
+Colour returns over,색이 돌아오는 시간
+Stay grey until told,해제할 때까지 회색 유지
+Across the screen,화면 가로 위치
+Down the screen,화면 세로 위치
+Grows to,커지는 크기
+Edge softness,가장자리 부드러움
+"Colour inside, grey outside","안쪽은 색, 바깥은 회색"
+Position Shake,위치 흔들기
+"Shakes ONLY the position of a node - never the camera, its angle or its size - for a time, and puts it back exactly where it was, so a node that is moving meanwhile keeps its own motion. Jitter a crate, tremble a door, rattle a button. The amount is in pixels for a 2D node or a Control and in metres for a 3D node. For the camera, use Shake; in a 3D game put a Juice 3D node beside the Juice Player and Shake shakes the 3D camera.","노드의 위치만 일정 시간 흔들고(카메라, 각도, 크기는 절대 건드리지 않음) 정확히 원래 자리로 되돌립니다. 그동안 움직이는 노드는 자신의 움직임을 유지합니다. 상자를 떨게 하거나 문을 흔들거나 버튼을 덜컹거리게 할 수 있습니다. 양은 2D 노드나 Control에서는 픽셀, 3D 노드에서는 미터입니다. 카메라에는 Shake를 쓰세요. 3D 게임에서는 Juice 3D 노드를 Juice Player 옆에 두면 Shake가 3D 카메라를 흔듭니다."
+Sideways,좌우
+Up and down,위아래
+Depth (3D),깊이 (3D)
+Jumps,점프 횟수

@@ -107,6 +107,13 @@ A scene that has a Juice node for 2D and a Juice 3D node beside the same player 
 
 ---
 
+## Position Shake in 3D, and the 3D camera shake
+
+For a 3D game put a Juice 3D node beside the Juice Player and the Shake card shakes the 3D camera. A Shake card with a tick or a curve keeps its shape over a 3D view too (`shake_timed`).
+
+**Shake Position** shakes ONLY the position of the 3D object the node is on, by up to Amount metres, then puts it back exactly: never the camera, the rotation or the scale. X, Y and Z weights choose the axes (Z weight 0 keeps it on its own plane), Fade in, Fade out and a Curve shape it, and Jumps per second is how often it moves. It is added when the frame is built and taken off after the frame is drawn, so a node that moves meanwhile keeps its own motion. **Stop Position Shake** ends them all.
+
+
 ## ACE reference
 
 On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
@@ -123,6 +130,8 @@ placed on.
 | Action | Parameters | Description |
 |---|---|---|
 | Shake | `strength` (float) | Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit. Opens at 0.4. |
+| Shake Position | `amount` (m, `0.1`), `seconds` (`0.4`), `fade_in`, `fade_out`, `curve`, `x_weight`, `y_weight`, `z_weight`, `jumps_per_second` (`30`) | Shakes only this 3D object's position and puts it back exactly. |
+| Stop Position Shake | (none) | Ends every position shake. |
 | Stop Shake | (none) | Cancels any shake immediately (other effects keep running). |
 | Recoil | `vertical_kick` (float), `horizontal_spread` (float) | Kicks the view UP by a pitch (degrees) plus a random side spread, then re-centres at the Recoil Recovery rate. Kicks stack, so sustained fire climbs. Cosmetic - aim is untouched. Opens at 1.5, 0.5. |
 | Start Head Bob | `amplitude` (float), `frequency` (float) | A walking figure-8 (side sway at half rate, one downward dip per step). Metres and steps-per-second. Call while moving; Stop Head Bob when halting. Opens at 0.06, 2.2. |

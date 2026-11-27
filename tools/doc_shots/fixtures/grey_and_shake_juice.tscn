@@ -1,0 +1,30 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://eventsheet_addons/juice/juice_player.gd" id="1_juice"]
+
+[node name="Crate" type="Node2D"]
+
+[node name="DeathJuice" type="Node" parent="."]
+script = ExtResource("1_juice")
+steps = Array[Dictionary]([{
+"amount": 1.0,
+"effect": "",
+"fade_in": 0.2,
+"fade_out": 0.4,
+"reach": 800.0,
+"seconds": 1.0,
+"shape": "circle",
+"softness": 0.2,
+"stay": false,
+"verb": "grayscale"
+}, {
+"amount": 8.0,
+"effect": "",
+"fade_out": true,
+"jumps": 30.0,
+"seconds": 0.4,
+"verb": "position_shake",
+"weight_x": 1.0,
+"weight_y": 1.0,
+"weight_z": 1.0
+}])

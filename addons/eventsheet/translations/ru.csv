@@ -11415,3 +11415,35 @@ Copy to the clipboard,Скопировать в буфер обмена
 Copy these rows as shareable snippet text.,"Копирует эти строки как текст фрагмента, которым можно поделиться."
 "Jump to ""%s"".",Перейти к «%s».
 Off means the Start page only opens from Sheet ▸ Start page.,"Если выключено, стартовая страница открывается только через Лист ▸ Стартовая страница."
+"The screen goes grey except a circle that opens to %s pixels over %s s, and stays grey until told.",
+"The screen goes grey except a circle that opens to %s pixels over %s s, then the colour comes back.",
+A circle of grey grows to %s pixels over %s s and stays until told.,
+"A circle of grey grows to %s pixels over %s s, then fades away.",
+The screen goes %s grey and stays grey until told.,
+"The screen goes %s grey for %s s, then the colour comes back.",
+"In the editor the play button greys the object this player is under, as a stand-in. In the game the whole screen goes grey, through the Screen FX layer of the scene.",
+"Moves up to %s from where it is over %s s, following your curve, and ends exactly where it began.",
+Moves up to %s from where it is half way and is back at %s s.,
+"Starts still and moves up to %s by %s s, then is put back.",
+Moves up to %s at first and is back where it was at %s s.,
+"Moves up to %s for %s s, then is put back.",
+Grayscale,Оттенки серого
+"Puts the colour out of the screen: all of it, or a circle of grey that grows from this object or from a place on the screen (or the other way round, a circle of colour in a grey world). It can stay grey until told, for a death or a flashback, and Stop brings the colour back. It plays through the scene's Screen FX layer, so the no-flashing and reduced-effects choices hold it. To grey one object, use the Grayscale behaviour instead.","Убирает цвет с экрана: весь или серым кругом, который растёт от этого объекта или от точки на экране (или наоборот, цветной круг в сером мире). Может оставаться серым, пока не скажут, для смерти или флешбэка, а Stop возвращает цвет. Воспроизводится через слой Screen FX сцены, поэтому действуют настройки без мерцания и сниженных эффектов. Чтобы сделать серым один объект, используйте вместо этого поведение Grayscale."
+Grayness,Степень серого
+Whole screen,Весь экран
+Circle from this object,Круг от этого объекта
+Circle from a place on the screen,Круг от точки на экране
+Colour drains over,Цвет уходит за
+Colour returns over,Цвет возвращается за
+Stay grey until told,"Оставаться серым, пока не скажут"
+Across the screen,По ширине экрана
+Down the screen,По высоте экрана
+Grows to,Растёт до
+Edge softness,Мягкость края
+"Colour inside, grey outside","Цвет внутри, серый снаружи"
+Position Shake,Тряска позиции
+"Shakes ONLY the position of a node - never the camera, its angle or its size - for a time, and puts it back exactly where it was, so a node that is moving meanwhile keeps its own motion. Jitter a crate, tremble a door, rattle a button. The amount is in pixels for a 2D node or a Control and in metres for a 3D node. For the camera, use Shake; in a 3D game put a Juice 3D node beside the Juice Player and Shake shakes the 3D camera.","Трясёт ТОЛЬКО позицию узла - никогда камеру, его угол или размер - в течение времени, а затем возвращает его точно туда, где он был, так что узел, который тем временем движется, сохраняет своё движение. Потряси ящик, дверь, кнопку. Величина задаётся в пикселях для 2D-узла или Control и в метрах для 3D-узла. Для камеры используйте Shake; в 3D-игре поставьте узел Juice 3D рядом с Juice Player, и Shake будет трясти 3D-камеру."
+Sideways,В стороны
+Up and down,Вверх и вниз
+Depth (3D),Глубина (3D)
+Jumps,Скачки

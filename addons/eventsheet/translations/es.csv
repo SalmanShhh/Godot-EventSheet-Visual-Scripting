@@ -11415,3 +11415,35 @@ Copy to the clipboard,Copiar al portapapeles
 Copy these rows as shareable snippet text.,Copia estas filas como texto de fragmento que se puede compartir.
 "Jump to ""%s"".","Ir a ""%s""."
 Off means the Start page only opens from Sheet ▸ Start page.,Desactivado significa que la página de inicio solo se abre desde Hoja ▸ Página de inicio.
+"The screen goes grey except a circle that opens to %s pixels over %s s, and stays grey until told.",
+"The screen goes grey except a circle that opens to %s pixels over %s s, then the colour comes back.",
+A circle of grey grows to %s pixels over %s s and stays until told.,
+"A circle of grey grows to %s pixels over %s s, then fades away.",
+The screen goes %s grey and stays grey until told.,
+"The screen goes %s grey for %s s, then the colour comes back.",
+"In the editor the play button greys the object this player is under, as a stand-in. In the game the whole screen goes grey, through the Screen FX layer of the scene.",
+"Moves up to %s from where it is over %s s, following your curve, and ends exactly where it began.",
+Moves up to %s from where it is half way and is back at %s s.,
+"Starts still and moves up to %s by %s s, then is put back.",
+Moves up to %s at first and is back where it was at %s s.,
+"Moves up to %s for %s s, then is put back.",
+Grayscale,Escala de grises
+"Puts the colour out of the screen: all of it, or a circle of grey that grows from this object or from a place on the screen (or the other way round, a circle of colour in a grey world). It can stay grey until told, for a death or a flashback, and Stop brings the colour back. It plays through the scene's Screen FX layer, so the no-flashing and reduced-effects choices hold it. To grey one object, use the Grayscale behaviour instead.","Quita el color de la pantalla: toda, o en un círculo gris que crece desde este objeto o desde un punto de la pantalla (o al revés, un círculo de color en un mundo gris). Puede quedarse gris hasta que se diga, para una muerte o un flashback, y Stop devuelve el color. Se reproduce mediante la capa Screen FX de la escena, así que le afectan las opciones de sin parpadeos y efectos reducidos. Para poner en gris un solo objeto, usa en su lugar el comportamiento Grayscale."
+Grayness,Nivel de gris
+Whole screen,Toda la pantalla
+Circle from this object,Círculo desde este objeto
+Circle from a place on the screen,Círculo desde un punto de la pantalla
+Colour drains over,El color se va en
+Colour returns over,El color vuelve en
+Stay grey until told,Seguir gris hasta que se diga
+Across the screen,A lo ancho de la pantalla
+Down the screen,Hacia abajo en la pantalla
+Grows to,Crece hasta
+Edge softness,Suavidad del borde
+"Colour inside, grey outside","Color dentro, gris fuera"
+Position Shake,Temblor de posición
+"Shakes ONLY the position of a node - never the camera, its angle or its size - for a time, and puts it back exactly where it was, so a node that is moving meanwhile keeps its own motion. Jitter a crate, tremble a door, rattle a button. The amount is in pixels for a 2D node or a Control and in metres for a 3D node. For the camera, use Shake; in a 3D game put a Juice 3D node beside the Juice Player and Shake shakes the 3D camera.","Sacude SOLO la posición de un nodo - nunca la cámara, su ángulo o su tamaño - durante un tiempo y lo devuelve exactamente a donde estaba, así que un nodo que se mueve entretanto conserva su propio movimiento. Haz temblar una caja, una puerta o un botón. La cantidad es en píxeles para un nodo 2D o un Control y en metros para un nodo 3D. Para la cámara usa Shake; en un juego 3D pon un nodo Juice 3D junto al Juice Player y Shake sacude la cámara 3D."
+Sideways,De lado a lado
+Up and down,Arriba y abajo
+Depth (3D),Profundidad (3D)
+Jumps,Saltos

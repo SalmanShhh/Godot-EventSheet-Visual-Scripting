@@ -4,6 +4,12 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ## [Unreleased]
 
+### Added
+
+- **A typed function behind every juice card.** On a typed variable (`@onready var juice: JuiceBehavior = $Juice`) Godot's editor now completes every juice effect with named, typed arguments, and a misspelt one is a parse error. The Juice Player gained about fifty (`pop`, `fade_node`, `shake_position`, `restart_particles`, `push_away_from`, `flare_light`, `tween_property` and so on), the Juice nodes gained `shake_timed` (a shake with a shape, also on the 3D node), and Screen FX gained `hold_post_effect`. A card and a line of code reach the same function, so they cannot disagree, and a card list saved in a scene plays as before. Every new function is hidden from the picker. Cards that only move the head of a list (Pause, Hold, Loop Start, Loop Back) have none on purpose; a Juice guide section, "Juice from code", maps each card to its function.
+- **A Grayscale card and Screen FX rows.** Puts the colour out of the whole screen or out of a circle that grows from this object or from a place on the screen (or the other way round, a circle of colour in a grey world), with edge softness, and can stay grey until told for a death or a flashback. Rows: Grayscale, Grayscale From Point, Clear Grayscale. It is the shipped Desaturate effect, so the reduced-effects dial and the no-flashing choice hold it, and it works over a 2D and a 3D view.
+- **A Position Shake card and rows.** Shakes only a node's position (never the camera, rotation or scale) and puts it back exactly, with fade ticks, a curve, X, Y and Z weights and a jump rate; two at once add and a node that moves meanwhile keeps its own motion. Rows: Shake Position and Stop Position Shake on the Juice and Juice 3D nodes. For a 3D game, put a Juice 3D node beside the Juice Player and the Shake card shakes the 3D camera; a Shake card with ticks or a curve now keeps its shape over a 3D view too.
+
 ## Releases
 
 - **v0.21.0** (2026-11-20) - Small to Large

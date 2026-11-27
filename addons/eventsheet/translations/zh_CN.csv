@@ -11415,3 +11415,35 @@ Copy to the clipboard,复制到剪贴板
 Copy these rows as shareable snippet text.,把这些行复制为可分享的代码片段文本。
 "Jump to ""%s"".",跳转到“%s”。
 Off means the Start page only opens from Sheet ▸ Start page.,关闭后，起始页只能从“事件表 ▸ 起始页”打开。
+"The screen goes grey except a circle that opens to %s pixels over %s s, and stays grey until told.",
+"The screen goes grey except a circle that opens to %s pixels over %s s, then the colour comes back.",
+A circle of grey grows to %s pixels over %s s and stays until told.,
+"A circle of grey grows to %s pixels over %s s, then fades away.",
+The screen goes %s grey and stays grey until told.,
+"The screen goes %s grey for %s s, then the colour comes back.",
+"In the editor the play button greys the object this player is under, as a stand-in. In the game the whole screen goes grey, through the Screen FX layer of the scene.",
+"Moves up to %s from where it is over %s s, following your curve, and ends exactly where it began.",
+Moves up to %s from where it is half way and is back at %s s.,
+"Starts still and moves up to %s by %s s, then is put back.",
+Moves up to %s at first and is back where it was at %s s.,
+"Moves up to %s for %s s, then is put back.",
+Grayscale,灰度
+"Puts the colour out of the screen: all of it, or a circle of grey that grows from this object or from a place on the screen (or the other way round, a circle of colour in a grey world). It can stay grey until told, for a death or a flashback, and Stop brings the colour back. It plays through the scene's Screen FX layer, so the no-flashing and reduced-effects choices hold it. To grey one object, use the Grayscale behaviour instead.","去掉屏幕上的颜色:整个屏幕,或者从这个对象或屏幕上某一点向外扩张的灰色圆形(也可以反过来,灰色世界里的一个彩色圆)。可以一直保持灰色直到被告知,用于死亡或闪回,Stop 会让颜色恢复。它通过场景的 Screen FX 层播放,所以无闪烁和减弱效果的设置对它有效。若只想让一个对象变灰,请改用 Grayscale 行为。"
+Grayness,灰度程度
+Whole screen,整个屏幕
+Circle from this object,从此对象出发的圆
+Circle from a place on the screen,从屏幕上某点出发的圆
+Colour drains over,颜色褪去用时
+Colour returns over,颜色恢复用时
+Stay grey until told,保持灰色直到被告知
+Across the screen,屏幕横向位置
+Down the screen,屏幕纵向位置
+Grows to,扩张到
+Edge softness,边缘柔和度
+"Colour inside, grey outside","内部有色,外部灰色"
+Position Shake,位置抖动
+"Shakes ONLY the position of a node - never the camera, its angle or its size - for a time, and puts it back exactly where it was, so a node that is moving meanwhile keeps its own motion. Jitter a crate, tremble a door, rattle a button. The amount is in pixels for a 2D node or a Control and in metres for a 3D node. For the camera, use Shake; in a 3D game put a Juice 3D node beside the Juice Player and Shake shakes the 3D camera.","只抖动节点的位置 - 绝不动摄像机、它的角度或大小 - 持续一段时间,然后把它精确放回原处,所以期间在移动的节点会保持自己的运动。可以让箱子颤抖、门抖动、按钮晃动。数值对 2D 节点或 Control 以像素为单位,对 3D 节点以米为单位。要抖动摄像机请用 Shake;在 3D 游戏里把 Juice 3D 节点放在 Juice Player 旁边,Shake 就会抖动 3D 摄像机。"
+Sideways,左右
+Up and down,上下
+Depth (3D),深度(3D)
+Jumps,跳动次数

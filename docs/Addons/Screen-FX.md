@@ -216,6 +216,17 @@ effects down turns these down with them.
 
 ---
 
+## Grayscale: the whole screen, or a circle of it
+
+Grayscale puts the colour out of the screen. It is the shipped Desaturate effect of the post stack under its own name (`grayscale`), so the effect-strength dial scales it and, while no flashing is on, its amount is held under the ceiling and its times over the floor. Use the Grayscale behaviour to grey one object; use this to grey the screen.
+
+- **Grayscale** (`grayscale(amount, seconds, fade_in, fade_out, stay)`): the colour drains over Fade in, stays grey, and comes back over Fade out, all of it lasting Seconds. With **stay** on it stays grey until told, for a death or a flashback. An amount of 0 puts the colour back.
+- **Grayscale From Point** (`grayscale_from(point, reach, seconds, amount, softness, colour_inside, fade_out, stay, in_screen)`): a circle of grey grows from a world point (a screen place, 0 to 1 across and down, with `in_screen`) to Reach pixels over Seconds, then fades away, or stays. **Colour inside** turns it round: a circle of colour opens in a grey world.
+- **Clear Grayscale** (`clear_grayscale(seconds)`): brings the colour back and takes the entry away. Nothing happens when the screen is not grey.
+
+A Juice Player's Grayscale card calls these, and its Stop brings the colour back. Which of the two Grayscale tools to use: the Grayscale behaviour changes one object's own picture; Screen FX Grayscale changes what the whole screen shows, whatever is under it, over a 2D or a 3D view.
+
+
 ## ACE reference
 
 All rows carry an **On node** parameter (default `$ScreenFx`), so a project with a layer per viewport
@@ -230,6 +241,9 @@ picks which one it means.
 | **Fade Back** | `colour` (Color, default black), `seconds` (float, default `1.0`) | Starts fully at the colour and fades back to the game, and waits. |
 | **Blur** | `amount` (float, default `2.0`), `seconds` (float, default `0.3`) | Blurs the screen over a time. 0 is sharp again. |
 | **Chromatic Pulse** | `strength` (float, default `0.6`), `seconds` (float, default `0.35`) | Pulls the colour channels apart and lets them snap back. |
+| **Grayscale** | `amount` (`1.0`), `seconds` (`1.0`), `fade_in` (`0.2`), `fade_out` (`0.4`), `stay` (off) | Puts the colour out of the whole screen and brings it back; with stay it holds until Clear Grayscale. Search words: grey, gray, black and white, monochrome, desaturate. |
+| **Grayscale From Point** | `point`, `reach` (`800` px), `seconds` (`1.0`), `amount`, `softness` (`0.2`), `colour_inside`, `fade_out`, `stay`, `in_screen` | A circle of grey grows from a point. |
+| **Clear Grayscale** | `seconds` (`0.4`) | Brings the colour back after either Grayscale row. |
 | **Clear Screen Effects** | none | Ends every effect at once. |
 | **Set Ring Seconds** | `value` (float) | How long a ring takes to cross. |
 | **Add Post Effect** | `effect` (one of the twelve words), `called` (String, default empty), `strength` (float, default `0.6`) | Adds one effect to the top of the post stack and turns it on. An empty name calls it after its effect. |

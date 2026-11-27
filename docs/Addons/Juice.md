@@ -632,6 +632,11 @@ row reaches a prop in a 3D level and a panel on the 2D interface and shakes both
 
 ---
 
+## Position Shake: only an object's own position
+
+Shake moves the camera. **Shake Position** shakes ONLY the position of the object the Juice node is on (never the camera, its rotation or its size) for exactly the seconds you give it, then puts it back exactly where it was: jitter, tremble, rumble or wobble a crate, a door or a button. The amount is in pixels. Fade in, Fade out and a Curve of your own shape it as they do a Shake For; the X and Y weights shake it sideways only (Y weight 0) or up and down only; Jumps per second is how often it moves to a new place. It is an offset added when the frame is built and taken off once the frame is drawn, so scripts and physics see the object at its own place, a node that is moving meanwhile keeps its own motion, two shakes at once add, and a Punch Position at the same time still works. While no flashing is on the amount is held to a third and the time over the floor, and the effect-strength dial scales it. **Stop Position Shake** ends them all. Do not use it on the node that carries the camera: the camera follows it, so the shake would move the world instead.
+
+
 ## ACE reference
 
 On the canvas these rows read as styled sentences - parameter values in **bold**, node references in *italic*, exactly as the rows draw them:
@@ -648,6 +653,8 @@ All ACEs live in the **Juice** category and target the `JuiceBehavior` on the no
 |---|---|---|
 | Shake | `strength` (float) | Adds screenshake to the active camera (0 = none, 1 = max). Stacks and decays automatically - fire it on every hit. Opens at 0.4. |
 | Stop Shake | (none) | Cancels any shake immediately, of either kind, and fires On Shake Stopped once (the camera returns to rest unless another effect - recoil, bob, jitter, tilt - is still holding it). |
+| Shake Position | `amount` (px, `8`), `seconds` (`0.4`), `fade_in`, `fade_out` (on), `curve`, `x_weight`, `y_weight`, `jumps_per_second` (`30`) | Shakes only this object's position (jitter, tremble, rumble, wobble) and puts it back exactly. |
+| Stop Position Shake | (none) | Ends every position shake and puts the objects back. |
 | Shake For | `amount` (float), `seconds` (float), `fade_in` (bool), `fade_out` (bool) | Shakes the active camera for exactly this long. Fade in rises from nothing to the amount, Fade out goes down from the amount to nothing, both swell and die away, and neither holds the full amount and then stops. The amount adds to a Shake already running, up to the same top of 1, and Stop Shake ends it. Opens at 0.4, 0.5, no, yes. |
 | Shake With Curve | `amount` (float), `seconds` (float), `curve` (Curve) | Shakes the active camera for exactly this long, following a Curve you drew: left to right is the time of the shake, and how high the line is says how much of the amount is felt. Opens at 0.4, 0.5, no curve. |
 | Use Camera | `camera_path` (NodePath) | Pins the effects to a specific `Camera2D` by path. Leave it unset to auto-target whichever camera is active. |

@@ -93,6 +93,12 @@ The three dots on a card open its menu: Duplicate, Cut, Copy, Paste, Paste over,
 
 **The ten felt words**, played by the Juice behaviour beside the player: `shake`, `hitstop`, `slowmo`, `flash`, `punch`, `zoom`, `shockwave`, `chromatic`, `pulse` and `hold` (the screen-effect hold, titled **Hold Effect** on a card so it is not confused with the list's own Hold). Each carries an amount and a length; `flash`, `pulse` and `hold` also read the extra word, which is the colour a flash goes to and the name of the post effect a pulse or a hold reaches for.
 
+![The Juice Player in the Inspector with its Grayscale card open: the Shape set to a circle from this object, Over, Colour returns over, Stay grey until told, Grows to and Edge softness, and a line saying a circle of grey grows to 800 pixels over 1 s](../images/juice-card-grayscale.png)
+
+![The Position Shake card open under the Grayscale card: Node, Amount in pixels, Over, the Fade in and Fade out ticks, a custom curve with its bars, the Sideways, Up and down and Depth weights and Jumps a second](../images/juice-card-position-shake.png)
+
+**In a 3D game put a Juice 3D node beside the Juice Player and the Shake card shakes the 3D camera.** The Shake card shakes the camera; Position Shake shakes one object.
+
 **The Shake card has two ticks and a curve of your own.** **Fade in** makes the shake rise from nothing to its Amount, and **Fade out** (ticked on a new card) makes it go down to nothing, so a card with a tick shakes for exactly its Seconds and has the shape the ticks say: Fade out falls, Fade in rises, both swell and die away, neither holds the full amount and then stops. **Custom curve** takes a Godot Curve file picked with Godot's own resource picker: left to right is the time of the shake, how high the line is says how much of the Amount is felt, and while one is set it is the shape and the two ticks are greyed. **New Curve** in that picker asks where to save the file first, because the card keeps the file's uid and never a hidden copy, and clicking the curve opens it in the Inspector with Godot's own curve editor (save the curve file there to keep an edit). A small drawing under the fields shows the shape, and the editor's Play preview draws the same one. A Shake card saved before the ticks existed has none of those keys and shakes as it always did, by the Juice node's Shake Decay, and says so in one quiet line until you tick one. A timed shake adds to a Shake already running and to other timed shakes, up to the same top of 1; Stop Shake ends both kinds and fires On Shake Stopped once. The play's strength and the accessibility dial scale the amount, never the time. Save Moment File names these keys when it leaves them off, because a moment file holds no ticks. A project that keeps an older copy of the Juice pack, one that cannot shake for a length, is not offered the ticks.
 
 **Four words that move the head** instead of being felt:
@@ -165,6 +171,8 @@ Play Player now picks the other player instead of asking for its name; an older 
 | **Slow One Object** | Node (empty is this object), Speed (`0.3`), For (`0.5` s) | Slows the animation players, animated sprites and particles at or under a node for a time, through their `speed_scale`, then puts it back. A line under the card lists what it found. Scripts of your own, and movement, keep their speed, because Godot has nothing to slow them with. The speed multiplies with Slowmo: half speed under a Slowmo of 0.5 is a quarter. `pause` family. |
 | **Animation Parameter** | Animation tree, Parameter, To, Over (`0.2` s), Go back (ticked), Back over (`0.2` s) | Moves one parameter of an AnimationTree to a value and brings it back: a blend amount, a speed, a condition. It lists only the parameters the tree really has and lets you set: numbers, whole numbers, ticks and a Vector2, never a read-only time, the playback object of a state machine, or the timers a one-shot keeps for itself. A number or a Vector2 is walked; a tick or a whole number (a one-shot's request) is set and put back when the time is up. `transform` family. |
 | **Chromatic Shake** | Amount (`12` px), Seconds (`0.3`), Ends (closes steadily, or holds then snaps shut), Direction (wanders, or along an angle), Angle (degrees, shown only for along an angle) | Pulls the red and the blue of the screen apart, one each way, along a direction, for a moment, and lets them close again: the colour fringe of a hit, a dash or a landing. Wandering turns the direction as it goes, the way the camera shake turns; an angle keeps it on one line and only lets it breathe. Closes steadily falls to nothing over the Seconds; holds then snaps shut keeps the full Amount and stops dead. It is played by the Juice node's own Chromatic Shake row, so the no-flashing choice halves it and the reduced-effects dial scales it exactly as it does the row, and the player's strength scales the Amount. A small picture under the fields draws the split and a sentence says how far it goes and when it is back together; a quiet amber line says when there is no Juice node beside the player. Beside a Juice 3D node it plays over the 3D view. Stop, Restore, Skip To End and a player leaving the scene put the colours together at once. It is not previewed in the editor, because the screen it splits is the running game's. `screen` family. |
+| **Grayscale** | Grayness (`1`), Shape (whole screen, circle from this object, circle from a place on the screen), Over (`1` s), Colour drains over (`0.2` s), Colour returns over (`0.4` s), Stay grey until told, Across and Down the screen (for a screen place), Grows to (`800` px), Edge softness (`0.2`), Colour inside and grey outside | Puts the colour out of the whole screen, or out of a circle that grows from this object or from a place on the screen, or the other way round: a circle of colour in a grey world. It plays through the scene's Screen FX layer, so the no-flashing and reduced-effects choices hold it. Stay grey until told holds it for a death or a flashback, and Stop, a second Grayscale card of grayness 0 or Clear Grayscale ends it. In the editor the play button greys the object the player is under as a stand-in. `screen` family. |
+| **Position Shake** | Node (empty is this object), Amount (`8` px, metres in 3D), Over (`0.4` s), Fade in, Fade out, Custom curve, Sideways, Up and down, Depth (3D), Jumps (`30` a second) | Shakes ONLY a node's position, never the camera, its angle or its size, and puts it back exactly: a crate, a door, a button. A node that moves meanwhile keeps its own motion and two at once add. A Juice node beside the player does it (a Juice 3D node for a 3D node). Played in the editor, and the scene is left as it was. `transform` family. |
 
 **Learning Godot from a card.** A card is a shortcut, not a wall. Under each field that sets something Godot has, in small print, is its Godot name (`Light2D.energy`); hover it for a line on what it is, and the **?** beside it opens that member's page in Godot's own help. The card's menu has three more entries: **Show as rows** shows the line that adds this card from a sheet or from code (the Add Juice Card row, with the card as its value) and puts it on the clipboard; **Show as GDScript** shows the same effect written by hand in plain GDScript, ready to paste into the script of the object the player is under, and puts it on the clipboard; **Open in Godot help** opens the page of the first Godot name the card has. The GDScript is the plain version, and says so: the card also handles its strength, the accessibility setting, its timing and the way back that Stop and Restore use, none of which a pasted copy has. Nothing in it needs the plugin. The screen effects (Shockwave, Chromatic Kick, Pulse Vignette, Hold Effect) draw over the whole screen with a shader, and Stop Sound, Hold, Loop Start and Loop Back move the head of a list, so those have no short plain version and Show as GDScript is greyed for them.
 
@@ -212,6 +220,76 @@ func play(target: Node, strength: float) -> void:
 - **Find what plays this** is a button on the strip under the list. It lists the sheets of the project that play this player and opens the one you pick, or says in one quiet line that no sheet does.
 
 ---
+
+## Juice from code
+
+Every card is a thin reader of one typed function, so a line of hand-written GDScript reaches exactly the work a card does. Put a typed variable on the node and Godot's script editor lists every juice effect after the dot, each with named, typed arguments and a description; a misspelt name is a parse error, not a silent nothing.
+
+```gdscript
+extends Node2D
+
+@onready var juice: JuiceBehavior = $Juice
+@onready var player: JuicePlayer = $JuicePlayer
+@onready var screen: ScreenFx = $ScreenFx
+
+func _on_hit() -> void:
+	juice.shake_timed(0.5, 0.4, false, true)          # a shake that lasts 0.4 s and dies away
+	juice.shake_position(6.0, 0.3)                     # only this object's position, put back after
+	player.pop($Sprite, 1.3, 0.15)                     # scale up from the middle and settle
+	screen.grayscale_from(global_position, 700.0, 0.6) # colour drains out in a circle from here
+
+func _on_death() -> void:
+	screen.grayscale(1.0, 0.0, 0.8, 0.0, true)         # grey, and stay grey until told
+```
+
+**Why a typed variable matters.** `@onready var juice: JuiceBehavior = $Juice` tells Godot what `juice` is, so the editor can complete `juice.` and check every call before the game runs. `$Juice.shake_timed(...)` on its own is an untyped node: nothing is completed and a typo shows up as an error in the middle of play.
+
+**What the functions return.** Nothing. Each effect is fire and forget: a handle to a tween would be empty whenever the target is missing, and waiting on an empty handle is a crash. When a script needs to wait, it waits the seconds it passed (`await get_tree().create_timer(0.4).timeout`), or plays a list with `await player.play_and_wait(1.0)`.
+
+**When a target is missing.** A call on a Juice Player whose node is missing or the wrong kind says why once in the Output panel and does nothing; a card in a list says the same in its own words and tells On Juice Card Skipped.
+
+**The picker.** These functions are for scripts. They are hidden from the sheet picker because the Add Juice Card row and the card list already reach them; Grayscale and Position Shake have their own rows as well.
+
+| Card | Typed function | On |
+|---|---|---|
+| Shake (a plain amount) | `shake(strength)` | `JuiceBehavior`, `Juice3DBehavior` |
+| Shake (with ticks or a curve) | `shake_timed(amount, seconds, fade_in, fade_out, curve, at_strength)` | `JuiceBehavior`, `Juice3DBehavior` |
+| Position Shake | `shake_position(amount, seconds, fade_in, fade_out, curve, x_weight, y_weight, jumps_per_second)` (`z_weight` too in 3D); `shake_position(node, ...)` on a Juice Player | `JuiceBehavior`, `Juice3DBehavior`, `JuicePlayer` |
+| Hitstop, Slowmo, Flash, Punch Scale, Zoom By Percent | `hitstop`, `slowmo`, `flash`, `punch_scale`, `zoom_by_percent` | the Juice nodes |
+| Squash And Stretch, Punch Position, Punch Rotation | `squash_and_stretch`, `punch_position`, `punch_rotation` | the Juice nodes |
+| Shockwave, Chromatic Kick, Pulse Vignette, Hold Effect | `shockwave`, `chromatic_pulse`, `pulse_post_effect`, `hold_post_effect` | `ScreenFx` |
+| Chromatic Shake | `chromatic_shake(magnitude, duration, mode, angle_degrees)` | the Juice nodes |
+| Grayscale | `grayscale(amount, seconds, fade_in, fade_out, stay)`, `grayscale_from(point, reach, seconds, amount, softness, colour_inside, fade_out, stay, in_screen)`, `clear_grayscale(seconds)` | `ScreenFx` |
+| Tween Property | `tween_property(target, property, to, seconds, from, trans, ease_type, comes_back, relative)` | `JuicePlayer` |
+| Emit Signal | `emit_signal_on(node, signal_name, args)`, `emit_juice_signal(word)` | `JuicePlayer` |
+| Play Player | `play_player(other, at_strength)` | `JuicePlayer` |
+| Sound, Stop Sound | `play_sound(stream, volume_db, pitch, bus, heard_from_here, label)`, `stop_sound(label, fade)` | `JuicePlayer` |
+| Fade Bus | `fade_bus(bus, to_db, seconds)` | `JuicePlayer` |
+| Vibrate | `vibrate(weak, strong, seconds)` | `JuicePlayer` |
+| Particles | `restart_particles(node)`, `start_particles(node)`, `stop_particles(node)` | `JuicePlayer` |
+| Animation, Sprite Animation | `play_animation(player, animation, seconds)`, `play_sprite_animation(sprite, animation, seconds)` | `JuicePlayer` |
+| Show Or Hide | `show_node(node)`, `hide_node(node)`, `show_node_for(node, seconds)` | `JuicePlayer` |
+| Call Method | `call_method(node, method, args)` | `JuicePlayer` |
+| Spawn Scene | `spawn_scene(scene, at)` | `JuicePlayer` |
+| Push | `push_away_from(body, from, speed)`, `push_along_motion(body, speed)`, `push_towards(body, direction, speed)` | `JuicePlayer` |
+| Force, Gravity, Freeze | `force_for_a_time(body, force, seconds)`, `gravity_for_a_time(body, gravity_scale, seconds)`, `freeze_body(body, seconds)` | `JuicePlayer` |
+| Pop, Fade | `pop(node, scale_to, seconds)`, `fade_node(node, alpha, seconds)` | `JuicePlayer` |
+| Grab Focus | `focus_control(control)` | `JuicePlayer` |
+| Count To, Reveal Text, Fill Bar | `count_label_to(label, to, seconds)`, `reveal_text(label, seconds, letters_per_second)`, `fill_bar_to(bar, to, seconds)` | `JuicePlayer` |
+| Shader Value | `tween_shader_value(node, parameter, to, seconds, trans, comes_back, only_this)` | `JuicePlayer` |
+| Collision For A Time, Collision Layer For A Time | `disable_collision_for(shape, seconds)`, `set_collision_bit_for(body, layer, on, seconds, as_mask)` | `JuicePlayer` |
+| Remove Node, Draw Order | `remove_node(node, after_list)`, `draw_order_for(node, z_index, seconds)` | `JuicePlayer` |
+| Switch Node On Or Off | `switch_node_off_for(node, seconds, hidden, processing, collision)`, `switch_node_off(...)`, `switch_node_on(...)` | `JuicePlayer` |
+| Look At, Rotate By, Rotate To, Rotation Shake | `turn_to_face(node, target, seconds)`, `rotate_by(node, degrees, seconds)`, `rotate_to(node, degrees, seconds)`, `rotation_shake(node, degrees, seconds, fade_in, fade_out, curve)` | `JuicePlayer` |
+| Light | `flare_light(light, energy_to, colour_to, seconds, comes_back, back_seconds, trans, ease_type, energy_from, colour_from)` | `JuicePlayer` |
+| Scene Look, Bus Effect | `tween_scene_look(property, to, seconds, back_seconds, holder)`, `bus_effect_for(bus, how, to, seconds, back_seconds, slot)` | `JuicePlayer` |
+| Spring, Slow One Object | `kick_spring(node, property, kick, damping, frequency)`, `slow_object(node, speed, seconds)` | `JuicePlayer` |
+| Animation Parameter | `tween_animation_parameter(tree, parameter, to, seconds, comes_back, back_seconds)` | `JuicePlayer` |
+| Pause Or Resume A Juice Player | `pause_feedbacks()`, `resume_feedbacks()`, `toggle_juice_paused()` on the other player | `JuicePlayer` |
+| A card of your own | `play(target, strength)` on your `JuiceCard` script | your script |
+| Pause, Hold, Loop Start, Loop Back | none: they only move the head of the list; `play`, `stop`, `pause_feedbacks`, `hold_here`, `release_hold` and `set_loop_count` already do that from code | `JuicePlayer` |
+
+A card dictionary is still accepted exactly as before (`add_feedback({...})`, a list saved in a scene or a moment file), and plays the same.
 
 ## ACE reference
 
