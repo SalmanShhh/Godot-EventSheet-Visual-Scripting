@@ -89,9 +89,8 @@ const FORBIDDEN_READINGS: PackedStringArray = [
 
 const SKATEBOARD_PACK := "res://eventsheet_addons/skateboard/skateboard_behavior.gd"
 const SKATEBOARD_3D_PACK := "res://eventsheet_addons/skateboard_3d/skateboard_3d_behavior.gd"
-
-
 const NodeVariables := preload("res://addons/eventforge/compiler/node_variables.gd")
+
 
 static func run() -> bool:
 	var ok: bool = true
