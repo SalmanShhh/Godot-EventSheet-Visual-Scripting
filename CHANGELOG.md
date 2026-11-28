@@ -19,6 +19,10 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 - **A typed answer from the compile calls.** `EventSheets.compile_result()` and `EventSheets.echo_result()` answer with an `EventSheetCompileResult` (`success`, `output`, `errors`, `warnings`, `source_map`, `refused_path`) beside the Dictionary the existing calls return, which is unchanged.
 - **Class names for the Post Kit effects.** The six effect scripts and the base class they share now publish `PostKitVignette`, `PostKitDesaturate`, `PostKitPixelate`, `PostKitTint`, `PostKitFade`, `PostKitOutline` and `PostKitEffect`, so a script can name one.
 
+### Fixed
+
+- **An old moment file's help matches the cards it shows.** The line above its steps still listed verb words (shake, hitstop and the rest) to type into a dictionary; it now says what you see, one card per thing that happens, and that the first edit turns the file into a Juice list with the same path. The class and the file format are unchanged.
+
 ## Releases
 
 - **v0.21.0** (2026-11-20) - Small to Large

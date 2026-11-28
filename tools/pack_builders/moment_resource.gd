@@ -33,9 +33,9 @@ static func build() -> bool:
 		"moment_name": {"type": "String", "default": "", "exported": true,
 			"attributes": {"tooltip": "Name this moment is played by.",
 				"header": "Moment", "header_color": "#e8a33d",
-				"info": "One entry in Steps per thing that happens, in order. The words are shake, hitstop, slowmo, flash, punch, zoom, shockwave, chromatic, pulse and hold; pulse and hold also take the name of a post effect."}},
+				"info": "One card per thing that happens, in order, shown under Steps. Add a card with the Add card button and open it to tune it. Change anything and this file turns into a Juice list that keeps the same path, so every scene using it plays on."}},
 		"steps": {"type": "Array[Dictionary]", "default": [], "exported": true,
-			"attributes": {"tooltip": "Steps in order: each has a step word, amount, effect and seconds."}}
+			"attributes": {"tooltip": "The cards in order: what each one does, how much and how long."}}
 	}
 	var saved: bool = Lib.save_pack(sheet, "res://eventsheet_addons/moment_resource/moment_resource")
 	return build_juice_list() and saved
