@@ -217,6 +217,10 @@ const STATE_JUMP_THRU := "jump_thru"
 const STATE_SLOPE_LEFT := "slope_left"
 ## The word slope_right.
 const STATE_SLOPE_RIGHT := "slope_right"
+## The word jump_thru_slope_left.
+const STATE_JUMP_THRU_SLOPE_LEFT := "jump_thru_slope_left"
+## The word jump_thru_slope_right.
+const STATE_JUMP_THRU_SLOPE_RIGHT := "jump_thru_slope_right"
 ## The word instant.
 const KIND_INSTANT := "instant"
 ## The word gradual.
@@ -248,6 +252,10 @@ const PATROL_TURN_BEFORE_DANGER: String = "turn_before_danger"
 const PATROL_ORDER_PING_PONG: String = "ping_pong"
 ## Start Patrol Between Markers order: 1, 2, 3, 1, 2, 3.
 const PATROL_ORDER_LOOP: String = "loop"
+## Tile state: a one-way slope that rises to the right, walkable from above and passable from below.
+const TILE_JUMP_THRU_SLOPE_LEFT: String = "jump_thru_slope_left"
+## Tile state: a one-way slope that rises to the left, walkable from above and passable from below.
+const TILE_JUMP_THRU_SLOPE_RIGHT: String = "jump_thru_slope_right"
 ## Graph build step: reading the painted tiles of the map.
 const BUILD_SCAN: int = 0
 ## Graph build step: adding the cells scanned from collision bodies.
@@ -512,7 +520,7 @@ var _edges: Dictionary = {}
 var _blocking: Dictionary = {}
 ## Every cell holding anything, for the clearance test of a drop (it lands on a jump-through floor too).
 var _blocking_down: Dictionary = {}
-## The obstacle map the last build read: cell -> "solid" / "jump_thru" / "slope_left" / "slope_right". Clear cells are simply absent.
+## The obstacle map the last build read: cell -> "solid" / "jump_thru" / "slope_left" / "slope_right" or a one-way slope word. Clear cells are simply absent.
 var _states: Dictionary = {}
 ## Hand-set tile states (Set Tile State, Load Obstacle Map JSON) layered over the scan; they survive Regenerate. "clear" erases whatever the scan found.
 var _tile_overrides: Dictionary = {}
@@ -1963,23 +1971,23 @@ func create_obstacle_map(width: int, height: int, cell_size: float) -> void:
 
 # @ace_action
 # @ace_name("Set Tile State")
-# @ace_description("Overrides one cell of the map: solid, clear, jump_thru (a one-way platform), slope_left (rises to the right) or slope_right (rises to the left). Overrides survive Regenerate; call Regenerate Nav Graph after a batch of them. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT.")
+# @ace_description("Overrides one cell of the map: solid, clear, jump_thru (a one-way platform), slope_left (rises to the right), slope_right (rises to the left), or jump_thru_slope_left / jump_thru_slope_right (the same slopes, one-way: walked from above, passed from below, dropped through). Overrides survive Regenerate; call Regenerate Nav Graph after a batch of them. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT, STATE_JUMP_THRU_SLOPE_LEFT, STATE_JUMP_THRU_SLOPE_RIGHT.")
 # @ace_param(gx, desc: "Grid X.")
 # @ace_param(gy, desc: "Grid Y.")
-# @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right, default_word: solid, desc: "The cell's new state.")
+# @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right|jump_thru_slope_left|jump_thru_slope_right, default_word: solid, desc: "The cell's new state.")
 # @ace_codegen_template("$PlatformerPathfinding.set_tile_state({gx}, {gy}, "{state}")")
 func set_tile_state(gx: int, gy: int, state: String) -> void:
-	if not ["solid", "clear", "jump_thru", "slope_left", "slope_right"].has(state):
+	if not ["solid", "clear", "jump_thru", "slope_left", "slope_right", TILE_JUMP_THRU_SLOPE_LEFT, TILE_JUMP_THRU_SLOPE_RIGHT].has(state):
 		push_warning("[PlatformerPathfinding] Set Tile State: unknown state '%s'." % state)
 		return
 	_tile_overrides[Vector2i(gx, gy)] = state
 
 # @ace_action
 # @ace_name("Set Tile State At")
-# @ace_description("Set Tile State for the cell under a world position. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT.")
+# @ace_description("Set Tile State for the cell under a world position. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT, STATE_JUMP_THRU_SLOPE_LEFT, STATE_JUMP_THRU_SLOPE_RIGHT.")
 # @ace_param(x, desc: "World X.")
 # @ace_param(y, desc: "World Y.")
-# @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right, default_word: solid, desc: "The cell's new state.")
+# @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right|jump_thru_slope_left|jump_thru_slope_right, default_word: solid, desc: "The cell's new state.")
 # @ace_codegen_template("$PlatformerPathfinding.set_tile_state_at({x}, {y}, "{state}")")
 func set_tile_state_at(x: float, y: float, state: String) -> void:
 	var cell: Vector2i = _world_to_cell(Vector2(x, y))
@@ -2109,7 +2117,7 @@ func obstacle_map_source() -> String:
 
 # @ace_expression
 # @ace_name("Tile State")
-# @ace_description("A cell's state: solid, clear, jump_thru, slope_left or slope_right (empty with no map or outside a custom map).")
+# @ace_description("A cell's state: solid, clear, jump_thru, slope_left, slope_right, jump_thru_slope_left or jump_thru_slope_right (empty with no map or outside a custom map).")
 # @ace_param(gx, desc: "Grid X.")
 # @ace_param(gy, desc: "Grid Y.")
 # @ace_codegen_template("$PlatformerPathfinding.tile_state({gx}, {gy})")
@@ -2123,20 +2131,20 @@ func tile_state(gx: int, gy: int) -> String:
 
 # @ace_condition
 # @ace_name("Tile Has State")
-# @ace_description("True when a cell has the given state. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT.")
+# @ace_description("True when a cell has the given state. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT, STATE_JUMP_THRU_SLOPE_LEFT, STATE_JUMP_THRU_SLOPE_RIGHT.")
 # @ace_param(gx, desc: "Grid X.")
 # @ace_param(gy, desc: "Grid Y.")
-# @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right, default_word: solid, desc: "The state to test for.")
+# @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right|jump_thru_slope_left|jump_thru_slope_right, default_word: solid, desc: "The state to test for.")
 # @ace_codegen_template("$PlatformerPathfinding.tile_has_state({gx}, {gy}, "{state}")")
 func tile_has_state(gx: int, gy: int, state: String) -> bool:
 	return tile_state(gx, gy) == state
 
 # @ace_condition
 # @ace_name("Tile Has State At")
-# @ace_description("True when the cell under a world position has the given state. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT.")
+# @ace_description("True when the cell under a world position has the given state. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT, STATE_JUMP_THRU_SLOPE_LEFT, STATE_JUMP_THRU_SLOPE_RIGHT.")
 # @ace_param(x, desc: "World X.")
 # @ace_param(y, desc: "World Y.")
-# @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right, default_word: solid, desc: "The state to test for.")
+# @ace_param(state, options: solid|clear|jump_thru|slope_left|slope_right|jump_thru_slope_left|jump_thru_slope_right, default_word: solid, desc: "The state to test for.")
 # @ace_codegen_template("$PlatformerPathfinding.tile_has_state_at({x}, {y}, "{state}")")
 func tile_has_state_at(x: float, y: float, state: String) -> bool:
 	var cell: Vector2i = _world_to_cell(Vector2(x, y))
@@ -3260,9 +3268,11 @@ func _has_grid() -> bool:
 
 # @ace_hidden
 ## What one painted tile is to the navigator, read off its collision polygons: no polygon is
-## clear, all-one-way polygons are a jump-through platform, a top edge that rises by more than a
-## quarter tile across the cell is a slope ("slope_left" rises to the right, "/"; "slope_right"
-## rises to the left, "\"), anything else is solid.
+## clear; a top edge that rises by more than a quarter tile across the cell is a slope
+## ("slope_left" rises to the right, "/"; "slope_right" rises to the left, "\"); polygons that
+## are all one-way make the tile jump-through - "jump_thru" when flat, or the slope word with
+## "jump_thru_" in front when it is a one-way slope, which an agent walks along from above and
+## passes through from below; anything else is solid.
 func _tile_state_of(tile_data: TileData) -> String:
 	if _tilemap.tile_set.get_physics_layers_count() == 0:
 		return ""
@@ -3273,8 +3283,6 @@ func _tile_state_of(tile_data: TileData) -> String:
 	for polygon_index in range(count):
 		if not tile_data.is_collision_polygon_one_way(0, polygon_index):
 			one_way = false
-	if one_way:
-		return "jump_thru"
 	var half: float = float(_tilemap.tile_set.tile_size.x) * 0.5
 	var left_top: float = INF
 	var right_top: float = INF
@@ -3283,13 +3291,24 @@ func _tile_state_of(tile_data: TileData) -> String:
 			left_top = minf(left_top, point.y)
 		if point.x >= half * 0.5:
 			right_top = minf(right_top, point.y)
-	if left_top == INF or right_top == INF:
-		return "solid"
-	if right_top < left_top - half * 0.5:
-		return "slope_left"
-	if left_top < right_top - half * 0.5:
-		return "slope_right"
-	return "solid"
+	var slope: String = ""
+	if left_top != INF and right_top != INF:
+		if right_top < left_top - half * 0.5:
+			slope = "slope_left"
+		elif left_top < right_top - half * 0.5:
+			slope = "slope_right"
+	if one_way:
+		if slope == "slope_left":
+			return TILE_JUMP_THRU_SLOPE_LEFT
+		if slope == "slope_right":
+			return TILE_JUMP_THRU_SLOPE_RIGHT
+		return "jump_thru"
+	return slope if slope != "" else "solid"
+
+# @ace_hidden
+## Whether a state is a jump-through platform: flat, or a one-way slope.
+func _is_jump_thru_state(state: String) -> bool:
+	return state == "jump_thru" or state == TILE_JUMP_THRU_SLOPE_LEFT or state == TILE_JUMP_THRU_SLOPE_RIGHT
 
 # @ace_hidden
 ## The live state of one cell: a hand-set override, else a scanned body, else the painted tile.
@@ -5391,7 +5410,7 @@ func _link_cell(link_pass: int, cell: Vector2i) -> void:
 	else:
 		# FALL-THROUGH drops: standing on a jump-through platform, drop straight down to the first
 		# node below it.
-		if str(_states.get(cell + Vector2i(0, 1), "")) != "jump_thru":
+		if not _is_jump_thru_state(str(_states.get(cell + Vector2i(0, 1), ""))):
 			return
 		for depth in range(1, _link_fall + 2):
 			var below: Vector2i = cell + Vector2i(0, depth)

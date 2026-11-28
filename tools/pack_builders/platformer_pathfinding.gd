@@ -4,7 +4,7 @@
 const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 const _STRATEGIES := ["balanced", "shortest", "safest", "ground_hugging", "no_falling", "walk_only"]
-const _TILE_STATES := ["solid", "clear", "jump_thru", "slope_left", "slope_right"]
+const _TILE_STATES := ["solid", "clear", "jump_thru", "slope_left", "slope_right", "jump_thru_slope_left", "jump_thru_slope_right"]
 const _HAZARD_LEVELS := ["deadly", "danger", "clear"]
 const _PATROL_SETTINGS := ["dwell_time", "edge_distance", "dwell_variation", "speed", "resume_after"]
 const _PATROL_OPTIONS := ["turn_at_agents", "turn_before_danger"]
@@ -336,7 +336,7 @@ static func build() -> bool:
 		"Starts an empty map with no TileMapLayer: Width x Height cells of Cell Size pixels from the world origin, every cell clear. Fill it with Set Tile State or Scan Collision Bodies, then Regenerate Nav Graph.",
 		[["width", "int", "Width in cells."], ["height", "int", "Height in cells."], ["cell_size", "float", "Cell size in pixels (0 keeps Grid Cell Size)."]])
 	src.verb("set_tile_state", "Set Tile State",
-		"Overrides one cell of the map: solid, clear, jump_thru (a one-way platform), slope_left (rises to the right) or slope_right (rises to the left). Overrides survive Regenerate; call Regenerate Nav Graph after a batch of them.",
+		"Overrides one cell of the map: solid, clear, jump_thru (a one-way platform), slope_left (rises to the right), slope_right (rises to the left), or jump_thru_slope_left / jump_thru_slope_right (the same slopes, one-way: walked from above, passed from below, dropped through). Overrides survive Regenerate; call Regenerate Nav Graph after a batch of them.",
 		[["gx", "int", "Grid X."], ["gy", "int", "Grid Y."], ["state", "String", "The cell's new state."]])
 	_word(sheet, "state", _TILE_STATES, "set_tile_state({gx}, {gy}, \"{state}\")")
 	src.verb("set_tile_state_at", "Set Tile State At",
@@ -360,7 +360,7 @@ static func build() -> bool:
 		"Where the map comes from: tilemap, custom or none.",
 		[], TYPE_STRING)
 	src.expression("tile_state", "Tile State",
-		"A cell's state: solid, clear, jump_thru, slope_left or slope_right (empty with no map or outside a custom map).",
+		"A cell's state: solid, clear, jump_thru, slope_left, slope_right, jump_thru_slope_left or jump_thru_slope_right (empty with no map or outside a custom map).",
 		[["gx", "int", "Grid X."], ["gy", "int", "Grid Y."]], TYPE_STRING)
 	src.condition("tile_has_state", "Tile Has State",
 		"True when a cell has the given state.",
