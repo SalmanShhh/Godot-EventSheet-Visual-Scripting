@@ -102,7 +102,7 @@ static func build() -> bool:
 		"debug_log": {"type": "bool", "default": false, "exported": true,
 			"attributes": {"tooltip": "Print each route found (waypoints, cost) and each failure with its reason to the Output panel."}},
 		"watch_tile_edits": {"type": "bool", "default": false, "exported": true,
-			"attributes": {"tooltip": "Notice tiles painted or erased at run time (Set Cell, Erase Cell): about two thousand tiles are compared per tick and only the changed area is rescanned. Off = call Regenerate Region yourself."}},
+			"attributes": {"tooltip": "Notice tiles painted or erased at run time: about 2000 tiles are compared per tick and only the changed area is rescanned. Off = call Regenerate Region."}},
 	}
 
 	src.note("Platformer pathfinding: attach as a SIBLING of PlatformerMovement under a CharacterBody2D. Build Nav Graph from your TileMapLayer once, then Find Path To - the behavior derives jump reach from the movement pack and drives it through the ai_move_axis seam. Stairs and tile slopes walk (adjacent cells one step up/down are WALK links); gaps and ledges route through jump, double jump and coyote jump arcs, fall drops, fall-through drops off one-way platforms, portals and moving platforms.")
@@ -564,7 +564,7 @@ static func build() -> bool:
 	_code_default(sheet, "group", "\"\"")
 	_word(sheet, "order", _PATROL_ORDERS, "start_patrol_between_markers({group}, \"{order}\", {dwell})")
 	src.verb("set_patrol_setting", "Set Patrol Setting",
-		"Tunes patrolling (both patrol verbs): dwell_time (seconds at each end or marker), edge_distance (pixels to turn short of each platform edge), dwell_variation (random seconds added to or taken from each wait), speed (percent of the run speed while a patrol walks; chases and jumps use full speed) or resume_after (seconds a patrol cancelled by Find Path To waits after the route ends before starting again, 0 = never).",
+		"Tunes patrolling (both patrol actions): dwell_time (seconds at each end or marker), edge_distance (pixels to turn short of each platform edge), dwell_variation (random seconds added to or taken from each wait), speed (percent of the run speed while a patrol walks; chases and jumps use full speed) or resume_after (seconds a patrol cancelled by Find Path To waits after the route ends before starting again, 0 = never).",
 		[["setting", "String", "Which setting to change."], ["value", "float", "Its new value."]])
 	_word(sheet, "setting", _PATROL_SETTINGS, "set_patrol_setting(\"{setting}\", {value})")
 	src.verb("set_patrol_option", "Set Patrol Option",

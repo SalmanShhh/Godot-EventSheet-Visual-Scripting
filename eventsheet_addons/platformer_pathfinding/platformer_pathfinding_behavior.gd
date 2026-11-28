@@ -151,7 +151,7 @@ signal nav_graph_cleared
 @export var debug_draw_graph: bool = false
 ## Print each route found (waypoints, cost) and each failure with its reason to the Output panel.
 @export var debug_log: bool = false
-## Notice tiles painted or erased at run time (Set Cell, Erase Cell): about two thousand tiles are compared per tick and only the changed area is rescanned. Off = call Regenerate Region yourself.
+## Notice tiles painted or erased at run time: about 2000 tiles are compared per tick and only the changed area is rescanned. Off = call Regenerate Region.
 @export var watch_tile_edits: bool = false
 
 # --- Choices (the words the choice parameters take; saved scenes keep them) ---
@@ -218,21 +218,29 @@ const KIND_GRADUAL := "gradual"
 
 ## The version written into an exported obstacle map, and the newest one this behaviour reads.
 const OBSTACLE_MAP_VERSION: int = 1
-## The words Set Tile Hazard takes: no hazard, a costly one, or one routes never cross.
+## Set Tile Hazard word: no hazard on the cell.
 const HAZARD_CLEAR: String = "clear"
+## Set Tile Hazard word: a costly cell routes pay extra to cross.
 const HAZARD_DANGER: String = "danger"
+## Set Tile Hazard word: a cell routes never cross.
 const HAZARD_DEADLY: String = "deadly"
-## The words Set Patrol Setting takes.
+## Set Patrol Setting word: seconds to wait at each end or marker.
 const PATROL_DWELL_TIME: String = "dwell_time"
+## Set Patrol Setting word: pixels to turn short of each platform edge.
 const PATROL_EDGE_DISTANCE: String = "edge_distance"
+## Set Patrol Setting word: random seconds added to or taken from each wait.
 const PATROL_DWELL_VARIATION: String = "dwell_variation"
+## Set Patrol Setting word: percent of the run speed while a patrol walks.
 const PATROL_SPEED: String = "speed"
+## Set Patrol Setting word: seconds a cancelled patrol waits before it starts again.
 const PATROL_RESUME_AFTER: String = "resume_after"
-## The words Set Patrol Option takes.
+## Set Patrol Option word: turn round when another agent stands in the way.
 const PATROL_TURN_AT_AGENTS: String = "turn_at_agents"
+## Set Patrol Option word: turn round before stepping somewhere more hazardous.
 const PATROL_TURN_BEFORE_DANGER: String = "turn_before_danger"
-## The words Start Patrol Between Markers takes for its order.
+## Start Patrol Between Markers order: 1, 2, 3, 2, 1.
 const PATROL_ORDER_PING_PONG: String = "ping_pong"
+## Start Patrol Between Markers order: 1, 2, 3, 1, 2, 3.
 const PATROL_ORDER_LOOP: String = "loop"
 ## One link out of a cell in the search graph.
 class NavEdge extends RefCounted:
@@ -575,8 +583,10 @@ var _patrol_retry: bool = false
 var _patrol_base_speed: float = -1.0
 ## What a route cancelled, for Resume After: empty for nothing, "platform" or "markers".
 var _patrol_memory_kind: String = ""
-## The markers of a cancelled between-markers patrol.
-var _patrol_memory_markers: Array[Node2D] = []
+## The group of markers of a cancelled between-markers patrol.
+var _patrol_memory_group: String = ""
+## The group of markers the running between-markers patrol visits.
+var _patrol_group: String = ""
 ## Whether the cancelled markers patrol looped.
 var _patrol_memory_loop: bool = false
 ## Seconds the host has stood idle since the route that cancelled its patrol ended.
@@ -2571,11 +2581,12 @@ func start_patrol_between_markers(group: String, order: String, dwell: float) ->
 	stop_pathfinding()
 	if _nodes.is_empty():
 		_auto_build()
+	_patrol_group = group
 	_begin_marker_patrol(found, order == PATROL_ORDER_LOOP, dwell)
 
 # @ace_action
 # @ace_name("Set Patrol Setting")
-# @ace_description("Tunes patrolling (both patrol verbs): dwell_time (seconds at each end or marker), edge_distance (pixels to turn short of each platform edge), dwell_variation (random seconds added to or taken from each wait), speed (percent of the run speed while a patrol walks; chases and jumps use full speed) or resume_after (seconds a patrol cancelled by Find Path To waits after the route ends before starting again, 0 = never).")
+# @ace_description("Tunes patrolling (both patrol actions): dwell_time (seconds at each end or marker), edge_distance (pixels to turn short of each platform edge), dwell_variation (random seconds added to or taken from each wait), speed (percent of the run speed while a patrol walks; chases and jumps use full speed) or resume_after (seconds a patrol cancelled by Find Path To waits after the route ends before starting again, 0 = never).")
 # @ace_param(setting, options: dwell_time|edge_distance|dwell_variation|speed|resume_after, default_word: dwell_time, desc: "Which setting to change.")
 # @ace_param(value, desc: "Its new value.")
 # @ace_codegen_template("$PlatformerPathfinding.set_patrol_setting("{setting}", {value})")
@@ -4198,7 +4209,7 @@ func _cancel_patrol_for_route() -> void:
 			_patrol_memory_kind = "platform"
 		else:
 			_patrol_memory_kind = "markers"
-			_patrol_memory_markers = _patrol_markers.duplicate()
+			_patrol_memory_group = _patrol_group
 			_patrol_memory_loop = _patrol_loop
 		_patrol_resume_clock = 0.0
 	_end_patrol()
@@ -4220,17 +4231,13 @@ func _resume_patrol_tick(delta: float) -> void:
 	if _patrol_resume_clock < _patrol_resume_after:
 		return
 	var kind: String = _patrol_memory_kind
-	var markers: Array[Node2D] = []
-	for marker in _patrol_memory_markers:
-		if is_instance_valid(marker):
-			markers.append(marker)
+	var group: String = _patrol_memory_group
 	var loop: bool = _patrol_memory_loop
 	_patrol_memory_kind = ""
-	_patrol_memory_markers.clear()
 	if kind == "platform":
 		start_patrol(_patrol_dwell, _patrol_edge)
-	elif not markers.is_empty():
-		_begin_marker_patrol(markers, loop, _patrol_dwell)
+	elif kind == "markers":
+		start_patrol_between_markers(group, PATROL_ORDER_LOOP if loop else PATROL_ORDER_PING_PONG, _patrol_dwell)
 
 # @ace_hidden
 ## True while a plain platform patrol (not a marker route) is running.
