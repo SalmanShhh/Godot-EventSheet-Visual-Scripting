@@ -290,6 +290,16 @@ const FLIGHT_MARGIN: float = 3.0
 const FLIGHT_NEVER: Dictionary = {"lands": false, "swept": [], "tops": []}
 ## How many sets of movement numbers keep their flights before the oldest are dropped all at once.
 const FLIGHT_TABLES_KEPT: int = 8
+## How far ahead, in seconds, an agent looks for a crusher on its way and holds back when the way is not clear.
+const CRUSHER_LOOKAHEAD: float = 0.8
+## The time between the moments checked while an agent crosses a crusher's lane, in seconds.
+const CRUSHER_STEP: float = 0.05
+## Seconds an agent waits for one crusher before it stops waiting and goes on.
+const CRUSHER_WAIT_LIMIT: float = 30.0
+## How many physics ticks of a crusher's movement are kept to learn its cycle from.
+const CRUSHER_TRAIL_TICKS: int = 600
+## A crusher is not taken to be at the same point of its cycle again until it has been this many ticks away from it.
+const CRUSHER_MIN_CYCLE_TICKS: int = 15
 ## One link out of a cell in the search graph.
 class NavEdge extends RefCounted:
 	## The cell the link leads to.
@@ -386,6 +396,8 @@ class NavHazard extends RefCounted:
 	var sweep: bool = false
 	## True when the range it covers was given (Set Hazard Travel) and is not learned from the node's movement.
 	var fixed: bool = false
+	## True for a crusher: a moving obstacle an agent waits out as well as keeps away from.
+	var crusher: bool = false
 	## The area the node's shapes cover right now (rect is the whole range when the hazard sweeps).
 	var live: Rect2 = Rect2()
 	## Where the node's origin was at the last read.
@@ -400,6 +412,16 @@ class NavHazard extends RefCounted:
 	var velocity: Vector2 = Vector2.ZERO
 	## The fastest the node has been seen moving, in pixels per second.
 	var top_speed: float = 0.0
+	## Where the node's origin was on each of the last physics ticks, oldest first (kept for a crusher, to replay its cycle).
+	var trail: PackedVector2Array = PackedVector2Array()
+	## The physics frame the trail was last added to, so several agents sharing a map add one point a tick.
+	var trail_frame: int = -1
+	## How many ticks one cycle of the node's movement takes, once the trail shows a whole one; 0 until then.
+	var cycle: int = 0
+	## The physics frame the cycle was last worked out on.
+	var cycle_frame: int = -1
+
+## A platform being watched while it moves, until one trip there and back tells where its two ends are.
 class NavLearn extends RefCounted:
 	## The platform; it may be freed from outside, so it is checked before use.
 	var node: Node2D = null
@@ -641,6 +663,10 @@ var _run_phase: int = 0
 var _run_clock: float = 0.0
 ## True on the tick a running-start jump should leave the ground.
 var _run_jump_due: bool = false
+## True while the host holds back for a crusher.
+var _crusher_waiting: bool = false
+## Seconds the host has been waiting for a crusher.
+var _crusher_wait_clock: float = 0.0
 ## The node the host keeps routing toward.
 var _follow_target: Node = null
 ## The point the current route leads to.
@@ -786,6 +812,30 @@ func _world_to_cell(world: Vector2) -> Vector2i:
 	var tile: float = _tile_px()
 	return Vector2i(floori((world.x - _grid_origin.x) / tile), floori((world.y - _grid_origin.y) / tile))
 
+# @ace_hidden
+## Where a crusher's shapes will be a short time from now. Once its trail shows a whole cycle the
+## cycle is replayed, dwells and slow stretches included. Before that it is guessed from how it has
+## been moving: it keeps its heading at the fastest speed it has been seen at (a standing one sets
+## off for the end it is further from) and turns round at the two ends of its travel, never
+## optimistic about a crusher that is slowing down, so an agent waits rather than takes a chance.
+func _crusher_bounds_at(hazard: NavHazard, ahead: float) -> Rect2:
+	var replayed: Vector2 = _crusher_replay(hazard, ahead)
+	if replayed.is_finite():
+		return Rect2(hazard.live.position + (replayed - hazard.trail[hazard.trail.size() - 1]), hazard.live.size)
+	var span: float = hazard.end_a.distance_to(hazard.end_b)
+	if span < 1.0 or hazard.top_speed < 1.0:
+		return hazard.live
+	var axis: Vector2 = (hazard.end_b - hazard.end_a) / span
+	var along: float = clampf((hazard.last_origin - hazard.end_a).dot(axis), 0.0, span)
+	var pace: float = hazard.velocity.dot(axis)
+	var heading: float = signf(pace)
+	if absf(pace) < 1.0:
+		heading = 1.0 if along < span * 0.5 else -1.0
+	# The position along the travel after `ahead` seconds, folded back at the ends.
+	var folded: float = fposmod(along + heading * hazard.top_speed * ahead, span * 2.0)
+	if folded > span:
+		folded = span * 2.0 - folded
+	return Rect2(hazard.live.position + axis * (folded - along), hazard.live.size)
 # @ace_hidden
 ## A node's transform in the world. Tree-safe: outside a scene tree (tools, tests) the transforms of its
 ## 2D parents are multiplied by hand, the way a tilemap stands in for its global transform.
@@ -1059,6 +1109,7 @@ func _physics_process(delta: float) -> void:
 	if _check_patrol_way(delta):
 		return
 	if _path.is_empty():
+		_crusher_waiting = false
 		if idle_separation > 0.0 and _separate(delta):
 			return
 		# No route, no deferred request, nobody being followed, no patrol, no spacing to keep
@@ -1098,6 +1149,14 @@ func _physics_process(delta: float) -> void:
 		if absf(takeoff_dx) > 4.0:
 			_move_axis = clampf(takeoff_dx / 24.0, -1.0, 1.0)
 			wants_jump = false
+	# A crusher on the way: stand at a safe spot until the way through its area is clear.
+	_crusher_waiting = action != "platform" and action != "portal" and action != "portal_gradual" and _crusher_wait_clock < CRUSHER_WAIT_LIMIT and _crusher_must_wait(target)
+	if _crusher_waiting:
+		_crusher_wait_clock += delta
+		_move_axis = 0.0
+		wants_jump = false
+		_stuck_clock = 0.0
+		_best_waypoint_distance = INF
 	# Fall-through: stand over the drop, then slip below the one-way platform's surface - it
 	# stops colliding once the body is past its margin, and gravity does the rest.
 	if action == "fall_through" and host.is_on_floor() and absf(dx) <= arrive_distance and not _dropped_this_segment:
@@ -2776,6 +2835,51 @@ func set_hazard_travel(target: Node, from_x: float, from_y: float, to_x: float, 
 			return
 	push_warning("[PlatformerPathfinding] Set Hazard Travel: the node has no hazard yet - add one with Add Hazard From Node first.")
 
+# @ace_action
+# @ace_name("Add Crusher From Node")
+# @ace_description("Turns a moving obstacle that cannot be ridden (a press, a thwomp, a sliding wall) into a crusher: everything it sweeps is danger, learned as it moves (Set Hazard Travel gives it by hand), and an agent whose way leads through that area stops at a safe spot and waits until the way is clear. Is Waiting For Crusher says when it waits. Last Hazard Id names it for Remove Hazard.")
+# @ace_param(target, desc: "The moving node (a body or area with collision shapes).")
+# @ace_codegen_template("$PlatformerPathfinding.add_crusher_from_node({target})")
+func add_crusher_from_node(target: Node) -> void:
+	if not (target is Node2D):
+		return
+	# A node that is already a hazard becomes a crusher and keeps its deadly flag.
+	for existing in _hazards:
+		if existing.kind == "shape" and existing.node == target:
+			existing.crusher = true
+			existing.sweep = true
+			_last_hazard_id = existing.id
+			set_physics_process(true)
+			return
+	var hazard: NavHazard = NavHazard.new()
+	hazard.id = _take_hazard_id()
+	hazard.kind = "shape"
+	hazard.node = target
+	hazard.sweep = true
+	hazard.crusher = true
+	_refresh_shape_hazard(hazard)
+	_hazards.append(hazard)
+	_last_hazard_id = hazard.id
+	set_physics_process(true)
+
+# @ace_condition
+# @ace_name("Is Waiting For Crusher")
+# @ace_description("True while the agent holds still at a safe spot for a crusher to get out of its way.")
+# @ace_codegen_template("$PlatformerPathfinding.is_waiting_for_crusher()")
+func is_waiting_for_crusher() -> bool:
+	return _crusher_waiting
+
+# @ace_expression
+# @ace_name("Crusher Count")
+# @ace_description("How many crushers are registered.")
+# @ace_codegen_template("$PlatformerPathfinding.crusher_count()")
+func crusher_count() -> int:
+	var count: int = 0
+	for hazard in _hazards:
+		if hazard.crusher:
+			count += 1
+	return count
+
 # @ace_expression
 # @ace_name("Hazard Area")
 # @ace_description("The area a hazard covers, the whole range it moves through included (an empty rectangle for an id that does not exist).")
@@ -3312,8 +3416,66 @@ func _prune_tracked_hazards() -> void:
 			_hazards.remove_at(index)
 		elif hazard.kind == "shape":
 			_refresh_shape_hazard(hazard)
+			if hazard.crusher:
+				_record_crusher_tick(hazard)
 		elif hazard.sweep and not hazard.fixed:
 			_sweep_tracked_hazard(hazard)
+
+# @ace_hidden
+## Adds where a crusher's node is to the trail of its last few seconds, once per physics tick.
+func _record_crusher_tick(hazard: NavHazard) -> void:
+	var frame: int = Engine.get_physics_frames()
+	if hazard.trail_frame == frame:
+		return
+	hazard.trail_frame = frame
+	var followed: Node2D = hazard.node as Node2D
+	if followed == null:
+		return
+	hazard.trail.append(_world_transform_of(followed).origin)
+	if hazard.trail.size() > CRUSHER_TRAIL_TICKS:
+		hazard.trail = hazard.trail.slice(hazard.trail.size() - CRUSHER_TRAIL_TICKS)
+
+# @ace_hidden
+## How many ticks one whole cycle of a crusher's movement takes, read off its trail: the trail is
+## searched back for the last time the node was at this same point going the same way, with a
+## stretch of real travel in between. 0 when no whole cycle has been seen yet. Worked out once a tick.
+func _crusher_cycle(hazard: NavHazard) -> int:
+	var frame: int = Engine.get_physics_frames()
+	if hazard.cycle_frame == frame:
+		return hazard.cycle
+	hazard.cycle_frame = frame
+	hazard.cycle = 0
+	var trail: PackedVector2Array = hazard.trail
+	var last: int = trail.size() - 1
+	if last < CRUSHER_MIN_CYCLE_TICKS * 2:
+		return 0
+	var here: Vector2 = trail[last]
+	var span: float = hazard.end_a.distance_to(hazard.end_b)
+	var step_now: Vector2 = trail[last] - trail[last - 1]
+	var excursion: float = 0.0
+	for back in range(1, last):
+		var point: Vector2 = trail[last - back]
+		var gap: float = point.distance_to(here)
+		excursion = maxf(excursion, gap)
+		if back < CRUSHER_MIN_CYCLE_TICKS or gap > 1.5 or excursion < span * 0.4:
+			continue
+		# Back at this point of the cycle, going the same way (or both stopped at an end).
+		var step_then: Vector2 = point - trail[last - back - 1]
+		if step_now.dot(step_then) < -0.01:
+			continue
+		hazard.cycle = back
+		break
+	return hazard.cycle
+
+# @ace_hidden
+## Where a crusher's node will be `ahead` seconds from now if its trail has a whole cycle to
+## replay: where it was one cycle (or a whole number of cycles) ago. (INF, INF) when it has not.
+func _crusher_replay(hazard: NavHazard, ahead: float) -> Vector2:
+	var cycle: int = _crusher_cycle(hazard)
+	if cycle <= 0:
+		return Vector2.INF
+	var ticks: int = int(round(ahead * float(Engine.physics_ticks_per_second)))
+	return hazard.trail[hazard.trail.size() - 1 - cycle + (ticks % cycle)]
 
 # @ace_hidden
 ## Widens a sweeping circle hazard to the box around the circle where its node is now.
@@ -3363,6 +3525,45 @@ func _refresh_shape_hazard(hazard: NavHazard) -> void:
 	if hazard.fixed:
 		return
 	hazard.rect = bounds.merge(hazard.rect) if hazard.sweep and hazard.rect.size != Vector2.ZERO else bounds
+
+# @ace_hidden
+## Whether the host should hold still for a crusher on its way to `target`: the way ahead goes into
+## the area the crusher sweeps, soon, and the crusher would be in the host's path while it crosses.
+## The host is never stopped in mid-air, nor once it is inside the area (it goes on through).
+func _crusher_must_wait(target: Vector2) -> bool:
+	if host == null or not host.is_on_floor():
+		return false
+	var half: Vector2 = _link_body_half + Vector2(2.0, 2.0)
+	var from: Vector2 = host.global_position
+	var leg: Vector2 = target - from
+	var distance: float = leg.length()
+	if distance < 1.0:
+		return false
+	var heading: Vector2 = leg / distance
+	var speed: float = maxf(_run_speed(), 1.0)
+	for hazard: NavHazard in _hazards:
+		if not hazard.crusher or not is_instance_valid(hazard.node):
+			continue
+		var lane: Rect2 = hazard.rect.grow_individual(half.x, half.y, half.x, half.y)
+		if lane.has_point(from):
+			continue
+		var enters: float = INF
+		var leaves: float = 0.0
+		var moment: float = 0.0
+		while moment * speed <= distance + CRUSHER_STEP * speed:
+			if lane.has_point(from + heading * minf(speed * moment, distance)):
+				enters = minf(enters, moment)
+				leaves = moment
+			moment += CRUSHER_STEP
+		if enters == INF or enters > CRUSHER_LOOKAHEAD:
+			continue
+		moment = maxf(enters - 0.1, 0.0)
+		while moment <= leaves + 0.1:
+			var body: Rect2 = Rect2(from + heading * minf(speed * moment, distance) - half, half * 2.0)
+			if _crusher_bounds_at(hazard, moment).intersects(body):
+				return true
+			moment += CRUSHER_STEP
+	return false
 
 # @ace_hidden
 ## Watches every platform being learned: once it has turned round twice (a trip there and back),
@@ -3851,6 +4052,7 @@ func _advance_waypoint() -> void:
 	_run_phase = 0
 	_run_clock = 0.0
 	_run_jump_due = false
+	_crusher_wait_clock = 0.0
 	_best_waypoint_distance = INF
 	_stuck_clock = 0.0
 	_path_index += 1
@@ -3878,6 +4080,7 @@ func _finish_path() -> void:
 	_run_phase = 0
 	_run_clock = 0.0
 	_run_jump_due = false
+	_crusher_wait_clock = 0.0
 	_follow_target = null
 	_path_pending = false
 	_stuck_clock = 0.0
@@ -4016,6 +4219,7 @@ func _route(x: float, y: float, mode: String) -> void:
 	_run_phase = 0
 	_run_clock = 0.0
 	_run_jump_due = false
+	_crusher_wait_clock = 0.0
 	_best_waypoint_distance = INF
 	_stuck_clock = 0.0
 	if debug_log:

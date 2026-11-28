@@ -572,6 +572,15 @@ static func build() -> bool:
 	src.verb("set_hazard_travel", "Set Hazard Travel",
 		"Tells the hazard of a node the range it moves through: the node's position at one end and at the other. The hazard then covers the whole range from the start, with no waiting to learn it. Add Hazard From Node first.",
 		[["target", "Node", "The node whose hazard is given a range."], ["from_x", "float", "Node X at one end of its travel."], ["from_y", "float", "Node Y at one end of its travel."], ["to_x", "float", "Node X at the other end."], ["to_y", "float", "Node Y at the other end."]])
+	src.verb("add_crusher_from_node", "Add Crusher From Node",
+		"Turns a moving obstacle that cannot be ridden (a press, a thwomp, a sliding wall) into a crusher: everything it sweeps is danger, learned as it moves (Set Hazard Travel gives it by hand), and an agent whose way leads through that area stops at a safe spot and waits until the way is clear. Is Waiting For Crusher says when it waits. Last Hazard Id names it for Remove Hazard.",
+		[["target", "Node", "The moving node (a body or area with collision shapes)."]])
+	src.condition("is_waiting_for_crusher", "Is Waiting For Crusher",
+		"True while the agent holds still at a safe spot for a crusher to get out of its way.",
+		[])
+	src.expression("crusher_count", "Crusher Count",
+		"How many crushers are registered.",
+		[], TYPE_INT)
 	src.expression("hazard_area", "Hazard Area",
 		"The area a hazard covers, the whole range it moves through included (an empty rectangle for an id that does not exist).",
 		[["hazard_id", "int", "The hazard's id."]], TYPE_RECT2)
