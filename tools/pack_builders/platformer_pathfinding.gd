@@ -103,6 +103,8 @@ static func build() -> bool:
 			"attributes": {"tooltip": "Print each route found (waypoints, cost) and each failure with its reason to the Output panel."}},
 		"watch_tile_edits": {"type": "bool", "default": false, "exported": true,
 			"attributes": {"tooltip": "Notice tiles painted or erased at run time: about 2000 tiles are compared per tick and only the changed area is rescanned. Off = call Regenerate Region."}},
+		"build_budget_ms": {"type": "float", "default": 4.0, "exported": true,
+			"attributes": {"tooltip": "Milliseconds of each physics frame a nav graph build may use; a big level builds a little per frame, a small one at once. 0 = build it all in one call."}},
 	}
 
 	src.note("Platformer pathfinding: attach as a SIBLING of PlatformerMovement under a CharacterBody2D. Build Nav Graph from your TileMapLayer once, then Find Path To - the behavior derives jump reach from the movement pack and drives it through the ai_move_axis seam. Stairs and tile slopes walk (adjacent cells one step up/down are WALK links); gaps and ledges route through jump, double jump and coyote jump arcs, fall drops, fall-through drops off one-way platforms, portals and moving platforms.")
@@ -120,8 +122,11 @@ static func build() -> bool:
 		"Scans a TileMapLayer's physics tiles into the navigation graph: standable cells become nodes, adjacent cells (one step up or down - stairs and tile slopes) become WALK links, and jump arcs / fall drops connect the rest, sized to the sibling PlatformerMovement's real jump. One-way tiles become jump-through platforms an agent can drop through. Call once on ready; Regenerate after level edits. Fires On Nav Graph Built.",
 		[["tilemap", "Node"]])
 	src.verb("regenerate_nav_graph", "Regenerate Nav Graph",
-		"Rebuilds the graph from the same map (after runtime tile edits, Set Tile State or Scan Collision Bodies).",
+		"Rebuilds the graph from the same map (after runtime tile edits, Set Tile State or Scan Collision Bodies). A build that is still running starts over, so the graph always matches the map as it stands now.",
 		[])
+	src.verb("set_build_budget", "Set Build Budget",
+		"How many milliseconds of each physics frame a nav graph build may use. A level too big to build in that time builds a few milliseconds per frame (Is Building Nav Graph is true meanwhile, Build Progress says how far it is, and On Nav Graph Built fires once at the end); a small one is done inside the Build Nav Graph call. 0 builds everything in one call.",
+		[["milliseconds", "float", "Milliseconds of each frame the build may use (0 = no limit)."]])
 	src.verb("find_path_to", "Find Path To",
 		"Routes to a world position and starts moving. Mode \"reach\" fails (On Path Failed) when the spot itself is unreachable; \"nearest\" never fails on a cut-off spot - it goes as close as it can get. Fires On Path Found / On Path Failed.",
 		[["x", "float"], ["y", "float"], ["mode", "String"]])

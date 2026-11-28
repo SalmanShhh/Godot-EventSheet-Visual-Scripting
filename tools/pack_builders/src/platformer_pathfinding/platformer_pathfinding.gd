@@ -45,6 +45,7 @@ var separation_give_up_time: float = 2.0
 var debug_draw_graph: bool = false
 var debug_log: bool = false
 var watch_tile_edits: bool = false
+var build_budget_ms: float = 4.0
 
 #region state
 ## The version written into an exported obstacle map, and the newest one this behaviour reads.
@@ -73,6 +74,32 @@ const PATROL_TURN_BEFORE_DANGER: String = "turn_before_danger"
 const PATROL_ORDER_PING_PONG: String = "ping_pong"
 ## Start Patrol Between Markers order: 1, 2, 3, 1, 2, 3.
 const PATROL_ORDER_LOOP: String = "loop"
+## Graph build step: reading the painted tiles of the map.
+const BUILD_SCAN: int = 0
+## Graph build step: adding the cells scanned from collision bodies.
+const BUILD_BODIES: int = 1
+## Graph build step: applying the hand-set tile states.
+const BUILD_OVERRIDES: int = 2
+## Graph build step: marking the cells that stop a body.
+const BUILD_BLOCKING: int = 3
+## Graph build step: finding the standable cells.
+const BUILD_NODES: int = 4
+## Graph build step: joining the standable cells with links.
+const BUILD_LINKS: int = 5
+## Graph build step: nothing left to do.
+const BUILD_DONE: int = 6
+## Link pass: walks to the cells beside a cell.
+const LINK_PASS_WALK: int = 0
+## Link pass: jumps and falls.
+const LINK_PASS_JUMP: int = 1
+## Link pass: double jumps.
+const LINK_PASS_DOUBLE_JUMP: int = 2
+## Link pass: jumps after running off a ledge.
+const LINK_PASS_COYOTE: int = 3
+## Link pass: drops through a one-way platform.
+const LINK_PASS_FALL_THROUGH: int = 4
+## How many link passes there are; every cell gets each pass before the next one starts.
+const LINK_PASS_COUNT: int = 5
 ## One link out of a cell in the search graph.
 class NavEdge extends RefCounted:
 	## The cell the link leads to.
@@ -225,6 +252,10 @@ class NavSharedMap extends RefCounted:
 	var next_portal_id: int = 1
 	## The id the next hazard added on this map gets.
 	var next_hazard_id: int = 1
+	## True while one agent is still building the graph over several frames.
+	var building: bool = false
+	## The instance id of the agent building it.
+	var builder_id: int = 0
 
 # --- Internal state (the graph lives per agent, or per map tag when one is set) ---
 ## The tile map the route is searched over.
@@ -332,6 +363,40 @@ var _watch_cells: Array[Vector2i] = []
 var _watch_cursor: int = 0
 ## True once the watch has taken its first picture of the tiles.
 var _watch_ready: bool = false
+## True while this agent is building the graph over several frames.
+var _build_active: bool = false
+## True when another agent on the same map tag is building the graph this agent asked for.
+var _build_waiting: bool = false
+## Which step of the build is running (a BUILD_ word).
+var _build_phase: int = BUILD_DONE
+## The painted cells the scan step walks.
+var _build_tiles: Array[Vector2i] = []
+## The cells of the obstacle map in the order they were added, so later steps need no key list of their own.
+var _build_keys: Array = []
+## The cells the running step walks.
+var _build_list: Array = []
+## How far into the running step's list the build has got.
+var _build_cursor: int = 0
+## The standable cells, in the order they were found.
+var _build_nodes: Array = []
+## Which link pass is running (a LINK_PASS word).
+var _build_pass: int = 0
+## What to do the moment the build is done (a patrol or ledge request that came in while it ran).
+var _after_build: Callable = Callable()
+## The size of a cell in pixels while links are made.
+var _link_tile: float = 32.0
+## The jump reach in pixels while links are made (x distance, y height).
+var _link_reach_px: Vector2 = Vector2.ZERO
+## The jump reach in cells while links are made.
+var _link_reach: Vector2i = Vector2i.ONE
+## How many cells deep a fall may go while links are made.
+var _link_fall: int = 1
+## True while double jump links are made.
+var _link_double: bool = false
+## The double jump reach in cells while links are made.
+var _link_double_reach: Vector2i = Vector2i.ONE
+## How many cells a coyote jump may cover while links are made; 0 when there are none.
+var _link_coyote_cells: int = 0
 ## The node the host keeps routing toward.
 var _follow_target: Node = null
 ## The point the current route leads to.
@@ -546,6 +611,25 @@ signal nav_graph_cleared
 func is_path_pending() -> bool:
 	return _path_pending
 
+## True while the nav graph is still being built a few milliseconds per frame (see Build Budget Ms). A
+## route asked for meanwhile waits, and On Nav Graph Built fires when the graph is done.
+## @ace_condition
+## @ace_name("Is Building Nav Graph")
+func is_building_nav_graph() -> bool:
+	return _graph_building()
+
+## How much of the running graph build is done, from 0 to 1 (1 when no build is running).
+## @ace_expression
+## @ace_name("Build Progress")
+func build_progress() -> float:
+	if _build_active:
+		return _build_fraction()
+	if _graph_building():
+		var shared: NavSharedMap = _shared_maps.get(map_tag, null) as NavSharedMap
+		var builder: PlatformerPathfinding = instance_from_id(shared.builder_id) as PlatformerPathfinding
+		return builder._build_fraction() if builder != null else 0.0
+	return 1.0
+
 ## @ace_condition
 ## @ace_name("Is In Hazard")
 func is_in_hazard() -> bool:
@@ -687,24 +771,25 @@ func _live_state(cell: Vector2i) -> String:
 func _blocks_state(state: String) -> bool:
 	return state == "solid" or state == "slope_left" or state == "slope_right"
 
-## The merged obstacle map: painted tiles, then scanned bodies, then the hand-set overrides.
+## The merged obstacle map as a fresh dictionary: painted tiles, then scanned bodies, then the hand-set overrides.
 ## @ace_hidden
-func _scan_states() -> void:
-	_states.clear()
+func _merged_states() -> Dictionary:
+	var merged: Dictionary = {}
 	if _tilemap != null:
 		for cell in _tilemap.get_used_cells():
 			var tile_data: TileData = _tilemap.get_cell_tile_data(cell)
 			if tile_data != null:
 				var painted: String = _tile_state_of(tile_data)
 				if painted != "":
-					_states[cell] = painted
+					merged[cell] = painted
 	for cell in _body_states:
-		_states[cell] = _body_states[cell]
+		merged[cell] = _body_states[cell]
 	for cell in _tile_overrides:
 		if str(_tile_overrides[cell]) == "clear":
-			_states.erase(cell)
+			merged.erase(cell)
 		else:
-			_states[cell] = _tile_overrides[cell]
+			merged[cell] = _tile_overrides[cell]
+	return merged
 
 ## Joins a map tag's shared map (or leaves the agent its own when the tag is empty): every
 ## container below is the SAME object for every agent on the tag, so one build serves them all.
@@ -717,7 +802,7 @@ func _bind_shared_map(grid_id: int) -> bool:
 	if shared == null:
 		shared = NavSharedMap.new()
 		_shared_maps[map_tag] = shared
-	var built: bool = shared.grid_id == grid_id and not shared.nodes.is_empty()
+	var built: bool = shared.grid_id == grid_id and not shared.nodes.is_empty() and not shared.building
 	shared.grid_id = grid_id
 	_nodes = shared.nodes
 	_edges = shared.edges
@@ -731,6 +816,15 @@ func _bind_shared_map(grid_id: int) -> bool:
 	_moving_platforms = shared.platforms
 	_elevator_stops = shared.elevators
 	return built
+
+## True when another live agent on this map tag is still building the graph over this grid, so a
+## second build would only repeat it.
+## @ace_hidden
+func _joined_running_build(grid_id: int) -> bool:
+	if map_tag == "":
+		return false
+	var shared: NavSharedMap = _shared_maps.get(map_tag, null) as NavSharedMap
+	return shared != null and shared.building and shared.grid_id == grid_id and shared.builder_id != get_instance_id() and is_instance_id_valid(shared.builder_id)
 
 ## Builds the graph from the first physics TileMapLayer in the running scene when a route is
 ## asked for before any graph exists (Auto Build on).
@@ -887,7 +981,7 @@ func _tile_signature(cell: Vector2i) -> Vector4i:
 ## Whatever changed is rescanned together as one region.
 ## @ace_hidden
 func _watch_tiles() -> void:
-	if not watch_tile_edits or _tilemap == null or _nodes.is_empty():
+	if not watch_tile_edits or _tilemap == null or _nodes.is_empty() or _graph_building():
 		return
 	if not _watch_ready:
 		_watch_ready = true
@@ -1149,6 +1243,9 @@ func _add_portal_record(from: Vector2, to: Vector2, both: bool, portal_kind: Str
 ## measured in walking cells). The portal's Cost scales either.
 ## @ace_hidden
 func _apply_portal(portal: NavPortal) -> void:
+	# A graph still being built gets its portals when it is done (Finish Build applies every one).
+	if _graph_building():
+		return
 	portal.linked_from = portal.from
 	portal.linked_to = portal.to
 	var from_node: Vector2i = _nearest_node(portal.from, 2)
@@ -1244,6 +1341,8 @@ func _follow_portal_nodes() -> void:
 ## standable nodes nearest its two travel endpoints.
 ## @ace_hidden
 func _apply_moving_platform(ride: NavRide) -> void:
+	if _graph_building():
+		return
 	var from_node: Vector2i = _nearest_node(ride.a, 3)
 	var to_node: Vector2i = _nearest_node(ride.b, 3)
 	if from_node == Vector2i.MAX or to_node == Vector2i.MAX:
@@ -1410,6 +1509,13 @@ func _route(x: float, y: float, mode: String) -> void:
 		return
 	# A new route replaces the wait of a portal held with Pause At Portal.
 	_portal_paused = false
+	# A graph still being built has no routes to search yet: the request waits (Is Path Pending)
+	# and runs on the first tick after On Nav Graph Built.
+	if _graph_building():
+		_pending_goal = Vector2(x, y)
+		_pending_goal_mode = mode
+		_path_pending = true
+		return
 	# The shared budget: at most Max Paths Per Tick A* runs per physics tick ACROSS all
 	# agents - extra requests defer to the next tick (Is Path Pending) instead of spiking.
 	var frame: int = Engine.get_physics_frames()
@@ -1425,6 +1531,11 @@ func _route(x: float, y: float, mode: String) -> void:
 	_path_pending = false
 	if _nodes.is_empty():
 		_auto_build()
+	if _graph_building():
+		_pending_goal = Vector2(x, y)
+		_pending_goal_mode = mode
+		_path_pending = true
+		return
 	if _nodes.is_empty():
 		push_warning("[PlatformerPathfinding] Find Path To called before the nav graph exists - call Build Nav Graph From Tilemap (usually On Ready) first.")
 		_fail("no_graph")
@@ -2596,27 +2707,68 @@ func _fall_cells() -> int:
 	return cells
 
 ## Makes the links that leave the cells of a list: walk links, jump arcs, fall drops, double
-## jumps, coyote jumps and fall-throughs. A full build passes every node; a region rebuild
-## passes the nodes whose reach touches the changed area.
+## jumps, coyote jumps and fall-throughs. A region rebuild passes the nodes whose reach touches the
+## changed area; a whole build goes through the same passes a few cells at a time.
 ## @ace_hidden
 func _build_links(scope: Array) -> void:
-	# WALK links: neighbours one cell over, up to one step up/down - stairs and slopes
-	# included, at plain euclidean cost so ramps beat jumps in the router.
-	for cell: Vector2i in scope:
+	_begin_links()
+	for link_pass in range(LINK_PASS_COUNT):
+		if not _link_pass_runs(link_pass):
+			continue
+		for cell: Vector2i in scope:
+			_link_cell(link_pass, cell)
+
+## Works out what every link pass reads: the cell size, the jump reach, how deep a fall may go and
+## which of the optional passes (double jump, coyote jump) run at all.
+## @ace_hidden
+func _begin_links() -> void:
+	_link_tile = _tile_px()
+	_link_reach_px = _jump_reach_px()
+	_link_reach = _jump_reach_cells()
+	_link_fall = _fall_cells()
+	_link_double = _double_jump_ready()
+	_link_double_reach = Vector2i(maxi(int(_link_reach_px.x * 1.7 / _link_tile), 1), maxi(int(_link_reach_px.y * 2.0 / _link_tile), 1))
+	_link_coyote_cells = 0
+	# Run off a ledge for half the coyote window, then leap - the extra run reaches gaps a
+	# standing takeoff cannot. Never with Ledge Restriction (it never runs off).
+	if _coyote_window() > 0.0 and not ledge_restriction:
+		var cells: int = int((_link_reach_px.x + _run_speed() * _coyote_window() * 0.5) / _link_tile)
+		if cells > _link_reach.x:
+			_link_coyote_cells = cells
+
+## Whether a link pass has anything to do with the settings read by Begin Links.
+## @ace_hidden
+func _link_pass_runs(link_pass: int) -> bool:
+	if link_pass == LINK_PASS_DOUBLE_JUMP:
+		return _link_double
+	if link_pass == LINK_PASS_COYOTE:
+		return _link_coyote_cells > 0
+	return true
+
+## Moves a build on to the next link pass that has anything to do.
+## @ace_hidden
+func _advance_link_pass() -> void:
+	_build_cursor = 0
+	_build_pass += 1
+	while _build_pass < LINK_PASS_COUNT and not _link_pass_runs(_build_pass):
+		_build_pass += 1
+
+## Makes the links one pass makes out of one cell.
+## @ace_hidden
+func _link_cell(link_pass: int, cell: Vector2i) -> void:
+	if link_pass == LINK_PASS_WALK:
+		# WALK links: neighbours one cell over, up to one step up/down - stairs and slopes
+		# included, at plain euclidean cost so ramps beat jumps in the router.
 		for dx in [-1, 1]:
 			for dy in [-1, 0, 1]:
 				var to: Vector2i = cell + Vector2i(dx, dy)
 				if _nodes.has(to):
 					_add_edge(cell, to, "walk", Vector2(float(dx), float(dy)).length())
-	# JUMP arcs + FALL drops within the derived reach, clearance-checked coarsely. A drop
-	# treats a jump-through platform in its way as a floor (it would land there).
-	var tile: float = _tile_px()
-	var reach_px: Vector2 = _jump_reach_px()
-	var reach: Vector2i = _jump_reach_cells()
-	var fall_cells: int = _fall_cells()
-	for cell: Vector2i in scope:
-		for dx in range(-reach.x, reach.x + 1):
-			for dy in range(-reach.y, fall_cells + 1):
+	elif link_pass == LINK_PASS_JUMP:
+		# JUMP arcs + FALL drops within the derived reach, clearance-checked coarsely. A drop
+		# treats a jump-through platform in its way as a floor (it would land there).
+		for dx in range(-_link_reach.x, _link_reach.x + 1):
+			for dy in range(-_link_reach.y, _link_fall + 1):
 				if absi(dx) <= 1 and absi(dy) <= 1:
 					continue
 				var to: Vector2i = cell + Vector2i(dx, dy)
@@ -2625,40 +2777,34 @@ func _build_links(scope: Array) -> void:
 				var kind: String = "fall" if dy > 0 and absi(dx) <= 2 else "jump"
 				var span: float = Vector2(float(dx), float(dy)).length()
 				_add_edge(cell, to, kind, span * (1.5 if kind == "jump" else 1.1))
-	# DOUBLE JUMP links: a sibling with two jumps reaches about twice as high and 1.7x as far;
-	# only targets the single jump cannot reach get one.
-	if _double_jump_ready():
-		var double_reach: Vector2i = Vector2i(maxi(int(reach_px.x * 1.7 / tile), 1), maxi(int(reach_px.y * 2.0 / tile), 1))
-		for cell: Vector2i in scope:
-			for dx in range(-double_reach.x, double_reach.x + 1):
-				for dy in range(-double_reach.y, fall_cells + 1):
-					if absi(dx) <= reach.x and dy >= -reach.y:
-						continue
-					var to: Vector2i = cell + Vector2i(dx, dy)
+	elif link_pass == LINK_PASS_DOUBLE_JUMP:
+		# DOUBLE JUMP links: a sibling with two jumps reaches about twice as high and 1.7x as far;
+		# only targets the single jump cannot reach get one.
+		for dx in range(-_link_double_reach.x, _link_double_reach.x + 1):
+			for dy in range(-_link_double_reach.y, _link_fall + 1):
+				if absi(dx) <= _link_reach.x and dy >= -_link_reach.y:
+					continue
+				var to: Vector2i = cell + Vector2i(dx, dy)
+				if not _nodes.has(to) or _has_edge(cell, to) or not _arc_clear(cell, to, _blocking_down if dy > 0 else _blocking):
+					continue
+				_add_edge(cell, to, "double_jump", Vector2(float(dx), float(dy)).length() * 1.8)
+	elif link_pass == LINK_PASS_COYOTE:
+		# COYOTE JUMP links: only from a ledge, only in the direction of its drop.
+		for direction in [-1, 1]:
+			if not _is_ledge_toward(cell, direction):
+				continue
+			for distance in range(_link_reach.x + 1, _link_coyote_cells + 1):
+				for dy in range(-(_link_reach.y - 1), _link_fall + 1):
+					var to: Vector2i = cell + Vector2i(direction * distance, dy)
 					if not _nodes.has(to) or _has_edge(cell, to) or not _arc_clear(cell, to, _blocking_down if dy > 0 else _blocking):
 						continue
-					_add_edge(cell, to, "double_jump", Vector2(float(dx), float(dy)).length() * 1.8)
-	# COYOTE JUMP links: run off a ledge for half the coyote window, then leap - the extra run
-	# reaches gaps a standing takeoff cannot. Never with Ledge Restriction (it never runs off).
-	if _coyote_window() > 0.0 and not ledge_restriction:
-		var coyote_cells: int = int((reach_px.x + _run_speed() * _coyote_window() * 0.5) / tile)
-		if coyote_cells > reach.x:
-			for cell: Vector2i in scope:
-				for direction in [-1, 1]:
-					if not _is_ledge_toward(cell, direction):
-						continue
-					for distance in range(reach.x + 1, coyote_cells + 1):
-						for dy in range(-(reach.y - 1), fall_cells + 1):
-							var to: Vector2i = cell + Vector2i(direction * distance, dy)
-							if not _nodes.has(to) or _has_edge(cell, to) or not _arc_clear(cell, to, _blocking_down if dy > 0 else _blocking):
-								continue
-							_add_edge(cell, to, "coyote_jump", Vector2(float(distance), float(dy)).length() * 1.6)
-	# FALL-THROUGH drops: standing on a jump-through platform, drop straight down to the first
-	# node below it.
-	for cell: Vector2i in scope:
+					_add_edge(cell, to, "coyote_jump", Vector2(float(distance), float(dy)).length() * 1.6)
+	else:
+		# FALL-THROUGH drops: standing on a jump-through platform, drop straight down to the first
+		# node below it.
 		if str(_states.get(cell + Vector2i(0, 1), "")) != "jump_thru":
-			continue
-		for depth in range(1, fall_cells + 2):
+			return
+		for depth in range(1, _link_fall + 2):
 			var below: Vector2i = cell + Vector2i(0, depth)
 			if _blocking.has(below):
 				break
@@ -2666,9 +2812,262 @@ func _build_links(scope: Array) -> void:
 				_add_edge(cell, below, "fall_through", float(depth) * 1.1)
 				break
 
+## True when a build step has used up its share of the frame (a zero deadline means no limit).
+## @ace_hidden
+func _build_timeup(deadline: int) -> bool:
+	return deadline > 0 and Time.get_ticks_usec() >= deadline
+
+## Starts reading one build step: which list it walks and from where.
+## @ace_hidden
+func _enter_build_phase(phase: int) -> void:
+	_build_phase = phase
+	_build_cursor = 0
+	_build_pass = 0
+	if phase == BUILD_BODIES:
+		_build_list = _body_states.keys()
+	elif phase == BUILD_OVERRIDES:
+		_build_list = _tile_overrides.keys()
+	elif phase == BUILD_BLOCKING or phase == BUILD_NODES:
+		_build_list = _build_keys
+	elif phase == BUILD_LINKS:
+		_build_list = _build_nodes
+		_begin_links()
+		_build_pass = -1
+		_advance_link_pass()
+	else:
+		_build_list = []
+
+## Runs the running build step for as long as the deadline allows (a zero deadline means no limit);
+## true when the step has walked its whole list. At least one cell is handled per call, so a build
+## always moves forward.
+## @ace_hidden
+func _run_build_phase(deadline: int) -> bool:
+	var handled: int = 0
+	var phase: int = _build_phase
+	if phase == BUILD_SCAN:
+		var total: int = _build_tiles.size()
+		while _build_cursor < total:
+			var scanned: Vector2i = _build_tiles[_build_cursor]
+			_build_cursor += 1
+			var tile_data: TileData = _tilemap.get_cell_tile_data(scanned)
+			if tile_data != null:
+				var painted: String = _tile_state_of(tile_data)
+				if painted != "":
+					_states[scanned] = painted
+					_build_keys.append(scanned)
+			handled += 1
+			if handled % 64 == 0 and _build_timeup(deadline):
+				return _build_cursor >= total
+		return true
+	if phase == BUILD_LINKS:
+		var count: int = _build_list.size()
+		while _build_pass < LINK_PASS_COUNT:
+			while _build_cursor < count:
+				_link_cell(_build_pass, _build_list[_build_cursor])
+				_build_cursor += 1
+				if _build_timeup(deadline):
+					if _build_cursor >= count:
+						_advance_link_pass()
+					return _build_pass >= LINK_PASS_COUNT
+			_advance_link_pass()
+			if _build_pass < LINK_PASS_COUNT and _build_timeup(deadline):
+				return false
+		return true
+	var size: int = _build_list.size()
+	while _build_cursor < size:
+		var cell: Vector2i = _build_list[_build_cursor]
+		_build_cursor += 1
+		if phase == BUILD_BODIES:
+			if not _states.has(cell):
+				_build_keys.append(cell)
+			_states[cell] = _body_states[cell]
+		elif phase == BUILD_OVERRIDES:
+			if str(_tile_overrides[cell]) == "clear":
+				_states.erase(cell)
+			else:
+				if not _states.has(cell):
+					_build_keys.append(cell)
+				_states[cell] = _tile_overrides[cell]
+		elif phase == BUILD_BLOCKING:
+			if _states.has(cell):
+				if _blocks_state(str(_states[cell])):
+					_blocking[cell] = true
+				_blocking_down[cell] = true
+		elif phase == BUILD_NODES:
+			if _states.has(cell):
+				var stand: Vector2i = cell + Vector2i(0, -1)
+				if not _blocking.has(stand) and not _blocking.has(stand + Vector2i(0, -1)):
+					_nodes[stand] = true
+					_build_nodes.append(stand)
+		handled += 1
+		if handled % 64 == 0 and _build_timeup(deadline):
+			return _build_cursor >= size
+	return true
+
+## Runs the graph build for up to `budget_ms` milliseconds (0 or less = to the end); true when the
+## graph is finished.
+## @ace_hidden
+func _step_build(budget_ms: float) -> bool:
+	var deadline: int = 0
+	if budget_ms > 0.0:
+		deadline = Time.get_ticks_usec() + maxi(int(budget_ms * 1000.0), 1)
+	while _build_phase != BUILD_DONE:
+		if not _run_build_phase(deadline):
+			return false
+		_enter_build_phase(_build_phase + 1)
+		if _build_phase != BUILD_DONE and _build_timeup(deadline):
+			return false
+	return true
+
+## Whether the graph is still being built, by this agent or by another one on the same map tag. A
+## builder that was freed half way leaves a half-made graph, which this agent then builds again.
+## @ace_hidden
+func _graph_building() -> bool:
+	if _build_active:
+		return true
+	if map_tag == "":
+		return false
+	var shared: NavSharedMap = _shared_maps.get(map_tag, null) as NavSharedMap
+	if shared == null or not shared.building:
+		return false
+	if is_instance_id_valid(shared.builder_id):
+		return true
+	shared.building = false
+	if _has_grid():
+		regenerate_nav_graph()
+	else:
+		shared.nodes.clear()
+		shared.edges.clear()
+	return _build_active
+
+## Gets a build ready over the map as it stands now, from nothing: a build that was running is
+## dropped and the graph is empty. Nothing is built yet.
+## @ace_hidden
+func _begin_build() -> void:
+	_nodes.clear()
+	_edges.clear()
+	_states.clear()
+	_blocking.clear()
+	_blocking_down.clear()
+	_watch_ready = false
+	_build_keys = []
+	_build_nodes = []
+	_build_tiles.clear()
+	if _tilemap != null:
+		_build_tiles.assign(_tilemap.get_used_cells())
+	_build_active = true
+	_build_waiting = false
+	var shared: NavSharedMap = _shared_maps.get(map_tag, null) as NavSharedMap if map_tag != "" else null
+	if shared != null:
+		shared.building = true
+		shared.builder_id = get_instance_id()
+	_enter_build_phase(BUILD_SCAN)
+
+## Builds the graph over the map as it stands now. The first part runs in this call (the whole graph
+## when it fits the frame budget, or when this agent is not in a scene tree to carry on in); the rest
+## continues a few milliseconds per physics frame.
+## @ace_hidden
+func _start_build() -> void:
+	_begin_build()
+	var sliced: bool = build_budget_ms > 0.0 and is_inside_tree()
+	if _step_build(build_budget_ms if sliced else 0.0):
+		_finish_build()
+	else:
+		_wake()
+
+## Drops a build that is running, leaving the graph as it is.
+## @ace_hidden
+func _abandon_build() -> void:
+	_build_active = false
+	_build_waiting = false
+	_build_phase = BUILD_DONE
+	_build_keys = []
+	_build_nodes = []
+	_build_list = []
+	_build_tiles.clear()
+	_after_build = Callable()
+	var shared: NavSharedMap = _shared_maps.get(map_tag, null) as NavSharedMap if map_tag != "" else null
+	if shared != null and shared.builder_id == get_instance_id():
+		shared.building = false
+
+## The graph is made: put back the portals and moving platforms, draw it, tell the sheet, and run
+## the request that was waiting for it.
+## @ace_hidden
+func _finish_build() -> void:
+	_build_active = false
+	_build_keys = []
+	_build_nodes = []
+	_build_list = []
+	_build_tiles.clear()
+	var shared: NavSharedMap = _shared_maps.get(map_tag, null) as NavSharedMap if map_tag != "" else null
+	if shared != null and shared.builder_id == get_instance_id():
+		shared.building = false
+	# Registered portals and moving platforms survive every rebuild.
+	for portal in _portals:
+		_apply_portal(portal)
+	for ride in _moving_platforms:
+		_apply_moving_platform(ride)
+	_refresh_graph_overlay()
+	nav_graph_built.emit()
+	var waiting: Callable = _after_build
+	_after_build = Callable()
+	if waiting.is_valid():
+		waiting.call()
+
+## How far along the running build is, from 0 to 1: each step has a share of the whole, and the link
+## passes (nearly all of the work) are counted pass by pass.
+## @ace_hidden
+func _build_fraction() -> float:
+	if not _build_active:
+		return 1.0
+	var shares: Array[float] = [0.08, 0.01, 0.01, 0.03, 0.03, 0.84]
+	var done: float = 0.0
+	for phase in range(mini(_build_phase, BUILD_LINKS)):
+		done += shares[phase]
+	if _build_phase == BUILD_LINKS:
+		var passes: int = 0
+		var passed: int = 0
+		for link_pass in range(LINK_PASS_COUNT):
+			if _link_pass_runs(link_pass):
+				passes += 1
+				if link_pass < _build_pass:
+					passed += 1
+		var within: float = float(_build_cursor) / float(maxi(_build_list.size(), 1))
+		done += shares[BUILD_LINKS] * (float(passed) + within) / float(maxi(passes, 1))
+	elif _build_phase < BUILD_LINKS:
+		var size: int = _build_tiles.size() if _build_phase == BUILD_SCAN else _build_list.size()
+		done += shares[_build_phase] * float(_build_cursor) / float(maxi(size, 1))
+	return clampf(done, 0.0, 1.0)
+
+## Carries a running build on by one frame's share, and tells a sheet whose agent was waiting for
+## another agent's build that the graph it asked for is there.
+## @ace_hidden
+func _step_graph_build() -> void:
+	if _build_active:
+		var shared: NavSharedMap = _shared_maps.get(map_tag, null) as NavSharedMap if map_tag != "" else null
+		if shared != null and shared.builder_id != get_instance_id():
+			# Another agent on this map tag started the build over: it is theirs now.
+			var kept: Callable = _after_build
+			_abandon_build()
+			_after_build = kept
+			_build_waiting = true
+			return
+		if _step_build(build_budget_ms):
+			_finish_build()
+		return
+	if _build_waiting and not _graph_building():
+		_build_waiting = false
+		_refresh_graph_overlay()
+		nav_graph_built.emit()
+		var waiting: Callable = _after_build
+		_after_build = Callable()
+		if waiting.is_valid():
+			waiting.call()
+
 #endregion
 
 func _physics_process(delta: float) -> void:
+	_step_graph_build()
 	if host == null:
 		return
 	_register_agent()
@@ -2727,7 +3126,7 @@ func _physics_process(delta: float) -> void:
 		# No route, no deferred request, nobody being followed, no patrol, no spacing to keep
 		# and no hazard to watch means there is nothing this tick could do - a parked agent
 		# costs nothing per frame until a path verb or Add Hazard turns processing back on.
-		if not _path_pending and (_follow_target == null or not is_instance_valid(_follow_target)) and _hazards.is_empty() and not _patrolling and idle_separation <= 0.0 and not _has_followed_portals() and _patrol_memory_kind == "" and _learning.is_empty() and not watch_tile_edits:
+		if not _path_pending and (_follow_target == null or not is_instance_valid(_follow_target)) and _hazards.is_empty() and not _patrolling and idle_separation <= 0.0 and not _has_followed_portals() and _patrol_memory_kind == "" and _learning.is_empty() and not watch_tile_edits and not _build_active and not _build_waiting:
 			set_physics_process(false)
 		return
 	var waypoint: NavWaypoint = _path[_path_index]
@@ -2864,43 +3263,31 @@ func build_nav_graph(tilemap: Node) -> void:
 		nav_graph_built.emit()
 		_refresh_graph_overlay()
 		return
+	if _tilemap != null and _joined_running_build(_tilemap.get_instance_id()):
+		# Another agent on this map tag is still building it: wait for that build instead of making a second.
+		_build_waiting = true
+		_wake()
+		return
 	regenerate_nav_graph()
 
 func regenerate_nav_graph() -> void:
-	_nodes.clear()
-	_edges.clear()
 	if not _has_grid():
+		_abandon_build()
+		_nodes.clear()
+		_edges.clear()
 		_states.clear()
 		_blocking.clear()
 		_blocking_down.clear()
 		return
-	_scan_states()
-	_watch_ready = false
-	_blocking.clear()
-	_blocking_down.clear()
-	for cell in _states:
-		if _blocks_state(str(_states[cell])):
-			_blocking[cell] = true
-		_blocking_down[cell] = true
-	# A standable node = a cell over solid ground, a slope or a jump-through platform, with two
-	# cells of headroom (a jump-through platform never takes headroom away).
-	for cell in _states:
-		var stand: Vector2i = cell + Vector2i(0, -1)
-		if not _blocking.has(stand) and not _blocking.has(stand + Vector2i(0, -1)):
-			_nodes[stand] = true
-	_build_links(_nodes.keys())
-	# Registered portals and moving platforms survive every rebuild.
-	for portal in _portals:
-		_apply_portal(portal)
-	for ride in _moving_platforms:
-		_apply_moving_platform(ride)
-	_refresh_graph_overlay()
-	nav_graph_built.emit()
+	_start_build()
+
+func set_build_budget(milliseconds: float) -> void:
+	build_budget_ms = milliseconds
 
 func regenerate_region(x: float, y: float, width: float, height: float) -> void:
 	if not _has_grid():
 		return
-	if _nodes.is_empty():
+	if _nodes.is_empty() or _graph_building():
 		regenerate_nav_graph()
 		return
 	var first: Vector2i = _world_to_cell(Vector2(x, y))
@@ -2933,6 +3320,7 @@ func find_path_to_node(target: Node, mode: String) -> void:
 func stop_pathfinding() -> void:
 	_held = false
 	_patrol_memory_kind = ""
+	_after_build = Callable()
 	_end_patrol()
 	_side_request = null
 	_jump_toward_active = false
@@ -3097,6 +3485,9 @@ func find_path_to_nearest_ledge(direction: String, distance: float) -> void:
 	var facing: int = -1 if direction == "left" else 1
 	if _nodes.is_empty():
 		_auto_build()
+	if _graph_building():
+		_after_build = find_path_to_nearest_ledge.bind(direction, distance)
+		return
 	var ledge: Vector2i = _nearest_ledge_cell(facing)
 	if ledge == Vector2i.MAX:
 		_fail("no_ledge")
@@ -3110,6 +3501,9 @@ func find_path_to_node_side(target: Node, side: String, distance: float) -> void
 	_reached_side = 0
 	if not (target is Node2D) or host == null:
 		_fail("no_target")
+		return
+	if _graph_building():
+		_after_build = find_path_to_node_side.bind(target, side, distance)
 		return
 	var at: Vector2 = (target as Node2D).global_position
 	var gap: float = _tile_px() + maxf(distance, 0.0)
@@ -3145,6 +3539,9 @@ func start_patrol(dwell: float, edge_distance: float) -> void:
 	stop_pathfinding()
 	if _nodes.is_empty():
 		_auto_build()
+	if _graph_building():
+		_after_build = start_patrol.bind(dwell, edge_distance)
+		return
 	_patrol_dwell = maxf(dwell, 0.0)
 	_patrol_edge = maxf(edge_distance, 0.0)
 	if not _measure_patrol_ends():
@@ -3284,6 +3681,7 @@ func scan_collision_bodies(root: Node) -> void:
 
 func clear_nav_graph() -> void:
 	stop_pathfinding()
+	_abandon_build()
 	_nodes.clear()
 	_edges.clear()
 	_states.clear()
@@ -3608,12 +4006,16 @@ func obstacle_map_source() -> String:
 func obstacle_map_json() -> String:
 	if not _has_grid():
 		return ""
-	_scan_states()
+	# While a build is running the map it is filling is left alone: the answer is read off a copy.
+	var merged: Dictionary = _merged_states()
+	if not _graph_building():
+		_states.clear()
+		_states.merge(merged)
 	var cells: Array = []
-	var keys: Array = _states.keys()
+	var keys: Array = merged.keys()
 	keys.sort()
 	for cell in keys:
-		cells.append([cell.x, cell.y, _states[cell]])
+		cells.append([cell.x, cell.y, merged[cell]])
 	var origin: Vector2 = _cell_world(Vector2i.ZERO) - Vector2(_tile_px(), _tile_px()) * 0.5
 	var size: Vector2i = grid_size()
 	return JSON.stringify({"version": OBSTACLE_MAP_VERSION, "cell_size": _tile_px(), "origin": [origin.x, origin.y], "size": [size.x, size.y], "cells": cells})
