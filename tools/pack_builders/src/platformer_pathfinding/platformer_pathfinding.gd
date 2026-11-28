@@ -108,6 +108,10 @@ const LINK_PASS_FALL_THROUGH: int = 4
 const LINK_PASS_COUNT: int = 5
 ## What a jump that scrapes a wall or ceiling on the way costs more than a clean one.
 const LINK_SCRAPE_COST: float = 2.0
+## A jump size that no flight lands: it is left out without looking at the tiles.
+const LANDING_NEVER: int = 1
+## A jump size that some flight lands: the tiles around the takeoff decide.
+const LANDING_SOMETIMES: int = 2
 ## How many physics ticks a simulated jump is followed before it counts as never landing.
 const FLIGHT_TICKS: int = 240
 ## The longest running start, in cells, a jump may ask for.
@@ -485,6 +489,10 @@ var _link_cut: float = 0.45
 var _link_variable: bool = true
 ## The most cells of running start a jump may ask for; 0 when the body needs none.
 var _link_run_cap: int = 0
+## What is known of each jump size in reach (columns across, rows up or down): 0 not looked at yet, else a landing word.
+var _link_can_land: PackedByteArray = PackedByteArray()
+## How many rows one column of the table of jump sizes holds.
+var _link_slot_stride: int = 1
 ## True when a jump is judged by flying it; false when a jump height or distance override sizes it by the old box.
 var _link_fly: bool = true
 ## The flights worked out so far, keyed by (columns across, rows up or down, cells of running start).
@@ -3073,6 +3081,9 @@ func _begin_links() -> void:
 	# The numbers a flown jump uses: the movement sibling's own, or the fallback driver's.
 	var movement: Node = _find_movement()
 	_link_fly = jump_height_override <= 0.0 and jump_distance_override <= 0.0
+	_link_slot_stride = _link_reach.y + _link_fall + 1
+	_link_can_land.resize((_link_reach.x * 2 + 1) * _link_slot_stride)
+	_link_can_land.fill(0)
 	_link_speed = _run_speed()
 	_link_gravity = _drive_gravity()
 	_link_accel = 0.0
@@ -3215,26 +3226,64 @@ func _link_cell(link_pass: int, cell: Vector2i) -> void:
 ## needs) comes before holding it all the way.
 ## @ace_hidden
 func _jump_plan(cell: Vector2i, dx: int, dy: int) -> Vector3i:
+	# Most jumps in reach of the box land for no run and no hold at all: each size is looked at once.
+	var slot: int = (dx + _link_reach.x) * _link_slot_stride + (dy + _link_reach.y)
+	var landing: int = _link_can_land[slot]
+	if landing == 0:
+		landing = _work_out_landing(dx, dy)
+		_link_can_land[slot] = landing
+	if landing == LANDING_NEVER:
+		return Vector3i(-1, 0, 0)
+	var runway: int = -1
+	var chord_clear: int = -1
+	var run: int = 0
+	while true:
+		var hold: int = 0
+		while hold < 2:
+			if hold == 1 and not _link_variable:
+				break
+			var flight: Variant = _flights.get(Vector3i(dx, dy, run * 2 + hold))
+			if flight == null:
+				flight = _flight(dx, dy, run, hold == 1)
+			if (flight as Dictionary)["lands"]:
+				if _flight_clear(cell, flight as Dictionary):
+					return Vector3i(run, hold, 0)
+				if chord_clear < 0:
+					chord_clear = 1 if _arc_clear(cell, cell + Vector2i(dx, dy), _blocking_down if dy > 0 else _blocking) else 0
+				if chord_clear == 1:
+					return Vector3i(run, hold, 1)
+			hold += 1
+		# More run is only looked at when the runway behind the takeoff has room for it.
+		run += 1
+		if runway < 0:
+			runway = _runway_cells(cell, dx)
+		if run > runway:
+			break
+	return Vector3i(-1, 0, 0)
+
+## Whether a jump of this size lands for any running start and either way of letting go of the
+## button: LANDING_NEVER, or LANDING_SOMETIMES. (More run than the ground behind a takeoff has
+## room for is counted, so this only rules out jumps that can never be made.)
+## @ace_hidden
+func _work_out_landing(dx: int, dy: int) -> int:
+	for run in range(_link_run_cap + 1):
+		for hold in range(2):
+			if hold == 1 and not _link_variable:
+				continue
+			if bool(_flight(dx, dy, run, hold == 1)["lands"]):
+				return LANDING_SOMETIMES
+	return LANDING_NEVER
+
+## How many cells of walkable ground there are behind a takeoff cell, away from the landing, up to
+## the longest running start a jump may ask for.
+## @ace_hidden
+func _runway_cells(cell: Vector2i, dx: int) -> int:
 	var runway: int = 0
 	if dx != 0 and _link_run_cap > 0:
 		var behind: int = -signi(dx)
 		while runway < _link_run_cap and _nodes.has(cell + Vector2i(behind * (runway + 1), 0)):
 			runway += 1
-	var chord_clear: int = -1
-	for run in range(runway + 1):
-		for hold in range(2):
-			if hold == 1 and not _link_variable:
-				continue
-			var flight: Dictionary = _flight(dx, dy, run, hold == 1)
-			if not bool(flight["lands"]):
-				continue
-			if _flight_clear(cell, flight):
-				return Vector3i(run, hold, 0)
-			if chord_clear < 0:
-				chord_clear = 1 if _arc_clear(cell, cell + Vector2i(dx, dy), _blocking_down if dy > 0 else _blocking) else 0
-			if chord_clear == 1:
-				return Vector3i(run, hold, 1)
-	return Vector3i(-1, 0, 0)
+	return runway
 
 ## Whether the tiles around a takeoff cell leave a flown jump alone: no solid cell in the way of
 ## the body, and no platform to land on before the one the jump is aimed at.
