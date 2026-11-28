@@ -44,10 +44,27 @@ var separation_cooldown: float = 5.0
 var separation_give_up_time: float = 2.0
 var debug_draw_graph: bool = false
 var debug_log: bool = false
+var watch_tile_edits: bool = false
 
 #region state
 ## The version written into an exported obstacle map, and the newest one this behaviour reads.
 const OBSTACLE_MAP_VERSION: int = 1
+## The words Set Tile Hazard takes: no hazard, a costly one, or one routes never cross.
+const HAZARD_CLEAR: String = "clear"
+const HAZARD_DANGER: String = "danger"
+const HAZARD_DEADLY: String = "deadly"
+## The words Set Patrol Setting takes.
+const PATROL_DWELL_TIME: String = "dwell_time"
+const PATROL_EDGE_DISTANCE: String = "edge_distance"
+const PATROL_DWELL_VARIATION: String = "dwell_variation"
+const PATROL_SPEED: String = "speed"
+const PATROL_RESUME_AFTER: String = "resume_after"
+## The words Set Patrol Option takes.
+const PATROL_TURN_AT_AGENTS: String = "turn_at_agents"
+const PATROL_TURN_BEFORE_DANGER: String = "turn_before_danger"
+## The words Start Patrol Between Markers takes for its order.
+const PATROL_ORDER_PING_PONG: String = "ping_pong"
+const PATROL_ORDER_LOOP: String = "loop"
 ## One link out of a cell in the search graph.
 class NavEdge extends RefCounted:
 	## The cell the link leads to.
@@ -90,15 +107,40 @@ class NavPortal extends RefCounted:
 	var tag: String = ""
 	## True when a route may take the portal through a deadly hazard.
 	var ignore_hazards: bool = false
+	## The node the entrance follows; it may be freed from outside, so it is checked before use.
+	var from_node: Node2D = null
+	## True when the entrance follows from_node (a freed node reads as null, so the flag remembers).
+	var from_follows: bool = false
+	## The node the exit follows.
+	var to_node: Node2D = null
+	## True when the exit follows to_node.
+	var to_follows: bool = false
+	## Where the entrance was when the graph was last linked, so a node that creeps does not relink every tick.
+	var linked_from: Vector2 = Vector2.ZERO
+	## Where the exit was when the graph was last linked.
+	var linked_to: Vector2 = Vector2.ZERO
 
-## One registered hazard: a rectangle, a circle, or a circle that follows a node.
+## One stop of an elevator group: a fixed spot, or a node the stop follows.
+class NavStop extends RefCounted:
+	## The stop's position when it was added.
+	var at: Vector2 = Vector2.ZERO
+	## The node the stop follows, or null for a fixed stop.
+	var node: Node2D = null
+
+## One registered hazard: a rectangle, a circle, a circle that follows a node, the collision
+## shape of a node, or one painted cell.
 class NavHazard extends RefCounted:
 	## The id Add Hazard handed out.
 	var id: int = 0
-	## "rect", "circle" or "tracked".
+	## "rect", "circle", "tracked", "shape" (a node's collision shapes) or "tile" (one cell).
 	var kind: String = "rect"
-	## The covered area of a rect hazard, in pixels.
+	## The covered area of a rect, shape or tile hazard, in pixels. A shape hazard refreshes it
+	## from its node every tick.
 	var rect: Rect2 = Rect2()
+	## The cell a tile hazard covers.
+	var cell: Vector2i = Vector2i.ZERO
+	## Where a shape hazard's node was when its bounds were last read.
+	var seen_at: Transform2D = Transform2D()
 	## The middle of a circle hazard, in pixels.
 	var center: Vector2 = Vector2.ZERO
 	## The reach of a circle or tracked hazard, in pixels.
@@ -107,6 +149,25 @@ class NavHazard extends RefCounted:
 	var node: Node = null
 	## True when a route may never cross the hazard; false makes it a costly danger.
 	var deadly: bool = false
+
+## A platform being watched while it moves, until one trip there and back tells where its two ends are.
+class NavLearn extends RefCounted:
+	## The platform; it may be freed from outside, so it is checked before use.
+	var node: Node2D = null
+	## The two furthest-apart points seen so far: the ends of its travel.
+	var end_a: Vector2 = Vector2.ZERO
+	## The other end of its travel.
+	var end_b: Vector2 = Vector2.ZERO
+	## Where it was at the last look.
+	var last: Vector2 = Vector2.ZERO
+	## The direction of its travel, fixed once it has moved a tile; zero until then.
+	var axis: Vector2 = Vector2.ZERO
+	## Which way along that direction it is heading: 1, -1 or 0 before it has moved.
+	var heading: int = 0
+	## How far it has moved against its heading since it last moved with it.
+	var against: float = 0.0
+	## How many times it has turned round.
+	var reversals: int = 0
 
 ## One registered moving platform: the node and the two ends of its travel.
 class NavRide extends RefCounted:
@@ -136,6 +197,10 @@ class NavSharedMap extends RefCounted:
 	var edges: Dictionary = {}
 	## Obstacle map the last build read.
 	var states: Dictionary = {}
+	## Cells that stop a body.
+	var blocking: Dictionary = {}
+	## Every cell holding anything.
+	var blocking_down: Dictionary = {}
 	## Hand-set tile states.
 	var overrides: Dictionary = {}
 	## Tile states scanned from collision bodies.
@@ -146,8 +211,12 @@ class NavSharedMap extends RefCounted:
 	var hazards: Array[NavHazard] = []
 	## Registered moving platforms.
 	var platforms: Array[NavRide] = []
-	## Elevator groups: group name -> stop positions.
+	## Elevator groups: group name -> stops (a position, or a node the stop follows).
 	var elevators: Dictionary = {}
+	## The id the next portal added on this map gets, so two agents never hand out the same one.
+	var next_portal_id: int = 1
+	## The id the next hazard added on this map gets.
+	var next_hazard_id: int = 1
 
 # --- Internal state (the graph lives per agent, or per map tag when one is set) ---
 ## The tile map the route is searched over.
@@ -164,6 +233,10 @@ const MOVEMENT_MEMBERS: PackedStringArray = ["jump_velocity", "gravity", "ai_con
 var _nodes: Dictionary = {}
 ## Links out of each cell: cell -> Array of NavEdge.
 var _edges: Dictionary = {}
+## Cells that stop a body (solid ground and slopes), for the arc clearance test.
+var _blocking: Dictionary = {}
+## Every cell holding anything, for the clearance test of a drop (it lands on a jump-through floor too).
+var _blocking_down: Dictionary = {}
 ## The obstacle map the last build read: cell -> "solid" / "jump_thru" / "slope_left" / "slope_right". Clear cells are simply absent.
 var _states: Dictionary = {}
 ## Hand-set tile states (Set Tile State, Load Obstacle Map JSON) layered over the scan; they survive Regenerate. "clear" erases whatever the scan found.
@@ -190,6 +263,14 @@ var _jump_release_velocity: float = 0.0
 var _second_jump_done: bool = false
 ## True once the host has dropped through a platform on the current leg.
 var _dropped_this_segment: bool = false
+## Counts every route the router has built, so a handler that asks for a new route while an old step is running can tell.
+var _route_serial: int = 0
+## A route asked for while a gradual portal carried the host; it runs the moment the portal is done.
+var _held_goal: Vector2 = Vector2.ZERO
+## How the held route treats an unreachable goal.
+var _held_mode: String = "nearest"
+## True while a route is held for the end of a portal.
+var _held: bool = false
 ## Horizontal input the route asks for this frame, from -1 to 1.
 var _move_axis: float = 0.0
 ## Line drawn along the route when debug drawing is on.
@@ -202,7 +283,7 @@ var _portals: Array[NavPortal] = []
 var _next_portal_id: int = 1
 ## Id of the portal used most recently; -1 when none.
 var _last_portal_id: int = -1
-## Elevator groups: group name -> Array of stop positions (Vector2).
+## Elevator groups: group name -> Array of NavStop.
 var _elevator_stops: Dictionary = {}
 ## Portal execution: the portal being taken, whether the sheet paused it, and the gradual move.
 var _current_portal: NavPortal = null
@@ -233,6 +314,16 @@ var _was_in_hazard: bool = false
 ## Registered moving platforms, each a link the agent waits for, boards and rides.
 var _moving_platforms: Array[NavRide] = []
 # Follow mode (Find Path To Node): the tracked node + where the current path was aimed.
+## Platforms watched by Learn Moving Platform until they have made one full trip.
+var _learning: Array[NavLearn] = []
+## The tiles the edit watch last saw: cell -> (source, atlas x, atlas y, alternative).
+var _watch_seen: Dictionary = {}
+## The cells the edit watch walks through, a slice per tick.
+var _watch_cells: Array[Vector2i] = []
+## Where the next slice starts in the watched cells.
+var _watch_cursor: int = 0
+## True once the watch has taken its first picture of the tiles.
+var _watch_ready: bool = false
 ## The node the host keeps routing toward.
 var _follow_target: Node = null
 ## The point the current route leads to.
@@ -285,6 +376,42 @@ var _patrol_dwell: float = 0.0
 var _patrol_dwelling: bool = false
 ## Seconds spent resting at the current end.
 var _patrol_clock: float = 0.0
+## Pixels the patrol turns short of each platform edge.
+var _patrol_edge: float = 0.0
+## Random seconds added to or taken from each wait, so guards do not move in step.
+var _patrol_dwell_variation: float = 0.0
+## Percent of the movement sibling run speed used while a patrol walks.
+var _patrol_speed_percent: float = 100.0
+## Seconds a patrol waits after the route that cancelled it ends, before it starts again (0 = never).
+var _patrol_resume_after: float = 0.0
+## True while a patrol turns around when another agent stands in its way.
+var _patrol_turn_at_agents: bool = true
+## True while a patrol turns around before stepping somewhere more hazardous than where it stands.
+var _patrol_turn_before_danger: bool = true
+## Seconds left before a patrol may turn for an agent again (stops two patrollers turning back and forth).
+var _patrol_bump_clock: float = 0.0
+## The markers a between-markers patrol visits (empty for a plain platform patrol).
+var _patrol_markers: Array[Node2D] = []
+## Which marker the patrol heads for.
+var _patrol_marker_index: int = -1
+## 1 or -1: which way a ping-pong patrol steps through the markers.
+var _patrol_marker_step: int = 1
+## True when the markers are visited in a loop instead of back and forth.
+var _patrol_loop: bool = false
+## Markers in a row the patrol could not reach.
+var _patrol_marker_fails: int = 0
+## True while the short wait before trying a marker again is running.
+var _patrol_retry: bool = false
+## The run speed the movement sibling had before a patrol slowed it; negative when it is untouched.
+var _patrol_base_speed: float = -1.0
+## What a route cancelled, for Resume After: empty for nothing, "platform" or "markers".
+var _patrol_memory_kind: String = ""
+## The markers of a cancelled between-markers patrol.
+var _patrol_memory_markers: Array[Node2D] = []
+## Whether the cancelled markers patrol looped.
+var _patrol_memory_loop: bool = false
+## Seconds the host has stood idle since the route that cancelled its patrol ended.
+var _patrol_resume_clock: float = 0.0
 # Jump Toward: a pathless full-strength leap at a point.
 ## True while a Jump Toward is in progress.
 var _jump_toward_active: bool = false
@@ -585,6 +712,8 @@ func _bind_shared_map(grid_id: int) -> bool:
 	_nodes = shared.nodes
 	_edges = shared.edges
 	_states = shared.states
+	_blocking = shared.blocking
+	_blocking_down = shared.blocking_down
 	_tile_overrides = shared.overrides
 	_body_states = shared.bodies
 	_portals = shared.portals
@@ -630,28 +759,215 @@ func _hazard_hit(hazard: NavHazard, world: Vector2, margin: float) -> bool:
 		return world.distance_to((followed as Node2D).global_position) <= hazard.radius + margin
 	return hazard.rect.grow(margin).has_point(world)
 
-## Drops tracked hazards whose node has been freed.
+## Drops hazards whose node has been freed, and re-reads the bounds of node-shape hazards whose
+## node has moved since the last read.
 ## @ace_hidden
 func _prune_tracked_hazards() -> void:
 	for index in range(_hazards.size() - 1, -1, -1):
 		var hazard: NavHazard = _hazards[index]
-		if hazard.kind == "tracked" and not is_instance_valid(hazard.node):
+		if hazard.kind != "tracked" and hazard.kind != "shape":
+			continue
+		if not is_instance_valid(hazard.node):
 			_hazards.remove_at(index)
+		elif hazard.kind == "shape":
+			_refresh_shape_hazard(hazard)
 
-## Hazard verdict for one link (endpoints + midpoint): 0 = clear, 1 = danger, 2 = deadly.
+## Re-reads a node-shape hazard's world bounds when its node has moved, turned or scaled.
+## @ace_hidden
+func _refresh_shape_hazard(hazard: NavHazard) -> void:
+	var followed: Node2D = hazard.node as Node2D
+	if followed == null:
+		return
+	var now: Transform2D = _world_transform_of(followed)
+	if hazard.seen_at == now and hazard.rect.size != Vector2.ZERO:
+		return
+	hazard.seen_at = now
+	hazard.rect = _node_shape_bounds(followed)
+
+## A node's transform in the world. Tree-safe: outside a scene tree (tools, tests) the transforms of its
+## 2D parents are multiplied by hand, the way a tilemap stands in for its global transform.
+## @ace_hidden
+func _world_transform_of(node: Node2D) -> Transform2D:
+	if node.is_inside_tree():
+		return node.global_transform
+	var world: Transform2D = node.transform
+	var up: Node = node.get_parent()
+	while up is Node2D:
+		world = (up as Node2D).transform * world
+		up = up.get_parent()
+	return world
+
+## The world-space box around every enabled collision shape and collision polygon at or under
+## a node (a rotated shape is covered by its bounding box). A node with no shape is a box one
+## tile wide around its origin, so a hazard from it still means something.
+## @ace_hidden
+func _node_shape_bounds(root: Node2D) -> Rect2:
+	var corners: PackedVector2Array = PackedVector2Array()
+	var shape_nodes: Array = root.find_children("*", "CollisionShape2D", true, false)
+	if root is CollisionShape2D:
+		shape_nodes.append(root)
+	for shape_node: Node in shape_nodes:
+		var collider: CollisionShape2D = shape_node as CollisionShape2D
+		if collider == null or collider.shape == null or collider.disabled:
+			continue
+		var local: Rect2 = collider.shape.get_rect()
+		var shape_world: Transform2D = _world_transform_of(collider)
+		for corner: Vector2 in [local.position, local.position + Vector2(local.size.x, 0.0), local.end, local.position + Vector2(0.0, local.size.y)]:
+			corners.append(shape_world * corner)
+	var polygon_nodes: Array = root.find_children("*", "CollisionPolygon2D", true, false)
+	if root is CollisionPolygon2D:
+		polygon_nodes.append(root)
+	for polygon_node: Node in polygon_nodes:
+		var polygon: CollisionPolygon2D = polygon_node as CollisionPolygon2D
+		if polygon == null or polygon.disabled:
+			continue
+		var polygon_world: Transform2D = _world_transform_of(polygon)
+		for point: Vector2 in polygon.polygon:
+			corners.append(polygon_world * point)
+	if corners.is_empty():
+		var half: float = _tile_px() * 0.5
+		return Rect2(_world_transform_of(root).origin - Vector2(half, half), Vector2(half, half) * 2.0)
+	var bounds: Rect2 = Rect2(corners[0], Vector2.ZERO)
+	for corner: Vector2 in corners:
+		bounds = bounds.expand(corner)
+	return bounds
+
+## Watches every platform being learned: once it has turned round twice (a trip there and back),
+## its two furthest points are registered like Add Moving Platform would.
+## @ace_hidden
+func _learn_platforms() -> void:
+	for index in range(_learning.size() - 1, -1, -1):
+		var learner: NavLearn = _learning[index]
+		if not is_instance_valid(learner.node):
+			_learning.remove_at(index)
+			continue
+		var here: Vector2 = _world_transform_of(learner.node).origin
+		if here.distance_to(learner.end_a) > learner.end_a.distance_to(learner.end_b):
+			learner.end_b = here
+		elif here.distance_to(learner.end_b) > learner.end_a.distance_to(learner.end_b):
+			learner.end_a = here
+		var step: Vector2 = here - learner.last
+		learner.last = here
+		if learner.axis == Vector2.ZERO:
+			if learner.end_a.distance_to(learner.end_b) >= _tile_px():
+				learner.axis = (learner.end_b - learner.end_a).normalized()
+				learner.heading = 1 if step.dot(learner.axis) >= 0.0 else -1
+			continue
+		var along: float = step.dot(learner.axis) * float(learner.heading)
+		if along >= 0.0:
+			learner.against = 0.0
+			continue
+		learner.against -= along
+		if learner.against >= 3.0:
+			learner.against = 0.0
+			learner.heading = -learner.heading
+			learner.reversals += 1
+		if learner.reversals >= 2:
+			_learning.remove_at(index)
+			add_moving_platform(learner.node, learner.end_a.x, learner.end_a.y, learner.end_b.x, learner.end_b.y)
+
+## The tile painted in a cell, as one comparable value (source, atlas column, atlas row, alternative).
+## @ace_hidden
+func _tile_signature(cell: Vector2i) -> Vector4i:
+	var atlas: Vector2i = _tilemap.get_cell_atlas_coords(cell)
+	return Vector4i(_tilemap.get_cell_source_id(cell), atlas.x, atlas.y, _tilemap.get_cell_alternative_tile(cell))
+
+## Watch Tile Edits: compares a slice of the painted tiles with the picture it took (about two
+## thousand a tick), and when a pass over every tile ends, looks for tiles painted or erased since.
+## Whatever changed is rescanned together as one region.
+## @ace_hidden
+func _watch_tiles() -> void:
+	if not watch_tile_edits or _tilemap == null or _nodes.is_empty():
+		return
+	if not _watch_ready:
+		_watch_ready = true
+		_watch_seen.clear()
+		_watch_cells = _tilemap.get_used_cells()
+		_watch_cursor = 0
+		for cell in _watch_cells:
+			_watch_seen[cell] = _tile_signature(cell)
+		return
+	var changed: Rect2i = Rect2i()
+	var any_change: bool = false
+	var budget: int = 2000
+	while budget > 0:
+		if _watch_cursor >= _watch_cells.size():
+			# The pass is over: tiles painted since are new cells, erased ones leave the picture.
+			var now: Array[Vector2i] = _tilemap.get_used_cells()
+			var present: Dictionary = {}
+			for cell in now:
+				present[cell] = true
+				if not _watch_seen.has(cell):
+					_watch_seen[cell] = _tile_signature(cell)
+					changed = Rect2i(cell, Vector2i.ONE) if not any_change else changed.expand(cell)
+					any_change = true
+			for cell in _watch_seen.keys():
+				if not present.has(cell):
+					_watch_seen.erase(cell)
+					changed = Rect2i(cell, Vector2i.ONE) if not any_change else changed.expand(cell)
+					any_change = true
+			_watch_cells = now
+			_watch_cursor = 0
+			break
+		var cell: Vector2i = _watch_cells[_watch_cursor]
+		_watch_cursor += 1
+		budget -= 1
+		var signature: Vector4i = _tile_signature(cell)
+		if _watch_seen.get(cell, Vector4i(-2, 0, 0, 0)) != signature:
+			_watch_seen[cell] = signature
+			changed = Rect2i(cell, Vector2i.ONE) if not any_change else changed.expand(cell)
+			any_change = true
+	if any_change:
+		# expand() leaves the far corner out of the box, so the box grows by one cell.
+		changed.size += Vector2i.ONE
+		_regenerate_cells(changed)
+
+## Whether a box (a tile-sized patch of ground) touches a hazard, grown by `margin` pixels. A
+## hazard narrower than a tile is still found, which a test at the tile's centre alone would miss.
+## @ace_hidden
+func _hazard_touches(hazard: NavHazard, box: Rect2, margin: float) -> bool:
+	if hazard.kind == "circle" or hazard.kind == "tracked":
+		var center: Vector2 = hazard.center
+		if hazard.kind == "tracked":
+			var followed: Variant = hazard.node
+			if not is_instance_valid(followed) or not (followed is Node2D):
+				return false
+			center = (followed as Node2D).global_position
+		var nearest: Vector2 = Vector2(clampf(center.x, box.position.x, box.end.x), clampf(center.y, box.position.y, box.end.y))
+		return nearest.distance_to(center) < hazard.radius + margin
+	return hazard.rect.grow(margin).intersects(box)
+
+## Hazard verdict for one link: 0 = clear, 1 = danger, 2 = deadly. Each end is judged as the whole
+## tile-sized patch of ground it stands on (so a hazard narrower than a tile is never missed); the
+## middle of a jump or fall arc, which is in the air, is judged as the point it passes through.
 ## Hazard Margin grows every hazard into a danger buffer.
 ## @ace_hidden
 func _segment_hazard(from_cell: Vector2i, to_cell: Vector2i) -> int:
 	if _hazards.is_empty():
 		return 0
 	var verdict: int = 0
-	for sample in [_cell_world(from_cell), _cell_world(to_cell), (_cell_world(from_cell) + _cell_world(to_cell)) * 0.5]:
+	var tile: float = _tile_px()
+	var reach: Vector2 = Vector2(tile, tile) * 0.5
+	var from_world: Vector2 = _cell_world(from_cell)
+	var to_world: Vector2 = _cell_world(to_cell)
+	for sample in [from_world, to_world]:
+		var box: Rect2 = Rect2(sample - reach, reach * 2.0)
 		for hazard in _hazards:
-			if _hazard_hit(hazard, sample, 0.0):
+			if _hazard_touches(hazard, box, 0.0):
 				if hazard.deadly:
 					return 2
 				verdict = 1
-			elif hazard_margin > 0.0 and _hazard_hit(hazard, sample, hazard_margin):
+			elif hazard_margin > 0.0 and _hazard_touches(hazard, box, hazard_margin):
+				verdict = 1
+	var step: Vector2i = to_cell - from_cell
+	if absi(step.x) > 1 or absi(step.y) > 1:
+		var middle: Vector2 = (from_world + to_world) * 0.5
+		for hazard in _hazards:
+			if _hazard_hit(hazard, middle, 0.0):
+				if hazard.deadly:
+					return 2
+				verdict = 1
+			elif hazard_margin > 0.0 and _hazard_hit(hazard, middle, hazard_margin):
 				verdict = 1
 	return verdict
 
@@ -707,7 +1023,7 @@ func _jump_reach_px() -> Vector2:
 		if height_px <= 0.0:
 			height_px = rise * rise / (2.0 * fall_pull) * 0.9
 		if distance_px <= 0.0:
-			distance_px = float(movement.get("move_speed")) * (2.0 * rise / fall_pull) * 0.9
+			distance_px = _sibling_move_speed(movement) * (2.0 * rise / fall_pull) * 0.9
 	# No sibling to derive from: size arcs from the fallback driver's own physics.
 	var fallback_rise: float = absf(fallback_jump_velocity)
 	if height_px <= 0.0:
@@ -723,12 +1039,19 @@ func _jump_reach_cells() -> Vector2i:
 	var reach: Vector2 = _jump_reach_px()
 	return Vector2i(maxi(int(ceil(reach.x / tile)), 1), maxi(int(ceil(reach.y / tile)), 1))
 
+## The sibling's own run speed, not the slower one a patrol may have set for the walk.
+## @ace_hidden
+func _sibling_move_speed(movement: Node) -> float:
+	if _patrol_base_speed >= 0.0:
+		return _patrol_base_speed
+	return float(movement.get("move_speed"))
+
 ## The run speed the drive moves at (the sibling's when present).
 ## @ace_hidden
 func _run_speed() -> float:
 	var movement: Node = _find_movement()
 	if movement != null and movement.get("move_speed") != null:
-		return float(movement.get("move_speed"))
+		return _sibling_move_speed(movement)
 	return fallback_move_speed
 
 ## The coyote window an AI jump can really use: this behavior's Coyote Time, capped by the
@@ -772,11 +1095,31 @@ func _portal_by_id(portal_id: int) -> NavPortal:
 			return portal
 	return null
 
+## The next portal id: one counter per shared map, so two agents on a map tag never hand out the same id.
+## @ace_hidden
+func _take_portal_id() -> int:
+	var shared: NavSharedMap = _shared_maps.get(map_tag, null) as NavSharedMap if map_tag != "" else null
+	if shared != null:
+		shared.next_portal_id += 1
+		return shared.next_portal_id - 1
+	_next_portal_id += 1
+	return _next_portal_id - 1
+
+## The next hazard id, counted the same way.
+## @ace_hidden
+func _take_hazard_id() -> int:
+	var shared: NavSharedMap = _shared_maps.get(map_tag, null) as NavSharedMap if map_tag != "" else null
+	if shared != null:
+		shared.next_hazard_id += 1
+		return shared.next_hazard_id - 1
+	_next_hazard_id += 1
+	return _next_hazard_id - 1
+
 ## Registers a portal and links it into the built graph; returns its id.
 ## @ace_hidden
 func _add_portal_record(from: Vector2, to: Vector2, both: bool, portal_kind: String, cost: float, speed: float, tag: String) -> int:
 	var portal: NavPortal = NavPortal.new()
-	portal.id = _next_portal_id
+	portal.id = _take_portal_id()
 	portal.from = from
 	portal.to = to
 	portal.both = both
@@ -784,7 +1127,6 @@ func _add_portal_record(from: Vector2, to: Vector2, both: bool, portal_kind: Str
 	portal.cost = cost
 	portal.speed = speed
 	portal.tag = tag
-	_next_portal_id += 1
 	_portals.append(portal)
 	_last_portal_id = portal.id
 	if not _nodes.is_empty():
@@ -797,6 +1139,8 @@ func _add_portal_record(from: Vector2, to: Vector2, both: bool, portal_kind: Str
 ## measured in walking cells). The portal's Cost scales either.
 ## @ace_hidden
 func _apply_portal(portal: NavPortal) -> void:
+	portal.linked_from = portal.from
+	portal.linked_to = portal.to
 	var from_node: Vector2i = _nearest_node(portal.from, 2)
 	var to_node: Vector2i = _nearest_node(portal.to, 2)
 	if from_node == Vector2i.MAX or to_node == Vector2i.MAX:
@@ -839,6 +1183,52 @@ func _portal_has_tag(portal: NavPortal, tag: String) -> bool:
 		if token.strip_edges() == tag:
 			return true
 	return false
+
+## Adds a stop to an elevator group: a two-way gradual portal to every stop already in it.
+## @ace_hidden
+func _add_elevator_stop(group: String, at: Vector2, node: Node2D, speed: float, tag: String) -> void:
+	var stop: NavStop = NavStop.new()
+	stop.at = at
+	stop.node = node
+	var stops: Array = _elevator_stops.get(group, [])
+	for other: NavStop in stops:
+		var portal_id: int = _add_portal_record(other.at, at, true, "gradual", 1.0, speed, tag)
+		var portal: NavPortal = _portal_by_id(portal_id)
+		portal.from_node = other.node
+		portal.from_follows = other.node != null
+		portal.to_node = node
+		portal.to_follows = node != null
+	stops.append(stop)
+	_elevator_stops[group] = stops
+	if node != null:
+		set_physics_process(true)
+
+## True when any portal has an end that follows a node (the agent keeps ticking to follow it).
+## @ace_hidden
+func _has_followed_portals() -> bool:
+	for portal in _portals:
+		if portal.from_follows or portal.to_follows:
+			return true
+	return false
+
+## Moves the ends of portals whose nodes moved, re-links the ones that crossed into another
+## node's reach, and removes the portals whose node was freed.
+## @ace_hidden
+func _follow_portal_nodes() -> void:
+	var relink_gap: float = _tile_px() * 0.5
+	for index in range(_portals.size() - 1, -1, -1):
+		var portal: NavPortal = _portals[index]
+		if not portal.from_follows and not portal.to_follows:
+			continue
+		if (portal.from_follows and not is_instance_valid(portal.from_node)) or (portal.to_follows and not is_instance_valid(portal.to_node)):
+			remove_portal(portal.id)
+			continue
+		if portal.from_follows:
+			portal.from = _world_transform_of(portal.from_node).origin
+		if portal.to_follows:
+			portal.to = _world_transform_of(portal.to_node).origin
+		if portal.from.distance_to(portal.linked_from) > relink_gap or portal.to.distance_to(portal.linked_to) > relink_gap:
+			_relink_portal(portal)
 
 ## Injects one moving platform as a slow bidirectional "platform" link between the
 ## standable nodes nearest its two travel endpoints.
@@ -1002,6 +1392,14 @@ func _route(x: float, y: float, mode: String) -> void:
 	# off the shaft in mid-air.
 	if _riding_moving_platform():
 		return
+	# A route asked for while a gradual portal carries the host waits for the portal to finish.
+	if _portal_traversing:
+		_held_goal = Vector2(x, y)
+		_held_mode = mode
+		_held = true
+		return
+	# A new route replaces the wait of a portal held with Pause At Portal.
+	_portal_paused = false
 	# The shared budget: at most Max Paths Per Tick A* runs per physics tick ACROSS all
 	# agents - extra requests defer to the next tick (Is Path Pending) instead of spiking.
 	var frame: int = Engine.get_physics_frames()
@@ -1038,6 +1436,7 @@ func _route(x: float, y: float, mode: String) -> void:
 		_finish_path()
 		_fail(_last_search_fail)
 		return
+	_route_serial += 1
 	_path_goal = Vector2(x, y)
 	_path_goal_cell = cells.back()
 	_goal_mode = mode
@@ -1165,6 +1564,38 @@ func _is_ledge_toward(cell: Vector2i, direction: int) -> bool:
 		if _nodes.has(cell + Vector2i(direction, dy)):
 			return false
 	return not _blocks_state(str(_states.get(cell + Vector2i(direction, 0), "")))
+
+## The graph split into groups of nodes that can reach one another by any link, biggest first.
+## @ace_hidden
+func _separate_regions() -> Array:
+	var reverse: Dictionary = {}
+	for cell in _edges:
+		for edge: NavEdge in (_edges[cell] as Array):
+			if not reverse.has(edge.to):
+				reverse[edge.to] = []
+			(reverse[edge.to] as Array).append(cell)
+	var seen: Dictionary = {}
+	var regions: Array = []
+	for start in _nodes:
+		if seen.has(start):
+			continue
+		var group: Array = []
+		var frontier: Array = [start]
+		seen[start] = true
+		while not frontier.is_empty():
+			var cell: Vector2i = frontier.pop_back()
+			group.append(cell)
+			var neighbours: Array = []
+			for edge: NavEdge in (_edges.get(cell, []) as Array):
+				neighbours.append(edge.to)
+			neighbours.append_array(reverse.get(cell, []))
+			for next_cell: Vector2i in neighbours:
+				if _nodes.has(next_cell) and not seen.has(next_cell):
+					seen[next_cell] = true
+					frontier.append(next_cell)
+		regions.append(group)
+	regions.sort_custom(func(a: Array, b: Array) -> bool: return a.size() > b.size())
+	return regions
 
 ## Every node reachable from `start` by WALK links only - the platform it stands on, slopes
 ## and stairs included.
@@ -1364,7 +1795,7 @@ func _edge_allowed(from_cell: Vector2i, edge: NavEdge) -> bool:
 	if not _ignores_hazards(edge) and _segment_hazard(from_cell, edge.to) == 2:
 		return false
 	var kind: String = edge.kind
-	if _patrolling and kind != "walk":
+	if _platform_patrolling() and kind != "walk":
 		return false
 	var drop: float = float(edge.to.y - from_cell.y) * _tile_px()
 	if ledge_restriction:
@@ -1557,30 +1988,293 @@ func _separate(delta: float) -> bool:
 ## Patrol: arrived at one end - fire the hooks, then dwell or turn straight around.
 ## @ace_hidden
 func _on_patrol_end() -> void:
+	# A marker the route could only get near does not count as reached: try again shortly.
+	if not _patrol_markers.is_empty() and not _at_patrol_marker():
+		_patrol_marker_fails += 1
+		if _patrol_marker_fails >= 2 * _patrol_markers.size():
+			push_warning("[PlatformerPathfinding] Start Patrol Between Markers stopped: none of the markers can be reached.")
+			_end_patrol()
+			return
+		if _patrol_marker_fails % 2 == 0:
+			_advance_patrol_marker()
+		_patrol_retry = true
+		_patrol_dwelling = true
+		_patrol_clock = 0.5
+		_wake()
+		return
+	_patrol_marker_fails = 0
 	patrol_end_reached.emit()
 	if not _patrolling:
 		return
-	if _patrol_dwell > 0.0:
+	var wait: float = _roll_patrol_dwell()
+	if wait > 0.0:
 		_patrol_dwelling = true
-		_patrol_clock = _patrol_dwell
+		_patrol_clock = wait
 		patrol_dwell_started.emit()
 		_wake()
 		return
-	_patrol_dir = -_patrol_dir
+	_patrol_turn()
 	_patrol_walk()
 
-## Routes to the patrol end the agent is facing.
+## The wait at an end is over: turn (or step to the next marker), tell the sheet, walk on.
+## @ace_hidden
+func _finish_patrol_dwell() -> void:
+	_patrol_dwelling = false
+	if _patrol_retry:
+		_patrol_retry = false
+		_patrol_walk()
+		return
+	_patrol_turn()
+	patrol_dwell_finished.emit()
+	if _patrolling:
+		_patrol_walk()
+
+## Turns the patrol around, or on to the next marker.
+## @ace_hidden
+func _patrol_turn() -> void:
+	if _patrol_markers.is_empty():
+		_patrol_dir = -_patrol_dir
+	else:
+		_advance_patrol_marker()
+
+## Steps the patrol on to the next marker: round the loop, or up and down the list.
+## @ace_hidden
+func _advance_patrol_marker() -> void:
+	var count: int = _patrol_markers.size()
+	if count <= 1:
+		return
+	if _patrol_loop:
+		_patrol_marker_index = (_patrol_marker_index + 1) % count
+		return
+	if _patrol_marker_index + _patrol_marker_step < 0 or _patrol_marker_index + _patrol_marker_step >= count:
+		_patrol_marker_step = -_patrol_marker_step
+	_patrol_marker_index += _patrol_marker_step
+
+## True when the host stands near the marker the patrol is heading for.
+## @ace_hidden
+func _at_patrol_marker() -> bool:
+	if host == null or _patrol_marker_index < 0 or _patrol_marker_index >= _patrol_markers.size():
+		return false
+	var marker: Node2D = _patrol_markers[_patrol_marker_index]
+	if not is_instance_valid(marker):
+		return false
+	var gap: Vector2 = marker.global_position - host.global_position
+	return absf(gap.x) <= _tile_px() * 1.5 and absf(gap.y) <= _tile_px() * 3.0
+
+## The wait at an end: the setting, plus or minus the variation.
+## @ace_hidden
+func _roll_patrol_dwell() -> float:
+	if _patrol_dwell_variation <= 0.0:
+		return _patrol_dwell
+	return maxf(_patrol_dwell + randf_range(-_patrol_dwell_variation, _patrol_dwell_variation), 0.0)
+
+## Routes to the patrol end (or marker) the agent is heading for.
 ## @ace_hidden
 func _patrol_walk() -> void:
+	if not _patrol_markers.is_empty():
+		_patrol_walk_to_marker()
+		return
 	var end: Vector2 = _patrol_ends[1] if _patrol_dir > 0 else _patrol_ends[0]
 	_exact_final = end.x
 	_route(end.x, end.y, "nearest")
+
+## Routes to the current marker; a marker with no route is skipped (after two misses in a row the patrol stops).
+## @ace_hidden
+func _patrol_walk_to_marker() -> void:
+	for attempt in range(_patrol_markers.size() * 2 + 1):
+		# Freed markers drop out of the list, the index staying on the same marker.
+		var target: Node2D = _patrol_markers[_patrol_marker_index] if _patrol_marker_index < _patrol_markers.size() else null
+		var live: Array[Node2D] = []
+		for marker in _patrol_markers:
+			if is_instance_valid(marker):
+				live.append(marker)
+		if live.is_empty():
+			_end_patrol()
+			return
+		_patrol_marker_index = maxi(live.find(target), mini(_patrol_marker_index, live.size() - 1))
+		_patrol_markers = live
+		var at: Vector2 = live[_patrol_marker_index].global_position
+		_exact_final = NAN
+		_route(at.x, at.y, "nearest")
+		if _path_pending or not _path.is_empty():
+			return
+		_patrol_marker_fails += 1
+		if _patrol_marker_fails >= 2 * live.size():
+			push_warning("[PlatformerPathfinding] Start Patrol Between Markers stopped: none of the markers can be reached.")
+			_end_patrol()
+			return
+		_advance_patrol_marker()
 
 ## @ace_hidden
 func _end_patrol() -> void:
 	_patrolling = false
 	_patrol_dwelling = false
+	_patrol_retry = false
 	_patrol_dir = 0
+	_patrol_markers.clear()
+	_patrol_marker_index = -1
+	_patrol_marker_fails = 0
+	_restore_patrol_speed()
+
+## Finds the two ends of the platform the host stands on (ledges and walls, slopes and stairs
+## included), pulled in by the patrol's edge distance; false when the host stands on no node.
+## @ace_hidden
+func _measure_patrol_ends() -> bool:
+	var here: Vector2i = _nearest_node(host.global_position, 3)
+	if here == Vector2i.MAX:
+		return false
+	var left: Vector2i = here
+	var right: Vector2i = here
+	for cell in _walk_component(here):
+		if cell.x < left.x or (cell.x == left.x and absi(cell.y - here.y) < absi(left.y - here.y)):
+			left = cell
+		if cell.x > right.x or (cell.x == right.x and absi(cell.y - here.y) < absi(right.y - here.y)):
+			right = cell
+	var inset: float = minf(maxf(_patrol_edge, 0.0), absf(_cell_world(right).x - _cell_world(left).x) * 0.5)
+	_patrol_ends = [_cell_world(left) + Vector2(inset, 0.0), _cell_world(right) - Vector2(inset, 0.0)]
+	return true
+
+## Starts a patrol over a list of markers, beginning at the one nearest the host.
+## @ace_hidden
+func _begin_marker_patrol(markers: Array[Node2D], loop: bool, dwell: float) -> void:
+	_patrol_markers = markers
+	_patrol_loop = loop
+	_patrol_dwell = maxf(dwell, 0.0)
+	_patrol_marker_fails = 0
+	_patrol_marker_index = 0
+	var best: float = INF
+	for index in range(markers.size()):
+		var gap: float = host.global_position.distance_to(markers[index].global_position)
+		if gap < best:
+			best = gap
+			_patrol_marker_index = index
+	# A ping-pong patrol heads for the end of the list that has more markers left.
+	var last: int = markers.size() - 1
+	_patrol_marker_step = -1 if (not loop and _patrol_marker_index > 0 and _patrol_marker_index >= last - _patrol_marker_index) else 1
+	_patrolling = true
+	_patrol_dwelling = false
+	_patrol_dir = 0
+	_patrol_walk()
+
+## Starts a route (Find Path To and friends): a running patrol is remembered, so Resume After can bring it back.
+## @ace_hidden
+func _cancel_patrol_for_route() -> void:
+	if _patrolling and _patrol_resume_after > 0.0:
+		if _patrol_markers.is_empty():
+			_patrol_memory_kind = "platform"
+		else:
+			_patrol_memory_kind = "markers"
+			_patrol_memory_markers = _patrol_markers.duplicate()
+			_patrol_memory_loop = _patrol_loop
+		_patrol_resume_clock = 0.0
+	_end_patrol()
+
+## Resume After: once the route that cancelled a patrol is over and the host has stood idle for the set
+## time, the patrol starts again (a platform patrol on the platform it is on now, a marker one from the
+## nearest marker).
+## @ace_hidden
+func _resume_patrol_tick(delta: float) -> void:
+	if _patrol_memory_kind == "":
+		return
+	if _patrol_resume_after <= 0.0:
+		_patrol_memory_kind = ""
+		return
+	if not _path.is_empty() or _path_pending or _jump_toward_active or _portal_traversing or _portal_paused:
+		_patrol_resume_clock = 0.0
+		return
+	_patrol_resume_clock += delta
+	if _patrol_resume_clock < _patrol_resume_after:
+		return
+	var kind: String = _patrol_memory_kind
+	var markers: Array[Node2D] = []
+	for marker in _patrol_memory_markers:
+		if is_instance_valid(marker):
+			markers.append(marker)
+	var loop: bool = _patrol_memory_loop
+	_patrol_memory_kind = ""
+	_patrol_memory_markers.clear()
+	if kind == "platform":
+		start_patrol(_patrol_dwell, _patrol_edge)
+	elif not markers.is_empty():
+		_begin_marker_patrol(markers, loop, _patrol_dwell)
+
+## True while a plain platform patrol (not a marker route) is running.
+## @ace_hidden
+func _platform_patrolling() -> bool:
+	return _patrolling and _patrol_markers.is_empty()
+
+## Slows the movement sibling to the patrol speed while a patrol walks, and puts the run speed back for
+## everything else (chases, jumps, a parked patrol).
+## @ace_hidden
+func _apply_patrol_speed() -> void:
+	var walking: bool = _patrolling and not _patrol_dwelling and not _path.is_empty() and _path_index < _path.size() and _path[_path_index].action == "walk"
+	if walking and _patrol_speed_percent != 100.0:
+		var movement: Node = _find_movement()
+		if movement == null:
+			return
+		if _patrol_base_speed < 0.0:
+			_patrol_base_speed = float(movement.get("move_speed"))
+		movement.set("move_speed", _patrol_base_speed * _patrol_speed_percent / 100.0)
+	else:
+		_restore_patrol_speed()
+
+## Gives the movement sibling its own run speed back.
+## @ace_hidden
+func _restore_patrol_speed() -> void:
+	if _patrol_base_speed < 0.0:
+		return
+	var movement: Node = _find_movement()
+	if movement != null:
+		movement.set("move_speed", _patrol_base_speed)
+	_patrol_base_speed = -1.0
+
+## How hazardous the ground of one cell is: 0 clear, 1 danger, 2 deadly.
+## @ace_hidden
+func _cell_hazard_level(cell: Vector2i) -> int:
+	return _segment_hazard(cell, cell)
+
+## True when stepping one cell in a direction means standing somewhere more hazardous than here.
+## @ace_hidden
+func _patrol_danger_ahead(direction: int) -> bool:
+	if _hazards.is_empty():
+		return false
+	var here: Vector2i = _nearest_node(host.global_position, 1)
+	if here == Vector2i.MAX:
+		return false
+	return _cell_hazard_level(here + Vector2i(direction, 0)) > _cell_hazard_level(here)
+
+## True when another agent stands close ahead of the host, in a direction.
+## @ace_hidden
+func _patrol_blocked_by_agent(direction: int) -> bool:
+	var tile: float = _tile_px()
+	for agent in _other_agents():
+		var gap: Vector2 = agent.host.global_position - host.global_position
+		if signi(int(gap.x)) == direction and absf(gap.x) <= tile * 1.2 and absf(gap.y) <= tile * 1.5:
+			return true
+	return false
+
+## Checks the way ahead of a walking platform patrol: danger or another agent ends the leg like a ledge does.
+## @ace_hidden
+func _check_patrol_way(delta: float) -> bool:
+	_patrol_bump_clock = maxf(_patrol_bump_clock - delta, 0.0)
+	if not _platform_patrolling() or _patrol_dwelling or _path.is_empty() or _path_index >= _path.size():
+		return false
+	var heading: int = signi(int(_path[_path_index].world.x - host.global_position.x))
+	if heading == 0:
+		return false
+	var danger: bool = _patrol_turn_before_danger and _patrol_danger_ahead(heading)
+	if danger and _patrol_danger_ahead(-heading):
+		# Danger on both sides: stand still rather than step into it.
+		_hold_still(delta)
+		return true
+	var bumped: bool = not danger and _patrol_turn_at_agents and _patrol_bump_clock <= 0.0 and _patrol_blocked_by_agent(heading)
+	if not danger and not bumped:
+		return false
+	if bumped:
+		_patrol_bump_clock = 0.75
+	_finish_path()
+	_on_patrol_end()
+	return true
 
 ## Side-of-node arrival: the agent stands on the requested side at the requested distance.
 ## @ace_hidden
@@ -1604,14 +2298,27 @@ func _set_movement_processing(active: bool) -> void:
 ## @ace_hidden
 func _enter_portal(waypoint: NavWaypoint) -> void:
 	_current_portal = _portal_by_id(waypoint.portal_id)
-	_current_portal_exit = waypoint.world
+	_current_portal_exit = _portal_exit_for(waypoint)
 	_portal_paused = false
 	_portal_entering = true
+	var serial: int = _route_serial
 	portal_entered.emit()
 	_portal_entering = false
-	if _portal_paused or _path.is_empty():
+	# A handler may have paused the portal, or asked for another route (which replaces this trip).
+	if _portal_paused or _path.is_empty() or serial != _route_serial:
 		return
 	_run_portal(waypoint)
+
+## Where a portal puts the host: the end of the portal the waypoint's node sits beside, exactly as the
+## sheet gave it (the nearest node's centre is only where the route's last step is aimed).
+## @ace_hidden
+func _portal_exit_for(waypoint: NavWaypoint) -> Vector2:
+	var portal: NavPortal = _portal_by_id(waypoint.portal_id)
+	if portal == null:
+		return waypoint.world
+	if waypoint.world.distance_to(portal.to) <= waypoint.world.distance_to(portal.from):
+		return portal.to
+	return portal.from
 
 ## Instant: blink to the exit. Gradual: start the straight-line move at the portal's speed with
 ## the movement sibling paused.
@@ -1620,12 +2327,12 @@ func _run_portal(waypoint: NavWaypoint) -> void:
 	if waypoint.action == "portal_gradual":
 		_portal_traversing = true
 		_portal_from = host.global_position
-		_portal_to = waypoint.world
+		_portal_to = _portal_exit_for(waypoint)
 		_portal_progress = 0.0
 		host.velocity = Vector2.ZERO
 		_set_movement_processing(false)
 		return
-	host.global_position = waypoint.world
+	host.global_position = _portal_exit_for(waypoint)
 	host.velocity = Vector2.ZERO
 	_finish_portal()
 
@@ -1649,8 +2356,14 @@ func _finish_portal() -> void:
 	if was_traversing:
 		_set_movement_processing(true)
 	portal_taken.emit()
+	var held: bool = _held
+	var held_goal: Vector2 = _held_goal
+	var held_mode: String = _held_mode
+	_held = false
 	if not _path.is_empty():
 		_advance_waypoint()
+	if held:
+		_route(held_goal.x, held_goal.y, held_mode)
 
 ## Holds the host still (a paused portal).
 ## @ace_hidden
@@ -1777,6 +2490,176 @@ func _draw_graph_overlay() -> void:
 			_debug_graph.draw_line(from, _cell_world(edge.to), _kind_color(edge.kind), 1.5)
 	for cell in _nodes:
 		_debug_graph.draw_circle(_cell_world(cell), 2.5, Color(1.0, 1.0, 1.0, 0.9))
+## Rescans the cells of a rectangle from the tile map, scanned bodies and hand-set states, then
+## rebuilds only the links that can reach them (a jump or fall away). The rest of the graph, the
+## portals and the routes of agents elsewhere stay as they are; agents whose route runs through
+## the changed area plan again. The rebuilt links equal what a full Regenerate Nav Graph makes.
+## @ace_hidden
+func _regenerate_cells(region: Rect2i) -> void:
+	for column in range(region.position.x, region.end.x):
+		for row in range(region.position.y, region.end.y):
+			var cell: Vector2i = Vector2i(column, row)
+			var state: String = _live_state(cell)
+			if state == "clear":
+				_states.erase(cell)
+				_blocking.erase(cell)
+				_blocking_down.erase(cell)
+				continue
+			_states[cell] = state
+			_blocking_down[cell] = true
+			if _blocks_state(state):
+				_blocking[cell] = true
+			else:
+				_blocking.erase(cell)
+	# A cell changes the standing nodes of its own row and the rows just above and below it.
+	var nodes_area: Rect2i = region.grow(1)
+	for column in range(nodes_area.position.x, nodes_area.end.x):
+		for row in range(nodes_area.position.y, nodes_area.end.y):
+			var stand: Vector2i = Vector2i(column, row)
+			if _states.has(stand + Vector2i(0, 1)) and not _blocking.has(stand) and not _blocking.has(stand + Vector2i(0, -1)):
+				_nodes[stand] = true
+			else:
+				_nodes.erase(stand)
+				_edges.erase(stand)
+	# Every node close enough to jump or fall into the area gets its links made again.
+	var reach: Vector2i = _jump_reach_cells()
+	var tile: float = _tile_px()
+	var across: int = reach.x + 1
+	if _double_jump_ready():
+		across = maxi(across, int(_jump_reach_px().x * 1.7 / tile) + 1)
+	if _coyote_window() > 0.0 and not ledge_restriction:
+		across = maxi(across, int((_jump_reach_px().x + _run_speed() * _coyote_window() * 0.5) / tile) + 1)
+	var down: int = _fall_cells()
+	var up: int = reach.y + 1
+	if _double_jump_ready():
+		up = maxi(up, int(_jump_reach_px().y * 2.0 / tile) + 1)
+	var scope_area: Rect2i = Rect2i(nodes_area.position - Vector2i(across, down + 1), nodes_area.size + Vector2i(across * 2, down + up + 2))
+	var scope: Array = []
+	var kept_scope: Dictionary = {}
+	if scope_area.get_area() <= _nodes.size() * 4:
+		for column in range(scope_area.position.x, scope_area.end.x):
+			for row in range(scope_area.position.y, scope_area.end.y):
+				if _nodes.has(Vector2i(column, row)):
+					scope.append(Vector2i(column, row))
+	else:
+		for cell in _nodes:
+			if scope_area.has_point(cell):
+				scope.append(cell)
+	for cell: Vector2i in scope:
+		kept_scope[cell] = true
+		# Portal and moving-platform links stay (while their far end is still a node).
+		var kept: Array[NavEdge] = []
+		for edge: NavEdge in (_edges.get(cell, []) as Array):
+			if (edge.portal_id >= 0 or edge.kind == "platform") and _nodes.has(edge.to):
+				kept.append(edge)
+		_edges[cell] = kept
+	_build_links(scope)
+	# A portal with an end beside the area may now land on a different node.
+	var world_low: Vector2 = _cell_world(nodes_area.position) - Vector2(tile, tile)
+	var world_box: Rect2 = Rect2(world_low, _cell_world(nodes_area.end) - world_low + Vector2(tile, tile))
+	for portal in _portals:
+		if world_box.has_point(portal.from) or world_box.has_point(portal.to):
+			_relink_portal(portal)
+	_refresh_graph_overlay()
+	# Agents whose route runs through the changed area plan it again.
+	var agents: Array[PlatformerPathfinding] = _other_agents()
+	agents.append(self)
+	for agent in agents:
+		agent._replan_through(nodes_area)
+
+## Plans the current route again when any of its steps lies in an area of the grid.
+## @ace_hidden
+func _replan_through(area: Rect2i) -> void:
+	if _path.is_empty():
+		return
+	for index in range(_path_index, _path.size()):
+		if area.has_point(_path[index].cell):
+			_route(_path_goal.x, _path_goal.y, _goal_mode)
+			return
+
+## How many cells deep a fall may go: the Max Fall Distance in cells, or the whole map for no limit.
+## @ace_hidden
+func _fall_cells() -> int:
+	var tile: float = _tile_px()
+	var cells: int = maxi(int(ceil(max_fall_distance / tile)), 1)
+	if max_fall_distance < 0.0:
+		var used: Rect2i = Rect2i()
+		for cell in _states:
+			used = Rect2i(cell, Vector2i.ONE) if used.size == Vector2i.ZERO else used.expand(cell)
+		cells = maxi(used.size.y + 2, 1)
+	return cells
+
+## Makes the links that leave the cells of a list: walk links, jump arcs, fall drops, double
+## jumps, coyote jumps and fall-throughs. A full build passes every node; a region rebuild
+## passes the nodes whose reach touches the changed area.
+## @ace_hidden
+func _build_links(scope: Array) -> void:
+	# WALK links: neighbours one cell over, up to one step up/down - stairs and slopes
+	# included, at plain euclidean cost so ramps beat jumps in the router.
+	for cell: Vector2i in scope:
+		for dx in [-1, 1]:
+			for dy in [-1, 0, 1]:
+				var to: Vector2i = cell + Vector2i(dx, dy)
+				if _nodes.has(to):
+					_add_edge(cell, to, "walk", Vector2(float(dx), float(dy)).length())
+	# JUMP arcs + FALL drops within the derived reach, clearance-checked coarsely. A drop
+	# treats a jump-through platform in its way as a floor (it would land there).
+	var tile: float = _tile_px()
+	var reach_px: Vector2 = _jump_reach_px()
+	var reach: Vector2i = _jump_reach_cells()
+	var fall_cells: int = _fall_cells()
+	for cell: Vector2i in scope:
+		for dx in range(-reach.x, reach.x + 1):
+			for dy in range(-reach.y, fall_cells + 1):
+				if absi(dx) <= 1 and absi(dy) <= 1:
+					continue
+				var to: Vector2i = cell + Vector2i(dx, dy)
+				if not _nodes.has(to) or not _arc_clear(cell, to, _blocking_down if dy > 0 else _blocking):
+					continue
+				var kind: String = "fall" if dy > 0 and absi(dx) <= 2 else "jump"
+				var span: float = Vector2(float(dx), float(dy)).length()
+				_add_edge(cell, to, kind, span * (1.5 if kind == "jump" else 1.1))
+	# DOUBLE JUMP links: a sibling with two jumps reaches about twice as high and 1.7x as far;
+	# only targets the single jump cannot reach get one.
+	if _double_jump_ready():
+		var double_reach: Vector2i = Vector2i(maxi(int(reach_px.x * 1.7 / tile), 1), maxi(int(reach_px.y * 2.0 / tile), 1))
+		for cell: Vector2i in scope:
+			for dx in range(-double_reach.x, double_reach.x + 1):
+				for dy in range(-double_reach.y, fall_cells + 1):
+					if absi(dx) <= reach.x and dy >= -reach.y:
+						continue
+					var to: Vector2i = cell + Vector2i(dx, dy)
+					if not _nodes.has(to) or _has_edge(cell, to) or not _arc_clear(cell, to, _blocking_down if dy > 0 else _blocking):
+						continue
+					_add_edge(cell, to, "double_jump", Vector2(float(dx), float(dy)).length() * 1.8)
+	# COYOTE JUMP links: run off a ledge for half the coyote window, then leap - the extra run
+	# reaches gaps a standing takeoff cannot. Never with Ledge Restriction (it never runs off).
+	if _coyote_window() > 0.0 and not ledge_restriction:
+		var coyote_cells: int = int((reach_px.x + _run_speed() * _coyote_window() * 0.5) / tile)
+		if coyote_cells > reach.x:
+			for cell: Vector2i in scope:
+				for direction in [-1, 1]:
+					if not _is_ledge_toward(cell, direction):
+						continue
+					for distance in range(reach.x + 1, coyote_cells + 1):
+						for dy in range(-(reach.y - 1), fall_cells + 1):
+							var to: Vector2i = cell + Vector2i(direction * distance, dy)
+							if not _nodes.has(to) or _has_edge(cell, to) or not _arc_clear(cell, to, _blocking_down if dy > 0 else _blocking):
+								continue
+							_add_edge(cell, to, "coyote_jump", Vector2(float(distance), float(dy)).length() * 1.6)
+	# FALL-THROUGH drops: standing on a jump-through platform, drop straight down to the first
+	# node below it.
+	for cell: Vector2i in scope:
+		if str(_states.get(cell + Vector2i(0, 1), "")) != "jump_thru":
+			continue
+		for depth in range(1, fall_cells + 2):
+			var below: Vector2i = cell + Vector2i(0, depth)
+			if _blocking.has(below):
+				break
+			if _nodes.has(below) and depth > 1:
+				_add_edge(cell, below, "fall_through", float(depth) * 1.1)
+				break
+
 #endregion
 
 func _physics_process(delta: float) -> void:
@@ -1791,6 +2674,10 @@ func _physics_process(delta: float) -> void:
 		_floor_grace += delta
 	# Hazard presence (any kind) fires On Hazard Entered on the way in - the damage hook.
 	_prune_tracked_hazards()
+	_follow_portal_nodes()
+	if not _learning.is_empty():
+		_learn_platforms()
+	_watch_tiles()
 	var in_hazard_now: bool = _point_in_hazard(host.global_position, false)
 	if in_hazard_now and not _was_in_hazard:
 		hazard_entered.emit()
@@ -1823,17 +2710,18 @@ func _physics_process(delta: float) -> void:
 		_hold_still(delta)
 		_patrol_clock -= delta
 		if _patrol_clock <= 0.0:
-			_patrol_dwelling = false
-			_patrol_dir = -_patrol_dir
-			patrol_dwell_finished.emit()
-			_patrol_walk()
+			_finish_patrol_dwell()
+	_resume_patrol_tick(delta)
+	_apply_patrol_speed()
+	if _check_patrol_way(delta):
+		return
 	if _path.is_empty():
 		if idle_separation > 0.0 and _separate(delta):
 			return
 		# No route, no deferred request, nobody being followed, no patrol, no spacing to keep
 		# and no hazard to watch means there is nothing this tick could do - a parked agent
 		# costs nothing per frame until a path verb or Add Hazard turns processing back on.
-		if not _path_pending and (_follow_target == null or not is_instance_valid(_follow_target)) and _hazards.is_empty() and not _patrolling and idle_separation <= 0.0:
+		if not _path_pending and (_follow_target == null or not is_instance_valid(_follow_target)) and _hazards.is_empty() and not _patrolling and idle_separation <= 0.0 and not _has_followed_portals() and _patrol_memory_kind == "" and _learning.is_empty() and not watch_tile_edits:
 			set_physics_process(false)
 		return
 	var waypoint: NavWaypoint = _path[_path_index]
@@ -1977,90 +2865,24 @@ func regenerate_nav_graph() -> void:
 	_edges.clear()
 	if not _has_grid():
 		_states.clear()
+		_blocking.clear()
+		_blocking_down.clear()
 		return
 	_scan_states()
-	var blocking: Dictionary = {}
-	var blocking_down: Dictionary = {}
+	_watch_ready = false
+	_blocking.clear()
+	_blocking_down.clear()
 	for cell in _states:
 		if _blocks_state(str(_states[cell])):
-			blocking[cell] = true
-		blocking_down[cell] = true
+			_blocking[cell] = true
+		_blocking_down[cell] = true
 	# A standable node = a cell over solid ground, a slope or a jump-through platform, with two
 	# cells of headroom (a jump-through platform never takes headroom away).
 	for cell in _states:
 		var stand: Vector2i = cell + Vector2i(0, -1)
-		if not blocking.has(stand) and not blocking.has(stand + Vector2i(0, -1)):
+		if not _blocking.has(stand) and not _blocking.has(stand + Vector2i(0, -1)):
 			_nodes[stand] = true
-	# WALK links: neighbours one cell over, up to one step up/down - stairs and slopes
-	# included, at plain euclidean cost so ramps beat jumps in the router.
-	for cell in _nodes:
-		for dx in [-1, 1]:
-			for dy in [-1, 0, 1]:
-				var to: Vector2i = cell + Vector2i(dx, dy)
-				if _nodes.has(to):
-					_add_edge(cell, to, "walk", Vector2(float(dx), float(dy)).length())
-	# JUMP arcs + FALL drops within the derived reach, clearance-checked coarsely. A drop
-	# treats a jump-through platform in its way as a floor (it would land there).
-	var tile: float = _tile_px()
-	var reach_px: Vector2 = _jump_reach_px()
-	var reach: Vector2i = _jump_reach_cells()
-	var fall_cells: int = maxi(int(ceil(max_fall_distance / tile)), 1)
-	if max_fall_distance < 0.0:
-		var used: Rect2i = Rect2i()
-		for cell in _states:
-			used = Rect2i(cell, Vector2i.ONE) if used.size == Vector2i.ZERO else used.expand(cell)
-		fall_cells = maxi(used.size.y + 2, 1)
-	for cell in _nodes:
-		for dx in range(-reach.x, reach.x + 1):
-			for dy in range(-reach.y, fall_cells + 1):
-				if absi(dx) <= 1 and absi(dy) <= 1:
-					continue
-				var to: Vector2i = cell + Vector2i(dx, dy)
-				if not _nodes.has(to) or not _arc_clear(cell, to, blocking_down if dy > 0 else blocking):
-					continue
-				var kind: String = "fall" if dy > 0 and absi(dx) <= 2 else "jump"
-				var span: float = Vector2(float(dx), float(dy)).length()
-				_add_edge(cell, to, kind, span * (1.5 if kind == "jump" else 1.1))
-	# DOUBLE JUMP links: a sibling with two jumps reaches about twice as high and 1.7x as far;
-	# only targets the single jump cannot reach get one.
-	if _double_jump_ready():
-		var double_reach: Vector2i = Vector2i(maxi(int(reach_px.x * 1.7 / tile), 1), maxi(int(reach_px.y * 2.0 / tile), 1))
-		for cell in _nodes:
-			for dx in range(-double_reach.x, double_reach.x + 1):
-				for dy in range(-double_reach.y, fall_cells + 1):
-					if absi(dx) <= reach.x and dy >= -reach.y:
-						continue
-					var to: Vector2i = cell + Vector2i(dx, dy)
-					if not _nodes.has(to) or _has_edge(cell, to) or not _arc_clear(cell, to, blocking_down if dy > 0 else blocking):
-						continue
-					_add_edge(cell, to, "double_jump", Vector2(float(dx), float(dy)).length() * 1.8)
-	# COYOTE JUMP links: run off a ledge for half the coyote window, then leap - the extra run
-	# reaches gaps a standing takeoff cannot. Never with Ledge Restriction (it never runs off).
-	if _coyote_window() > 0.0 and not ledge_restriction:
-		var coyote_cells: int = int((reach_px.x + _run_speed() * _coyote_window() * 0.5) / tile)
-		if coyote_cells > reach.x:
-			for cell in _nodes:
-				for direction in [-1, 1]:
-					if not _is_ledge_toward(cell, direction):
-						continue
-					for distance in range(reach.x + 1, coyote_cells + 1):
-						for dy in range(-(reach.y - 1), fall_cells + 1):
-							var to: Vector2i = cell + Vector2i(direction * distance, dy)
-							if not _nodes.has(to) or _has_edge(cell, to) or not _arc_clear(cell, to, blocking_down if dy > 0 else blocking):
-								continue
-							_add_edge(cell, to, "coyote_jump", Vector2(float(distance), float(dy)).length() * 1.6)
-	# FALL-THROUGH drops: standing on a jump-through platform, drop straight down to the first
-	# node below it.
-	for cell in _nodes:
-		if str(_states.get(cell + Vector2i(0, 1), "")) != "jump_thru":
-			continue
-		for depth in range(1, fall_cells + 2):
-			var below: Vector2i = cell + Vector2i(0, depth)
-			if blocking.has(below):
-				break
-			if _nodes.has(below) and depth > 1:
-				_add_edge(cell, below, "fall_through", float(depth) * 1.1)
-				break
+	_build_links(_nodes.keys())
 	# Registered portals and moving platforms survive every rebuild.
 	for portal in _portals:
 		_apply_portal(portal)
@@ -2069,8 +2891,26 @@ func regenerate_nav_graph() -> void:
 	_refresh_graph_overlay()
 	nav_graph_built.emit()
 
+func regenerate_region(x: float, y: float, width: float, height: float) -> void:
+	if not _has_grid():
+		return
+	if _nodes.is_empty():
+		regenerate_nav_graph()
+		return
+	var first: Vector2i = _world_to_cell(Vector2(x, y))
+	var last: Vector2i = _world_to_cell(Vector2(x + width, y + height))
+	var low: Vector2i = Vector2i(mini(first.x, last.x), mini(first.y, last.y))
+	var high: Vector2i = Vector2i(maxi(first.x, last.x), maxi(first.y, last.y))
+	_regenerate_cells(Rect2i(low, high - low + Vector2i.ONE))
+
+func regenerate_region_by_node(target: Node) -> void:
+	if not (target is Node2D):
+		return
+	var box: Rect2 = _node_shape_bounds(target as Node2D)
+	regenerate_region(box.position.x, box.position.y, box.size.x, box.size.y)
+
 func find_path_to(x: float, y: float, mode: String) -> void:
-	_end_patrol()
+	_cancel_patrol_for_route()
 	_side_request = null
 	_exact_final = NAN
 	_route(x, y, mode)
@@ -2085,6 +2925,8 @@ func find_path_to_node(target: Node, mode: String) -> void:
 		path_failed.emit()
 
 func stop_pathfinding() -> void:
+	_held = false
+	_patrol_memory_kind = ""
 	_end_patrol()
 	_side_request = null
 	_jump_toward_active = false
@@ -2133,13 +2975,12 @@ func clear_portals() -> void:
 
 func add_hazard(x: float, y: float, width: float, height: float, deadly: bool) -> void:
 	var hazard: NavHazard = NavHazard.new()
-	hazard.id = _next_hazard_id
+	hazard.id = _take_hazard_id()
 	hazard.kind = "rect"
 	hazard.rect = Rect2(x, y, width, height)
 	hazard.deadly = deadly
 	_hazards.append(hazard)
-	_last_hazard_id = _next_hazard_id
-	_next_hazard_id += 1
+	_last_hazard_id = hazard.id
 	# A hazard is watched per frame (On Hazard Entered fires on the way in), so a parked
 	# agent starts paying for its tick again the moment one exists.
 	set_physics_process(true)
@@ -2158,7 +2999,25 @@ func add_moving_platform(platform: Node, from_x: float, from_y: float, to_x: flo
 	if not _nodes.is_empty():
 		_apply_moving_platform(ride)
 
+func learn_moving_platform(platform: Node) -> void:
+	if not (platform is Node2D):
+		return
+	for ride in _moving_platforms:
+		if ride.node == platform:
+			return
+	for learner in _learning:
+		if learner.node == platform:
+			return
+	var learn: NavLearn = NavLearn.new()
+	learn.node = platform as Node2D
+	learn.end_a = _world_transform_of(learn.node).origin
+	learn.end_b = learn.end_a
+	learn.last = learn.end_a
+	_learning.append(learn)
+	set_physics_process(true)
+
 func clear_moving_platforms() -> void:
+	_learning.clear()
 	_moving_platforms.clear()
 	regenerate_nav_graph()
 
@@ -2227,7 +3086,7 @@ func set_debug_draw_graph(enabled: bool) -> void:
 	_refresh_graph_overlay()
 
 func find_path_to_nearest_ledge(direction: String, distance: float) -> void:
-	_end_patrol()
+	_cancel_patrol_for_route()
 	_side_request = null
 	var facing: int = -1 if direction == "left" else 1
 	if _nodes.is_empty():
@@ -2241,7 +3100,7 @@ func find_path_to_nearest_ledge(direction: String, distance: float) -> void:
 	_route(spot.x, spot.y, "nearest")
 
 func find_path_to_node_side(target: Node, side: String, distance: float) -> void:
-	_end_patrol()
+	_cancel_patrol_for_route()
 	_reached_side = 0
 	if not (target is Node2D) or host == null:
 		_fail("no_target")
@@ -2280,24 +3139,55 @@ func start_patrol(dwell: float, edge_distance: float) -> void:
 	stop_pathfinding()
 	if _nodes.is_empty():
 		_auto_build()
-	var here: Vector2i = _nearest_node(host.global_position, 3)
-	if here == Vector2i.MAX:
+	_patrol_dwell = maxf(dwell, 0.0)
+	_patrol_edge = maxf(edge_distance, 0.0)
+	if not _measure_patrol_ends():
 		_fail("no_start_node")
 		return
-	var left: Vector2i = here
-	var right: Vector2i = here
-	for cell in _walk_component(here):
-		if cell.x < left.x or (cell.x == left.x and absi(cell.y - here.y) < absi(left.y - here.y)):
-			left = cell
-		if cell.x > right.x or (cell.x == right.x and absi(cell.y - here.y) < absi(right.y - here.y)):
-			right = cell
-	var inset: float = minf(maxf(edge_distance, 0.0), absf(_cell_world(right).x - _cell_world(left).x) * 0.5)
-	_patrol_ends = [_cell_world(left) + Vector2(inset, 0.0), _cell_world(right) - Vector2(inset, 0.0)]
 	_patrolling = true
-	_patrol_dwell = maxf(dwell, 0.0)
 	_patrol_dwelling = false
 	_patrol_dir = 1 if (_patrol_ends[1] as Vector2).x - host.global_position.x >= host.global_position.x - (_patrol_ends[0] as Vector2).x else -1
 	_patrol_walk()
+
+func start_patrol_between_markers(group: String, order: String, dwell: float) -> void:
+	if not nav_enabled or host == null or not is_inside_tree():
+		return
+	var found: Array[Node2D] = []
+	for candidate in get_tree().get_nodes_in_group(group):
+		if candidate is Node2D and candidate != host:
+			found.append(candidate as Node2D)
+	if found.is_empty():
+		push_warning("[PlatformerPathfinding] Start Patrol Between Markers: the group '%s' has no markers." % group)
+		return
+	stop_pathfinding()
+	if _nodes.is_empty():
+		_auto_build()
+	_begin_marker_patrol(found, order == PATROL_ORDER_LOOP, dwell)
+
+func set_patrol_setting(setting: String, value: float) -> void:
+	if setting == PATROL_DWELL_TIME:
+		_patrol_dwell = maxf(value, 0.0)
+	elif setting == PATROL_EDGE_DISTANCE:
+		_patrol_edge = maxf(value, 0.0)
+		if _platform_patrolling():
+			_measure_patrol_ends()
+	elif setting == PATROL_DWELL_VARIATION:
+		_patrol_dwell_variation = maxf(value, 0.0)
+	elif setting == PATROL_SPEED:
+		_patrol_speed_percent = maxf(value, 1.0)
+	elif setting == PATROL_RESUME_AFTER:
+		_patrol_resume_after = maxf(value, 0.0)
+		if _patrol_resume_after <= 0.0:
+			_patrol_memory_kind = ""
+
+func set_patrol_option(option: String, enabled: bool) -> void:
+	if option == PATROL_TURN_AT_AGENTS:
+		_patrol_turn_at_agents = enabled
+	elif option == PATROL_TURN_BEFORE_DANGER:
+		_patrol_turn_before_danger = enabled
+
+func patrol_point_index() -> int:
+	return _patrol_marker_index if _patrolling else -1
 
 func stop_patrol() -> void:
 	stop_pathfinding()
@@ -2319,6 +3209,12 @@ func log_graph_stats() -> void:
 			counts[edge.kind] = int(counts.get(edge.kind, 0)) + 1
 			total += 1
 	print("[PlatformerPathfinding] nodes=%d links=%d %s portals=%d hazards=%d platforms=%d jump_reach=%s cells" % [_nodes.size(), total, str(counts), _portals.size(), _hazards.size(), _moving_platforms.size(), str(_jump_reach_cells())])
+	var regions: Array = _separate_regions()
+	if regions.size() > 1:
+		var sizes: PackedStringArray = PackedStringArray()
+		for region: Array in regions:
+			sizes.append("%d at %s" % [region.size(), str(_cell_world(region[0]).round())])
+		print("[PlatformerPathfinding] %d separate regions (nodes that cannot reach each other, by any link): %s" % [regions.size(), ", ".join(sizes)])
 
 func create_obstacle_map(width: int, height: int, cell_size: float) -> void:
 	_tilemap = null
@@ -2384,6 +3280,8 @@ func clear_nav_graph() -> void:
 	_nodes.clear()
 	_edges.clear()
 	_states.clear()
+	_blocking.clear()
+	_blocking_down.clear()
 	_tile_overrides.clear()
 	_body_states.clear()
 	_tilemap = null
@@ -2422,12 +3320,49 @@ func add_gradual_portal(from_x: float, from_y: float, to_x: float, to_y: float, 
 	_add_portal_record(Vector2(from_x, from_y), Vector2(to_x, to_y), bidirectional, "gradual", cost, speed, tag)
 
 func add_elevator_stop(group: String, x: float, y: float, speed: float, tag: String) -> void:
-	var stop: Vector2 = Vector2(x, y)
-	var stops: Array = _elevator_stops.get(group, [])
-	for other in stops:
-		_add_portal_record(other, stop, true, "gradual", 1.0, speed, tag)
-	stops.append(stop)
-	_elevator_stops[group] = stops
+	_add_elevator_stop(group, Vector2(x, y), null, speed, tag)
+
+func add_elevator_stop_from_node(group: String, stop: Node, speed: float, tag: String) -> void:
+	if stop is Node2D:
+		_add_elevator_stop(group, _world_transform_of(stop as Node2D).origin, stop as Node2D, speed, tag)
+
+func add_portal_from_nodes(entrance: Node, exit: Node, bidirectional: bool, kind: String, cost: float, speed: float, tag: String) -> void:
+	if not (entrance is Node2D) or not (exit is Node2D):
+		return
+	var portal_id: int = _add_portal_record(_world_transform_of(entrance as Node2D).origin, _world_transform_of(exit as Node2D).origin, bidirectional, kind, cost, speed, tag)
+	var portal: NavPortal = _portal_by_id(portal_id)
+	portal.from_node = entrance as Node2D
+	portal.from_follows = true
+	portal.to_node = exit as Node2D
+	portal.to_follows = true
+	set_physics_process(true)
+
+func set_portal_position_from_nodes(portal_id: int, entrance: Node, exit: Node) -> void:
+	var portal: NavPortal = _portal_by_id(portal_id)
+	if portal == null or not (entrance is Node2D) or not (exit is Node2D):
+		return
+	portal.from_node = entrance as Node2D
+	portal.from_follows = true
+	portal.to_node = exit as Node2D
+	portal.to_follows = true
+	portal.from = _world_transform_of(portal.from_node).origin
+	portal.to = _world_transform_of(portal.to_node).origin
+	_relink_portal(portal)
+	set_physics_process(true)
+
+func remove_portal_at_node(target: Node) -> void:
+	var doomed: Array = []
+	for portal in _portals:
+		if portal.from_node == target or portal.to_node == target:
+			doomed.append(portal.id)
+	for portal_id in doomed:
+		remove_portal(portal_id)
+	for group in _elevator_stops:
+		var kept: Array = []
+		for stop: NavStop in (_elevator_stops[group] as Array):
+			if stop.node != target:
+				kept.append(stop)
+		_elevator_stops[group] = kept
 
 func remove_portal(portal_id: int) -> void:
 	for index in range(_portals.size() - 1, -1, -1):
@@ -2502,28 +3437,69 @@ func complete_portal() -> void:
 
 func add_circle_hazard(x: float, y: float, radius: float, deadly: bool) -> void:
 	var hazard: NavHazard = NavHazard.new()
-	hazard.id = _next_hazard_id
+	hazard.id = _take_hazard_id()
 	hazard.kind = "circle"
 	hazard.center = Vector2(x, y)
 	hazard.radius = radius
 	hazard.deadly = deadly
 	_hazards.append(hazard)
-	_last_hazard_id = _next_hazard_id
-	_next_hazard_id += 1
+	_last_hazard_id = hazard.id
 	set_physics_process(true)
 
 func add_tracked_hazard(target: Node, radius: float, deadly: bool) -> void:
 	if not (target is Node2D):
 		return
 	var hazard: NavHazard = NavHazard.new()
-	hazard.id = _next_hazard_id
+	hazard.id = _take_hazard_id()
 	hazard.kind = "tracked"
 	hazard.node = target
 	hazard.radius = radius
 	hazard.deadly = deadly
 	_hazards.append(hazard)
-	_last_hazard_id = _next_hazard_id
-	_next_hazard_id += 1
+	_last_hazard_id = hazard.id
+	set_physics_process(true)
+
+func add_hazard_from_node(target: Node, deadly: bool) -> void:
+	if not (target is Node2D):
+		return
+	# One hazard per node: asking again changes its deadly flag instead of stacking a copy.
+	for existing in _hazards:
+		if existing.kind == "shape" and existing.node == target:
+			existing.deadly = deadly
+			_last_hazard_id = existing.id
+			return
+	var hazard: NavHazard = NavHazard.new()
+	hazard.id = _take_hazard_id()
+	hazard.kind = "shape"
+	hazard.node = target
+	hazard.deadly = deadly
+	_refresh_shape_hazard(hazard)
+	_hazards.append(hazard)
+	_last_hazard_id = hazard.id
+	set_physics_process(true)
+
+func remove_hazard_from_node(target: Node) -> void:
+	for index in range(_hazards.size() - 1, -1, -1):
+		var hazard: NavHazard = _hazards[index]
+		if (hazard.kind == "shape" or hazard.kind == "tracked") and hazard.node == target:
+			_hazards.remove_at(index)
+
+func set_tile_hazard(gx: int, gy: int, level: String) -> void:
+	var cell: Vector2i = Vector2i(gx, gy)
+	for index in range(_hazards.size() - 1, -1, -1):
+		if _hazards[index].kind == "tile" and _hazards[index].cell == cell:
+			_hazards.remove_at(index)
+	if level != HAZARD_DANGER and level != HAZARD_DEADLY:
+		return
+	var hazard: NavHazard = NavHazard.new()
+	hazard.id = _take_hazard_id()
+	hazard.kind = "tile"
+	hazard.cell = cell
+	var half: Vector2 = Vector2(_tile_px(), _tile_px()) * 0.5
+	hazard.rect = Rect2(_cell_world(cell) - half, half * 2.0)
+	hazard.deadly = level == HAZARD_DEADLY
+	_hazards.append(hazard)
+	_last_hazard_id = hazard.id
 	set_physics_process(true)
 
 func remove_hazard(hazard_id: int) -> void:
@@ -2674,6 +3650,20 @@ func nearest_graph_node_cell(x: float, y: float) -> Vector2i:
 	var cell: Vector2i = _nearest_node(Vector2(x, y), 1000000)
 	return cell if cell != Vector2i.MAX else Vector2i(-1, -1)
 
+func run_speed() -> float:
+	return _run_speed()
+
+func jump_speed() -> float:
+	var movement: Node = _find_movement()
+	if movement != null and movement.get("jump_velocity") != null:
+		return absf(float(movement.get("jump_velocity")))
+	return absf(fallback_jump_velocity)
+
+func grid_origin() -> Vector2:
+	if _tilemap != null:
+		return _cell_world(Vector2i.ZERO) - Vector2(_tile_px(), _tile_px()) * 0.5
+	return _grid_origin
+
 func calculated_jump_distance() -> float:
 	return _jump_reach_px().x
 
@@ -2779,7 +3769,7 @@ func hazard_count() -> int:
 func tracked_hazard_count() -> int:
 	var count: int = 0
 	for hazard in _hazards:
-		if hazard.kind == "tracked":
+		if hazard.kind == "tracked" or hazard.kind == "shape":
 			count += 1
 	return count
 

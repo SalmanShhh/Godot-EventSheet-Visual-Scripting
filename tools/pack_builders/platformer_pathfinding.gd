@@ -5,6 +5,11 @@ const Lib := preload("res://tools/pack_builders/_lib.gd")
 
 const _STRATEGIES := ["balanced", "shortest", "safest", "ground_hugging", "no_falling", "walk_only"]
 const _TILE_STATES := ["solid", "clear", "jump_thru", "slope_left", "slope_right"]
+const _HAZARD_LEVELS := ["deadly", "danger", "clear"]
+const _PATROL_SETTINGS := ["dwell_time", "edge_distance", "dwell_variation", "speed", "resume_after"]
+const _PATROL_OPTIONS := ["turn_at_agents", "turn_before_danger"]
+const _PATROL_ORDERS := ["ping_pong", "loop"]
+const _PORTAL_KINDS := ["instant", "gradual"]
 
 
 ## Platformer pathfinding for a CharacterBody2D - the 2D jump-graph navigator:
@@ -20,7 +25,7 @@ const _TILE_STATES := ["solid", "clear", "jump_thru", "slope_left", "slope_right
 static func build() -> bool:
 	var src: Lib.PackSource = Lib.pack_from_source("platformer_pathfinding", "CharacterBody2D", "PlatformerPathfinding",
 		"Jump-aware navigation for 2D platformers: builds a jump graph from your TileMapLayer so an enemy can actually chase through the level - walking where walking works and jumping where a jump is needed. Attach as a sibling of PlatformerMovement, build the graph once, and call Find Path To; jump reach is derived from the movement pack's real physics and the agent is driven through its ai_move_axis seam.",
-		Lib.manifest().behavior().category("Platformer Pathfinding").tags(["movement", "platformer", "ai", "pathfinding"]).expose_all_verbs_on_a_node())
+		Lib.manifest().behavior().category("Platformer Pathfinding").tags(["movement", "platformer", "ai", "pathfinding", "patrol between objects", "hazard from object", "portal from objects", "regenerate region", "elevator stop", "moving platform"]).expose_all_verbs_on_a_node())
 	var sheet: EventSheetResource = src.sheet
 	# Property ORDER is part of the pack: these emit in the order they are declared here.
 	sheet.variables = {
@@ -96,6 +101,8 @@ static func build() -> bool:
 			"attributes": {"tooltip": "Draw every node and link of the graph in the world, links coloured by kind (walk, jump, fall, portal...)."}},
 		"debug_log": {"type": "bool", "default": false, "exported": true,
 			"attributes": {"tooltip": "Print each route found (waypoints, cost) and each failure with its reason to the Output panel."}},
+		"watch_tile_edits": {"type": "bool", "default": false, "exported": true,
+			"attributes": {"tooltip": "Notice tiles painted or erased at run time (Set Cell, Erase Cell): about two thousand tiles are compared per tick and only the changed area is rescanned. Off = call Regenerate Region yourself."}},
 	}
 
 	src.note("Platformer pathfinding: attach as a SIBLING of PlatformerMovement under a CharacterBody2D. Build Nav Graph from your TileMapLayer once, then Find Path To - the behavior derives jump reach from the movement pack and drives it through the ai_move_axis seam. Stairs and tile slopes walk (adjacent cells one step up/down are WALK links); gaps and ledges route through jump, double jump and coyote jump arcs, fall drops, fall-through drops off one-way platforms, portals and moving platforms.")
@@ -538,6 +545,69 @@ static func build() -> bool:
 	src.expression("portal_progress", "Portal Progress",
 		"0 to 1 along a gradual portal while it moves the agent (0 otherwise).",
 		[], TYPE_FLOAT)
+
+
+	# ── Added to match the matured navigation graph addon: hazards from nodes, patrols, portals that follow nodes ──
+	src.verb("add_hazard_from_node", "Add Hazard From Node",
+		"Turns a node into a hazard shaped like its collision shapes (a rotated shape is covered by its bounding box). It follows the node as it moves and removes itself when the node is freed. Deadly blocks routes; not deadly makes them costly. Last Hazard Id names it.",
+		[["target", "Node", "The node that becomes a hazard (a body or area with collision shapes)."], ["deadly", "bool", "Deadly blocks routes; off only makes them costly."]])
+	src.verb("remove_hazard_from_node", "Remove Hazard From Node",
+		"Switches a node's hazard off without freeing the node.",
+		[["target", "Node", "The node whose hazard goes away."]])
+	src.verb("set_tile_hazard", "Set Tile Hazard",
+		"Marks one grid cell as hazardous: deadly (routes never cross it), danger (routes pay extra) or clear (removes the mark). Last Hazard Id names it.",
+		[["gx", "int", "Grid X."], ["gy", "int", "Grid Y."], ["level", "String", "How hazardous the cell is."]])
+	_word(sheet, "level", _HAZARD_LEVELS, "set_tile_hazard({gx}, {gy}, \"{level}\")")
+	src.verb("start_patrol_between_markers", "Start Patrol Between Markers",
+		"Patrols a route: visits the marker nodes of a group in scene order and waits at each, pathing between them with walks, jumps, falls, portals and moving platforms. Starts at the nearest marker. Ping pong goes 1, 2, 3, 2, 1; loop goes 1, 2, 3, 1, 2, 3. Any Find Path To call ends the patrol (Set Patrol Setting resume_after brings it back). Patrol Point Index says which marker it heads for.",
+		[["group", "String", "The group holding the marker nodes, in quotes."], ["order", "String", "How the markers are visited."], ["dwell", "float", "Seconds to wait at each marker (0 moves on at once)."]])
+	_code_default(sheet, "group", "\"\"")
+	_word(sheet, "order", _PATROL_ORDERS, "start_patrol_between_markers({group}, \"{order}\", {dwell})")
+	src.verb("set_patrol_setting", "Set Patrol Setting",
+		"Tunes patrolling (both patrol verbs): dwell_time (seconds at each end or marker), edge_distance (pixels to turn short of each platform edge), dwell_variation (random seconds added to or taken from each wait), speed (percent of the run speed while a patrol walks; chases and jumps use full speed) or resume_after (seconds a patrol cancelled by Find Path To waits after the route ends before starting again, 0 = never).",
+		[["setting", "String", "Which setting to change."], ["value", "float", "Its new value."]])
+	_word(sheet, "setting", _PATROL_SETTINGS, "set_patrol_setting(\"{setting}\", {value})")
+	src.verb("set_patrol_option", "Set Patrol Option",
+		"Turns one of the automatic patrol turns on or off (both start on): turn_at_agents (turn round when another agent stands in the way, so two patrollers meeting head on both turn) or turn_before_danger (turn round before stepping somewhere more hazardous than where it stands). Applies to Start Patrol.",
+		[["option", "String", "Which option to change."], ["enabled", "bool", "On to turn, off to walk on."]])
+	_word(sheet, "option", _PATROL_OPTIONS, "set_patrol_option(\"{option}\", {enabled})")
+	src.expression("patrol_point_index", "Patrol Point Index",
+		"Which marker a Start Patrol Between Markers patrol heads for, from 0 (-1 when no marker patrol runs). Inside On Patrol Dwell Finished it already reads the NEXT marker.",
+		[], TYPE_INT)
+	src.verb("add_portal_from_nodes", "Add Portal From Nodes",
+		"Links two nodes as a portal: the entrance and the exit follow their nodes as they move, and the portal removes itself when either node is freed. Kind instant blinks the agent across; gradual moves it at Speed. Last Portal Id names it.",
+		[["entrance", "Node", "The node the portal is entered at."], ["exit", "Node", "The node the portal lets out at."], ["bidirectional", "bool", "Usable both ways."], ["kind", "String", "Blink across, or move at a speed."], ["cost", "float", "Price multiplier (1 = normal)."], ["speed", "float", "Travel speed in px/s (gradual only)."], ["tag", "String", "Optional tags, comma-separated, in quotes."]])
+	_word(sheet, "kind", _PORTAL_KINDS, "add_portal_from_nodes({entrance}, {exit}, {bidirectional}, \"{kind}\", {cost}, {speed}, {tag})")
+	_code_default(sheet, "tag", "\"\"")
+	src.verb("add_elevator_stop_from_node", "Add Elevator Stop From Node",
+		"Adds a stop to an elevator group at a node, and follows the node as it moves (a lift car with stops that ride along). Two-way gradual portals to every other stop of the group are created for you.",
+		[["group", "String", "The elevator's name, in quotes."], ["stop", "Node", "The node standing where the stop is."], ["speed", "float", "Travel speed in px/s."], ["tag", "String", "Optional tags, comma-separated, in quotes."]])
+	_code_default(sheet, "group", "\"\"")
+	_code_default(sheet, "tag", "\"\"")
+	src.verb("remove_portal_at_node", "Remove Portal At Node",
+		"Removes every portal and elevator stop that has this node at one of its ends.",
+		[["target", "Node", "The node whose portals go away."]])
+	src.verb("set_portal_position_from_nodes", "Set Portal Position From Nodes",
+		"Points a portal's two ends at nodes (keeping its id, type, cost, speed and tags); they follow the nodes from then on.",
+		[["portal_id", "int", "The portal's id."], ["entrance", "Node", "The node the portal is entered at."], ["exit", "Node", "The node the portal lets out at."]])
+	src.verb("regenerate_region", "Regenerate Region",
+		"Rescans only a rectangle of the map (tiles, scanned bodies, hand-set states) and rebuilds only the links that can reach it, so a door or crumbling floor costs a small update instead of a full rebuild. Agents whose route runs through the area plan it again. Does not fire On Nav Graph Built.",
+		[["x", "float", "World X of the top-left corner."], ["y", "float", "World Y of the top-left corner."], ["width", "float", "Width in pixels."], ["height", "float", "Height in pixels."]])
+	src.verb("regenerate_region_by_node", "Regenerate Region By Node",
+		"Regenerate Region over the collision shapes of a node - call it after a door, crate or platform of tiles changed.",
+		[["target", "Node", "The node whose area is rescanned."]])
+	src.verb("learn_moving_platform", "Learn Moving Platform",
+		"Watches a node move and registers it as a moving platform by itself once it has gone out to one end and turned back - no endpoints to type. Add Moving Platform is the same with the ends given.",
+		[["platform", "Node", "The moving platform to learn."]])
+	src.expression("run_speed", "Run Speed",
+		"The run speed in px/s the graph is sized from (the movement sibling's, or the fallback driver's).",
+		[], TYPE_FLOAT)
+	src.expression("jump_speed", "Jump Speed",
+		"The upward launch speed in px/s the graph is sized from (the movement sibling's jump, or the fallback driver's).",
+		[], TYPE_FLOAT)
+	src.expression("grid_origin", "Grid Origin",
+		"The top-left corner of the map in world pixels.",
+		[], TYPE_VECTOR2)
 
 	# The pack's hero verbs: starred + bold at the top of their picker section.
 	Lib.verb_sentences(sheet, {

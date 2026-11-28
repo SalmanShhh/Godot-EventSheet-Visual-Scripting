@@ -2047,7 +2047,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Facing Direction**
 
 ### PlatformerPathfinding (`res://eventsheet_addons/platformer_pathfinding/platformer_pathfinding_behavior.gd`)
-@ace_tags(movement, platformer, ai, pathfinding) @ace_category("Platformer Pathfinding") @ace_expose_all(node) @ace_version(1.0.0)
+@ace_tags(movement, platformer, ai, pathfinding, patrol between objects, hazard from object, portal from objects, regenerate region, elevator stop, moving platform) @ace_category("Platformer Pathfinding") @ace_expose_all(node) @ace_version(1.0.0)
 
 #### Triggers
 - **On Portal Taken**
@@ -2148,6 +2148,19 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Portal Tag** (`portal_id: int, tag: String`) - Replaces a portal's tags.
 - **Set Portal Ignore Hazards** (`portal_id: int, ignore: bool`) - On: routes use the portal even when a hazard covers it.
 - **Set Portal Position** (`portal_id: int, from_x: float, from_y: float, to_x: float, to_y: float`) - Moves a portal's entrance and exit, keeping its id, type, cost, speed and tags - call it on a timer to follow a moving door.
+- **Add Hazard From Node** (`target: Node, deadly: bool`) - Turns a node into a hazard shaped like its collision shapes (a rotated shape is covered by its bounding box). It follows the node as it moves and removes itself when the node is freed. Deadly blocks routes; not deadly makes them costly. Last Hazard Id names it.
+- **Remove Hazard From Node** (`target: Node`) - Switches a node's hazard off without freeing the node.
+- **Set Tile Hazard** (`gx: int, gy: int, level: String`) - Marks one grid cell as hazardous: deadly (routes never cross it), danger (routes pay extra) or clear (removes the mark). Last Hazard Id names it.
+- **Start Patrol Between Markers** (`group: String, order: String, dwell: float`) - Patrols a route: visits the marker nodes of a group in scene order and waits at each, pathing between them with walks, jumps, falls, portals and moving platforms. Starts at the nearest marker. Ping pong goes 1, 2, 3, 2, 1; loop goes 1, 2, 3, 1, 2, 3. Any Find Path To call ends the patrol (Set Patrol Setting resume_after brings it back). Patrol Point Index says which marker it heads for.
+- **Set Patrol Setting** (`setting: String, value: float`) - Tunes patrolling (both patrol verbs): dwell_time (seconds at each end or marker), edge_distance (pixels to turn short of each platform edge), dwell_variation (random seconds added to or taken from each wait), speed (percent of the run speed while a patrol walks; chases and jumps use full speed) or resume_after (seconds a patrol cancelled by Find Path To waits after the route ends before starting again, 0 = never).
+- **Set Patrol Option** (`option: String, enabled: bool`) - Turns one of the automatic patrol turns on or off (both start on): turn_at_agents (turn round when another agent stands in the way, so two patrollers meeting head on both turn) or turn_before_danger (turn round before stepping somewhere more hazardous than where it stands). Applies to Start Patrol.
+- **Add Portal From Nodes** (`entrance: Node, exit: Node, bidirectional: bool, kind: String, cost: float, speed: float, tag: String`) - Links two nodes as a portal: the entrance and the exit follow their nodes as they move, and the portal removes itself when either node is freed. Kind instant blinks the agent across; gradual moves it at Speed. Last Portal Id names it. The words for kind are the constants KIND_INSTANT, KIND_GRADUAL.
+- **Add Elevator Stop From Node** (`group: String, stop: Node, speed: float, tag: String`) - Adds a stop to an elevator group at a node, and follows the node as it moves (a lift car with stops that ride along). Two-way gradual portals to every other stop of the group are created for you.
+- **Remove Portal At Node** (`target: Node`) - Removes every portal and elevator stop that has this node at one of its ends.
+- **Set Portal Position From Nodes** (`portal_id: int, entrance: Node, exit: Node`) - Points a portal's two ends at nodes (keeping its id, type, cost, speed and tags); they follow the nodes from then on.
+- **Regenerate Region** (`x: float, y: float, width: float, height: float`) - Rescans only a rectangle of the map (tiles, scanned bodies, hand-set states) and rebuilds only the links that can reach it, so a door or crumbling floor costs a small update instead of a full rebuild. Agents whose route runs through the area plan it again. Does not fire On Nav Graph Built.
+- **Regenerate Region By Node** (`target: Node`) - Regenerate Region over the collision shapes of a node - call it after a door, crate or platform of tiles changed.
+- **Learn Moving Platform** (`platform: Node`) - Watches a node move and registers it as a moving platform by itself once it has gone out to one end and turned back - no endpoints to type. Add Moving Platform is the same with the ends given.
 
 #### Expressions
 - **Patrol Direction** - -1 walking left, 1 walking right, 0 while dwelling at an end or not patrolling. Handy for flipping the sprite.
@@ -2203,6 +2216,10 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Portal Type** (`portal_id: int`) - instant or gradual (empty when the portal does not exist).
 - **Portal Exit** - Where the current portal lets the agent out.
 - **Portal Progress** - 0 to 1 along a gradual portal while it moves the agent (0 otherwise).
+- **Patrol Point Index** - Which marker a Start Patrol Between Markers patrol heads for, from 0 (-1 when no marker patrol runs). Inside On Patrol Dwell Finished it already reads the NEXT marker.
+- **Run Speed** - The run speed in px/s the graph is sized from (the movement sibling's, or the fallback driver's).
+- **Jump Speed** - The upward launch speed in px/s the graph is sized from (the movement sibling's jump, or the fallback driver's).
+- **Grid Origin** - The top-left corner of the map in world pixels.
 - **Path Move Axis**
 - **Waypoint Count**
 - **Current Waypoint Index**
