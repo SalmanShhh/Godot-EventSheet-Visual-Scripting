@@ -11465,3 +11465,8 @@ Make it a Juice list,En faire une liste Juice
 Make all %d Juice lists,Transformer les %d en listes Juice
 Turn old moment files into Juice lists,Transformer les anciens fichiers de moment en listes Juice
 Make a Juice list,Créer une liste Juice
+"To play this list here, drop it on the Moment File slot of a Juice Player in the open scene.","Pour jouer cette liste ici, déposez-la sur l'emplacement Fichier de moment d'un Juice Player de la scène ouverte."
+Play on,Jouer sur
+Several Juice Players in the open scene hold this file. The buttons below play it on the one chosen here. The choice is kept until the editor closes and is not saved in the file or the scene.,Plusieurs Juice Players de la scène ouverte contiennent ce fichier. Les boutons ci-dessous le jouent sur celui choisi ici. Le choix reste jusqu'à la fermeture de l'éditeur et n'est enregistré ni dans le fichier ni dans la scène.
+%s also plays this file and does not find this node from where it stands.,%s joue aussi ce fichier et ne trouve pas ce nœud depuis sa position.
+%s also play this file and do not find this node from where they stand.,%s jouent aussi ce fichier et ne trouvent pas ce nœud depuis leur position.

@@ -18,6 +18,9 @@
 @tool
 extends RefCounted
 
+## Which player of the open scene plays a Juice list opened on its own. By path, like the other editor-only files.
+const HOST_PATH: String = "res://addons/eventsheet/editor/inspector/juice_list_host.gd"
+
 ## The plain words a field says when it names nothing.
 const NOTHING_PICKED: String = "(none)"
 
@@ -53,6 +56,16 @@ static func missing_note(edited: Object, card: Dictionary, key: String) -> Strin
 		return ""
 	var named: String = path.get_name(path.get_name_count() - 1) if path.get_name_count() > 0 else str(path)
 	return EventSheetL10n.translate("%s is not under this object any more.") % named
+
+
+## The note under a node field of a SHARED list (a Juice list file) when another Juice Player that holds the same file
+## would not find the node at this path from where it stands, or an empty text. A note only: the path is never rewritten.
+static func shared_note(drawer: Control, edited: Object, stored: Variant) -> String:
+	var file: Variant = drawer.get("list_file")
+	if not (file is Resource) or not (edited is Node) or not Engine.is_editor_hint():
+		return ""
+	var finder: GDScript = load(HOST_PATH)
+	return str(finder.call("unresolved_note", finder.call("users_of", file), edited, finder.call("scene_root"), stored))
 
 
 ## The words a node field shows: the name of the picked node, as the Scene dock shows it (a parent, the
@@ -107,6 +120,10 @@ static func node_field(drawer: Control, card: Dictionary, field: Dictionary, wri
 	var finding: Label = EventSheetLookStyle.message_line(missing_note(edited, card, key), EventSheetLookStyle.Tone.WARNING)
 	finding.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
 	finding.visible = not finding.text.is_empty()
+	# A file shared by several players keeps one path, so a player that would not find the node by it is named.
+	var shared: Label = EventSheetLookStyle.message_line(shared_note(drawer, edited, card.get(key, "")), EventSheetLookStyle.Tone.WARNING)
+	shared.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	shared.visible = not shared.text.is_empty()
 	var pick: Button = Button.new()
 	pick.text = EventSheetL10n.translate("Pick")
 	pick.tooltip_text = EventSheetL10n.translate("Pick a node with Godot's own node picker.")
@@ -134,6 +151,8 @@ static func node_field(drawer: Control, card: Dictionary, field: Dictionary, wri
 			shown.tooltip_text = str(relative)
 			finding.text = missing_note(edited, {key: relative}, key)
 			finding.visible = not finding.text.is_empty()
+			shared.text = shared_note(drawer, edited, relative)
+			shared.visible = not shared.text.is_empty()
 			drawer.call("rebuild_soon", index), types, current))
 	line.add_child(pick)
 	var clear: Button = EventSheetLookStyle.icon_button(&"Remove", "✕", EventSheetL10n.translate("Clear the node."))
@@ -144,6 +163,7 @@ static func node_field(drawer: Control, card: Dictionary, field: Dictionary, wri
 	line.add_child(clear)
 	box.add_child(line)
 	box.add_child(finding)
+	box.add_child(shared)
 	return box
 
 

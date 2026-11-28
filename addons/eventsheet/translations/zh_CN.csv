@@ -11465,3 +11465,8 @@ Make it a Juice list,转换为 Juice 列表
 Make all %d Juice lists,将全部 %d 个转换为 Juice 列表
 Turn old moment files into Juice lists,将旧时刻文件转换为 Juice 列表
 Make a Juice list,创建 Juice 列表
+"To play this list here, drop it on the Moment File slot of a Juice Player in the open scene.",要在这里播放此列表，请把它拖到已打开场景中某个 Juice Player 的“时刻文件”槽上。
+Play on,播放于
+Several Juice Players in the open scene hold this file. The buttons below play it on the one chosen here. The choice is kept until the editor closes and is not saved in the file or the scene.,已打开场景中有多个 Juice Player 持有此文件。下面的按钮会在这里选中的那个上播放它。该选择保留到关闭编辑器为止，不会保存到文件或场景中。
+%s also plays this file and does not find this node from where it stands.,%s 也在播放此文件，但从它所在的位置找不到这个节点。
+%s also play this file and do not find this node from where they stand.,%s 也在播放此文件，但从它们所在的位置找不到这个节点。

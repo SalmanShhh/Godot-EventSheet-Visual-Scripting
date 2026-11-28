@@ -11465,3 +11465,8 @@ Make it a Juice list,Juice リストにする
 Make all %d Juice lists,%d 個すべてを Juice リストにする
 Turn old moment files into Juice lists,古いモーメントファイルを Juice リストにする
 Make a Juice list,Juice リストを作る
+"To play this list here, drop it on the Moment File slot of a Juice Player in the open scene.",このリストをここで再生するには、開いているシーンの Juice Player のモーメントファイルのスロットにドロップしてください。
+Play on,再生先
+Several Juice Players in the open scene hold this file. The buttons below play it on the one chosen here. The choice is kept until the editor closes and is not saved in the file or the scene.,開いているシーンの複数の Juice Player がこのファイルを持っています。下のボタンは、ここで選んだものでこのファイルを再生します。選択はエディターを閉じるまで保持され、ファイルにもシーンにも保存されません。
+%s also plays this file and does not find this node from where it stands.,%s もこのファイルを再生していますが、自分の位置からこのノードを見つけられません。
+%s also play this file and do not find this node from where they stand.,%s もこのファイルを再生していますが、自分の位置からこのノードを見つけられません。

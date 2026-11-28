@@ -11465,3 +11465,8 @@ Make it a Juice list,Juice 목록으로 바꾸기
 Make all %d Juice lists,%d개 모두 Juice 목록으로 바꾸기
 Turn old moment files into Juice lists,오래된 모먼트 파일을 Juice 목록으로 바꾸기
 Make a Juice list,Juice 목록 만들기
+"To play this list here, drop it on the Moment File slot of a Juice Player in the open scene.",이 목록을 여기서 재생하려면 열려 있는 씬의 Juice Player 모멘트 파일 슬롯에 놓으세요.
+Play on,재생 대상
+Several Juice Players in the open scene hold this file. The buttons below play it on the one chosen here. The choice is kept until the editor closes and is not saved in the file or the scene.,열려 있는 씬의 여러 Juice Player가 이 파일을 가지고 있습니다. 아래 버튼은 여기서 고른 것에서 이 파일을 재생합니다. 선택은 에디터를 닫을 때까지 유지되며 파일이나 씬에는 저장되지 않습니다.
+%s also plays this file and does not find this node from where it stands.,%s도 이 파일을 재생하지만 자신의 위치에서 이 노드를 찾지 못합니다.
+%s also play this file and do not find this node from where they stand.,%s도 이 파일을 재생하지만 자신의 위치에서 이 노드를 찾지 못합니다.

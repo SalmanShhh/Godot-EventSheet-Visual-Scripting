@@ -38,6 +38,9 @@ const ROW_MENU_PATH: String = "res://addons/eventsheet/editor/dock/juice_row_men
 ## What the cards that reach other nodes are drawn by. By path, like the preview helper.
 const WORLD_PATH: String = "res://addons/eventsheet/editor/inspector/juice_world_preview.gd"
 
+## Which player a list opened on its own is played on. By path, like the rest of the editor-only files.
+const HOST_PATH: String = "res://addons/eventsheet/editor/inspector/juice_list_host.gd"
+
 ## The moment file's own class, written when a list is saved out. Also by path, and also for the
 ## same reason.
 const MOMENT_RESOURCE_PATH: String = "res://eventsheet_addons/moment_resource/moment_resource.gd"
@@ -62,9 +65,23 @@ const TIMELINE_HEAD: Color = Color(0.96, 0.72, 0.32, 0.95)
 const PREVIEW_VOICES: int = 4
 
 ## The player this strip plays on: the object itself, or - when the strip sits under a Juice list file - the
-## selected player that holds that file in its slot. Null when a list is opened on its own, which has nothing
-## to play it on.
+## player of the open scene that holds that file in its slot (the selected one while the list is shown inside
+## that slot, else the one chosen in "Play on", else the first in tree order). Null when no player of the open
+## scene holds the file, which leaves nothing to play it on.
 var _player: Node = null
+## What the strip is registered under right now, so a change of host can take it back out.
+var _registered_under: Object = null
+## The players that could host a list opened on its own (more than one is what shows "Play on"), and its choice.
+var _hosts: Array[Node] = []
+var _host_row: HBoxContainer = null
+var _host_menu: OptionButton = null
+## The one quiet line a list with no player to play on shows in place of the buttons.
+var _no_host_note: Label = null
+## The doors that need a player to play on, and the lines under them.
+var _play_doors: Array[Button] = []
+var _try_rows: Control = null
+## The scene this strip last looked in, so a change of scene tab looks again.
+var _looked_in: Node = null
 ## What holds the cards this strip reads: the player, or the Juice list file itself.
 var _source: Object = null
 var _head: Label = null
@@ -131,7 +148,15 @@ func _init(source: Object = null, drawer: Control = null) -> void:
 	_head.mouse_filter = Control.MOUSE_FILTER_PASS
 	_head.tooltip_text = EventSheetL10n.translate("How long one pass of the list takes. Cards between two Pauses or Holds start together, so their times do not add up. What a Loop Back or the Loop tick repeats comes on top.")
 	add_child(_head)
+	add_child(_build_host_row())
 	add_child(_build_buttons())
+	_no_host_note = Label.new()
+	_no_host_note.text = EventSheetL10n.translate("To play this list here, drop it on the Moment File slot of a Juice Player in the open scene.")
+	_no_host_note.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
+	_no_host_note.add_theme_color_override("font_color", EventSheetLookStyle.quiet())
+	_no_host_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_no_host_note.hide()
+	add_child(_no_host_note)
 	_find_note = Label.new()
 	_find_note.hide()
 	_find_note.add_theme_font_size_override("font_size", EventSheetPalette.scaled(10))
@@ -144,32 +169,48 @@ func _init(source: Object = null, drawer: Control = null) -> void:
 	_loop_note.add_theme_color_override("font_color", EventSheetLookStyle.warning())
 	_loop_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_loop_note)
-	var try_rows: Control = _build_try_rows()
-	# A list file opened on its own has nothing to play on, so it has nothing to repeat or try at a strength.
-	try_rows.visible = not (_is_list_file() and _player == null)
-	add_child(try_rows)
+	_try_rows = _build_try_rows()
+	add_child(_try_rows)
 	_timeline = _build_timeline()
 	add_child(_timeline)
 	_lines = VBoxContainer.new()
 	_lines.hide()
 	add_child(_lines)
+	_look_for_hosts()
 	refresh()
 	if _source != null:
-		load(PREVIEW_PATH).call("register", _registered_as(), self)
+		_registered_under = _registered_as()
+		load(PREVIEW_PATH).call("register", _registered_under, self)
 	if Engine.is_editor_hint() and EditorInterface.get_inspector() != null:
 		EditorInterface.get_inspector().property_edited.connect(_on_property_edited)
+	# A list file asks the open scene who plays it, so a change of scene tab has to ask again.
+	set_process(_is_list_file() and Engine.is_editor_hint())
 
 
 ## A tick or a number edited in the Inspector: the Loop line may have to appear or go.
-func _on_property_edited(_property: String) -> void:
+func _on_property_edited(property: String) -> void:
 	if _source != null and is_instance_valid(_source):
+		# A Moment File slot filled or emptied somewhere in the scene changes who plays this list.
+		if property == "moment_file" and _is_list_file():
+			load(HOST_PATH).call("forget_walk")
+			_look_for_hosts()
 		refresh()
+
+
+## Cheap: one comparison a frame. A new scene tab is a new root, so the players are looked for again.
+func _process(_delta: float) -> void:
+	if _source == null or not is_instance_valid(_source):
+		return
+	if EditorInterface.get_edited_scene_root() != _looked_in:
+		_look_for_hosts()
 
 
 func _exit_tree() -> void:
 	if _source != null and is_instance_valid(_source):
 		stop()
-		load(PREVIEW_PATH).call("unregister", _registered_as(), self)
+		if _registered_under != null and is_instance_valid(_registered_under):
+			load(PREVIEW_PATH).call("unregister", _registered_under, self)
+		_registered_under = null
 
 
 ## What the card list's play marks find this strip by: the player it plays on, else the file itself.
@@ -188,10 +229,81 @@ func _is_list_file() -> bool:
 static func host_player_of(list: Object) -> Node:
 	if not (list is Resource) or not Engine.is_editor_hint():
 		return null
-	for node: Node in EditorInterface.get_selection().get_selected_nodes():
-		if node.get("moment_file") == list:
-			return node
-	return null
+	return load(HOST_PATH).call("find_host", list) as Node
+
+
+## The "Play on" row: shown only when a list opened on its own is held by more than one Juice Player of the open scene.
+func _build_host_row() -> Control:
+	_host_row = HBoxContainer.new()
+	_host_row.add_theme_constant_override("separation", 6)
+	_host_row.hide()
+	var label: Label = Label.new()
+	label.text = EventSheetL10n.translate("Play on")
+	_host_row.add_child(label)
+	_host_menu = OptionButton.new()
+	_host_menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_host_menu.fit_to_longest_item = false
+	_host_menu.tooltip_text = EventSheetL10n.translate("Several Juice Players in the open scene hold this file. The buttons below play it on the one chosen here. The choice is kept until the editor closes and is not saved in the file or the scene.")
+	_host_menu.item_selected.connect(_on_host_chosen)
+	_host_row.add_child(_host_menu)
+	return _host_row
+
+
+## The player picked in "Play on": remembered for the session, and everything below it follows.
+func _on_host_chosen(index: int) -> void:
+	if index < 0 or index >= _hosts.size():
+		return
+	load(HOST_PATH).call("remember", _source, EditorInterface.get_edited_scene_root(), _hosts[index])
+	_look_for_hosts(true)
+
+
+## Looks in the open scene for the players that hold this list, and follows the answer: the host, the "Play on"
+## choice, the buttons and the line that says there is none. Only a list file asks; a player's own list has its
+## player already.
+func _look_for_hosts(rebuild_cards: bool = false) -> void:
+	if not _is_list_file() or not Engine.is_editor_hint():
+		_apply_host()
+		return
+	var finder: GDScript = load(HOST_PATH)
+	_looked_in = EditorInterface.get_edited_scene_root()
+	var found: Node = finder.call("find_host", _source) as Node
+	_hosts = finder.call("choices_for", _source)
+	if found != _player:
+		# What the old host was made to do is put back before it is let go of.
+		stop()
+		if _registered_under != null and is_instance_valid(_registered_under):
+			load(PREVIEW_PATH).call("unregister", _registered_under, self)
+		_player = found
+		_registered_under = _registered_as()
+		load(PREVIEW_PATH).call("register", _registered_under, self)
+		rebuild_cards = true
+	if _host_menu != null:
+		_host_menu.clear()
+		for index: int in range(_hosts.size()):
+			_host_menu.add_item(str(finder.call("label_of", _looked_in, _hosts[index])), index)
+			if _hosts[index] == _player:
+				_host_menu.select(index)
+	# The card list's pickers and play marks were built for the old host: it draws them again for the new one.
+	if _drawer != null and is_instance_valid(_drawer) and rebuild_cards:
+		_drawer.call("set_edited_object", _player if _player != null else _source)
+		_drawer.call("rebuild_soon")
+	_apply_host()
+	_shown = false
+	refresh()
+
+
+## Shows what the strip can honestly offer: the playing doors when there is a player, "Play on" when a list opened
+## on its own has several, and one plain line when it has none.
+func _apply_host() -> void:
+	var playable: bool = _player != null or not _is_list_file()
+	for door: Button in _play_doors:
+		door.visible = playable
+	if _try_rows != null:
+		_try_rows.visible = playable
+	if _host_row != null:
+		_host_row.visible = _hosts.size() > 1
+	if _no_host_note != null:
+		_no_host_note.visible = not playable
 
 
 ## The head line and the timeline, re-read from the player as it is edited.
@@ -311,8 +423,8 @@ func _build_buttons() -> Control:
 		# play doors need a player to play on and a sheet that plays it.
 		if _is_list_file() and (entry[1] == _on_save or entry[1] == _on_load or entry[1] == _on_find_plays):
 			continue
-		if _is_list_file() and _player == null and (entry[1] == play or entry[1] == stop or entry[1] == skip or entry[1] == restore):
-			continue
+		if entry[1] == play or entry[1] == stop or entry[1] == skip or entry[1] == restore:
+			_play_doors.append(button)
 		if entry[1] == _on_find_plays:
 			_find_button = button
 		row.add_child(button)

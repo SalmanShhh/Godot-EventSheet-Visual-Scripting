@@ -609,15 +609,15 @@ class CardListProperty:
 		set_bottom_editor(panel)
 		draw_background = false
 
-	## The object the cards are about. A node is itself; a Resource file that holds cards (a Juice list) is the
-	## selected node that holds it in a slot when there is one, so node pickers and the play mark work as they do on
-	## the node, and the file itself otherwise.
+	## The object the cards are about. A node is itself; a Resource file that holds cards (a Juice list) is the Juice
+	## Player of the open scene that plays it when there is one (the selected one while the list is shown in that
+	## player's slot), so node pickers and the play mark work as they do on the node, and the file itself otherwise.
 	func _acting_object() -> Object:
 		var edited: Object = get_edited_object()
 		if edited is Resource and Engine.is_editor_hint():
-			for node: Node in EditorInterface.get_selection().get_selected_nodes():
-				if node.get("moment_file") == edited:
-					return node
+			var host: Node = load("res://addons/eventsheet/editor/inspector/juice_list_host.gd").call("find_host", edited) as Node
+			if host != null:
+				return host
 		return edited
 
 	func _ready() -> void:

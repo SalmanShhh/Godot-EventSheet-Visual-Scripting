@@ -11465,3 +11465,8 @@ Make it a Juice list,Сделать списком Juice
 Make all %d Juice lists,Сделать списками Juice все (%d)
 Turn old moment files into Juice lists,Превратить старые файлы момента в списки Juice
 Make a Juice list,Создать список Juice
+"To play this list here, drop it on the Moment File slot of a Juice Player in the open scene.","Чтобы воспроизвести этот список здесь, перетащите его в слот «Файл момента» узла Juice Player в открытой сцене."
+Play on,Воспроизвести на
+Several Juice Players in the open scene hold this file. The buttons below play it on the one chosen here. The choice is kept until the editor closes and is not saved in the file or the scene.,"Несколько Juice Player в открытой сцене держат этот файл. Кнопки ниже воспроизводят его на выбранном здесь. Выбор сохраняется до закрытия редактора и не записывается ни в файл, ни в сцену."
+%s also plays this file and does not find this node from where it stands.,%s тоже воспроизводит этот файл и не находит этот узел со своего места.
+%s also play this file and do not find this node from where they stand.,%s тоже воспроизводят этот файл и не находят этот узел со своего места.

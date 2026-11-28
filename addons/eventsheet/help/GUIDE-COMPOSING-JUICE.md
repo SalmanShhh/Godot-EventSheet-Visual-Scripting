@@ -301,11 +301,17 @@ moment file holds only the ten moment words; a Juice list holds everything.
    press **Save as file** under a Juice Player's list. The second one writes the player's list out as
    a Juice list with every card in it.
 2. Double-click the file. Its Inspector is the same card editor a Juice Player has: add cards, drag
-   them into order, open one to tune it, tick it off. Opened on its own the file has no object to
-   play on, so the Play buttons wait for the next step.
-3. Drop the file on the **Moment File** slot of every Juice Player that should play it. Select such
-   a player and open the slot, and the file's cards show right there with the Play buttons: they play
-   the file on the player you selected.
+   them into order, open one to tune it, tick it off. A file has nothing to play on by itself, so it
+   looks in the scene you have open for the Juice Players that hold it (step 3) and plays on one of
+   them. Until a player holds it, the buttons are replaced by one line saying to drop the file on a
+   player's slot.
+3. Drop the file on the **Moment File** slot of every Juice Player that should play it. Now the file
+   opened on its own shows Play, Stop, Skip and Restore, and its node pickers work. With one such
+   player in the open scene it plays on that one. With several, a **Play on** choice above the
+   buttons names each by its path in the scene, and the first in the Scene dock is chosen until you
+   pick another (the choice lasts until the editor closes and is never saved in the file or the
+   scene). Switch to another scene tab and the file looks again. Select a player and open its slot,
+   and the buttons play the file on that player.
 
 Edit the file once and every player using it changes, in the editor and in a running game, because a
 player only reads the file while it plays. What a play counts down (the loops left, a chance roll) is
@@ -336,6 +342,11 @@ edit takes a copy into that player's own list and lets the slot go.
 
 Card settings that name a node, such as a Tween Property or a Spawn Scene card, are read from the
 player that plays the file, so the same file works on every object whose nodes carry those names.
+**Pick** stores the path from the player you are playing on, the same way the slot does. The file is
+shared, so right after a pick (and whenever the card is shown) every other player of the open scene
+that holds the same file is asked to find that node by that path; one that cannot is named in a quiet
+line under the field. It is a note only: nothing is rewritten, so you decide whether to rename a node,
+move the player or give that player its own copy with Make Unique.
 From a script, `player.moment_file = load("res://hit.tres")` is the whole door.
 
 ---
