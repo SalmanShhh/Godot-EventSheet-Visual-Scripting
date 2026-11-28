@@ -245,6 +245,19 @@ they are placed on.
 | Set Portal Tag | `portal_id` (int), `tag` (String) | Replaces a portal's tags. |
 | Set Portal Ignore Hazards | `portal_id` (int), `ignore` (bool) | On: routes use the portal even when a hazard covers it. |
 | Set Portal Position | `portal_id` (int), `from_x`, `from_y`, `to_x`, `to_y` (float) | Moves a portal's entrance and exit, keeping its id, type, cost, speed and tags - call it on a timer to follow a moving platform. |
+| Add Hazard From Node | `target` (Node), `deadly` (bool) | Turns a node into a hazard shaped like its collision shapes (a rotated shape is covered by its bounding box). It follows the node and removes itself when the node is freed. |
+| Remove Hazard From Node | `target` (Node) | Switches that node's hazard off without freeing the node. |
+| Set Tile Hazard | `gx`, `gy` (int), `level` (`deadly`/`danger`/`clear`) | Marks one grid cell: deadly never crossed, danger costs extra, clear removes the mark. |
+| Start Patrol Between Markers | `group` (String), `order` (`ping_pong`/`loop`), `dwell` (float) | Visits the marker nodes of a group in scene order, waiting at each, pathing between them with jumps, falls, portals and moving platforms. Patrol Point Index says which marker it heads for. |
+| Set Patrol Setting | `setting` (`dwell_time`/`edge_distance`/`dwell_variation`/`speed`/`resume_after`), `value` (float) | Tunes both patrol actions: the wait, the turn-short distance, a random wait variation, the walking speed as a percent, and how long after a chase the patrol starts again by itself. |
+| Set Patrol Option | `option` (`turn_at_agents`/`turn_before_danger`), `enabled` (bool) | Both on by default: a patrol turns round when another agent is in the way, and before stepping somewhere more hazardous than where it stands. |
+| Add Portal From Nodes | `entrance`, `exit` (Node), `bidirectional`, `kind` (`instant`/`gradual`), `cost`, `speed`, `tag` | A portal whose two ends follow their nodes; it goes away when either node is freed. |
+| Add Elevator Stop From Node | `group` (String), `stop` (Node), `speed`, `tag` | An elevator stop that follows its node (a lift car that carries its stops along). |
+| Remove Portal At Node | `target` (Node) | Removes every portal and elevator stop with this node at one end. |
+| Set Portal Position From Nodes | `portal_id` (int), `entrance`, `exit` (Node) | Points an existing portal's ends at nodes. |
+| Regenerate Region | `x`, `y`, `width`, `height` (float) | Rescans only a rectangle and rebuilds only the links that can reach it. Agents whose route runs through it plan again. |
+| Regenerate Region By Node | `target` (Node) | Regenerate Region over a node's collision shapes. |
+| Learn Moving Platform | `platform` (Node) | Watches a node move and registers it as a moving platform after one trip there and back. |
 
 ### Conditions, expressions, and triggers
 
@@ -292,6 +305,9 @@ they are placed on.
 | Expression | Graph Node Connection Cost | The cost of one link leaving a node, under the current strategy. |
 | Expression | Graph Node Connection Target | The world position one link leaving a node lands on. |
 | Expression | Calculated Jump Distance / Calculated Jump Height | The reach the graph is built with. |
+| Expression | Run Speed / Jump Speed | The run speed and the launch speed (px/s) the graph is sized from. |
+| Expression | Grid Origin | The map's top-left corner in world pixels. |
+| Expression | Patrol Point Index | Which marker a Start Patrol Between Markers patrol heads for (-1 when none); inside On Patrol Dwell Finished it already reads the next one. |
 | Expression | Hazard At / Hazard Count / Tracked Hazard Count / Last Hazard Id | 0 clear, 1 danger, 2 deadly; counts; the id for Remove Hazard. |
 | Expression | Current Portal Id / Last Portal Id / Portal Count / Nearest Portal Id / Furthest Portal Id / Portal Count By Tag / Portal Id By Tag / Portal Tag / Portal Type / Portal Exit / Portal Progress | Portal bookkeeping. |
 
@@ -326,6 +342,7 @@ they are placed on.
 | `crowd_arrivals` / `multi_agent_avoidance` | `false` / `false` | Spread arrivals; fan routes out. |
 | `idle_separation` / `separation_cooldown` / `separation_give_up_time` | `0.0` / `5.0` / `2.0` | Idle personal space (px, 0 = off), rest after giving up, time before giving up. |
 | `debug_draw_graph` / `debug_log` | `false` / `false` | Draw the whole graph; print each route and failure. |
+| `watch_tile_edits` | `false` | Notice tiles painted or erased at run time: about two thousand tiles are compared per tick and only the changed area is rescanned (Regenerate Region). |
 
 ### Inspector properties are ACEs too
 
@@ -350,6 +367,30 @@ which survive auto-named children. While **Live Values** streams from a running 
 upgrades to *Behaviours (live - on your node)* and reads the RUNNING instance - behaviours
 attached at runtime included, under their real names. And with your node selected in the Scene
 dock, the section grounds to that node's actual children before you even press Run.
+
+## Coming from the platformer navigation graph addon of another event-sheet engine
+
+If you know that addon, the words differ a little and the ideas are the same. Its "object" is a Godot
+**Node** (or a **group** of them), its pairs of X and Y expressions are one **Vector2**, and its
+dropdown actions are separate verbs or a word dropdown:
+
+| In that addon | Here |
+|---|---|
+| Add hazard from object / Remove hazard from object | Add Hazard From Node / Remove Hazard From Node |
+| Set tile hazard severity | Set Tile Hazard (`deadly`, `danger`, `clear`) |
+| Start patrol between objects, Patrol point index | Start Patrol Between Markers (a group), Patrol Point Index |
+| Set patrol setting, Set patrol option | Set Patrol Setting, Set Patrol Option |
+| Add portal from objects, Add elevator stop from object, Set portal position from objects, Remove portal at object | Add Portal From Nodes, Add Elevator Stop From Node, Set Portal Position From Nodes, Remove Portal At Node |
+| Regenerate region, Regenerate region by object | Regenerate Region, Regenerate Region By Node |
+| Find path to object, Find object on same platform | Find Path To Node, Node On Platform |
+| Moving platforms found by themselves | Learn Moving Platform (one trip there and back), or Add Moving Platform with the ends |
+| Auto map refresh after tile edits | the `watch_tile_edits` property, or Regenerate Region |
+| Set multiplayer mode | `set_enabled(is_multiplayer_authority())` on peers - Godot's own authority check |
+| Slope marking actions | none: slopes are read from each tile's collision polygon |
+
+What it does that this pack does not (yet): time-sliced graph builds on very large maps, run-up
+jumps checked by flight simulation, danger areas over crushers with waiting at them, and moving
+hazards that cover their whole travel range. A moving hazard here follows its node exactly each tick.
 
 ## Use cases
 
@@ -635,6 +676,65 @@ On process
   Condition: Current Path Action is "fall_through"  -> play "drop"
 ```
 
+### 26. A guard that walks a route of posts
+
+Drop `Marker2D` nodes in a group called `posts`, in the order the guard should visit them, and start the
+patrol once. It paths between the posts with jumps, falls, portals and moving platforms.
+
+```
+On Ready                 -> Guard | Pathfinding: Start Patrol Between Markers  "posts", "ping_pong", 1.0
+On Patrol Dwell Started  -> play "look_around"
+On Patrol Dwell Finished -> play "walk"   (Patrol Point Index already names the NEXT post)
+```
+
+### 27. Chase, then go back to work
+
+Tell the guard to resume 3 seconds after any chase ends. No row is needed to send it home.
+
+```
+On Ready                 -> Guard | Pathfinding: Set Patrol Setting  "resume_after", 3
+On Ready                 -> Guard | Pathfinding: Start Patrol  1.0, 8
+Player seen              -> Guard | Pathfinding: Find Path To Node  $Player, "nearest"
+```
+
+### 28. Guards that do not march in step
+
+Dwell variation adds or takes a random amount from every wait, and a speed under 100 makes a patrol
+amble while a chase still runs at full speed.
+
+```
+On Ready -> Guard | Pathfinding: Set Patrol Setting  "dwell_variation", 0.6
+On Ready -> Guard | Pathfinding: Set Patrol Setting  "speed", 60
+```
+
+### 29. A trapdoor that is a hazard
+
+Make the node itself the hazard: it follows the trapdoor's collision shape as it swings and goes
+away when the door is freed.
+
+```
+On Ready                -> Enemy | Pathfinding: Add Hazard From Node  $Trapdoor, true
+Trapdoor opened (safe)  -> Enemy | Pathfinding: Remove Hazard From Node  $Trapdoor
+```
+
+### 30. Doors that follow their frames
+
+Two door nodes become a portal that keeps up when the doors slide or the level scrolls.
+
+```
+On Ready -> Enemy | Pathfinding: Add Portal From Nodes  $DoorLeft, $DoorRight, true, "instant", 1, 100, ""
+```
+
+### 31. Knocking a hole in the floor
+
+Erase tiles and regenerate only the hole, not the whole level (or switch on `watch_tile_edits` and do
+nothing at all).
+
+```
+Bomb exploded -> $Level: Erase Cell  ...
+              -> Enemy | Pathfinding: Regenerate Region  x, y, 96, 96
+```
+
 ### Other use cases
 
 **Rooftop assassin patrols.** Ledge restriction keeps each guard glued to its own rooftop while normal chasing agents below jump between platforms, so two AI temperaments share one pack.
@@ -685,8 +785,19 @@ On process
 - **Tune with the debug line on.** Set Nav Debug Draw during development; the green line shows
   exactly what the router decided, which makes level-layout problems obvious. Set Debug Draw
   Graph shows every link the router COULD use, and Log Graph Stats counts them by kind.
-- **Patrols and routes do not mix.** Any Find Path To, Find Path To Node, Jump Toward or Stop
-  Pathfinding ends a running patrol; call Start Patrol again to resume it.
+- **A route ends a patrol, and can hand it back.** Any Find Path To, Find Path To Node, Jump Toward
+  or Stop Pathfinding ends a running patrol. Set Patrol Setting `resume_after` to a few seconds and
+  a patrol that a Find Path To cancelled starts again by itself once the route is over (Stop
+  Pathfinding and Jump Toward forget it) - chase-and-return needs no On Path Complete row.
+- **A hazard narrower than a tile still counts.** Each end of a link is judged as the whole tile
+  of ground it stands on, so a thin spike strip between two cell centres cannot be walked over.
+  The middle of a jump arc, which is in the air, is judged as the point it passes through.
+- **A portal puts the agent exactly where you said.** The exit is the position you gave (or the
+  exit node's position), not the middle of the nearest tile, so a lift stop that sits on its floor
+  line drops the agent on that line.
+- **A route asked for in the middle of a gradual portal waits.** It runs the moment the portal is
+  done (Is Path Pending reads true meanwhile). A route asked for while the agent is held by Pause At
+  Portal frees it, and uses the same portal again if the new route needs it.
 - **A shared Map Tag shares everything.** Portals, hazards and platforms one agent registers on a
   tag apply to every agent on it - which is the point for a horde, and a surprise for a guard who
   was meant to ignore a door. Give it its own tag (or none).
