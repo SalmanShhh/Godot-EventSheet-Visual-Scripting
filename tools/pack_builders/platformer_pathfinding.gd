@@ -105,6 +105,8 @@ static func build() -> bool:
 			"attributes": {"tooltip": "Notice tiles painted or erased at run time: about 2000 tiles are compared per tick and only the changed area is rescanned. Off = call Regenerate Region."}},
 		"build_budget_ms": {"type": "float", "default": 4.0, "exported": true,
 			"attributes": {"tooltip": "Milliseconds of each physics frame a nav graph build may use; a big level builds a little per frame, a small one at once. 0 = build it all in one call."}},
+		"run_up_jumps": {"type": "bool", "default": true, "exported": true,
+			"attributes": {"tooltip": "Plan jumps that only land with a running start, and have the agent back up along the runway and run at them. Off = every jump leaves from a standstill."}},
 	}
 
 	src.note("Platformer pathfinding: attach as a SIBLING of PlatformerMovement under a CharacterBody2D. Build Nav Graph from your TileMapLayer once, then Find Path To - the behavior derives jump reach from the movement pack and drives it through the ai_move_axis seam. Stairs and tile slopes walk (adjacent cells one step up/down are WALK links); gaps and ledges route through jump, double jump and coyote jump arcs, fall drops, fall-through drops off one-way platforms, portals and moving platforms.")
@@ -127,6 +129,9 @@ static func build() -> bool:
 	src.verb("set_build_budget", "Set Build Budget",
 		"How many milliseconds of each physics frame a nav graph build may use. A level too big to build in that time builds a few milliseconds per frame (Is Building Nav Graph is true meanwhile, Build Progress says how far it is, and On Nav Graph Built fires once at the end); a small one is done inside the Build Nav Graph call. 0 builds everything in one call.",
 		[["milliseconds", "float", "Milliseconds of each frame the build may use (0 = no limit)."]])
+	src.verb("set_run_up_jumps", "Set Run Up Jumps",
+		"On (default): a jump that only lands with a running start is planned, and the agent backs up along the runway behind the takeoff, runs at it and leaps. Off: every jump leaves from a standstill, so only gaps a standing jump clears are crossed. Regenerate Nav Graph afterwards.",
+		[["enabled", "bool", "On to plan jumps with a running start."]])
 	src.verb("find_path_to", "Find Path To",
 		"Routes to a world position and starts moving. Mode \"reach\" fails (On Path Failed) when the spot itself is unreachable; \"nearest\" never fails on a cut-off spot - it goes as close as it can get. Fires On Path Found / On Path Failed.",
 		[["x", "float"], ["y", "float"], ["mode", "String"]])
@@ -413,6 +418,9 @@ static func build() -> bool:
 	src.expression("graph_node_connection_cost", "Graph Node Connection Cost",
 		"The cost of one link leaving a node, under the current strategy.",
 		[["gx", "int", "Grid X."], ["gy", "int", "Grid Y."], ["index", "int", "Link index, from 0."]], TYPE_FLOAT)
+	src.expression("graph_node_connection_run_up", "Graph Node Connection Run Up",
+		"How many cells of running start one jump link leaving a node needs behind that node (0 for a jump from a standstill and for every other kind of link).",
+		[["gx", "int", "Grid X."], ["gy", "int", "Grid Y."], ["index", "int", "Link index, from 0."]], TYPE_INT)
 	src.expression("graph_node_connection_target", "Graph Node Connection Target",
 		"The world position one link leaving a node lands on.",
 		[["gx", "int", "Grid X."], ["gy", "int", "Grid Y."], ["index", "int", "Link index, from 0."]], TYPE_VECTOR2)

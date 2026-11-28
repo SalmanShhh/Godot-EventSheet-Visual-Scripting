@@ -47,25 +47,26 @@ static func run() -> bool:
 # ── One-way tiles, slopes ─────────────────────────────────────────────────────────────
 static func _links(script: GDScript) -> bool:
 	var ok: bool = true
-	# Floor y=10 x 0..19; a one-way platform y=7 x 3..6; a "/" slope tile at (12, 9).
+	# Floor y=10 x 0..19; a one-way platform y=8 x 3..6 (two cells up from the floor nodes: with the default jump a body
+	# rises 81.6 px, which is 2.5 cells, so a climb of three through it is not a jump it can make); a "/" slope tile at (12, 9).
 	var map: TileMapLayer = _make_map()
 	for x in range(0, 20):
 		map.set_cell(Vector2i(x, 10), 0, Vector2i(0, 0))
 	for x in range(3, 7):
-		map.set_cell(Vector2i(x, 7), 0, Vector2i(1, 0))
+		map.set_cell(Vector2i(x, 8), 0, Vector2i(1, 0))
 	map.set_cell(Vector2i(12, 9), 0, Vector2i(2, 0))
 	var nav: Node = script.new()
 	nav.build_nav_graph(map)
-	ok = _check("a one-way tile reads jump_thru", nav.tile_state(4, 7), "jump_thru") and ok
+	ok = _check("a one-way tile reads jump_thru", nav.tile_state(4, 8), "jump_thru") and ok
 	ok = _check("a / slope tile reads slope_left", nav.tile_state(12, 9), "slope_left") and ok
 	ok = _check("a full tile reads solid", nav.tile_state(0, 10), "solid") and ok
 	ok = _check("an empty cell reads clear", nav.tile_state(0, 2), "clear") and ok
-	ok = _check("standing ON the one-way platform is a node", nav.graph_node_exists(4, 6), true) and ok
+	ok = _check("standing ON the one-way platform is a node", nav.graph_node_exists(4, 7), true) and ok
 	ok = _check("the floor UNDER the one-way platform keeps its headroom", nav.graph_node_exists(4, 9), true) and ok
-	ok = _check("dropping off the one-way platform is a fall_through link", _kind(nav, Vector2i(4, 6), Vector2i(4, 9)), "fall_through") and ok
-	ok = _check("jumping up through it from below is a jump link", _kind(nav, Vector2i(4, 9), Vector2i(4, 6)), "jump") and ok
+	ok = _check("dropping off the one-way platform is a fall_through link", _kind(nav, Vector2i(4, 7), Vector2i(4, 9)), "fall_through") and ok
+	ok = _check("jumping up through it from below is a jump link", _kind(nav, Vector2i(4, 9), Vector2i(4, 7)), "jump") and ok
 	ok = _check("solid ground gets no fall_through link", _kind(nav, Vector2i(10, 9), Vector2i(10, 12)), "") and ok
-	ok = _check("tile_has_state agrees", nav.tile_has_state(4, 7, "jump_thru"), true) and ok
+	ok = _check("tile_has_state agrees", nav.tile_has_state(4, 8, "jump_thru"), true) and ok
 	nav.free()
 	map.free()
 	return ok

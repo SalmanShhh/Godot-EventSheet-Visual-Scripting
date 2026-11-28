@@ -46,6 +46,7 @@ var debug_draw_graph: bool = false
 var debug_log: bool = false
 var watch_tile_edits: bool = false
 var build_budget_ms: float = 4.0
+var run_up_jumps: bool = true
 
 #region state
 ## The version written into an exported obstacle map, and the newest one this behaviour reads.
@@ -100,6 +101,18 @@ const LINK_PASS_COYOTE: int = 3
 const LINK_PASS_FALL_THROUGH: int = 4
 ## How many link passes there are; every cell gets each pass before the next one starts.
 const LINK_PASS_COUNT: int = 5
+## How many physics ticks a simulated jump is followed before it counts as never landing.
+const FLIGHT_TICKS: int = 240
+## The longest running start, in cells, a jump may ask for.
+const RUN_UP_CELLS: int = 6
+## Seconds a running start may take before the host gives up on it and just jumps.
+const RUN_UP_TIME_LIMIT: float = 4.0
+## A body's width and height are drawn in from the edge by this many pixels when it is checked against the tiles.
+const FLIGHT_SKIN: float = 1.0
+## What a flight that never lands over its cell is: shared, so a jump that cannot be made costs nothing to remember.
+const FLIGHT_NEVER: Dictionary = {"lands": false, "swept": [], "tops": []}
+## How many sets of movement numbers keep their flights before the oldest are dropped all at once.
+const FLIGHT_TABLES_KEPT: int = 8
 ## One link out of a cell in the search graph.
 class NavEdge extends RefCounted:
 	## The cell the link leads to.
@@ -110,6 +123,10 @@ class NavEdge extends RefCounted:
 	var cost: float = 1.0
 	## The id of the portal that made this link; -1 when it is not a portal link.
 	var portal_id: int = -1
+	## How many cells of running start the jump needs behind its takeoff cell; 0 for a jump from a standstill and for every other kind.
+	var run_up: int = 0
+	## True when the jump is flown holding the button the whole way (letting go early would shorten it too much to land).
+	var hold_jump: bool = false
 
 ## One stop on the active route.
 class NavWaypoint extends RefCounted:
@@ -121,6 +138,10 @@ class NavWaypoint extends RefCounted:
 	var cell: Vector2i = Vector2i.ZERO
 	## The id of the portal this stop enters; -1 when it is not a portal stop.
 	var portal_id: int = -1
+	## How many cells of running start the jump to this stop needs (0 for none).
+	var run_up: int = 0
+	## True when the jump to this stop is flown holding the button the whole way.
+	var hold_jump: bool = false
 
 ## One registered portal: a link between two spots that survives a regenerate.
 class NavPortal extends RefCounted:
@@ -397,6 +418,36 @@ var _link_double: bool = false
 var _link_double_reach: Vector2i = Vector2i.ONE
 ## How many cells a coyote jump may cover while links are made; 0 when there are none.
 var _link_coyote_cells: int = 0
+## Half the width and height of the body in pixels, for the flight of a jump.
+var _link_body_half: Vector2 = Vector2(11.0, 14.0)
+## The run speed a flight is simulated with, in pixels per second.
+var _link_speed: float = 200.0
+## How fast the body speeds up, in pixels per second squared; 0 when it reaches full speed at once.
+var _link_accel: float = 0.0
+## How fast the body slows down with no input, in pixels per second squared.
+var _link_decel: float = 0.0
+## The gravity a flight is simulated with.
+var _link_gravity: float = 980.0
+## The upward speed of a jump, as a positive number.
+var _link_jump: float = 400.0
+## The fastest the body may fall.
+var _link_fall_cap: float = 1000.0
+## What a released jump button leaves of the upward speed.
+var _link_cut: float = 0.45
+## Whether the drive lets go of the jump early to stop at the height a gap needs.
+var _link_variable: bool = true
+## The most cells of running start a jump may ask for; 0 when the body needs none.
+var _link_run_cap: int = 0
+## True when a jump is judged by flying it; false when a jump height or distance override sizes it by the old box.
+var _link_fly: bool = true
+## The flights worked out so far, keyed by (columns across, rows up or down, cells of running start).
+var _flights: Dictionary = {}
+## Which part of a running-start jump the host is in: 0 backing up along the runway, 1 running at the takeoff.
+var _run_phase: int = 0
+## Seconds spent on the current running-start jump.
+var _run_clock: float = 0.0
+## True on the tick a running-start jump should leave the ground.
+var _run_jump_due: bool = false
 ## The node the host keeps routing toward.
 var _follow_target: Node = null
 ## The point the current route leads to.
@@ -528,6 +579,9 @@ static var _goal_claims: Dictionary = {}
 # Map tags: tag -> the shared graph, obstacle edits, portals, hazards and platforms.
 ## Shared graph, obstacle edits, portals, hazards and platforms for each map tag.
 static var _shared_maps: Dictionary = {}
+# Flights already worked out: the numbers they were flown with -> (columns, rows, run, hold) -> flight.
+## Flights already worked out, kept for every agent: a table for each set of movement numbers.
+static var _flight_tables: Dictionary = {}
 #endregion
 
 #region signals
@@ -646,6 +700,9 @@ func path_wants_jump() -> bool:
 	if _path.is_empty() or _jumped_this_segment or host == null:
 		return false
 	var waypoint: NavWaypoint = _path[_path_index]
+	if waypoint.action == "jump" and waypoint.run_up > 0 and _path_index > 0:
+		# A jump that needs a running start is due only once the run has reached the takeoff.
+		return _run_jump_due
 	if waypoint.action == "jump" or waypoint.action == "double_jump":
 		return true
 	if waypoint.action == "coyote_jump":
@@ -1429,12 +1486,51 @@ func _riding_moving_platform() -> bool:
 			return true
 	return false
 
+## Steers a jump that needs a running start and says whether the jump is due this tick. The host
+## backs up along the runway behind the takeoff until it has the room the graph counted on, then
+## runs at the takeoff at full push and leaps as it crosses it. A wall or a ledge behind it, or a
+## run that takes too long, ends the backing up (or the run) and the jump goes ahead from there.
+## @ace_hidden
+func _steer_run_up(waypoint: NavWaypoint, delta: float) -> bool:
+	_run_jump_due = false
+	var takeoff: Vector2 = _path[_path_index - 1].world
+	var heading: float = signf(waypoint.world.x - takeoff.x)
+	if heading == 0.0:
+		return true
+	# The run is held to the stuck watchdog's patience like a platform wait.
+	_stuck_clock = 0.0
+	_best_waypoint_distance = INF
+	_run_clock += delta
+	var room: float = float(waypoint.run_up) * _tile_px()
+	var behind: float = (takeoff.x - host.global_position.x) * heading
+	if behind > room + _tile_px() * 2.0 or behind < -_tile_px() * 2.0:
+		# Nowhere near the runway: get to the takeoff first, the plain way.
+		_move_axis = clampf(behind * heading / 24.0, -1.0, 1.0)
+		_run_phase = 0
+		_run_clock = 0.0
+		return false
+	if _run_phase == 0:
+		if behind >= room - 4.0 or _run_clock >= RUN_UP_TIME_LIMIT * 0.5 or (host.is_on_wall() and behind > 0.0):
+			_run_phase = 1
+		else:
+			_move_axis = -heading
+			return false
+	# Running at the takeoff.
+	_move_axis = heading
+	if behind <= 2.0 or _run_clock >= RUN_UP_TIME_LIMIT:
+		_run_jump_due = true
+		return true
+	return false
+
 ## @ace_hidden
 func _advance_waypoint() -> void:
 	_jumped_this_segment = false
 	_jump_released = false
 	_second_jump_done = false
 	_dropped_this_segment = false
+	_run_phase = 0
+	_run_clock = 0.0
+	_run_jump_due = false
 	_best_waypoint_distance = INF
 	_stuck_clock = 0.0
 	_path_index += 1
@@ -1459,6 +1555,9 @@ func _finish_path() -> void:
 	_jumped_this_segment = false
 	_second_jump_done = false
 	_dropped_this_segment = false
+	_run_phase = 0
+	_run_clock = 0.0
+	_run_jump_due = false
 	_follow_target = null
 	_path_pending = false
 	_stuck_clock = 0.0
@@ -1572,6 +1671,8 @@ func _route(x: float, y: float, mode: String) -> void:
 		waypoint.cell = cells[index]
 		if index > 0:
 			waypoint.portal_id = edge.portal_id
+			waypoint.run_up = edge.run_up
+			waypoint.hold_jump = edge.hold_jump
 		if index > 0:
 			_path_cost += _edge_cost(cells[index - 1], edge)
 		_path.append(waypoint)
@@ -1592,6 +1693,9 @@ func _route(x: float, y: float, mode: String) -> void:
 	_jumped_this_segment = false
 	_second_jump_done = false
 	_dropped_this_segment = false
+	_run_phase = 0
+	_run_clock = 0.0
+	_run_jump_due = false
 	_best_waypoint_distance = INF
 	_stuck_clock = 0.0
 	if debug_log:
@@ -2735,6 +2839,51 @@ func _begin_links() -> void:
 		var cells: int = int((_link_reach_px.x + _run_speed() * _coyote_window() * 0.5) / _link_tile)
 		if cells > _link_reach.x:
 			_link_coyote_cells = cells
+	# The numbers a flown jump uses: the movement sibling's own, or the fallback driver's.
+	var movement: Node = _find_movement()
+	_link_fly = jump_height_override <= 0.0 and jump_distance_override <= 0.0
+	_link_speed = _run_speed()
+	_link_gravity = _drive_gravity()
+	_link_accel = 0.0
+	_link_decel = 0.0
+	_link_fall_cap = 1000.0
+	_link_cut = 0.45
+	_link_variable = variable_jump
+	if movement != null:
+		_link_jump = absf(float(movement.get("jump_velocity"))) if movement.get("jump_velocity") != null else absf(fallback_jump_velocity)
+		if movement.get("acceleration") != null:
+			_link_accel = maxf(float(movement.get("acceleration")), 0.0)
+		if movement.get("deceleration") != null:
+			_link_decel = maxf(float(movement.get("deceleration")), 0.0)
+		if movement.get("max_fall_speed") != null:
+			_link_fall_cap = float(movement.get("max_fall_speed"))
+		if movement.get("jump_cut_factor") != null:
+			_link_cut = float(movement.get("jump_cut_factor"))
+		_link_variable = variable_jump and movement.has_method("jump_released") and movement.get("variable_jump_height") != false
+	else:
+		_link_jump = absf(fallback_jump_velocity)
+	_link_body_half = _body_half_extents()
+	# How long a runway it takes to reach full speed; a body that gets there at once needs none.
+	_link_run_cap = 0
+	if run_up_jumps and _link_accel > 0.0:
+		_link_run_cap = clampi(int(ceil(_link_speed * _link_speed / (2.0 * _link_accel) / _link_tile)), 0, RUN_UP_CELLS)
+	# Flights depend on these numbers only, so every agent and every rebuild with the same ones shares the table.
+	var signature: String = "%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s" % [_link_tile, _link_speed, _link_accel, _link_decel, _link_gravity, _link_jump, _link_fall_cap, _link_cut, _link_variable, _link_body_half, _link_run_cap]
+	if not _flight_tables.has(signature):
+		if _flight_tables.size() >= FLIGHT_TABLES_KEPT:
+			_flight_tables.clear()
+		_flight_tables[signature] = {}
+	_flights = _flight_tables[signature]
+
+## Half the width and height of the host body in pixels: its collision shapes, or a body a little
+## smaller than a cell when it has none.
+## @ace_hidden
+func _body_half_extents() -> Vector2:
+	var tile: float = _tile_px()
+	if host != null and not host.find_children("*", "CollisionShape2D", true, false).is_empty():
+		var bounds: Rect2 = _node_shape_bounds(host)
+		return Vector2(maxf(bounds.size.x * 0.5, 1.0), maxf(bounds.size.y * 0.5, 1.0))
+	return Vector2(tile * 0.35, tile * 0.45)
 
 ## Whether a link pass has anything to do with the settings read by Begin Links.
 ## @ace_hidden
@@ -2772,11 +2921,22 @@ func _link_cell(link_pass: int, cell: Vector2i) -> void:
 				if absi(dx) <= 1 and absi(dy) <= 1:
 					continue
 				var to: Vector2i = cell + Vector2i(dx, dy)
-				if not _nodes.has(to) or not _arc_clear(cell, to, _blocking_down if dy > 0 else _blocking):
+				if not _nodes.has(to):
 					continue
 				var kind: String = "fall" if dy > 0 and absi(dx) <= 2 else "jump"
+				# A drop is a walk off the edge, judged by the chord. A jump is flown with the
+				# movement's own numbers, from a standstill or from the running start it has room for.
+				var plan: Vector2i = Vector2i.ZERO
+				if kind == "jump" and _link_fly:
+					plan = _jump_plan(cell, dx, dy)
+					if plan.x < 0:
+						continue
+				elif not _arc_clear(cell, to, _blocking_down if dy > 0 else _blocking):
+					continue
 				var span: float = Vector2(float(dx), float(dy)).length()
-				_add_edge(cell, to, kind, span * (1.5 if kind == "jump" else 1.1))
+				var link: NavEdge = _add_edge(cell, to, kind, span * (1.5 if kind == "jump" else 1.1) + float(plan.x) * 0.25)
+				link.run_up = plan.x
+				link.hold_jump = plan.y == 1
 	elif link_pass == LINK_PASS_DOUBLE_JUMP:
 		# DOUBLE JUMP links: a sibling with two jumps reaches about twice as high and 1.7x as far;
 		# only targets the single jump cannot reach get one.
@@ -2811,6 +2971,145 @@ func _link_cell(link_pass: int, cell: Vector2i) -> void:
 			if _nodes.has(below) and depth > 1:
 				_add_edge(cell, below, "fall_through", float(depth) * 1.1)
 				break
+
+## How a jump from this cell is made, as (cells of running start, 1 when the button is held the
+## whole way else 0), or (-1, 0) when it cannot be made. The runway is the row of walkable cells
+## behind the takeoff, away from the landing. A jump can be made when the body, flown through empty
+## air with the movement's own numbers, comes down over the landing cell, and either its flight
+## passes through free cells or the coarse chord between the two cells does (a body pressed against
+## a wall still slides up it, which a flight through empty air cannot show, so the chord gets the
+## last word on obstacles). From a standstill comes first, then with more run; at each, the jump
+## the drive makes (letting go early at the height the gap needs) comes before holding it all the way.
+## @ace_hidden
+func _jump_plan(cell: Vector2i, dx: int, dy: int) -> Vector2i:
+	var runway: int = 0
+	if dx != 0 and _link_run_cap > 0:
+		var behind: int = -signi(dx)
+		while runway < _link_run_cap and _nodes.has(cell + Vector2i(behind * (runway + 1), 0)):
+			runway += 1
+	var chord_clear: int = -1
+	for run in range(runway + 1):
+		for hold in range(2):
+			if hold == 1 and not _link_variable:
+				continue
+			var flight: Dictionary = _flight(dx, dy, run, hold == 1)
+			if not bool(flight["lands"]):
+				continue
+			if chord_clear < 0:
+				chord_clear = 1 if _arc_clear(cell, cell + Vector2i(dx, dy), _blocking_down if dy > 0 else _blocking) else 0
+			if chord_clear == 1 or _flight_clear(cell, flight):
+				return Vector2i(run, hold)
+	return Vector2i(-1, 0)
+
+## Whether the tiles around a takeoff cell leave a flown jump alone: no solid cell in the way of
+## the body, and no platform to land on before the one the jump is aimed at.
+## @ace_hidden
+func _flight_clear(cell: Vector2i, flight: Dictionary) -> bool:
+	for offset: Vector2i in (flight["swept"] as Array):
+		if _blocking.has(cell + offset):
+			return false
+	for offset: Vector2i in (flight["tops"] as Array):
+		if _blocking_down.has(cell + offset):
+			return false
+	return true
+
+## Flies one jump over empty air with the numbers the movement sibling really uses (or the fallback
+## driver's): the body leaves the middle of a cell with `run` cells of running start behind it and
+## steers at the middle of the landing cell the way the drive does (a full push until it is within
+## 24 px, then easing off), the jump letting go early when the drive would (unless `hold` keeps the
+## button down all the way). Returns whether it lands over the landing cell, the cells the body
+## passed through (relative to the takeoff cell) and the cells whose top it came down through on
+## the way. The flight does not depend on the level, so every jump of the same size shares one.
+## @ace_hidden
+func _flight(dx: int, dy: int, run: int, hold: bool) -> Dictionary:
+	var key: Vector3i = Vector3i(dx, dy, run * 2 + (1 if hold else 0))
+	if _flights.has(key):
+		return _flights[key]
+	var tile: float = _link_tile
+	# What no flight can do, whatever the numbers: climb past the top of the jump, or cross more
+	# ground than top speed covers in the air time that climb leaves. Worked out in one line each,
+	# so a jump that is out of reach costs nothing to rule out.
+	var apex: float = _link_jump * _link_jump / (2.0 * _link_gravity)
+	var air_time: float = _link_jump / _link_gravity + sqrt(maxf(2.0 * (apex + float(dy) * tile) / _link_gravity, 0.0))
+	if float(-dy) * tile >= apex or absf(float(dx)) * tile - tile * 0.5 > _link_speed * air_time:
+		_flights[key] = FLIGHT_NEVER
+		return FLIGHT_NEVER
+	var half: Vector2 = _link_body_half
+	var step: float = 1.0 / 60.0
+	var side: float = float(signi(dx))
+	var vx: float = 0.0
+	if run > 0 and side != 0.0:
+		vx = side * (_link_speed if _link_accel <= 0.0 else minf(_link_speed, sqrt(2.0 * _link_accel * float(run) * tile)))
+	var vy: float = -_link_jump
+	var pos: Vector2 = Vector2(0.0, tile * 0.5 - half.y)
+	var target: Vector2 = Vector2(float(dx) * tile, float(dy) * tile)
+	var land_y: float = target.y + tile * 0.5
+	# The drive lets go of the jump when the upward speed left is just what the climb still needs.
+	var release: float = 0.0
+	if _link_variable and not hold:
+		release = sqrt(2.0 * _link_gravity * (maxf(pos.y - target.y, 0.0) + 20.0))
+		if release >= _link_jump * 0.85:
+			release = 0.0
+	var released: bool = false
+	var trace: PackedVector2Array = PackedVector2Array()
+	var lands: bool = false
+	var feet: float = pos.y + half.y
+	var give_up_y: float = maxf(land_y, tile * 0.5) + tile
+	for tick in range(FLIGHT_TICKS):
+		var gap: float = target.x - pos.x
+		var axis: float = clampf(gap / 24.0, -1.0, 1.0) if absf(gap) > 2.0 else 0.0
+		if _link_accel <= 0.0:
+			vx = axis * _link_speed
+		else:
+			vx = move_toward(vx, axis * _link_speed, (_link_accel if axis != 0.0 else _link_decel) * step)
+		vy = minf(vy + _link_gravity * step, _link_fall_cap)
+		if release > 0.0 and not released and vy < 0.0 and absf(vy) <= release:
+			released = true
+			vy *= _link_cut
+		pos += Vector2(vx, vy) * step
+		var new_feet: float = pos.y + half.y
+		if vy > 0.0 and feet < land_y and new_feet >= land_y:
+			# Down through the landing line: it comes to rest here, over the landing cell or not.
+			pos.y = land_y - half.y
+			lands = absf(pos.x - target.x) <= tile * 0.5
+			trace.append(pos)
+			break
+		trace.append(pos)
+		if vy > 0.0 and new_feet > give_up_y:
+			break
+		feet = new_feet
+	if not lands:
+		_flights[key] = FLIGHT_NEVER
+		return FLIGHT_NEVER
+	var swept: Dictionary = {}
+	var tops: Dictionary = {}
+	var before: float = tile * 0.5
+	for index in range(trace.size()):
+		var at: Vector2 = trace[index]
+		_flight_cells(at, half, tile, swept)
+		var after: float = at.y + half.y
+		if after > before and index < trace.size() - 1:
+			# Any cell top the feet pass on the way down is a platform it would stop on.
+			var first_column: int = floori((at.x - half.x + FLIGHT_SKIN) / tile + 0.5)
+			var last_column: int = floori((at.x + half.x - FLIGHT_SKIN) / tile + 0.5)
+			for row in range(floori(before / tile + 0.5) + 1, floori(after / tile + 0.5) + 1):
+				for column in range(first_column, last_column + 1):
+					tops[Vector2i(column, row)] = true
+		before = after
+	var result: Dictionary = {"lands": true, "swept": swept.keys(), "tops": tops.keys()}
+	_flights[key] = result
+	return result
+
+## Adds the cells the body overlaps at a position to a set (drawn in by the skin, so resting against a wall is not hitting it).
+## @ace_hidden
+func _flight_cells(pos: Vector2, half: Vector2, tile: float, into: Dictionary) -> void:
+	var first_column: int = floori((pos.x - half.x + FLIGHT_SKIN) / tile + 0.5)
+	var last_column: int = floori((pos.x + half.x - FLIGHT_SKIN) / tile + 0.5)
+	var first_row: int = floori((pos.y - half.y + FLIGHT_SKIN) / tile + 0.5)
+	var last_row: int = floori((pos.y + half.y - FLIGHT_SKIN) / tile + 0.5)
+	for row in range(first_row, last_row + 1):
+		for column in range(first_column, last_column + 1):
+			into[Vector2i(column, row)] = true
 
 ## True when a build step has used up its share of the frame (a zero deadline means no limit).
 ## @ace_hidden
@@ -3148,9 +3447,14 @@ func _physics_process(delta: float) -> void:
 		wants_jump = not host.is_on_floor() and _floor_grace >= _coyote_window() * 0.5
 	if not wants_jump and action == "walk":
 		wants_jump = target.y < host.global_position.y - 8.0 and absf(dx) < tile * 1.5
+	# A jump that needs a running start: back up along the runway, run at the takeoff, and leap as the
+	# body crosses it, so it leaves the ground with the speed the graph counted on.
+	var runs_up: bool = action == "jump" and waypoint.run_up > 0 and not _jumped_this_segment and _path_index > 0 and not _portal_traversing
+	if runs_up:
+		wants_jump = _steer_run_up(waypoint, delta)
 	# Strict jump positioning: walk onto the exact takeoff spot before leaping (relaxed
 	# leaps the moment the jump leg starts - faster, but looser on tight arcs).
-	if (action == "jump" or action == "double_jump") and jump_positioning == "strict" and not _jumped_this_segment and _path_index > 0:
+	if (action == "jump" or action == "double_jump") and jump_positioning == "strict" and not _jumped_this_segment and _path_index > 0 and not runs_up:
 		var takeoff_dx: float = _path[_path_index - 1].world.x - host.global_position.x
 		if absf(takeoff_dx) > 4.0:
 			_move_axis = clampf(takeoff_dx / 24.0, -1.0, 1.0)
@@ -3222,7 +3526,7 @@ func _physics_process(delta: float) -> void:
 			# when there is clear headroom, and never on a double or coyote jump (both need
 			# every bit of air time the jump has).
 			var full_rise: float = absf(float(movement.get("jump_velocity"))) if movement != null else absf(fallback_jump_velocity)
-			if _jump_release_velocity >= full_rise * 0.85 or action == "double_jump" or action == "coyote_jump":
+			if _jump_release_velocity >= full_rise * 0.85 or action == "double_jump" or action == "coyote_jump" or waypoint.hold_jump:
 				_jump_release_velocity = 0.0
 		# Double jump: the second leap fires at the top of the first.
 		var second_jump: bool = action == "double_jump" and _jumped_this_segment and not _second_jump_done and not host.is_on_floor() and host.velocity.y >= -40.0
@@ -3283,6 +3587,9 @@ func regenerate_nav_graph() -> void:
 
 func set_build_budget(milliseconds: float) -> void:
 	build_budget_ms = milliseconds
+
+func set_run_up_jumps(enabled: bool) -> void:
+	run_up_jumps = enabled
 
 func regenerate_region(x: float, y: float, width: float, height: float) -> void:
 	if not _has_grid():
@@ -4043,6 +4350,10 @@ func graph_node_connection_kind(gx: int, gy: int, index: int) -> String:
 func graph_node_connection_cost(gx: int, gy: int, index: int) -> float:
 	var links: Array = _edges.get(Vector2i(gx, gy), [])
 	return _edge_cost(Vector2i(gx, gy), links[index] as NavEdge) if index >= 0 and index < links.size() else 0.0
+
+func graph_node_connection_run_up(gx: int, gy: int, index: int) -> int:
+	var links: Array = _edges.get(Vector2i(gx, gy), [])
+	return (links[index] as NavEdge).run_up if index >= 0 and index < links.size() else 0
 
 func graph_node_connection_target(gx: int, gy: int, index: int) -> Vector2:
 	var links: Array = _edges.get(Vector2i(gx, gy), [])
