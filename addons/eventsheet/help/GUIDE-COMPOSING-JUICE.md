@@ -372,7 +372,7 @@ card's **Timing** foldout and set **Repeat** (how many buzzes) and **Every** (se
 one buzz to the start of the next, so keep it longer than **For** to leave a gap). The badge and the
 list's length count every buzz. **Stop**, **Restore** and leaving the scene end the pattern and quiet
 the motors the player started; a phone cannot be told to stop, so its last buzz finishes. In a script,
-call `vibrate()` again on a timer.
+call `vibrate_pattern(times, every, weak, strong, seconds, controller)`, which takes the same Repeat (`times`) and Every (`every`) and ends the same way. `controller` is `EVERY_CONTROLLER` (the default), a controller number, or `LAST_USED_CONTROLLER`. `times` of 1 is one buzz, exactly `vibrate()`; an `every` shorter than `seconds` lets the buzzes overlap; an `every` of 0 buzzes once a frame. A second call while a pattern runs starts another pattern beside it, so a call made every frame piles up: call it once when the hit lands.
 
 ---
 

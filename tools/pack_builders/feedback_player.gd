@@ -941,6 +941,8 @@ static func _player_lines() -> PackedStringArray:
 		"",
 		"## Tokens of the plays still running, so a stale play can tell it was stopped.",
 		"var _live: Array[int] = []",
+		"## The tokens of the vibrate_pattern calls still to buzz, apart from _live on purpose: a pattern from code is no walk.",
+		"var _pattern_runs: Array[int] = []",
 		"## The token handed to the next play that starts.",
 		"var _next_token: int = 0",
 		"## True while the play is paused on a Pause card.",
@@ -1023,7 +1025,7 @@ static func _player_lines() -> PackedStringArray:
 		"## Whether a walk is still the one it started as. A step that comes back after its token has left the",
 		"## live list stops there, which is the whole of stopping.",
 		"func _alive(token: int) -> bool:",
-		"\treturn _live.has(token)",
+		"\treturn _live.has(token) or _pattern_runs.has(token)",
 		"",
 		"## Whether a new play may start now - the cooldown and the \"can play while playing\" answer in one",
 		"## place, so every door into the runner refuses for the same reasons.",
@@ -1265,15 +1267,19 @@ static func _player_lines() -> PackedStringArray:
 		"## The repeats a card asks for after its first play, pass k a time k * Every after the first on the stopwatch",
 		"## that was started with it, so a pass that came late does not push the ones after it.",
 		"func _repeat_rest(card: Dictionary, at_strength: float, token: int, started: MomentRunner.Stopwatch) -> void:",
-		"\tvar repeat: int = maxi(int(card.get(\"repeat\", 1)), 1)",
-		"\tvar interval: float = maxf(float(card.get(\"interval\", 0.0)), 0.0)",
-		"\tfor pass_index: int in range(1, repeat):",
+		"\tawait _pulse_rest(int(card.get(\"repeat\", 1)), float(card.get(\"interval\", 0.0)), token, started, func() -> void: _do_step(card, at_strength))",
+		"",
+		"## The passes after the first of anything that repeats, a card's Repeat or a typed pattern alike: `pulse` is called",
+		"## for pass k a time k * `interval` after the first on `started`, and not at all once the token is no longer alive.",
+		"func _pulse_rest(times: int, interval: float, token: int, started: MomentRunner.Stopwatch, pulse: Callable) -> void:",
+		"\tinterval = maxf(interval, 0.0)",
+		"\tfor pass_index: int in range(1, maxi(times, 1)):",
 		"\t\tif not _alive(token):",
 		"\t\t\treturn",
 		"\t\tawait started.until(float(pass_index) * MomentRunner.seconds_of(interval))",
 		"\t\tif not _alive(token):",
 		"\t\t\treturn",
-		"\t\t_do_step(card, at_strength)",
+		"\t\tpulse.call()",
 		"",
 		"## Whether a card is felt at all: its enable box, its chance, and the strength window it asked for.",
 		"func _card_runs(card: Dictionary, at_strength: float, index: int) -> bool:",
@@ -3129,6 +3135,31 @@ func vibrate_controller(controller: int, weak: float = 0.5, strong: float = 0.5,
 	if OS.has_feature("mobile"):
 		Input.vibrate_handheld(int(seconds * 1000.0), maxf(weak, strong))
 
+## The controller number that means the controller the player touched last, as vibrate_last_used chooses it.
+const LAST_USED_CONTROLLER: int = -2
+
+## Rumbles in a pattern: `times` buzzes, each starting `every` seconds after the start of the one before (the same
+## Repeat and Every a Vibrate card has), each at the weak and strong strengths for `seconds`. Buzzes may overlap when
+## `every` is shorter than `seconds`; with `every` at 0 they come one a frame. A `times` of 1 or less is one buzz, exactly
+## what vibrate does. `controller` is EVERY_CONTROLLER, a controller number, or LAST_USED_CONTROLLER. A phone buzzes at
+## the stronger strength and the web does nothing. Stop, Restore and leaving the scene end the pattern and quiet the
+## motors this player started. A second call while one runs starts a second pattern beside it.
+## @ace_hidden
+func vibrate_pattern(times: int, every: float, weak: float, strong: float, seconds: float, controller: int = EVERY_CONTROLLER) -> void:
+	var pulse: Callable = func() -> void:
+		if controller == LAST_USED_CONTROLLER:
+			vibrate_last_used(weak, strong, seconds)
+		else:
+			vibrate_controller(controller, weak, strong, seconds)
+	pulse.call()
+	if times <= 1:
+		return
+	_next_token += 1
+	var token: int = _next_token
+	_pattern_runs.append(token)
+	await _pulse_rest(times, every, token, MomentRunner.stopwatch(self, MomentRunner.CLOCK_GAME), pulse)
+	_pattern_runs.erase(token)
+
 ## The controllers this player set rumbling; a player never stops another's motors.
 var _rumbling: Array[int] = []
 ## When the latest rumble this player started ends, in seconds of the game clock.
@@ -3143,6 +3174,7 @@ func _note_rumble(device: int, seconds: float) -> void:
 ## Stops the motors this player set going that are still running, so a Stop, a Restore or leaving the scene in
 ## the middle of a pattern of buzzes does not leave the last one humming. A phone cannot be told to stop.
 func _stop_rumble() -> void:
+	_pattern_runs.clear()
 	if float(Time.get_ticks_msec()) / 1000.0 < _rumble_ends_at:
 		for device: int in _rumbling:
 			if Input.get_connected_joypads().has(device):

@@ -265,7 +265,7 @@ func _on_death() -> void:
 | Play Player | `play_player(other, at_strength)` | `JuicePlayer` |
 | Sound, Stop Sound | `play_sound(stream, volume_db, pitch, bus, heard_from_here, label)`, `stop_sound(label, fade)` | `JuicePlayer` |
 | Fade Bus | `fade_bus(bus, to_db, seconds)` | `JuicePlayer` |
-| Vibrate | `vibrate(weak, strong, seconds)` | `JuicePlayer` |
+| Vibrate | `vibrate(weak, strong, seconds)`, `vibrate_controller(controller, weak, strong, seconds)`, `vibrate_last_used(weak, strong, seconds)`, `vibrate_pattern(times, every, weak, strong, seconds, controller)` | `JuicePlayer` |
 | Particles | `restart_particles(node)`, `start_particles(node)`, `stop_particles(node)` | `JuicePlayer` |
 | Animation, Sprite Animation | `play_animation(player, animation, seconds)`, `play_sprite_animation(sprite, animation, seconds)` | `JuicePlayer` |
 | Show Or Hide | `show_node(node)`, `hide_node(node)`, `show_node_for(node, seconds)` | `JuicePlayer` |

@@ -19,7 +19,7 @@ const TEST_NAME: String = "juice_typed_functions"
 
 ## Every function this build adds to the Juice Player, which the picker must not list a second time.
 const PLAYER_FUNCTIONS: PackedStringArray = [
-	"tween_property", "emit_signal_on", "emit_juice_signal", "play_player", "play_sound", "stop_sound", "fade_bus", "vibrate",
+	"tween_property", "emit_signal_on", "emit_juice_signal", "play_player", "play_sound", "stop_sound", "fade_bus", "vibrate", "vibrate_pattern",
 	"restart_particles", "start_particles", "stop_particles", "play_animation", "play_sprite_animation", "show_node",
 	"hide_node", "show_node_for", "call_method", "spawn_scene", "push_away_from", "push_along_motion", "push_towards",
 	"force_for_a_time", "gravity_for_a_time", "freeze_body", "pop", "fade_node", "focus_control", "count_label_to",
@@ -132,6 +132,7 @@ static func _parse_pins() -> bool:
 		"\tplayer.stop_sound(\"hit\", 0.2)",
 		"\tplayer.fade_bus(\"Master\", -12.0, 0.3)",
 		"\tplayer.vibrate(0.5, 0.5, 0.2)",
+		"\tplayer.vibrate_pattern(3, 0.3, 0.5, 0.5, 0.1, JuicePlayer.LAST_USED_CONTROLLER)",
 		"\tplayer.restart_particles(node)",
 		"\tplayer.start_particles(node)",
 		"\tplayer.stop_particles(node)",
