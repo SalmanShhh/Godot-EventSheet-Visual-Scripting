@@ -22,6 +22,7 @@ The work not yet released is listed first, under `[Unreleased]`. Each released v
 
 ### Fixed
 
+- **A repeating card's second pass no longer comes early on the first play.** A card with Repeat 3 and Every 0.5 could start its second pass about 0.37 seconds after the first, once, the first time the scene played it, and 0.5 seconds apart from then on. The game's own timer is credited the whole length of the frame it was made in, so a slow frame (the one that loaded the scene) was counted as time already waited. Waits of a Juice Player and a moment now count from the instant they are asked for, and every pass of a repeating card is measured from the first pass, so pass k starts k times Every after it, to within one frame, with no drift at a low or uneven frame rate. A card with no Repeat plays as before.
 - **An old moment file's help matches the cards it shows.** The line above its steps still listed verb words (shake, hitstop and the rest) to type into a dictionary; it now says what you see, one card per thing that happens, and that the first edit turns the file into a Juice list with the same path. The class and the file format are unchanged.
 
 ## Releases

@@ -21,7 +21,7 @@ extends RefCounted
 #                  happened and whoever is watching.
 #
 # PLAIN GDSCRIPT, AND NOT THE PLUGIN'S. Nothing here touches an editor, a sheet, or any class the
-# plugin declares. It allocates nothing per frame - a wait is one timer per step, and the strength
+# plugin declares. It allocates nothing per frame - a wait looks once a frame while it is open, and the strength
 # maths is arithmetic - so a moment costs the same on a phone and in a browser as it does on a
 # desktop.
 
@@ -97,13 +97,93 @@ static func then(host: Node, seconds: float, clock: String = CLOCK_GAME) -> Sign
 static func hold(host: Node, longest: float, delay: float, clock: String = CLOCK_GAME) -> Signal:
 	return wait(host, maxf(longest, 0.0) + maxf(delay, 0.0), clock)
 ## The one wait the three words go through. A zero wait is still a wait of one frame, which is what
-## makes a Hold a beat rather than a no-op.
+## makes a Hold a beat rather than a no-op. A longer wait is measured from the moment it was asked for
+## (see Stopwatch), so a slow frame that happened BEFORE the ask can never shorten it.
 static func wait(host: Node, seconds: float, clock: String = CLOCK_GAME) -> Signal:
 	var tree: SceneTree = _tree(host)
 	if tree == null:
 		push_warning("Moment: a step asked to wait with no scene tree to wait in - the wait was skipped.")
 		return Signal()
-	return tree.create_timer(maxf(seconds, 0.0), true, false, clock == CLOCK_REAL).timeout
+	if seconds <= 0.0:
+		return tree.create_timer(0.0, true, false, clock == CLOCK_REAL).timeout
+	return Stopwatch.new(tree, clock == CLOCK_REAL).until(seconds)
+## A clock that starts the moment it is made, for a run of waits that must all be measured from ONE start:
+## the passes of a repeating card, each one `every` seconds after the first with no drift. The game clock
+## follows the time scale and the real clock does not; neither stops while the tree is paused. A scene
+## tree's own timer is credited the whole length of the frame it is made in, so after a slow frame (a first
+## play loading what it needs) it fires early by that much. This one counts the time since it was made, so
+## it cannot. It looks once a frame, and only while a wait is open.
+static func stopwatch(host: Node, clock: String = CLOCK_GAME) -> Stopwatch:
+	return Stopwatch.new(_tree(host), clock == CLOCK_REAL)
+## The counting behind stopwatch(). `tick` is the whole of it, so a test can drive it with chosen frame lengths.
+class Stopwatch:
+	extends RefCounted
+	## How early, in seconds, a frame may land and still count as reaching the time: the clock reads a few
+	## thousandths either side, and a pass that falls on a frame should not wait for the next one.
+	const REACHED_WITHIN: float = 0.002
+	## Said when the open wait is reached.
+	signal reached
+	## Seconds of this clock counted since it was made.
+	var elapsed: float = 0.0
+	var _real: bool = false
+	var _tree: SceneTree = null
+	var _last_usec: int = 0
+	var _goal: float = -1.0
+	var _watching: bool = false
+	# What the tree calls each frame while a wait is open. The lambda holds this object, so a wait nobody else keeps
+	# is not freed while it is open; it is let go the moment the wait ends, so nothing is kept after.
+	var _hook: Callable = Callable()
+
+
+	func _init(tree: SceneTree, real: bool) -> void:
+		_tree = tree
+		_real = real
+		_last_usec = Time.get_ticks_usec()
+
+
+	## Counts `wall_seconds` of real time, which is worth `wall_seconds * time_scale` on the game clock.
+	func tick(wall_seconds: float, time_scale: float = 1.0) -> void:
+		elapsed += maxf(wall_seconds, 0.0) * (1.0 if _real else maxf(time_scale, 0.0))
+		if _goal >= 0.0 and elapsed + REACHED_WITHIN >= _goal:
+			_goal = -1.0
+			# The local keeps this object alive through the emit, and the member is free for the next wait to set.
+			var done: Callable = _hook
+			_hook = Callable()
+			if _watching:
+				_watching = false
+				_tree.process_frame.disconnect(done)
+			reached.emit()
+
+
+	## A signal that fires once the clock has counted `seconds` since it was made, and never before the next
+	## frame. A time that has passed already fires with the timer of a zero wait. One wait is open at a time.
+	func until(seconds: float) -> Signal:
+		if _tree != null:
+			_count_up_to_now()
+		_goal = seconds
+		if _tree == null:
+			return Signal(self, "reached")
+		if elapsed + REACHED_WITHIN >= _goal:
+			_goal = -1.0
+			return _tree.create_timer(0.0, true, false, _real).timeout
+		if not _watching:
+			_watching = true
+			_hook = func() -> void: _on_frame()
+			_tree.process_frame.connect(_hook)
+		return Signal(self, "reached")
+
+
+	func _count_up_to_now() -> void:
+		var now: int = Time.get_ticks_usec()
+		elapsed += float(now - _last_usec) / 1000000.0 * (1.0 if _real else maxf(Engine.time_scale, 0.0))
+		_last_usec = now
+
+
+	func _on_frame() -> void:
+		var now: int = Time.get_ticks_usec()
+		var wall: float = float(now - _last_usec) / 1000000.0
+		_last_usec = now
+		tick(wall, Engine.time_scale)
 ## The strength a play really has once the distance has been paid for: full strength with no range
 ## and no place, less the further away the moment happened, and nothing at all past the edge.
 ##
