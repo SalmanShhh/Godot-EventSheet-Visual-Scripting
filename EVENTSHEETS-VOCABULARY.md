@@ -2074,22 +2074,26 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Is At Island** - True while the agent stands on a one-node platform.
 - **Is On Same Platform** (`target: Node`) - True when the agent could WALK to the node - no jump or fall needed (slopes and stairs count).
 - **Is Position On Same Platform** (`x: float, y: float`) - True when the agent could WALK to a world position - no jump or fall needed.
-- **Tile Has State** (`gx: int, gy: int, state: String`) - True when a cell has the given state. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT.
-- **Tile Has State At** (`x: float, y: float, state: String`) - True when the cell under a world position has the given state. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT.
+- **Tile Has State** (`gx: int, gy: int, state: String`) - True when a cell has the given state. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT, STATE_JUMP_THRU_SLOPE_LEFT, STATE_JUMP_THRU_SLOPE_RIGHT.
+- **Tile Has State At** (`x: float, y: float, state: String`) - True when the cell under a world position has the given state. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT, STATE_JUMP_THRU_SLOPE_LEFT, STATE_JUMP_THRU_SLOPE_RIGHT.
 - **Graph Node Exists** (`gx: int, gy: int`) - True when a cell is a standable node of the graph.
 - **Graph Node Exists At** (`x: float, y: float`) - True when the cell under a world position is a standable node.
 - **Is Ledge Node** (`gx: int, gy: int`) - True when a node is the edge of its platform (left, right or both).
 - **Is Position Hazardous** (`x: float, y: float`) - True when a world position is inside any hazard.
 - **Is At Portal** - True while the agent is held at a portal entrance by Pause At Portal.
 - **Is Traversing Portal** - True while a gradual portal is moving the agent.
+- **Is Waiting For Crusher** - True while the agent holds still at a safe spot for a crusher to get out of its way.
 - **Is Path Pending**
+- **Is Building Nav Graph** - True while the nav graph is still being built a few milliseconds per frame (see Build Budget Ms). A route asked for meanwhile waits, and On Nav Graph Built fires when the graph is done.
 - **Is In Hazard**
 - **Has Path**
 - **Path Wants Jump**
 
 #### Actions
 - **Build Nav Graph From Tilemap** (`tilemap: Node`) - Scans a TileMapLayer's physics tiles into the navigation graph: standable cells become nodes, adjacent cells (one step up or down - stairs and tile slopes) become WALK links, and jump arcs / fall drops connect the rest, sized to the sibling PlatformerMovement's real jump. One-way tiles become jump-through platforms an agent can drop through. Call once on ready; Regenerate after level edits. Fires On Nav Graph Built.
-- **Regenerate Nav Graph** - Rebuilds the graph from the same map (after runtime tile edits, Set Tile State or Scan Collision Bodies).
+- **Regenerate Nav Graph** - Rebuilds the graph from the same map (after runtime tile edits, Set Tile State or Scan Collision Bodies). A build that is still running starts over, so the graph always matches the map as it stands now.
+- **Set Build Budget** (`milliseconds: float`) - How many milliseconds of each physics frame a nav graph build may use. A level too big to build in that time builds a few milliseconds per frame (Is Building Nav Graph is true meanwhile, Build Progress says how far it is, and On Nav Graph Built fires once at the end); a small one is done inside the Build Nav Graph call. 0 builds everything in one call.
+- **Set Run Up Jumps** (`enabled: bool`) - On (default): a jump that only lands with a running start is planned, and the agent backs up along the runway behind the takeoff, runs at it and leaps. Off: every jump leaves from a standstill, so only gaps a standing jump clears are crossed. Regenerate Nav Graph afterwards.
 - **Find Path To** (`x: float, y: float, mode: String`) - Routes to a world position and starts moving. Mode "reach" fails (On Path Failed) when the spot itself is unreachable; "nearest" never fails on a cut-off spot - it goes as close as it can get. Fires On Path Found / On Path Failed. The words for mode are the constants MODE_NEAREST, MODE_REACH.
 - **Find Path To Node** (`target: Node, mode: String`) - Routes to another node's position AND keeps following it: the route auto-refreshes every Repath Interval once the node has moved Repath Threshold pixels (firing On Repath) - one call chases forever. Stop Pathfinding ends the follow. The words for mode are the constants MODE_NEAREST, MODE_REACH.
 - **Stop Pathfinding** - Clears the path (and any patrol, Jump Toward or portal in progress) and releases the movement pack back to the keyboard (ai_controlled off).
@@ -2123,8 +2127,8 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Multi Agent Avoidance** (`enabled: bool`) - On: routes pay extra for cells other agents stand on or are about to walk, so a pack fans out over different ways.
 - **Set Separation Setting** (`setting: String, value: float`) - Changes an idle separation setting: distance (personal space in pixels, 0 = off), cooldown (seconds of rest after giving up) or give_up_time (seconds of trying before resting). The words for setting are the constants SETTING_DISTANCE, SETTING_COOLDOWN, SETTING_GIVE_UP_TIME.
 - **Create Obstacle Map** (`width: int, height: int, cell_size: float`) - Starts an empty map with no TileMapLayer: Width x Height cells of Cell Size pixels from the world origin, every cell clear. Fill it with Set Tile State or Scan Collision Bodies, then Regenerate Nav Graph.
-- **Set Tile State** (`gx: int, gy: int, state: String`) - Overrides one cell of the map: solid, clear, jump_thru (a one-way platform), slope_left (rises to the right) or slope_right (rises to the left). Overrides survive Regenerate; call Regenerate Nav Graph after a batch of them. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT.
-- **Set Tile State At** (`x: float, y: float, state: String`) - Set Tile State for the cell under a world position. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT.
+- **Set Tile State** (`gx: int, gy: int, state: String`) - Overrides one cell of the map: solid, clear, jump_thru (a one-way platform), slope_left (rises to the right), slope_right (rises to the left), or jump_thru_slope_left / jump_thru_slope_right (the same slopes, one-way: walked from above, passed from below, dropped through). Overrides survive Regenerate; call Regenerate Nav Graph after a batch of them. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT, STATE_JUMP_THRU_SLOPE_LEFT, STATE_JUMP_THRU_SLOPE_RIGHT.
+- **Set Tile State At** (`x: float, y: float, state: String`) - Set Tile State for the cell under a world position. The words for state are the constants STATE_SOLID, STATE_CLEAR, STATE_JUMP_THRU, STATE_SLOPE_LEFT, STATE_SLOPE_RIGHT, STATE_JUMP_THRU_SLOPE_LEFT, STATE_JUMP_THRU_SLOPE_RIGHT.
 - **Scan Collision Bodies** (`root: Node`) - Marks every cell covered by the StaticBody2D shapes under a node as solid (one-way shapes as jump-through) - for levels built from bodies instead of tiles. Needs a grid first (Build Nav Graph From Tilemap or Create Obstacle Map); Regenerate Nav Graph afterwards.
 - **Clear Nav Graph** - Drops the graph, the obstacle map and every tile override (portals and hazards stay registered), stops the agent and fires On Nav Graph Cleared.
 - **Load Obstacle Map JSON** (`json: String`) - Rebuilds the map and graph from a string Obstacle Map JSON produced - a saved or pre-baked level, no TileMapLayer needed.
@@ -2149,6 +2153,9 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Set Portal Ignore Hazards** (`portal_id: int, ignore: bool`) - On: routes use the portal even when a hazard covers it.
 - **Set Portal Position** (`portal_id: int, from_x: float, from_y: float, to_x: float, to_y: float`) - Moves a portal's entrance and exit, keeping its id, type, cost, speed and tags - call it on a timer to follow a moving door.
 - **Add Hazard From Node** (`target: Node, deadly: bool`) - Turns a node into a hazard shaped like its collision shapes (a rotated shape is covered by its bounding box). It follows the node as it moves and removes itself when the node is freed. Deadly blocks routes; not deadly makes them costly. Last Hazard Id names it.
+- **Set Hazards Cover Travel** (`enabled: bool`) - On: a hazard added from a node afterwards covers every place the node moves through - a saw on a rail is dangerous along the whole rail, learned as it moves. Off (default): it covers where the node is now. Set Hazard Travel gives the range by hand instead.
+- **Set Hazard Travel** (`target: Node, from_x: float, from_y: float, to_x: float, to_y: float`) - Tells the hazard of a node the range it moves through: the node's position at one end and at the other. The hazard then covers the whole range from the start, with no waiting to learn it. Add Hazard From Node first.
+- **Add Crusher From Node** (`target: Node`) - Turns a moving obstacle that cannot be ridden (a press, a thwomp, a sliding wall) into a crusher: everything it sweeps is danger, learned as it moves (Set Hazard Travel gives it by hand), and an agent whose way leads through that area stops at a safe spot and waits until the way is clear. Is Waiting For Crusher says when it waits. Last Hazard Id names it for Remove Hazard.
 - **Remove Hazard From Node** (`target: Node`) - Switches a node's hazard off without freeing the node.
 - **Set Tile Hazard** (`gx: int, gy: int, level: String`) - Marks one grid cell as hazardous: deadly (routes never cross it), danger (routes pay extra) or clear (removes the mark). Last Hazard Id names it.
 - **Start Patrol Between Markers** (`group: String, order: String, dwell: float`) - Patrols a route: visits the marker nodes of a group in scene order and waits at each, pathing between them with walks, jumps, falls, portals and moving platforms. Starts at the nearest marker. Ping pong goes 1, 2, 3, 2, 1; loop goes 1, 2, 3, 1, 2, 3. Any Find Path To call ends the patrol (Set Patrol Setting resume_after brings it back). Patrol Point Index says which marker it heads for.
@@ -2184,7 +2191,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Node On Platform** (`group: String, which: String`) - The nearest or furthest node of a group that stands on the agent's own platform (reachable by walking alone), or null - pick a target it can walk to. The words for which are the constants WHICH_NEAREST, WHICH_FURTHEST.
 - **Obstacle Map JSON** - The current obstacle map (tiles, scanned bodies and overrides) as a JSON string, to save or ship with a level.
 - **Obstacle Map Source** - Where the map comes from: tilemap, custom or none.
-- **Tile State** (`gx: int, gy: int`) - A cell's state: solid, clear, jump_thru, slope_left or slope_right (empty with no map or outside a custom map).
+- **Tile State** (`gx: int, gy: int`) - A cell's state: solid, clear, jump_thru, slope_left, slope_right, jump_thru_slope_left or jump_thru_slope_right (empty with no map or outside a custom map).
 - **World To Grid** (`x: float, y: float`) - The grid cell under a world position.
 - **Grid To World** (`gx: int, gy: int`) - The world position of a cell's centre.
 - **Grid Size** - The map's size in cells (a tilemap's used area, or a custom map's size).
@@ -2196,6 +2203,7 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Graph Node Connection Count** (`gx: int, gy: int`) - How many links leave a node.
 - **Graph Node Connection Kind** (`gx: int, gy: int, index: int`) - The kind of one link leaving a node (walk, jump, fall, portal...).
 - **Graph Node Connection Cost** (`gx: int, gy: int, index: int`) - The cost of one link leaving a node, under the current strategy.
+- **Graph Node Connection Run Up** (`gx: int, gy: int, index: int`) - How many cells of running start one jump link leaving a node needs behind that node (0 for a jump from a standstill and for every other kind of link).
 - **Graph Node Connection Target** (`gx: int, gy: int, index: int`) - The world position one link leaving a node lands on.
 - **Nearest Graph Node** (`x: float, y: float`) - The world position of the node nearest a point (zero with no graph).
 - **Nearest Graph Node Cell** (`x: float, y: float`) - The grid cell of the node nearest a point ((-1, -1) with no graph).
@@ -2216,10 +2224,13 @@ Demo EventSheet ACE addon. Drop scripts like this into res://eventsheet_addons/ 
 - **Portal Type** (`portal_id: int`) - instant or gradual (empty when the portal does not exist).
 - **Portal Exit** - Where the current portal lets the agent out.
 - **Portal Progress** - 0 to 1 along a gradual portal while it moves the agent (0 otherwise).
+- **Crusher Count** - How many crushers are registered.
+- **Hazard Area** (`hazard_id: int`) - The area a hazard covers, the whole range it moves through included (an empty rectangle for an id that does not exist).
 - **Patrol Point Index** - Which marker a Start Patrol Between Markers patrol heads for, from 0 (-1 when no marker patrol runs). Inside On Patrol Dwell Finished it already reads the NEXT marker.
 - **Run Speed** - The run speed in px/s the graph is sized from (the movement sibling's, or the fallback driver's).
 - **Jump Speed** - The upward launch speed in px/s the graph is sized from (the movement sibling's jump, or the fallback driver's).
 - **Grid Origin** - The top-left corner of the map in world pixels.
+- **Build Progress** - How much of the running graph build is done, from 0 to 1 (1 when no build is running).
 - **Path Move Axis**
 - **Waypoint Count**
 - **Current Waypoint Index**

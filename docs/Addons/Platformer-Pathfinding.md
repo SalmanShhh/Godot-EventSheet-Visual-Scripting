@@ -94,6 +94,43 @@ edges; farther nodes within the derived jump reach connect with JUMP arcs; drops
 Fall Distance connect with FALL edges. Walking costs less than jumping, so the router prefers
 ramps and stairs over hops when both work.
 
+**A big level builds a little each frame.** A level with tens of thousands of standable cells
+used to freeze the game for seconds while the graph was made. Build Nav Graph From Tilemap and
+Regenerate Nav Graph now spend at most **Build Budget Ms** milliseconds of each physics frame
+(default 4) and carry on in the next one; a level small enough to finish inside the budget is
+still done inside the call, exactly as before. While a build runs, Is Building Nav Graph is
+true and Build Progress counts from 0 to 1; a route asked for meanwhile is pending (Is Path
+Pending) and runs on the first tick after **On Nav Graph Built**, which fires once, at the
+end. Asking for Regenerate Nav Graph again while a build runs starts it over, so the graph
+always matches the map as it stands now; agents that share a Map Tag wait for the one agent
+that builds. Graph inspection (Graph Node Count and friends) reads what is built so far.
+Build Budget Ms 0 builds everything in one call. A 1000 x 200 level with 28,000 standable
+cells took a single two-second frame before; it now costs 4 ms of each frame for about nine
+seconds of play, and the frames in between stay at their usual length. Region regenerates are
+small and stay as they are.
+
+**A jump link is a jump the body can make.** The graph does not take a jump on trust from a box
+around the takeoff. The body is flown through the air with the movement sibling's own
+numbers - acceleration, top speed, gravity, jump speed, the early release of a variable jump -
+and a jump becomes a link only if the flight comes down over the landing cell. So the three
+tile climb that a 2.5 tile jump cannot make is not a link, and a hop off the end of a platform
+that the old coarse test refused (it clipped the corner) is one. A jump the early release of a
+variable jump would cut short is flown holding the button the whole way, so reach is kept
+where the drive can still make it. A jump whose flight scrapes a wall or a ceiling is kept only
+if the coarse test allows it, and costs a little more than a clean one, so the router takes the
+clean way up when there is one. A Jump Height Override or Jump Distance Override (Set Movement
+Limit) is believed instead, with the old box.
+
+**A running start is part of the link.** A body that speeds up slowly (a low `acceleration` on
+the movement sibling) cannot clear from a standstill what it clears at speed. When a gap is
+crossed only with the speed built up along the ground behind the takeoff, the jump becomes a
+link that asks for that run (Graph Node Connection Run Up says how many cells of it), and the
+agent backs up along the runway, runs at the takeoff at full push and leaps as it crosses it.
+It asks for the least run that works, and only where the cells behind the takeoff are
+walkable; with no room behind, the gap is not a link. A body that reaches full speed at once
+(the fallback driver, or a very high `acceleration`) never needs one. Run Up Jumps turns it
+off, and every jump then leaves from a standstill.
+
 **Paths are cell waypoints; driving is an intent.** Each physics tick with an active path the
 behavior resolves the current waypoint into an intent - a move axis (-1..1) and a want-jump
 flag - and feeds the sibling movement pack. Full-block stairs get a STEP-ASSIST hop
@@ -108,6 +145,27 @@ tiles or the graph: deadly hazards block their edges outright (and are never pic
 `nearest` goal), danger hazards multiply their edges' cost by 4 so the router detours whenever
 a clean route exists and grits through only when there is none. On Hazard Entered fires if the
 agent ends up inside one anyway (knockback, a mid-air clip) - that is the damage hook.
+
+**Moving hazards can cover their whole travel.** A hazard from a node (Add Hazard From Node, Add
+Tracked Hazard) normally covers where the node is now. Turn on **Hazards Cover Travel** (a property,
+or Set Hazards Cover Travel) and a hazard added afterwards covers everything its node has moved
+through, learned as it moves: a saw on a rail is dangerous along the whole rail. **Set Hazard
+Travel** gives the range by hand (the node's position at each end) so the whole lane is a hazard
+from the first tick. Hazard Area reads the area a hazard covers. A moving shape is covered by the
+box around its two ends, which is more than it covers on a diagonal rail. The option is off by
+default, so hazards you already have behave as they did.
+
+**Crushers are waited out.** A moving obstacle that cannot be ridden - a press, a thwomp, a
+sliding wall - is a hazard of its own kind. **Add Crusher From Node** makes the area the node
+sweeps a danger (routes pay to cross it, and take another way when there is one; make it
+deadly with Add Hazard From Node first if you would rather no route crosses it) and an agent
+whose way leads into that area, soon, stops at a safe spot and waits until the way is clear, the
+way a moving platform is waited for. Is Waiting For Crusher says when it waits. The crusher's
+cycle is read off its last ten seconds of movement and replayed, dwells and slow ends included;
+before a whole cycle has been seen it is guessed from its heading and top speed, never
+optimistically. An agent already inside the area does not stop (it goes on through), and one in
+the air is never frozen. An agent that has waited thirty seconds for one crusher stops waiting
+for it.
 
 **Moving platforms are choreography.** Add Moving Platform registers a platform you animate
 (an AnimatableBody2D with `sync_to_physics`, ping-ponged between exactly the two registered
@@ -124,9 +182,19 @@ or more - the second jump fires at the top of the first); `coyote_jump` (run off
 half way through the coyote window, for gaps a standing jump cannot clear - only built when the
 window is long enough to matter and Ledge Restriction is off); `fall`; `fall_through` (drop
 straight down through a one-way tile - one-way collision polygons are read as jump-through
-platforms you can stand on, jump up through, and drop through); `portal` (an instant blink);
+platforms you can stand on, jump up through, and drop through; a one-way polygon whose top edge
+slopes is a jump-through SLOPE, below); `portal` (an instant blink);
 `portal_gradual` (a straight-line move at a speed, with the movement sibling paused - ladders,
 lifts, ziplines); and `platform` (a moving platform ride).
+
+**One-way slopes.** A tile whose collision polygons are all one-way and whose top edge rises by more
+than a quarter tile across the cell reads as `jump_thru_slope_left` (rises to the right, "/") or
+`jump_thru_slope_right` (rises to the left); before, it read as a flat `jump_thru`. An agent walks
+up and down it from above like a solid slope (the cell above is a node, neighbours link by
+walking), jumps up through it from below because the tile takes no headroom, and drops through
+it (a `fall_through` link) the way it does a flat one-way tile. Solid slopes are unchanged
+(`slope_left`, `slope_right`), and so are flat one-way tiles (`jump_thru`). A level you saved
+as Obstacle Map JSON keeps the new words.
 
 **Strategies price routes.** Walking, portals and platforms always cost what they cost; Path
 Strategy re-prices the airborne links. `balanced` (default) uses the built-in weights;
@@ -143,7 +211,8 @@ and Path Fail Reason says why (`no_graph`, `no_start_node`, `no_goal_node`, `no_
 `max_nodes_reached`, `no_ledge`, `no_target`).
 
 **Maps without a TileMapLayer.** Create Obstacle Map starts an empty grid of a cell size you
-pick; Set Tile State marks cells `solid`, `clear`, `jump_thru`, `slope_left` or `slope_right`;
+pick; Set Tile State marks cells `solid`, `clear`, `jump_thru`, `slope_left`, `slope_right`,
+`jump_thru_slope_left` or `jump_thru_slope_right`;
 Scan Collision Bodies marks the cells StaticBody2D shapes cover (one-way shapes as jump-through).
 Overrides and scans layer over a tilemap too, and survive Regenerate. Obstacle Map JSON hands
 back the merged map as text and Load Obstacle Map JSON rebuilds from it - a pre-baked level.
@@ -229,7 +298,7 @@ they are placed on.
 | Set Crowd Arrivals / Set Multi Agent Avoidance | `enabled` (bool) | Spread arrivals over neighbouring nodes / fan routes away from other agents' cells. |
 | Set Separation Setting | `setting` (`distance`/`cooldown`/`give_up_time`), `value` (float) | Idle separation tuning. |
 | Create Obstacle Map | `width`, `height` (int), `cell_size` (float) | An empty map with no TileMapLayer. |
-| Set Tile State / Set Tile State At | `gx`, `gy` (int) or `x`, `y` (float), `state` | Overrides one cell: `solid`, `clear`, `jump_thru`, `slope_left`, `slope_right`. Regenerate afterwards. |
+| Set Tile State / Set Tile State At | `gx`, `gy` (int) or `x`, `y` (float), `state` | Overrides one cell: `solid`, `clear`, `jump_thru`, `slope_left`, `slope_right`, `jump_thru_slope_left`, `jump_thru_slope_right`. Regenerate afterwards. |
 | Scan Collision Bodies | `root` (Node) | Marks cells covered by the StaticBody2D shapes under `root` (one-way shapes as jump-through). Regenerate afterwards. |
 | Clear Nav Graph | (none) | Drops the graph and the obstacle map. Fires On Nav Graph Cleared. |
 | Load Obstacle Map JSON | `json` (String) | Rebuilds the map and graph from Obstacle Map JSON text. |
@@ -258,6 +327,11 @@ they are placed on.
 | Regenerate Region | `x`, `y`, `width`, `height` (float) | Rescans only a rectangle and rebuilds only the links that can reach it. Agents whose route runs through it plan again. |
 | Regenerate Region By Node | `target` (Node) | Regenerate Region over a node's collision shapes. |
 | Learn Moving Platform | `platform` (Node) | Watches a node move and registers it as a moving platform after one trip there and back. |
+| Set Build Budget | `milliseconds` (float) | How many milliseconds of each physics frame a graph build may use (0 = all at once). |
+| Set Run Up Jumps | `enabled` (bool) | On (default): plan jumps that need a running start and run at them. Off: every jump leaves from a standstill. Regenerate afterwards. |
+| Set Hazards Cover Travel | `enabled` (bool) | On: hazards added afterwards from a node cover everything the node moves through. |
+| Set Hazard Travel | `target` (Node), `from_x`, `from_y`, `to_x`, `to_y` (float) | Gives the hazard of a node the range it moves through, so it covers the whole lane from the start. |
+| Add Crusher From Node | `target` (Node) | A moving obstacle that cannot be ridden: what it sweeps is danger, and an agent waits at a safe spot until the way through is clear. |
 
 ### Conditions, expressions, and triggers
 
@@ -267,6 +341,12 @@ they are placed on.
 | Condition | Path Wants Jump | The drive wants a jump right now (jump arc, or a step-assist hop) - the manual-mode jump signal. |
 | Condition | Is Path Pending | This agent's route request is queued for a later tick (the shared budget was spent). |
 | Condition | Is In Hazard | The agent is standing inside a registered hazard right now (deadly or danger). |
+| Condition | Is Building Nav Graph | The graph is still being built a few milliseconds per frame (Build Budget Ms). |
+| Condition | Is Waiting For Crusher | The agent is holding still at a safe spot for a crusher to get out of its way. |
+| Expression | Build Progress | How much of a running graph build is done, 0 to 1 (1 when none runs). |
+| Expression | Crusher Count | How many crushers are registered. |
+| Expression | Hazard Area | The area a hazard covers (its whole travel range when it sweeps), by Last Hazard Id; an empty rectangle for an id that does not exist. |
+| Expression | Graph Node Connection Run Up | How many cells of running start one jump link leaving a node asks for (0 for none). |
 | Expression | Path Move Axis | The current steering, -1..1 - feed it to your own driver in manual mode. |
 | Expression | Current Waypoint X | The X of the waypoint being moved toward, in world pixels. |
 | Expression | Current Waypoint Y | The Y of the waypoint being moved toward, in world pixels. |
@@ -343,6 +423,9 @@ they are placed on.
 | `idle_separation` / `separation_cooldown` / `separation_give_up_time` | `0.0` / `5.0` / `2.0` | Idle personal space (px, 0 = off), rest after giving up, time before giving up. |
 | `debug_draw_graph` / `debug_log` | `false` / `false` | Draw the whole graph; print each route and failure. |
 | `watch_tile_edits` | `false` | Notice tiles painted or erased at run time: about two thousand tiles are compared per tick and only the changed area is rescanned (Regenerate Region). |
+| `build_budget_ms` | `4.0` | Milliseconds of each physics frame a graph build may use; a big level builds a little per frame, a small one inside the call. 0 = build it all in one call. |
+| `run_up_jumps` | `true` | Plan jumps that only land with a running start and have the agent back up and run at them. Off = every jump leaves from a standstill. |
+| `hazards_cover_travel` | `false` | A hazard added from a node covers every place the node has moved through, not only where it is now. |
 
 ### Inspector properties are ACEs too
 
@@ -386,11 +469,15 @@ dropdown actions are separate verbs or a word dropdown:
 | Moving platforms found by themselves | Learn Moving Platform (one trip there and back), or Add Moving Platform with the ends |
 | Auto map refresh after tile edits | the `watch_tile_edits` property, or Regenerate Region |
 | Set multiplayer mode | `set_enabled(is_multiplayer_authority())` on peers - Godot's own authority check |
-| Slope marking actions | none: slopes are read from each tile's collision polygon |
+| Slope marking actions | none: slopes are read from each tile's collision polygon, and one-way slopes too (`jump_thru_slope_left` / `jump_thru_slope_right`) |
+| Graph and obstacle scans spread over frames | Build Budget Ms (a property, or Set Build Budget), with Is Building Nav Graph and Build Progress |
+| Run-up jumps checked by simulating the flight | built into every jump link; Graph Node Connection Run Up, Run Up Jumps |
+| Crushers: danger areas over moving obstacles, waiting at them | Add Crusher From Node, Is Waiting For Crusher |
+| Moving hazard objects cover their whole range | Hazards Cover Travel, Set Hazard Travel, Hazard Area |
 
-What it does that this pack does not (yet): time-sliced graph builds on very large maps, run-up
-jumps checked by flight simulation, danger areas over crushers with waiting at them, and moving
-hazards that cover their whole travel range. A moving hazard here follows its node exactly each tick.
+The jump simulation here flies one body through empty air with the movement sibling's numbers and
+asks the coarse tile test about walls and ceilings, rather than replaying every tile along the way;
+that keeps a graph build cheap enough to run inside a frame budget.
 
 ## Use cases
 
@@ -735,6 +822,64 @@ Bomb exploded -> $Level: Erase Cell  ...
               -> Enemy | Pathfinding: Regenerate Region  x, y, 96, 96
 ```
 
+### 32. A level too big to build in one frame
+
+Leave Build Budget Ms at its default and build on ready. A small level is done inside the call; a
+huge one builds a few milliseconds a frame, the loading screen can show Build Progress, and
+the chaser's first Find Path To simply waits (Is Path Pending) until On Nav Graph Built.
+
+```
+On Ready          -> Enemy | Pathfinding: Build Nav Graph From Tilemap  $Level/TileMapLayer
+                  -> Enemy | Pathfinding: Find Path To Node  $Player, "nearest"
+Every frame       -> $LoadingBar: Set Value  Enemy | Pathfinding: Build Progress
+On Nav Graph Built -> $LoadingBar: Hide
+```
+
+### 33. A gap that needs a run-up
+
+A slow-starting character (a heavy knight, `acceleration` 400) cannot clear a six tile gap from a
+standstill. If there is floor behind the takeoff, the graph already holds the link and the agent
+backs up, runs and leaps; Graph Node Connection Run Up says how much room the link asked for. With
+no room behind the edge, the gap is not a link, and Path Failed tells you so.
+
+```
+On Ready     -> Knight | Pathfinding: Build Nav Graph From Tilemap  $Level/TileMapLayer
+Debug key    -> Knight | Pathfinding: Log Graph Stats
+Print        -> Knight | Pathfinding: Graph Node Connection Run Up  gx, gy, index
+```
+
+### 34. A saw on a rail
+
+Tell the hazard its rail once and the whole lane is dangerous from the first frame, however the
+sheet animates the saw.
+
+```
+On Ready -> Enemy | Pathfinding: Add Hazard From Node  $Saw, true
+         -> Enemy | Pathfinding: Set Hazard Travel     $Saw, 400, 530, 768, 530
+```
+
+### 35. A press the guard waits for
+
+A press that comes down every few seconds is a crusher: the guard crosses under it when the way is
+clear and stands short of it while it comes down, and an Is Waiting For Crusher row can play the
+"checking the timing" animation.
+
+```
+On Ready -> Guard | Pathfinding: Add Crusher From Node  $Press
+Every frame, Guard | Pathfinding: Is Waiting For Crusher -> $Guard/Sprite: Play  "wait"
+```
+
+### 36. A stair of one-way slopes
+
+Paint a flight of one-way slope tiles and an agent walks up and down it, jumps up through it from
+the floor beneath and drops through it to the floor again, with nothing set up. Tile State reads
+`jump_thru_slope_left` for a flight that rises to the right.
+
+```
+On Ready -> Enemy | Pathfinding: Build Nav Graph From Tilemap  $Level/TileMapLayer
+Debug    -> Enemy | Pathfinding: Tile State  gx, gy
+```
+
 ### Other use cases
 
 **Rooftop assassin patrols.** Ledge restriction keeps each guard glued to its own rooftop while normal chasing agents below jump between platforms, so two AI temperaments share one pack.
@@ -758,9 +903,14 @@ Bomb exploded -> $Level: Erase Cell  ...
 - **Build the graph AFTER the level exists.** On Ready is right for a static level; if you
   generate tiles at runtime, build after generating (and Regenerate after edits).
 - **The graph is cells, the drive is physics.** The router plans in tile cells; the movement
-  pack executes under real physics. If an agent misses a jump the router thought possible,
-  lower the overrides slightly or widen the gap's platforms - the derivation already applies a
-  10% safety margin.
+  pack executes under real physics. Every jump link is flown with the movement's own numbers
+  first, so most missed jumps are gone; one that still misses (an agent arriving at speed at a
+  tight corner) recovers by itself - On Waypoint Stuck re-routes it - and lowering the overrides
+  slightly or widening the gap's platforms helps. A link that scrapes a wall or ceiling costs
+  more than a clean one, so the router prefers the clean way up.
+- **Do not ask a route of a graph that is still building and expect a path at once.** While Is
+  Building Nav Graph is true, Find Path To waits (Is Path Pending) and runs after On Nav Graph
+  Built. Patrols and Find Path To Nearest Ledge wait the same way.
 - **One Find Path To Node call chases forever.** It follows the node: the route auto-refreshes
   every Repath Interval once the target has moved Repath Threshold pixels. You do not need a
   timer row (though re-calling on one is harmless - each call just resets the follow).
