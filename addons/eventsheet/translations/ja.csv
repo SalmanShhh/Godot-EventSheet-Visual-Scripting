@@ -11458,10 +11458,10 @@ Controller 1,コントローラー 1
 Controller 2,コントローラー 2
 Controller 3,コントローラー 3
 Controller 4,コントローラー 4
-Turn this moment file into a Juice list,
-"1 old moment file can become a Juice list. It plays the same either way and keeps its path, so scenes and scripts pointing at it keep working; only a script that loads it and casts it to the old class gets nothing back.",
-"%d old moment files can become Juice lists. They play the same either way and keep their paths, so scenes and scripts pointing at them keep working; only a script that loads one and casts it to the old class gets nothing back.",
-Make it a Juice list,
-Make all %d Juice lists,
-Turn old moment files into Juice lists,
-Make a Juice list,
+Turn this moment file into a Juice list,このモーメントファイルを Juice リストにする
+"1 old moment file can become a Juice list. It plays the same either way and keeps its path, so scenes and scripts pointing at it keep working; only a script that loads it and casts it to the old class gets nothing back.",古いモーメントファイル 1 個を Juice リストにできます。どちらの形でも同じように再生され、パスも変わらないため、それを指すシーンやスクリプトは引き続き動きます。ただし、ファイルを読み込んで古いクラスにキャストするスクリプトだけは何も受け取れなくなります。
+"%d old moment files can become Juice lists. They play the same either way and keep their paths, so scenes and scripts pointing at them keep working; only a script that loads one and casts it to the old class gets nothing back.",古いモーメントファイル %d 個を Juice リストにできます。どちらの形でも同じように再生され、パスも変わらないため、それらを指すシーンやスクリプトは引き続き動きます。ただし、ファイルを読み込んで古いクラスにキャストするスクリプトだけは何も受け取れなくなります。
+Make it a Juice list,Juice リストにする
+Make all %d Juice lists,%d 個すべてを Juice リストにする
+Turn old moment files into Juice lists,古いモーメントファイルを Juice リストにする
+Make a Juice list,Juice リストを作る

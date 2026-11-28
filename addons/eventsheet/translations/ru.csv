@@ -11458,10 +11458,10 @@ Controller 1,Контроллер 1
 Controller 2,Контроллер 2
 Controller 3,Контроллер 3
 Controller 4,Контроллер 4
-Turn this moment file into a Juice list,
-"1 old moment file can become a Juice list. It plays the same either way and keeps its path, so scenes and scripts pointing at it keep working; only a script that loads it and casts it to the old class gets nothing back.",
-"%d old moment files can become Juice lists. They play the same either way and keep their paths, so scenes and scripts pointing at them keep working; only a script that loads one and casts it to the old class gets nothing back.",
-Make it a Juice list,
-Make all %d Juice lists,
-Turn old moment files into Juice lists,
-Make a Juice list,
+Turn this moment file into a Juice list,Превратить этот файл момента в список Juice
+"1 old moment file can become a Juice list. It plays the same either way and keeps its path, so scenes and scripts pointing at it keep working; only a script that loads it and casts it to the old class gets nothing back.","1 старый файл момента может стать списком Juice. В обоих видах он играет одинаково и сохраняет свой путь, поэтому сцены и скрипты, которые на него указывают, продолжают работать; только скрипт, который загружает его и приводит (cast) к старому классу, ничего не получит."
+"%d old moment files can become Juice lists. They play the same either way and keep their paths, so scenes and scripts pointing at them keep working; only a script that loads one and casts it to the old class gets nothing back.","%d старых файлов момента могут стать списками Juice. В обоих видах они играют одинаково и сохраняют свои пути, поэтому сцены и скрипты, которые на них указывают, продолжают работать; только скрипт, который загружает один из них и приводит (cast) к старому классу, ничего не получит."
+Make it a Juice list,Сделать списком Juice
+Make all %d Juice lists,Сделать списками Juice все (%d)
+Turn old moment files into Juice lists,Превратить старые файлы момента в списки Juice
+Make a Juice list,Создать список Juice

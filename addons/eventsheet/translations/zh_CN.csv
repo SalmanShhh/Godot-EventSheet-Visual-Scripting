@@ -11458,10 +11458,10 @@ Controller 1,手柄 1
 Controller 2,手柄 2
 Controller 3,手柄 3
 Controller 4,手柄 4
-Turn this moment file into a Juice list,
-"1 old moment file can become a Juice list. It plays the same either way and keeps its path, so scenes and scripts pointing at it keep working; only a script that loads it and casts it to the old class gets nothing back.",
-"%d old moment files can become Juice lists. They play the same either way and keep their paths, so scenes and scripts pointing at them keep working; only a script that loads one and casts it to the old class gets nothing back.",
-Make it a Juice list,
-Make all %d Juice lists,
-Turn old moment files into Juice lists,
-Make a Juice list,
+Turn this moment file into a Juice list,将此时刻文件转换为 Juice 列表
+"1 old moment file can become a Juice list. It plays the same either way and keeps its path, so scenes and scripts pointing at it keep working; only a script that loads it and casts it to the old class gets nothing back.",1 个旧时刻文件可以变成 Juice 列表。两种形式播放效果相同，并且保留原路径，因此指向它的场景和脚本继续有效；只有加载它并转换（cast）为旧类的脚本会得到空值。
+"%d old moment files can become Juice lists. They play the same either way and keep their paths, so scenes and scripts pointing at them keep working; only a script that loads one and casts it to the old class gets nothing back.",%d 个旧时刻文件可以变成 Juice 列表。两种形式播放效果相同，并且保留原路径，因此指向它们的场景和脚本继续有效；只有加载其中一个并转换（cast）为旧类的脚本会得到空值。
+Make it a Juice list,转换为 Juice 列表
+Make all %d Juice lists,将全部 %d 个转换为 Juice 列表
+Turn old moment files into Juice lists,将旧时刻文件转换为 Juice 列表
+Make a Juice list,创建 Juice 列表

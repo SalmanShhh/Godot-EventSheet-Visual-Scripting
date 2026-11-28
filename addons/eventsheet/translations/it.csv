@@ -11458,10 +11458,10 @@ Controller 1,Gamepad 1
 Controller 2,Gamepad 2
 Controller 3,Gamepad 3
 Controller 4,Gamepad 4
-Turn this moment file into a Juice list,
-"1 old moment file can become a Juice list. It plays the same either way and keeps its path, so scenes and scripts pointing at it keep working; only a script that loads it and casts it to the old class gets nothing back.",
-"%d old moment files can become Juice lists. They play the same either way and keep their paths, so scenes and scripts pointing at them keep working; only a script that loads one and casts it to the old class gets nothing back.",
-Make it a Juice list,
-Make all %d Juice lists,
-Turn old moment files into Juice lists,
-Make a Juice list,
+Turn this moment file into a Juice list,Trasforma questo file momento in una lista Juice
+"1 old moment file can become a Juice list. It plays the same either way and keeps its path, so scenes and scripts pointing at it keep working; only a script that loads it and casts it to the old class gets nothing back.","1 vecchio file momento può diventare una lista Juice. Si riproduce allo stesso modo nei due casi e mantiene il suo percorso, quindi le scene e gli script che lo puntano continuano a funzionare; solo uno script che lo carica e lo converte (cast) nella vecchia classe non ottiene nulla."
+"%d old moment files can become Juice lists. They play the same either way and keep their paths, so scenes and scripts pointing at them keep working; only a script that loads one and casts it to the old class gets nothing back.","%d vecchi file momento possono diventare liste Juice. Si riproducono allo stesso modo nei due casi e mantengono i loro percorsi, quindi le scene e gli script che li puntano continuano a funzionare; solo uno script che ne carica uno e lo converte (cast) nella vecchia classe non ottiene nulla."
+Make it a Juice list,Trasforma in lista Juice
+Make all %d Juice lists,Trasforma tutti e %d in liste Juice
+Turn old moment files into Juice lists,Trasforma i vecchi file momento in liste Juice
+Make a Juice list,Crea una lista Juice

@@ -11458,10 +11458,10 @@ Controller 1,Gamepad 1
 Controller 2,Gamepad 2
 Controller 3,Gamepad 3
 Controller 4,Gamepad 4
-Turn this moment file into a Juice list,
-"1 old moment file can become a Juice list. It plays the same either way and keeps its path, so scenes and scripts pointing at it keep working; only a script that loads it and casts it to the old class gets nothing back.",
-"%d old moment files can become Juice lists. They play the same either way and keep their paths, so scenes and scripts pointing at them keep working; only a script that loads one and casts it to the old class gets nothing back.",
-Make it a Juice list,
-Make all %d Juice lists,
-Turn old moment files into Juice lists,
-Make a Juice list,
+Turn this moment file into a Juice list,Diese Momentdatei in eine Juice-Liste umwandeln
+"1 old moment file can become a Juice list. It plays the same either way and keeps its path, so scenes and scripts pointing at it keep working; only a script that loads it and casts it to the old class gets nothing back.","1 alte Momentdatei kann zu einer Juice-Liste werden. Sie spielt in beiden Formen gleich und behält ihren Pfad, sodass Szenen und Skripte, die auf sie zeigen, weiter funktionieren; nur ein Skript, das sie lädt und in die alte Klasse umwandelt (cast), bekommt nichts zurück."
+"%d old moment files can become Juice lists. They play the same either way and keep their paths, so scenes and scripts pointing at them keep working; only a script that loads one and casts it to the old class gets nothing back.","%d alte Momentdateien können zu Juice-Listen werden. Sie spielen in beiden Formen gleich und behalten ihre Pfade, sodass Szenen und Skripte, die auf sie zeigen, weiter funktionieren; nur ein Skript, das eine lädt und in die alte Klasse umwandelt (cast), bekommt nichts zurück."
+Make it a Juice list,In eine Juice-Liste umwandeln
+Make all %d Juice lists,Alle %d in Juice-Listen umwandeln
+Turn old moment files into Juice lists,Alte Momentdateien in Juice-Listen umwandeln
+Make a Juice list,Juice-Liste erstellen
