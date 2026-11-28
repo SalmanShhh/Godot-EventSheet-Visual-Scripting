@@ -107,6 +107,8 @@ static func build() -> bool:
 			"attributes": {"tooltip": "Milliseconds of each physics frame a nav graph build may use; a big level builds a little per frame, a small one at once. 0 = build it all in one call."}},
 		"run_up_jumps": {"type": "bool", "default": true, "exported": true,
 			"attributes": {"tooltip": "Plan jumps that only land with a running start, and have the agent back up along the runway and run at them. Off = every jump leaves from a standstill."}},
+		"hazards_cover_travel": {"type": "bool", "default": false, "exported": true,
+			"attributes": {"tooltip": "A hazard added from a node covers every place the node has moved through, not only where it is now. Off = it covers where it is."}},
 	}
 
 	src.note("Platformer pathfinding: attach as a SIBLING of PlatformerMovement under a CharacterBody2D. Build Nav Graph from your TileMapLayer once, then Find Path To - the behavior derives jump reach from the movement pack and drives it through the ai_move_axis seam. Stairs and tile slopes walk (adjacent cells one step up/down are WALK links); gaps and ledges route through jump, double jump and coyote jump arcs, fall drops, fall-through drops off one-way platforms, portals and moving platforms.")
@@ -564,6 +566,15 @@ static func build() -> bool:
 	src.verb("add_hazard_from_node", "Add Hazard From Node",
 		"Turns a node into a hazard shaped like its collision shapes (a rotated shape is covered by its bounding box). It follows the node as it moves and removes itself when the node is freed. Deadly blocks routes; not deadly makes them costly. Last Hazard Id names it.",
 		[["target", "Node", "The node that becomes a hazard (a body or area with collision shapes)."], ["deadly", "bool", "Deadly blocks routes; off only makes them costly."]])
+	src.verb("set_hazards_cover_travel", "Set Hazards Cover Travel",
+		"On: a hazard added from a node afterwards covers every place the node moves through - a saw on a rail is dangerous along the whole rail, learned as it moves. Off (default): it covers where the node is now. Set Hazard Travel gives the range by hand instead.",
+		[["enabled", "bool", "On to cover the whole range a node moves through."]])
+	src.verb("set_hazard_travel", "Set Hazard Travel",
+		"Tells the hazard of a node the range it moves through: the node's position at one end and at the other. The hazard then covers the whole range from the start, with no waiting to learn it. Add Hazard From Node first.",
+		[["target", "Node", "The node whose hazard is given a range."], ["from_x", "float", "Node X at one end of its travel."], ["from_y", "float", "Node Y at one end of its travel."], ["to_x", "float", "Node X at the other end."], ["to_y", "float", "Node Y at the other end."]])
+	src.expression("hazard_area", "Hazard Area",
+		"The area a hazard covers, the whole range it moves through included (an empty rectangle for an id that does not exist).",
+		[["hazard_id", "int", "The hazard's id."]], TYPE_RECT2)
 	src.verb("remove_hazard_from_node", "Remove Hazard From Node",
 		"Switches a node's hazard off without freeing the node.",
 		[["target", "Node", "The node whose hazard goes away."]])

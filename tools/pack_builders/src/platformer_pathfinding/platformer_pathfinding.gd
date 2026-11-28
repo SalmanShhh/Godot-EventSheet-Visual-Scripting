@@ -47,6 +47,7 @@ var debug_log: bool = false
 var watch_tile_edits: bool = false
 var build_budget_ms: float = 4.0
 var run_up_jumps: bool = true
+var hazards_cover_travel: bool = false
 
 #region state
 ## The version written into an exported obstacle map, and the newest one this behaviour reads.
@@ -101,14 +102,18 @@ const LINK_PASS_COYOTE: int = 3
 const LINK_PASS_FALL_THROUGH: int = 4
 ## How many link passes there are; every cell gets each pass before the next one starts.
 const LINK_PASS_COUNT: int = 5
+## What a jump that scrapes a wall or ceiling on the way costs more than a clean one.
+const LINK_SCRAPE_COST: float = 2.0
 ## How many physics ticks a simulated jump is followed before it counts as never landing.
 const FLIGHT_TICKS: int = 240
 ## The longest running start, in cells, a jump may ask for.
 const RUN_UP_CELLS: int = 6
 ## Seconds a running start may take before the host gives up on it and just jumps.
 const RUN_UP_TIME_LIMIT: float = 4.0
-## A body's width and height are drawn in from the edge by this many pixels when it is checked against the tiles.
+## The bottom of a body is drawn in by this many pixels when it is checked against the tiles, so standing on a floor is not hitting it.
 const FLIGHT_SKIN: float = 1.0
+## A body's sides and top are grown by this many pixels when a flight is checked against the tiles, so one that only just clears a corner is not clean.
+const FLIGHT_MARGIN: float = 3.0
 ## What a flight that never lands over its cell is: shared, so a jump that cannot be made costs nothing to remember.
 const FLIGHT_NEVER: Dictionary = {"lands": false, "swept": [], "tops": []}
 ## How many sets of movement numbers keep their flights before the oldest are dropped all at once.
@@ -205,8 +210,24 @@ class NavHazard extends RefCounted:
 	var node: Node = null
 	## True when a route may never cross the hazard; false makes it a costly danger.
 	var deadly: bool = false
-
-## A platform being watched while it moves, until one trip there and back tells where its two ends are.
+	## True when the hazard covers everything its node has moved through, not only where the node is now.
+	var sweep: bool = false
+	## True when the range it covers was given (Set Hazard Travel) and is not learned from the node's movement.
+	var fixed: bool = false
+	## The area the node's shapes cover right now (rect is the whole range when the hazard sweeps).
+	var live: Rect2 = Rect2()
+	## Where the node's origin was at the last read.
+	var last_origin: Vector2 = Vector2.ZERO
+	## The two furthest-apart origins seen: the ends of the node's travel.
+	var end_a: Vector2 = Vector2.ZERO
+	## The other end of the node's travel.
+	var end_b: Vector2 = Vector2.ZERO
+	## True once end_a and end_b have a first position.
+	var ends_ready: bool = false
+	## How fast the node moves right now, in pixels per second.
+	var velocity: Vector2 = Vector2.ZERO
+	## The fastest the node has been seen moving, in pixels per second.
+	var top_speed: float = 0.0
 class NavLearn extends RefCounted:
 	## The platform; it may be freed from outside, so it is checked before use.
 	var node: Node2D = null
@@ -913,6 +934,8 @@ func _point_in_hazard(world: Vector2, deadly_only: bool) -> bool:
 func _hazard_hit(hazard: NavHazard, world: Vector2, margin: float) -> bool:
 	if hazard.kind == "circle":
 		return world.distance_to(hazard.center) <= hazard.radius + margin
+	if hazard.kind == "tracked" and hazard.sweep and hazard.rect.size != Vector2.ZERO and hazard.rect.grow(margin).has_point(world):
+		return true
 	if hazard.kind == "tracked":
 		var followed: Variant = hazard.node
 		if not is_instance_valid(followed) or not (followed is Node2D):
@@ -921,7 +944,8 @@ func _hazard_hit(hazard: NavHazard, world: Vector2, margin: float) -> bool:
 	return hazard.rect.grow(margin).has_point(world)
 
 ## Drops hazards whose node has been freed, and re-reads the bounds of node-shape hazards whose
-## node has moved since the last read.
+## node has moved since the last read. A hazard that sweeps also widens to everything its node has
+## moved through.
 ## @ace_hidden
 func _prune_tracked_hazards() -> void:
 	for index in range(_hazards.size() - 1, -1, -1):
@@ -932,8 +956,40 @@ func _prune_tracked_hazards() -> void:
 			_hazards.remove_at(index)
 		elif hazard.kind == "shape":
 			_refresh_shape_hazard(hazard)
+		elif hazard.sweep and not hazard.fixed:
+			_sweep_tracked_hazard(hazard)
 
-## Re-reads a node-shape hazard's world bounds when its node has moved, turned or scaled.
+## Widens a sweeping circle hazard to the box around the circle where its node is now.
+## @ace_hidden
+func _sweep_tracked_hazard(hazard: NavHazard) -> void:
+	var followed: Node2D = hazard.node as Node2D
+	if followed == null:
+		return
+	var here: Vector2 = _world_transform_of(followed).origin
+	var box: Rect2 = Rect2(here - Vector2(hazard.radius, hazard.radius), Vector2(hazard.radius, hazard.radius) * 2.0)
+	hazard.live = box
+	hazard.rect = box if hazard.rect.size == Vector2.ZERO else hazard.rect.merge(box)
+	_follow_hazard_travel(hazard, here)
+
+## Keeps what a node's movement says about it: its speed, and the two ends it has travelled between.
+## @ace_hidden
+func _follow_hazard_travel(hazard: NavHazard, origin: Vector2) -> void:
+	var step: float = get_physics_process_delta_time() if is_inside_tree() else 0.0
+	if hazard.ends_ready and step > 0.0:
+		hazard.velocity = (origin - hazard.last_origin) / step
+		hazard.top_speed = maxf(hazard.top_speed, hazard.velocity.length())
+	hazard.last_origin = origin
+	if not hazard.ends_ready:
+		hazard.ends_ready = true
+		hazard.end_a = origin
+		hazard.end_b = origin
+	elif origin.distance_to(hazard.end_a) > hazard.end_a.distance_to(hazard.end_b):
+		hazard.end_b = origin
+	elif origin.distance_to(hazard.end_b) > hazard.end_a.distance_to(hazard.end_b):
+		hazard.end_a = origin
+
+## Re-reads a node-shape hazard's world bounds when its node has moved, turned or scaled; a hazard
+## that sweeps keeps the whole range it has seen, and one given a travel keeps that.
 ## @ace_hidden
 func _refresh_shape_hazard(hazard: NavHazard) -> void:
 	var followed: Node2D = hazard.node as Node2D
@@ -941,9 +997,16 @@ func _refresh_shape_hazard(hazard: NavHazard) -> void:
 		return
 	var now: Transform2D = _world_transform_of(followed)
 	if hazard.seen_at == now and hazard.rect.size != Vector2.ZERO:
+		hazard.velocity = Vector2.ZERO
 		return
 	hazard.seen_at = now
-	hazard.rect = _node_shape_bounds(followed)
+	var bounds: Rect2 = _node_shape_bounds(followed)
+	hazard.live = bounds
+	if hazard.sweep:
+		_follow_hazard_travel(hazard, now.origin)
+	if hazard.fixed:
+		return
+	hazard.rect = bounds.merge(hazard.rect) if hazard.sweep and hazard.rect.size != Vector2.ZERO else bounds
 
 ## A node's transform in the world. Tree-safe: outside a scene tree (tools, tests) the transforms of its
 ## 2D parents are multiplied by hand, the way a tilemap stands in for its global transform.
@@ -1087,6 +1150,8 @@ func _watch_tiles() -> void:
 ## hazard narrower than a tile is still found, which a test at the tile's centre alone would miss.
 ## @ace_hidden
 func _hazard_touches(hazard: NavHazard, box: Rect2, margin: float) -> bool:
+	if hazard.kind == "tracked" and hazard.sweep and hazard.rect.size != Vector2.ZERO and hazard.rect.grow(margin).intersects(box):
+		return true
 	if hazard.kind == "circle" or hazard.kind == "tracked":
 		var center: Vector2 = hazard.center
 		if hazard.kind == "tracked":
@@ -2926,7 +2991,7 @@ func _link_cell(link_pass: int, cell: Vector2i) -> void:
 				var kind: String = "fall" if dy > 0 and absi(dx) <= 2 else "jump"
 				# A drop is a walk off the edge, judged by the chord. A jump is flown with the
 				# movement's own numbers, from a standstill or from the running start it has room for.
-				var plan: Vector2i = Vector2i.ZERO
+				var plan: Vector3i = Vector3i.ZERO
 				if kind == "jump" and _link_fly:
 					plan = _jump_plan(cell, dx, dy)
 					if plan.x < 0:
@@ -2934,7 +2999,7 @@ func _link_cell(link_pass: int, cell: Vector2i) -> void:
 				elif not _arc_clear(cell, to, _blocking_down if dy > 0 else _blocking):
 					continue
 				var span: float = Vector2(float(dx), float(dy)).length()
-				var link: NavEdge = _add_edge(cell, to, kind, span * (1.5 if kind == "jump" else 1.1) + float(plan.x) * 0.25)
+				var link: NavEdge = _add_edge(cell, to, kind, span * (1.5 if kind == "jump" else 1.1) + float(plan.x) * 0.25 + float(plan.z) * LINK_SCRAPE_COST)
 				link.run_up = plan.x
 				link.hold_jump = plan.y == 1
 	elif link_pass == LINK_PASS_DOUBLE_JUMP:
@@ -2973,15 +3038,17 @@ func _link_cell(link_pass: int, cell: Vector2i) -> void:
 				break
 
 ## How a jump from this cell is made, as (cells of running start, 1 when the button is held the
-## whole way else 0), or (-1, 0) when it cannot be made. The runway is the row of walkable cells
-## behind the takeoff, away from the landing. A jump can be made when the body, flown through empty
-## air with the movement's own numbers, comes down over the landing cell, and either its flight
-## passes through free cells or the coarse chord between the two cells does (a body pressed against
-## a wall still slides up it, which a flight through empty air cannot show, so the chord gets the
-## last word on obstacles). From a standstill comes first, then with more run; at each, the jump
-## the drive makes (letting go early at the height the gap needs) comes before holding it all the way.
+## whole way else 0, 1 when the flight scrapes a wall or ceiling else 0), or (-1, 0, 0) when it
+## cannot be made. The runway is the row of walkable cells behind the takeoff, away from the
+## landing. A jump can be made when the body, flown through empty air with the movement's own
+## numbers, comes down over the landing cell, and either its flight passes through free cells or
+## the coarse chord between the two cells does (a body pressed against a wall still slides up it,
+## which a flight through empty air cannot show, so the chord gets the last word on obstacles; such
+## a link costs more, so a clean way up is taken when there is one). From a standstill comes first,
+## then with more run; at each, the jump the drive makes (letting go early at the height the gap
+## needs) comes before holding it all the way.
 ## @ace_hidden
-func _jump_plan(cell: Vector2i, dx: int, dy: int) -> Vector2i:
+func _jump_plan(cell: Vector2i, dx: int, dy: int) -> Vector3i:
 	var runway: int = 0
 	if dx != 0 and _link_run_cap > 0:
 		var behind: int = -signi(dx)
@@ -2995,11 +3062,13 @@ func _jump_plan(cell: Vector2i, dx: int, dy: int) -> Vector2i:
 			var flight: Dictionary = _flight(dx, dy, run, hold == 1)
 			if not bool(flight["lands"]):
 				continue
+			if _flight_clear(cell, flight):
+				return Vector3i(run, hold, 0)
 			if chord_clear < 0:
 				chord_clear = 1 if _arc_clear(cell, cell + Vector2i(dx, dy), _blocking_down if dy > 0 else _blocking) else 0
-			if chord_clear == 1 or _flight_clear(cell, flight):
-				return Vector2i(run, hold)
-	return Vector2i(-1, 0)
+			if chord_clear == 1:
+				return Vector3i(run, hold, 1)
+	return Vector3i(-1, 0, 0)
 
 ## Whether the tiles around a takeoff cell leave a flown jump alone: no solid cell in the way of
 ## the body, and no platform to land on before the one the jump is aimed at.
@@ -3090,8 +3159,8 @@ func _flight(dx: int, dy: int, run: int, hold: bool) -> Dictionary:
 		var after: float = at.y + half.y
 		if after > before and index < trace.size() - 1:
 			# Any cell top the feet pass on the way down is a platform it would stop on.
-			var first_column: int = floori((at.x - half.x + FLIGHT_SKIN) / tile + 0.5)
-			var last_column: int = floori((at.x + half.x - FLIGHT_SKIN) / tile + 0.5)
+			var first_column: int = floori((at.x - half.x - FLIGHT_MARGIN) / tile + 0.5)
+			var last_column: int = floori((at.x + half.x + FLIGHT_MARGIN) / tile + 0.5)
 			for row in range(floori(before / tile + 0.5) + 1, floori(after / tile + 0.5) + 1):
 				for column in range(first_column, last_column + 1):
 					tops[Vector2i(column, row)] = true
@@ -3103,9 +3172,9 @@ func _flight(dx: int, dy: int, run: int, hold: bool) -> Dictionary:
 ## Adds the cells the body overlaps at a position to a set (drawn in by the skin, so resting against a wall is not hitting it).
 ## @ace_hidden
 func _flight_cells(pos: Vector2, half: Vector2, tile: float, into: Dictionary) -> void:
-	var first_column: int = floori((pos.x - half.x + FLIGHT_SKIN) / tile + 0.5)
-	var last_column: int = floori((pos.x + half.x - FLIGHT_SKIN) / tile + 0.5)
-	var first_row: int = floori((pos.y - half.y + FLIGHT_SKIN) / tile + 0.5)
+	var first_column: int = floori((pos.x - half.x - FLIGHT_MARGIN) / tile + 0.5)
+	var last_column: int = floori((pos.x + half.x + FLIGHT_MARGIN) / tile + 0.5)
+	var first_row: int = floori((pos.y - half.y - FLIGHT_MARGIN) / tile + 0.5)
 	var last_row: int = floori((pos.y + half.y - FLIGHT_SKIN) / tile + 0.5)
 	for row in range(first_row, last_row + 1):
 		for column in range(first_column, last_column + 1):
@@ -4167,6 +4236,9 @@ func add_tracked_hazard(target: Node, radius: float, deadly: bool) -> void:
 	hazard.node = target
 	hazard.radius = radius
 	hazard.deadly = deadly
+	hazard.sweep = hazards_cover_travel
+	if hazard.sweep:
+		_sweep_tracked_hazard(hazard)
 	_hazards.append(hazard)
 	_last_hazard_id = hazard.id
 	set_physics_process(true)
@@ -4185,6 +4257,7 @@ func add_hazard_from_node(target: Node, deadly: bool) -> void:
 	hazard.kind = "shape"
 	hazard.node = target
 	hazard.deadly = deadly
+	hazard.sweep = hazards_cover_travel
 	_refresh_shape_hazard(hazard)
 	_hazards.append(hazard)
 	_last_hazard_id = hazard.id
@@ -4195,6 +4268,37 @@ func remove_hazard_from_node(target: Node) -> void:
 		var hazard: NavHazard = _hazards[index]
 		if (hazard.kind == "shape" or hazard.kind == "tracked") and hazard.node == target:
 			_hazards.remove_at(index)
+
+func set_hazards_cover_travel(enabled: bool) -> void:
+	hazards_cover_travel = enabled
+
+func set_hazard_travel(target: Node, from_x: float, from_y: float, to_x: float, to_y: float) -> void:
+	if not (target is Node2D):
+		return
+	for hazard in _hazards:
+		if (hazard.kind == "shape" or hazard.kind == "tracked") and hazard.node == target:
+			var origin: Vector2 = _world_transform_of(target as Node2D).origin
+			var live: Rect2 = hazard.live
+			if hazard.kind == "tracked" or live.size == Vector2.ZERO:
+				live = Rect2(origin - Vector2(hazard.radius, hazard.radius), Vector2(hazard.radius, hazard.radius) * 2.0)
+				hazard.live = live
+			var at_from: Rect2 = Rect2(live.position + Vector2(from_x, from_y) - origin, live.size)
+			var at_to: Rect2 = Rect2(live.position + Vector2(to_x, to_y) - origin, live.size)
+			hazard.rect = at_from.merge(at_to)
+			hazard.sweep = true
+			hazard.fixed = true
+			hazard.end_a = Vector2(from_x, from_y)
+			hazard.end_b = Vector2(to_x, to_y)
+			hazard.ends_ready = true
+			hazard.last_origin = origin
+			return
+	push_warning("[PlatformerPathfinding] Set Hazard Travel: the node has no hazard yet - add one with Add Hazard From Node first.")
+
+func hazard_area(hazard_id: int) -> Rect2:
+	for hazard in _hazards:
+		if hazard.id == hazard_id:
+			return hazard.rect
+	return Rect2()
 
 func set_tile_hazard(gx: int, gy: int, level: String) -> void:
 	var cell: Vector2i = Vector2i(gx, gy)
